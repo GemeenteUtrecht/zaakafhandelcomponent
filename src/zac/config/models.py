@@ -1,5 +1,9 @@
+import uuid
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+
+from zds_client import Client, ClientAuth
 
 from .constants import APITypes
 
@@ -24,3 +28,13 @@ class Service(models.Model):
         if not self.api_root.endswith('/'):
             self.api_root = f"{self.api_root}/"
         super().save(*args, **kwargs)
+
+    def build_client(self) -> Client:
+        """
+        Build an API client from the service configuration.
+        """
+        _uuid = uuid.uuid4()
+        dummy_detail_url = f"{self.api_root}dummy/{_uuid}"
+        client = Client.from_url(dummy_detail_url)
+        client.auth = ClientAuth(client_id=self.client_id, secret=self.secret)
+        return client
