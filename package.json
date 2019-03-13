@@ -1,0 +1,30 @@
+{
+  "name": "zac",
+  "version": "0.1.0",
+  "description": "zac referentie implementatie API",
+  "main": "src/index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "build": "gulp build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:GemeenteUtrecht/zaakafhandelcomponent"
+  },
+  "author": "Gemeente Utrecht",
+  "license": "EUPL-1.2",
+  "homepage": "https://ref.tst.vng.cloud",
+  "dependencies": {
+    "font-awesome": "^4.7.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^5.0.0",
+    "gulp-clean-css": "^3.9.4",
+    "gulp-css-purge": "^3.0.5",
+    "gulp-sass": "^4.0.1",
+    "require-dir": "^1.0.0"
+  }
+}

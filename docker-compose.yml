@@ -1,0 +1,18 @@
+# Inspired by https://docs.docker.com/compose/django/
+version: '3.4'
+
+services:
+  db:
+    image: postgres:11-alpine
+    # environment:
+    #   - POSTGRES_USER=${PG_USER:zac}
+    #   - POSTGRES_PASSWORD=${PG_PASSWORD:zac}
+  web:
+    image: GemeenteUtrecht/zaakafhandelcomponent
+    environment:
+      - DJANGO_SETTINGS_MODULE=zac.conf.docker
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - 8000:8000
+    depends_on:
+      - db

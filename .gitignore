@@ -1,0 +1,34 @@
+# Developers
+.hg
+.git
+.svn
+.idea/
+.sass-cache/
+*.db
+*.pyc
+__pycache__
+*~
+
+# Javascript libraries
+/node_modules/
+
+# Coverage reports
+/reports/
+/htmlcov/
+
+# Environment
+local.py
+/env/
+/media/
+/static/
+/mail/
+/log/*.log*
+/log/nginx/*.log*
+.env
+
+# Static files build by gulp
+src/zac/static/css/admin/admin_overrides.css
+src/zac/static/css/screen.css
+
+src/zac/static/fonts/
+src/zac/static/js/
