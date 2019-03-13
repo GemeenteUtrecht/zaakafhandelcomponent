@@ -34,10 +34,9 @@ Referenties
 * `Issues <https://github.com/GemeenteUtrecht/zaakafhandelcomponent/issues>`_
 * `Code <https://github.com/GemeenteUtrecht/zaakafhandelcomponent>`_
 
-
-.. |build-status| image:: http://jenkins.nlx.io/buildStatus/icon?job=zaakafhandelcomponent-stable
+.. |build-status| image:: https://travis-ci.org/GemeenteUtrecht/zaakafhandelcomponent.svg?branch=develop
     :alt: Build status
-    :target: http://jenkins.nlx.io/job/zaakafhandelcomponent-stable
+    :target: https://travis-ci.org/GemeenteUtrecht/zaakafhandelcomponent
 
 .. |requirements| image:: https://requires.io/github/GemeenteUtrecht/zaakafhandelcomponent/requirements.svg?branch=master
      :target: https://requires.io/github/GemeenteUtrecht/zaakafhandelcomponent/requirements/?branch=master
