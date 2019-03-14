@@ -4,16 +4,24 @@
 #
 #    pip-compile --no-index requirements/base.in
 #
+certifi==2019.3.9         # via requests
+chardet==3.0.4            # via requests
 click==7.0                # via pip-tools
 django-appconf==1.0.3     # via django-axes
 django-axes==4.5.4
 django-choices==1.6.2
 django-ipware==2.1.0      # via django-axes
 django==2.1.7
+gemma-zds-client==0.9.3
+idna==2.8                 # via requests
 pip-tools==3.5.0
 psycopg2==2.7.7
+pyjwt==1.7.1              # via gemma-zds-client
 python-dotenv==0.10.1
 pytz==2018.9
+pyyaml==3.13              # via gemma-zds-client
 raven==6.10.0
+requests==2.21.0          # via gemma-zds-client
 six==1.12.0               # via django-appconf, pip-tools
+urllib3==1.24.1           # via requests
 uwsgi==2.0.18

@@ -5,6 +5,9 @@ pytz
 raven
 uwsgi
 
+# zgw-integration
+gemma-zds-client
+
 Django
 django-axes
 django-choices
