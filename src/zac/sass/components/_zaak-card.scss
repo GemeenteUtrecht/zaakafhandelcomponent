@@ -1,0 +1,8 @@
+.zaak-card {
+  padding: 0.5em;
+  border: solid 1px #DDDDDD;
+
+  & + .zaak-card {
+    margin-top: .5em;
+  }
+}

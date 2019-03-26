@@ -1,0 +1,48 @@
+{% extends "master.html" %}
+{% load i18n %}
+
+
+{% block content %}
+<article class="list">
+
+    <section class="list__filters">
+
+        <div class="filter">
+            <h1 class="filter__name">Zaaktypen</h1>
+            <ul class="filter__options filter__options--checkboxes">
+                {% for zaaktype in zaaktypes %}
+                    <li>
+                        <input id="zaaktype-{{ forloop.counter0 }}" type="checkbox"
+                               name="zaaktype" value="{{ zaaktype.url }}" checked>
+                        <label for="zaaktype-{{ forloop.counter0 }}">
+                            {{ zaaktype.omschrijving }}
+                        </label>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </section>
+
+    <section class="list__results">
+        {% for zaak in zaken %}
+            <article class="zaak-card" data-url="{{ zaak.url }}">
+                <strong>{{ zaak.identificatie }}</strong> - {{ zaak.omschrijving }}
+                <p>{{ zaak.toelichting }}</p>
+                <p>
+                    Startdatum: {{ zaak.startdatum }}
+                    <br>
+                    Geplande einddatum: {{ zaak.einddatumGepland }}
+                </p>
+            </article>
+        {% endfor %}
+    </section>
+
+    <!--
+    <section class="list__details">
+        Details
+    </section>
+    -->
+
+</article>
+{% endblock content %}

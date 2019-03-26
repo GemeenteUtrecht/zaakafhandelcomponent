@@ -29,12 +29,12 @@ class Service(models.Model):
             self.api_root = f"{self.api_root}/"
         super().save(*args, **kwargs)
 
-    def build_client(self) -> Client:
+    def build_client(self, **claims) -> Client:
         """
         Build an API client from the service configuration.
         """
         _uuid = uuid.uuid4()
         dummy_detail_url = f"{self.api_root}dummy/{_uuid}"
         client = Client.from_url(dummy_detail_url)
-        client.auth = ClientAuth(client_id=self.client_id, secret=self.secret)
+        client.auth = ClientAuth(client_id=self.client_id, secret=self.secret, **claims)
         return client
