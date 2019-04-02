@@ -1,30 +1,31 @@
 from django.core.cache import cache
 from django.shortcuts import redirect
 from django.views import View
-from django.views.generic import TemplateView
 
+from .base_views import BaseListView
 from .forms import ZakenFilterForm
 from .services import get_zaaktypes, get_zaken
 
 
-class Index(TemplateView):
+class Index(BaseListView):
     """
     Display the landing screen.
     """
     template_name = 'core/index.html'
+    context_object_name = 'zaken'
+    filter_form_class = ZakenFilterForm
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_object_list(self):
+        filter_form = self.get_filter_form()
+        filters = {}
+        if filter_form.is_valid():
+            filters['zaaktypes'] = filter_form.cleaned_data['zaaktypen']
+        return get_zaken(**filters)
 
-        context['filter_form'] = ZakenFilterForm(
-            data=self.request.GET if self.request.GET else None,
-            initial={
-                'zaaktypen': [zt.id for zt in get_zaaktypes()],
-            }
-        )
-
-        context['zaken'] = get_zaken()
-        return context
+    def get_filter_form_initial(self):
+        return {
+            'zaaktypen': [zt.id for zt in get_zaaktypes()],
+        }
 
 
 class FlushCacheView(View):

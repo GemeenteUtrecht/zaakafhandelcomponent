@@ -65,7 +65,7 @@ def get_zaaktypes() -> List[ZaakType]:
     return [_get_zaaktype(raw) for raw in zaaktypes_raw]
 
 
-def get_zaken(zaaktypes=None) -> list:
+def get_zaken(zaaktypes: List[str] = None) -> list:
     """
     Fetch all zaken from the ZRCs.
     """
