@@ -9,6 +9,10 @@
 
         <div class="filter">
             <h1 class="filter__name">Zaaktypen</h1>
+
+            {{ filter_form.as_p }}
+
+{% comment %}
             <ul class="filter__options filter__options--checkboxes">
                 {% for zaaktype in zaaktypes %}
                     <li>
@@ -20,6 +24,7 @@
                     </li>
                 {% endfor %}
             </ul>
+{% endcomment %}
         </div>
 
     </section>
