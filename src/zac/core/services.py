@@ -23,6 +23,13 @@ class ZaakType:
     omschrijving_generiek: str
     vertrouwelijkheidaanduiding: str
 
+    @property
+    def id(self):
+        """
+        Because of the usage of UUID4, we can rely on the UUID as identifier.
+        """
+        return self.url.split('/')[-1]
+
 
 def _get_zaaktypes() -> List[Dict]:
     """
@@ -62,8 +69,10 @@ def get_zaken(zaaktypes=None) -> list:
     """
     Fetch all zaken from the ZRCs.
     """
+    _zaaktypes = get_zaaktypes()
+
     if zaaktypes is None:
-        zaaktypes = [zt.url for zt in get_zaaktypes()]
+        zaaktypes = [zt.id for zt in get_zaaktypes()]
 
     zt_key = ','.join(sorted(zaaktypes))
     cache_key = hashlib.md5(f"zaken.{zt_key}".encode('ascii')).hexdigest()
@@ -75,7 +84,7 @@ def get_zaken(zaaktypes=None) -> list:
 
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
-        'zaaktypes': zaaktypes,
+        'zaaktypes': [zt.url for zt in _zaaktypes if zt.id in zaaktypes],
     }
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
 

@@ -3,29 +3,24 @@
 
 
 {% block content %}
+<form action="{% url 'core:flush-cache' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">{% trans "Flush cache" %}</button>
+</form>
+
 <article class="list">
 
     <section class="list__filters">
 
-        <div class="filter">
+        <form class="filter" action="." method="get">
             <h1 class="filter__name">Zaaktypen</h1>
 
             {{ filter_form.as_p }}
 
-{% comment %}
-            <ul class="filter__options filter__options--checkboxes">
-                {% for zaaktype in zaaktypes %}
-                    <li>
-                        <input id="zaaktype-{{ forloop.counter0 }}" type="checkbox"
-                               name="zaaktype" value="{{ zaaktype.url }}" checked>
-                        <label for="zaaktype-{{ forloop.counter0 }}">
-                            {{ zaaktype.omschrijving }}
-                        </label>
-                    </li>
-                {% endfor %}
-            </ul>
-{% endcomment %}
-        </div>
+            <div>
+                <button type="submit">{% trans "Filter" %}</button>
+            </div>
+        </form>
 
     </section>
 

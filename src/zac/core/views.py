@@ -1,3 +1,6 @@
+from django.core.cache import cache
+from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import TemplateView
 
 from .forms import ZakenFilterForm
@@ -16,9 +19,17 @@ class Index(TemplateView):
         context['filter_form'] = ZakenFilterForm(
             data=self.request.GET if self.request.GET else None,
             initial={
-                'zaaktypen': [zt.url for zt in get_zaaktypes()],
+                'zaaktypen': [zt.id for zt in get_zaaktypes()],
             }
         )
 
         context['zaken'] = get_zaken()
         return context
+
+
+class FlushCacheView(View):
+
+    def post(self, request, *args, **kwargs):
+        referer = request.META['HTTP_REFERER']
+        cache.clear()
+        return redirect(referer)
