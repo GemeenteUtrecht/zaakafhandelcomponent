@@ -1,34 +1,17 @@
 import hashlib
 import logging
-from dataclasses import dataclass
 from typing import Dict, List
 
 from django.core.cache import cache
 
+from zgw.models import ZaakType
+
 from zac.config.constants import APITypes
 from zac.config.models import Service
-from zac.utils.camel_case import underscoreize
 
 logger = logging.getLogger(__name__)
 
 CATALOGUS = '28487d3f-6a1b-489c-b03d-c75ac6693e72'
-
-
-@dataclass
-class ZaakType:
-    url: str
-    catalogus: str
-    identificatie: int
-    omschrijving: str
-    omschrijving_generiek: str
-    vertrouwelijkheidaanduiding: str
-
-    @property
-    def id(self):
-        """
-        Because of the usage of UUID4, we can rely on the UUID as identifier.
-        """
-        return self.url.split('/')[-1]
 
 
 def _get_zaaktypes() -> List[Dict]:
@@ -55,14 +38,7 @@ def _get_zaaktypes() -> List[Dict]:
 
 def get_zaaktypes() -> List[ZaakType]:
     zaaktypes_raw = _get_zaaktypes()
-    known_keys = ZaakType.__annotations__.keys()
-
-    def _get_zaaktype(raw):
-        kwargs = underscoreize(raw)
-        init_kwargs = {key: value for key, value in kwargs.items() if key in known_keys}
-        return ZaakType(**init_kwargs)
-
-    return [_get_zaaktype(raw) for raw in zaaktypes_raw]
+    return [ZaakType.from_raw(raw) for raw in zaaktypes_raw]
 
 
 def get_zaken(zaaktypes: List[str] = None) -> list:
