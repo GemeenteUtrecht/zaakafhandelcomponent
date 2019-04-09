@@ -1,0 +1,10 @@
+.buttonforms
+{
+	margin: 2em 0 3em;
+
+	.actionbutton a
+	{
+		@extend .cta;
+	}
+}
+

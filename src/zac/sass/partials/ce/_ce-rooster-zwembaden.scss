@@ -1,0 +1,86 @@
+//  Specifieke CSS voor htmlblok van zwembaden
+//  Op ID selectief gemaakt om conflicten met andere delen van de site te voorkomen
+#pool-schedule
+{
+	h3, h4
+	{
+		margin: 0;
+		font-size: 0.9em;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+	h3
+	{
+		float: left;
+		padding: 0.5em 0.9em 0;
+		letter-spacing: 0.08em;
+	}
+	h4
+	{
+		margin: 1em 0 0.1em;
+		font-size: 1em;
+	}
+	p
+	{
+		margin-bottom: 0.1em;
+	}
+	
+	&.scripted
+	{
+		//min-height: 20em;
+		position: relative;
+		margin-bottom: 0.5em;
+
+		div
+		{
+			visibility: hidden;
+		}
+
+		.highlighted
+		{
+			height: 2em;
+			padding: 0.35em 0.8em 0;
+			background: $lichtgrijs;
+			font-size: 1em;
+			color: $zwart;
+			text-decoration: none;
+			
+			+ div
+			{
+				visibility: visible;
+			}
+		}
+
+		
+		div
+		{
+			width: 100%;
+			position: absolute;
+			top: 2em;
+			left: 0;
+			clear: left;
+			border: 2px solid $lichtgrijs;
+			padding: 0 0.8em 0.6em;
+		}
+
+		h3
+		{
+			color: $donkerblauw;
+			cursor: pointer;
+
+			&:hover,
+			&:focus
+			{
+				text-decoration: underline;				
+			}
+			
+			&.highlighted
+			{
+				color: $zwart;
+				font-weight: bold;
+				text-decoration: none;
+				cursor: default;
+			}
+		}
+	}
+}

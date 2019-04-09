@@ -1,0 +1,188 @@
+.bodycopy .gadget_alfabet
+{
+	li
+	{
+		display: block;
+		float: left;
+		margin: 0 0.55em 0.55em 0;
+		padding-left: 0;
+		background-image: none;
+	}
+	
+	a
+	{
+		@extend .upper;
+
+		display: block;
+		width: 2.6em;
+		padding: 0.5em 0 0.55em;
+		border: 2px solid $rood;
+		background-color: $rood;
+		color: $wit;
+		text-decoration: none;
+		text-align: center;
+		cursor: pointer;
+		
+		&:hover
+		{
+			background-color: $lichtrood;
+			border-color: $lichtrood;
+		}
+
+		&[aria-selected="true"]
+		{
+			border-color: $geel;
+			background-color: $wit;
+			color: $zwart;
+			cursor: default;
+		}
+	}
+
+	.character_na a,
+	.character_na a:hover
+	{
+		border-color: $wit;
+		background-color: $wit;
+		color: $grijs;
+		cursor: default;
+		
+	}
+}
+
+
+
+#productsAlphabet
+{
+	margin: 0 0 4em;
+	
+	li
+	{
+		padding-left: 0;
+		background-image: none;
+	}	
+
+	div
+	{
+		&[aria-hidden="true"]
+		{
+			@include assistive;
+		}
+	}
+
+	section
+	{
+		border: none;
+	}
+
+
+	.js-tablist
+	{
+		@extend .gadget_alfabet;
+		
+		margin: 2em 0;
+		
+		&:after
+		{
+			@include floatclear;
+		}
+	}
+
+	.js-tabcontent
+	{
+		h2
+		{
+			display: none;
+		}
+		
+		li
+		{
+			margin: 0;
+			padding: 0.5em 0.7em 0.6em;
+			
+			&:nth-child(2n)
+			{
+				background-color: $lichtgrijs;
+			}
+		}
+		
+		img
+		{
+			margin-left: .5em;
+			height: 1em;
+			width: auto;
+			vertical-align: middle;
+		}
+	}
+}
+
+#topicsTable
+{
+	caption
+	{
+		@include assistive;
+	}
+}
+
+#products
+{
+	thead
+	{
+		@include assistive;
+	}
+	
+	tr
+	{
+		td
+		{
+			padding: 0.5em 0.7em 0.6em;
+			border-bottom: 0;
+		}
+
+		&:nth-child(2n+1) td
+		{
+			background-color: $lichtgrijs;
+		}
+
+		img
+		{
+			margin-left: .5em;
+			height: 1em;
+			width: auto;
+			vertical-align: middle;
+		}
+	}
+}
+
+#products_filter
+{
+	margin: 2em 0;
+	
+	+ #products
+	{
+		margin-top: -1em;
+	}
+}
+
+.dataTables_filter
+{
+	margin: 2em 0;
+	
+	+ .dataTable
+	{
+		margin-top: -1em;
+	}
+}
+
+#products_filter,
+.dataTables_filter
+{
+	label
+	{
+		@extend .upper;
+	}
+	input
+	{
+		margin-left: 0.5em;
+		border-bottom-width: 1px;
+	}
+}

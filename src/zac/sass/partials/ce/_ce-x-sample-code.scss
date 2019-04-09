@@ -1,0 +1,43 @@
+//  TEST CE PARTIAL
+// 
+// tweakpoint-1 : 35em;
+// tweakpoint-2 : 40em;
+// tweakpoint-3 : 50em;
+// tweakpoint-4 : 60em;
+// tweakpoint-5 : 70em;
+// tweakpoint-6 : 80em;
+
+.your-class
+{
+	@include tweakpoint('min-width', 35em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 40em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 50em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 60em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 70em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 80em)
+	{
+		//settings here for this min-width
+	}
+}
+
+
+@if ($render == ie)
+{
+	// IE specifieke code
+
+}

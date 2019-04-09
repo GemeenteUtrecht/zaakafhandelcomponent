@@ -1,0 +1,62 @@
+//  PARTIAL - TEMPLATE ELEMENT
+//
+//  Reply to page
+
+.csc-linkToTop
+{
+	clear: both;
+	position: relative;
+	margin: 4em 1.2em 0 0;
+	
+  .bodycopy &
+  {
+	  max-width: 48em;
+	  @include tweakpoint('min-width', 60em) { max-width: none; }
+	  margin: 4em 0 0;
+	  padding-bottom: 1em;
+  }
+
+  a
+  {
+		display: block;
+		position: absolute;
+		z-index: 100;
+		right: 0;
+		bottom: 0.4em;
+		//border-bottom: 2px solid $wit;
+		color: $rood;		
+		font-weight: bold;
+		text-decoration: none;
+		
+		&:hover,
+		&:focus
+		{
+			// border-color: $rood;
+			text-decoration: underline;
+		}
+		
+		&:after
+		{
+			content: "";
+			display: block;
+			width: 1.2em;
+			height: 1.2em;
+			position: absolute;
+			right: 0;
+			top: -1.5em;
+			background: url($pijltjerood) 0 .25em no-repeat;
+			-webkit-transform: rotateZ(-90deg);
+			transform: rotateZ(-90deg);
+		}
+  }
+}
+
+
+// Use MS filter to rotate the arrow in IE8 and 9.
+@if ($render == ie)
+{
+	.csc-linkToTop a:after
+	{
+		display: none;
+	}
+}

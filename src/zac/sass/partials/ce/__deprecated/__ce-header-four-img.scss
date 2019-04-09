@@ -1,0 +1,61 @@
+// header-four-img header bouwblok met 4 afbeeldingen (gaat misschien weg)
+// header-four-img header bouwblok met 4 afbeeldingen (gaat misschien weg op langer termijn)
+// tweakpoint-1 : 35em;
+// tweakpoint-2 : 40em;
+// tweakpoint-3 : 50em;
+// tweakpoint-4 : 60em;
+// tweakpoint-5 : 70em;
+// tweakpoint-6 : 80em;
+
+
+.headerTitle4Images{
+    width:42.750em;
+    height:100%;
+    display:table;
+    text-align:left;
+    margin:0 0 0.750em 0;
+	 
+	 h2{
+	    font:normal normal bold 1.455em/170% Verdana, "DejaVu Sans", sans-serif;
+	    padding: 0.938em 0 0.938em 0.938em;
+	    //padding:15px 0 15px 25px;
+	    margin:0;
+	}
+
+	img{
+	    border:none;
+	    float: left;
+	}
+
+	@include tweakpoint('min-width', 35em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 40em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 50em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 60em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 70em)
+	{
+		//settings here for this min-width
+	}
+	@include tweakpoint('min-width', 80em)
+	{
+		//settings here for this min-width
+	}
+}
+
+
+@if ($render == ie)
+{
+	// IE specifieke code
+
+}

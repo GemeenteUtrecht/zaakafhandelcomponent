@@ -1,0 +1,54 @@
+.tx-timtabsociable-pi1
+{
+	position: relative;  // Set position to relative for z-index
+	z-index: 10;         // Raise social buttons above weblog pagination (photoblog)
+	margin: 3em 0 0;
+	
+	span
+	{
+		display: block;
+		float: right;
+		margin-left: 1.2em;
+		
+		&.share-linkedin
+		{
+			margin-left: 0;
+		}
+		
+		@include tweakpoint('min-width',40em)
+		{
+			margin-left: 0.6em;
+		}		
+		@include tweakpoint('min-width',50em)
+		{
+			margin-left: 1.2em;
+		}
+	}
+	a
+	{
+		display: block;
+		width: 2.4em;
+		height: 2.4em;
+		background-repeat: no-repeat;
+		background-size: 2.4em;
+		//text-indent: -100em;
+	}
+	/*
+	.share-twitter a
+	{
+		background-image: url($icoon-social-twitter);
+	}
+	.share-linkedin a
+	{
+		background-image: url($icoon-social-linkedin);
+	}
+	.share-facebook a
+	{
+		background-image: url($icoon-social-facebook);
+	}
+	.share-google-plus a
+	{
+		background-image: url($icoon-social-google-plus);
+	}
+	*/
+}

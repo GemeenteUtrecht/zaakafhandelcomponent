@@ -1,0 +1,65 @@
+.breakout
+{	
+	.kader
+	{
+		//transition: background-color 1s ease-in;
+		
+		h2, p, li, li > a
+		{
+			color: inherit;
+		}
+
+		@include tweakpoint('min-width',60em)
+		{
+			width: 35%;
+			right: 2.4em;
+			margin: 0;
+		}
+	}
+	
+	.kader-links
+	{
+		right: auto;		
+		@include tweakpoint('min-width',35em)
+		{
+			left: 0;
+			padding-left: 3em;
+		}
+		@include tweakpoint('min-width',60em)
+		{
+			left: 4em;
+			padding-left: 1.2em;
+		}
+	}
+}
+
+article .bodycopy .met-balk .breakout-content
+{
+	position: static;
+
+	> div
+	{
+		position: relative;
+	}
+		
+	&:before
+	{
+		content: "";
+		display: block;
+		width: 0.8em;
+		height: 21.2em;
+		position: absolute;
+		top: 0;
+		left: 0;
+		
+		@include tweakpoint('min-width',35em)
+		{
+			left: 1em;
+		}
+		
+		z-index: 100;
+		background: url($huisstijlbalk) no-repeat;
+	}
+	
+
+}

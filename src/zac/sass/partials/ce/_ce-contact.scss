@@ -1,0 +1,62 @@
+.page-contact
+{
+	margin: 4em 0 3em;
+	padding: 0 0 0.8em;
+	background-color: $ijsblauw;
+	overflow: hidden;
+
+	@include tweakpoint('min-width',60em)
+	{
+		background: $ijsblauw url($footer) bottom left 75% no-repeat;
+		background-size: 300%;
+	}
+
+	h2
+	{
+		padding: 0 1.2em;
+	}
+	
+	.upper span
+	{
+		font-weight: normal;
+	}
+	
+	.h4
+	{
+		font-weight: normal;
+	}
+	
+	p
+	{
+		margin-bottom: 0.5em;
+	}
+
+	> div
+	{
+		padding: 0 1.2em;
+		
+		@include tweakpoint('min-width',35em)
+		{
+			float: left;
+			width: 50%;
+		}
+	}
+	
+	a:not(.cta)
+	{
+		color: $zwart;
+		
+		&:hover,
+		&:focus
+		{
+			color: $zwart;		
+		}
+		
+		&.arrow
+		{
+			background-image: url($pijltjezwart);
+		}
+	}
+	
+	
+}

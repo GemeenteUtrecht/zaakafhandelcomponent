@@ -1,0 +1,71 @@
+/*  TEMPLATE ELEMENTS
+ *  Include template subcomponents, like paginator etcetera
+ *
+ */
+@import "te/te-readspeaker";      // Readspeaker styling for in-page contextual popup and expanded menubar module
+@import "te/te-paginator";        // For search and news
+@import "te/te-searchresults";    // For solr search results page and search form, excluding main search in header (!)
+@import "te/te-cookiebox";        // Styling for cookie bar
+@import "te/te-page-reply";       // Reply to a page
+@import "te/te-back-to-top";      // Back to top link on content pages
+@import "te/te-autocomplete";     // Autocomplete for searchbox
+@import "te/te-tx-socialbuttons"; // Social sharing buttons
+@import "te/te-shadowbox";        // Shadowbox lightbox implementatie
+@import "te/te-gemeenteraad";     // Special treatment
+@import "te/te-news";             // Nieuwsberichten
+@import "te/te-extra-navigation"; // Navigation for extra level: below main nav template, but for pages with navigation role
+@import "te/te-metro-navigation"; // Navigation alternative: metroline style visualisation of breadcrumb trail and further options
+@import "te/te-settings"; // Navigation settings buttons in header
+
+
+
+
+
+
+
+
+/*  CONTENT ELEMENTS
+ *  Include typo 3 building block styling 
+ *
+ */
+@import "ce/ce-rte-stijlen";              // Algemene blokstijlen beschikbaar in de teksteditor
+@import "ce/ce-slider-small";
+@import "ce/ce-faq";
+@import "ce/ce-images";
+@import "ce/ce-videos";
+@import "ce/ce-toptasks";
+@import "ce/ce-pagerating";
+@import "ce/ce-keuzeboom-form";           // Powermail form for choices tree structure.
+@import "ce/ce-weblog-fotodagboek";       // For the win!
+@import "ce/ce-layout-algemeen";          // Algemene vormgeving en witruimten
+@import "ce/ce-layout-2-kolommen";        // Kolomsindeling bouwblok
+@import "ce/ce-banners";                  // Banners op navigatiepagina
+@import "ce/ce-rooster-zwembaden";        // Rooster van activiteiten op zwembad landingspagina.
+@import "ce/ce-tx-powermail";             // Formulierstyling
+@import "ce/ce-tx-jkpoll";                // Poll voor onder andere gemeenteraad landing.
+@import "ce/ce-spotlight";                // Vormgeving voor uitgelichtblokken met of zonder foto, grote sfeerbeelden
+@import "ce/ce-contact";                  // Contactinfo en bezoekinfo binnen paginacontext
+@import "ce/ce-stappen-navigatie";        // Stappennavigatie voor toolbox e.d.
+
+
+
+/*  BREAKOUT CONTENT ELEMENTS
+ *  Include typo 3 building block styling for breakout
+ *
+ */
+@import "ce/ce-breakout";
+@import "ce/ce-breakout-spotlight";       // Kleurensets voor full bleed foto met kader
+
+
+/*  NAVIGATION CONTENT ELEMENTS
+ *  Include typo 3 building block styling for navigaton content blocks
+ *
+ */
+@import "ce/ce-navigatie-bezoekinfo";     // Bezoekinformatie en openingstijden (navigatie++).
+
+
+
+// Deprecated content elements to be phased out...
+@import "ce/ce-secondary-content";        // Umbrella formatting for blocks in secondary content position
+@import "ce/ce-right-links-list";         // List of links cf. linklijst
+@import "ce/ce-right-link-arrow";         // Pijltje met link

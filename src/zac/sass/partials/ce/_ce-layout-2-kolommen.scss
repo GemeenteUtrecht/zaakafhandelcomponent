@@ -1,0 +1,30 @@
+// TWEEKOLOMS BOUWBLOK
+// div.twocolumngroup
+//   div.twocolumngroup-col1
+//   div.twocolumngroup-col2
+//
+// Dit blok is feitelijk een kopie/versie van het gridsysteem met twee gelijke gridkolommen.
+//
+.twocolumngroup
+{
+	@extend .grid-columns;
+	margin: 0 -1.2em;
+}
+.twocolumngroup-col1,
+.twocolumngroup-col2
+{
+	@extend .grid-column-1of2;
+	
+	> div
+	{
+		@extend .grid-wrap;
+	}
+}
+.twocolumngroup-col1
+{
+	@extend .grid-column-left;
+}
+.twocolumngroup-col2
+{
+	@extend .grid-column-right;
+}

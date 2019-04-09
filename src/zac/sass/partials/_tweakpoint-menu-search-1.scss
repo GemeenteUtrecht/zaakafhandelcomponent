@@ -1,0 +1,247 @@
+//  TWEAKPOINT FOR MENU AND SEARCH OVERLAYS
+//
+//  Alles voor touchversie van menu en zoekveld
+//
+
+#readspeaker_button1,
+.skiplinks a span,
+.returnlink span
+{
+  @include assistive;	
+}
+
+
+//  SKIPLINKS DUBBELEN ALS HAMBURGER EN ZOEK BUTTONS
+//
+.skiplinks
+{
+	a
+	{
+		display: block;
+		width: 2.5em;
+		height: 2.5em;
+		position: absolute;
+		right: 2.5em;
+		top: 1.5em;
+		
+		img
+		{
+			display: block;
+			width: auto;
+			height: auto;
+			padding: 0.5em;
+			// transition: transform 0.3s ease-out 0s;
+		}
+		
+		&:hover img
+		{
+			// transform: rotateZ(15deg);
+			// transform: scale(1.1);
+		}
+
+		&:focus,
+		&:active
+		{
+			outline: 1px dotted $rood;
+		}
+	}
+	
+	a[href^='#search']
+	{
+		top: 4em;		
+	}	
+}
+
+
+//  MENU AND SEARCH
+//
+.touch-js
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 99999;
+	padding: 0 3em 0 2em;
+	background-color: $rood;
+	
+	.container
+	{
+  	margin-right: -1em;
+	}
+	
+	//  INSIGNIA OF CITY
+	&:before
+	{
+		content: " ";
+		background: transparent url($wapenutrechtwit) no-repeat;
+		background-size: contain;
+		display: block;
+		width: 50%;
+		height: 6em;
+		min-width: 8em;
+		max-width: 10em;
+		position: relative;
+		left: 0;
+		top: 1.25em;		
+	}
+
+	// MENU LAYOUT
+	ul
+	{
+		text-align: center;
+		margin-top: 10vw;
+	}
+	
+	li
+	{
+  	margin-bottom: 1em;
+
+		a
+		{
+			font-size: 1.315em;
+		}
+	}
+	
+	a
+	{
+		text-decoration: none;
+		color: $wit;
+		
+		&:hover
+		{
+			text-decoration: underline;
+			/* I know, eigenlijk overbodig */				
+		}
+	}
+
+	// LINK TO ENGLISH SITE (HOME ONLY!)
+	.english
+	{
+		margin-top: 3em;
+		text-align: center;	
+		
+		a
+		{
+			padding: .5em 0 .5em 1.6em;
+			background: url($icoonwereldwit) left top 0.5em / 1.2em no-repeat;
+			font-size: 0.9em;
+		}
+	}
+	
+	//  RETURN LINK DUBBELT ALS SLUITKNOP
+	//
+	.returnlink
+	{
+		display: block;
+		width: 2.5em;
+		height: 2.5em;
+		position: absolute;
+		top: 1.5em;
+		right: 2.5em;
+	
+		img
+		{
+			display: block;
+			width: auto;
+			height: auto;
+			padding: 0.5em;
+			// transition: transform 0.3s ease-out 0s;
+		}		
+
+		&:focus,
+		&:active
+		{
+			outline: 1px dotted $wit;
+		}
+	}
+	&#search .returnlink
+	{
+		top: 4em;
+	}
+
+	// SEARCH
+	form
+	{
+		width: 100%;
+		margin: 2em 0 0;
+		padding: 1em 0 1em 1em;
+	}
+	fieldset
+	{
+		position: relative;
+		border: 0;
+		margin: 0;
+	}
+	label
+	{
+		@include assistive;
+	}
+	input
+	{
+		width: 100%;
+		min-width: 5em;
+		max-width: none;
+		border: 0;
+		line-height: normal;
+		
+		&:hover,
+		&:focus
+		{
+			border: 0;
+		}
+	}
+	input[type='text']
+	{
+		padding: .65em 8em .65em 2em;
+		background: $wit url($icoonzoekrood) .5em 50% no-repeat;
+		background-size: 1em;
+		color: $asfalt;
+	}
+	input[type='submit']
+	{
+		-webkit-appearance: none; // Fix iOS styling of submit button.
+		display: block;
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: auto;
+		margin: 0;
+		padding: .75em 1.5em;
+		background: $asfalt;
+		color: $wit;
+		text-transform: uppercase;
+		letter-spacing: .05em;
+		font-weight: bold;
+		font-size: .9em;
+	}
+}
+
+
+//  ZET SCROLLEN UIT
+//
+.fixed
+{
+	position: fixed;
+}
+
+//  VERBERG OVERLAYS
+//
+#menu.hidden,
+#search.hidden
+{
+	width: 1px;
+	height: 1px;
+	clip: rect(0, 0, 0, 0);
+	overflow: hidden;
+}
+#menu:not(.hidden),
+#search:not(.hidden)
+{
+	width: auto;
+	height: auto;
+	clip: auto;
+	overflow: auto;
+}
+

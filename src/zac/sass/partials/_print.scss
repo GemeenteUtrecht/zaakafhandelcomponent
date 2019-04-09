@@ -1,0 +1,65 @@
+/*   PRINT STYLESHEET
+ *   
+ *
+ */
+
+
+/*  SET UP PAGE
+ *
+ */
+body
+{
+	padding: 0 3cm 0 0;
+}
+
+
+/*  ELEMENTS TO HIDE
+ *
+ */
+.skiplinks,
+.rsbtn_colorskin,
+.crumb,
+.subnav,
+.bannerset,
+.bannerstrip,
+.related,
+.reactie,
+.csc-linkToTop,
+nav#menu,
+#search,
+footer .arrow
+{
+	display: none !important;
+}
+
+article
+{
+	ul li
+	{
+		list-style: disc outside;
+		background-image: none !important;
+	}
+}
+
+
+/*  FOOTER
+ *
+ */
+footer
+{
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+	
+	h2,
+	p,
+	li,
+	a
+	{
+		color: $zwart !important;
+	}
+
+	a
+	{
+		text-decoration: none !important;		
+	}
+}

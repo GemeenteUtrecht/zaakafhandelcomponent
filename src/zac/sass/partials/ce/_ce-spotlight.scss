@@ -1,0 +1,100 @@
+//  BLOCK LEVEL
+//  STYLE @spotlight
+//
+//  
+//  - Small block to highlight one topic with some links in a separate box
+//  - Responsive image above contentblock
+//  - Extend with vibrant color pick from image
+
+
+.spotlight
+{
+	margin: 1.111em 0 1.889em;
+
+	&:first-child
+	{
+		margin-top: 0;
+	}
+	
+	> .layout-body
+	{
+		background-color: $ijsblauw; // Basiskleur is ijsblauw.
+	}
+
+	&.vanille
+	{
+		> .layout-body
+		{
+			background-color: $vanillegeel; // Lichtgeel voor attentie.
+		}
+	}
+	&.lichtgrijs
+	{
+		> .layout-body
+		{
+			background-color: $lichtgrijs; // Lichtgrijs voor saaie meldingen.
+		}
+	}
+	
+	.image-beside
+	{
+		.image-wrap,
+		.text
+		{
+			width: 100%;
+			float: none;
+			
+		}
+		.image-wrap
+		{			
+			figure,
+			img
+			{
+				display: block;			
+				margin: 0;
+				padding: 0;
+			}
+		}
+	}
+
+	.text.layout-body
+	{
+		padding: 1.2em 1.2em 0.6em;
+
+		:first-child
+		{
+			margin-top: 0;
+		}
+	}
+	
+	.arrow
+	{
+		background-image: url($pijltjezwart);
+		color: $zwart;
+	}
+
+
+	&.spotlight-intext-left
+	{
+		@include tweakpoint('min-width',35em)
+		{
+			width: 50%;
+			float: left;
+			margin-top: 0;
+			margin-right: 1.2em;
+			padding-right: 1.2em;
+		}
+	}
+
+	&.spotlight-intext-right
+	{
+		@include tweakpoint('min-width',35em)
+		{
+			width: 50%;
+			float: right;
+			margin-top: 0;
+			margin-left: 1.2em;
+			padding-left: 1.2em;
+		}
+	}
+}

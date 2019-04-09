@@ -1,0 +1,36 @@
+//  General and specific Powermail form styling
+//
+.tx-powermail
+{
+	.simpleform &
+	{
+		margin-top: 0;
+		
+		fieldset
+		{
+			border: 0;
+			padding: 0 1.2em 1.2em;
+			background-color: $lichtgrijs;
+			
+			input[type="email"]
+			{
+				//max-width: none;
+			}
+			
+			input[type="submit"]
+			{
+				margin-top: 1.2em;
+			}
+		}
+		legend
+		{
+			@include assistive;
+		}
+		div
+		{
+			margin-bottom: 0;
+		}		
+	}
+
+	
+}

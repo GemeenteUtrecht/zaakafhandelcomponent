@@ -1,0 +1,52 @@
+//  RULES FOR ALL UP TO IE9
+
+/*  DISABLE RESPONSIVE MENU BUTTONS
+ *
+ */
+.hamburger,
+.magnifier
+{
+  @include assistive;
+}
+
+
+/*  SET FLOATS FOR MENU
+ *  AS IE <=9 DOESN'T SUPPORT FLEXBOX
+ *
+ */
+nav li
+{
+	display: block;
+	float: left;
+}
+
+#main,
+#search,
+.container
+{
+	width: 74em;
+	text-align: left;
+}
+#main,
+.page-wrap
+{
+	margin: 0 auto;
+	text-align: center;
+}
+
+nav li a
+{
+	padding : 1em 3em;
+}
+
+.skiplinks,
+.returnlink
+{
+	@include assistive;
+}
+.rsbtn_colorskin
+{
+	display: none !important;
+}
+
+	

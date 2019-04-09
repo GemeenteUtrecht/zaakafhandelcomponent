@@ -1,0 +1,62 @@
+//  BANNERS AT BOTTOM OF NAVIGATION (HBR++) PAGES
+//
+//
+.bannerstrip
+{
+	margin: 6em auto 2em;
+
+	&.with-3
+	{
+		> div:first-child div
+		{
+			@include tweakpoint('min-width',60em)
+			{
+				margin-left: 12.5%;
+			}
+		}
+	}
+	&.with-2
+	{
+		> div:first-child div
+		{
+			@include tweakpoint('min-width',60em)
+			{
+				margin-left: 25%;
+			}
+		}
+	}
+	&.with-1
+	{
+		> div:first-child div
+		{
+			@include tweakpoint('min-width',35em)
+			{
+				margin-left: 25%;
+			}
+			@include tweakpoint('min-width',60em)
+			{
+				margin-left: 37.5%;
+			}
+		}
+	}
+
+
+	&:after
+	{
+		@include floatclear;
+	}
+	
+	.banner
+	{
+		padding: 0 1.2em;
+		margin-bottom: 2em;
+		
+		@include tweakpoint('min-width',35em) { width: 50%; float: left; }
+		@include tweakpoint('min-width',60em) { width: 25%; }
+		
+		img
+		{
+			height: auto;
+		}
+	}
+}

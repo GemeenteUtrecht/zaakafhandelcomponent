@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="36px" height="32px" viewBox="-3.138 -2 36 32" enable-background="new -3.138 -2 36 32"
+	 xml:space="preserve">
+<defs>
+</defs>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="#ACACAA" d="M0.505,0C0.228,0,0,0.228,0,0.505v26.183
+	c0,0.278,0.228,0.505,0.505,0.505h30.024c0.278,0,0.506-0.227,0.506-0.505V0.505C31.035,0.228,30.808,0,30.529,0H0.505z
+	 M29.361,25.26c0,0.278-0.228,0.505-0.506,0.505H2.179c-0.277,0-0.505-0.227-0.505-0.505V5.755c0-0.278,0.228-0.505,0.505-0.505
+	h26.677c0.278,0,0.506,0.228,0.506,0.505V25.26z"/>
+<rect x="5.277" y="9.27" fill-rule="evenodd" clip-rule="evenodd" fill="#ACACAA" width="4.925" height="4.925"/>
+<rect x="13.404" y="9.27" fill-rule="evenodd" clip-rule="evenodd" fill="#ACACAA" width="4.924" height="4.925"/>
+<rect x="21.53" y="9.269" fill-rule="evenodd" clip-rule="evenodd" fill="#ACACAA" width="4.926" height="4.926"/>
+<rect x="5.277" y="17.627" fill-rule="evenodd" clip-rule="evenodd" fill="#ACACAA" width="4.925" height="4.926"/>
+<rect x="13.404" y="17.628" fill-rule="evenodd" clip-rule="evenodd" fill="#CE070D" width="4.925" height="4.924"/>
+</svg>

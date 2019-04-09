@@ -1,0 +1,46 @@
+.settings
+{
+    position: relative;  // Set position to relative for z-index
+    z-index: 10;         // Raise Images button
+    margin: 1.8em 0 0;
+    float: right;
+
+    p
+    {
+        img{
+
+        }
+
+        @include tweakpoint('min-width',40em)
+        {
+            margin-left: 0.6em;
+        }
+        @include tweakpoint('min-width',50em)
+        {
+            margin-left: 1.2em;
+        }
+    }
+
+
+    a
+    {
+        display: block;
+        width: 2.4em;
+        height: 2.4em;
+
+        :hover{
+             opacity: 0.5;
+        }
+        //text-indent: -100em;
+    }
+    .img-circular{
+        border: 2px solid $donkergrijs;
+        width: 60px;
+        height: 60px;
+        background-image: url("../images/png/earth-chan.png");
+        background-size: cover;
+        display: block;
+         border-radius: 50%;
+    }
+}
+

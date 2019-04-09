@@ -1,0 +1,153 @@
+.fd-file-form
+{
+	@include assistive;
+}
+.fd-zone
+{
+	.legend
+	{
+		width: 100%;
+		min-height: 6em;
+		@include tweakpoint('min-width',35em) { width: 60%; float: left; margin-right: 1.2em;}
+		border: 4px dotted $randgrijs;
+		padding: .6em;
+		background-image: url($icoondocumentdrop);
+		background-position: center center;
+		background-repeat: no-repeat;
+	}
+	&.over
+	{
+		.legend
+		{
+			background-color: $lichtgrijs;
+			background-size: 4em;
+		}
+	}
+	span.orsep
+	{
+		display: inline-block;
+		border-top: 2px solid $wit;
+		padding-top: .6em;
+		margin-right: 1.2em;
+	}
+	.choose-btn
+	{
+		display: inline-block;
+	}
+	.input-choose-btn
+	{
+		@extend button;
+		
+		fieldset & 
+		{
+			margin-top: 0;
+		}
+	}
+	
+	hr
+	{
+		display: none;
+	}
+	
+	.upload-counter
+	{
+		clear: left;
+	}
+	.screenreaderonly
+	{
+		@include assistive;
+	}
+	.upload_error
+	{
+		@extend p.error;
+	}
+	.note
+	{
+		clear: left;
+		margin-top: 1em;
+		font-size: 0.9em;
+	}	
+}
+
+.upload-counter
+{
+	@include assistive;
+}
+
+
+.fd-zone,
+.uploadedFiles
+{
+	ul
+	{
+		clear: left;
+		border-bottom: 4px solid $lichtgrijs;
+		padding-left: 0;
+
+		li
+		{
+			position: relative;
+			padding: .4em 4em .4em 0.6em;
+			background-image: none;
+			list-style-position: inside;
+						
+			&:nth-child(2n+1)
+			{
+				background: $lichtgrijs;
+			}
+		}
+	}
+
+	li:before { content: "1. "; font-weight: bold; display: inline; }
+	li + li:before { content: "2. "; }
+	li + li + li:before { content: "3. "; }
+	li + li + li + li:before { content: "4. "; }
+	li + li + li + li + li:before { content: "5. "; }
+	li + li + li + li + li + li:before { content: "6. "; }
+	li + li + li + li + li + li + li:before { content: "7. "; }
+	li + li + li + li + li + li + li + li:before { content: "8. "; }
+	li + li + li + li + li + li + li + li + li:before { content: "9. "; }
+	li + li + li + li + li + li + li + li + li + li:before { content: "10. "; }
+
+	.fd-filename:after
+	{
+		content: "\00D7";
+		display: block;
+		position: absolute;
+		right: .6em;
+		top: 0;
+		color: $rood;
+		font-size: 1.6em;
+		font-weight: bold;
+		cursor: pointer;
+	}	
+}
+
+.default_table .uploadedFiles
+{
+	margin: -0.5em 0;
+	
+	.highlight
+	{
+		display: none;
+	}
+	ul
+	{
+		margin-bottom: 0;
+		border-bottom: 0;	
+	}
+	li
+	{
+		padding-left: 0;
+		
+		&:nth-child(2n+1)
+		{
+			background: transparent;
+		}
+		
+		&:before
+		{
+			display: none;
+		}
+	}
+}

@@ -1,0 +1,54 @@
+/*Cookie box layout*/
+
+
+.cookie-wrap {
+	background-color: $midgrijs;
+  color: $asfalt;
+  position: relative;
+  
+  &:after
+  {
+    @include floatclear;
+  }
+  
+  @include tweakpoint('min-width',60em)
+  {
+    margin: 0 -2em;
+    padding: 0 2em;
+  }
+}
+
+.cookie-notice
+{
+	width: 100%;
+	max-width: 74em;
+	border-right: 1px solid $lichtgrijs;
+	border-left: 1px solid $lichtgrijs;
+	margin: 0 auto;
+	
+	padding: 0 2em;
+  @include tweakpoint('min-width',35em) { padding: 0 3em; }
+  @include tweakpoint('min-width',60em) { padding: 0 3em 0 4em; }
+
+
+	p
+	{
+		position: relative;
+		margin: 0;
+		padding: 0.6em 4em 0.8em 0;
+	}
+	
+	.close-button
+	{
+		position: absolute;
+		right: 0;
+		top: 0;
+		padding: 0.15em .2em 0;
+		//background-color: $donkergeel;
+		//color: $zwart;
+		color: $donkerblauw;
+		text-decoration: none;
+		font-size: 1.5em;
+		font-weight: bold;
+	}
+}

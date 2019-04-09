@@ -1,0 +1,39 @@
+.formstorage_buttons
+{
+	ul
+	{
+		margin-bottom: 2em;
+		li
+		{
+			margin: 0.5em 0;
+			background-image: none;
+			padding-left: 0;
+			
+			@include tweakpoint('min-width',35em) { float: left; margin-right: 3em; }
+			
+			a
+			{
+				padding-left: 2em;
+				background-position: left center;
+				background-repeat: no-repeat;
+				background-size: 1.2em;
+				text-decoration: none;
+				font-weight: bold;
+			}
+		}
+		
+		&:after
+		{
+			@include floatclear;
+		}
+	}
+}
+
+#formstoragebuttons_save
+{
+	background-image: url($icoonformopslaan);
+}
+#formstoragebuttons_load
+{
+	background-image: url($icoonformophalen);
+}

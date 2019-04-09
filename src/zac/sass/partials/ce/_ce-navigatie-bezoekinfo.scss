@@ -1,0 +1,88 @@
+//	BEZOEKINFORMATIE
+.visiting
+{
+	margin-bottom: 1.5em;
+	
+	.addresses
+	{
+		h3
+		{
+			font-size: 1em;
+			font-weight: bold;
+		}
+		.address
+		{
+			margin: 0;
+			border-top: 2px solid $wit;
+			position: relative;
+
+			&:last-child
+			{
+				border-bottom: 2px solid $wit;
+			}
+			
+			figcaption
+			{
+				width: 50%;
+				float: left;
+				position: relative;
+				font-size: 1em;
+				
+				&:after
+				{
+					position: absolute;
+					width: 0;
+					height: 0;
+					border-top: 20px solid transparent;
+					border-bottom: 20px solid transparent;
+					border-left: 20px solid $midgrijs;
+					content: "";
+					right: -1.6em;
+					left: auto;
+					/*Alleen kleine mobiele schermen*/
+					top: .5em;
+					z-index: 100;
+				}
+			}
+
+			img
+			{
+				display: block;
+				width: 50%;
+				max-width: 350px;
+				position: relative;
+				margin-bottom: 0;
+			}
+		}
+	}
+}
+
+.timetable
+{
+	margin-bottom: 1.5em;
+	
+	th,
+	td
+	{
+		display: table-cell;
+		padding: 0.25em 0.25em 0.25em 0;
+	}
+}
+
+.listing
+{
+	td:first-child
+	{
+		font-weight: bold;
+		width:10em;
+		border:none;
+	}
+	td:last-child
+	{
+		width:75em;
+		border:none;
+		text-align: left;
+			vertical-align: bottom;
+	}
+}
+

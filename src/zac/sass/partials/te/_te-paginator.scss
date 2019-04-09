@@ -1,0 +1,172 @@
+//  PAGINATORS
+//
+//	Search and news overview pages
+//
+//  35em
+//  40em
+//  50em
+//  60em
+//  70em
+//  80em
+
+
+%buttonsecstyle
+{
+	display: inline-block;
+	position: relative;
+	padding: .5em;
+	border: 2px solid $wit;
+	color: $donkerblauw;
+	letter-spacing: 0.04em;
+	font-size: 0.9em;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.tx-pagebrowse
+{
+	&:after
+	{
+		@include floatclear;
+	}
+
+	margin: 0;
+	
+	@include tweakpoint('min-width',60em) { margin-right: -50%; }
+	
+	li > ol
+	{
+		margin: 0 -0.5em 0 0;
+		padding: 0;
+	}
+	
+	li
+	{
+		display: block;
+		float: left;
+		margin: 0 .5em 0 0;
+
+		//@include tweakpoint('min-width',60em) { margin-right: 0.15em; }
+		@include tweakpoint('min-width',70em) { margin-right: 0.5em; }
+	}
+	
+	.bodycopy &
+	{
+		li
+		{
+			margin: 0 0.5em 0 0;
+			padding: 0;
+			background-image: none;
+		}
+	}
+}
+
+.tx-pagebrowse-page
+{	
+	a
+	{
+		@extend %buttonsecstyle;
+	}
+	
+	a:hover,
+	a:focus
+	{
+		background-color: $blauw;
+		border-color: $blauw;
+		color: $wit;
+	}
+	
+	span
+	{
+		color: $grijs;
+	}
+
+	@include tweakpoint('max-width', 49.9em)
+	{
+		@include assistive;
+	}	
+}
+
+.tx-pagebrowse-ellipsis
+{
+	span
+	{
+		@extend %buttonsecstyle;
+		color: $grijs;
+	}
+
+	@include tweakpoint('max-width', 34.9em)
+	{
+		@include assistive;
+	}	
+}
+
+
+
+.tx-pagebrowse-prev,
+.tx-pagebrowse-next
+{
+	// Styling voor alle viewports
+	a
+	{
+		@extend %buttonsecstyle;
+		padding: .5em 2em .5em 1em;
+		border-color: $donkerblauw;
+		text-transform: uppercase;
+		
+		&:after
+		{
+			content: url($pijltjeblauw);
+			position: absolute;
+			right: .75em;
+			top: .5em;
+		}
+		&:hover
+		{
+			background-color: $blauw;
+			border-color: $blauw;
+			color: $wit;
+		}
+		&:hover:after
+		{
+			content: url($pijltjewit);
+		}
+	}	
+}
+.tx-pagebrowse-prev
+{
+	a
+	{
+		padding: .5em 1em .5em 2em;
+		
+		&:after
+		{
+			transform: rotateZ(180deg);
+			right: auto;
+			left: .75em;
+			top: .35em;
+		}
+	}
+}
+
+.tx-pagebrowse-current
+{
+		@extend %buttonsecstyle;
+		border-color: $geel;
+		color: $zwart;
+		
+		div.bodycopy &
+		{
+			padding: .5em .5em;
+		}
+}
+
+.disabled
+{
+	@include assistive;
+}
+
+@if ($render == ie)
+{
+	// IE specifieke code
+}

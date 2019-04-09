@@ -1,0 +1,28 @@
+.embed-wrap
+{
+	display: block;
+	max-width: 100%;
+	height: 0;
+	position: relative;
+	overflow: hidden;
+	padding-bottom: 56.25%;
+
+	iframe,
+	object,
+	embed
+	{
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+}
+
+.herald.video
+{
+	background-color: $midgrijs;
+	
+	padding-top: 1px; // Force margin on content within herald to produce proper whitespace.
+	@include tweakpoint('min-width',60em) { padding-top: 0; }
+}

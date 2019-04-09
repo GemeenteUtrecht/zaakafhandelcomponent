@@ -1,0 +1,67 @@
+[class^="tx-jkpoll"]
+{
+	fieldset
+	{
+		margin: 0;
+		border-top: 0;
+	}
+	
+	ul
+	{
+		margin-bottom: 0;
+	}
+	
+	li
+	{
+		label
+		{
+			display: block;
+			position: relative;
+			margin: 0 0 0.5em;
+			padding: 0.25em 1em 0.5em 2em;
+		}
+		input[type="radio"]
+		{
+			position: absolute;
+			left: 0.4em;
+			top: 0.4em;
+		}
+	}
+	
+	input[type="submit"]
+	{
+		margin: 1em 0;
+	}
+	
+	.tx_jkpoll_result_bar
+	{
+		display: block;
+		width: 80%;
+		position: relative;
+		margin-top: 0.1em;
+		background: $lichtgrijs;
+		padding: 2px;
+		
+		span
+		{
+			display: block;
+			height: 0.8em;
+		}
+		
+		em
+		{
+			position: absolute;
+			left: 100%;
+			top: -0.1em;
+			margin-left: 0.4em;
+		}
+	}
+	
+	.tx_jkpoll_bar_red     { background-color: $rood; }
+	.tx_jkpoll_bar_blue    { background-color: $blauw; }
+	.tx_jkpoll_bar_yellow  { background-color: $geel; }
+	.tx_jkpoll_bar_green   { background-color: $groen; }
+	.tx_jkpoll_bar_purple  { background-color: $magenta; }
+
+
+}

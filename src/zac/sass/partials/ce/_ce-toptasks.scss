@@ -1,0 +1,170 @@
+//	TOPTAKEN
+//
+.toptaken,
+#toptaken
+{
+	&:after
+	{
+		@include floatclear;
+	}
+
+	ul
+	{
+		clear: left;
+		padding: 0 1.2em;
+	
+		li
+		{
+			margin-top: 0;
+			margin-bottom: .6em;
+			padding: 0;
+			background-image: none;
+			
+			@include tweakpoint('min-width',35em)
+			{
+				width: 32%;
+				float: left;
+				margin-right: 2%;
+			}
+	
+			@include tweakpoint('min-width',60em)
+			{
+				width: 19%;
+				float: left;
+				margin-right: 1.25%;
+			}
+	
+			&:nth-child(3n)
+			{
+				@include tweakpoint('min-width',35em) { margin-right: 0; }
+				@include tweakpoint('min-width',60em) { margin-right: 1.25%; }
+			}
+			&:nth-child(5n)
+			{
+				@include tweakpoint('min-width',60em) { margin-right: 0; }
+			}		
+		}
+	}
+	
+	.home &
+	{
+		&:after
+		{
+			@include tweakpoint('min-width',60em) { display: none; }
+		}
+
+		ul
+		{
+			@include tweakpoint('min-width',60em)
+			{
+				width: 66.67%;
+				float: left;
+			}
+		}
+	}
+
+	.home &,
+	.bodycopy &
+	{
+		ul li
+		{
+			background-image: none; // Just to be sure, overrule regular list styling
+			padding-left: 0;
+			
+			@include tweakpoint('min-width',35em)
+			{
+				width: 49%;
+			}
+
+			@include tweakpoint('min-width',60em)
+			{
+				width: 32%;
+				float: left;
+				margin-right: 2%;
+				margin-bottom: .8em;				
+			}
+
+			@include tweakpoint('min-width',60em) { margin-right: 2%; }
+
+			&:nth-child(2n)
+			{
+				@include tweakpoint('min-width',35em) { margin-right: 0; }
+				@include tweakpoint('min-width',60em) { margin-right: 2%; }
+			}
+			&:nth-child(3n)
+			{
+				@include tweakpoint('min-width',60em) { margin-right: 0; }
+			}
+			&:nth-child(5n)
+			{
+				@include tweakpoint('min-width',60em) { margin-right: 2%; }
+			}
+		}
+
+		a
+		{
+			@include tweakpoint('min-width',60em) { min-height: 10.2em; }
+		}
+	}
+
+	.bodycopy &
+	{
+		margin: 0 -1.2em; // Compensatie voor gebruik van toptakenblok in standaard content template
+
+		li
+		{
+			&:nth-child(3n)
+			{
+				@include tweakpoint('min-width',35em) { margin-right: 2%; }
+				@include tweakpoint('min-width',60em) { margin-right: 0; }
+			}
+		}
+	}
+	
+	a
+	{
+		display: block;
+		position: relative;
+		padding: 1em 1em 1em 4em;
+		border: 2px solid $donkerblauw;
+		background-color: $donkerblauw;
+		color: $wit;
+		text-decoration: none;
+		
+		&:hover,
+		&:focus
+		{
+			background-color: $blauw;
+			border-color: $blauw;
+			transform: scale(1.02);
+		}
+		
+		@include tweakpoint('min-width',35em)
+		{
+			padding: 3em .75em .75em;
+			min-height: 8.25em;
+		}
+
+		span
+		{
+			font-size: 1.25em;
+			
+			@include tweakpoint('min-width',35em)
+			{
+				font-size: 1.125em;
+				line-height: 1.2;
+			}
+		}
+	}
+	
+	img
+	{
+		display: block;
+		width: 3.6em;
+		height: auto;
+		position: absolute;
+		left: 0.8em;
+		top: 0.8em;
+	}
+}
+

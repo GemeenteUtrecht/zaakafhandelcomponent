@@ -1,0 +1,16 @@
+//  ALERT MESSAGE
+//
+.alert
+{
+	.alert-wrap
+	{
+		padding: 2.25em 30% .25em 4em;
+		position: relative;
+		background: $lichtgrijs url($icoonalert) no-repeat scroll right 4em center / 5em auto;
+	}
+
+	h2
+	{
+		left: 3em;
+	}
+}

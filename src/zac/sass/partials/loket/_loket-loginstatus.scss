@@ -1,0 +1,121 @@
+.account
+{
+	@extend .subnav;
+	
+	.linklijst
+	{
+		padding: 0;
+		
+		ul
+		{
+			padding: 0 0 0.5em;
+		}
+	}
+
+	span
+	{
+		display: block;
+		color: $zwart;
+		font-weight: normal;		
+	}
+}
+
+.login-wrap
+{
+	padding-top: 0.5em;
+	
+	h2
+	{
+		@extend .upper;
+		font-size: 1em;
+	}
+	p
+	{
+		min-height: 3em;
+		margin: 0;
+
+		&.digid
+		{
+			background: url($logo-digid) 0 0 no-repeat;
+			background-size: 3em;
+		}
+		&.eherkenning
+		{
+			background: url($logo-eherkenning) 0 0 no-repeat;
+			background-size: 3em;
+		}
+
+		&.logout,
+		&.login
+		{
+			padding-left: 3.6em;
+		}
+	}
+	.logout + p
+	{
+		margin-top: 1em;
+	}
+
+	.box
+	{
+		margin: 1em 0;
+	}
+	.box + .box
+	{
+		margin-top: -0.5em;
+	}
+
+	.cta
+	{
+		margin: 0;
+		padding: 0.5em 2.2em 0.5em 0.889em;
+	}
+}
+
+#popup_overlay
+{
+	opacity: 0.8 !important;
+}
+#popup_container
+{
+	border: 5px solid $donkerblauw;
+	background-color: $wit;
+	
+	h1
+	{
+		margin: 0;
+		padding: 0.8em 1.6em 0;
+		font-size: 1.5em;
+	}
+}
+#popup_content
+{
+	padding: 0.6em 2.4em 1.2em;	
+}
+#popup_panel
+{
+	margin-top: 1em;
+}
+#popup_ok
+{
+	margin-right: 1.2em;
+}
+#popup_cancel
+{
+	@extend .upper;
+
+	display: inline-block;
+	padding: 0.75em 0 0.1em;
+	border: 0;
+	border-bottom: 2px solid $donkerblauw;
+	color: $donkerblauw;
+	background-color: transparent;
+	font-size: 0.9em;
+	text-decoration: none;
+	
+	&:hover,
+	&:focus
+	{
+		border-color: $blauw;
+	}
+}

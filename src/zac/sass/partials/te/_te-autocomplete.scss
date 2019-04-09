@@ -1,0 +1,48 @@
+.ui-menu {
+	list-style: none;
+	padding: 2px;
+	margin: 0;
+	display: block;
+	float: left;
+}
+
+.ui-autocomplete {
+	position: absolute;
+	z-index: 150;
+	background-color: $wit;
+}
+
+.ui-autocomplete li{
+	margin: 0;
+	padding: 0;
+	display: block;
+	overflow: hidden;
+  	cursor: pointer;
+}
+
+.ui-autocomplete.ui-menu{
+	padding: 0;
+}
+
+.ui-autocomplete .ui-menu-item a{
+	display: block;
+	padding: 0.3em 0.5em 0.3em 2em;
+}
+
+.ui-autocomplete .ui-state-hover, .ui-autocomplete .ui-state-focus{
+	border: 0;
+	background: $lichtgrijs;
+	color: $zwart;
+}
+
+.ui-state-focus a:hover{
+  color: $zwart;
+}
+
+.ui-autocomplete li a:before{
+	content: "";
+}
+
+.ui-autocomplete.ui-widget-content{
+	border: 1px solid $randgrijs;
+}

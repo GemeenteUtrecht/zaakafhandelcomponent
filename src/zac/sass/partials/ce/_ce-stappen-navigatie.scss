@@ -1,0 +1,99 @@
+.steps-navigation
+{
+	.grid-columns
+	{
+		margin: 0 -1.2em;
+	}
+
+	
+	ol
+	{
+		margin: 0.2em 0;
+		list-style: decimal outside;
+		
+		li 
+		{
+			margin: 0.8em 0 0.8em 0.6667em;
+			padding-left: 0.333em;
+			background-image: none;
+		}
+	}	
+	
+	&.steps-table-of-contents
+	{
+		margin: 0 0 2.4em;
+		border-top: 2px solid $lichtgrijs;
+		border-bottom: 2px solid $lichtgrijs;
+	}
+	
+	
+	&.steps-pagination
+	{
+		clear: both;
+		border-top: 2px solid $lichtgrijs;
+		//border-bottom: 8px solid $blauw;
+		margin-top: 2.4em;
+		padding: 0;
+		
+		li 
+		{
+			position: relative;
+			background-image: none;
+			padding: 0 1.2em;
+			margin: 0;
+		}
+
+		a
+		{
+			display: block;
+			padding-top: 2.25em;
+			padding-bottom: 1.2em;
+			text-decoration: none;
+			font-size: 1.25em;
+
+			&:before
+			{
+				display: block;
+				position: absolute;
+				top: 1.2em;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				font-size: 0.7em; // =14/20
+				font-weight: bold;
+				text-decoration: none;
+			}			
+		}
+		a:hover,
+		a:focus
+		{
+			text-decoration: underline;
+			background-color: $lichtgrijs;
+		}
+		
+		.step-next
+		{
+			padding-right: 2em;
+			background: url($pijltjeblauw) no-repeat right 0.8em top 1em;
+			text-align: right;
+		}
+		.step-next:before
+		{
+			content: "Volgende";
+			right: 4em;
+		}
+
+		.step-previous
+		{
+			padding-left: 2em;
+			background: url($pijltjeblauwterug) no-repeat left 0.8em top 1em;
+		}
+		.step-previous:before
+		{
+			content: "Vorige";
+			left: 4em;
+		}
+	}	
+}
+
+
+

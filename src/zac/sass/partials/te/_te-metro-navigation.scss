@@ -1,0 +1,205 @@
+.metro-nav
+{
+	@include tweakpoint('min-width',40em)
+	{
+		width: 75%;
+	}
+	@include tweakpoint('min-width',50em)
+	{
+		width: 50%;
+	}
+	@include tweakpoint('min-width',60em)
+	{
+		width: 30%;
+		float: right;
+	}
+
+	.trail
+	{
+		overflow: visible;
+		
+		ol
+		{
+			li 
+			{
+				@include tweakpoint('min-width',60em)
+				{
+					margin: 0 -2.4em 0 0;
+				}
+				
+				// First level: breadcrumb trail metro style
+				a 
+				{
+					display: block;
+					padding-left: 1.2em;
+					position: relative;
+					background: url($metroline) no-repeat left center;
+					color: $donkergrijs;
+					text-decoration: none;
+					
+					span
+					{
+						display: block;
+						padding: 0.8em 0;
+						border-bottom: 2px solid $lichtgrijs;
+					}
+					
+					&:before
+					{
+						content: "";
+						width: 10px;
+						height: 10px;
+						position: absolute;
+						top: 1.1em;
+						left: -5px;
+						margin-right: -14px;
+						float: left;
+						border-radius: 50%;
+						border: 2px solid $wit;
+						background-color: $midgrijs;
+					}
+					
+					&:hover,
+					&:focus
+					{
+						color: $blauw;
+						text-decoration: underline;
+						
+						&:before
+						{
+							background-color: $blauw;
+						}
+					}
+				}
+				&:first-child
+				{
+					> a 
+					{
+						background-position: left bottom;					
+					}
+				}
+				&:last-child
+				{
+					span
+					{
+						border-bottom: 0;
+					}
+					> a 
+					{
+						background-position: left top;					
+					}
+				}				
+				&.active > a
+				{
+					font-weight: bold;
+					color: $rood;
+					
+					&:before
+					{
+						width: 12px;
+						height: 12px;
+						position: absolute;
+						top: 1em;
+						left: -6px;
+						margin-right: -16px;
+						background-color: $rood;
+					}
+				}
+
+
+				ol.metro-steps-nav 
+				{
+					list-style: decimal outside;
+					padding-left: 1.8em;
+					margin-top: -0.6em;
+
+					li 
+					{
+						margin: 0.8em 0 0.8em 0.6667em;
+						padding-left: 0.333em;
+						background-image: none;
+						
+						&.active 
+						{
+							color: $zwart;
+						}				
+
+						a
+						{
+							padding-left: 0;
+							background: none;
+							color: $blauw;
+							text-decoration: underline;
+							
+							&:before
+							{ 
+								display: none;
+							}
+						}
+
+
+					}
+					
+				}
+
+				// Second level: further nav options
+				ul.metro-children-nav
+				{
+					margin-top: -0.2em;
+					padding-left: 1.25em;
+					
+					li 
+					{
+						margin: 0;
+						
+						> a
+						{
+							background: url($metroline) no-repeat left center;
+							color: $donkerblauw;
+							
+							&:before
+							{
+								content: "";
+								width: 10px;
+								height: 4px;
+								position: absolute;
+								top: 1.4em;
+								left: 0;
+								margin-right: -14px;
+								float: left;
+								border-radius: 0;
+								border: 0;
+								border-bottom: 5px solid $wit;
+								background-color: $midgrijs;
+							}
+
+							&:hover,
+							&:focus
+							{
+								&:before
+								{
+									background-color: $blauw;
+								}
+							}
+
+							span
+							{
+								display: block;
+								padding: 0.8em 0 0.2em;
+							}
+						}
+
+						&:last-child
+						{
+							> a 
+							{
+								background-position: left top;					
+							}
+						}				
+
+					}
+				}
+			}
+		}
+	}
+}
