@@ -11,8 +11,6 @@ from zac.config.models import Service
 
 logger = logging.getLogger(__name__)
 
-CATALOGUS = '28487d3f-6a1b-489c-b03d-c75ac6693e72'
-
 
 def _get_zaaktypes() -> List[Dict]:
     """
@@ -30,7 +28,8 @@ def _get_zaaktypes() -> List[Dict]:
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     for ztc in ztcs:
         client = ztc.build_client(scopes=['zds.scopes.zaaktypes.lezen'])
-        result += client.list('zaaktype', catalogus_uuid=CATALOGUS)
+        catalogus_uuid = ztc.extra.get('main_catalogus_uuid')
+        result += client.list('zaaktype', catalogus_uuid=catalogus_uuid)
 
     cache.set(KEY, result, 60 * 60)
     return result
