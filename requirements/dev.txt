@@ -39,7 +39,7 @@ pyquery==1.4.0
 python-dateutil==2.8.0    # via faker, freezegun
 python-dotenv==0.10.1
 pytz==2018.9
-pyyaml==3.13
+pyyaml==5.1
 raven==6.10.0
 requests==2.21.0
 six==1.12.0

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # Project applications.
     'zac.accounts',
     'zac.config',
+    'zac.core',
     'zac.utils',
 ]
 

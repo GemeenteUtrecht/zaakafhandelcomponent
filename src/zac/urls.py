@@ -3,15 +3,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
-from django.views.generic.base import TemplateView
 
 handler500 = 'zac.utils.views.server_error'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Simply show the master template.
-    path('', TemplateView.as_view(template_name='index.html')),
+    path('', include('zac.core.urls')),
 ]
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie. no need to run collectstatic). Both the static

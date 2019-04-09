@@ -1,0 +1,48 @@
+{% extends "master.html" %}
+{% load i18n %}
+
+
+{% block content %}
+<form action="{% url 'core:flush-cache' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">{% trans "Flush cache" %}</button>
+</form>
+
+<article class="list">
+
+    <section class="list__filters">
+
+        <form class="filter" action="." method="get">
+            <h1 class="filter__name">Zaaktypen</h1>
+
+            {{ filter_form.as_p }}
+
+            <div>
+                <button type="submit">{% trans "Filter" %}</button>
+            </div>
+        </form>
+
+    </section>
+
+    <section class="list__results">
+        {% for zaak in zaken %}
+            <article class="zaak-card" data-url="{{ zaak.url }}">
+                <strong>{{ zaak.identificatie }}</strong> - {{ zaak.omschrijving }}
+                <p>{{ zaak.toelichting }}</p>
+                <p>
+                    Startdatum: {{ zaak.startdatum }}
+                    <br>
+                    Geplande einddatum: {{ zaak.einddatumGepland }}
+                </p>
+            </article>
+        {% endfor %}
+    </section>
+
+    <!--
+    <section class="list__details">
+        Details
+    </section>
+    -->
+
+</article>
+{% endblock content %}
