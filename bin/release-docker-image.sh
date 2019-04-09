@@ -3,7 +3,7 @@
 set -e # exit on error
 set -x # echo commands
 
-CONTAINER_REPO=GemeenteUtrecht/zaakafhandelcomponent
+CONTAINER_REPO=scrumteamzgw/zaakafhandelcomponent
 
 git_tag=$(git tag --points-at HEAD) &>/dev/null
 git_branch=$(git rev-parse --abbrev-ref HEAD)
