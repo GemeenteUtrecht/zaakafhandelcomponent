@@ -1,0 +1,24 @@
+//  TWEAKPOINT FOR MENU AND SEARCH OVERLAYS
+//
+//  Voor echt kleine schermen (iphone 3, 4, galaxy mini): logo dichter bij kant
+//
+
+//  SKIPLINKS
+//
+.skiplinks
+{
+	a
+	{
+		right: 1.5em;
+	}
+}
+
+.touch-js
+{
+	padding: 0 2em 0 1em;
+
+	.returnlink
+	{
+		right: 1.5em;
+	}
+}

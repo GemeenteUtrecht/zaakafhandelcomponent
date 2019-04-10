@@ -1,0 +1,45 @@
+.navigation-extra
+{
+	// Set up grid system to skip two column version on tablet (straight from mobile to three-column grid)
+	.grid-column-1of3
+	{
+		@include tweakpoint('min-width', 35em)
+		{
+			width: 100%;
+		}		
+
+		@include tweakpoint('min-width', 40em)
+		{
+			width: 33.33%;
+		}		
+	}
+	
+	// Set up specific typographic and image treatment..
+	h2
+	{
+		margin: 0;
+	}
+	.image-wrap + .text.layout-body h2
+	{
+		margin-top: 0.4em;
+	}
+	p
+	{
+		margin: 0.5em 0 0; // Halve em boven en onder om witruimte alinea gelijk te trekken met die van item uit linklijst
+	}
+	.image-left .image-wrap,
+	.image-right .image-wrap,
+	.image-beside .image-wrap
+	{
+		float: none;
+		
+		figure
+		{
+			margin-top: 1.875em;
+		}
+	}
+	.linklijst
+	{
+		margin-bottom: 2.4em;	
+	}
+}

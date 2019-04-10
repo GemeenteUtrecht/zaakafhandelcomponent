@@ -1,0 +1,417 @@
+// General fieldset and form elements
+//
+fieldset 
+{
+	position: relative;
+	
+	fieldset
+	{
+		margin: 1em 0 0;
+		border: 0;
+		
+		legend
+		{
+			width: 100%;
+			text-transform: none;
+			letter-spacing: normal;
+			top: auto;
+			font-size: 1em;
+		}
+	}
+	
+	.fieldset_note
+	{
+		margin: 1em 0;
+		font-size: 0.8em;
+		color: $donkergrijs;
+		
+		.label_required
+		{
+			font-weight: bold;
+			color: $zwart;
+		}
+	}
+}
+
+// Style registered information block (e.g. license registration info) as official info.
+// The occurrence of both dashes and underscores is due to exxellence code (yup, that's my thought exactly).
+.fieldset-row
+{
+	position: relative;
+	
+	.fieldset-row-label
+	{
+		padding: 0.5em 0.4em 0.5em 0;
+
+	}
+
+	.showfield_container
+	{
+		@extend .official;
+		margin-bottom: 1.2em;
+		padding: 0.5em 0.4em;
+		font-weight: bold;
+	}
+}
+
+
+.radio_container,
+.checkbox_container
+{
+	display: block;
+	margin: 0.4em 0;
+	padding-left: 1.5em;
+	
+	input
+	{
+		float: left;
+		position: relative;
+		left: -1.5em;
+		top: 0.3em;
+		margin-right: -1.5em;
+	}
+	label
+	{
+		font-weight: normal;
+	}
+}
+
+.textarea_maxlength
+{
+	@include assistive;
+}
+
+
+
+
+.inputfield_container
+{
+	position: relative;
+	
+	&:after
+	{
+		@include floatclear;
+	}
+	
+	.multiselectNotSelected,
+	.multiselectSelected
+	{
+		width: 100%;
+
+		@include tweakpoint('min-width',35em)
+		{
+			width: 50%;
+			float: left;
+		}
+		
+		select
+		{
+			display: block;
+			width: 100%;
+			min-height: 8em;
+		}
+		
+		br
+		{
+			display: none;
+		}
+		
+		label
+		{
+			
+		}
+	}
+	.multiselectNotSelected
+	{
+		@include tweakpoint('min-width',35em)
+		{
+			padding-right: 2em;
+		}
+	}
+	.multiselectSelected
+	{
+		@include tweakpoint('min-width',35em)
+		{
+			padding-left: 2em;
+		}
+	}
+	.multiselectbutton
+	{
+		max-width: 28em;
+		padding-top: 0.8em;
+		margin-bottom: -0.4em;
+		text-align: center;
+				
+		@include tweakpoint('min-width',35em)
+		{
+			position: absolute;
+			top: 0;
+			left: 50%;
+			width: 2.4em;
+			margin-left: -1.2em;
+			padding-top: 2.66em;
+		}
+
+		input
+		{
+			@extend .cta;
+			font-size: 0.9em;
+			text-indent: -1000em;
+			width: 40%;
+			max-width: 10em;
+			padding: 0.25em 0;
+			background-position: center center;
+
+			&.multiselectbuttonSelect   { background-image: url($pijltjewitomlaag); }
+			&.multiselectbuttonDeselect { background-image: url($pijltjewitomhoog); }
+
+			@include tweakpoint('min-width',35em)
+			{
+				padding: 0.25em 1.2em;
+				
+				&.multiselectbuttonSelect   { background-image: url($pijltjewit); }
+				&.multiselectbuttonDeselect { background-image: url($pijltjewitterug); }
+			}
+		}		
+	}
+	
+	.inputfield_container_error
+	{
+/*
+		> span
+		{
+			@include tweakpoint('min-width',35em)
+			{
+				position: relative;
+				left: 50%;
+				margin-left: 2em;
+			}
+		}
+*/
+		
+		.multiselectNotSelected select
+		{
+			border-color: $randgrijs;
+		}
+	}
+}
+
+.inputfield_container_error
+{
+	> span
+	{
+		@extend p.error;
+		
+		clear: left;
+		padding-bottom: 0.2em; // Extra ruimte voor puntje van icoon.
+	}
+	
+	input,
+	textarea,
+	select
+	{
+		border-color: $rood;
+	}
+}
+
+.navigation_buttons
+{
+	margin: 2em 0;
+		
+	&:after
+	{
+		@include floatclear;
+	}
+}
+fieldset + .navigation_buttons
+{
+	margin: 4em 0;
+}
+
+
+
+.navigation_button
+{
+	float: left;
+	margin-right: 1.2em;
+
+	.previous-button
+	{
+		@extend .upper;
+
+		display: block;
+		padding: 0.75em 0 0.1em;
+		border: 0;
+		border-bottom: 2px solid $donkerblauw;
+		color: $donkerblauw;
+		background-color: transparent;
+		font-size: 0.9em;
+		text-decoration: none;
+		
+		&:hover,
+		&:focus
+		{
+			border-color: $blauw;
+		}
+	}
+
+	.form_close_pay-button,
+	.register-button
+	{
+		@extend .cta;		
+	
+		font-size: 0.9em;
+	}
+}
+
+#Formulieropslaan_button a
+{
+	@extend .cta;
+	padding: .75em 1em 0.75em 2.5em;	
+	background: $donkerblauw url($icoonformopslaanwit) no-repeat scroll left 1em center;
+}
+
+
+#Stoppen_button,
+#Annuleren_button
+{
+	float: right;
+	margin-right: 0;
+}
+
+#submitButton
+{
+	display: none;
+}
+
+#Afsluiten_button button,
+#Klaar_button button
+{
+	@extend .cta;		
+
+	font-size: 0.9em;
+	background-color: $groen;	
+	border-color: $groen;
+	
+	&:hover,
+	&:focus
+	{
+		background-color: $lichtgroen;	
+		border-color: $lichtgroen;
+	}
+}
+
+	
+#Stoppen_button a,
+#Annuleren_button button,
+.navigation_button .form_cancel-button
+{
+	@extend .upper;
+
+	display: block;
+	position: relative;
+	padding: 0.75em 0 0.1em;
+	border: 0;
+	border-bottom: 2px solid $rood;
+	color: $rood;
+	background-color: transparent;
+	font-size: 0.9em;
+	text-decoration: none;
+	
+	&:hover,
+	&:focus
+	{
+		color: $lichtrood;
+		border-color: $lichtrood;
+	}
+
+	/*
+	&:after
+	{
+		content: "\00D7";
+		display: block;
+		position: absolute;
+		right: 0.6em;
+		top: 0.15em;
+		font-size: 1.6em;
+		cursor: pointer;		
+	}
+	*/
+}
+
+@if ($render == ie)
+{
+	.ie9 .navigation_button
+	{
+		.form_cancel-button
+		{
+			&:after
+			{
+				top: 0;
+				font-weight: bold;
+			}
+		}
+	}
+}
+
+
+
+strong.official
+{
+	margin-right: 0.2em;
+	padding: 0.5em 0.75em;
+	letter-spacing: 0.05em;
+}
+
+.eform_result_heading,
+form h3
+{
+	@extend .upper;
+}
+
+
+.default_table,
+.eform_result_table
+{
+	border-collapse: separate;
+	border-spacing: 0 0.4em;
+	
+	tbody
+	{
+		th
+		{
+			width: 40%;
+			border: 0;
+			padding-left: 0;
+			vertical-align: top;
+		}
+		
+		td
+		{
+			@extend .official;
+			border: 0;
+			padding: 0.5em 0.4em;
+		}
+		
+		.overviewCreatorHide
+		{
+			display: none; // De TR's met deze class bevat twee lege td's en zijn dus sowieso overbodig.
+		}
+	}
+}
+
+.bodycopy .grid-wrap h1
+{
+	display: none; // Hide title in form content area because it's also present in page-heading div. 
+}
+
+
+
+
+
+//  Google maps box
+#googleMapsMap
+{
+	border: 1px solid $randgrijs !important;
+	position: relative;
+}

@@ -1,0 +1,36 @@
+.breakout
+{
+	table
+	{
+		.date
+		{
+			margin: 0;
+			padding-left: 1.9em;
+			background-position: 0.3em center;
+		}
+	}
+	
+	.sec,
+	.timetable
+	{
+		th,
+		td
+		{
+			padding-left: 0;
+			padding-right: 0.4em;
+		}
+	}
+
+
+	figure,
+	.twocolumngroup .image-below figure
+	{
+		margin: 0;
+		padding: 0;
+		
+		img
+		{
+			vertical-align: top;  // Prevent small pixel gap below images in breakout section (on navigation pages)
+		}
+	}
+}

@@ -1,0 +1,130 @@
+.ui-datepicker
+{
+	z-index: 30;
+	background-color: $wit;
+	padding: 0;
+	border: 3px solid $randgrijs;
+
+	table
+	{
+		margin: 0.4em 0 0;
+	}
+	th,
+	td
+	{
+		padding: 0.6em 0.3em;
+		
+		&:first-child
+		{
+			padding-left: 0.6em;
+		}
+		&:last-child
+		{
+			padding-right: 0.6em;
+		}
+	}
+	
+	th
+	{
+		border-bottom: 2px solid $randgrijs;
+		font-size: 0.8em;
+		font-weight: bold;
+		text-transform: uppercase;
+	}
+	
+}
+
+.ui-datepicker-prev,
+.ui-datepicker-next
+{
+	@extend %buttonsecstyle;
+	
+	width: 2em;
+	height: 2em;
+	margin: 0 0.6em;
+	padding: 0;
+	border-color: $donkerblauw;
+	text-transform: uppercase;
+	
+	&:after
+	{
+		content: url($pijltjeblauw);
+		height: 1em;
+		width: auto;
+		position: absolute;
+		right: .5em;
+		top: .25em;
+	}
+	&:hover
+	{
+		background-color: $blauw;
+		border-color: $blauw;
+		color: $wit;
+	}
+	&:hover:after
+	{
+		content: url($pijltjewit);
+	}
+	
+	span
+	{
+		@include assistive;
+	}
+}
+.ui-datepicker-prev
+{
+	float: left;
+	
+	&:after
+	{
+		transform: rotateZ(180deg);
+		right: auto;
+		left: .45em;
+		top: .5em;
+	}
+}
+.ui-datepicker-next
+{
+	float: right;
+}
+
+.ui-datepicker-title
+{
+	margin-top: 0.6em;
+	text-align: center;
+	
+	select
+	{
+		width: auto;
+		border: 2px solid $donkerblauw;
+		padding: 0 0.2em 0.2em;		
+	}
+}
+
+	
+.ui-datepicker-week-col
+{
+	color: $grijs;
+}
+
+td.ui-datepicker-week-end
+{
+	background-color: $lichtgrijs;
+}
+
+.hasDatepicker
+{
+	width: 16em;
+}
+
+.ui-datepicker-trigger
+{
+	text-indent: -1000em;
+	background-image: url($kalenderwit);
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: 2em;
+	margin: 0;
+	@include tweakpoint('min-width',35em) { margin-right: -2em; } // Tijdelijk om datumpick button op zelfde regel te houden als input 
+}
+

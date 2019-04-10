@@ -1,0 +1,41 @@
+
+
+
+//  BREEDTES
+//  
+//  Om de velden beter scanbaar te maken, geven we specifieke velden
+//  een smallere breedte: huis- en telefoonnummers, toevoegingen, voorletters.  
+
+input[id$="Time"],
+input[id$="Date"],
+input[id$="Number"],
+input[id$="nummer"],
+input[id$="bsn"],
+input[id*="phoneNumber"],
+input[id*="telefoonnummer"],
+input[id$="_len_50"]
+{
+	width: 50%;
+	max-width: 14em;
+	@include tweakpoint('min-width',60em) { width: 30%; }
+}
+
+input[id*="nitials"],        // Initialen
+input[id$="voorletters"],
+input[id$="Code"],           // Postcode
+input[id$="postcode"],
+input[id$="Postcode"],
+input[id$="Letter"],         // Huisletter
+input[id$="huisletter"],
+input[id$="Prefix"],         // Tussen- of voorvoegsel, bijv. lastnamePrefix
+input[id*="voorvoegsel"],
+input[id$="houseNumber"],
+input[id$="huisnummer"],
+input[id="houseRemark"],     // Huisnummertoevoeging
+input[id$="toevoeging"],
+input[id$="_len_20"]
+{
+	width: 40%;
+	max-width: 7em;
+	@include tweakpoint('min-width',60em) { width: 20%; }
+}

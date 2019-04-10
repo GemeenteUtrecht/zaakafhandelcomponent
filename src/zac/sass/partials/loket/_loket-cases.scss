@@ -1,0 +1,63 @@
+#header_cases
+{
+	@include assistive;
+}
+
+// Disable js tabs for case detail page (for now?).
+.js-tabs .subnavigation_menu
+{
+	display: none;
+}
+
+#cases
+{
+	.inline-icon
+	{
+		display: block;
+		width: 2em;
+		height: 1em;
+		margin-top: .2em;
+		background-repeat: no-repeat;
+		background-size: 2em;
+	}
+	.icon-payment_fulfilled_false,
+	.icon-payment_fulfilled_true
+	{
+		width: 1em;
+	}
+}
+
+#cases_wrapper + .navigation_buttons
+{
+	#Zoeken_button
+	{
+		display: none;
+	}
+}
+
+#zaken_legenda
+{
+	li
+	{
+		background-image: none;
+		padding-left: 0;
+
+		span
+		{
+			display: block;
+			padding: 0.2em 0 0.2em 2.5em;
+			background-repeat: no-repeat;
+			background-position: 0 0.45em;
+			background-size: 2em;
+		}
+	}	
+}
+
+.icon-deadline_open           { background-image: url($icoon-zaak-open); }
+.icon-deadline_near           { background-image: url($icoon-zaak-signalering); }
+.icon-deadline_overdue        { background-image: url($icoon-zaak-over-datum); }
+.icon-deadline_closed         { background-image: url($icoon-zaak-gereed); }
+.icon-deadline_closed_overdue { background-image: url($icoon-zaak-gereed-over-datum); }
+.icon-deadline_stopped        { background-image: url($icoon-zaak-wacht); }
+.icon-payment_fulfilled_false { background-image: url($icoon-zaak-betaling-open); }
+.icon-payment_fulfilled_true  { background-image: url($icoon-zaak-betaling-gereed); }

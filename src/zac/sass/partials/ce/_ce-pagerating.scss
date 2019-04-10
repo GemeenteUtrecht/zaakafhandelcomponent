@@ -1,0 +1,90 @@
+.tx-powermail
+{
+	overflow: hidden;
+	clear: left;
+	margin: 4em 0 0;
+	
+	h3
+	{
+		@include assistive;
+	}
+	
+	fieldset
+	{
+		margin: 0;
+		border: 0;
+	}
+}
+
+
+.rating_icons
+{
+	.powermail_fieldwrap_textarea,
+	.powermail_radio_legend,
+	.powermail_radio_outer input
+	{
+		display: none;
+	}
+	
+	.powermail_radio_inner 
+	{
+		label
+		{
+			display: block;
+			float: left;
+			width: 1.8em;
+			height: 1.8em;
+			margin-right: 1em;
+			text-indent: -100em;
+			background-size: 1.5em;
+			cursor: pointer;
+		}
+	}
+
+	.powermail_radio_inner_1
+	{
+		label
+		{
+			background: url($smiley-yeah) no-repeat center center;
+			&:hover
+			{
+				background: url($smiley-yeah-hover) no-repeat center center;
+			}
+		}
+		&.checked label
+		{
+			background: url($smiley-yeah-active) no-repeat center center;
+		}
+	}
+	.powermail_radio_inner_2
+	{
+		label
+		{
+			background: url($smiley-mwah) no-repeat center center;
+			&:hover
+			{
+				background: url($smiley-mwah-hover) no-repeat center center;
+			}
+		}
+		&.checked label
+		{
+			background: url($smiley-mwah-active) no-repeat center center;
+		}
+	}
+	.powermail_radio_inner_3
+	{
+		label
+		{
+			background: url($smiley-nope) no-repeat center center;
+			&:hover
+			{
+				background: url($smiley-nope-hover) no-repeat center center;
+			}
+		}
+		&.checked label
+		{
+			background: url($smiley-nope-active) no-repeat center center;
+		}
+	}
+	
+}

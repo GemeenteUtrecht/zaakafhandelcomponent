@@ -1,0 +1,186 @@
+.slider
+{
+	clear: left;
+	height: 20em;
+}
+
+.slides {
+	position: relative;
+	overflow: hidden;
+	float: left;
+}
+
+
+.slider .textoverlay {
+	background: white;
+	background: rgba(255, 255, 255, 0.8);
+	color: #2b2d2d;
+	padding: 1em 2em 2em;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	overflow: hidden;
+	z-index: 280;
+	font-size: 0.9em;
+
+}
+	.try-show, span.visuallyhidden {
+		display: none;
+	}
+
+.slider .textoverlay h2 a,.slider .textoverlay h2 a:hover, .slider .textoverlay h2 .rslides_tabs li.selected a, .rslides_tabs li.selected .slider .textoverlay h2 a, .slider .textoverlay h2 .rslides_tabs li.rslides_here a, .rslides_tabs li.rslides_here .slider .textoverlay h2 a, .slider .textoverlay h2 a:focus {
+	text-decoration: none;
+    font-size: 1em;
+}
+
+.slider .textoverlay p {
+	hyphens: auto;
+	margin: 0;
+}
+
+.slider .textoverlay p a {
+	white-space: nowrap;
+}
+
+.slider .textoverlay p a span {
+	margin-left: 0.4em;
+}
+
+.slider .is-selected a:hover, .slider .is-selected .rslides_tabs li.selected a, .rslides_tabs li.selected .slider .is-selected a, .slider .is-selected .rslides_tabs li.rslides_here a, .rslides_tabs li.rslides_here .slider .is-selected a,
+.slider .is-selected a:focus {
+	border-color: white;
+	cursor: default;
+}
+
+/*! http://responsiveslides.com v1.54 by @viljamis */
+.rslides {
+	position: relative;
+	list-style: none;
+	overflow: hidden;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+.rslides li {
+	-webkit-backface-visibility: hidden;
+	position: absolute;
+	display: none;
+	width: 100%;
+	left: 0;
+	top: 0;
+	padding:0 !important;
+}
+
+.rslides li:first-child {
+	position: relative;
+	display: block;
+	float: left;
+}
+
+.rslides img {
+	display: block;
+	height: 100%;
+	float: left;
+	border: 0;
+}
+
+.rslides_tabs {
+	list-style: none;
+	margin: 0;
+	bottom: 0.3em;
+	right: 1em;
+	padding: 0;
+	position: absolute;
+	overflow: hidden;
+	text-align: right;
+	z-index: 290;
+}
+
+.rslides_tabs li {
+	float: left;
+	vertical-align: middle;
+	background: none !important;
+	padding: 0 !important;
+}
+
+.rslides_tabs li a {
+	display: inline-block;
+	background-color: #fff;
+	border: 1px solid #f00;
+	width: 10px;
+	height: 10px;
+	margin: 3px;
+	line-height: 10px;
+}
+
+.rslides_tabs li a:hover, .rslides_tabs li.selected a, .rslides_tabs li.rslides_here a, .rslides_tabs li a:focus{
+    background: url("../images/assets/curr-bg.png") no-repeat scroll 1px 1px #ffffff;
+    text-decoration: none;
+}
+/*
+.rslides_tabs li a:hover, .rslides_tabs li.selected a, .rslides_tabs li.rslides_here a, .rslides_tabs li a:focus{
+    background: url("../images/assets/curr-bg.png") no-repeat scroll 1px 1px #ffffff;
+    text-decoration: none;
+}*/
+
+.rslides_tabs li a [data-icon]:before {
+	margin: 0;
+	vertical-align: middle;
+}
+
+.rslides_tabs li .play {
+	margin-left: 1em;
+	cursor: pointer;
+}
+
+.rslides_tabs li .play, .rslides_tabs li .play:hover {
+	background: url("../images/assets/br-assets.png") -2px -16px #ffffff;
+}
+
+.rslides_tabs li .play.paused, .rslides_tabs li .play.paused:hover {
+	background: url("../images/assets/br-assets.png") -2px -2px #ffffff;
+}
+
+.rslides_tabs li .play:focus{
+    background: url("../images/assets/br-assets.png") -2px -16px #ffffff;
+}
+
+.rslides_tabs li .play.paused:focus{
+    background: url("../images/assets/br-assets.png") -2px -2px #ffffff;
+}
+
+
+
+.rslides {
+    position: relative;
+    list-style: none;
+    overflow: hidden;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.rslides li {
+    -webkit-backface-visibility: hidden;
+    position: absolute;
+    display: none;
+    width: 100%;
+    left: 0;
+    top: 0;
+}
+
+.rslides li:first-child {
+    position: relative;
+    display: block;
+    float: left;
+}
+
+.rslides img {
+    display: block;
+    height: auto;
+    float: left;
+    width: 100%;
+    border: 0;
+}

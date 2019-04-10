@@ -1,0 +1,14 @@
+.ie9
+{
+	#search input[type=text],                                 // For main search input field
+	.zoeken-loket input.gadget_search_input[type=text]        // For 'digitaal loket' search
+	{
+		padding-top: .35em;
+		padding-bottom: .4em;
+	}
+
+	nav li a
+	{
+		padding: 1em 3.15em;
+	}
+}

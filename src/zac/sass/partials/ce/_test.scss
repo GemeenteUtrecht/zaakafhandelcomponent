@@ -1,0 +1,29 @@
+//  TEST CE PARTIAL
+//
+//  35em
+//  40em
+//  50em
+//  60em
+//  70em
+//  80em
+
+.partial-box-classname
+{
+	// Styling voor alle viewports
+	
+	
+	@include tweakpoint('min-width',60em)
+	{
+		// Styling voor tweakpoint 4 (60em) en groter
+		background-color: $wit;
+	}
+}
+
+
+
+
+@if ($render == ie)
+{
+	// IE specifieke code
+
+}

@@ -1,0 +1,315 @@
+//  TWEAKPOINT 1
+//
+//
+//
+
+
+//  SIZE UP TYPOGRAPHY
+h1
+{
+	margin: 1.429em 0 0.8em;  //  1.429 = 2.5em / 1.75em (margin/font-size)
+	font-size: 1.75em;
+	line-height: 1.2;
+  
+  span
+  {
+    font-size: .57143em;
+  }
+}
+
+article
+{
+	.intro
+	{
+		font-size: 1.25em;
+	}
+}
+
+
+
+
+#main .container
+{
+	padding: 0 1.8em;
+	background-position: 1em 0;
+}
+
+header .grid-wrap {
+	padding: 1.25em 2.4em 1em 2em;  
+}
+
+footer
+{
+	padding: 1em 1.8em 1.8em;
+}
+
+// .subnav .linklijst, // Excluded for now, see what happens on dev/acc?!
+.bodycopy .grid-wrap > div,
+.related
+{
+	max-width: 48em;
+}
+
+
+// Make the subnavigation fill two columns if there's room.
+.subnav
+{
+	.grid-columns
+	{
+		margin: 0 -1.2em;
+	}
+	
+	ul
+	{
+		width: 50%;
+		float: left;
+		padding: 0 1.2em;
+	}		
+}
+
+
+// TWO COLUMN LAYOUT
+.grid-columns .grid-column
+{
+	float: left;
+	width: 50%;
+}
+
+
+//  LIJSTEN MET NAVIGATIELINKS
+//
+.lijsten
+{
+	.grid-columns > div
+	{
+		width: 50%;
+
+		&:nth-child(2n+1)
+		{
+			clear: left;
+		}		
+	}
+	.grid-column
+	{
+		float: left;
+		margin: 0;		
+	}
+}
+
+
+
+
+
+//  ALERT MESSAGE
+//
+.alert 
+{
+	.alert-wrap
+	{
+		padding: 2.25em 2em .25em 2em;
+		margin-bottom: 2em;
+	}
+	
+	h2
+	{
+		left: 2em;
+	}
+}
+
+
+//  TOPTAKEN
+//
+.toptaken
+{
+	&:after
+	{
+		@include floatclear;
+	}
+	
+	li
+	{
+		width: 32%;
+		float: left;
+		margin-right: 2%;
+		
+		&:nth-child(3n)
+		{
+			margin-right: 0;
+		}
+	}
+	
+	.home &
+	{
+		li
+		{
+			width: 49%;
+			
+			&:nth-child(3n)
+			{
+				margin-right: 2%;
+			}
+			&:nth-child(2n)
+			{
+				margin-right: 0;
+			}
+		}
+	}
+	
+	a
+	{
+		padding: 3em .75em .75em;
+		min-height: 8.25em;
+		
+		span
+		{
+			font-size: 1.125em;
+			line-height: 1.2;
+		}
+	}
+	img
+	{
+		top: .5em;
+	}
+}
+
+
+
+//  BREAKOUT
+//  PoC setup for flexible new content blocks
+//  adjustments
+//
+//
+.breakout
+{
+	.article-width-breakout
+	{
+		width: 100%;
+	}
+	.page-width-breakout
+	{
+		margin: 0 -1.8em;
+	}
+}
+
+
+//  GRID COLUMNS SETUP FOR BREAKOUT
+//  
+//
+.grid-column-1of2
+{
+	width: 50%;
+}
+
+.grid-column-left,
+.grid-columns .grid-column-left
+{
+	float: left;
+}
+.grid-column-right,
+.grid-columns .grid-column-right
+{
+	float: right;
+}
+
+
+
+
+
+//  CONTACTBLOK HOMEPAGE
+//
+article .contact
+{
+	margin: 1em -1.8em 0;
+	
+	.grid-wrap
+	{
+		padding: .25em 3em;
+	}
+	
+	.cta
+	{
+		position: absolute;
+		top: 3em;
+		right: 2.6667em;  // 3em / 1.125 to compensate for call-to-action font-size.
+	}
+}
+
+
+//  KADER IN HERALD IMAGE
+//
+.kader
+{
+	.pipette &,
+	.stadspromotie &
+	{
+		width: 50%;
+		position: absolute;
+		right: 0;
+		bottom: 2em;
+		padding: 0 1.2em 0.6em;
+	}
+	
+	.stadspromotie &
+	{
+		bottom: 0;
+				
+		&:after
+		{
+			right: 3em;
+			bottom: -0.35em;
+		}
+	}
+}
+
+//  GROTE FOTO
+//
+.herald
+{
+	margin: 0;
+	
+	figcaption
+	{
+		width: 50%;
+		padding: 0 1.111em 0 3.333em;  // 1.111 and 3.333 because of 0.9em font-size.
+		
+		&:after
+		{
+			left: 3.5em;
+		}
+	}
+}
+
+
+
+//  BANNER adjustments
+//
+.banner
+{
+	&.half
+	{
+		float: left;
+		width: 50%;
+	}
+}
+
+
+
+//  FOOTER
+//
+footer
+{
+	position: relative;
+
+	.social
+	{
+		position: absolute;
+		top: 2em;
+		right: 2.4em;
+		margin: 0;
+		
+		a 
+		{
+			border: 0;
+		}
+	}	
+}

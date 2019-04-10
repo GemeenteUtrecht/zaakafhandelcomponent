@@ -1,0 +1,50 @@
+.box.zoeken .gadget_header
+{
+	@extend .upper;
+	margin: 0 0 1em;	
+}
+
+#searchResults_suggestions
+{
+	margin-top: 0.4em;
+	
+	ul,
+	li
+	{
+		display: inline-block;
+		background: none;
+		padding: 0;
+		margin: 0;
+	}
+}
+
+.zoeken-loket
+{
+	position: relative;			
+
+	label
+	{
+		@include assistive;
+	}
+	input[type="text"]
+	{
+		@include search-field();
+		
+		max-width: none;
+		border-color: $donkerblauw;
+		background-image: url($icoonzoekblauw);
+		// background: $wit url($icoonzoekblauw) .5em 50% no-repeat;
+	}
+	button[type="submit"]
+	{
+		@include search-submit();
+
+		border-color: $donkerblauw;
+		background-color: $donkerblauw;
+
+		&:hover
+		{
+			background-color: $blauw;
+		}
+	}
+}

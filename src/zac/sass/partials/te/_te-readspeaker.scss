@@ -1,0 +1,282 @@
+/* Readspeaker layout */
+
+
+.rsbtn_play
+{
+	float: left;
+	padding-left: 1.75em;
+	background: url($icoonrdspkrrood) center left no-repeat;
+	background-size: 1.2em;
+	font-size: 0.9em;
+	color: $rood;
+	
+	&:hover,
+	&:focus
+	{
+		color: $rood;
+	}
+	
+	.rs_img
+	{
+		display: none; // Turn of extra span with rdspkr icon
+	}
+	
+	.rsbtn_text
+	{
+		text-decoration: underline;
+	}
+}
+
+
+.rsbtn_colorskin
+{
+	display: block;
+	position: absolute;
+	right: 2.4em;
+	top: 5.4em;
+	z-index: 110;
+	color: $rood;
+
+	a,
+	span
+	{
+		display: block;
+		position: relative;
+		color: $rood;
+	}
+
+	.rspart
+	{
+		display: block;
+		float: left;
+	}
+	
+	.rsdefloat
+	{
+		clear: both;
+	}
+
+	.rsbutton
+	{
+		display: block;
+		height: 1em;
+		width: 1em;
+		margin-left: .2em;
+		background-color: $wit;
+	}
+	
+	.rsbtn_box
+	{
+		display: block;
+		
+		&:after
+		{
+			@include floatclear;
+		}
+	}
+
+	/************************************************ EXPANDING AREA */
+	.rsbtn_exp.rsimg.rspart
+	{
+		background: none !important;
+		float: left;
+		display: none;
+		margin-top: .1em;
+		margin-left: 0.5em;
+		
+		.rsbtn_status_overlay
+		{
+			width: 20em;
+			height: auto;
+			position: absolute;
+			left: auto;
+			right: 1.5em;
+			top: 0;
+			background-color: $wit;
+			color: $asfalt;
+			text-align: right;
+
+			span.rsbtn_status
+			{
+				display: inline;
+				margin: 0;
+				color: $asfalt;
+				font-family: inherit;
+				font-size: 0.9em;
+				text-align: left;
+			}
+
+		}
+		
+	}
+
+
+	/**
+	 * We want the expanding area to be visible only when the player
+	 * is expanded, hence the .rsexpanded class.
+	 */
+	&.rsexpanded
+	{
+		width: auto !important;
+		background-color: $wit !important;
+		
+		.rsbtn_exp.rsimg
+		{
+			display: block;
+		}
+	}
+
+	/**
+	 * This is the style of the listen button that popups when the user makes a text selection on the page.
+	 */
+	&.rspopup {
+		position: absolute;
+		right: auto;
+		background: $wit;
+		padding: 0.4em 0.8em 0.4em 0.6em;
+		border: 3px solid $randgrijs;
+		//box-shadow: 0 0 5px $midgrijs;
+		display: none;
+	}
+	
+
+
+
+	/************************************************ PLAY/PAUSE BUTTON */
+	.rsbtn_pause {
+		background: url($icoonpauzerenrood) no-repeat left center;
+		background-size: 0.8em;
+	}
+	
+	&.rspaused .rsbtn_pause,
+	&.rsstopped .rsbtn_pause {
+		background: url($icoonafspelenrood) no-repeat left center;
+		background-size: 0.8em;
+	}
+	
+	/************************************************ STOP BUTTON */
+	.rsbtn_stop {
+		background: url($icoonstoppenrood) no-repeat left center;
+		background-size: 0.8em;
+	}
+
+
+	/************************************************ PROGRESS CONTAINER */
+	.rsbtn_progress_container
+	{
+		width: 3em;
+		height: 0.4em;
+		margin: 0.3em 0.4em 0;
+		background-image: none;
+		background: $midgrijs;
+	}
+	
+	/************************************************ PROGRESS DRAG HANDLE */
+	.rsbtn_progress_handle.rsimg
+	{
+		position: absolute;
+		background-color: $rood;
+		top: -0.3em;
+		left: -0.15em;
+		width: 0.3em;
+		height: 1em;
+		background-image: none;
+
+		a
+		{
+			text-decoration: none;
+		}
+	}
+	
+	/************************************************ PROGRESS BAR */
+	.rsbtn_progress_played
+	{
+		position: absolute;
+		height: 100%;
+		background-color: $donkergrijs;
+		background-image: none;
+	}
+
+
+
+
+
+
+	/************************************************ CLOSE BUTTON */
+	.rsbtn_closer
+	{
+		margin-left: 0.6em;
+		text-decoration: none;
+		
+		&:after
+		{
+			content: "×";
+			margin: 0;
+			padding: 0;
+			position: relative;
+			top: -0.3em;
+			color: $rood;
+			font-size: 1.5em;
+			font-weight: bold;
+			line-height: normal;
+		}
+	}
+	
+
+	/************************************************ VOLUME BUTTON */
+	.rsbtn_volume
+	{
+		background: url($icoonvolumerood) no-repeat left center;
+		background-size: 1.1em;
+		width: 1.1em;
+		margin-left: 0.6em;
+	}
+	
+	/************************************************ VOLUME SLIDER CONTAINER */
+	.rsbtn_volume_container
+	{
+		position: absolute;
+		display: none;
+		top: 100%;
+		width: 1em;
+		height: 3.5em;
+		margin-top: .4em;
+		background: $wit;
+		z-index: 42; /* ;) */
+	}
+	
+	/************************************************ VOLUME SLIDER SLIDER AREA */
+	.rsbtn_volume_slider
+	{
+		//display: block;
+		width: 0.4em;
+		height: 2em;
+		margin: 0.4em;
+		background-color: $midgrijs;
+		overflow: visible;
+	}
+	
+	/************************************************ VOLUME SLIDER SLIDE HANDLE */
+	.rsbtn_volume_handle.rsimg
+	{
+		position: absolute;
+		top: -0.15em;	
+		left: -0.2em;	
+		width: 0.8em;
+		height: .3em;
+		background: $rood;
+		
+		a
+		{
+			text-decoration: none;
+		}
+	}
+
+
+	/**
+	 * Hide all text labels. They will still be visible to non-CSS browsers
+	 */
+	.rspart .rsbtn_btnlabel {
+		@include assistive;
+	}
+}

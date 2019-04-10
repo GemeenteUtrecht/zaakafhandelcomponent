@@ -1,0 +1,257 @@
+
+// Subtitle currently only on photo blog of mayor.
+// Future: move to base styles.
+.subtitle
+{
+	display: block;
+	color: $rood;
+	font-weight: normal;
+	font-style: normal;
+}
+
+.weblog
+{
+	&.news-list-item
+	{
+		margin-bottom: 2em;
+		
+		p 
+		{
+			margin-top: 0.2em;
+		}
+	}
+	
+	h2
+	{
+		margin-top: 0;
+	}
+	
+	/*
+	a
+	{
+		img
+		{
+			transition: opacity 1s ease-out;
+		}
+		
+		&:hover
+		{
+			img
+			{
+				opacity: 0.8;
+			}
+		}
+	}
+	*/
+
+	a + h2
+	{
+		width: 50%;
+		min-height: 4.5em;
+		margin: -4.5em 0 0;
+		padding-left: 7px;
+		font-size: 1.25em;
+		position: relative;
+		z-index: 30;
+
+		@include tweakpoint('min-width',35em)
+		{
+			font-size: 1.5em;
+		}
+		line-height: 1.3;
+		
+		a
+		{
+			text-decoration: none;
+			padding: 0.1em 0 0.2em;
+			box-shadow: 7px 0 0 $rood, -7px 0 0 $rood;
+			box-decoration-break: clone; // Forces box-shadow to have effect on all lines of a multiline heading
+			background-color: $rood;
+			color: $wit;
+		}
+	}
+	
+	.news-list-date
+	{
+		@extend .date;
+		display: none;
+	}
+
+	img
+	{
+		width: 100%;
+		height: auto;
+
+		&.image-noscale
+		{
+			width: auto;
+			max-width: 100%;
+		}
+
+		&.image-noscale-left
+		{
+			@extend .image-noscale;
+			float: left;
+			margin: 0 1.2em 0.3em 0; 
+		}
+		&.image-noscale-right
+		{
+			@extend .image-noscale;
+			float: right;
+			margin: 0 0 0.3em 1.2em; 
+		}
+
+	}
+
+
+	.figcaption
+	{
+		margin-top: -0.75em;
+	}
+}
+
+.weblog-nav
+{
+	clear: both;
+	position: relative;
+	padding-top: 2em;
+	margin: 0 0 2em;
+
+	
+	@include tweakpoint('min-width',40em)
+	{
+		padding-top: 0;
+		clear: none;
+	}
+	@include tweakpoint('min-width',60em)
+	{
+		padding-top: 2em;
+		clear: both;
+	}
+	@include tweakpoint('min-width',70em)
+	{
+		padding-top: 0;
+		clear: none;
+	}
+	
+	
+	
+	&:after
+	{
+		@include floatclear;
+	}
+
+	.weblog-prev
+	{
+		float: left;
+		
+		@include tweakpoint('min-width',40em)
+		{
+			margin-right: 0.4em;
+		}
+		@include tweakpoint('min-width',50em)
+		{
+			margin-right: 1.2em;
+		}
+	}
+
+	.weblog-next
+	{
+		float: right;
+		
+		@include tweakpoint('min-width',40em)
+		{
+			float: left;
+			margin-right: 0.4em;
+		}
+		@include tweakpoint('min-width',50em)
+		{
+			margin-right: 1.2em;
+		}
+
+		@include tweakpoint('min-width',60em)
+		{
+			float: right;
+			margin-right: 0;
+		}
+		@include tweakpoint('min-width',70em)
+		{
+			float: left;
+			margin-right: 1.2em;
+		}
+
+	}
+
+	.weblog-prev,
+	.weblog-next
+	{
+		a
+		{
+			@include tweakpoint('max-width',25em)
+			{
+				min-height: 2.66em;
+				padding: 0.5em 1.2em;
+			}	
+		}
+
+		span
+		{
+			@include tweakpoint('max-width',25em)
+			{
+				@include assistive;
+			}			
+		}
+	}
+
+
+	.weblog-back
+	{
+		width: 7.8em;
+		position: absolute;
+		left: 50%;
+		top: 2em;
+		margin-left: -4.2em;
+		
+		
+		@include tweakpoint('min-width',40em)
+		{
+			width: auto;
+			position: static;
+			float: left;
+			margin-left: 0;
+			margin-right: 0.4em;
+		}
+		@include tweakpoint('min-width',50em)
+		{
+			margin-right: 1.2em;
+		}
+		@include tweakpoint('min-width',60em)
+		{
+			width: 7.8em;
+			position: absolute;
+			margin-left: -3.9em;
+			margin-right: 0;
+		}
+		@include tweakpoint('min-width',70em)
+		{
+			width: auto;
+			position: static;
+			margin-left: 0;
+			margin-right: 1.2em;
+		}
+
+		
+		.button
+		{
+			display: inline-block;
+			width: auto;
+			font-size: 0.9em;
+			padding: 0.5em 0.8em;
+		}
+	}
+}
+
+.weblog-hide
+{
+	@include assistive;
+}

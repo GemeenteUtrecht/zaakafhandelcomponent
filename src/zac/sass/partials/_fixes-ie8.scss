@@ -1,0 +1,124 @@
+/*  BROWSE HAPPY NOTICE FOR IE7/8
+ *
+ */
+.browsehappy
+{
+	margin: 0 -2em;
+	padding: 0 2em;
+	
+	background-color: $rood;
+	color: $wit;
+
+	.notice
+	{
+	  width: 100%;
+	  margin: 0;
+	  border-top: 0;
+	  border-bottom: 0;
+	  font-weight: 700;
+	}
+	
+	.grid-wrap
+	{
+		border-left: 1px solid $lichtrood;
+		border-right: 1px solid $lichtrood;
+	}
+	
+	p,
+	a
+	{
+		margin: 0;
+		padding: 1em 0;
+		color: $wit;
+		font-weight: normal;
+	}
+	strong
+	{
+		display: block;
+		float: left;
+		position: relative;
+		top: -.4em;
+		margin-right: 1em;
+		padding: 0.3em 0.6em;
+		background-color: $wit;
+		color: $zwart;
+	}
+}
+
+
+
+
+// FORCE 'HASLAYOUT' ELEMENT STATUS IN IE7
+nav li,
+nav li a,
+header,
+section,
+#main,
+.container,
+.grid-wrap,
+.page-wrap,
+#wapen,
+.tx-solr,
+.crumb
+{
+	zoom: 1;
+}
+
+
+
+.ie7,
+.ie8
+{
+	#search input[type=text],                                 // For main search input field
+	.zoeken-loket input.gadget_search_input[type=text]        // For 'digitaal loket' search
+	{
+		padding-top: .5em;
+		padding-bottom: .5em;
+	}
+
+	nav li + li + li + li + li    // Align last item right in menu, to make border line up.
+	{
+		float: right;
+		
+		a
+		{
+			padding: 1em 3.05em;
+		}
+	}
+}
+
+// IE8 ONLY STUFF
+.ie8
+{	
+	#search .container
+	{
+		padding: 0;
+	}
+	#main .container
+	{
+		width: 74em;
+	}
+}
+
+
+// IE7 ONLY
+.ie7
+{
+	#wapen img
+	{
+		width: auto;
+	}
+	#search .container
+	{
+		padding: 0;
+	}
+	footer .container
+	{
+		padding-right: 0;
+	}
+	#main .container
+	{
+		width: 70em;
+	}
+}
+

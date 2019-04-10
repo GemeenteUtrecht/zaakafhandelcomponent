@@ -1,0 +1,10 @@
+// DEPRECATED CONTENT ELEMENT
+//
+// rechterkolom links met pijl (misschien weg)
+// na opschonen secondary content kan deze weg
+
+.rightLinkArrow a
+{
+	@extend .arrow;
+	margin: 0.5em 0;
+}

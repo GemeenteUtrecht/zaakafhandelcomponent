@@ -1,2 +1,134 @@
+/*   MAIN STYLESHEET
+ *
+ *   Taken from https://github.com/GemeenteUtrecht/Designs
+ *
+ */
+$render : "responsive";
+$context : "site";
+$image-path : "../images/svg/";
+$image-ext : ".svg";
+
+//  RESET AND NORMALIZE BROWSER STYLING
+@import "partials/normalize";
+
+//  ICONS
+@import "partials/icons";
+
+
+//  BASE DESIGN FOR ALL VIEWPORTS
+@import "partials/base";
+
+
+//  TEMPORARY GRID SYSTEM OVERLAY
+//  Only for able browsers, not for IE
+@import "partials/grid";
+
+
+
+/*  MENU AND SEARCH OVERLAYS FOR MOBILE + TABLET
+ *
+ */
+@media screen and (max-width: 60em)
+{
+  @import "partials/tweakpoint-menu-search-1";
+}
+@media screen and (max-width: 35em)
+{
+  @import "partials/tweakpoint-menu-search-2";
+}
+
+
+
+/*  TWEAKPOINT 1
+ *
+ *  Wide smartphones and small tablets
+ *  > 560 px (bij standaard 16px em!)
+ *
+ */
+@media screen and (min-width: 35em)
+{
+  @import "partials/tweakpoint-1";
+}
+
+/*  TWEAKPOINT 2
+ *
+ *  Bigger smartphones (or landscape small ones), portrait tablets
+ *  > 720 px (bij standaard 16px em!)
+ *
+ */
+// @media screen and (min-width: 40em)
+// {
+//   @import "partials/tweakpoint-2";
+// }
+
+/*  TWEAKPOINT 3
+ *
+ *  landscape tablets or hires phones, small desktop or laptop
+ *  > 800 px (bij standaard 16px em!)
+ *
+ */
+@media screen and (min-width: 50em)
+{
+  @import "partials/tweakpoint-3";
+}
+
+
+/*  TWEAKPOINT 4
+ *
+ *  wider smartphones, normal laptops and desktops
+ *  > 960 px (bij standaard 16px em!)
+ *
+ */
+@media screen and (min-width: 60em)
+{
+  @import "partials/tweakpoint-4";
+}
+
+
+/*  TWEAKPOINT 5
+ *
+ *  Current mainstream laptops and desktops (as of march 2015)
+ *  > 1120 px (bij standaard 16px em!)
+ *
+ */
+@media screen and (min-width: 70em)
+{
+  @import "partials/tweakpoint-5";
+}
+
+/*  TWEAKPOINT 6
+ *
+ *  Ultrawide laptops or desktops (nonetheless: not even HD yet)
+ *  > 1280 px (bij standaard 16px em!)
+ *
+ */
+// @media screen and (min-width: 80em)
+// {
+//   @import "partials/tweakpoint-6";
+// }
+
+
+/*  PARTIALS FOR TYPO3
+ *
+ *
+ */
+@import "partials/partials";
+
+
+/*  FIXES FOR SEARCHBOX HEIGHT IE 10+
+ *
+ */
+@import "partials/fixes-ie10";
+
+
+/*  PRINT STYLESHEET
+ *
+ */
+@media print {
+  @import "partials/print";
+}
+
+
+// custom components and views
 @import "components/all";
 @import "views/all";

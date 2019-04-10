@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 13.0.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1 Tiny//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-tiny.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1" baseProfile="tiny"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="28px" height="38px" viewBox="-0.5 -0.5 28 38" xml:space="preserve">
+<defs>
+</defs>
+<polygon fill="none" stroke="#FFFFFF" stroke-width="2" points="26,8.5 26,36 1,36 1,1 18.5,1 "/>
+<polyline fill="none" stroke="#FFFFFF" stroke-width="2" points="18.5,1 18.5,8.5 26,8.5 "/>
+<line fill="none" stroke="#FFFFFF" stroke-width="2" x1="5" y1="13.5" x2="22" y2="13.5"/>
+<line fill="none" stroke="#FFFFFF" stroke-width="2" x1="5" y1="16.5" x2="19.1" y2="16.5"/>
+<line fill="none" stroke="#FFFFFF" stroke-width="2" x1="5" y1="19.5" x2="20.6" y2="19.5"/>
+<line fill="none" stroke="#FFFFFF" stroke-width="2" x1="5" y1="22.5" x2="14" y2="22.5"/>
+</svg>

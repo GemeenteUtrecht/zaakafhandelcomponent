@@ -1,0 +1,39 @@
+/*  TEMPLATE ELEMENTS
+ *  Include template subcomponents, like paginator etcetera
+ *
+ */
+@import "te/te-readspeaker";      // Readspeaker styling for in-page contextual popup and expanded menubar module
+@import "te/te-paginator";        // For search and news
+@import "te/te-searchresults";    // For solr search results page and search form, excluding main search in header (!)
+@import "te/te-cookiebox";        // Styling for cookie bar
+@import "te/te-back-to-top";      // Back to top link on content pages
+//@import "te/te-autocomplete";     // Autocomplete for searchbox
+
+
+
+/*  CONTENT ELEMENTS
+ *  Includes typo 3 building block styling 
+ *
+ */
+//@import "ce/ce-slider-small";
+@import "ce/ce-faq";
+@import "ce/ce-images";
+@import "ce/ce-toptasks";
+
+
+/*  DIGITAL SERVICES ELEMENTS
+ *
+ */
+@import "loket/loket-algemeen";
+@import "loket/loket-icons"; // Icons specific for frontoffice / cases
+@import "loket/loket-home"; // All styles for main page of digital frontdesk
+@import "loket/loket-cookiebalk";
+@import "loket/loket-themas-producten";  //  Alphabetical list and products by alphabet tabs
+@import "loket/loket-zoeken";
+@import "loket/loket-content";
+@import "loket/loket-loginstatus";   // Login, logout block, popup for timeout and popup for logout
+@import "loket/loket-datumprikker";
+@import "loket/loket-faq";
+@import "loket/loket-cases";
+@import "loket/loket-tooltips";
+//@import "eforms/eforms-bijlage";          // Drag and drop form attachment upload

@@ -1,0 +1,203 @@
+// de kleine variant van de slider
+.slider
+{
+	clear: left;
+}
+
+
+
+.slides {
+	width: 100%;
+	position: relative;
+	
+	figure
+	{
+		margin-top: 0;
+
+		figcaption:after
+		{
+			left: 0.5em;
+			top: -1em;
+			z-index: 280;
+		}
+	}
+}
+
+
+
+
+.try-show, span.visuallyhidden {
+	@include assistive;
+}
+
+.slider .textoverlay h2 a,
+.slider .textoverlay h2 a:hover, 
+.slider .textoverlay h2 a:focus,
+.rslides_tabs li.selected a, 
+.rslides_tabs li.rslides_here a
+{
+	text-decoration: none;
+	font-size: 1em;
+}
+
+
+
+
+.slider .is-selected a:hover, 
+.slider .is-selected .rslides_tabs li.selected a, 
+.rslides_tabs li.selected .slider .is-selected a, 
+.slider .is-selected .rslides_tabs li.rslides_here a, 
+.rslides_tabs li.rslides_here .slider .is-selected a,
+.slider .is-selected a:focus {
+	border-color: white;
+	cursor: default;
+}
+
+
+
+
+
+.textoverlay {
+	background: $wit;
+	color: $asfalt;
+	padding: 0.6em 0;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 280;
+	font-size: 0.9em;
+
+	h2,
+	p
+	{
+		margin-top: 0;
+		font-size: 0.9em;
+	}
+	
+	a span
+	{
+		margin-left: 0.4em;
+	}
+	
+}
+
+
+
+
+/*! http://responsiveslides.com v1.54 by @viljamis */
+.rslides
+{
+	position: relative;
+	list-style: none;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+
+	li 
+	{
+		//-webkit-backface-visibility: hidden;
+		position: absolute;
+		display: none;
+		width: 100%;
+		left: 0;
+		top: 0;
+		padding:0 !important;
+		background: none;
+		
+		&:first-child 
+		{
+			position: relative;
+			display: block;
+			float: left;
+		}
+	}
+
+	img 
+	{
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+}
+
+
+
+ul.rslides_tabs
+{
+	list-style: none;
+	margin: 0;
+	top: 1.2em;
+	right: 1em;
+	padding: 0;
+	position: absolute;
+	overflow: hidden;
+	text-align: right;
+	z-index: 290;
+
+	li
+	{
+		float: left;
+		margin-right: 0.6em;
+		padding: 0;
+		vertical-align: middle;
+		background: none;
+	}
+
+	a
+	{
+		display: inline-block;
+		background-color: transparent;
+		border: 4px solid $wit;
+		border-radius: .6em;
+		width: 1.2em;
+		height: 1.2em;
+		margin: 0;
+    text-decoration: none;
+    box-shadow: 0 0 .5em $grijs;
+
+		&:hover,
+		&:focus
+		{
+			background-color: $wit;
+		}
+		
+		&.play,
+		&.paused
+		{
+			background: $wit;
+		}
+		
+		&.play:after,
+		&.play:hover:after,
+		&.play:focus:after
+		{
+			content: "";
+			display: block;
+			height: 1.2em;
+			width: 1em;
+			background: url($icoonpauzerenrood) center center no-repeat;
+			background-size: 0.6em auto;
+			cursor: pointer;
+			position: relative;
+			top: -0.25em;
+			left: -0.15em;
+			z-index: 290;
+		}
+
+		&.paused:after,
+		&.paused:hover:after,
+		&.paused:focus:after
+		{
+			background: url($icoonafspelenrood) center center no-repeat;
+			background-size: 0.6em auto;
+			left: -0.1em;
+		}
+	}
+
+	.rslides_here a
+	{
+		background-color: $rood;
+	}	
+}

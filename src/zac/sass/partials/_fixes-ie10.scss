@@ -1,0 +1,17 @@
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active)
+{
+	// Fix height of main search input
+	#search input[type=text],                                 // For main search input field
+	.zoeken-loket input[type=text].gadget_search_input        // For 'digitaal loket' search
+	{
+		padding-top: .4em;
+		padding-bottom: .4em;
+	}
+	
+	.stadspromotie .kader:after
+	{
+		height: auto;
+		width: 2.2em;
+		bottom: -0.4em;
+	}
+}

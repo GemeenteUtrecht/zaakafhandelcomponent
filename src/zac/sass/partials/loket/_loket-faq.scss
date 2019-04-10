@@ -1,0 +1,28 @@
+.faqQuestion
+{
+	h2:after
+	{
+		content: none;
+		display: none;
+	}
+
+	.nav-icon
+	{
+		display: block;
+    right: 0;
+    top: 0;
+    position: absolute;
+    height: 1.6em;
+    width: 1.6em;		
+	}
+	
+	.icon-collapses
+	{
+    background: $donkergeel url($pijltjezwartomhoog) scroll no-repeat center center;
+	}	
+	
+	.icon-expands
+	{
+    background: $donkergeel url($pijltjezwartomlaag) scroll no-repeat center center;		
+	}
+}

@@ -1,0 +1,11 @@
+// Afhankelijk van icons.scss, vanwege imageurl aanroep!
+
+// Iconen bij statusoverzicht van zaken.
+$icoon-zaak-open :               imageurl("icon-deadline_open");
+$icoon-zaak-signalering :        imageurl("icon-deadline_near");
+$icoon-zaak-over-datum :         imageurl("icon-deadline_overdue");
+$icoon-zaak-gereed :             imageurl("icon-deadline_closed");
+$icoon-zaak-gereed-over-datum :  imageurl("icon-deadline_closed_overdue");
+$icoon-zaak-wacht :              imageurl("icon-deadline_stopped");
+$icoon-zaak-betaling-open :      imageurl("icon-payment_fulfilled_false");
+$icoon-zaak-betaling-gereed :    imageurl("icon-payment_fulfilled_true");

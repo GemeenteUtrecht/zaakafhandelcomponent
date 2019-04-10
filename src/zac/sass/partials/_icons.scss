@@ -1,0 +1,98 @@
+//  Fancy image urls
+//
+
+@function imageurl($image-name: "kapot")
+{
+	@return	#{$image-path}#{$image-name}#{$image-ext};
+}
+
+
+$wapenutrechtwit :    imageurl("wapen-utrecht-wit");
+
+$huisstijlbalk :      imageurl("bg-balk");
+$menubalk :           imageurl("bg-menu");
+$kruimelpad :         imageurl("bg-crumb");
+$satellietpad :       imageurl("bg-crumb-satellite");
+$footer :             imageurl("bg-footer");
+$balkenpatroon :      imageurl("bg-patroon-balken");
+$attentiekop :        imageurl("bg-alert-heading");
+$officieel :          imageurl("bg-patroon-officieel");
+
+$metroline :          imageurl("bg-metro-line");
+
+$icoonzoekrood :      imageurl("icoon-zoek-rood");
+$icoonzoekblauw :     imageurl("icoon-zoek-blauw");
+
+$icoonwereldrood :    imageurl("icoon-wereld-rood");
+$icoonwereldwit :     imageurl("icoon-wereld-wit");
+
+$icoonrdspkrrood :    imageurl("icoon-rdspkr-rood");
+
+$icoon-error :        imageurl("icoon-error");
+$icoonalert :         imageurl("icoon-alert");
+
+$icoonformopslaan :      imageurl("icoon-form-opslaan");
+$icoonformopslaanwit :   imageurl("icoon-form-opslaan-wit");
+$icoonformophalen :      imageurl("icoon-form-ophalen");
+$icoonformophalenwit :   imageurl("icoon-form-ophalen-wit");
+
+$icoondocumentdrop :  imageurl("icoon-document-dropzone");
+
+$icoonafspelenrood :  imageurl("icoon-afspelen-rood");
+$icoonpauzerenrood :  imageurl("icoon-pauzeren-rood");
+$icoonstoppenrood :   imageurl("icoon-stoppen-rood");
+$icoonvolumerood :    imageurl("icoon-volume-rood");
+
+
+$pijltjezwart :       imageurl("pijltje-zwart");
+$pijltjezwartterug :  imageurl("pijltje-zwart-terug");
+$pijltjezwartomlaag : imageurl("pijltje-zwart-omlaag");
+$pijltjezwartomhoog : imageurl("pijltje-zwart-omhoog");
+
+$pijltjeblauw :       imageurl("pijltje-blauw");
+$pijltjeblauwterug :  imageurl("pijltje-blauw-terug");
+
+$pijltjerood :        imageurl("pijltje-rood");
+$pijltjeroodterug :   imageurl("pijltje-rood-terug");
+
+$pijltjewit :         imageurl("pijltje-wit");
+$pijltjewitterug :    imageurl("pijltje-wit-terug");
+$pijltjewitomlaag :   imageurl("pijltje-wit-omlaag");
+$pijltjewitomhoog :   imageurl("pijltje-wit-omhoog");
+
+
+$scheidingspijl :     imageurl("bg-aside");
+
+$domtoren :           imageurl("domtoren");
+
+$listbullet :         imageurl("bullet-rood");
+$kalender :           imageurl("icoon-kalender");
+$kalenderwit :        imageurl("icoon-kalender-wit");
+
+$logo-digid :         imageurl("logo-digid");
+$logo-eherkenning :   imageurl("logo-eherkenning");
+
+
+// Page rating iconen
+$smiley-yeah :        imageurl("icoon-smiley-yeah");
+$smiley-yeah-hover :  imageurl("icoon-smiley-yeah-hover");
+$smiley-yeah-active : imageurl("icoon-smiley-yeah-active");
+$smiley-mwah :        imageurl("icoon-smiley-mwah");
+$smiley-mwah-hover :  imageurl("icoon-smiley-mwah-hover");
+$smiley-mwah-active : imageurl("icoon-smiley-mwah-active");
+$smiley-nope :        imageurl("icoon-smiley-nope");
+$smiley-nope-hover :  imageurl("icoon-smiley-nope-hover");
+$smiley-nope-active : imageurl("icoon-smiley-nope-active");
+
+// Social media
+$icoon-social-google-plus :  imageurl("icoon-social-google-plus");
+$icoon-social-facebook :     imageurl("icoon-social-facebook");
+$icoon-social-twitter :      imageurl("icoon-social-twitter");
+$icoon-social-youtube :      imageurl("icoon-social-youtube");
+$icoon-social-whatsapp :     imageurl("icoon-social-whatsapp");
+$icoon-social-linkedin :     imageurl("icoon-social-linkedin");
+
+// Main social media for footer
+$icoon-footer-facebook :     imageurl("icoon-footer-facebook");
+$icoon-footer-twitter :      imageurl("icoon-footer-twitter");
+

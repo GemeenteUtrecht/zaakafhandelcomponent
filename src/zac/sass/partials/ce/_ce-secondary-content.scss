@@ -1,0 +1,61 @@
+
+.secondary
+{
+	clear: both;
+	@include tweakpoint('min-widt',60em) { margin-top: 6em; }
+	
+	
+	.grid-wrap
+	{
+		margin: 3em 0;
+		padding: 0;
+		
+		> div
+		{
+			padding: 0 1.2em;
+			margin-bottom: 1em;
+
+			@include tweakpoint('min-width',25em)
+			{
+				width: 50%;
+				float: left;		
+			}
+			@include tweakpoint('min-width',40em)
+			{
+				width: 33.3%;
+				
+				&:nth-child(3n+1)
+				{
+					clear: left;
+				}
+			}
+						
+			> div
+			{
+				border-top: 8px solid $midgrijs;
+			}
+
+			h2
+			{		
+				@extend .h4;
+				margin: 0.2em 0;
+			}
+		}
+
+		.banner img
+		{
+			display: block;
+			width: auto;
+			max-width: 100%;
+			height: auto;
+		}
+	}
+	
+	
+	.related
+	{
+		margin-top: 0;           // Houdt uitlijning van secondary blokken vast.
+		padding-top: 0.4em;      // Beetje padding voor witruimte
+		background-image: none;  // Onderdruk de related accolade
+	}
+}

@@ -1,0 +1,8 @@
+// Smaller, uppercase headings for content elements in breakout and in spotlight news section
+.breakout
+{
+	.csc-firstHeader
+	{
+		@extend .upper;
+	}
+}

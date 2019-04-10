@@ -1,0 +1,37 @@
+//  TX POWERMAIL FORM
+//  Keuzeboom versie
+
+//  Zelfde situatie als online loket eforms: geneste fieldsets and all.
+fieldset 
+{
+	position: relative;
+	
+	fieldset
+	{
+		margin: 1em 0 0;
+		border: 0;
+		
+		legend.powermail_label
+		{
+			width: 100%;
+			text-transform: none;
+			letter-spacing: normal;
+			top: auto;
+			font-size: 1em;
+		}
+	}
+	
+	.powermail_fieldwrap
+	{
+		margin: 0 0 2em;
+	}
+}
+
+
+ul.orgs .org
+{
+	background-image: none;
+	padding-left: 0;
+}
+
+

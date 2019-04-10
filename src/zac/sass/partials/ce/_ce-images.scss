@@ -1,0 +1,243 @@
+//  PARTIAL - CONTENT ELEMENT
+//
+//  IMAGES AND TEXT
+
+// Ten options:
+//
+// - above content left/center/right
+// - below content left/center/right
+// - inline below heading left/right
+// - beside content left/right
+
+
+.image-beside:after
+{
+	@include floatclear;
+}
+
+
+.image-wrap
+{
+	// These options exist, but for now commented out as not to break current image sizes.
+	//.image-left &,
+	//.image-right &,
+	//.image-intext &,
+	//.image-above &,
+	//.image-below &,
+	.image-beside &
+	{	
+		width: 100%;
+
+		@include tweakpoint('min-width',25em)
+		{
+			width: 50%;
+		}
+		@include tweakpoint('min-width',35em)
+		{
+			width: 25%;
+		}
+	}
+	
+	figure
+  {
+	  width: auto;
+	  margin: 0.3em 0 1.2em;
+  }
+  
+	.image-center &
+	{
+		text-align: center;
+		margin: 0 auto;
+		
+		figure     { display: inline-block; }		
+		figcaption { text-align: left; }
+	}
+	
+	.image-left &,
+	.image-intext-left &,
+	.image-beside-left &
+	{
+		float: left;
+	}
+	.image-intext-left &
+	{
+		figure
+		{
+			margin-right: 1.2em;
+		}
+	}
+	.image-beside-left &
+	{
+		figure
+		{
+			@include tweakpoint('min-width',25em)
+			{
+				margin-right: 1.2em;
+			}
+		}		
+	}
+
+	
+	.image-right &,
+	.image-intext-right &,
+	.image-beside-right &
+	{
+		float: right;
+
+		figcaption { text-align: left; }
+	}
+
+	.image-intext-right &
+	{
+		figure
+		{
+			margin-left: 1.2em;
+		}		
+	}
+	.image-beside-right &
+	{
+		figure
+		{
+			@include tweakpoint('min-width',25em)
+			{
+				margin-left: 1.2em;
+			}
+		}		
+	}
+
+
+	
+	&.image-fullwidth {
+		float: none;
+		
+		figure,
+		img {
+			display: block;
+		}
+	}
+}
+
+.image-left,
+.image-right,
+.image-intext,
+.image-below
+{
+	overflow: hidden;
+}
+
+.image-beside
+{
+	margin-top: 1.2em;
+	
+	h2:first-child,
+	h3:first-child
+	{
+		margin-top: 0;
+	}
+}
+
+
+.text
+{
+	.image-left &,
+	.image-right &
+	{
+		clear: both;
+	}
+	.image-beside &
+	{
+		width: 100%;
+
+		@include tweakpoint('min-width',25em)
+		{
+			width: 50%;
+		}
+		@include tweakpoint('min-width',35em)
+		{
+			width: 75%;
+		}
+	}
+	.image-beside-left &
+	{
+		float: left;
+	}
+	.image-beside-right &
+	{
+		float: none;
+	}	
+}
+
+.image-intext
+{
+	.text .layout-body hr:last-child
+	{
+		margin-bottom: 0em; // Voorkom verdubbeling van margin als een scheidingslijn wordt gebruikt als laatste element 
+	}		
+}
+.image-intext-left
+{
+	.layout-body
+	{
+		ol, ul
+		{
+			clear: left;
+		}
+	}	
+}
+
+
+
+
+
+//  IMAGES IN A ROW
+//  2/3/4 per row
+
+.image-row
+{
+	margin: 0 -1.2em 1.2em;
+	
+	&:after
+	{
+		@include floatclear;
+	}
+	
+	.image-column
+	{
+		padding: 0 1.2em;
+		
+		figure
+		{
+			display: block;
+			padding: 0;
+		}
+	}
+
+	.imagecols2
+	{
+		@include tweakpoint('min-width',35em) { width: 50%; float: left; }
+	}
+
+	.imagecols3
+	{
+		@include tweakpoint('min-width',35em) { width: 33.3%; float: left; }
+	}
+
+	.imagecols4
+	{
+		@include tweakpoint('min-width',35em) { width: 50%; float: left; }
+		@include tweakpoint('min-width',60em) { width: 25%; }
+	}
+
+	.imagecols5
+	{
+		@include tweakpoint('min-width',35em) { width: 20%; float: left; }
+	}
+
+	.imagecols6
+	{
+		@include tweakpoint('min-width',35em) { width: 33.3%; float: left; }
+		@include tweakpoint('min-width',60em) { width: 16.6%; }
+	}
+}
+
+

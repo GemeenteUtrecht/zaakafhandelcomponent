@@ -1,0 +1,155 @@
+// Promotie
+// RTE stijl voor links
+.promo
+{
+	display: inline-block;
+	padding: .4em 2.22em .4em 1.11em;
+	margin: 1.2em 0 0;
+	background: $lichtgeel url($pijltjezwart) no-repeat top 0.65em right 0.8em;
+	color: $zwart;
+	font-size: 0.9em;
+	text-decoration: none;
+
+	&:hover,
+	&:focus
+	{
+		color: $zwart;
+		text-decoration: underline;
+	}
+	
+	strong
+	{
+		display: block;
+		font-size: 1.11em;
+	}
+}
+
+
+
+// Uitgelicht blok
+// RTE blokstijl voor alinea
+/*
+.citaat
+{
+  font-size: 1.75em;
+  line-height: 1.6;
+  padding: 0.5em 25% 0 0;
+
+	//font-family: georgia;
+  //font-size: 2em;
+  //line-height: 1.4;
+  //padding: 0.6em 33% 0 0;
+
+  color: #1d1c1c;
+  border-top: 6px solid #c00;
+  margin: 2.4em 0 2em;
+}
+*/
+
+blockquote,
+.citaat
+{
+	margin: 2.4em 0;
+	padding: 1em 2.4em;
+	border-left: 0.8em solid $ijsblauw;
+	font-size: 1em;
+	font-weight: bold;
+	line-height: 2;
+	color: $donkergrijs;
+
+  p
+  {
+	  margin-bottom: 0;
+	  
+	  & + p
+	  {
+		  margin-top: 0.5em;
+	  }
+  }
+}
+.citaat-groot
+{
+	margin: 1.2em 0;
+	padding: 0.6em 1.2em;
+	border-left: 0.4em solid $ijsblauw;
+  font-size: 2em;
+  font-weight: normal;
+  line-height: 1.6;  
+}
+
+
+
+
+
+
+// Initiaal: grote beginletter
+// RTE blokstijl voor alinea
+// Lijkt een mooi element voor meer tijdschrift-achtige delen van site. Nu nog geen goede plek voor, dus niet gebruiken?!
+/*
+.initiaal
+{
+	&:first-letter
+	{
+		display: inline-block;
+		float: left;
+		margin: 0 0.1em -0.2em 0;
+		color: $rood;
+		font-family: georgia,serif;
+		font-size: 4.8em;
+		line-height: 0.9;
+	}
+}
+*/
+
+
+
+
+// Bijschrift
+// RTE blokstijl voor alinea
+.image-caption
+{
+	@extend figcaption;
+	margin: -0.75em 0 1.25em;
+}
+
+
+
+// Tabellen
+// RTE stijlen voor tabel: sec, zebra, timetable
+table
+{
+	&.sec
+	{
+		width: auto;
+		max-width: 100%;
+		margin: 0.5em 0;
+		
+		p + &
+		{
+			margin-top: -0.5em;
+		}
+
+		// Uitgeklede basisstijlen voor kale tabel, bijv voor openingstijden
+		th, td
+		{
+			border-bottom: 0;
+			padding: 0.2em 1em 0.2em 0;
+		}
+	}
+	
+	&.zebra
+	{
+		tbody tr:nth-child(even)
+		{
+			th, td
+			{
+				background-color: $lichtgrijs;
+			}
+		}
+	}
+	
+	&.timetable
+	{
+		// Openingstijden burgerzaken
+	}
+}

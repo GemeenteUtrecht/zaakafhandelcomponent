@@ -1,0 +1,522 @@
+//  TWEAKPOINT 4
+//
+//  Touchmenu verdwijnt
+//  Hoofdmenu bovenaan pagina
+//  Zoekveld in header
+//  Readspeaker zichtbaar
+//  Skiplinks zichtbaar bij tabgebruik
+//
+
+
+//  MAIN LAYOUT CHANGES
+//  header, footer, centering, disable phone link
+//
+body
+{
+	padding: 0 2em;
+	background: $lichtgrijs;
+}
+
+header
+{
+	margin: 0 -2em;
+	padding: 3.5em 2em 0;
+	background: url($menubalk) repeat-x;
+		
+	.grid-wrap
+	{
+		padding: 1.75em 2.4em 1.25em 2em;
+	}
+}
+
+#wapen
+{
+	position: relative;
+}
+a#wapen
+{
+	z-index: 1337;
+}
+
+
+
+#main
+{
+	position: relative;
+	z-index: 10;
+	
+ .container
+	{
+		padding: 0 1.2em 2em 2.8em;
+	}
+}
+
+.container
+{
+	position: relative;
+	margin: 0 auto;
+}
+footer
+{
+	margin: -2em -2em 0;
+	padding: 3.5em 2em 2em;
+	
+	.container
+	{
+		padding: 0 2.4em 0 3em;
+	}
+
+	a[href^=tel] {
+		text-decoration: none;
+		cursor: text;
+	}	
+
+	.social
+	{
+		position: absolute;
+		top: 0em;
+		right: 1.8em;
+	}	
+
+}
+
+.subnav .linklijst,
+.bodycopy .grid-wrap > div,
+.related
+{
+		max-width: none;
+}
+article
+{
+	.page-heading,
+	.bodycopy
+	{
+		width: 66.67%;
+		float: left;
+		
+		.popup &
+		{
+			width: 100%;
+		}
+	}
+		
+	.subnav,
+	.account
+	{
+		width: 33.3%;
+		float: right;
+		margin-top: 3em;
+	}
+
+	.subnav,
+	.account,
+	.sisternav
+	{
+		.linklijst
+		{
+			margin-right: -2.4em;
+			padding-right: 2.4em;
+			
+			ul
+			{
+				width: 100%;
+				float: none;
+			}
+		}
+	}
+	.sisternav
+	{
+		margin-top: -2px;
+
+		.linklijst
+		{
+			border-top-width: 2px;
+			border-left: 6px solid $lichtgrijs;
+			padding-left: 0.6em;
+		}
+	}
+	
+}
+
+
+
+
+
+
+//  LIJSTEN MET NAVIGATIELINKS
+//
+.lijsten
+{
+	.grid-columns > div
+	{
+		&:nth-child(2n+1)
+		{
+			clear: none;
+		}		
+	}
+	.grid-3-columns > div
+	{
+		width: 33.3%;
+
+		&:nth-child(3n+1)
+		{
+			clear: left;
+		}		
+	}
+	.grid-4-columns > div
+	{
+		width: 25%;
+		&:nth-child(4n+1)
+		{
+			clear: left;
+		}		
+	}
+}
+
+
+
+//  NEWS
+//
+.news
+{
+	li
+	{
+		width: 33.3%;
+		float: left;
+		
+		&:nth-child(3n+1)
+		{
+			clear: left;
+		}
+	}
+}
+
+
+
+
+//  BREAKOUT
+//  PoC setup for flexible new content blocks
+//  adjustments
+//
+//
+.breakout
+{
+	.article-width-breakout
+	{
+		width: 150%;
+	}
+	.page-width-breakout
+	{
+		margin-left: -2.8em;
+		margin-right: -1.2em;
+	}
+}
+
+
+
+//  GRID COLUMNS SETUP FOR BREAKOUT
+//  
+//
+.grid-columns
+{
+	.grid-column-1of6
+	{
+		width: 16.66%;
+	}
+	
+	.grid-column-1of5
+	{
+		width: 20%;
+	}
+	.grid-column-2of5
+	{
+		width: 40%;
+	}
+	.grid-column-3of5
+	{
+		width: 60%;
+	}
+	
+	.grid-column-1of4
+	{
+		width: 25%;
+	}
+}
+// Deze twee buiten de wrapperclass .grid-columns, want zo in gebruik op online loket!
+.grid-column-1of3
+{
+	width: 33.33%;
+}
+.grid-column-2of3
+{
+	width: 66.66%;
+}
+
+
+
+
+
+//  CONTACTBLOK HOMEPAGE
+//
+article .contact
+{
+	width: 33.3%;
+	float: left;
+	margin: 0;
+	padding: 0 1.2em;
+	
+	.upper
+	{
+		margin-top: 0;
+		padding-top: 1.5em;
+	}
+	
+	.grid-wrap
+	{
+		min-height: 21.2em;
+		padding: 0 0.8em;
+	}
+	
+	.cta
+	{
+		position: relative;
+		top: auto;
+		right: auto;
+	}
+}
+.home .breakout
+{
+	clear: both;
+}
+
+
+
+
+//  GROTE FOTO
+//
+.herald
+{
+	margin: 0;
+	
+	figcaption
+	{
+		width: 60%;
+		padding: 0 0 0 4.444em; // 4.444 because of 0.9em font-size.
+		
+		&:after
+		{
+			left: 4.5em;
+		}
+	}
+}
+
+
+
+
+
+
+//  BANNERS
+//
+.bannerset
+{
+	width: 66.67%;
+	float: left;
+	
+	.half
+	{
+		width: 50%;
+		float: left;
+	}
+
+	&.aside
+	{
+		width: 33.3%;
+		float: right;
+		
+		.half
+		{
+			width: 100%;
+			float: none;
+		}
+	}
+}
+
+
+
+//  SIZE UP TYPOGRAPHY
+//
+h1
+{
+	margin-top: 1.25em;
+	margin-top: 1em;
+	font-size: 2em;
+	
+	span
+	{
+		font-size: 0.5em;
+		margin-top: 2.5em;
+		margin-top: 1.5em;
+	}
+}
+
+
+
+
+//  HIDE MENU BUTTONS, SHOW SKIPLINKS ON FOCUS
+.skiplinks a img,
+.skiplinks a:not(:focus),
+.returnlink
+{
+	@include assistive;
+}
+.skiplinks
+{
+	a:focus
+	{
+		padding: 0.65em 1em;
+		position: absolute;
+		top: 1.8em;
+		left: 15em;
+		background: $wit;
+		color: $rood;
+		font-weight: bold;
+		text-decoration: none;
+	}
+}
+
+
+
+
+
+//  MAIN MENU WITH TOPICS
+//
+nav
+{
+	display: block;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	color: $wit;
+	
+	ul
+	{
+		height: 2em;
+		overflow: visible;
+		
+		display: -webkit-box;   // Legacy Safari <6, iOS <6
+		display: -ms-flexbox;   // IE 10/11
+		display: -webkit-flex;  // Legacy Safari 7 and Google Chrome
+		display: flex;          // Current spec
+
+		-ms-justify-content: space-between;			
+		-webkit-justify-content: space-between;
+		justify-content: space-between;
+
+		margin: 0;
+	}
+	li
+	{
+		height: 3.5em;
+
+		-webkit-box-flex: 1;    // Legacy Safari <6, iOS <6
+		-ms-flex: 1 0 auto;     // IE 10/11
+		-webkit-flex: 1 0 auto; // Legacy Safari 7 and Google Chrome
+		flex: 1 0 auto;         // Current spec
+
+		margin: 0;
+		border-right: 1px solid $schemergrijs;
+		text-align: center;
+
+		&:first-child
+		{
+			border-left: 1px solid $schemergrijs;
+		}
+		a
+		{
+			display: block;
+			padding: 1em;
+			color: $wit;
+			font-size: 1em;
+			text-decoration: none;
+			transition: background-color 0.25s ease;
+			
+			&.selected,
+			&:hover,
+			&:focus
+			{
+				background: $zwart;
+				color: $wit;
+			}
+		}
+	}
+	
+	.english
+	{
+		position: absolute;
+		right: 10em;
+		top: 8.8em;
+		
+		a
+		{
+			padding-left: 1.75em;
+			background: url($icoonwereldrood) center left no-repeat;
+			background-size: 1.2em;
+			font-size: 0.9em;
+			color: $rood;
+		}
+	}
+}
+
+
+//  SEARCH BOX
+//
+#search
+{
+	width: 100%;
+	max-width: 74em;
+	margin: 0 auto;
+
+	.container
+	{
+		position: absolute;
+		top: 3.5em;
+		width: 100%;
+		padding: 0 1.2em 0 2.8em;
+	}
+	
+	form
+	{
+		width: 50%;
+		float: right;
+		padding: 1.8em 1.2em 0;
+	}
+
+	fieldset
+	{
+		position: relative;
+		border: 0;
+		margin: 0;
+		padding-right: 5.9em;
+	}
+
+	label
+	{
+		@include assistive;
+	}
+	
+	input[type="text"]
+	{
+		@include search-field();
+	}
+	input[type="submit"]
+	{
+		@include search-submit();
+	}
+}
+// Ugly fix for IE10 input height
+html.ie10 #search input[type="text"]
+{
+	padding: .4em 1em .5em 2em;
+}

@@ -1,0 +1,57 @@
+//  PARTIAL - CONTENT ELEMENT
+//
+//  FAQ
+
+.faqQuestion
+{
+  width: 100%;
+  position: relative;
+  border-top: 3px solid $wit;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  
+  h2
+  {
+    margin: 0;
+    padding: 0.8em 3.6em 0.8em 0.8em;
+    background: $lichtgrijs;
+    color: $asfalt;
+    
+    &:after
+    {
+      content: "";
+      background: $donkergeel url($pijltjezwartomlaag) scroll no-repeat center center;
+      right: 0;
+      top: 0;
+      position: absolute;
+      height: 1.6em;
+      width: 1.6em;
+    }
+    
+    a
+    {
+      color: $asfalt;
+      text-decoration: none;
+    }
+  
+    &.open
+    {
+    	background:$midgrijs;
+    	
+    	&:after
+    	{
+        background: $donkergeel url($pijltjezwartomhoog) scroll no-repeat center center;
+    	}
+  	}
+  }  
+}
+
+.faqAnswer > div
+{
+  width: 100%;
+  border: 2px solid $midgrijs;
+  border-top: none;
+  padding: 1em 1em 0;
+}

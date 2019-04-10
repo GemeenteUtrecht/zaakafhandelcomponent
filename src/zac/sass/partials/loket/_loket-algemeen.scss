@@ -1,0 +1,163 @@
+.gadgetcontainer
+{
+	clear: both;
+	margin: 2em 0;
+	
+	.header .icons
+	{
+		display: none;
+	}
+}
+
+.header .upper
+{
+	margin: 0 0 1em;	
+}
+
+
+
+.box-assistive .gadget_header,
+.noheader .gadget_header
+{
+	@include assistive;
+}
+.noheader .icons,
+.gadget_configuration
+{
+	display: none; // Disable all congiguration options for gadgets. Nasty and ugly fix!
+}
+
+
+
+.navigation_button
+{
+	float: left;
+	margin-right: 1.2em;
+}
+
+.navigation_button a
+{
+	@extend .cta;
+	
+	//font-size: 1em;
+	line-height: 1;
+}
+
+#Terug_button a
+{
+	padding-right: 1em;
+	padding-left: 2.5em;
+	background-image: url($pijltjewitterug);
+	background-position: left 1em center;
+}
+
+
+.default_table
+{
+	thead
+	{
+		th
+		{
+			min-width: 0.5em;
+		}
+		td
+		{
+			border-bottom: 1px solid $rood;
+		}
+		th.sorting
+		{
+			padding-right: 1.5em;
+		}
+		.sorting_asc
+		{
+			padding-right: 1.5em;
+			background: url($pijltjezwartomhoog) no-repeat right .2em center;
+		}
+		.sorting_desc
+		{
+			padding-right: 1.5em;
+			background: url($pijltjezwartomlaag) no-repeat right .2em center;
+		}
+	}
+	
+	tbody th,
+	tbody td
+	{
+		vertical-align: top;
+	}
+	.odd td
+	{
+		background-color: $lichtgrijs;
+	}
+}
+
+#topicsTable
+{
+	th,
+	td
+	{
+		border: 0;
+		padding: 0.2em 0;
+	}
+	a
+	{
+		@extend .arrow;
+	}
+}
+
+#products.empty
+{
+	display: none;
+}
+
+
+// Digid message with logo and link.
+.digidtekst
+{	
+	.bodycopy .grid-wrap &
+	{
+		max-width: 36em;
+	}
+
+	img
+	{
+		width: 3.8em;
+		float: left;
+		position: relative;
+		top: 0.2em;
+		margin: 0 .8em 0 0;
+	}
+	
+	.arrow
+	{
+		display: block;
+	}
+}
+
+
+
+// Release message alert
+// Temporary
+.alert.online-loket
+{
+	padding: 0;
+	
+	.alert-wrap
+	{
+		background-image: none;
+		padding: 0.8em 1.2em;
+		margin-bottom: 0;
+	}
+	p
+	{
+		margin-bottom: 0.6em;
+
+		.los
+		{
+			margin-bottom: 0;
+		}
+	}
+}
+
+
+

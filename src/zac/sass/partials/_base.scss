@@ -1,0 +1,1489 @@
+//	BASE SETUP FOR RESPONSIVE
+//
+//	1. Color scheme definitions
+//	2. Box sizing for elements in grid layout
+//	3. Assistive mixin for screen reading etc.
+//	4. Float clears (yeah, float clears :-)
+//	5. Media query tweakpoints setup
+//	6. Base styling for all viewports
+
+
+
+// General refactoring todo:
+// - rework float clears to use @extend
+// - make icon images config more elegant with an @each loop
+//
+
+
+//	1.
+//	COLOR DEFINITIONS
+//
+//
+$wit:						#FFFFFF;
+$zwart:					#000000;
+$asfalt:				#1D1D1C;
+
+$donkergrijs:		#333333;
+$schemergrijs:	#777777; // Border van hoofdmenu
+$grijs:					#ADADAB; // Huisstijlgrijs
+$randgrijs:			#B3B3B3; // Border van inputvelden
+$midgrijs:			#E5E5E5; // Kruimelpad en bezoekinfoblok
+$lichtgrijs:		#F2F2F2; // Achtergronden
+
+$rood:					#CC0000; // Huisstijl rood
+$lichtrood:			#D94E51; // Hoverkleur van rood
+
+$vanillegeel:   #FFEEBB; // Vanille voor attentieblok.
+$lichtgeel:			#FFE44D; // Lichter geel voor markeren
+$geel:					#FFCC00; // Huisstijl geel
+$donkergeel:		#FFB60A; // Donkerder geel voor kader
+
+$groen:					#479759; // Huisstijlgroen
+$lichtgroen:		#51AD62; // Lichtgroen voor hover op verzendbuttons e-forms.
+
+$ijsblauw:      #DBEAF6; // Lichtste blauw voor contactblok binnen pagina
+$lichtblauw:		#9ACBF0; // Lichte versie conform ontwerp eend
+$blauw:					#3669A5;
+$donkerblauw:		#2A5587; // Knoppen in formulieren, links, etcetera
+$zachtblauw:		#B9DBF4;
+
+$magenta:				#BC3983;
+
+
+
+//	2.
+//	FIX BOX SIZING SETUP
+//
+//
+*
+{
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+
+
+//	3.
+//	ASSISTIVE MIXIN PLUS CLASS
+//	
+//	todo: rewrite using @extend
+//
+@mixin assistive
+{
+	display: inline-block !important;
+	width: 1px;
+	height: 1px;
+	position: absolute !important;
+	overflow: hidden;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+}
+
+.assistive
+{
+	@include assistive;
+}
+
+
+
+//	4.
+//	FLOAT CLEARS
+//
+//	todo: rewrite using @extend
+//
+@mixin floatclear
+{
+	content: "";
+	display: block;
+	clear: both;
+	visibility: hidden;
+}
+nav ul:after,
+article:after,
+.crumb:after,
+.linklijst:after,
+.lijsten:after,
+.visiting:after
+{
+	@include floatclear;
+}
+
+
+
+
+/*	5.
+ *	MEDIA QUERIES MIXIN FOR PARTIALS
+ *
+ *	Set up mixin to allow scss for typo3 content elements to access tweakpoints in an elegant way
+ *
+ */
+@mixin tweakpoint($query,$tweakpoint)
+{
+	@if ($render == responsive)
+	{
+		@media only screen and ($query: $tweakpoint)
+		{
+			@content;
+		}
+	}
+	@else if ($render == ie)
+	{
+		@content;
+}
+}
+
+
+
+//	6.
+//  SEARCH BOX MIXINS
+//
+//
+@mixin search-field()
+{
+	display: inline-block;
+	padding: .55em 1em .58em 2em;
+	width: 100%;
+	border: 1px solid $rood;
+	background: $wit url($icoonzoekrood) .5em 50% no-repeat;
+	background-size: 1em;
+	color: $asfalt;
+	line-height: 1.2em;	
+}
+@mixin search-submit()
+{
+	-webkit-appearance: none; // Fix iOS styling of submit button.
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 6.6em;
+	margin: 0;
+	padding: .7em 0;
+	border: 1px solid $rood;
+	background: $rood;
+	color: $wit;
+	text-align: center;
+	line-height: 1.2em;	
+
+	&:hover
+	{
+		background: $lichtrood;
+	}
+}
+
+
+
+
+//	7.
+//	BASE STYLING FOR ALL VIEWPORTS
+//
+//
+body,
+code,
+button,
+input,
+select,
+textarea {
+	font: normal 1em/1.4 'Lucida Grande','Lucida Sans Unicode','Lucida Sans','Verdana',sans-serif;
+}
+h1, .h1
+{
+	margin: 0.67em 0;
+	color: $zwart;
+	font-size: 1.5em;
+	font-weight: bold;
+
+	span
+	{
+		display: block;
+		text-transform: uppercase;
+		font-size: .67em;
+		letter-spacing: .04em;
+		margin: 1em 0 .25em;		
+	}	
+}
+
+h2, .h2
+{
+	margin: 1.5em 0 0.3em;
+	font-size: 1.25em;
+	line-height: 1.2; // JVI - typecheck 11-2016
+	font-weight: bold;
+}
+.upper
+{
+	padding: .5em 0 .1em;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-size: 1em;
+	letter-spacing: .04em;
+}
+h3, .h3
+{
+	margin: 1em 0 0.2em;
+	font-size: 1.25em;
+	line-height: 1.2; // JVI - typecheck 11-2016
+	font-weight: normal;
+}
+h4, .h4
+{
+	margin: 1.2em 0 0.3em;
+	font-size: 1.125em;
+	font-weight: normal;
+	line-height: 1.25;
+}
+h5, .h5,
+h6, .h6
+{
+	margin: 1em 0 0.2em;
+	font-size: 0.9em;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-weight: normal;
+	line-height: 1.333;
+}
+h1 + h2,
+h2 + h3,
+h3 + h4,
+h4 + h5,
+h5 + h6
+{
+	margin-top: 0;
+}
+
+
+
+
+
+
+p
+{
+	margin: 0 0 1em;
+	color: $asfalt;
+	//line-height: 1.5; // JVI - typecheck 11-2016
+}
+
+em
+{
+	font-style: italic;
+}
+
+
+
+
+//  BASE RTE CONTENT STYLING
+//
+article
+{
+	padding-bottom: 1em;
+
+	.intro
+	{
+		font-size: 1.125em;
+		margin-bottom: 1.8em;
+	
+		p
+		{
+			margin-bottom: 0.5em;
+		}
+	}
+
+	em
+	{
+		font-style: normal;
+	}
+}
+
+.date
+{
+	display: block;
+	margin: 1em 0;
+	padding-left: 1.5em;
+	background: url($kalender) center left no-repeat;
+	background-size: 1.2em;
+	color: $donkergrijs;
+}
+
+
+/*	LINKS 
+ *
+ */
+a
+{
+	// box-shadow: inset 0px 0px 0px $wit,inset 0px -2px 0px $donkerblauw;
+  // text-shadow: 0.0625em 0.0625em 0 $wit,-0.0625em 0.0625em 0 $wit,0.125em 0 0 $wit,-0.125em 0 0 $wit;		
+	color: $donkerblauw;
+	//text-decoration: none;
+
+	&:hover,
+	&:focus
+	{
+		// box-shadow: inset 0px 0px 0px $wit,inset 0px -2px 0px $blauw;
+		color: $blauw;
+	}
+	
+	/* Voor de toekomst: dikke gele actieve highlight voor links
+	&:focus,
+	&:active
+	{
+		background-color: $geel;
+	}
+	*/
+}
+
+// Link met pijltje voor follow-up link na kopje+intro
+// RTE stijl voor link in content,
+// wordt ook gebruikt in loket productpagina's, dus in base css opgenomen!
+.arrow
+{
+	display: inline-block;
+	padding-left: 1em;
+	margin-top: .5em;
+	text-decoration: none;
+	background: url($pijltjeblauw) left 0 top .25em no-repeat;
+	font-weight: bold;
+
+	&:hover,
+	&:focus
+	{
+		text-decoration: underline;
+	}
+}
+p + p > .arrow:first-child
+{
+	margin-top: -0.5em;
+	
+	.news &
+	{
+		margin-top: 0.5em;
+	}
+}
+
+
+
+
+
+
+.bodycopy
+{
+	ul,	ol
+	{
+		margin: 0 0 1em;
+
+		ul, ol
+		{
+			margin-left: 1.5em;
+		}
+	}
+
+	li
+	{
+		margin: 0.25em 0;
+	}
+	
+	ol {
+		list-style: outside;
+		padding-left: 1.8em;
+	
+		li
+		{
+			list-style-type: decimal;
+			line-height: 1.4;
+		}
+	}
+
+	ul
+	{		
+		li
+		{
+			padding-left: 1.8em;
+			background: url($listbullet) no-repeat left .7em top 0.5em;
+			margin: 0.5em 0;
+			line-height: 1.4;
+		}
+	}
+	
+}
+
+
+
+
+
+
+//	BEELD
+figure
+{
+	margin: 1em 0;
+	max-width: 100%;
+	position: relative;
+	
+	&.headerImage
+	{
+		margin-top: 0;
+	}
+	
+	img
+	{
+		width: 100%;
+		height: auto;
+	}
+}
+
+figcaption
+{
+	position: relative;
+	margin: 0.25em 0 1.25em;
+	font-size: 0.9em;
+
+	&:after
+	{
+		content: '';
+		width: 0;
+		height: 0;
+		position: absolute;
+		border-left: 15px solid transparent;
+		border-right: 15px solid transparent;
+		border-bottom: 20px solid $wit;
+		top: -1.5em;
+		left: 0.5em;
+	}
+}
+
+
+.album
+{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  .small
+  {
+    width: 47%;
+  }
+  
+  .xsmall
+  {
+    width: 31.5%;
+  }
+}
+
+
+
+//	SEPARATORS
+hr
+{
+	height: 8px;
+	margin: 2em 0;
+	border: 0;
+	background-color: $lichtgrijs;
+}
+
+
+
+//	TABLES
+table
+{
+	width: 100%;
+	border-collapse: collapse;
+	margin: 1em 0 2em;
+
+	caption
+	{
+		margin: 1em 0;
+		font-size: 1.25em;
+		text-align: left;
+	}
+}
+
+
+th, 
+td
+{
+	padding: 0.5em 0 0.5em 0.4em;
+	border-bottom: 1px solid $midgrijs;
+	text-align: left;
+
+	p
+	{
+		margin-bottom: 0;
+	}
+}
+
+thead th
+{
+	font-weight: bold;
+	text-align: left;
+	vertical-align: bottom;
+	border-bottom: 2px solid $rood;
+	margin-top: 1em;
+}
+
+thead th:first-child
+{
+	width: auto;
+	
+	//.normale-eerste-kolom &  { width: 35%; }
+	//.brede-eerste-kolom &  { width: 50%; }
+	//.extrabrede-eerste-kolom &  { width: 70%; }
+}
+
+
+
+
+
+//	CALL TO ACTION LINKS
+//
+.los
+{
+	a:not(.cta)
+	{
+		display: inline-block;
+		padding-left: 1em;
+		background: url($pijltjezwart) left center no-repeat;
+		color: $zwart;
+		font-weight: bold;
+		text-decoration: none;
+		
+		&:hover,
+		&:focus
+		{
+			text-decoration: underline;
+		}
+	}
+}
+
+
+
+//	CALL TO ACTION BUTTONS
+//
+.cta {
+	display: inline-block;
+	margin: 0 .5em 0.5em 0;
+	border: 2px solid $donkerblauw;
+	padding: .75em 2.5em 0.75em 1em;
+	background: $donkerblauw url($pijltjewit) no-repeat right 1em top 1.12em;
+	color: $wit;
+	text-decoration: none;
+	font-size: 1.125em;
+	//-webkit-font-smoothing: antialiased;
+
+	&:hover,
+	&:focus
+	{
+		background-color: $blauw;
+		border-color: $blauw;
+	  color: $wit;
+		-webkit-transform: scale(1.02);
+		transform: scale(1.02);
+	}
+
+	&.sec {
+		margin-top:0;
+		border:2px solid $donkerblauw;
+		background: url($pijltjeblauw) no-repeat right 1em top 1.12em;
+		color: $donkerblauw;
+		
+		&:hover,
+		&:focus
+		{
+			border-color: $blauw;
+			background-color: $blauw;
+			background-image: url($pijltjewit);
+			color: $wit;
+			-webkit-transform: none;
+			transform: none;
+		}
+	}
+	
+	+ .cta
+	{
+		margin-top: .5em;
+	}
+	
+	+ p
+	{
+		margin-top: 1em;
+	}
+}
+
+
+
+
+.button.sec
+{
+	display: inline-block;
+	padding: .5em 1em;
+	border: 2px solid $donkerblauw;
+	background: $wit;
+	color: $donkerblauw;
+	text-decoration: none;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-weight: bold;
+	
+	&:hover,
+	&:focus
+	{
+		background-color: $blauw;
+		border-color: $blauw;
+		color: $wit;
+	}
+}
+
+
+
+//	OFFICIAL INFORMATION: registered citizen data or case reference numbers
+//
+.official
+{
+	background: url($officieel);
+	background-size: 1.5em;
+}
+
+
+
+
+//	FORM ELEMENTS
+//
+p.error,
+.parsley-custom-error-message, 	  // FOR PARSLEY FORMS
+.parsley-required                	// FOR PARSLEY FORMS
+{
+	margin-top: .5em;
+	padding-left: 2.2em;
+	background: url($icoon-error) .1em .25em no-repeat;
+	background-size: 1.5em;	
+	color: $rood;
+}
+
+.keus span
+{
+	display: block;
+	margin: 1em 0 -.25em;
+}
+
+fieldset {
+	padding: 0;
+	border: none;
+	border-top: 2px solid $lichtgrijs;
+	margin: 2em 0;
+}
+
+legend {
+	text-transform: uppercase;
+	margin: 1em 0 .5em;
+	display: block;
+	font-weight: bold;
+	letter-spacing: .04em;
+	background: $wit;
+	position: relative;
+	top: -.25em;
+	padding-right: .5em;
+}
+
+label {
+	display: block;
+	margin: 1em 0 .25em;
+	font-weight: bold;
+	
+	&.radio {
+		font-weight: normal;
+		padding-right: 2em;
+	}
+	
+	input + &,
+	div + &
+	{
+		margin-top: 1.5em;
+	}
+}
+input + label,
+div + label {
+
+}
+
+// Define base styling for formfields
+%formfield
+{
+	width: 100%;
+	max-width: 28em;
+	border: 1px solid $randgrijs;
+	border-bottom-width: 3px;
+	padding: .5em .75em;
+
+	&.error,
+	&.has-error,
+	.has-error &
+	{
+		border-color: $rood;
+	}
+
+	&.m
+	{
+		max-width: 20em;
+	}
+	&.s
+	{
+		max-width: 10em;
+	}
+}
+
+textarea,
+select
+{
+	@extend %formfield;
+}
+
+input
+{
+	@extend %formfield;
+		
+	&[type="radio"],
+	&[type="checkbox"]
+	{
+		width: auto;
+		margin: 0 .25em 0 0;
+		border: 0;
+		
+		+ label
+		{
+			display: inline-block;
+			margin: 0;
+			width: auto;
+		}
+	}
+}
+
+button,
+input[type="submit"] {
+	-webkit-appearance: none; // Fix iOS styling of submit button.
+	width: auto;
+	border: none;
+	background: $donkerblauw;
+	color: $wit;
+	padding: .75em 1.25em;
+	text-transform: uppercase;
+	letter-spacing: .05em;
+	font-weight: bold;
+	font-size: .9em;
+	line-height: normal;
+	border: 2px solid $donkerblauw;
+	
+	fieldset &
+	{
+		margin-top: 2em;
+	}
+	
+	&.sec {
+		border: 2px solid $donkerblauw;
+		color: $donkerblauw;
+		background: $wit;
+	}
+	
+	&.back,
+	&.back:hover,
+	&.back:focus
+	{
+		border: 2px solid $wit;
+		text-decoration: underline;
+		color: $donkerblauw;
+		background: $wit;
+		padding: 1em 1em .75em;
+	}
+
+	&:hover,
+	&:focus,
+	&.sec:hover,
+	&.sec:focus
+	{	
+		border: 2px solid $blauw;
+		background-color: $blauw;
+		color: $wit;
+	}
+}
+
+.keus {
+  display: flex;
+  
+  span
+  {
+	  display: block;
+	  padding: 2em 2em 1em;
+  }
+}
+
+
+
+
+//	TEKSTSELECTIE
+//
+article p::-moz-selection, article h1::-moz-selection, article h2::-moz-selection, article h3::-moz-selection, article h4::-moz-selection, article h5::-moz-selection, article h6::-moz-selection, article li::-moz-selection, article em::-moz-selection, article span::-moz-selection, article strong::-moz-selection {
+	background-color: $lichtgeel;
+	/* Omdat het kan */
+}
+article p::selection, article h1::selection, article h2::selection, article h3::selection, article h4::selection, article h5::selection, article h6::selection, article li::selection, article em::selection, article span::selection, article strong::selection {
+	background-color: $lichtgeel;
+	/* Omdat het kan */
+}
+
+
+//	WAPEN VAN GEMEENTE
+#wapen
+{	
+	img
+	{
+		width: 50%;
+		min-width: 8em;
+		max-width: 10em;
+	}
+
+	&:focus,
+	&:active
+	{
+		outline: 1px dotted $rood;
+	}
+}
+
+
+.page-wrap
+{
+	position: relative;
+}
+
+.container
+{
+	width: 100%;
+	max-width: 74em;
+	
+	.popup &
+	{
+		max-width: none;
+	}
+
+	header &
+	{
+		background-color: $wit;	
+	}
+}
+#main
+{
+	position: relative;
+
+	.container
+	{
+		padding: 0 0.8em;
+	}
+
+	& > .container
+	{
+		background: $wit url($huisstijlbalk) 0 0 no-repeat;		
+	}
+}
+
+
+
+
+.grid-wrap
+{
+	padding: 0 1.2em;
+	
+	header &
+	{
+		padding: 1.25em 2em 1em 1em;
+	}
+}
+
+
+
+
+//	Breadcrumb
+//
+.crumb {
+
+	.cutoff
+	{
+			overflow: hidden;
+	}
+	
+	ol
+	{
+		margin: 0 0 0 -1.2em;
+		padding-right: 2em;
+	}
+	
+	li
+	{
+		display: block;
+		float: left;
+		position: relative;
+		z-index: 20;
+		overflow: hidden;
+		margin: 0 -1em 0 0;
+	}
+
+	// Onderstaande moet eleganter kunnen, in elk geval in dit scss bestand. :-/
+	li + li { z-index: 19; }
+	li + li + li { z-index: 18; }
+	li + li + li + li { z-index: 17; }
+	li + li + li + li + li { z-index: 16; }
+	li + li + li + li + li + li { z-index: 15; }
+	li + li + li + li + li + li + li { z-index: 14; }
+	li + li + li + li + li + li + li + li { z-index: 13; }
+	li + li + li + li + li + li + li + li + li { z-index: 12; }
+	li + li + li + li + li + li + li + li + li + li { z-index: 11; }
+	li + li + li + li + li + li + li + li + li + li + li { z-index: 10; }
+	li + li + li + li + li + li + li + li + li + li + li + li { z-index: 9; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 8; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 7; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 6; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 5; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 4; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 3; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 2; }
+	li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li + li { z-index: 1; }
+
+	
+	a
+	{
+		display: block;
+		margin-bottom: 1px;
+		padding: .45em 1.8em .55em 2.5em;
+		background: url($kruimelpad) right center no-repeat;
+		color: $asfalt;
+		// text-decoration: none;
+		font-size: .875em;
+	}
+	.satellite a
+	{
+		background: url($satellietpad) right center no-repeat; // Home button for satellite sites of utrecht.nl
+		color: $wit;
+		font-weight: bold;
+	}
+
+	a:hover,
+	a:focus
+	{
+		text-decoration: underline;
+	}
+}
+
+
+//	LINKLIJST
+//
+ul.linklijst,
+.linklijst ul
+{
+	margin: 0;
+	list-style: none;
+
+	li
+	{
+		background: none;
+		padding-left: 0;
+		margin: .5em 0;
+		line-height: 1.4em;
+		
+		h3
+		{
+			margin: 0;
+			font-size: 1em;
+		}
+		
+		a
+		{
+			display: block;
+			background: url($pijltjeblauw) 0 .25em no-repeat;
+			padding-left: 1em;
+			font-weight: bold;
+			text-decoration: none;
+			
+			&:hover
+			{
+				text-decoration: underline;
+			}
+		}
+	}
+}
+
+
+.subnav
+{
+	//margin-bottom: 2em;
+
+  .upper
+  {
+    margin-top: 0;
+  }
+	
+	.linklijst
+	{
+		border-top: 2px solid $lichtgrijs;
+		border-bottom: 2px solid $lichtgrijs;
+		padding: .75em 0;
+	}
+}
+.sisternav
+{
+  .upper
+  {
+    margin-top: 0;
+    color: $donkergrijs;
+  }
+	.linklijst
+	{
+		border-top: 6px solid $lichtgrijs;
+		//border-bottom: 2px solid $lichtgrijs;
+		padding: .75em 0;
+	}
+}
+
+
+.related
+{
+	margin: 2em 0 4em;
+	padding-top: 1.6em;
+	background: url($scheidingspijl) top center no-repeat;
+	background-size: auto 1.2em;
+	
+	.linklijst
+	{
+		overflow: hidden;
+
+		li
+		{
+			background: none;
+			padding-left: 0;
+		}
+		a
+		{
+			background-image: url($pijltjezwart);
+			color: $zwart;
+		}
+	}
+}
+
+.lijsten
+{
+	margin-bottom: 2em;
+	
+	.grid-column
+	{
+		padding: 0 1.2em;
+	}
+}
+
+
+
+//  ALERT MESSAGE
+//
+.alert 
+{
+	padding: 2em 1.2em 0;
+	margin-bottom: 1em;
+	
+	.alert-wrap
+	{
+		padding: 2em 1em .5em;
+		position: relative;
+		background: $lichtgrijs;
+	}
+
+	h2
+	{
+		position: absolute;
+		top:-2em;
+		left:1em;
+		z-index: 100;
+		padding:1em;
+		margin-top:0;
+		background: url($attentiekop) no-repeat scroll right center / auto 3em;
+		color: $wit;
+	}
+}
+
+//  NEWS
+//
+.news
+{
+	margin: 1em 0 0;
+	
+	&.spotlight
+	{
+		margin-top: 2em;
+		padding: 0;
+		background-color: transparent;
+		
+		h3
+		{
+			font-weight: bold;
+			margin: 1.2em 0 0.3em;
+			
+			a
+			{
+				text-decoration: none;
+				text-shadow: 0.1em 0.06em 0 white,-0.1em 0.06em 0 white,0.1em 0 0 white,-0.1em 0 0 white;
+				box-shadow: inset 0 -2px 0 $donkerblauw;
+				text-rendering: optimizeLegibility;
+			}
+		}
+		
+		ul:after
+		{
+			@include floatclear;
+		}
+		li
+		{
+			margin-bottom: 1.2em;
+		}
+	}
+	
+	ul
+	{
+		margin: 0 -1.2em 2em;
+	}
+	li
+	{
+		padding: 0 1.2em;
+		p
+		{
+			margin: 0;
+		}
+	}
+	
+	.button
+	{
+		text-align: center;
+		margin: 0 auto;
+		width: 11em;
+		display: block;
+	}
+	
+	&.short
+	{
+		margin-bottom: 1.5em;
+		
+		.date
+		{
+			margin: 0.5em 0;
+		}
+	}
+}
+.more-link
+{
+	clear: left;
+}
+
+
+
+//	BREAKOUT
+//	PoC setup for flexible new content blocks: large photos, maps, data visualisations, diagrams
+//
+//
+.breakout
+{
+	.grid-wrap-breakout
+	{
+		margin: 0 -1.2em;
+	}
+	.article-width-breakout
+	{
+		width: 100%;
+	}
+	.page-width-breakout
+	{
+		margin: 0 -0.8em;
+	}
+	.breakout-content
+	{
+		position: relative;
+	}
+	
+	.container
+	{
+		overflow: hidden;
+		margin: 0;
+		
+		&:after
+		{
+			@include floatclear;
+		}
+	}
+
+	.midgrey
+	{
+		background-color: $midgrijs;
+		
+		figcaption,
+		.image-caption
+		{
+			&:after
+			{
+				border-bottom-color: $midgrijs;
+			}
+		}
+	}
+}
+
+
+#main .breakout
+{
+	.container
+	{
+		padding-bottom: 0;
+	}
+}
+
+
+//  GRID COLUMNS SETUP
+.grid-columns
+{
+	overflow: hidden;   // Force container to wrap around floating children.
+	clear: both;
+}
+.grid-column
+{
+	padding: 0 1.2em;
+}
+
+
+
+
+
+//  CONTACTBLOK HOMEPAGE
+//
+article .contact
+{
+	position: relative;
+	margin: 1em -0.8em 0;
+
+	.grid-wrap
+	{
+		padding: .25em 2em;
+		background: $zachtblauw url($balkenpatroon);
+		color: $asfalt;
+	}
+
+	li
+	{
+		margin: 0.5em 0;
+		
+		em
+		{
+			display: block;
+		}
+		p
+		{
+			margin: 0;
+		}
+		a
+		{
+			color: $asfalt;
+			
+			&.cta
+			{
+				margin: 1em 0 0;
+				color: $wit;
+			}
+		}
+	}
+}
+
+
+
+.kader
+{
+	padding: .8em 2em;
+	margin: 0;
+	position: relative;
+	z-index: 10;
+	background-color: $wit;	
+
+	.stadspromotie &
+	{
+		background-color: $donkergeel;	
+
+		&:after
+		{
+			content: url($domtoren);
+			display: block;
+			position:absolute;
+			right: 2em;
+			bottom: -0.25em;
+		}
+	}
+
+
+	h2, .h2
+	{
+		margin-top: 0.5em;
+	}
+
+	.linklijst a
+	{
+		display: inline-block;
+		color: $zwart;
+		text-decoration: none;
+		background: transparent url($pijltjezwart) 0 0.25em no-repeat;
+		padding-left: 1em;
+		font-weight:bold;
+	}
+	
+	a:hover,
+	a:focus{
+		text-decoration: underline;
+	}
+}
+
+.stadspromotie .grid-wrap
+{
+	padding: 0; // Temp to prevent old HTML to mess with layout
+}
+
+
+//  GROTE FOTO
+//
+.herald
+{
+	margin: 0;
+
+	img
+	{
+		display: block;
+	}
+	
+	figcaption
+	{
+		margin-bottom: 2em;
+		padding: 0 2.222em;  // 2.222 because of 0.9em font-size!
+		
+		&:after
+		{
+			left: 2.5em;
+			top: -1.25em;
+		}
+	}
+}
+
+
+
+//	BANNERS
+//
+.bannerset
+{
+}
+.banner
+{
+	margin-top: 4em;
+
+	figure,
+	img
+	{
+		width: 100%;
+		margin: 0;
+	}
+	
+	&.center
+	{
+		text-align: center;
+		
+		a
+		{
+			display: inline-block;
+			width: auto;
+		}
+		img
+		{
+			width: auto;
+		}
+	}
+}
+
+
+
+//	FOOTER
+footer {
+	margin: 2em 0 0;
+	padding: 1em;
+	background: $rood url($footer) top center no-repeat;
+	background-size: cover;
+	color: $wit;
+
+	a,
+	a:hover,
+	a:focus,
+	p
+	{
+		color: $wit;
+	}
+	em
+	{
+		display: block;
+		font-style: normal;
+	}
+	h2
+	{
+		font-size: 1em;
+		text-transform: uppercase;
+		letter-spacing: .05em;
+		margin: 1.5em 0 .75em;
+		padding: 0;
+	}
+	h3
+	{
+		font-size: 1em;
+		font-weight: bold;
+	}
+
+	a[href^=tel] {
+		text-decoration: underline;
+	}
+	
+	.arrow
+	{
+		background: url($pijltjewit) 0 .25em no-repeat;
+	}
+	
+	.social
+	{
+		margin-top: 1.2em;
+		
+		a
+		{
+			position: relative;
+			display: inline-block;
+			width: 2.4em;
+			height: 2.4em;
+			border: 2px solid $wit;
+			border-radius: 50%;
+			margin-right: 0.6em;
+			//transition: scale 0.4s ease-in;
+			
+			&:hover,
+			&:focus
+			{
+				width: 2.6em;
+				height: 2.6em;
+				margin: -0.1em 0.5em -0.1em -0.1em;
+			}
+			
+			span
+			{
+				@include assistive;
+			}
+		}
+		.twitter
+		{
+			background: $rood url($icoon-footer-twitter) no-repeat center center;
+			background-size: 1.8em;
+		}
+		.facebook
+		{
+			background: $rood url($icoon-footer-facebook) no-repeat center center;
+			background-size: 1.5em;			
+		}
+	}
+}

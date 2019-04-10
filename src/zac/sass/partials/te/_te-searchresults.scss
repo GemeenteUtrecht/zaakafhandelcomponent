@@ -1,0 +1,221 @@
+//  SEARCH RESULTS
+//
+//	Search and news overview pages
+//
+//  35em
+//  40em
+//  50em
+//  60em
+//  70em
+//  80em
+
+
+%options-float
+{	
+	@include tweakpoint('min-width',35em)
+	{
+		width: 50%;
+		float: left;
+		margin-top: 2em;
+	}
+
+	@include tweakpoint('min-width',60em)
+	{
+		width: 33.3%;
+	}
+	
+}
+
+%options-aside
+{
+	border-top: 2px solid $lichtgrijs;
+	border-bottom: 2px solid $lichtgrijs;
+	
+	@include tweakpoint('min-width',60em)
+	{
+		margin-right: -2.4em;
+		padding-right: 2.4em;
+	}	
+}
+
+%heading-upper
+{
+	display: block;
+	margin: 1em 0 0.4em;
+	letter-spacing: 0.04em;
+	font-size: 1em;
+	font-weight: bold;
+	text-decoration: none;
+	text-transform: uppercase;	
+}
+
+
+
+
+.tx-solr--resultbar
+{
+	font-size: 1.125em;
+}
+
+.tx-solr-search-word
+{
+	font-weight: bold;
+}
+
+
+//  RESULTS LISTING
+//
+#tx-solr-search ol.results-list   // id needed for specificity to override ol styling in bodycopy divs
+{
+	padding: 0;
+	
+	li
+	{
+		list-style: none;
+	}
+}
+.results-type
+{
+	@extend .upper;
+	
+	padding-top: 0;
+	color: $schemergrijs;
+	font-size: .9em;
+}
+
+.results-type--label
+{
+	@include assistive;
+}
+
+.results-highlight
+{
+	background-color: $lichtgeel;
+}
+
+
+
+
+
+//  SEARCH FORM
+//
+.tx-solr-search-form
+{
+	form
+	{
+		width: 100%;
+
+		@include tweakpoint('min-width',35em) { width: 80%;	}	
+		
+		max-width: 40em;
+		margin: 1em 0;
+	}
+
+	.form-group
+	{
+		position: relative;
+		border: 0;
+		margin-bottom: 0;
+		padding-right: 5.9em;
+	}
+
+	label
+	{
+		@include assistive;
+	}
+	
+	input[type="text"]
+	{
+		display: inline-block;
+		max-width: none;
+		padding: .65em 1em .65em 2em;
+		width: 100%;
+		border: 1px solid $rood;
+		background: $wit url($icoonzoekrood) .5em 50% no-repeat;
+		background-size: 1em;
+		color: $asfalt;
+		line-height: normal;
+	}
+	button
+	{
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 6.6em;
+		padding: .7em 0;
+		border: 1px solid $rood;
+		background: $rood;
+		color: $wit;
+		text-align: center;
+		
+		&:hover
+		{
+			background: $lichtrood;
+		}
+	}
+}
+
+
+//  SORT OPTIONS
+//
+#tx-solr-sorting-outer
+{
+	@extend %options-float;
+
+	margin-top: 2em;
+}
+
+.tx-solr-sorting
+{
+	@extend %options-aside;
+
+	span
+	{
+		@extend %heading-upper;		
+	}
+	
+	ul
+	{
+		padding: 0.25em 0;
+	}
+}
+
+
+//  FILTERS
+//
+#tx-solr-search-functions
+{
+	@extend %options-float;	
+
+	margin-top: -2px;
+	@include tweakpoint('min-width',35em) { margin-top: 2em;	}
+	@include tweakpoint('min-width',60em)	{ margin-top: -2px; }
+	
+	h2
+	{
+		@extend %heading-upper;
+	}
+
+	ul ul
+	{
+		margin-bottom: 0;
+	}
+		
+	.facet-label
+	{
+		@include assistive;
+	}
+}
+#tx-solr-faceting
+{
+	padding: 0 1.2em;
+}
+#tx-solr-facets-available
+{
+	@extend %options-aside;
+	
+	ul
+	{
+		padding: 0.25em 0;
+	}
+}
