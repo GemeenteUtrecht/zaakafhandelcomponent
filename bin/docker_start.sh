@@ -18,6 +18,8 @@ done
 
 >&2 echo "Database is up."
 
+uwsgi_port=${UWSGI_PORT:-8000}
+
 # Apply database migrations
 >&2 echo "Apply database migrations"
 python src/manage.py migrate

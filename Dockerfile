@@ -1,5 +1,5 @@
 # Stage 1 - Compile needed python dependencies
-FROM python:3.6-alpine AS build
+FROM python:3.7-alpine AS build
 RUN apk --no-cache add \
     gcc \
     musl-dev \
@@ -45,7 +45,7 @@ RUN apk --no-cache add \
     postgresql-client
 
 # Stage 3.1 - Set up the needed testing/development dependencies
-COPY --from=build /usr/local/lib/python3.6 /usr/local/lib/python3.6
+COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=build /app/requirements /app/requirements
 
 RUN pip install -r requirements/jenkins.txt --exists-action=s
@@ -63,7 +63,7 @@ CMD ["/runtests.sh"]
 
 
 # Stage 4 - Build docker image suitable for execution and deployment
-FROM python:3.6-alpine AS production
+FROM python:3.7-alpine AS production
 RUN apk --no-cache add \
     ca-certificates \
     mailcap \
@@ -78,7 +78,7 @@ RUN apk --no-cache add \
     zlib
 
 # Stage 4.1 - Set up dependencies
-COPY --from=build /usr/local/lib/python3.6 /usr/local/lib/python3.6
+COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
 # required for fonts,styles etc.
