@@ -142,11 +142,19 @@ The easiest way to get the project started is by using `Docker Compose`_.
 
    .. code-block:: bash
 
-       $ git clone git@bitbucket.org:GemeenteUtrecht/zaakafhandelcomponent zac
+       $ git clone git@bitbucket.org:gemeenteutrecht/zaakafhandelcomponent zac
        Cloning into 'zac'...
        ...
 
        $ cd zac
+
+3. Set a secret key in the environment:
+
+    .. code-block:: bash
+
+        $ export SECRET_KEY=your_unique_key
+
+    The key is a random string.
 
 2. Start the database and web services:
 
