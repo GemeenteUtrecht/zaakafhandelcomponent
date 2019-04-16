@@ -154,7 +154,7 @@ The easiest way to get the project started is by using `Docker Compose`_.
 
         $ export SECRET_KEY=your_unique_key
 
-    The key is a random string.
+    The key is a random string. Te genereren op https://www.miniwebtool.com/django-secret-key-generator/
 
 2. Start the database and web services:
 
