@@ -182,9 +182,6 @@ The easiest way to get the project started is by using `Docker Compose`_.
        ...
        Superuser created successfully.
 
-       $ docker exec -it zac_web_1 /app/src/manage.py loaddata admin_index groups
-       Installed 5 object(s) from 2 fixture(s)
-
 4. Point your browser to ``http://localhost:8000/`` to access the project's
    management interface with the credentials used in step 3.
 
