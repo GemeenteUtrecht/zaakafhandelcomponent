@@ -142,7 +142,7 @@ The easiest way to get the project started is by using `Docker Compose`_.
 
    .. code-block:: bash
 
-       $ git clone git@bitbucket.org:gemeenteutrecht/zaakafhandelcomponent zac
+       $ git clone git@github.com:gemeenteutrecht/zaakafhandelcomponent zac
        Cloning into 'zac'...
        ...
 
