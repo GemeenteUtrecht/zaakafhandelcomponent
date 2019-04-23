@@ -142,11 +142,19 @@ The easiest way to get the project started is by using `Docker Compose`_.
 
    .. code-block:: bash
 
-       $ git clone git@bitbucket.org:GemeenteUtrecht/zaakafhandelcomponent zac
+       $ git clone git@github.com:gemeenteutrecht/zaakafhandelcomponent zac
        Cloning into 'zac'...
        ...
 
        $ cd zac
+
+3. Set a secret key in the environment:
+
+    .. code-block:: bash
+
+        $ export SECRET_KEY=your_unique_key
+
+    The key is a random string. Te genereren op https://www.miniwebtool.com/django-secret-key-generator/
 
 2. Start the database and web services:
 
@@ -173,9 +181,6 @@ The easiest way to get the project started is by using `Docker Compose`_.
        Username: admin
        ...
        Superuser created successfully.
-
-       $ docker exec -it zac_web_1 /app/src/manage.py loaddata admin_index groups
-       Installed 5 object(s) from 2 fixture(s)
 
 4. Point your browser to ``http://localhost:8000/`` to access the project's
    management interface with the credentials used in step 3.
