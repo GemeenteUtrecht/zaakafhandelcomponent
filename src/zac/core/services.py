@@ -3,6 +3,7 @@ import logging
 from typing import Dict, List
 
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 
 from zgw.models import Zaak, ZaakType
 
@@ -40,7 +41,7 @@ def get_zaaktypes() -> List[ZaakType]:
     return [ZaakType.from_raw(raw) for raw in zaaktypes_raw]
 
 
-def get_zaken(zaaktypes: List[str] = None) -> list:
+def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
     """
@@ -72,3 +73,46 @@ def get_zaken(zaaktypes: List[str] = None) -> list:
     cache.set(cache_key, zaken, 60 * 30)
 
     return zaken
+
+
+def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
+    """
+    Find the Zaak, uniquely identified by bronorganisatie & identificatie.
+    """
+    cache_key = f"zaak:{bronorganisatie}:{identificatie}"
+    result = cache.get(cache_key)
+    if result is not None:
+        # TODO: when ETag is implemented, check that the cache is still up to
+        # date!
+        return result
+
+    query = {
+        'bronorganisatie': bronorganisatie,
+        'identificatie': identificatie,
+    }
+
+    # not in cache -> check it in all known ZRCs
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': [zt.url for zt in get_zaaktypes()],
+    }
+    for zrc in zrcs:
+        client = zrc.build_client(**claims)
+        results = client.list('zaak', query_params=query)['results']
+
+        if not results:
+            continue
+
+        if len(results) > 1:
+            logger.warning("Found multiple Zaken for query %r", query)
+
+        # there's only supposed to be one unique case
+        result = results[0]
+        break
+
+    if result is None:
+        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
+
+    cache.set(cache_key, result, 60 * 30)
+    return result

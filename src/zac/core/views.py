@@ -4,7 +4,7 @@ from django.views import View
 
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
-from .services import get_zaaktypes, get_zaken
+from .services import find_zaak, get_zaaktypes, get_zaken
 
 
 class Index(BaseListView):
@@ -33,7 +33,7 @@ class ZaakDetail(BaseDetailView):
     context_object_name = 'zaak'
 
     def get_object(self):
-        import bpdb; bpdb.set_trace()
+        return find_zaak(**self.kwargs)
 
 
 class FlushCacheView(View):

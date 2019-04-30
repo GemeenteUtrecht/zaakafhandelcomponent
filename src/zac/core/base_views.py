@@ -1,3 +1,6 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+from django.utils.translation import ugettext_lazy as _
 from django.views import View
 from django.views.generic.base import ContextMixin, TemplateResponseMixin
 
@@ -43,9 +46,8 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
 class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
     """
     A base view to look up remote objects.
-
-    TODO: support caching
     """
+    context_object_name = 'object'
 
     def get_object(self):
         raise NotImplementedError
@@ -59,6 +61,10 @@ class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
         return super().get_context_data(**context)
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        try:
+            self.object = self.get_object()
+        except ObjectDoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': self.context_object_name})
         context = self.get_context_data()
         return self.render_to_response(context)
