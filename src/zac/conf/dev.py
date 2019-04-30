@@ -6,6 +6,8 @@ os.environ.setdefault('DB_NAME', 'zac')
 os.environ.setdefault('DB_USER', 'zac')
 os.environ.setdefault('DB_PASSWORD', 'zac')
 
+os.environ.setdefault('USE_REDIS_CACHE', '0')
+
 from .base import *  # noqa isort:skip
 
 #
@@ -79,14 +81,15 @@ AXES_BEHIND_REVERSE_PROXY = False  # Default: False (we are typically using Ngin
 
 # in memory cache and django-axes don't get along.
 # https://django-axes.readthedocs.io/en/latest/configuration.html#known-configuration-problems
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-    'axes_cache': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+if not os.getenv('USE_REDIS_CACHE').lower() in ['1', 'true', 'yes']:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        },
+        'axes_cache': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
     }
-}
 
 AXES_CACHE = 'axes_cache'
 

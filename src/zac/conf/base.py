@@ -1,5 +1,7 @@
 import os
 
+from .utils import get_redis_db_url
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 DJANGO_PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 BASE_DIR = os.path.abspath(os.path.join(DJANGO_PROJECT_DIR, os.path.pardir, os.path.pardir))
@@ -23,6 +25,23 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', 'zac'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', 5432),
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": get_redis_db_url(db=1),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "axes_cache": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": get_redis_db_url(db=2),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 
