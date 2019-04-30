@@ -4,7 +4,7 @@ from typing import Dict, List
 
 from django.core.cache import cache
 
-from zgw.models import ZaakType
+from zgw.models import Zaak, ZaakType
 
 from zac.config.constants import APITypes
 from zac.config.models import Service
@@ -66,7 +66,8 @@ def get_zaken(zaaktypes: List[str] = None) -> list:
     zaken = []
     for zrc in zrcs:
         client = zrc.build_client(**claims)
-        zaken += client.list('zaak')['results']
+        _zaken = client.list('zaak')['results']
+        zaken += [Zaak.from_raw(raw) for raw in _zaken]
 
     cache.set(cache_key, zaken, 60 * 30)
 

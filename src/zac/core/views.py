@@ -2,7 +2,7 @@ from django.core.cache import cache
 from django.shortcuts import redirect
 from django.views import View
 
-from .base_views import BaseListView
+from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
 from .services import get_zaaktypes, get_zaken
 
@@ -26,6 +26,14 @@ class Index(BaseListView):
         return {
             'zaaktypen': [zt.id for zt in get_zaaktypes()],
         }
+
+
+class ZaakDetail(BaseDetailView):
+    template_name = 'core/detail.html'
+    context_object_name = 'zaak'
+
+    def get_object(self):
+        import bpdb; bpdb.set_trace()
 
 
 class FlushCacheView(View):

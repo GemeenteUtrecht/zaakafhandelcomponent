@@ -42,3 +42,19 @@ class ZaakType(Model):
     omschrijving: str
     omschrijving_generiek: str
     vertrouwelijkheidaanduiding: str
+
+
+@dataclass
+class Zaak(Model):
+    url: str
+    identificatie: str
+    bronorganisatie: str
+    omschrijving: str
+    toelichting: str
+    zaaktype: str
+    registratiedatum: str
+    startdatum: str
+    einddatum_gepland: str
+    vertrouwelijkheidaanduiding: str
+    status: str
+    resultaat: str

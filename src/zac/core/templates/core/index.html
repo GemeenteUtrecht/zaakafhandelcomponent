@@ -27,12 +27,14 @@
     <section class="list__results">
         {% for zaak in zaken %}
             <article class="zaak-card" data-url="{{ zaak.url }}">
-                <strong>{{ zaak.identificatie }}</strong> - {{ zaak.omschrijving }}
+                <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                    <strong>{{ zaak.identificatie }}</strong>
+                </a> - {{ zaak.omschrijving }}
                 <p>{{ zaak.toelichting }}</p>
                 <p>
                     Startdatum: {{ zaak.startdatum }}
                     <br>
-                    Geplande einddatum: {{ zaak.einddatumGepland }}
+                    Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
                 </p>
             </article>
         {% endfor %}

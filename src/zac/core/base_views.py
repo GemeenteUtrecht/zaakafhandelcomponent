@@ -38,3 +38,27 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
         self.object_list = self.get_object_list()
         context = self.get_context_data()
         return self.render_to_response(context)
+
+
+class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
+    """
+    A base view to look up remote objects.
+
+    TODO: support caching
+    """
+
+    def get_object(self):
+        raise NotImplementedError
+
+    def get_context_data(self, **kwargs):
+        context = {
+            self.context_object_name: self.object,
+            'object': self.object,
+        }
+        context.update(kwargs)
+        return super().get_context_data(**context)
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data()
+        return self.render_to_response(context)
