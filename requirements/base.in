@@ -4,6 +4,7 @@ python-dotenv
 pytz
 raven
 uwsgi
+python-dateutil
 
 # zgw-integration
 gemma-zds-client
