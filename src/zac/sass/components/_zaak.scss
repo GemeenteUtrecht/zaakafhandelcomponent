@@ -1,0 +1,22 @@
+$border-color: #EEEEEE !default;
+
+.zaak {
+  display: flex;
+  justify-content: space-between;
+  align-items: top;
+
+  &__box {
+    border: solid 1px $border-color;
+    padding: 0.5em;
+    margin: 0.5em;
+
+    &--statussen {
+      width: 40%;
+    }
+  }
+
+  &__box-title {
+    margin-top: 0.5em;
+    border-bottom: solid 1px $rood;
+  }
+}

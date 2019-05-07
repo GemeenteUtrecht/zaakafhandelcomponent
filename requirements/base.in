@@ -12,3 +12,4 @@ Django
 django-axes
 django-choices
 django-redis
+django-sniplates

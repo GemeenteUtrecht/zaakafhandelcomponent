@@ -5,7 +5,8 @@ from typing import Dict, List
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
-from zgw.models import Zaak, ZaakType
+from zds_client import Client, ClientAuth
+from zgw.models import Status, Zaak, ZaakType
 
 from zac.config.constants import APITypes
 from zac.config.models import Service
@@ -108,7 +109,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
             logger.warning("Found multiple Zaken for query %r", query)
 
         # there's only supposed to be one unique case
-        result = results[0]
+        result = Zaak.from_raw(results[0])
         break
 
     if result is None:
@@ -116,3 +117,19 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
 
     cache.set(cache_key, result, 60 * 30)
     return result
+
+
+def get_statussen(zaak: Zaak) -> List[Status]:
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': [zaak.zaaktype],
+    }
+
+    # build the client
+    client = Client.from_url(zaak.url)
+    service = Service.objects.get(api_root=client.base_url)
+    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+
+    # fetch the statusses
+    statussen = client.list('status', query_params={'zaak': zaak.url})
+    return [Status.from_raw(status) for status in statussen]

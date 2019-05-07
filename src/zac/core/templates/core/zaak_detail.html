@@ -1,17 +1,50 @@
 {% extends "master.html" %}
-{% load i18n %}
+{% load i18n sniplates %}
 
 
 {% block content %}
-    <article class="zaak-card" data-url="{{ zaak.url }}">
-        <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
-            <strong>{{ zaak.identificatie }}</strong>
-        </a> - {{ zaak.omschrijving }}
-        <p>{{ zaak.toelichting }}</p>
-        <p>
-            Startdatum: {{ zaak.startdatum }}
-            <br>
-            Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
-        </p>
-    </article>
+
+{% load_widgets key_value='snippets/key_value.html' %}
+
+<article class="zaak">
+
+    <div>
+
+        <section class="zaak__box">
+            <h2 class="zaak__box-title">Details</h2>
+
+            <table>
+                <tbody>
+                    {% widget 'key_value:label-value' label=_("Identificatie") value=zaak.identificatie %}
+                    {% widget 'key_value:label-value' label=_("Bronorganisatie") value=zaak.bronorganisatie %}
+                    {% widget 'key_value:label-value' label=_("Omschrijving") value=zaak.omschrijving %}
+                    {% widget 'key_value:label-value' label=_("Toelichting") value=zaak.toelichting %}
+                    {% widget 'key_value:label-value' label=_("Startdatum") value=zaak.startdatum %}
+                    {% widget 'key_value:label-value' label=_("Geplande einddatum") value=zaak.einddatum_gepland|default:"onbekend" %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="zaak__box">
+            <h2 class="zaak__box-title">Documenten</h2>
+
+
+
+        </section>
+
+    </div>
+
+
+
+    <section class="zaak__box zaak__box--statussen">
+        <h2 class="zaak__box-title">Statussen</h2>
+
+        Statussen: {{ statussen }}
+
+    </section>
+
+
+
+</article>
+
 {% endblock content %}

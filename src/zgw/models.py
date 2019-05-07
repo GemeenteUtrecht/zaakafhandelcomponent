@@ -58,3 +58,23 @@ class Zaak(Model):
     vertrouwelijkheidaanduiding: str
     status: str
     resultaat: str
+
+
+@dataclass
+class Status(Model):
+    url: str
+    zaak: str
+    status_type: str
+    datum_status_gezet: str
+    statustoelichting: str
+
+
+@dataclass
+class StatusType(Model):
+    url: str
+    zaaktype: str
+    omschrijving: str
+    omschrijving_generiek: str
+    statustekst: str
+    volgnummer: int
+    is_eindstatus: bool
