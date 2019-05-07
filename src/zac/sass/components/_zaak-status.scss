@@ -1,0 +1,46 @@
+$dot-size: 30px;
+
+.zaak-status {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  padding-left: 0.5em;
+
+  &--eind {
+    .zaak-status__dot {
+      background: $rood;
+      color: $wit;
+    }
+  }
+
+  &__dot {
+    width: $dot-size;
+    height: $dot-size;
+    padding: 5px;
+    border: solid 3px $rood;
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 80%;
+
+    margin-right: 1em;
+  }
+
+  &__name {
+    width: 40%;
+  }
+
+  &__timestamp {
+    display: block;
+    color: $grijs;
+    font-size: 80%;
+  }
+
+  &__info {
+    width: calc(50% - 1em - $dot-size);
+  }
+
+}

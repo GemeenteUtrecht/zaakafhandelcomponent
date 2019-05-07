@@ -5,8 +5,9 @@ from typing import Dict, List
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
+from dateutil.parser import parse
 from zds_client import Client, ClientAuth
-from zgw.models import Status, Zaak, ZaakType
+from zgw.models import Status, StatusType, Zaak, ZaakType
 
 from zac.config.constants import APITypes
 from zac.config.models import Service
@@ -131,5 +132,36 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
 
     # fetch the statusses
-    statussen = client.list('status', query_params={'zaak': zaak.url})
-    return [Status.from_raw(status) for status in statussen]
+    _statussen = client.list('status', query_params={'zaak': zaak.url})
+    statussen = []
+    for _status in _statussen:
+        # convert URL reference into object
+        _status['statusType'] = get_statustype(_status['statusType'])
+        _status['zaak'] = zaak
+        _status['datumStatusGezet'] = parse(_status['datumStatusGezet'])
+        statussen.append(Status.from_raw(_status))
+
+    return sorted(statussen, key=lambda x: x.datum_status_gezet)
+
+
+def get_statustype(url: str) -> StatusType:
+    cache_key = f"statustype:{url}"
+    result = cache.get(cache_key)
+    if result is not None:
+        # TODO: when ETag is implemented, check that the cache is still up to
+        # date!
+        return result
+
+    # build client
+    client = Client.from_url(url)
+    service = Service.objects.get(api_root=client.base_url)
+    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **{
+        'scopes': ['zds.scopes.zaaktypes.lezen']
+    })
+
+    # get statustype
+    status_type = client.retrieve('statustype', url=url)
+
+    result = StatusType.from_raw(status_type)
+    cache.set(cache_key, result, 60 * 30)
+    return result

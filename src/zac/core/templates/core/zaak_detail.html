@@ -11,13 +11,12 @@
     <div>
 
         <section class="zaak__box">
-            <h2 class="zaak__box-title">Details</h2>
+            <h2 class="zaak__box-title">{{ zaak.omschrijving }}</h2>
 
             <table>
                 <tbody>
                     {% widget 'key_value:label-value' label=_("Identificatie") value=zaak.identificatie %}
                     {% widget 'key_value:label-value' label=_("Bronorganisatie") value=zaak.bronorganisatie %}
-                    {% widget 'key_value:label-value' label=_("Omschrijving") value=zaak.omschrijving %}
                     {% widget 'key_value:label-value' label=_("Toelichting") value=zaak.toelichting %}
                     {% widget 'key_value:label-value' label=_("Startdatum") value=zaak.startdatum %}
                     {% widget 'key_value:label-value' label=_("Geplande einddatum") value=zaak.einddatum_gepland|default:"onbekend" %}
@@ -37,9 +36,31 @@
 
 
     <section class="zaak__box zaak__box--statussen">
-        <h2 class="zaak__box-title">Statussen</h2>
+        <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
 
-        Statussen: {{ statussen }}
+        {% for status in statussen %}
+            <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
+
+                <div class="zaak-status__dot">
+                    {{ forloop.counter }}
+                </div>
+
+                <div class="zaak-status__name">
+                    {{ status.status_type.omschrijving }}
+
+                    <span class="zaak-status__timestamp">
+                        {{ status.datum_status_gezet|timesince }} geleden
+                    </span>
+                </div>
+
+                <div class="zaak-status__info">
+                    {{ status.statustoelichting|default:'-' }}
+                </div>
+
+            </article>
+        {% empty %}
+            Geen statussen bekend
+        {% endfor %}
 
     </section>
 

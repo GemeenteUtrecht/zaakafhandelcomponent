@@ -18,5 +18,9 @@ $border-color: #EEEEEE !default;
   &__box-title {
     margin-top: 0.5em;
     border-bottom: solid 1px $rood;
+
+    &--space-bottom {
+      margin-bottom: 1em;
+    }
   }
 }

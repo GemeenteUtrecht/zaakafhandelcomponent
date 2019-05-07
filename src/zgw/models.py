@@ -45,6 +45,17 @@ class ZaakType(Model):
 
 
 @dataclass
+class StatusType(Model):
+    url: str
+    zaaktype: str
+    omschrijving: str
+    omschrijving_generiek: str
+    statustekst: str
+    volgnummer: int
+    is_eindstatus: bool
+
+
+@dataclass
 class Zaak(Model):
     url: str
     identificatie: str
@@ -64,17 +75,6 @@ class Zaak(Model):
 class Status(Model):
     url: str
     zaak: str
-    status_type: str
+    status_type: StatusType
     datum_status_gezet: str
     statustoelichting: str
-
-
-@dataclass
-class StatusType(Model):
-    url: str
-    zaaktype: str
-    omschrijving: str
-    omschrijving_generiek: str
-    statustekst: str
-    volgnummer: int
-    is_eindstatus: bool
