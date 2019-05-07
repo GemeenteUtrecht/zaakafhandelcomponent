@@ -1,4 +1,4 @@
-{% load staticfiles %}<!DOCTYPE html>
+{% load staticfiles i18n %}<!DOCTYPE html>
 {# Styles from https://github.com/GemeenteUtrecht/Designs #}
 <html lang="nl">
     <head>
@@ -85,6 +85,11 @@
                         {% endblock %}
                     </article>
                     <!-- END page content -->
+
+                    <form class="flush-cache" action="{% url 'core:flush-cache' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit">{% trans "Flush cache" %}</button>
+                    </form>
                 </div>
                 <!-- END container -->
             </div>

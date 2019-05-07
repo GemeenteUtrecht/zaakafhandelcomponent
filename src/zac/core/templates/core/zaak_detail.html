@@ -3,13 +3,6 @@
 
 
 {% block content %}
-<form action="{% url 'core:flush-cache' %}" method="post">
-    {% csrf_token %}
-    <button type="submit">{% trans "Flush cache" %}</button>
-</form>
-
-<article class="detail">
-
     <article class="zaak-card" data-url="{{ zaak.url }}">
         <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
             <strong>{{ zaak.identificatie }}</strong>
@@ -21,6 +14,4 @@
             Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
         </p>
     </article>
-
-</article>
 {% endblock content %}

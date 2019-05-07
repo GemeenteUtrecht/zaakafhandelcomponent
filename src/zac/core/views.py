@@ -29,11 +29,15 @@ class Index(BaseListView):
 
 
 class ZaakDetail(BaseDetailView):
-    template_name = 'core/detail.html'
+    template_name = 'core/zaak_detail.html'
     context_object_name = 'zaak'
 
     def get_object(self):
         return find_zaak(**self.kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 
 class FlushCacheView(View):

@@ -3,11 +3,6 @@
 
 
 {% block content %}
-<form action="{% url 'core:flush-cache' %}" method="post">
-    {% csrf_token %}
-    <button type="submit">{% trans "Flush cache" %}</button>
-</form>
-
 <article class="list">
 
     <section class="list__filters">
