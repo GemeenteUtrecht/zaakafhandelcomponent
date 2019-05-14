@@ -14,7 +14,8 @@ RUN apk --no-cache add \
     # pillow dependencies
     jpeg-dev \
     openjpeg-dev \
-    zlib-dev
+    zlib-dev \
+    libffi-dev
 
 WORKDIR /app
 
@@ -75,7 +76,8 @@ RUN apk --no-cache add \
     # pillow dependencies
     jpeg \
     openjpeg \
-    zlib
+    zlib \
+    libffi
 
 # Stage 4.1 - Set up dependencies
 COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
