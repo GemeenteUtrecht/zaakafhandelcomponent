@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import logging
 from typing import Dict, List
@@ -5,9 +6,12 @@ from typing import Dict, List
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
+import aiohttp
 from dateutil.parser import parse
 from zds_client import Client, ClientAuth
-from zgw.models import Status, StatusType, Zaak, ZaakType
+from zgw.models import (
+    Document, InformatieObjectType, Status, StatusType, Zaak, ZaakType
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -166,20 +170,91 @@ def get_statustype(url: str) -> StatusType:
     return result
 
 
-def get_documenten(zaak: Zaak):
+def get_documenten(zaak: Zaak) -> List[Document]:
+    logger.debug("Retrieving documents linked to zaak %r", zaak)
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zaak.zaaktype],
     }
 
     # build the client
-    client = Client.from_url(zaak.url)
-    service = Service.objects.get(api_root=client.base_url)
-    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+    zrc_client = Client.from_url(zaak.url)
+    service = Service.objects.get(api_root=zrc_client.base_url)
+    zrc_client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
 
     # get zaakinformatieobjecten
-    zaak_informatieobjecten = client.list('zaakinformatieobject', zaak_uuid=zaak.id)
+    zaak_informatieobjecten = zrc_client.list('zaakinformatieobject', zaak_uuid=zaak.id)
+
+    # retrieve the documents themselves, in parallel
+    cache_key = "zios:{}".format(
+        ",".join([zio["informatieobject"] for zio in zaak_informatieobjecten])
+    )
+    cache_key = hashlib.md5(cache_key.encode('ascii')).hexdigest()
+
+    logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
+    documenten = fetch_async(
+        cache_key,
+        fetch_documents,
+        zaak_informatieobjecten
+    )
+
+    logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
+    # figure out relevant ztcs
+    informatieobjecttypen = {document["informatieobjecttype"] for document in documenten}
+    ztcs = Service.objects.filter(api_type=APITypes.ztc)
+    relevant_ztcs = []
+    for ztc in ztcs:
+        if any(iot.startswith(ztc.api_root) for iot in informatieobjecttypen):
+            relevant_ztcs.append(ztc)
+
+    all_informatieobjecttypen = []
+    for ztc in relevant_ztcs:
+        client = ztc.build_client(scopes=["zds.scopes.zaaktypes.lezen"])
+        catalogus_uuid = ztc.extra.get('main_catalogus_uuid')
+        results = client.list("informatieobjecttype", catalogus_uuid=catalogus_uuid)
+        all_informatieobjecttypen += [
+            iot for iot in results if iot["url"] in informatieobjecttypen
+        ]
+
+    informatieobjecttypen = {
+        raw["url"]: InformatieObjectType.from_raw(raw)
+        for raw in all_informatieobjecttypen
+    }
+
+    for document in documenten:
+        document['informatieobjecttype'] = informatieobjecttypen[document['informatieobjecttype']]
+
+    return [Document.from_raw(raw) for raw in documenten]
 
 
+async def fetch(session: aiohttp.ClientSession, url: str):
+    async with session.get(url) as response:
+        return await response.json()
 
-    return zaak_informatieobjecten
+
+# TODO: add auth
+async def fetch_documents(zios: list):
+    tasks = []
+    async with aiohttp.ClientSession() as session:
+        for zio in zios:
+            task = asyncio.ensure_future(
+                fetch(session=session, url=zio["informatieobject"])
+            )
+            tasks.append(task)
+
+        responses = await asyncio.gather(*tasks)
+
+    return responses
+
+
+def fetch_async(cache_key: str, job, *args, **kwargs):
+    result = cache.get(cache_key)
+    if result is not None:
+        return result
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    coro = job(*args, **kwargs)
+    result = loop.run_until_complete(coro)
+    cache.set(cache_key, result, 30 * 60)
+    return result

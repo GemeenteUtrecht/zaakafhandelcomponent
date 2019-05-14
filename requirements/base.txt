@@ -24,7 +24,7 @@ gemma-zds-client==0.9.3
 idna==2.8                 # via requests, yarl
 multidict==4.5.2          # via aiohttp, yarl
 pip-tools==3.7.0
-psycopg2==2.7.7
+psycopg2==2.8.2
 pycares==3.0.0            # via aiodns
 pycparser==2.19           # via cffi
 pyjwt==1.7.1              # via gemma-zds-client
