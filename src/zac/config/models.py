@@ -5,9 +5,15 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from djchoices import ChoiceItem, DjangoChoices
 from zds_client import Client, ClientAuth
 
-from .constants import APITypes
+
+class APITypes(DjangoChoices):
+    zrc = ChoiceItem('zrc', _("ZRC"))
+    ztc = ChoiceItem('ztc', _("ZTC"))
+    drc = ChoiceItem('drc', _("DRC"))
+    brc = ChoiceItem('brc', _("BRC"))
 
 
 class Service(models.Model):

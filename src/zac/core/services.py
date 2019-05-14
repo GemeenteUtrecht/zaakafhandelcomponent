@@ -8,9 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from dateutil.parser import parse
 from zds_client import Client, ClientAuth
 from zgw.models import Status, StatusType, Zaak, ZaakType
-
-from zac.config.constants import APITypes
-from zac.config.models import Service
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
 
 logger = logging.getLogger(__name__)
 
