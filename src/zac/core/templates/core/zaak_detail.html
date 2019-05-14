@@ -28,7 +28,7 @@
             <h2 class="zaak__box-title">Documenten</h2>
 
             {% for document in documenten %}
-                {{ document }}
+                {% include "core/includes/document.html" with document=document only %}
             {% empty %}
                 Geen documenten bekend
             {% endfor %}
@@ -46,7 +46,7 @@
             <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
 
                 <div class="zaak-status__dot">
-                    {{ forloop.counter }}
+                    {{ status.status_type.volgnummer }}
                 </div>
 
                 <div class="zaak-status__name">

@@ -9,13 +9,13 @@ from .ztc import InformatieObjectType
 class Document(Model):
     url: str
     auteur: str
+    identificatie: str
     beschrijving: str
     bestandsnaam: str
     bestandsomvang: int
     bronorganisatie: str
     creatiedatum: str
     formaat: str  # noqa
-    identificatie: str
     indicatie_gebruiksrecht: Any
     informatieobjecttype: InformatieObjectType
     inhoud: str
