@@ -7,6 +7,9 @@ uwsgi
 python-dateutil
 
 # zgw-integration
+aiodns
+aiohttp
+
 gemma-zds-client
 zgw-consumers
 
