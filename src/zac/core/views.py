@@ -4,7 +4,9 @@ from django.views import View
 
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
-from .services import find_zaak, get_statussen, get_zaaktypes, get_zaken
+from .services import (
+    find_zaak, get_documenten, get_statussen, get_zaaktypes, get_zaken
+)
 
 
 class Index(BaseListView):
@@ -38,6 +40,7 @@ class ZaakDetail(BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['statussen'] = get_statussen(self.object)
+        context['documenten'] = get_documenten(self.object)
         return context
 
 

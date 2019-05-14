@@ -27,7 +27,11 @@
         <section class="zaak__box">
             <h2 class="zaak__box-title">Documenten</h2>
 
-
+            {% for document in documenten %}
+                {{ document }}
+            {% empty %}
+                Geen documenten bekend
+            {% endfor %}
 
         </section>
 

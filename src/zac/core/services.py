@@ -165,3 +165,22 @@ def get_statustype(url: str) -> StatusType:
     result = StatusType.from_raw(status_type)
     cache.set(cache_key, result, 60 * 30)
     return result
+
+
+def get_documenten(zaak: Zaak):
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': [zaak.zaaktype],
+    }
+
+    # build the client
+    client = Client.from_url(zaak.url)
+    service = Service.objects.get(api_root=client.base_url)
+    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+
+    # get zaakinformatieobjecten
+    zaak_informatieobjecten = client.list('zaakinformatieobject', zaak_uuid=zaak.id)
+
+
+
+    return zaak_informatieobjecten
