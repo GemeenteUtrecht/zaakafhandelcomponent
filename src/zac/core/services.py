@@ -227,6 +227,46 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     return [Document.from_raw(raw) for raw in documenten]
 
 
+def find_document(bronorganisatie: str, identificatie: str) -> Document:
+    """
+    Find the document uniquely identified by bronorganisatie and identificatie.
+    """
+    cache_key = f"document:{bronorganisatie}:{identificatie}"
+    result = cache.get(cache_key)
+    if result is not None:
+        # TODO: when ETag is implemented, check that the cache is still up to
+        # date!
+        return result
+
+    query = {
+        'bronorganisatie': bronorganisatie,
+        'identificatie': identificatie,
+    }
+
+    # not in cache -> check it in all known ZRCs
+    drcs = Service.objects.filter(api_type=APITypes.drc)
+    claims = {}
+    for drc in drcs:
+        client = drc.build_client(**claims)
+        results = client.list('enkelvoudiginformatieobject', query_params=query)
+
+        if not results:
+            continue
+
+        if len(results) > 1:
+            logger.warning("Found multiple Zaken for query %r", query)
+
+        # there's only supposed to be one unique case
+        result = Document.from_raw(results[0])
+        break
+
+    if result is None:
+        raise ObjectDoesNotExist("Document object was not found in any known registrations")
+
+    cache.set(cache_key, result, 60 * 30)
+    return result
+
+
 async def fetch(session: aiohttp.ClientSession, url: str):
     async with session.get(url) as response:
         return await response.json()

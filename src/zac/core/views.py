@@ -1,11 +1,17 @@
+import mimetypes
+
 from django.core.cache import cache
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views import View
+
+import requests
 
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
 from .services import (
-    find_zaak, get_documenten, get_statussen, get_zaaktypes, get_zaken
+    find_document, find_zaak, get_documenten, get_statussen, get_zaaktypes,
+    get_zaken
 )
 
 
@@ -42,6 +48,18 @@ class ZaakDetail(BaseDetailView):
         context['statussen'] = get_statussen(self.object)
         context['documenten'] = get_documenten(self.object)
         return context
+
+
+class DownloadDocumentView(View):
+
+    def get(self, request, *args, **kwargs):
+        document = find_document(**kwargs)
+        resp = requests.get(document.inhoud)
+
+        content_type = document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
+        response = HttpResponse(resp.content, content_type=content_type)
+        response["Content-Disposition"] = f"attachment; filename=\"{document.bestandsnaam}\""
+        return response
 
 
 class FlushCacheView(View):

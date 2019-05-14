@@ -14,6 +14,7 @@
         </tbody>
     </table>
 
-    <a href="{{ document.inhoud }}" class="button sec" target="_blank" rel="nofollow">Download</a>
+    <a href="{% url 'core:download-document' bronorganisatie=document.bronorganisatie identificatie=document.identificatie %}"
+       class="button sec" target="_blank" rel="nofollow">Download</a>
 
 </article>
