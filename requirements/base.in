@@ -8,6 +8,7 @@ python-dateutil
 
 # zgw-integration
 gemma-zds-client
+zgw-consumers
 
 Django
 django-axes

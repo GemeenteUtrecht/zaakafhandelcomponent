@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     # External applications.
     'axes',
     'sniplates',
+    'zgw_consumers',
 
     # Project applications.
     'zac.accounts',
