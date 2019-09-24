@@ -3,43 +3,61 @@
 
 
 {% block content %}
-<article class="list">
+<div class="page-heading">
 
-    <section class="list__filters">
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            <span>Zaken</span>
+            List of cases
+        </h1>
+    </div>
+    <!-- END grid wrap -->
+</div>
 
-        <form class="filter" action="." method="get">
-            <h1 class="filter__name">Zaaktypen</h1>
 
-            {{ filter_form.as_p }}
+<div class="primary bodycopy">
+    <div class="grid-wrap">
 
-            <div>
-                <button type="submit">{% trans "Filter" %}</button>
+        <div class="list">
+
+            <div class="list__filters">
+
+                <form class="filter" action="." method="get">
+<!--                    <h2 class="filter__name">Zaaktypen</h2>-->
+                    {{ filter_form.as_p }}
+
+                    <div>
+                        <button type="submit">{% trans "Filter" %}</button>
+                    </div>
+                </form>
+
             </div>
-        </form>
 
-    </section>
+            <div class="list__results">
+                <h2>Resultaten</h2>
+                {% for zaak in zaken %}
+                    <article class="zaak-card" data-url="{{ zaak.url }}">
+                        <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                            <strong>{{ zaak.identificatie }}</strong>
+                        </a> - {{ zaak.omschrijving }}
+                        <p>{{ zaak.toelichting }}</p>
+                        <p>
+                            Startdatum: {{ zaak.startdatum }}
+                            <br>
+                            Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
+                        </p>
+                    </article>
+                {% endfor %}
+            </div>
 
-    <section class="list__results">
-        {% for zaak in zaken %}
-            <article class="zaak-card" data-url="{{ zaak.url }}">
-                <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
-                    <strong>{{ zaak.identificatie }}</strong>
-                </a> - {{ zaak.omschrijving }}
-                <p>{{ zaak.toelichting }}</p>
-                <p>
-                    Startdatum: {{ zaak.startdatum }}
-                    <br>
-                    Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
-                </p>
-            </article>
-        {% endfor %}
-    </section>
+            <!--
+            <section class="list__details">
+                Details
+            </section>
+            -->
 
-    <!--
-    <section class="list__details">
-        Details
-    </section>
-    -->
-
-</article>
+        </div>
+    </div>
+</div>
 {% endblock content %}
