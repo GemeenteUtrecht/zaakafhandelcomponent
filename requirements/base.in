@@ -12,9 +12,12 @@ aiohttp
 
 gemma-zds-client
 zgw-consumers
+nlx-url-rewriter
 
 Django
 django-axes
+django-camunda
 django-choices
 django-redis
 django-sniplates
+django-utrechtstijl
