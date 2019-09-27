@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     # 'django.contrib.humanize',
 
     # External applications.
+    "solo",
     'axes',
     'sniplates',
     'zgw_consumers',
