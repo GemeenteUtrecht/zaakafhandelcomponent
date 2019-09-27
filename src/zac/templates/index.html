@@ -1,1 +1,35 @@
 {% extends "master.html" %}
+{% load sniplates %}
+
+{% block page-class %}landing{% endblock %}
+
+
+{% block content %}
+
+<div class="page-heading">
+
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>Regie Zaken</h1>
+    </div>
+    <!-- END grid wrap -->
+</div>
+
+<div class="toptaken">
+    <ul>
+        <li>
+            <a href="{% url 'core:index' %}" class="topTasksButton">
+                <i class="fa fa-building fa-2x"></i>
+                <span>List of all zaken</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'regiezaken:index' %}" class="topTasksButton">
+                <i class="fa fa-lock fa-2x"></i>
+                <span>For users</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+{% endblock %}
