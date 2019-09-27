@@ -1,7 +1,8 @@
-from django.db import models
-from django.core.exceptions import ValidationError
-from django.contrib.postgres.fields import ArrayField
 from django import forms
+from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
+from django.db import models
+
 from zgw_consumers.admin_fields import get_zaaktypen
 
 
