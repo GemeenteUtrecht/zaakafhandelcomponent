@@ -14,6 +14,8 @@ class RegieZaakDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['zaken'] = get_zaken([])
+
+        instance = self.get_object()
+        context['zaken'] = get_zaken(zaaktypes=[instance.zaaktype_object.id])
 
         return context
