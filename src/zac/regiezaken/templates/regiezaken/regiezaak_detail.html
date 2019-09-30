@@ -1,0 +1,45 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+{% block content %}
+<div class="page-heading">
+
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            <span>Regie Zaak {{ object.pk }}</span>
+            {{ object.name }}
+        </h1>
+    </div>
+    <!-- END grid wrap -->
+</div>
+
+<div class="primary bodycopy">
+    <div class="grid-wrap">
+
+        <div>
+            <h2>Main zaaktype</h2>
+            <h3>{{ object.zaaktype_object.omschrijving }}</h3>
+        </div>
+
+        <div class="divider">
+            <hr>
+        </div>
+
+        <div>
+            <h2>Related zaken</h2>
+<!--            <ul>-->
+<!--                {% for zaak in zaken %}-->
+<!--                    <li>-->
+<!--                        <a href="{% url 'regiezaken:regiezaak-detail' pk=regiezaak.pk %}" class="topTasksButton">-->
+<!--                            <span>{{ regiezaak.name }}</span>-->
+<!--                        </a>-->
+<!--                    </li>-->
+<!--                {% endfor %}-->
+<!--            </ul>-->
+<!--        </div>-->
+
+
+    </div>
+</div>
+{% endblock content %}

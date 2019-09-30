@@ -5,6 +5,11 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.admin_fields import get_zaaktypen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zds_client import ClientError
+from zgw.models import ZaakType
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class ZaakTypeArrayField(ArrayField):
@@ -64,3 +69,23 @@ class RegieZaakConfiguratie(models.Model):
             raise ValidationError(
                 "'zaaktypes_related' can't include 'zaaktype_main'"
             )
+
+    @property
+    def zaaktype_object(self):
+        if not hasattr(self, '_zaaktype_object'):
+            self._zaaktype_object = None
+            ztcs = Service.objects.filter(api_type=APITypes.ztc)
+            for ztc in ztcs:
+                client = ztc.build_client(scopes=['zds.scopes.zaaktypes.lezen'])
+                try:
+                    zaaktype_raw = client.retrieve('zaaktype', url=self.zaaktype_main)
+                except ClientError:
+                    continue
+                else:
+                    self._zaaktype_object = ZaakType.from_raw(zaaktype_raw)
+                    break
+
+        if not self._zaaktype_object:
+            raise ObjectDoesNotExist("Zaaktype object was not found in any known registrations")
+
+        return self._zaaktype_object

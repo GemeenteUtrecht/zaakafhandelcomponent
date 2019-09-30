@@ -332,3 +332,5 @@ if SENTRY_DSN:
             'dsn': RAVEN_CONFIG['dsn']
         },
     })
+
+ZGW_CONSUMERS_CLIENT_CLASS = "zds_client.nlx.NLXClient"
