@@ -8,14 +8,14 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
 from dateutil.parser import parse
+from nlx_url_rewriter.rewriter import Rewriter
 from zds_client import ClientAuth
 from zgw.models import (
     Document, InformatieObjectType, Status, StatusType, Zaak, ZaakType
 )
+from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.client import get_client_class
-from nlx_url_rewriter.rewriter import Rewriter
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,14 @@
 from django import forms
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from zds_client import ClientError
+from zgw.models import ZaakType
 from zgw_consumers.admin_fields import get_zaaktypen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zds_client import ClientError
-from zgw.models import ZaakType
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class ZaakTypeArrayField(ArrayField):

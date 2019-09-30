@@ -1,6 +1,8 @@
-from django.views.generic import ListView, DetailView
-from .models import RegieZaakConfiguratie
+from django.views.generic import DetailView, ListView
+
 from zac.core.services import get_zaken
+
+from .models import RegieZaakConfiguratie
 
 
 class IndexView(ListView):
