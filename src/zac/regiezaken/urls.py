@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import IndexView, LoginView, RegieZaakDetailView
+from .views import IndexView, RegieZaakDetailView
 
 app_name = 'regiezaken'
 
