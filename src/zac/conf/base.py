@@ -291,6 +291,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend'
 ]
 
+LOGIN_URL = "regiezaken:login"
+
 SESSION_COOKIE_NAME = 'zac_sessionid'
 
 #

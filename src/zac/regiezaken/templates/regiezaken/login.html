@@ -1,0 +1,27 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+
+{% block subtitle %}Inloggen{% endblock subtitle %}
+
+
+{% block content %}
+<div>
+    <form action="." method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+        {% load_widgets form='utrechtstijl/snippets/forms.html' %}
+        <fieldset class="fieldset">
+            {% form_field form.username %}
+            {% form_field form.password %}
+
+            {% widget 'form:required-fields' %}
+        </fieldset>
+
+        <div class="navigation_buttons">
+            {% widget 'form:submit' text=_("Inloggen") %}
+        </div>
+    </form>
+</div>
+{% endblock content %}
