@@ -68,7 +68,6 @@ def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zt.url for zt in _zaaktypes if zt.id in zaaktypes],
-        # 'zaaktypes': zaaktypes
     }
     Rewriter().forwards(claims)
     zrcs = Service.objects.filter(api_type=APITypes.zrc)

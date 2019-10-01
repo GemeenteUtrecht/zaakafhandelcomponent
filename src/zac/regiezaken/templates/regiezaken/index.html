@@ -1,14 +1,25 @@
 {% extends "master.html" %}
 {% load sniplates %}
 
+{% block breadcrumbs %}
+{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
+{% nested_widget 'crumbs:crumbs' %}
+    {% url 'index' as index_url %}
+    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
+
+    {% url 'regiezaken:index' as regie_index_url %}
+    {% widget 'crumbs:crumb' label=_("Per onderwerp") url=regie_index_url %}
+{% endnested %}
+{% endblock breadcrumbs %}
+
 {% block content %}
 <div class="page-heading">
 
     <!-- START grid wrap -->
     <div class="grid-wrap">
         <h1>
-            <span>Regie Zaken</span>
-            List of Zaaktype groups
+            <span>Regiezaken</span>
+            Onderwerpen
         </h1>
     </div>
     <!-- END grid wrap -->
@@ -16,18 +27,17 @@
 
 <div class="primary bodycopy">
     <div class="grid-wrap">
+        <p>
+            Op deze pagina zie je een overzicht van beschikbare onderwerpen.
+            Klik door om zaken bij deze onderwerpen te behandelen.
+        </p>
 
-        <div class="toptaken">
-            <ul>
-                {% for regiezaak in object_list %}
-                    <li>
-                        <a href="{% url 'regiezaken:regiezaak-detail' pk=regiezaak.pk %}" class="topTasksButton">
-                            <span>{{ regiezaak.name }}</span>
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+        <p>
+        {% for regiezaak in object_list %}
+            <a href="{% url 'regiezaken:regiezaak-detail' pk=regiezaak.pk %}" class="button sec">{{ regiezaak.name }}</a>
+        {% endfor %}
+        </p>
+
     </div>
 
 </div>

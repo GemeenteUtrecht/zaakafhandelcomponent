@@ -3,6 +3,13 @@
 
 {% block page-class %}landing{% endblock %}
 
+{% block breadcrumbs %}
+{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
+{% nested_widget 'crumbs:crumbs' %}
+    {% url 'index' as index_url %}
+    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
+{% endnested %}
+{% endblock breadcrumbs %}
 
 {% block content %}
 
@@ -10,7 +17,7 @@
 
     <!-- START grid wrap -->
     <div class="grid-wrap">
-        <h1>Regie Zaken</h1>
+        <h1>Zaakafhandeling</h1>
     </div>
     <!-- END grid wrap -->
 </div>
@@ -20,13 +27,13 @@
         <li>
             <a href="{% url 'core:index' %}" class="topTasksButton">
                 <i class="fa fa-building fa-2x"></i>
-                <span>List of all zaken</span>
+                <span>Bekijk alle zaken</span>
             </a>
         </li>
         <li>
             <a href="{% url 'regiezaken:index' %}" class="topTasksButton">
-                <i class="fa fa-lock fa-2x"></i>
-                <span>For users</span>
+                <i class="fa fa-folder-open fa-2x"></i>
+                <span>Bekijk regiezaken</span>
             </a>
         </li>
     </ul>
