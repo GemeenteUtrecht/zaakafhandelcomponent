@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.admin_fields import get_zaaktypen
 
@@ -34,12 +35,27 @@ class ZaakTypeArrayField(ArrayField):
 
 
 class RegieZaakConfiguratie(models.Model):
-    name = models.CharField(max_length=100, help_text="The name of the theme/subject")
-    zaaktype_main = models.URLField()
-    zaaktypes_related = ZaakTypeArrayField(base_field=models.URLField(), default=list())
+    name = models.CharField(
+        max_length=100,
+        help_text=_("The name of the theme/subject")
+    )
+    zaaktype_main = models.URLField(
+        _("Hoofdzaaktype"),
+        help_text=_("Zaken van dit zaaktype worden als de regiezaak beschouwd.")
+    )
+    zaaktypes_related = ZaakTypeArrayField(
+        base_field=models.URLField(),
+        default=list,
+        help_text=_("Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak."),
+        blank=True,
+    )
 
     class Meta:
-        verbose_name = "Regie Zaak"
+        verbose_name = "regiezaak"
+        verbose_name_plural = "regiezaken"
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         super().clean()
