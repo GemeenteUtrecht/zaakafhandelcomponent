@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+{% block content %}
+<div class="page-heading">
+
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            <span>Regie Zaken</span>
+            List of Zaaktype groups
+        </h1>
+    </div>
+    <!-- END grid wrap -->
+</div>
+
+<div class="primary bodycopy">
+    <div class="grid-wrap">
+
+        <div class="toptaken">
+            <ul>
+                {% for regiezaak in object_list %}
+                    <li>
+                        <a href="{% url 'regiezaken:regiezaak-detail' pk=regiezaak.pk %}" class="topTasksButton">
+                            <span>{{ regiezaak.name }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

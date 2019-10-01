@@ -1,0 +1,49 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+{% block content %}
+<div class="page-heading">
+
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            <span>Regie Zaak {{ object.pk }}</span>
+            {{ object.name }}
+        </h1>
+    </div>
+    <!-- END grid wrap -->
+</div>
+
+<div class="primary bodycopy">
+    <div class="grid-wrap">
+
+        <div>
+            <h2>Main zaaktype</h2>
+            <h3>{{ object.zaaktype_object.omschrijving }}</h3>
+        </div>
+
+        <div class="divider">
+            <hr>
+        </div>
+
+        <div>
+            <h2>Related zaken</h2>
+
+            {% for zaak in zaken %}
+                <article class="zaak-card" data-url="{{ zaak.url }}">
+                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                        <strong>{{ zaak.identificatie }}</strong>
+                    </a> - {{ zaak.omschrijving }}
+                    <p>{{ zaak.toelichting }}</p>
+                    <p>
+                        Startdatum: {{ zaak.startdatum }}
+                        <br>
+                        Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

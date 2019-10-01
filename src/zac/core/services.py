@@ -8,10 +8,12 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
 from dateutil.parser import parse
-from zds_client import Client, ClientAuth
+from nlx_url_rewriter.rewriter import Rewriter
+from zds_client import ClientAuth
 from zgw.models import (
     Document, InformatieObjectType, Status, StatusType, Zaak, ZaakType
 )
+from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -66,7 +68,9 @@ def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zt.url for zt in _zaaktypes if zt.id in zaaktypes],
+        # 'zaaktypes': zaaktypes
     }
+    Rewriter().forwards(claims)
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
 
     zaken = []
@@ -102,6 +106,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zt.url for zt in get_zaaktypes()],
     }
+    Rewriter().forwards(claims)
     for zrc in zrcs:
         client = zrc.build_client(**claims)
         results = client.list('zaak', query_params=query)['results']
@@ -130,6 +135,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     }
 
     # build the client
+    Client = get_client_class()
     client = Client.from_url(zaak.url)
     service = Service.objects.get(api_root=client.base_url)
     client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
@@ -156,6 +162,7 @@ def get_statustype(url: str) -> StatusType:
         return result
 
     # build client
+    Client = get_client_class()
     client = Client.from_url(url)
     service = Service.objects.get(api_root=client.base_url)
     client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **{
@@ -178,6 +185,7 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     }
 
     # build the client
+    Client = get_client_class()
     zrc_client = Client.from_url(zaak.url)
     service = Service.objects.get(api_root=zrc_client.base_url)
     zrc_client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)

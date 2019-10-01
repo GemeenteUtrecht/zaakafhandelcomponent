@@ -74,7 +74,7 @@ INSTALLED_APPS = [
 
     # Project applications.
     'zac.accounts',
-    'zac.config',
+    'zac.regiezaken',
     'zac.core',
     'zac.utils',
 ]
@@ -291,6 +291,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend'
 ]
 
+LOGIN_URL = "regiezaken:login"
+
 SESSION_COOKIE_NAME = 'zac_sessionid'
 
 #
@@ -332,3 +334,5 @@ if SENTRY_DSN:
             'dsn': RAVEN_CONFIG['dsn']
         },
     })
+
+ZGW_CONSUMERS_CLIENT_CLASS = "zds_client.nlx.NLXClient"
