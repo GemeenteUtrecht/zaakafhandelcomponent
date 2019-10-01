@@ -64,9 +64,13 @@ INSTALLED_APPS = [
     # 'django.contrib.humanize',
 
     # External applications.
+    "solo",
     'axes',
     'sniplates',
     'zgw_consumers',
+    "django_utrechtstijl",
+    "django_camunda",
+    "nlx_url_rewriter",
 
     # Project applications.
     'zac.accounts',
