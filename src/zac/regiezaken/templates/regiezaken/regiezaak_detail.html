@@ -31,7 +31,7 @@
 
             {% for zaak in zaken %}
                 <article class="zaak-card" data-url="{{ zaak.url }}">
-                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                    <a href="{% url 'regiezaken:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
                         <strong>{{ zaak.identificatie }}</strong>
                     </a> - {{ zaak.omschrijving }}
                     <p>{{ zaak.toelichting }}</p>
