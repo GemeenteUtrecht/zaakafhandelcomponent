@@ -11,6 +11,8 @@ class ZaakType(Model):
     omschrijving: str
     omschrijving_generiek: str
     vertrouwelijkheidaanduiding: str
+    aanleiding: str
+    toelichting: str
 
 
 @dataclass

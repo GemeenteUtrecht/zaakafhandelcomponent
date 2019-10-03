@@ -15,6 +15,9 @@
                 <section class="zaak__box">
                     <h2 class="zaak__box-title">{{ zaak.omschrijving }}</h2>
 
+                    <p>{{ zaaktype.omschrijving }} </p>
+                    <p>{{ zaaktype.aanleiding }} </p>
+
                     <table>
                         <tbody>
                             {% widget 'key_value:label-value' label=_("Identificatie") value=zaak.identificatie %}
@@ -24,6 +27,8 @@
                             {% widget 'key_value:label-value' label=_("Geplande einddatum") value=zaak.einddatum_gepland|default:"onbekend" %}
                         </tbody>
                     </table>
+
+
                 </section>
 
         </div>
