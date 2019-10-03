@@ -52,10 +52,8 @@ def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
     """
-    _zaaktypes = get_zaaktypes()
-
     if zaaktypes is None:
-        zaaktypes = [zt.id for zt in get_zaaktypes()]
+        zaaktypes = [zt.url for zt in get_zaaktypes()]
 
     zt_key = ','.join(sorted(zaaktypes))
     cache_key = hashlib.md5(f"zaken.{zt_key}".encode('ascii')).hexdigest()
@@ -67,7 +65,7 @@ def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
 
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
-        'zaaktypes': [zt.url for zt in _zaaktypes if zt.id in zaaktypes],
+        'zaaktypes': zaaktypes,
     }
     Rewriter().forwards(claims)
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
