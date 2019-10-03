@@ -2,12 +2,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import DetailView, ListView
 
-from zac.core.services import get_zaken, get_related_zaken, get_zaak
-from zac.core.views import ZaakDetail
 from zac.core.base_views import BaseDetailView
+from zac.core.services import get_related_zaken, get_zaak, get_zaken
+from zac.core.views import ZaakDetail
 
-from .models import RegieZaakConfiguratie
 from .camunda import get_tasks
+from .models import RegieZaakConfiguratie
 
 
 class LoginView(_LoginView):
