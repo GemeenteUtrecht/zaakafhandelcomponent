@@ -6,15 +6,7 @@ These are NOT django models.
 from ..camel_case import underscoreize
 
 
-class Model:
-
-    @property
-    def id(self):
-        """
-        Because of the usage of UUID4, we can rely on the UUID as identifier.
-        """
-        return self.url.split('/')[-1]
-
+class BaseModel:
     @classmethod
     def from_raw(cls, raw_data: dict, strict=False):
         kwargs = underscoreize(raw_data)
@@ -30,3 +22,13 @@ class Model:
             init_kwargs = kwargs
 
         return cls(**init_kwargs)
+
+
+class Model(BaseModel):
+
+    @property
+    def id(self):
+        """
+        Because of the usage of UUID4, we can rely on the UUID as identifier.
+        """
+        return self.url.split('/')[-1]

@@ -12,8 +12,6 @@
 
         <div class="zaak">
 
-            <div>
-
                 <section class="zaak__box">
                     <h2 class="zaak__box-title">{{ zaak.omschrijving }}</h2>
 
@@ -28,60 +26,16 @@
                     </table>
                 </section>
 
-                <section class="zaak__box">
-                    <h2 class="zaak__box-title">Documenten</h2>
-
-                    {% for document in documenten %}
-                        {% include "core/includes/document.html" with document=document only %}
-                    {% empty %}
-                        Geen documenten bekend
-                    {% endfor %}
-
-                </section>
-
-            </div>
-
-
-            <section class="zaak__box zaak__box--statussen">
-                <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
-
-                {% for status in statussen %}
-                    <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
-
-                        <div class="zaak-status__dot">
-                            {{ status.status_type.volgnummer }}
-                        </div>
-
-                        <div class="zaak-status__name">
-                            {{ status.status_type.omschrijving }}
-
-                            <span class="zaak-status__timestamp">
-                                {{ status.datum_status_gezet|timesince }} geleden
-                            </span>
-                        </div>
-
-                        <div class="zaak-status__info">
-                            {{ status.statustoelichting|default:'-' }}
-                        </div>
-
-                    </article>
-                {% empty %}
-                    Geen statussen bekend
-                {% endfor %}
-
-            </section>
-
         </div>
 
         <div>
             <section class="zaak__box">
-                <h2 class="zaak__box-title">Processes</h2>
-                {% for process in process_instances %}
-                <article class="zaak-card">
-                    <span>Process id: {{ process.id }}</span>
-                </article>
-                {% empty %}
-                    No processes are found
+                <h2 class="zaak__box-title">Zaken list</h2>
+                {% include "regiezaken/includes/zaak.html" with zaak=zaak %}
+
+                {% for related_zaak in related_zaken %}
+                    {% include "regiezaken/includes/zaak.html" with zaak=related_zaak %}
+
                 {% endfor %}
             </section>
         </div>

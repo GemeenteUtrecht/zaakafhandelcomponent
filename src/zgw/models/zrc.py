@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .base import Model
 from .ztc import StatusType
@@ -18,6 +18,8 @@ class Zaak(Model):
     vertrouwelijkheidaanduiding: str
     status: str
     resultaat: str
+    relevante_andere_zaken: list
+    tasks: list = field(default_factory=list)
 
 
 @dataclass

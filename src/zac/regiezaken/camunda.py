@@ -1,9 +1,9 @@
 from django_camunda.client import Camunda
-from zgw.models.camunda import ProcessInstance
+from zgw.models.camunda import Task
 
 
-def get_process_instances():
+def get_tasks(zaken):
     client = Camunda()
-    _process_instances_raw = client.request(f"process-instance")
-    return [ProcessInstance.from_raw(instance) for instance in _process_instances_raw]
-
+    # FIXME filter on particular zaak when relationship of zaak and tasks appears
+    _tasks_raw = client.request(f"task")
+    return [Task.from_raw(_task) for _task in _tasks_raw]

@@ -303,3 +303,47 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
     result = loop.run_until_complete(coro)
     cache.set(cache_key, result, 30 * 60)
     return result
+
+
+def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None):
+    """retrieve zaak with uuid or url"""
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+
+    _zaaktypes = zaaktypes or [zt.url for zt in get_zaaktypes()]
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': _zaaktypes,
+    }
+    Rewriter().forwards(claims)
+
+    result = None
+
+    for zrc in zrcs:
+        client = zrc.build_client(**claims)
+        results = client.retrieve('zaak', url=zaak_url, uuid=zaak_uuid)
+
+        if not results:
+            continue
+
+        result = Zaak.from_raw(results)
+
+    if result is None:
+        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
+
+    return result
+
+
+def get_related_zaken(zaak: Zaak, zaaktypes) -> list:
+    """
+    return list of related zaken with selected zaaktypes
+    """
+
+    related_urls = [related['url'] for related in zaak.relevante_andere_zaken]
+
+    zaken = []
+    for url in related_urls:
+        zaken.append(get_zaak(zaak_url=url, zaaktypes=zaaktypes))
+
+    # FIXME remove string after testing
+    zaken = get_zaken(zaaktypes)[:3]
+    return zaken

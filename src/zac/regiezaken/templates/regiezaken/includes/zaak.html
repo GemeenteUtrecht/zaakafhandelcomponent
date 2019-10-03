@@ -1,0 +1,8 @@
+{% load i18n sniplates %}
+
+<article class="zaak-card">
+    <span>{{ zaak.omschrijving }}</span>
+    {% for task in zaak.tasks %}
+        <p>task name: {{ task.name }}</p>
+    {% endfor %}
+</article>

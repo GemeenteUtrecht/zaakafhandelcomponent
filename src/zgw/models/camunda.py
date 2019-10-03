@@ -1,31 +1,27 @@
 from dataclasses import dataclass
-from .base import Model
-from ..camel_case import underscoreize
+from .base import BaseModel
 
 
-# Can't inherit model because of id field
 @dataclass
-class ProcessInstance:
+class Task(BaseModel):
     id: str
-    definition_id: str
-    business_key: str
+    name: str
+    assignee: str
+    created: str
+    due: str
+    follow_up: str
+    delegation_state: str
+    description: str
+    execution_id: str
+    owner: str
+    parent_task_id: str
+    priority: int
+    process_definition_id: str
+    process_instance_id: str
+    task_definition_key: str
+    case_execution_id: str
     case_instance_id: str
-    ended: bool
+    case_definition_id: str
     suspended: bool
+    form_key: str
     tenant_id: str
-
-    @classmethod
-    def from_raw(cls, raw_data: dict, strict=False):
-        kwargs = underscoreize(raw_data)
-        # strip out the unknown keys
-        if not strict:
-            known_keys = cls.__annotations__.keys()
-            init_kwargs = {
-                key: value
-                for key, value
-                in kwargs.items() if key in known_keys
-            }
-        else:
-            init_kwargs = kwargs
-
-        return cls(**init_kwargs)
