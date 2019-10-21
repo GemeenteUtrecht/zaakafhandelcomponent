@@ -1,0 +1,10 @@
+{% extends "admin/solo/change_form.html" %}
+{% load i18n admin_static admin_modify %}
+{% load admin_urls %}
+
+{% block object-tools-items %}
+
+  <li><a href="{% url opts|admin_urlname:'export' %}{{cl.get_query_string}}" class="export_link">{% trans "Export" %}</a></li>
+  <li><a href='{% url opts|admin_urlname:"import" %}' class="import_link">{% trans "Import" %}</a></li>
+  {{ block.super }}
+{% endblock %}
