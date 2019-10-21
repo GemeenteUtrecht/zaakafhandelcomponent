@@ -1,0 +1,66 @@
+{% extends "master.html" %}
+{% load i18n sniplates zac %}
+
+
+{% block breadcrumbs %}
+{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
+{% nested_widget 'crumbs:crumbs' %}
+    {% url 'index' as index_url %}
+    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
+
+    {% url 'regiezaken:index' as regie_index_url %}
+    {% widget 'crumbs:crumb' label=_("Per onderwerp") url=regie_index_url %}
+
+    {% url 'regiezaken:regiezaak-detail' pk=regie.pk as regiezaak_url %}
+    {% widget 'crumbs:crumb' label=regie.name url=regiezaak_url %}
+
+    {% url 'regiezaken:zaak-detail' pk=regie.pk uuid=object.id as zaak_url %}
+    {% widget 'crumbs:crumb' label=object.identificatie url=zaak_url %}
+{% endnested %}
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+
+{% load_widgets key_value='snippets/key_value.html' %}
+
+<div class="page-heading">
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            {% with "Aanvraag "|add:zaak.identificatie as default_omschrijving %}
+                {{ zaak.omschrijving|default:default_omschrijving }}
+            {% endwith %}
+        </h1>
+
+        <a href="?showTasks={% if request.GET.showTasks == '1' %}0{% else %}1{% endif %}">
+            {% if request.GET.showTasks == '1' %}Hide{% else %}Show{% endif %} tasks
+        </a>
+
+        <p>
+            Locatie: {{ zaak.zaakgeometrie|default:"-" }}
+            {% for eigenschap in zaak.eigenschappen %}
+                <br>
+                {{ eigenschap.naam|capfirst }}:
+                <span title="{{ eigenschap.waarde }}">{{ eigenschap.waarde|parse }}</span>
+            {% endfor %}
+            <br>
+        </p>
+    </div>
+    <!-- END grid wrap -->
+</div>
+
+<div class="primary bodycopy">
+
+    <div class="grid-wrap">
+
+        {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype request=request only %}
+
+        {% for zaaktype, zaak in related_zaken %}
+            {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype request=request only %}
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock content %}

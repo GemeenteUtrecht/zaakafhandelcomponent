@@ -11,13 +11,30 @@ from dateutil.parser import parse
 from nlx_url_rewriter.rewriter import Rewriter
 from zds_client import ClientAuth
 from zgw.models import (
-    Document, InformatieObjectType, Status, StatusType, Zaak, ZaakType
+    Document, Eigenschap, InformatieObjectType, Status, StatusType, Zaak,
+    ZaakType
 )
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 logger = logging.getLogger(__name__)
+
+
+def _client_from_url(url: str, **claims):
+    # build the client
+    Client = get_client_class()
+    client = Client.from_url(url)
+
+    base_urls = [client.base_url]
+    Rewriter().backwards(base_urls)
+    service = Service.objects.get(api_root=base_urls[0])
+
+    return service.build_client(**claims)
+
+
+def _client_from_object(obj, **claims):
+    return _client_from_url(obj.url, **claims)
 
 
 def _get_zaaktypes() -> List[Dict]:
@@ -48,14 +65,27 @@ def get_zaaktypes() -> List[ZaakType]:
     return [ZaakType.from_raw(raw) for raw in zaaktypes_raw]
 
 
+def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
+    cache_key = f"zt:statustypen:{zaaktype.url}"
+    result = cache.get(cache_key)
+    if result is not None:
+        return result
+
+    client = _client_from_object(zaaktype, scopes=["zds.scopes.zaaktypes.lezen"])
+    cat_uuid = zaaktype.catalogus.split("/")[-1]
+    _statustypen = client.list("statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.id)
+    statustypen = [StatusType.from_raw(raw) for raw in _statustypen]
+
+    cache.set(cache_key, statustypen, 60 * 30)
+    return statustypen
+
+
 def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
     """
-    _zaaktypes = get_zaaktypes()
-
     if zaaktypes is None:
-        zaaktypes = [zt.id for zt in get_zaaktypes()]
+        zaaktypes = [zt.url for zt in get_zaaktypes()]
 
     zt_key = ','.join(sorted(zaaktypes))
     cache_key = hashlib.md5(f"zaken.{zt_key}".encode('ascii')).hexdigest()
@@ -67,7 +97,7 @@ def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
 
     claims = {
         'scopes': ['zds.scopes.zaken.lezen'],
-        'zaaktypes': [zt.url for zt in _zaaktypes if zt.id in zaaktypes],
+        'zaaktypes': zaaktypes,
     }
     Rewriter().forwards(claims)
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
@@ -132,24 +162,40 @@ def get_statussen(zaak: Zaak) -> List[Status]:
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zaak.zaaktype],
     }
+    client = _client_from_object(zaak, **claims)
 
-    # build the client
-    Client = get_client_class()
-    client = Client.from_url(zaak.url)
-    service = Service.objects.get(api_root=client.base_url)
-    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+    # re-use cached objects
+    zaaktype = zaak.get_zaaktype()
+    statustypen = {
+        st.url: st
+        for st in get_statustypen(zaaktype)
+    }
 
     # fetch the statusses
     _statussen = client.list('status', query_params={'zaak': zaak.url})
     statussen = []
     for _status in _statussen:
         # convert URL reference into object
-        _status['statusType'] = get_statustype(_status['statusType'])
+        _status['statusType'] = statustypen[_status['statusType']]
         _status['zaak'] = zaak
         _status['datumStatusGezet'] = parse(_status['datumStatusGezet'])
         statussen.append(Status.from_raw(_status))
 
     return sorted(statussen, key=lambda x: x.datum_status_gezet)
+
+
+def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': [zaak.zaaktype],
+    }
+    client = _client_from_object(zaak, **claims)
+
+    eigenschappen = client.list("zaakeigenschap", zaak_uuid=zaak.id)
+    for _eigenschap in eigenschappen:
+        _eigenschap["zaak"] = zaak
+
+    return [Eigenschap.from_raw(_eigenschap) for _eigenschap in eigenschappen]
 
 
 def get_statustype(url: str) -> StatusType:
@@ -160,15 +206,7 @@ def get_statustype(url: str) -> StatusType:
         # date!
         return result
 
-    # build client
-    Client = get_client_class()
-    client = Client.from_url(url)
-    service = Service.objects.get(api_root=client.base_url)
-    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **{
-        'scopes': ['zds.scopes.zaaktypes.lezen']
-    })
-
-    # get statustype
+    client = _client_from_url(url, scopes=["zds.scopes.zaaktypes.lezen"])
     status_type = client.retrieve('statustype', url=url)
 
     result = StatusType.from_raw(status_type)
@@ -305,3 +343,47 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
     result = loop.run_until_complete(coro)
     cache.set(cache_key, result, 30 * 60)
     return result
+
+
+def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None):
+    """retrieve zaak with uuid or url"""
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+
+    _zaaktypes = zaaktypes or [zt.url for zt in get_zaaktypes()]
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': _zaaktypes,
+    }
+    Rewriter().forwards(claims)
+
+    result = None
+
+    for zrc in zrcs:
+        client = zrc.build_client(**claims)
+        results = client.retrieve('zaak', url=zaak_url, uuid=zaak_uuid)
+
+        if not results:
+            continue
+
+        result = Zaak.from_raw(results)
+
+    if result is None:
+        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
+
+    return result
+
+
+def get_related_zaken(zaak: Zaak, zaaktypes) -> list:
+    """
+    return list of related zaken with selected zaaktypes
+    """
+
+    related_urls = [related['url'] for related in zaak.relevante_andere_zaken]
+
+    zaken = []
+    for url in related_urls:
+        zaken.append(get_zaak(zaak_url=url, zaaktypes=zaaktypes))
+
+    # FIXME remove string after testing
+    zaken = get_zaken(zaaktypes)[:3]
+    return zaken

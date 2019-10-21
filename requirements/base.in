@@ -5,6 +5,7 @@ pytz
 raven
 uwsgi
 python-dateutil
+isodate
 
 # zgw-integration
 aiodns

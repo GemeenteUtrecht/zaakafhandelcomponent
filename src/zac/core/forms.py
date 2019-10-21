@@ -7,7 +7,7 @@ from .services import get_zaaktypes
 def get_zaaktype_choices():
     # TODO: sorting of zaaktypes
     for zaaktype in get_zaaktypes():
-        yield (zaaktype.id, zaaktype.omschrijving)
+        yield (zaaktype.url, zaaktype.omschrijving)
 
 
 class ZakenFilterForm(forms.Form):
