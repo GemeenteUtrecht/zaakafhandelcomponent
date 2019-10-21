@@ -82,6 +82,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -288,6 +289,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # Allow logging in with both username+password and email+password
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
     'zac.accounts.backends.UserModelEmailBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
