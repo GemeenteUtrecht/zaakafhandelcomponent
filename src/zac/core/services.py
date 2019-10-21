@@ -11,13 +11,26 @@ from dateutil.parser import parse
 from nlx_url_rewriter.rewriter import Rewriter
 from zds_client import ClientAuth
 from zgw.models import (
-    Document, InformatieObjectType, Status, StatusType, Zaak, ZaakType
+    Document, Eigenschap, InformatieObjectType, Status, StatusType, Zaak,
+    ZaakType
 )
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 logger = logging.getLogger(__name__)
+
+
+def _client_from_object(obj, **claims):
+    # build the client
+    Client = get_client_class()
+    client = Client.from_url(obj.url)
+
+    base_urls = [client.base_url]
+    Rewriter().backwards(base_urls)
+    service = Service.objects.get(api_root=base_urls[0])
+
+    return service.build_client(**claims)
 
 
 def _get_zaaktypes() -> List[Dict]:
@@ -130,12 +143,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
         'scopes': ['zds.scopes.zaken.lezen'],
         'zaaktypes': [zaak.zaaktype],
     }
-
-    # build the client
-    Client = get_client_class()
-    client = Client.from_url(zaak.url)
-    service = Service.objects.get(api_root=client.base_url)
-    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+    client = _client_from_object(zaak, **claims)
 
     # fetch the statusses
     _statussen = client.list('status', query_params={'zaak': zaak.url})
@@ -148,6 +156,20 @@ def get_statussen(zaak: Zaak) -> List[Status]:
         statussen.append(Status.from_raw(_status))
 
     return sorted(statussen, key=lambda x: x.datum_status_gezet)
+
+
+def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
+    claims = {
+        'scopes': ['zds.scopes.zaken.lezen'],
+        'zaaktypes': [zaak.zaaktype],
+    }
+    client = _client_from_object(zaak, **claims)
+
+    eigenschappen = client.list("zaakeigenschap", zaak_uuid=zaak.id)
+    for _eigenschap in eigenschappen:
+        _eigenschap["zaak"] = zaak
+
+    return [Eigenschap.from_raw(_eigenschap) for _eigenschap in eigenschappen]
 
 
 def get_statustype(url: str) -> StatusType:

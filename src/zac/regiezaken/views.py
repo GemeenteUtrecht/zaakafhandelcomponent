@@ -3,7 +3,10 @@ from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import DetailView, ListView
 
 from zac.core.base_views import BaseDetailView
-from zac.core.services import get_related_zaken, get_zaak, get_zaken
+from zac.core.services import (
+    get_eigenschappen, get_related_zaken, get_zaak, get_zaken,
+    get_statussen
+)
 
 from .camunda import get_tasks
 from .models import RegieZaakConfiguratie
@@ -39,6 +42,8 @@ class ZaakDetailView(BaseDetailView):
         uuid = self.kwargs['uuid']
         zaak = get_zaak(zaak_uuid=uuid)
         zaak.tasks = get_tasks(zaak)
+        zaak.eigenschappen = get_eigenschappen(zaak)
+        zaak.statussen = get_statussen(zaak)
         return zaak
 
     def get_context_data(self, **kwargs):
@@ -51,7 +56,10 @@ class ZaakDetailView(BaseDetailView):
         # add tasks to zaken:
         for zaak in related_zaken:
             zaak.tasks = get_tasks(zaak)
+            zaak.eigenschappen = get_eigenschappen(zaak)
+            zaak.statussen = get_statussen(zaak)
 
+        context["regie"] = regie
         context['related_zaken'] = related_zaken
         context['zaaktype'] = regie.zaaktype_object
 

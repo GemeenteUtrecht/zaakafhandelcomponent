@@ -1,13 +1,52 @@
 {% extends "master.html" %}
-{% load i18n sniplates %}
+{% load i18n sniplates zac %}
+
+
+{% block breadcrumbs %}
+{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
+{% nested_widget 'crumbs:crumbs' %}
+    {% url 'index' as index_url %}
+    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
+
+    {% url 'regiezaken:index' as regie_index_url %}
+    {% widget 'crumbs:crumb' label=_("Per onderwerp") url=regie_index_url %}
+
+    {% url 'regiezaken:regiezaak-detail' pk=regie.pk as regiezaak_url %}
+    {% widget 'crumbs:crumb' label=regie.name url=regiezaak_url %}
+
+    {% url 'regiezaken:zaak-detail' pk=regie.pk uuid=object.id as zaak_url %}
+    {% widget 'crumbs:crumb' label=object.identificatie url=zaak_url %}
+{% endnested %}
+{% endblock breadcrumbs %}
 
 
 {% block content %}
 
 {% load_widgets key_value='snippets/key_value.html' %}
 
+<div class="page-heading">
+    <!-- START grid wrap -->
+    <div class="grid-wrap">
+        <h1>
+            {% with "Aanvraag "|add:zaak.identificatie as default_omschrijving %}
+                {{ zaak.omschrijving|default:default_omschrijving }}
+            {% endwith %}
+        </h1>
+        <p>
+            Locatie: {{ zaak.zaakgeometrie|default:"-" }}
+            {% for eigenschap in zaak.eigenschappen %}
+                <br>
+                {{ eigenschap.naam|capfirst }}:
+                <span title="{{ eigenschap.waarde }}">{{ eigenschap.waarde|parse }}</span>
+            {% endfor %}
+            <br>
+        </p>
+    </div>
+    <!-- END grid wrap -->
+</div>
 
 <div class="primary bodycopy">
+
     <div class="grid-wrap">
 
         <div class="zaak">
@@ -28,8 +67,36 @@
                         </tbody>
                     </table>
 
-
                 </section>
+
+                <section class="zaak__box zaak__box--statussen">
+                <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
+
+                {% for status in zaak.statussen %}
+                    <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
+
+                        <div class="zaak-status__dot">
+                            {{ status.status_type.volgnummer }}
+                        </div>
+
+                        <div class="zaak-status__name">
+                            {{ status.status_type.omschrijving }}
+
+                            <span class="zaak-status__timestamp">
+                                {{ status.datum_status_gezet|timesince }} geleden
+                            </span>
+                        </div>
+
+                        <div class="zaak-status__info">
+                            {{ status.statustoelichting|default:'-' }}
+                        </div>
+
+                    </article>
+                {% empty %}
+                    Geen statussen bekend
+                {% endfor %}
+
+            </section>
 
         </div>
 

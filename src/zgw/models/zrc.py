@@ -21,6 +21,8 @@ class Zaak(Model):
     relevante_andere_zaken: list
     zaakgeometrie: dict
 
+    statussen: list = field(default_factory=list)
+    eigenschappen: list = field(default_factory=list)
     tasks: list = field(default_factory=list)
 
 
@@ -31,3 +33,12 @@ class Status(Model):
     status_type: StatusType
     datum_status_gezet: str
     statustoelichting: str
+
+
+@dataclass
+class Eigenschap(Model):
+    url: str
+    zaak: Zaak
+    # eigenschap: str
+    naam: str
+    waarde: str
