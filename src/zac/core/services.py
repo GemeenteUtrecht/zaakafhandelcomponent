@@ -221,11 +221,7 @@ def get_documenten(zaak: Zaak) -> List[Document]:
         'zaaktypes': [zaak.zaaktype],
     }
 
-    # build the client
-    Client = get_client_class()
-    zrc_client = Client.from_url(zaak.url)
-    service = Service.objects.get(api_root=zrc_client.base_url)
-    zrc_client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **claims)
+    zrc_client = _client_from_object(zaak, **claims)
 
     # get zaakinformatieobjecten
     zaak_informatieobjecten = zrc_client.list('zaakinformatieobject', zaak_uuid=zaak.id)
