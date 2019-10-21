@@ -26,4 +26,10 @@ Expects:
             Deadline: over {{ zaak.deadline|timeuntil }}
         </div>
     </section>
+
+    {% if request.GET.showTasks == "1" %}
+    <section class="zaak-preview__pe-tasks">
+        {% include "regiezaken/includes/zaak_tasks.html" with tasks=zaak.tasks only %}
+    </section>
+    {% endif %}
 </article>

@@ -32,6 +32,11 @@
                 {{ zaak.omschrijving|default:default_omschrijving }}
             {% endwith %}
         </h1>
+
+        <a href="?showTasks={% if request.GET.showTasks == '1' %}0{% else %}1{% endif %}">
+            {% if request.GET.showTasks == '1' %}Hide{% else %}Show{% endif %} tasks
+        </a>
+
         <p>
             Locatie: {{ zaak.zaakgeometrie|default:"-" }}
             {% for eigenschap in zaak.eigenschappen %}
@@ -49,74 +54,11 @@
 
     <div class="grid-wrap">
 
-        {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype only %}
+        {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype request=request only %}
 
-        {% comment %}
-
-        <div class="zaak">
-
-                <section class="zaak__box">
-                    <h2 class="zaak__box-title">{{ zaak.omschrijving }}</h2>
-
-                    <p>{{ zaaktype.omschrijving }} </p>
-                    <p>{{ zaaktype.aanleiding }} </p>
-
-                    <table>
-                        <tbody>
-                            {% widget 'key_value:label-value' label=_("Identificatie") value=zaak.identificatie %}
-                            {% widget 'key_value:label-value' label=_("Bronorganisatie") value=zaak.bronorganisatie %}
-                            {% widget 'key_value:label-value' label=_("Toelichting") value=zaak.toelichting %}
-                            {% widget 'key_value:label-value' label=_("Startdatum") value=zaak.startdatum %}
-                            {% widget 'key_value:label-value' label=_("Geplande einddatum") value=zaak.einddatum_gepland|default:"onbekend" %}
-                        </tbody>
-                    </table>
-
-                </section>
-
-                <section class="zaak__box zaak__box--statussen">
-                <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
-
-                {% for status in zaak.statussen %}
-                    <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
-
-                        <div class="zaak-status__dot">
-                            {{ status.status_type.volgnummer }}
-                        </div>
-
-                        <div class="zaak-status__name">
-                            {{ status.status_type.omschrijving }}
-
-                            <span class="zaak-status__timestamp">
-                                {{ status.datum_status_gezet|timesince }} geleden
-                            </span>
-                        </div>
-
-                        <div class="zaak-status__info">
-                            {{ status.statustoelichting|default:'-' }}
-                        </div>
-
-                    </article>
-                {% empty %}
-                    Geen statussen bekend
-                {% endfor %}
-
-            </section>
-
-        </div>
-
-        <div>
-            <section class="zaak__box">
-                <h2 class="zaak__box-title">Zaken list</h2>
-                {% include "regiezaken/includes/zaak.html" with zaak=zaak %}
-
-                {% for related_zaak in related_zaken %}
-                    {% include "regiezaken/includes/zaak.html" with zaak=related_zaak %}
-
-                {% endfor %}
-            </section>
-        </div>
-
-        {% endcomment %}
+        {% for zaaktype, zaak in related_zaken %}
+            {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype request=request only %}
+        {% endfor %}
 
     </div>
 </div>

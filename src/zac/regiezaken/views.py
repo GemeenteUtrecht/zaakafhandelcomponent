@@ -4,7 +4,8 @@ from django.views.generic import DetailView, ListView
 
 from zac.core.base_views import BaseDetailView
 from zac.core.services import (
-    get_eigenschappen, get_related_zaken, get_statussen, get_zaak, get_zaken
+    get_eigenschappen, get_related_zaken, get_statussen, get_zaak,
+    get_zaaktypes, get_zaken
 )
 
 from .camunda import get_tasks
@@ -50,16 +51,28 @@ class ZaakDetailView(BaseDetailView):
 
         id = int(self.kwargs['pk'])
         regie = RegieZaakConfiguratie.objects.get(id=id)
-        related_zaken = get_related_zaken(self.get_object(), regie.zaaktypes_related)
+        _related_zaken = get_related_zaken(
+            self.get_object(),
+            regie.zaaktypes_related
+        )
+
+        all_zaaktypes = {
+            zaaktype.url: zaaktype
+            for zaaktype in get_zaaktypes()
+        }
 
         # add tasks to zaken:
-        for zaak in related_zaken:
+        related_zaken = []
+
+        for zaak in _related_zaken:
+            _zaaktype = all_zaaktypes[zaak.zaaktype]
             zaak.tasks = get_tasks(zaak)
             zaak.eigenschappen = get_eigenschappen(zaak)
             zaak.statussen = get_statussen(zaak)
+            related_zaken.append((_zaaktype, zaak))
 
         context["regie"] = regie
-        context['related_zaken'] = related_zaken
         context['zaaktype'] = regie.zaaktype_object
+        context['related_zaken'] = related_zaken
 
         return context
