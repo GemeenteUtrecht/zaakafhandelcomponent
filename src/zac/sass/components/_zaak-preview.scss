@@ -1,0 +1,16 @@
+.zaak-preview {
+  padding: 0.5em;
+  border: solid 1px #DDDDDD;
+
+  & &__zaaktype {
+    display: block !important;
+    font-size: 1em;
+    text-transform: uppercase;
+  }
+
+  & &__information {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

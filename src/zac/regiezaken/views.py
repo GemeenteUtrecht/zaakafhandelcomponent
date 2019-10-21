@@ -4,8 +4,7 @@ from django.views.generic import DetailView, ListView
 
 from zac.core.base_views import BaseDetailView
 from zac.core.services import (
-    get_eigenschappen, get_related_zaken, get_zaak, get_zaken,
-    get_statussen
+    get_eigenschappen, get_related_zaken, get_statussen, get_zaak, get_zaken
 )
 
 from .camunda import get_tasks

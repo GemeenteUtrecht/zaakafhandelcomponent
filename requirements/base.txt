@@ -33,6 +33,7 @@ gemma-zds-client==0.13.0
 idna==2.8                 # via requests, yarl
 importlib-metadata==0.23  # via kombu
 inflection==0.3.1         # via django-camunda
+isodate==0.6.0
 jdcal==1.4.1              # via openpyxl
 kombu==4.6.4              # via celery
 markuppy==1.14            # via tablib
@@ -53,7 +54,7 @@ pyyaml==5.1.2             # via gemma-zds-client, tablib
 raven==6.10.0
 redis==3.3.8              # via django-redis
 requests==2.22.0          # via django-camunda, gemma-zds-client
-six==1.12.0               # via django-appconf, pip-tools, python-dateutil
+six==1.12.0               # via django-appconf, isodate, pip-tools, python-dateutil
 sqlparse==0.3.0           # via django
 tablib==0.14.0            # via django-import-export
 urllib3==1.25.5           # via requests

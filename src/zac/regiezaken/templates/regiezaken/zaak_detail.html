@@ -49,6 +49,10 @@
 
     <div class="grid-wrap">
 
+        {% include "regiezaken/includes/zaak_preview.html" with zaak=zaak zaaktype=zaaktype only %}
+
+        {% comment %}
+
         <div class="zaak">
 
                 <section class="zaak__box">
@@ -111,6 +115,8 @@
                 {% endfor %}
             </section>
         </div>
+
+        {% endcomment %}
 
     </div>
 </div>

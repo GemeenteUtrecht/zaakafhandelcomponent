@@ -32,7 +32,10 @@ class DurationLog(Log):
         entry["duration"] = duration
 
     def add_duration(self, request_id: UUID, duration: int):
-        self.durations[request_id]["duration"] = duration
+        try:
+            self.durations[request_id]["duration"] = duration
+        except KeyError:
+            pass
 
 
 class Client(NLXClient):
@@ -43,7 +46,7 @@ class Client(NLXClient):
         request_id = uuid4()
         self.request_starts[request_id] = time.time()
         request = (self.service, url, method, request_id)
-        self._log.durations[request_id] = {"request": request, "duration": None}
+        self._log.durations[request_id] = {"request": request, "duration": 0}
         return request_id
 
     def post_response(self, request_id, response_json) -> None:

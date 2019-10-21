@@ -13,6 +13,7 @@ class ZaakType(Model):
     vertrouwelijkheidaanduiding: str
     aanleiding: str
     toelichting: str
+    doorlooptijd: str
 
 
 @dataclass
