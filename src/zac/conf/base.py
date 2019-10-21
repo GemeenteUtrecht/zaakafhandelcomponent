@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "django_utrechtstijl",
     "django_camunda",
     "nlx_url_rewriter",
+    "import_export",
 
     # Project applications.
     'zac.accounts',

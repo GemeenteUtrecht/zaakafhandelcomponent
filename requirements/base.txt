@@ -15,26 +15,33 @@ certifi==2019.9.11        # via requests
 cffi==1.12.3              # via pycares
 chardet==3.0.4            # via aiohttp, requests
 click==7.0                # via pip-tools
+defusedxml==0.6.0         # via odfpy
+diff-match-patch==20181111  # via django-import-export
 django-appconf==1.0.3     # via django-axes
 django-axes==5.0.13
 django-camunda==0.2.1
 django-choices==1.7.0
+django-import-export==1.2.0
 django-ipware==2.1.0      # via django-axes
 django-redis==4.10.0
 django-sniplates==0.6.0
 django-solo==1.1.3        # via django-camunda, zgw-consumers
 django-utrechtstijl==0.2.0
 django==2.2.5
+et-xmlfile==1.0.1         # via openpyxl
 gemma-zds-client==0.13.0
-idna-ssl==1.1.0           # via aiohttp
-idna==2.8                 # via idna-ssl, requests, yarl
+idna==2.8                 # via requests, yarl
 importlib-metadata==0.23  # via kombu
 inflection==0.3.1         # via django-camunda
+jdcal==1.4.1              # via openpyxl
 kombu==4.6.4              # via celery
+markuppy==1.14            # via tablib
 more-itertools==7.2.0     # via zipp
 multidict==4.5.2          # via aiohttp, yarl
 nlx-url-rewriter==0.1.2
-pip-tools==4.1.0
+odfpy==1.4.0              # via tablib
+openpyxl==3.0.0           # via tablib
+pip-tools==4.2.0
 psycopg2==2.8.3
 pycares==3.0.0            # via aiodns
 pycparser==2.19           # via cffi
@@ -42,17 +49,18 @@ pyjwt==1.7.1              # via gemma-zds-client
 python-dateutil==2.8.0
 python-dotenv==0.10.3
 pytz==2019.2
-pyyaml==5.1.2             # via gemma-zds-client
+pyyaml==5.1.2             # via gemma-zds-client, tablib
 raven==6.10.0
 redis==3.3.8              # via django-redis
 requests==2.22.0          # via django-camunda, gemma-zds-client
 six==1.12.0               # via django-appconf, pip-tools, python-dateutil
 sqlparse==0.3.0           # via django
-typing-extensions==3.7.4  # via aiohttp
-typing==3.7.4.1           # via aiodns
+tablib==0.14.0            # via django-import-export
 urllib3==1.25.5           # via requests
 uwsgi==2.0.18
 vine==1.3.0               # via amqp, celery
+xlrd==1.2.0               # via tablib
+xlwt==1.3.0               # via tablib
 yarl==1.3.0               # via aiohttp
 zgw-consumers==0.4.0
 zipp==0.6.0               # via importlib-metadata

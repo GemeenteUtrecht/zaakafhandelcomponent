@@ -18,6 +18,7 @@ Django
 django-axes
 django-camunda
 django-choices
+django-import-export
 django-redis
 django-sniplates
 django-utrechtstijl
