@@ -21,16 +21,20 @@ from zgw_consumers.models import Service
 logger = logging.getLogger(__name__)
 
 
-def _client_from_object(obj, **claims):
+def _client_from_url(url: str, **claims):
     # build the client
     Client = get_client_class()
-    client = Client.from_url(obj.url)
+    client = Client.from_url(url)
 
     base_urls = [client.base_url]
     Rewriter().backwards(base_urls)
     service = Service.objects.get(api_root=base_urls[0])
 
     return service.build_client(**claims)
+
+
+def _client_from_object(obj, **claims):
+    return _client_from_url(obj.url, **claims)
 
 
 def _get_zaaktypes() -> List[Dict]:
@@ -59,6 +63,21 @@ def _get_zaaktypes() -> List[Dict]:
 def get_zaaktypes() -> List[ZaakType]:
     zaaktypes_raw = _get_zaaktypes()
     return [ZaakType.from_raw(raw) for raw in zaaktypes_raw]
+
+
+def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
+    cache_key = f"zt:statustypen:{zaaktype.url}"
+    result = cache.get(cache_key)
+    if result is not None:
+        return result
+
+    client = _client_from_object(zaaktype, scopes=["zds.scopes.zaaktypes.lezen"])
+    cat_uuid = zaaktype.catalogus.split("/")[-1]
+    _statustypen = client.list("statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.id)
+    statustypen = [StatusType.from_raw(raw) for raw in _statustypen]
+
+    cache.set(cache_key, statustypen, 60 * 30)
+    return statustypen
 
 
 def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
@@ -145,12 +164,19 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     }
     client = _client_from_object(zaak, **claims)
 
+    # re-use cached objects
+    zaaktype = zaak.get_zaaktype()
+    statustypen = {
+        st.url: st
+        for st in get_statustypen(zaaktype)
+    }
+
     # fetch the statusses
     _statussen = client.list('status', query_params={'zaak': zaak.url})
     statussen = []
     for _status in _statussen:
         # convert URL reference into object
-        _status['statusType'] = get_statustype(_status['statusType'])
+        _status['statusType'] = statustypen[_status['statusType']]
         _status['zaak'] = zaak
         _status['datumStatusGezet'] = parse(_status['datumStatusGezet'])
         statussen.append(Status.from_raw(_status))
@@ -180,15 +206,7 @@ def get_statustype(url: str) -> StatusType:
         # date!
         return result
 
-    # build client
-    Client = get_client_class()
-    client = Client.from_url(url)
-    service = Service.objects.get(api_root=client.base_url)
-    client.auth = ClientAuth(client_id=service.client_id, secret=service.secret, **{
-        'scopes': ['zds.scopes.zaaktypes.lezen']
-    })
-
-    # get statustype
+    client = _client_from_url(url, scopes=["zds.scopes.zaaktypes.lezen"])
     status_type = client.retrieve('statustype', url=url)
 
     result = StatusType.from_raw(status_type)

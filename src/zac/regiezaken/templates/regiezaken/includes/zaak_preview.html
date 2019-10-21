@@ -18,8 +18,8 @@ Expects:
             Willem Janssen
         </div>
 
-        <div class="zaak-preview__status-progress">
-            {{ zaak.statussen|length }}
+        <div class="zaak-preview__status-progress" title="{{ zaak.status_information.omschrijving }}">
+            Stap {{ zaak.status_information.volgnummer }} van {{ zaak.status_information.totaal }}
         </div>
 
         <div class="zaak-preview__deadline" title="{{ zaak.deadline|date:"d/m/Y" }}">
