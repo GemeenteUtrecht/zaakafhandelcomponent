@@ -1,14 +1,30 @@
 {% extends "master.html" %}
 {% load sniplates %}
 
+
+{% block breadcrumbs %}
+{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
+{% nested_widget 'crumbs:crumbs' %}
+    {% url 'index' as index_url %}
+    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
+
+    {% url 'regiezaken:index' as regie_index_url %}
+    {% widget 'crumbs:crumb' label=_("Per onderwerp") url=regie_index_url %}
+
+    {% url 'regiezaken:regiezaak-detail' pk=object.pk as regiezaak_url %}
+    {% widget 'crumbs:crumb' label=object.name url=regiezaak_url %}
+{% endnested %}
+{% endblock breadcrumbs %}
+
+
 {% block content %}
 <div class="page-heading">
 
     <!-- START grid wrap -->
     <div class="grid-wrap">
         <h1>
-            <span>Regie Zaak {{ object.pk }}</span>
-            {{ object.name }}
+            <span>{{ object.name }}</span>
+            {{ object.zaaktype_object.omschrijving }}
         </h1>
     </div>
     <!-- END grid wrap -->
@@ -18,27 +34,18 @@
     <div class="grid-wrap">
 
         <div>
-            <h2>Main zaaktype</h2>
-            <h3>{{ object.zaaktype_object.omschrijving }}</h3>
-        </div>
-
-        <div class="divider">
-            <hr>
-        </div>
-
-        <div>
-            <h2>Related zaken</h2>
-
             {% for zaak in zaken %}
                 <article class="zaak-card" data-url="{{ zaak.url }}">
                     <a href="{% url 'regiezaken:zaak-detail' pk=object.pk uuid=zaak.id %}">
                         <strong>{{ zaak.identificatie }}</strong>
-                    </a> - {{ zaak.omschrijving }}
-                    <p>{{ zaak.toelichting }}</p>
+                    </a> - {{ zaak.omschrijving|default:"(geen omschrijving)" }}
+                    <p>{{ zaak.toelichting|default:"-" }}</p>
                     <p>
                         Startdatum: {{ zaak.startdatum }}
                         <br>
                         Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
+                        <br>
+                        Locatie: {{ zaak.zaakgeometrie|default:"-" }}
                     </p>
                 </article>
             {% endfor %}

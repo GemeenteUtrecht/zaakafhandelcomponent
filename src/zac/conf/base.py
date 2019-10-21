@@ -115,6 +115,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'zac.utils.context_processors.settings',
+                'zac.utils.context_processors.client_log',
             ],
             'loaders': RAW_TEMPLATE_LOADERS
         },
@@ -338,4 +339,4 @@ if SENTRY_DSN:
         },
     })
 
-ZGW_CONSUMERS_CLIENT_CLASS = "zds_client.nlx.NLXClient"
+ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"

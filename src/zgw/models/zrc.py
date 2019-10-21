@@ -19,6 +19,8 @@ class Zaak(Model):
     status: str
     resultaat: str
     relevante_andere_zaken: list
+    zaakgeometrie: dict
+
     tasks: list = field(default_factory=list)
 
 

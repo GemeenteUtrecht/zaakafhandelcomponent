@@ -1,0 +1,23 @@
+{% load sniplates %}
+{% load_widgets key_value='utrechtstijl/snippets/key-value.html' %}
+<section class="log-entries">
+    <h1>
+        API calls
+        <small><code>total time: {{ total_duration_api_calls }} ms</code></small>
+    </h1>
+
+    {% for entry in client_log.entries %}
+        <table class="log-entry">
+            <tbody>
+                {% widget 'key_value:label-value' label="Call" value=entry.request.method|add:" "|add:entry.request.url %}
+                {% widget 'key_value:label-value' label="Response" value=entry.response.status %}
+                {# use |lower to cast int to string #}
+                {% widget 'key_value:label-value' label="Duration" value=entry.duration|lower|add:" ms" %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+{# Clear the log after displaying it #}
+{{ client_log.clear|default:"" }}
+
+</section>
