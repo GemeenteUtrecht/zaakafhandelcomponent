@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from nlx_url_rewriter.rewriter import Rewriter
 from zds_client import ClientError
 from zgw.models import ZaakType
 from zgw_consumers.admin_fields import get_zaaktypen
@@ -72,12 +73,19 @@ class RegieZaakConfiguratie(models.Model):
     @property
     def zaaktype_object(self):
         if not hasattr(self, '_zaaktype_object'):
+            rewriter = Rewriter()
+
             self._zaaktype_object = None
             ztcs = Service.objects.filter(api_type=APITypes.ztc)
             for ztc in ztcs:
                 client = ztc.build_client(scopes=['zds.scopes.zaaktypes.lezen'])
+
+                urls = [self.zaaktype_main]
+                url = rewriter.backwards(urls)
+                url = urls[0]
+
                 try:
-                    zaaktype_raw = client.retrieve('zaaktype', url=self.zaaktype_main)
+                    zaaktype_raw = client.retrieve('zaaktype', url=url)
                 except ClientError:
                     continue
                 else:
