@@ -34,6 +34,7 @@ class Zaak(Model):
 
     def get_zaaktype(self) -> ZaakType:
         from zac.core.services import get_zaaktypes
+
         zaaktypes = get_zaaktypes()
         zt = next((zt for zt in zaaktypes if zt.url == self.zaaktype))
         return zt
@@ -54,15 +55,12 @@ class Zaak(Model):
         Fetch the current status in context of all statusses.
         """
         from zac.core.services import get_statustypen
+
         zaaktype = self.get_zaaktype()
         statustypen = get_statustypen(zaaktype)
 
         if self.status is None:
-            return {
-                "volgnummer": 0,
-                "omschrijving": "",
-                "totaal": len(statustypen),
-            }
+            return {"volgnummer": 0, "omschrijving": "", "totaal": len(statustypen)}
 
         current_status = next(
             (status for status in self.statussen if status.url == self.status)

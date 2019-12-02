@@ -6,23 +6,30 @@ import zac.regiezaken.models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('regiezaken', '0001_initial'),
-    ]
+    dependencies = [("regiezaken", "0001_initial")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='regiezaakconfiguratie',
-            options={'verbose_name': 'regiezaak', 'verbose_name_plural': 'regiezaken'},
+            name="regiezaakconfiguratie",
+            options={"verbose_name": "regiezaak", "verbose_name_plural": "regiezaken"},
         ),
         migrations.AlterField(
-            model_name='regiezaakconfiguratie',
-            name='zaaktype_main',
-            field=models.URLField(help_text='Zaken van dit zaaktype worden als de regiezaak beschouwd.', verbose_name='Hoofdzaaktype'),
+            model_name="regiezaakconfiguratie",
+            name="zaaktype_main",
+            field=models.URLField(
+                help_text="Zaken van dit zaaktype worden als de regiezaak beschouwd.",
+                verbose_name="Hoofdzaaktype",
+            ),
         ),
         migrations.AlterField(
-            model_name='regiezaakconfiguratie',
-            name='zaaktypes_related',
-            field=zac.regiezaken.models.ZaakTypeArrayField(base_field=models.URLField(), blank=True, default=list, help_text='Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak.', size=None),
+            model_name="regiezaakconfiguratie",
+            name="zaaktypes_related",
+            field=zac.regiezaken.models.ZaakTypeArrayField(
+                base_field=models.URLField(),
+                blank=True,
+                default=list,
+                help_text="Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak.",
+                size=None,
+            ),
         ),
     ]

@@ -14,5 +14,5 @@ class ZakenFilterForm(forms.Form):
     zaaktypen = forms.MultipleChoiceField(
         label=_("zaaktypen"),
         choices=get_zaaktype_choices,
-        widget=forms.CheckboxSelectMultiple
+        widget=forms.CheckboxSelectMultiple,
     )

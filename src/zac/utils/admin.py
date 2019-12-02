@@ -8,9 +8,7 @@ from nlx_url_rewriter.models import URLRewrite
 from zgw_consumers.admin import ServiceAdmin
 from zgw_consumers.models import Service
 
-from .resources import (
-    CamundaConfigResource, ServiceResource, URLRewriteResource
-)
+from .resources import CamundaConfigResource, ServiceResource, URLRewriteResource
 
 admin.site.unregister(Service)
 admin.site.unregister(URLRewrite)

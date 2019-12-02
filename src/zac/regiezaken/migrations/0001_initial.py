@@ -10,15 +10,31 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='RegieZaakConfiguratie',
+            name="RegieZaakConfiguratie",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='The name of the theme/subject', max_length=100)),
-                ('zaaktype_main', models.URLField()),
-                ('zaaktypes_related', zac.regiezaken.models.ZaakTypeArrayField(base_field=models.URLField(), default=[], size=None)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="The name of the theme/subject", max_length=100
+                    ),
+                ),
+                ("zaaktype_main", models.URLField()),
+                (
+                    "zaaktypes_related",
+                    zac.regiezaken.models.ZaakTypeArrayField(
+                        base_field=models.URLField(), default=[], size=None
+                    ),
+                ),
             ],
-            options={
-                'verbose_name': 'Regie Zaak',
-            },
-        ),
+            options={"verbose_name": "Regie Zaak"},
+        )
     ]

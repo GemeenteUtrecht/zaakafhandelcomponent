@@ -31,9 +31,9 @@ class ZaakTypeArrayField(ArrayField):
         ]
 
         defaults = {
-            'form_class': forms.MultipleChoiceField,
-            'choices': choices,
-            'widget': forms.CheckboxSelectMultiple,
+            "form_class": forms.MultipleChoiceField,
+            "choices": choices,
+            "widget": forms.CheckboxSelectMultiple,
         }
         defaults.update(kwargs)
         return super(ArrayField, self).formfield(**defaults)
@@ -41,17 +41,18 @@ class ZaakTypeArrayField(ArrayField):
 
 class RegieZaakConfiguratie(models.Model):
     name = models.CharField(
-        max_length=100,
-        help_text=_("The name of the theme/subject")
+        max_length=100, help_text=_("The name of the theme/subject")
     )
     zaaktype_main = models.URLField(
         _("Hoofdzaaktype"),
-        help_text=_("Zaken van dit zaaktype worden als de regiezaak beschouwd.")
+        help_text=_("Zaken van dit zaaktype worden als de regiezaak beschouwd."),
     )
     zaaktypes_related = ZaakTypeArrayField(
         base_field=models.URLField(),
         default=list,
-        help_text=_("Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak."),
+        help_text=_(
+            "Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak."
+        ),
         blank=True,
     )
 
@@ -66,26 +67,24 @@ class RegieZaakConfiguratie(models.Model):
         super().clean()
 
         if self.zaaktype_main in self.zaaktypes_related:
-            raise ValidationError(
-                "'zaaktypes_related' can't include 'zaaktype_main'"
-            )
+            raise ValidationError("'zaaktypes_related' can't include 'zaaktype_main'")
 
     @property
     def zaaktype_object(self):
-        if not hasattr(self, '_zaaktype_object'):
+        if not hasattr(self, "_zaaktype_object"):
             rewriter = Rewriter()
 
             self._zaaktype_object = None
             ztcs = Service.objects.filter(api_type=APITypes.ztc)
             for ztc in ztcs:
-                client = ztc.build_client(scopes=['zds.scopes.zaaktypes.lezen'])
+                client = ztc.build_client(scopes=["zds.scopes.zaaktypes.lezen"])
 
                 urls = [self.zaaktype_main]
                 url = rewriter.backwards(urls)
                 url = urls[0]
 
                 try:
-                    zaaktype_raw = client.retrieve('zaaktype', url=url)
+                    zaaktype_raw = client.retrieve("zaaktype", url=url)
                 except ClientError:
                     continue
                 else:
@@ -93,6 +92,8 @@ class RegieZaakConfiguratie(models.Model):
                     break
 
         if not self._zaaktype_object:
-            raise ObjectDoesNotExist("Zaaktype object was not found in any known registrations")
+            raise ObjectDoesNotExist(
+                "Zaaktype object was not found in any known registrations"
+            )
 
         return self._zaaktype_object

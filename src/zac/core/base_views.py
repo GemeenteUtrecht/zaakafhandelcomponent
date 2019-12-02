@@ -19,11 +19,10 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
         if self.filter_form_class is None:
             return
 
-        if not hasattr(self, '_filter_form'):
+        if not hasattr(self, "_filter_form"):
             data = self.request.GET or None
             self._filter_form = self.filter_form_class(
-                data=data,
-                initial=self.get_filter_form_initial()
+                data=data, initial=self.get_filter_form_initial()
             )
 
         return self._filter_form
@@ -31,8 +30,8 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
     def get_context_data(self, **kwargs):
         context = {
             self.context_object_name: self.object_list,
-            'object_list': self.object_list,
-            'filter_form': self.get_filter_form(),
+            "object_list": self.object_list,
+            "filter_form": self.get_filter_form(),
         }
         context.update(kwargs)
         return super().get_context_data(**context)
@@ -47,16 +46,14 @@ class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
     """
     A base view to look up remote objects.
     """
-    context_object_name = 'object'
+
+    context_object_name = "object"
 
     def get_object(self):
         raise NotImplementedError
 
     def get_context_data(self, **kwargs):
-        context = {
-            self.context_object_name: self.object,
-            'object': self.object,
-        }
+        context = {self.context_object_name: self.object, "object": self.object}
         context.update(kwargs)
         return super().get_context_data(**context)
 
@@ -64,7 +61,9 @@ class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
         try:
             self.object = self.get_object()
         except ObjectDoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': self.context_object_name})
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": self.context_object_name}
+            )
         context = self.get_context_data()
         return self.render_to_response(context)

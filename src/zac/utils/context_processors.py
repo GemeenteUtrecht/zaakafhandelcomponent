@@ -7,13 +7,17 @@ from zds_client.log import Log
 
 
 def settings(request):
-    public_settings = ('GOOGLE_ANALYTICS_ID', 'ENVIRONMENT',
-                       'SHOW_ALERT', 'PROJECT_NAME')
+    public_settings = (
+        "GOOGLE_ANALYTICS_ID",
+        "ENVIRONMENT",
+        "SHOW_ALERT",
+        "PROJECT_NAME",
+    )
 
     return {
-        'settings': dict([
-            (k, getattr(django_settings, k, None)) for k in public_settings
-        ]),
+        "settings": dict(
+            [(k, getattr(django_settings, k, None)) for k in public_settings]
+        )
     }
 
 

@@ -24,10 +24,13 @@ class DurationLog(Log):
         super().add(service, url, method, *args, **kwargs)
 
         entry = next(
-            (entry for entry in reversed(cls._entries)
-             if entry["service"] == service
-             and entry["request"]["url"] == url
-             and entry["request"]["method"] == method)
+            (
+                entry
+                for entry in reversed(cls._entries)
+                if entry["service"] == service
+                and entry["request"]["url"] == url
+                and entry["request"]["method"] == method
+            )
         )
         entry["duration"] = duration
 

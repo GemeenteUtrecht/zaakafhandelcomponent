@@ -14,9 +14,7 @@ class BaseModel:
         if not strict:
             known_keys = cls.__annotations__.keys()
             init_kwargs = {
-                key: value
-                for key, value
-                in kwargs.items() if key in known_keys
+                key: value for key, value in kwargs.items() if key in known_keys
             }
         else:
             init_kwargs = kwargs
@@ -25,10 +23,9 @@ class BaseModel:
 
 
 class Model(BaseModel):
-
     @property
     def id(self):
         """
         Because of the usage of UUID4, we can rely on the UUID as identifier.
         """
-        return self.url.split('/')[-1]
+        return self.url.split("/")[-1]
