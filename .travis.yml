@@ -12,7 +12,7 @@ addons:
 
 env:
   global:
-  - DJANGO_SETTINGS_MODULE=zac.conf.jenkins
+  - DJANGO_SETTINGS_MODULE=zac.conf.ci
   - SECRET_KEY=dummy
   - DB_PASSWORD=
   - DB_USER=postgres
