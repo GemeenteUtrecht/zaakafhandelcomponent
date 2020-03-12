@@ -9,6 +9,7 @@ handler500 = "zac.utils.views.server_error"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("adfs/", include("django_auth_adfs.urls")),
     path("", TemplateView.as_view(template_name="index.html"), name="index"),
     path("core/", include("zac.core.urls")),
     path("regiezaken/", include("zac.regiezaken.urls")),

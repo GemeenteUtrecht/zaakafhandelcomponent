@@ -1,5 +1,7 @@
 import os
 
+from django.urls import reverse_lazy
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 DJANGO_PROJECT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), os.path.pardir)
@@ -73,6 +75,8 @@ INSTALLED_APPS = [
     "django_camunda",
     "nlx_url_rewriter",
     "import_export",
+    "django_auth_adfs",
+    "django_auth_adfs_db",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",
@@ -256,12 +260,14 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Allow logging in with both username+password and email+password
 AUTHENTICATION_BACKENDS = [
+    "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
     "axes.backends.AxesBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
 LOGIN_URL = "regiezaken:login"
+LOGIN_REDIRECT_URL = reverse_lazy("index")
 
 SESSION_COOKIE_NAME = "zac_sessionid"
 SESSION_COOKIE_SECURE = not DEBUG
@@ -319,3 +325,8 @@ if SENTRY_DSN:
     )
 
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
+
+#
+# DJANGO-AUTH-ADFS
+#
+AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
