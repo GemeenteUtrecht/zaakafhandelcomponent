@@ -18,10 +18,13 @@ cffi==1.12.3
 chardet==3.0.4
 click==7.0
 coverage==4.5.3
+cryptography==2.8
 cssselect==1.0.3
 defusedxml==0.6.0
 diff-match-patch==20181111
 django-appconf==1.0.3
+django-auth-adfs-db==0.1.1
+django-auth-adfs==1.3.1
 django-axes==5.0.13
 django-camunda==0.2.1
 django-choices==1.7.0

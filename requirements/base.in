@@ -16,6 +16,7 @@ zgw-consumers
 nlx-url-rewriter
 
 Django
+django-auth-adfs-db
 django-axes
 django-camunda
 django-choices
