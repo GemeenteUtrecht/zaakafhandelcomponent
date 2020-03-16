@@ -1,0 +1,16 @@
+@import "../lib/typography";
+@import "../lib/colors";
+
+body {
+  @include body;
+
+  font-size: 1rem;
+  color: $color-text;
+
+  background-color: #f2f2f2;
+  margin: 0;
+
+  &, & * {
+    box-sizing: border-box;
+  }
+}

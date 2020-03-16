@@ -1,3 +1,4 @@
+// legacy
 @import "list";
 @import "flush-cache";
 @import "zaak-card";
@@ -5,3 +6,9 @@
 @import "zaak-preview";
 
 @import "log-entries";
+
+
+// proper structure
+@import "body";
+
+@import "footer";

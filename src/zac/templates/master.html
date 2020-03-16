@@ -1,11 +1,68 @@
-{% extends "utrechtstijl/master.html" %}{% load static %}
+{% load static i18n %}<!DOCTYPE html>
+<html lang="nl">
+    <head>
+        <meta charset="utf-8">
+        <title>{% block title %}Zaakafhandel en -inzage{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
 
-{% block extra_css %}
-    <link href="{% static 'css/font-awesome.min.css' %}" media="screen" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/zac.css' %}"/>
-{% endblock %}
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans:300,400,600|Material+Icons|Material+Icons+Outlined" rel="stylesheet">
 
-{% block content %}
-    Override <code>{% verbatim %}{% block content %}{% endverbatim %}</code>
-    to get some actual content.
-{% endblock %}
+        <link href="{% static 'css/font-awesome.min.css' %}" media="screen" rel="stylesheet" />
+        <link href="{% static 'css/screen.css' %}" media="screen" rel="stylesheet" type="text/css" />
+        {% block extra_css %}{% endblock %}
+        <link href="{% static 'ico/favicon.png' %}" rel="shortcut icon">
+    </head>
+
+    <body class="{% block body-class %}{% endblock %}">
+
+        <header>
+            <!-- TODO - add branding -->
+        </header>
+
+        <main>
+            <nav class="nav-panel">
+
+                <div class="nav-panel__main-id">
+                    {% block nav-main-id %}{% endblock %}
+                </div>
+
+                <ul class="nav-menu">
+
+                    <li class="nav-menu__item">
+                        <a href="{% url 'core:index' %}" class="nav-menu__item-link">
+                            Alle zaken
+                        </a>
+                    </li>
+
+                    <li class="nav-menu__item">
+                        <a href="{% url 'regiezaken:index' %}" class="nav-menu__item-link">
+                            Regiezaken
+                        </a>
+                    </li>
+
+                    <li class="nav-menu__item">
+                        <a href="{% url 'admin:index' %}" class="nav-menu__item-link">
+                            {% trans "Admin" %}
+                        </a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+            <section class="content-panel">
+                {% block content %}
+                    Override <code>{% verbatim %}{% block content %}{% endverbatim %}</code>
+                    to get some actual content.
+                {% endblock %}
+            </section>
+
+        </main>
+
+        {% include "includes/footer.html" %}
+
+        {# <script src="{% static 'js/main.js' %}"></script> #}
+    </body>
+</html>

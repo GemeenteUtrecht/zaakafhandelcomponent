@@ -1,4 +1,4 @@
-@import "utrechtstijl/screen.scss";
+@import "../lib/colors";
 
 $dot-size: 30px;
 
@@ -11,8 +11,8 @@ $dot-size: 30px;
 
   &--eind {
     .zaak-status__dot {
-      background: $rood;
-      color: $wit;
+      background: $color-primary;
+      color: #fff;
     }
   }
 
@@ -20,7 +20,7 @@ $dot-size: 30px;
     width: $dot-size;
     height: $dot-size;
     padding: 5px;
-    border: solid 3px $rood;
+    border: solid 3px $color-primary;
     border-radius: 50%;
 
     display: flex;
@@ -37,7 +37,7 @@ $dot-size: 30px;
 
   &__timestamp {
     display: block;
-    color: $grijs;
+    color: lighten($color-text, 20%);
     font-size: 80%;
   }
 
