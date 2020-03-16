@@ -9,7 +9,6 @@ from django.core.exceptions import ObjectDoesNotExist
 import aiohttp
 from dateutil.parser import parse
 from nlx_url_rewriter.rewriter import Rewriter
-from zds_client import ClientAuth
 from zgw.models import (
     Document,
     Eigenschap,
@@ -17,8 +16,9 @@ from zgw.models import (
     Status,
     StatusType,
     Zaak,
-    ZaakType,
 )
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -57,9 +57,11 @@ def _get_zaaktypes() -> List[Dict]:
 
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     for ztc in ztcs:
-        client = ztc.build_client(scopes=["zds.scopes.zaaktypes.lezen"])
+        client = ztc.build_client()
         catalogus_uuid = ztc.extra.get("main_catalogus_uuid")
-        result += client.list("zaaktype", catalogus_uuid=catalogus_uuid)
+        paginated_response = client.list("zaaktype", catalogus_uuid=catalogus_uuid)
+        assert not paginated_response["next"], "Pagination not implemented"
+        result += paginated_response["results"]
 
     cache.set(KEY, result, 60 * 60)
     return result
@@ -67,7 +69,8 @@ def _get_zaaktypes() -> List[Dict]:
 
 def get_zaaktypes() -> List[ZaakType]:
     zaaktypes_raw = _get_zaaktypes()
-    return [ZaakType.from_raw(raw) for raw in zaaktypes_raw]
+    zaaktypes = factory(ZaakType, zaaktypes_raw)
+    return zaaktypes
 
 
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:

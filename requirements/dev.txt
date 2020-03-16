@@ -36,10 +36,11 @@ django-extensions==2.1.6  # via -r requirements/dev.in
 django-import-export==1.2.0  # via -r requirements/ci.txt
 django-ipware==2.1.0      # via -r requirements/ci.txt, django-axes
 django-redis==4.10.0      # via -r requirements/ci.txt
+django-relativedelta==1.1.1  # via -r requirements/ci.txt, zgw-consumers
 django-sniplates==0.6.0   # via -r requirements/ci.txt
 django-solo==1.1.3        # via -r requirements/ci.txt, django-auth-adfs-db, django-camunda, zgw-consumers
 django-webtest==1.9.7     # via -r requirements/ci.txt
-django==2.2.5             # via -r requirements/ci.txt, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-debug-toolbar, django-import-export, django-redis, django-sniplates, nlx-url-rewriter, zgw-consumers
+django==2.2.5             # via -r requirements/ci.txt, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-debug-toolbar, django-import-export, django-redis, django-relativedelta, django-sniplates, nlx-url-rewriter, zgw-consumers
 docutils==0.16            # via sphinx
 et-xmlfile==1.0.1         # via -r requirements/ci.txt, openpyxl
 factory-boy==2.12.0       # via -r requirements/ci.txt
@@ -71,7 +72,7 @@ pycparser==2.19           # via -r requirements/ci.txt, cffi
 pygments==2.6.1           # via sphinx
 pyjwt==1.7.1              # via -r requirements/ci.txt, django-auth-adfs, gemma-zds-client
 pyparsing==2.4.6          # via packaging
-python-dateutil==2.8.0    # via -r requirements/ci.txt, django-camunda, faker, freezegun
+python-dateutil==2.8.0    # via -r requirements/ci.txt, django-camunda, django-relativedelta, faker, freezegun
 python-dotenv==0.10.3     # via -r requirements/ci.txt
 pytz==2019.2              # via -r requirements/ci.txt, babel, celery, django
 pyyaml==5.1.2             # via -r requirements/ci.txt, gemma-zds-client, tablib
@@ -106,7 +107,7 @@ webtest==2.0.34           # via -r requirements/ci.txt, django-webtest
 xlrd==1.2.0               # via -r requirements/ci.txt, tablib
 xlwt==1.3.0               # via -r requirements/ci.txt, tablib
 yarl==1.3.0               # via -r requirements/ci.txt, aiohttp
-zgw-consumers==0.4.0      # via -r requirements/ci.txt
+zgw-consumers==0.6.0.dev1  # via -r requirements/ci.txt
 zipp==0.6.0               # via -r requirements/ci.txt, importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:

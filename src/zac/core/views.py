@@ -36,7 +36,7 @@ class Index(BaseListView):
         return get_zaken(**filters)
 
     def get_filter_form_initial(self):
-        return {"zaaktypen": [zt.id for zt in get_zaaktypes()]}
+        return {"zaaktypen": [zt.url for zt in get_zaaktypes()]}
 
 
 class ZaakDetail(BaseDetailView):
