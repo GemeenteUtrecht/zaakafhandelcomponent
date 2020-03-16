@@ -1,5 +1,6 @@
 import mimetypes
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -19,7 +20,7 @@ from .services import (
 )
 
 
-class Index(BaseListView):
+class Index(LoginRequiredMixin, BaseListView):
     """
     Display the landing screen.
     """
@@ -39,7 +40,7 @@ class Index(BaseListView):
         return {"zaaktypen": [zt.url for zt in get_zaaktypes()]}
 
 
-class ZaakDetail(BaseDetailView):
+class ZaakDetail(LoginRequiredMixin, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
 
@@ -53,7 +54,7 @@ class ZaakDetail(BaseDetailView):
         return context
 
 
-class DownloadDocumentView(View):
+class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         document = find_document(**kwargs)
         resp = requests.get(document.inhoud)
@@ -68,7 +69,7 @@ class DownloadDocumentView(View):
         return response
 
 
-class FlushCacheView(View):
+class FlushCacheView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         referer = request.META["HTTP_REFERER"]
         cache.clear()
