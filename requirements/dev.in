@@ -1,2 +1,15 @@
+# Helpers
+pip-tools
+bumpversion
+
+# Code formatting
+black
+isort
+
+# Debug tooling
 django-debug-toolbar
 django-extensions
+
+# Documentation
+sphinx
+sphinx_rtd_theme

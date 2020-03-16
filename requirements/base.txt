@@ -4,8 +4,8 @@
 #
 #    pip-compile --no-index requirements/base.in
 #
-aiodns==2.0.0
-aiohttp==3.6.1
+aiodns==2.0.0             # via -r requirements/base.in
+aiohttp==3.6.1            # via -r requirements/base.in
 amqp==2.5.1               # via kombu
 async-timeout==3.0.1      # via aiohttp
 attrs==19.1.0             # via aiohttp
@@ -14,57 +14,55 @@ celery==4.3.0             # via django-camunda
 certifi==2019.9.11        # via requests
 cffi==1.12.3              # via cryptography, pycares
 chardet==3.0.4            # via aiohttp, requests
-click==7.0                # via pip-tools
 cryptography==2.8         # via django-auth-adfs
 defusedxml==0.6.0         # via odfpy
 diff-match-patch==20181111  # via django-import-export
 django-appconf==1.0.3     # via django-axes
-django-auth-adfs-db==0.2.0
+django-auth-adfs-db==0.2.0  # via -r requirements/base.in
 django-auth-adfs==1.3.1   # via django-auth-adfs-db
-django-axes==5.0.13
-django-camunda==0.2.1
-django-choices==1.7.0
-django-import-export==1.2.0
+django-axes==5.0.13       # via -r requirements/base.in
+django-camunda==0.2.1     # via -r requirements/base.in
+django-choices==1.7.0     # via -r requirements/base.in, zgw-consumers
+django-import-export==1.2.0  # via -r requirements/base.in
 django-ipware==2.1.0      # via django-axes
-django-redis==4.10.0
-django-sniplates==0.6.0
+django-redis==4.10.0      # via -r requirements/base.in
+django-sniplates==0.6.0   # via -r requirements/base.in
 django-solo==1.1.3        # via django-auth-adfs-db, django-camunda, zgw-consumers
-django-utrechtstijl==0.2.0
-django==2.2.5
+django==2.2.5             # via -r requirements/base.in, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-import-export, django-redis, django-sniplates, nlx-url-rewriter, zgw-consumers
 et-xmlfile==1.0.1         # via openpyxl
-gemma-zds-client==0.13.0
+gemma-zds-client==0.13.0  # via -r requirements/base.in, zgw-consumers
 idna==2.8                 # via requests, yarl
 importlib-metadata==0.23  # via kombu
 inflection==0.3.1         # via django-camunda
-isodate==0.6.0
+isodate==0.6.0            # via -r requirements/base.in
 jdcal==1.4.1              # via openpyxl
 kombu==4.6.4              # via celery
 markuppy==1.14            # via tablib
 more-itertools==7.2.0     # via zipp
 multidict==4.5.2          # via aiohttp, yarl
-nlx-url-rewriter==0.1.2
+nlx-url-rewriter==0.1.2   # via -r requirements/base.in
 odfpy==1.4.0              # via tablib
 openpyxl==3.0.0           # via tablib
-pip-tools==4.2.0
-psycopg2==2.8.3
+psycopg2==2.8.3           # via -r requirements/base.in
 pycares==3.0.0            # via aiodns
 pycparser==2.19           # via cffi
 pyjwt==1.7.1              # via django-auth-adfs, gemma-zds-client
-python-dateutil==2.8.0
-python-dotenv==0.10.3
-pytz==2019.2
+python-dateutil==2.8.0    # via -r requirements/base.in, django-camunda
+python-dotenv==0.10.3     # via -r requirements/base.in
+pytz==2019.2              # via -r requirements/base.in, celery, django
 pyyaml==5.1.2             # via gemma-zds-client, tablib
-raven==6.10.0
+raven==6.10.0             # via -r requirements/base.in
 redis==3.3.8              # via django-redis
-requests==2.22.0          # via django-auth-adfs, django-camunda, gemma-zds-client
-six==1.12.0               # via cryptography, django-appconf, isodate, pip-tools, python-dateutil
+requests-mock==1.7.0      # via -r requirements/base.in
+requests==2.22.0          # via django-auth-adfs, django-camunda, gemma-zds-client, requests-mock
+six==1.12.0               # via cryptography, django-appconf, isodate, python-dateutil, requests-mock
 sqlparse==0.3.0           # via django
 tablib==0.14.0            # via django-import-export
 urllib3==1.25.5           # via requests
-uwsgi==2.0.18
+uwsgi==2.0.18             # via -r requirements/base.in
 vine==1.3.0               # via amqp, celery
 xlrd==1.2.0               # via tablib
 xlwt==1.3.0               # via tablib
 yarl==1.3.0               # via aiohttp
-zgw-consumers==0.4.0
+zgw-consumers==0.4.0      # via -r requirements/base.in
 zipp==0.6.0               # via importlib-metadata

@@ -1,4 +1,4 @@
-pip-tools
+# Core python libraries
 psycopg2
 python-dotenv
 pytz
@@ -6,6 +6,7 @@ raven
 uwsgi
 python-dateutil
 isodate
+requests_mock
 
 # zgw-integration
 aiodns
@@ -15,6 +16,7 @@ gemma-zds-client
 zgw-consumers
 nlx-url-rewriter
 
+# Framework libraries
 Django
 django-auth-adfs-db
 django-axes
@@ -23,4 +25,3 @@ django-choices
 django-import-export
 django-redis
 django-sniplates
-django-utrechtstijl

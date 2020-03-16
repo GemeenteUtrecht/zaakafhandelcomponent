@@ -1,0 +1,23 @@
+{% load i18n l10n %}{% load static %}
+<div class="djdt-clearfix">
+    <table>
+        <thead>
+            <tr>
+                <th>{% trans "Method" %}</th>
+                <th>{% trans "URL" %}</th>
+                <th>{% trans "Time (ms)" %}</th>
+                <th>{% trans "Status code" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+                <tr class="{% cycle 'djDebugOdd' 'djDebugEven' %}">
+                    <td>{{ request.method }}</td>
+                    <td>{{ request.url }}</td>
+                    <td>{{ request.timing.2 }}</td>
+                    <td>{{ request.status_code }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
