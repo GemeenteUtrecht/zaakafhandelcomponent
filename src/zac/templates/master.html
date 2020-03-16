@@ -21,8 +21,8 @@
             <!-- TODO - add branding -->
         </header>
 
-        <main>
-            <nav class="nav-panel">
+        <main class="main">
+            <nav class="main__nav nav-panel">
 
                 <div class="nav-panel__main-id">
                     {% block nav-main-id %}{% endblock %}
@@ -52,7 +52,7 @@
 
             </nav>
 
-            <section class="content-panel">
+            <section class="main__content content-panel">
                 {% block content %}
                     Override <code>{% verbatim %}{% block content %}{% endverbatim %}</code>
                     to get some actual content.

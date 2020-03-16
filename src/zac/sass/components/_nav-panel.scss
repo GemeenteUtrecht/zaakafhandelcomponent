@@ -1,0 +1,15 @@
+@import "../lib/colors";
+
+$nav-panel-background: #fefefe !default;
+$nav-panel-main-id-background: $color-highlight !default;
+$nav-panel-main-id-text-color: #fff !default;
+
+.nav-panel {
+  background: $nav-panel-background;
+
+  & &__main-id {
+    background: $nav-panel-main-id-background;
+    min-height: 100px;
+    color: $nav-panel-main-id-text-color;
+  }
+}

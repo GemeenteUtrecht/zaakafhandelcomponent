@@ -1,0 +1,19 @@
+$main-content-background-color: #fefefe !default;
+
+.main {
+  display: flex;
+  min-height: 90vh;
+
+  & &__nav {
+    min-width: 200px;
+    width: 10vw;
+    margin: 1em;
+  }
+
+  & &__content {
+    flex: 1;
+    background-color: $main-content-background-color;
+    margin: 1em;
+    padding: 1em;
+  }
+}
