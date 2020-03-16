@@ -119,6 +119,7 @@ TEMPLATES = [
                 "zac.utils.context_processors.client_log",
             ],
             "loaders": TEMPLATE_LOADERS,
+            "builtins": ["zac.templatetags.zac"],
         },
     }
 ]

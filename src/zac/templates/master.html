@@ -29,25 +29,9 @@
                 </div>
 
                 <ul class="nav-menu">
-
-                    <li class="nav-menu__item">
-                        <a href="{% url 'core:index' %}" class="nav-menu__item-link">
-                            Alle zaken
-                        </a>
-                    </li>
-
-                    <li class="nav-menu__item">
-                        <a href="{% url 'regiezaken:index' %}" class="nav-menu__item-link">
-                            Regiezaken
-                        </a>
-                    </li>
-
-                    <li class="nav-menu__item">
-                        <a href="{% url 'admin:index' %}" class="nav-menu__item-link">
-                            {% trans "Admin" %}
-                        </a>
-                    </li>
-
+                    {% nav_menu_item 'core:index' _("Alle zaken") %}
+                    {% nav_menu_item 'regiezaken:index' _("Regiezaken") %}
+                    {% nav_menu_item 'admin:index' _("Admin") %}
                 </ul>
 
             </nav>

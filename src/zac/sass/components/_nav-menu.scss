@@ -2,7 +2,6 @@
 
 $nav-menu__item-color: $color-primary !default;
 $nav-menu__item-background-color--hover: $color-primary !default;
-$nav-menu__item-color--hover: #fff !default;
 
 .nav-menu {
   margin: 0;
@@ -16,6 +15,10 @@ $nav-menu__item-color--hover: #fff !default;
 
     &:hover {
       border-left-color: $nav-menu__item-background-color--hover;
+    }
+
+    &--active {
+      border-left-color: rgba($nav-menu__item-background-color--hover, 0.3);
     }
   }
 
