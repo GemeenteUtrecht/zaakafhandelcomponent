@@ -42,7 +42,7 @@ $dot-size: 30px;
   }
 
   &__info {
-    width: calc(50% - 1em - $dot-size);
+    width: calc(50% - 1em - #{$dot-size});
   }
 
 }

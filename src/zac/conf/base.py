@@ -71,7 +71,6 @@ INSTALLED_APPS = [
     "axes",
     "sniplates",
     "zgw_consumers",
-    "django_utrechtstijl",
     "django_camunda",
     "nlx_url_rewriter",
     "import_export",

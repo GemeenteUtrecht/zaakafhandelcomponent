@@ -30,38 +30,13 @@ FROM mhart/alpine-node:10 AS frontend-build
 WORKDIR /app
 
 COPY ./*.json /app/
-RUN npm install
+RUN npm ci
 
 COPY ./Gulpfile.js /app/
 COPY ./build /app/build/
 
 COPY src/zac/sass/ /app/src/zac/sass/
-RUN npm run build
-
-
-# Stage 3 - Prepare jenkins tests image
-FROM build AS jenkins
-
-RUN apk --no-cache add \
-    postgresql-client
-
-# Stage 3.1 - Set up the needed testing/development dependencies
-COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
-COPY --from=build /app/requirements /app/requirements
-
-RUN pip install -r requirements/jenkins.txt --exists-action=s
-
-# Stage 3.2 - Set up testing config
-COPY ./setup.cfg /app/setup.cfg
-COPY ./bin/runtests.sh /runtests.sh
-
-# Stage 3.3 - Copy source code
-COPY --from=frontend-build /app/src/zac/static/fonts /app/src/zac/static/fonts
-COPY --from=frontend-build /app/src/zac/static/css /app/src/zac/static/css
-COPY ./src /app/src
-RUN mkdir /app/log
-CMD ["/runtests.sh"]
-
+RUN npm run build --production
 
 # Stage 4 - Build docker image suitable for execution and deployment
 FROM python:3.7-alpine AS production
@@ -79,14 +54,14 @@ RUN apk --no-cache add \
     zlib \
     libffi
 
-# Stage 4.1 - Set up dependencies
+# Stage 3.1 - Set up dependencies
 COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
 # required for fonts,styles etc.
 COPY --from=frontend-build /app/node_modules/font-awesome /app/node_modules/font-awesome
 
-# Stage 4.2 - Copy source code
+# Stage 3.2 - Copy source code
 WORKDIR /app
 COPY ./bin/docker_start.sh /start.sh
 RUN mkdir /app/log
