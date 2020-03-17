@@ -62,7 +62,7 @@ class Zaak(_Zaak):
 class Status(Model):
     url: str
     zaak: str
-    status_type: StatusType
+    statustype: StatusType
     datum_status_gezet: str
     statustoelichting: str
 

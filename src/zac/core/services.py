@@ -23,6 +23,8 @@ from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from .utils import get_paginated_results
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,10 +60,7 @@ def _get_zaaktypes() -> List[Dict]:
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     for ztc in ztcs:
         client = ztc.build_client()
-        catalogus_uuid = ztc.extra.get("main_catalogus_uuid")
-        paginated_response = client.list("zaaktype", catalogus_uuid=catalogus_uuid)
-        assert not paginated_response["next"], "Pagination not implemented"
-        result += paginated_response["results"]
+        result += get_paginated_results(client, "zaaktype")
 
     cache.set(KEY, result, 60 * 60)
     return result
@@ -96,8 +95,8 @@ def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     client = _client_from_object(zaaktype)
     cat_uuid = zaaktype.catalogus.split("/")[-1]
     _statustypen = client.list(
-        "statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.id
-    )
+        "statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.uuid
+    )["results"]
     statustypen = [StatusType.from_raw(raw) for raw in _statustypen]
 
     cache.set(cache_key, statustypen, 60 * 30)
@@ -165,13 +164,8 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
 
     # not in cache -> check it in all known ZRCs
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    claims = {
-        "scopes": ["zds.scopes.zaken.lezen"],
-        "zaaktypes": [zt.url for zt in get_zaaktypes()],
-    }
-    Rewriter().forwards(claims)
     for zrc in zrcs:
-        client = zrc.build_client(**claims)
+        client = zrc.build_client()
         results = client.list("zaak", query_params=query)["results"]
 
         if not results:
@@ -181,7 +175,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
             logger.warning("Found multiple Zaken for query %r", query)
 
         # there's only supposed to be one unique case
-        result = Zaak.from_raw(results[0])
+        result = factory(Zaak, results[0])
         break
 
     if result is None:
@@ -192,19 +186,18 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
 
 
 def get_statussen(zaak: Zaak) -> List[Status]:
-    claims = {"scopes": ["zds.scopes.zaken.lezen"], "zaaktypes": [zaak.zaaktype]}
-    client = _client_from_object(zaak, **claims)
+    client = _client_from_object(zaak)
 
     # re-use cached objects
-    zaaktype = zaak.get_zaaktype()
+    zaaktype = fetch_zaaktype(zaak.zaaktype)
     statustypen = {st.url: st for st in get_statustypen(zaaktype)}
 
     # fetch the statusses
-    _statussen = client.list("status", query_params={"zaak": zaak.url})
+    _statussen = client.list("status", query_params={"zaak": zaak.url})["results"]
     statussen = []
     for _status in _statussen:
         # convert URL reference into object
-        _status["statusType"] = statustypen[_status["statusType"]]
+        _status["statustype"] = statustypen[_status["statustype"]]
         _status["zaak"] = zaak
         _status["datumStatusGezet"] = parse(_status["datumStatusGezet"])
         statussen.append(Status.from_raw(_status))
@@ -213,8 +206,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
 
 
 def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
-    claims = {"scopes": ["zds.scopes.zaken.lezen"], "zaaktypes": [zaak.zaaktype]}
-    client = _client_from_object(zaak, **claims)
+    client = _client_from_object(zaak)
 
     eigenschappen = client.list("zaakeigenschap", zaak_uuid=zaak.id)
     for _eigenschap in eigenschappen:
@@ -241,12 +233,14 @@ def get_statustype(url: str) -> StatusType:
 
 def get_documenten(zaak: Zaak) -> List[Document]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
-    claims = {"scopes": ["zds.scopes.zaken.lezen"], "zaaktypes": [zaak.zaaktype]}
+    rewriter = Rewriter()
 
-    zrc_client = _client_from_object(zaak, **claims)
+    zrc_client = _client_from_object(zaak)
 
     # get zaakinformatieobjecten
-    zaak_informatieobjecten = zrc_client.list("zaakinformatieobject", zaak_uuid=zaak.id)
+    zaak_informatieobjecten = zrc_client.list(
+        "zaakinformatieobject", query_params={"zaak": zaak.url}
+    )
 
     # retrieve the documents themselves, in parallel
     cache_key = "zios:{}".format(
@@ -257,22 +251,28 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
     documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
 
+    # FIXME!
+    documenten = [doc for doc in documenten if "informatieobjecttype" in doc]
+
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
     # figure out relevant ztcs
     informatieobjecttypen = {
         document["informatieobjecttype"] for document in documenten
     }
+
+    _iot = list(informatieobjecttypen)
+    rewriter.backwards(_iot)
+
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     relevant_ztcs = []
     for ztc in ztcs:
-        if any(iot.startswith(ztc.api_root) for iot in informatieobjecttypen):
+        if any(iot.startswith(ztc.api_root) for iot in _iot):
             relevant_ztcs.append(ztc)
 
     all_informatieobjecttypen = []
     for ztc in relevant_ztcs:
         client = ztc.build_client()
-        catalogus_uuid = ztc.extra.get("main_catalogus_uuid")
-        results = client.list("informatieobjecttype", catalogus_uuid=catalogus_uuid)
+        results = get_paginated_results(client, "informatieobjecttype")
         all_informatieobjecttypen += [
             iot for iot in results if iot["url"] in informatieobjecttypen
         ]
@@ -330,7 +330,8 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
 
 
 async def fetch(session: aiohttp.ClientSession, url: str):
-    async with session.get(url) as response:
+    creds = _client_from_url(url).auth.credentials()
+    async with session.get(url, headers=creds) as response:
         return await response.json()
 
 
@@ -362,22 +363,19 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
     return result
 
 
-def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None):
+def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None) -> Zaak:
     """retrieve zaak with uuid or url"""
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
-
-    _zaaktypes = zaaktypes or [zt.url for zt in get_zaaktypes()]
-
     result = None
 
     for zrc in zrcs:
         client = zrc.build_client()
-        results = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
+        result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
 
-        if not results:
+        if not result:
             continue
 
-        result = Zaak.from_raw(results)
+        result = factory(Zaak, result)
 
     if result is None:
         raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
