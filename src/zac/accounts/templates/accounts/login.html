@@ -12,19 +12,17 @@
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.GET.next }}">
 
-    {# {% load_widgets form='utrechtstijl/snippets/forms.html' %} #}
-    <fieldset class="fieldset">
-        {{ form.as_p }}
-        {# {% form_field form.username %} #}
-        {# {% form_field form.password %} #}
+    {% load_widgets form='sniplates/forms.html' %}
 
-        {# {% widget 'form:required-fields' %} #}
-    </fieldset>
+    {% widget 'form:non_field_errors' %}
+
+    {% form_field form.username %}
+    {% form_field form.password %}
+
+    {% widget 'form:submit' label=_("Log in") %}
 
     {% get_solo 'django_auth_adfs_db.ADFSConfig' as adfs_config %}
     <div class="navigation_buttons">
-        <input type="submit" value="login">
-        {# {% widget 'form:submit' text=_("Inloggen") %} #}
         {% if adfs_config.enabled %}
             <a href="{% url 'django_auth_adfs:login' %}">{% trans "Login with ADFS" %}</a>
         {% endif %}

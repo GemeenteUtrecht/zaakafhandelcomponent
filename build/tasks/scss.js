@@ -17,6 +17,9 @@ const sourcemap = argv.sourcemap ? true : false;
 
 const sassOptions = {
     outputStyle: isProduction ? 'compressed' : 'expanded',
+    includePaths: [
+        'node_modules/@nl-design-system'
+    ],
 };
 
 let selectorLintConfig = {

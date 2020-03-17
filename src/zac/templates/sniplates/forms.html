@@ -1,0 +1,88 @@
+{% extends "sniplates/django.html" %}
+{% load sniplates i18n %}
+
+
+Container for label/help text/input
+{% block _wrapper %}
+<div class="input {{ errors|yesno:'input--invalid,' }}">
+    {{ content }}
+</div>
+{% endblock %}
+
+How to render labels
+{% block _label %}
+{% if label %}
+    <label class="input__label" for="{{ id_for_label }}">
+        {{ label }}
+        {% if not required %}
+            <span class="label label--optional">optioneel</span>
+        {% endif %}
+    </label>
+{% endif %}
+{% endblock %}
+
+How to render help_text
+{% block _help %}
+{% if help_text %}
+    <span class="input__hint" id="hint_{{ id_for_label }}">{{ help_text }}</span>
+{% endif %}
+{% endblock %}
+
+How to render errors
+{% block _errors %}
+{% for error in errors %}
+    <div class="input__error">{{ error }}</div>
+{% endfor %}
+{% endblock %}
+
+{% block input %}
+{% with input_type=input_type|default:"text" %}
+<input type="{{ input_type }}"
+    name="{{ html_name }}"
+    {{ required|yesno:"required," }}
+    {% if help_text %}aria-describedby="hint_{{ id_for_label }}"{% endif %}
+    id="{{ id }}"
+    value="{{ raw_value|default:"" }}"
+    class="input__control {{ css_classes }}"
+    {{ widget.attrs|flatattrs }}
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+>
+{% endwith %}
+{% endblock %}
+
+Form widgets
+
+{% block non_field_errors %}
+<div class="input {{ form.non_field_errors|yesno:'input--invalid,' }}">
+    {% reuse '_errors' errors=form.non_field_errors %}
+</div>
+{% endblock %}
+
+Actual input types
+
+{% block TextInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
+{% block PasswordInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="password" raw_value="" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
+
+
+Button interactions
+{% block submit %}
+<div class="input">
+    <button type="submit" class="btn btn--primary">{{ label|default:_("Submit") }}</button>
+</div>
+{% endblock %}

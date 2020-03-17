@@ -23,7 +23,7 @@ module.exports = {
     sassSrcDir: `${sourcesRoot}sass/`,
 
     // Path to the sass (sources) entry point
-    sassSrc: `${sourcesRoot}sass/**/*.scss`,
+    sassSrc: `${sourcesRoot}sass/*.scss`,
 
     // Path to the (transpiled) css directory
     cssDir: `${staticRoot}css/`,

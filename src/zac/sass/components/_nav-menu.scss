@@ -12,6 +12,7 @@ $nav-menu__item-background-color--hover: $color-primary !default;
     border-bottom: solid 1px #eee;
     border-left: solid 4px transparent;
     transition: all 0.2s ease;
+    margin: 0;
 
     &:hover {
       border-left-color: $nav-menu__item-background-color--hover;
