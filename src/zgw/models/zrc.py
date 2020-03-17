@@ -5,29 +5,14 @@ from django.utils.functional import cached_property
 
 from dateutil.parser import parse
 from isodate import parse_duration
+from zgw_consumers.api_models.zaken import Zaak as _Zaak
 
 from .base import Model
 from .ztc import StatusType, ZaakType
 
 
 @dataclass
-class Zaak(Model):
-    url: str
-    identificatie: str
-    bronorganisatie: str
-    omschrijving: str
-    toelichting: str
-    zaaktype: str
-    registratiedatum: str
-    startdatum: str
-    einddatum_gepland: str
-    uiterlijke_einddatum_afdoening: str
-    vertrouwelijkheidaanduiding: str
-    status: str
-    resultaat: str
-    relevante_andere_zaken: list
-    zaakgeometrie: dict
-
+class Zaak(_Zaak):
     statussen: list = field(default_factory=list)
     eigenschappen: list = field(default_factory=list)
     tasks: list = field(default_factory=list)

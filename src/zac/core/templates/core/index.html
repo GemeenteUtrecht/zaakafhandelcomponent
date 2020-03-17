@@ -42,7 +42,7 @@
                         {{ zaak.identificatie }}
                     </a>
                 </th>
-                <td> {{ zaak.zaaktype }} </td>
+                <td> {{ zaak.zaaktype.omschrijving }} </td>
                 <td> {{ zaak.startdatum }} </td>
                 <td> {{ zaak.einddatum_gepland|default:"-" }} </td>
             </tr>

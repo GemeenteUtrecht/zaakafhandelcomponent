@@ -31,9 +31,10 @@ class Index(LoginRequiredMixin, BaseListView):
 
     def get_object_list(self):
         filter_form = self.get_filter_form()
-        filters = {}
         if filter_form.is_valid():
-            filters["zaaktypes"] = filter_form.cleaned_data["zaaktypen"]
+            filters = filter_form.as_filters()
+        else:
+            filters = {}
         return get_zaken(**filters)
 
     def get_filter_form_initial(self):

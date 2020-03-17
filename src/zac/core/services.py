@@ -26,7 +26,7 @@ from zgw_consumers.models import Service
 logger = logging.getLogger(__name__)
 
 
-def _client_from_url(url: str, **claims):
+def _client_from_url(url: str):
     # build the client
     Client = get_client_class()
     client = Client.from_url(url)
@@ -35,11 +35,11 @@ def _client_from_url(url: str, **claims):
     Rewriter().backwards(base_urls)
     service = Service.objects.get(api_root=base_urls[0])
 
-    return service.build_client(**claims)
+    return service.build_client()
 
 
-def _client_from_object(obj, **claims):
-    return _client_from_url(obj.url, **claims)
+def _client_from_object(obj):
+    return _client_from_url(obj.url)
 
 
 def _get_zaaktypes() -> List[Dict]:
@@ -73,13 +73,27 @@ def get_zaaktypes() -> List[ZaakType]:
     return zaaktypes
 
 
+def fetch_zaaktype(url: str) -> ZaakType:
+    key = f"zaaktype:{url}"
+
+    result = cache.get(key)
+    if result:
+        logger.debug("Cache hit for zaaktype %s", url)
+    else:
+        client = _client_from_url(url)
+        result = client.retrieve("zaaktype", url=url)
+        cache.set(key, result, 60 * 24)
+
+    return factory(ZaakType, result)
+
+
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     cache_key = f"zt:statustypen:{zaaktype.url}"
     result = cache.get(cache_key)
     if result is not None:
         return result
 
-    client = _client_from_object(zaaktype, scopes=["zds.scopes.zaaktypes.lezen"])
+    client = _client_from_object(zaaktype)
     cat_uuid = zaaktype.catalogus.split("/")[-1]
     _statustypen = client.list(
         "statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.id
@@ -90,30 +104,46 @@ def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     return statustypen
 
 
-def get_zaken(zaaktypes: List[str] = None) -> List[Zaak]:
+def get_zaken(
+    zaaktypen: List[str] = None, identificatie: str = "", bronorganisatie: str = "",
+) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
     """
-    if zaaktypes is None:
-        zaaktypes = [zt.url for zt in get_zaaktypes()]
+    query = {
+        "zaaktype": zaaktypen,
+        "identificatie": identificatie,
+        "bronorganisatie": bronorganisatie,
+    }
+    if zaaktypen is None:
+        zaaktypen = [zt.url for zt in get_zaaktypes()]
 
-    zt_key = ",".join(sorted(zaaktypes))
-    cache_key = hashlib.md5(f"zaken.{zt_key}".encode("ascii")).hexdigest()
+    zt_key = ",".join(sorted(zaaktypen))
+    cache_key = hashlib.md5(
+        f"zaken.{zt_key}.{identificatie}.{bronorganisatie}".encode("ascii")
+    ).hexdigest()
 
     zaken = cache.get(cache_key)
     if zaken is not None:
         logger.debug("Zaken cache hit")
         return zaken
 
-    claims = {"scopes": ["zds.scopes.zaken.lezen"], "zaaktypes": zaaktypes}
-    Rewriter().forwards(claims)
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
 
     zaken = []
     for zrc in zrcs:
-        client = zrc.build_client(**claims)
-        _zaken = client.list("zaak")["results"]
-        zaken += [Zaak.from_raw(raw) for raw in _zaken]
+        client = zrc.build_client()
+        _zaken = client.list("zaak", query_params=query)["results"]
+        zaken += factory(Zaak, _zaken)
+
+    # resolve zaaktype URL
+    _zaaktypen = {zt.url: zt for zt in get_zaaktypes()}
+    for zaak in zaken:
+        if zaak.zaaktype not in _zaaktypen:
+            zaaktype = fetch_zaaktype(zaak.zaaktype)
+            _zaaktypen[zaak.zaaktype] = zaaktype
+
+        zaak.zaaktype = _zaaktypen[zaak.zaaktype]
 
     cache.set(cache_key, zaken, 60 * 30)
 
@@ -201,7 +231,7 @@ def get_statustype(url: str) -> StatusType:
         # date!
         return result
 
-    client = _client_from_url(url, scopes=["zds.scopes.zaaktypes.lezen"])
+    client = _client_from_url(url)
     status_type = client.retrieve("statustype", url=url)
 
     result = StatusType.from_raw(status_type)
@@ -240,7 +270,7 @@ def get_documenten(zaak: Zaak) -> List[Document]:
 
     all_informatieobjecttypen = []
     for ztc in relevant_ztcs:
-        client = ztc.build_client(scopes=["zds.scopes.zaaktypes.lezen"])
+        client = ztc.build_client()
         catalogus_uuid = ztc.extra.get("main_catalogus_uuid")
         results = client.list("informatieobjecttype", catalogus_uuid=catalogus_uuid)
         all_informatieobjecttypen += [
@@ -337,13 +367,11 @@ def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None):
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
 
     _zaaktypes = zaaktypes or [zt.url for zt in get_zaaktypes()]
-    claims = {"scopes": ["zds.scopes.zaken.lezen"], "zaaktypes": _zaaktypes}
-    Rewriter().forwards(claims)
 
     result = None
 
     for zrc in zrcs:
-        client = zrc.build_client(**claims)
+        client = zrc.build_client()
         results = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
 
         if not results:
