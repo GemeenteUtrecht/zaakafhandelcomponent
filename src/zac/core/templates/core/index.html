@@ -1,64 +1,54 @@
 {% extends "master.html" %}
-{% load i18n %}
+{% load i18n sniplates %}
 
 
 {% block content %}
-<div class="page-heading">
+<h1 class="page-title">Zaken</h1>
 
-    <!-- START grid wrap -->
-    <div class="grid-wrap">
-        <h1>
-            <span>Zaken</span>
-            List of cases
-        </h1>
+<div class="section-title">Filters</div>
+
+{% load_widgets form='sniplates/filters.html' %}
+<form class="filters" action="." method="get">
+
+    <div class="filters__group">
+        {% form_field filter_form.identificatie %}
+        {% form_field filter_form.bronorganisatie %}
     </div>
-    <!-- END grid wrap -->
-</div>
 
-
-<div class="primary bodycopy">
-    <div class="grid-wrap">
-
-        <article class="list">
-
-            <section class="list__filters">
-
-                <form class="filter" action="." method="get">
-<!--                    <h2 class="filter__name">Zaaktypen</h2>-->
-                    {{ filter_form.as_p }}
-
-                    <div>
-                        <button type="submit">{% trans "Filter" %}</button>
-                    </div>
-                </form>
-
-            </section>
-
-            <section class="list__results">
-                <h2>Resultaten</h2>
-                {% for zaak in zaken %}
-                    <article class="zaak-card" data-url="{{ zaak.url }}">
-                        <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
-                            <strong>{{ zaak.identificatie }}</strong>
-                        </a> - {{ zaak.omschrijving }}
-                        <p>{{ zaak.toelichting }}</p>
-                        <p>
-                            Startdatum: {{ zaak.startdatum }}
-                            <br>
-                            Geplande einddatum: {{ zaak.einddatum_gepland|default:"onbekend" }}
-                        </p>
-                    </article>
-                {% endfor %}
-            </section>
-
-            <!--
-            <section class="list__details">
-                Details
-            </section>
-            -->
-
-        </article>
-        </div>
+    <div class="filters__group">
+        {% form_field filter_form.zaaktypen %}
     </div>
-</div>
+
+    <div class="filters__submit">
+        <button type="submit">{% trans "Filter" %}</button>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Identificatie</th>
+            <th>Zaaktype</th>
+            <th>Startdatum</th>
+            <th>Geplande Einddatum</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for zaak in zaken %}
+            <tr>
+                <th>
+                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                        {{ zaak.identificatie }}
+                    </a>
+                </th>
+                <td> {{ zaak.zaaktype }} </td>
+                <td> {{ zaak.startdatum }} </td>
+                <td> {{ zaak.einddatum_gepland|default:"-" }} </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
 {% endblock content %}

@@ -3,6 +3,7 @@ $main-content-background-color: #fefefe !default;
 .main {
   display: flex;
   min-height: 90vh;
+  padding: 0;
 
   & &__nav {
     min-width: 200px;

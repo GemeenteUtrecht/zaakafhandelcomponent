@@ -11,6 +11,8 @@ def get_zaaktype_choices():
 
 
 class ZakenFilterForm(forms.Form):
+    identificatie = forms.CharField(label=_("identificatie"), required=False,)
+    bronorganisatie = forms.CharField(label=_("bronorganisatie"), required=False,)
     zaaktypen = forms.MultipleChoiceField(
         label=_("zaaktypen"),
         choices=get_zaaktype_choices,
