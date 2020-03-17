@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+{% load sniplates solo_tags i18n %}
+
+
+{% block subtitle %}Inloggen{% endblock subtitle %}
+
+
+{% block content %}
+<h1 class="page-title">Inloggen</h1>
+
+<form action="." method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+    {# {% load_widgets form='utrechtstijl/snippets/forms.html' %} #}
+    <fieldset class="fieldset">
+        {{ form.as_p }}
+        {# {% form_field form.username %} #}
+        {# {% form_field form.password %} #}
+
+        {# {% widget 'form:required-fields' %} #}
+    </fieldset>
+
+    {% get_solo 'django_auth_adfs_db.ADFSConfig' as adfs_config %}
+    <div class="navigation_buttons">
+        <input type="submit" value="login">
+        {# {% widget 'form:submit' text=_("Inloggen") %} #}
+        {% if adfs_config.enabled %}
+            <a href="{% url 'django_auth_adfs:login' %}">{% trans "Login with ADFS" %}</a>
+        {% endif %}
+    </div>
+</form>
+
+{% endblock content %}

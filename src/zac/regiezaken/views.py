@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import DetailView, ListView
 
 from zac.core.base_views import BaseDetailView
@@ -14,10 +13,6 @@ from zac.core.services import (
 
 from .camunda import get_tasks
 from .models import RegieZaakConfiguratie
-
-
-class LoginView(_LoginView):
-    template_name = "regiezaken/login.html"
 
 
 class IndexView(LoginRequiredMixin, ListView):

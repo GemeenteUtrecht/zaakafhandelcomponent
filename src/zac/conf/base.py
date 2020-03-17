@@ -266,7 +266,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-LOGIN_URL = "regiezaken:login"
+LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = reverse_lazy("index")
 
 SESSION_COOKIE_NAME = "zac_sessionid"
