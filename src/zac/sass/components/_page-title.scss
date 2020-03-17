@@ -1,0 +1,5 @@
+@import "../lib/typography";
+
+.page-title {
+  @include title;
+}

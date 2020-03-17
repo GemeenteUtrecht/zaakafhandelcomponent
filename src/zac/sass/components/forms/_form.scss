@@ -1,0 +1,15 @@
+$form-centered-width--normal: 40vw !default;
+
+.form {
+  display: block;
+
+  &#{&}--centered {
+    width: $form-centered-width--normal;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &#{&}--centered-content {
+    text-align: center;
+  }
+}

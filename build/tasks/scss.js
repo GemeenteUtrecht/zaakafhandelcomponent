@@ -66,7 +66,7 @@ const plugins = isProduction ? [cssnano(), autoprefixer()] : [autoprefixer(), se
  * Writes css to paths.cssDir
  */
 function _scss() {
-    return gulp.src(paths.sassSrc)
+    return gulp.src(paths.sassSrcDir)
         .pipe(gulpif(sourcemap, sourcemaps.init()))
         .pipe(sass(sassOptions).on("error", sass.logError))
         .pipe(postcss(plugins))
