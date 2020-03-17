@@ -6,6 +6,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const sass = require('gulp-sass');
 const autoprefixer = require('autoprefixer');
 const cssnano = require('cssnano');
+const cssbyebye = require('css-byebye');
 const selectorLint = require('postcss-selector-lint');
 const argv = require('yargs').argv;
 const paths = require('../paths');
@@ -52,8 +53,19 @@ let selectorLintConfig = {
     }
 };
 
+const _plugins = [
+    autoprefixer(),
+    cssbyebye({
+        rulesToRemove: [
+            '.btn--digid::before', // issue with background image
+        ],
+    }),
+];
 
-const plugins = isProduction ? [cssnano(), autoprefixer()] : [autoprefixer(), selectorLint(selectorLintConfig)];
+const plugins = isProduction ?
+    _plugins.concat([cssnano()])
+    : _plugins.concat([selectorLint(selectorLintConfig)])
+;
 
 
 /**
