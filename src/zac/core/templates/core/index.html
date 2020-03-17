@@ -27,17 +27,17 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Identificatie</th>
-            <th>Zaaktype</th>
-            <th>Startdatum</th>
-            <th>Geplande Einddatum</th>
+            <th class="table__header">Identificatie</th>
+            <th class="table__header">Zaaktype</th>
+            <th class="table__header">Startdatum</th>
+            <th class="table__header">Geplande Einddatum</th>
         </tr>
     </thead>
 
     <tbody>
         {% for zaak in zaken %}
             <tr>
-                <th>
+                <th class="table__id-column">
                     <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
                         {{ zaak.identificatie }}
                     </a>
