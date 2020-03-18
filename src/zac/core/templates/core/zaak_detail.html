@@ -2,6 +2,22 @@
 {% load i18n sniplates %}
 
 
+{% block nav-main-id %}
+<article class="object-id">
+    <h1 class="object-id__identifier" title="Identificatie">
+        {{ zaak.identificatie }}
+    </h1>
+    <p class="object-id__secondary" title="Bronorganisatie">
+        {{ zaak.bronorganisatie }}
+    </p>
+    <p class="object-id__secondary" title="Startdatum">
+        {{ zaak.startdatum|date }}
+    </p>
+</article>
+{% endblock %}
+
+
+
 {% block content %}
 
 {% load_widgets key_value='snippets/key_value.html' %}

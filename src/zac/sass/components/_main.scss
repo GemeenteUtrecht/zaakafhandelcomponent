@@ -6,15 +6,17 @@ $main-content-background-color: #fefefe !default;
   padding: 0;
 
   & &__nav {
-    min-width: 200px;
-    width: 10vw;
+    min-width: 300px;
+    width: 16vw;
     margin: 1em;
+    margin-right: 0.5em;
   }
 
   & &__content {
     flex: 1;
     background-color: $main-content-background-color;
     margin: 1em;
+    margin-left: 0.5em;
     padding: 1em;
   }
 }

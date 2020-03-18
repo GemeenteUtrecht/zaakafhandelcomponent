@@ -1,0 +1,19 @@
+@import "../lib/typography";
+
+.object-id {
+  padding: 1rem;
+
+  & &__identifier {
+    @include title;
+    font-size: 2rem;
+    font-weight: 600;
+    padding: 0;
+    margin: 0 0 1rem;
+  }
+
+  & &__secondary {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+}
