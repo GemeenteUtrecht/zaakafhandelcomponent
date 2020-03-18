@@ -53,7 +53,6 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "zaaktype": fetch_zaaktype(self.object.zaaktype),
                 "statussen": get_statussen(self.object),
                 "documenten": get_documenten(self.object),
             }

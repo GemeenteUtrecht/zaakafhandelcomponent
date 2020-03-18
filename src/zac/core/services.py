@@ -148,11 +148,11 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     Find the Zaak, uniquely identified by bronorganisatie & identificatie.
     """
     cache_key = f"zaak:{bronorganisatie}:{identificatie}"
-    result = cache.get(cache_key)
-    if result is not None:
+    zaak = cache.get(cache_key)
+    if zaak is not None:
         # TODO: when ETag is implemented, check that the cache is still up to
         # date!
-        return result
+        return zaak
 
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
@@ -169,22 +169,24 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
             logger.warning("Found multiple Zaken for query %r", query)
 
         # there's only supposed to be one unique case
-        result = factory(Zaak, results[0])
+        zaak = factory(Zaak, results[0])
         break
 
-    if result is None:
+    if zaak is None:
         raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
 
-    cache.set(cache_key, result, 60 * 30)
-    return result
+    # resolve relation
+    zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
+    cache.set(cache_key, zaak, 60 * 30)
+    return zaak
 
 
 def get_statussen(zaak: Zaak) -> List[Status]:
     client = _client_from_object(zaak)
 
     # re-use cached objects
-    zaaktype = fetch_zaaktype(zaak.zaaktype)
-    statustypen = {st.url: st for st in get_statustypen(zaaktype)}
+    statustypen = {st.url: st for st in get_statustypen(zaak.zaaktype)}
 
     # fetch the statusses
     _statussen = get_paginated_results(

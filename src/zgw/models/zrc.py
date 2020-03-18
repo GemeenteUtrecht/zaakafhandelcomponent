@@ -16,18 +16,10 @@ class Zaak(_Zaak):
     eigenschappen: list = field(default_factory=list)
     tasks: list = field(default_factory=list)
 
-    def get_zaaktype(self) -> ZaakType:
-        from zac.core.services import get_zaaktypes
-
-        zaaktypes = get_zaaktypes()
-        zt = next((zt for zt in zaaktypes if zt.url == self.zaaktype))
-        return zt
-
     @cached_property
     def deadline(self) -> datetime.date:
         if not self.uiterlijke_einddatum_afdoening:
-            zt = self.get_zaaktype()
-            end = self.startdatum + zt.doorlooptijd
+            end = self.startdatum + self.zaaktype.doorlooptijd
             self.uiterlijke_einddatum_afdoening = end
         return self.uiterlijke_einddatum_afdoening
 
