@@ -31,6 +31,7 @@
             <th class="table__header">Zaaktype</th>
             <th class="table__header">Startdatum</th>
             <th class="table__header">Geplande Einddatum</th>
+            <th class="table__header">Einddatum</th>
         </tr>
     </thead>
 
@@ -45,6 +46,7 @@
                 <td> {{ zaak.zaaktype.omschrijving }} </td>
                 <td> {{ zaak.startdatum }} </td>
                 <td> {{ zaak.einddatum_gepland|default:"-" }} </td>
+                <td> {{ zaak.einddatum|default:"-" }} </td>
             </tr>
         {% endfor %}
     </tbody>

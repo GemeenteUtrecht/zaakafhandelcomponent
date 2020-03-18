@@ -35,9 +35,11 @@
 
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Zaakinformatie</div>
+
         <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
             {{ zaak.omschrijving|default:"(geen omschrijving)" }}
         </p>
+
         <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
             {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
         </p>
@@ -56,9 +58,15 @@
             {{ zaak.deadline|date|default:_("-") }}
         {% endnested %}
 
-        <div class="zaak-detail__deadline-progress">
-            {% include "includes/progress.html" with progress=zaak.deadline_progress %}
-        </div>
+        {% if not zaak.einddatum %}
+            <div class="zaak-detail__deadline-progress">
+                {% include "includes/progress.html" with progress=zaak.deadline_progress %}
+            </div>
+        {% else %}
+            <p class="content-panel__content content-panel__content--highlighted">
+                Afgehandeld op {{ zaak.einddatum|date }}
+            </p>
+        {% endif %}
 
         Geschiedenis
 

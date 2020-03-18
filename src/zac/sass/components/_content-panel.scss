@@ -23,5 +23,10 @@ $content-panel-spacing: 1em !default;
     &--blurred {
       color: lighten($color-text, 40%);
     }
+
+    &--highlighted {
+      background-color: $color-secondary;
+      padding: 0.5em;
+    }
   }
 }
