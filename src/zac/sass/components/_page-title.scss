@@ -1,5 +1,14 @@
 @import "../lib/typography";
+@import "../lib/colors";
+
+$page-title__extra-color: rgba($color-text, 0.5) !default;
 
 .page-title {
   @include title;
+
+  &__extra {
+    color: $page-title__extra-color;
+    font-size: 1.8rem;
+    vertical-align: baseline;
+  }
 }

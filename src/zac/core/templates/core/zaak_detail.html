@@ -19,9 +19,55 @@
 
 
 {% block content %}
-
 {% load_widgets key_value='snippets/key_value.html' %}
 
+<h1 class="page-title" title="Zaaktype">
+    {{ zaaktype.omschrijving }}
+    <small class="page-title__extra">
+        versie {{ zaaktype.versiedatum|date }}
+    </small>
+</h1>
+
+
+
+<article class="zaak-detail">
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Zaakinformatie</div>
+        <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
+            {{ zaak.omschrijving|default:"(geen omschrijving)" }}
+        </p>
+        <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
+            {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
+        </p>
+    </section>
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Betrokkenen</div>
+        TODO
+    </section>
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Geschiedenis</div>
+    </section>
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Geometrie</div>
+    </section>
+
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
+        <div class="section-title">Gerelateerde objecten</div>
+    </section>
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Documenten</div>
+    </section>
+
+</article>
+
+
+
+{% comment %}
 
 <div class="primary bodycopy">
     <div class="grid-wrap">
@@ -91,5 +137,8 @@
 
     </div>
 </div>
+
+{% endcomment %}
+
 
 {% endblock content %}

@@ -11,6 +11,7 @@ import requests
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
 from .services import (
+    fetch_zaaktype,
     find_document,
     find_zaak,
     get_documenten,
@@ -50,8 +51,13 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["statussen"] = get_statussen(self.object)
-        context["documenten"] = get_documenten(self.object)
+        context.update(
+            {
+                "zaaktype": fetch_zaaktype(self.object.zaaktype),
+                "statussen": get_statussen(self.object),
+                "documenten": get_documenten(self.object),
+            }
+        )
         return context
 
 
