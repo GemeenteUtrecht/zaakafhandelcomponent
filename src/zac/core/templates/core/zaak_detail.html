@@ -64,23 +64,41 @@
 
         <ul class="timeline zaak-detail__statuses">
 
+            {# Legenda #}
+            <li class="timeline__item timeline__item--legenda">
+                <div class="timeline__item-nr"></div>
+
+                <div class="timeline__item-content zaak-detail__status-details">
+                    <div class="zaak-detail__status">
+                        <strong>Status</strong>
+                    </div>
+                    <div class="zaak-detail__status-toelichting">
+                        <strong>Toelichting</strong>
+                    </div>
+                </div>
+            </li>
+
+            {# Status history #}
             {% for status in statussen %}
                 <li class="timeline__item">
                     <div class="timeline__item-nr" title="volgnummer">
                         {{ status.statustype.volgnummer }}
                     </div>
 
-                    <div class="timeline__item-content">
+                    <div class="timeline__item-content zaak-detail__status-details">
 
-                        <time class="timeline__item-timestamp" datetime="{{ status.datum_status_gezet.isoformat }}" title="{{ status.datum_status_gezet }}">
-                            {{ status.datum_status_gezet|timesince }} geleden
-                        </time>
+                        <div class="zaak-detail__status">
+                            <strong>{{ status.statustype.omschrijving }}</strong>
+                            <time class="timeline__item-timestamp" datetime="{{ status.datum_status_gezet.isoformat }}" title="{{ status.datum_status_gezet }}">
+                                {{ status.datum_status_gezet|timesince }} geleden
+                            </time>
+                        </div>
 
-                        <strong>{{ status.statustype.omschrijving }}</strong>
+                        <div class="zaak-detail__status-toelichting">
+                            {{ status.statustoelichting|linebreaksbr|default:'-' }}
+                        </div>
 
-                        <div>{{ status.statustoelichting|linebreaksbr|default:'-' }}</div>
                     </div>
-
                 </li>
             {% endfor %}
 

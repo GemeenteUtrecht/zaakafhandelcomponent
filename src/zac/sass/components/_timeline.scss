@@ -11,6 +11,14 @@ $timeline__item-dot-color: $color-primary !default;
   & &__item {
     display: flex;
     align-items: center;
+
+    &--legenda {
+      border-bottom: solid 1px #eee;
+
+      .timeline__item-nr {
+        visibility: hidden;
+      }
+    }
   }
 
   & &__item-nr {

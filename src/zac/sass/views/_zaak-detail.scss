@@ -33,4 +33,13 @@ $zaak-detail__panel-spacing: $content-panel-spacing !default;
   & &__statuses {
     margin: 1em;
   }
+
+  & &__status-details {
+    display: flex;
+  }
+
+  & &__status,
+  & &__status-toelichting {
+    flex: 1;
+  }
 }
