@@ -13,9 +13,12 @@
     <p class="object-id__secondary" title="Startdatum">
         {{ zaak.startdatum|date }}
     </p>
+
+    <p class="object-id__secondary" title="Vertrouwelijkheidaanduiding">
+        <strong>{{ zaak.get_vertrouwelijkheidaanduiding_display }}</strong>
+    </p>
 </article>
 {% endblock %}
-
 
 
 {% block content %}
@@ -28,8 +31,6 @@
         versie {{ zaaktype.versiedatum|date }}
     </small>
 </h1>
-
-
 
 <article class="zaak-detail">
 
@@ -124,50 +125,41 @@
         TODO
     </section>
 
-    <section class="zaak-detail__panel content-panel">
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Documenten</div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">Type</th>
+                    <th class="table__header">Titel</th>
+                    <th class="table__header">Vertrouwelijkheidaanduiding</th>
+                    <th class="table__header">Bestandsgrootte</th>
+                    <th class="table__header">Download</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for document in documenten %}
+                    <tr>
+                        <td> {{ document.informatieobjecttype.omschrijving }} </td>
+                        <td> {{ document.titel }}</td>
+                        <td> {{ document.get_vertrouwelijkheidaanduiding_display }} </td>
+                        <td> {{ document.bestandsomvang|filesizeformat }} </td>
+                        <th class="table__id-column">
+                            <a
+                                href="{% url 'core:download-document' bronorganisatie=document.bronorganisatie identificatie=document.identificatie %}"
+                                target="_blank" rel="nofollow noopener">
+                                {{ document.bestandsnaam|default:document.identificatie }}
+                            </a>
+                        </th>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
     </section>
 
 </article>
-
-
-
-{% comment %}
-
-<div class="primary bodycopy">
-    <div class="grid-wrap">
-
-        <div class="zaak">
-
-            <div>
-
-                <section class="zaak__box">
-                    <h2 class="zaak__box-title">Documenten</h2>
-
-                    {% for document in documenten %}
-                        {% include "core/includes/document.html" with document=document only %}
-                    {% empty %}
-                        Geen documenten bekend
-                    {% endfor %}
-
-                </section>
-
-            </div>
-
-
-            <section class="zaak__box zaak__box--statussen">
-                <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
-
-
-
-            </section>
-
-        </div>
-
-    </div>
-</div>
-
-{% endcomment %}
-
 
 {% endblock content %}

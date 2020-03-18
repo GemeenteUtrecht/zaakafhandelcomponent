@@ -8,9 +8,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
 from nlx_url_rewriter.rewriter import Rewriter
-from zgw.models import Document, Eigenschap, InformatieObjectType, StatusType, Zaak
+from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
@@ -277,12 +278,15 @@ def get_documenten(zaak: Zaak) -> List[Document]:
         for raw in all_informatieobjecttypen
     }
 
+    documenten = factory(Document, documenten)
+
+    # resolve relations
     for document in documenten:
-        document["informatieobjecttype"] = informatieobjecttypen[
-            document["informatieobjecttype"]
+        document.informatieobjecttype = informatieobjecttypen[
+            document.informatieobjecttype
         ]
 
-    return [Document.from_raw(raw) for raw in documenten]
+    return documenten
 
 
 def find_document(bronorganisatie: str, identificatie: str) -> Document:

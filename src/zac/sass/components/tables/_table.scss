@@ -23,5 +23,6 @@ $table-head-border-color: $color-secondary !default;
   & &__id-column {
     font-weight: 600;
     padding: 0.3em 0.5em 0.3em 0;
+    text-align: left;
   }
 }
