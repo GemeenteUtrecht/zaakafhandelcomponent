@@ -25,4 +25,12 @@ $zaak-detail__panel-spacing: $content-panel-spacing !default;
       border-left: solid 4px rgba($color-secondary, 0.8);
     }
   }
+
+  & &__deadline-progress {
+    margin: 1em;
+  }
+
+  & &__statuses {
+    margin: 1em;
+  }
 }

@@ -2,7 +2,6 @@
 @import "list";
 @import "flush-cache";
 @import "zaak-card";
-@import "zaak-status";
 @import "zaak-preview";
 
 @import "log-entries";
@@ -20,8 +19,10 @@
 @import "footer";
 
 @import "divider";
+@import "key-value";
 @import "forms/all";
 @import "tables/all";
-
 @import "object-id";
 @import "content-panel";
+@import "progress-bar";
+@import "timeline";

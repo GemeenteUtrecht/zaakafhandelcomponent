@@ -19,7 +19,8 @@
 
 
 {% block content %}
-{% load_widgets key_value='snippets/key_value.html' %}
+
+{% load_widgets kv='sniplates/key-value.html' %}
 
 <h1 class="page-title" title="Zaaktype">
     {{ zaaktype.omschrijving }}
@@ -40,6 +41,7 @@
         <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
             {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
         </p>
+
     </section>
 
     <section class="zaak-detail__panel content-panel">
@@ -48,15 +50,52 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
-        <div class="section-title">Geschiedenis</div>
+        <div class="section-title">Status</div>
+
+        {% nested_widget 'kv:key-value' label=_("Uiterlijke einddatum") %}
+            {{ zaak.deadline|date|default:_("-") }}
+        {% endnested %}
+
+        <div class="zaak-detail__deadline-progress">
+            {% include "includes/progress.html" with progress=zaak.deadline_progress %}
+        </div>
+
+        Geschiedenis
+
+        <ul class="timeline zaak-detail__statuses">
+
+            {% for status in statussen %}
+                <li class="timeline__item">
+                    <div class="timeline__item-nr" title="volgnummer">
+                        {{ status.statustype.volgnummer }}
+                    </div>
+
+                    <div class="timeline__item-content">
+
+                        <time class="timeline__item-timestamp" datetime="{{ status.datum_status_gezet.isoformat }}" title="{{ status.datum_status_gezet }}">
+                            {{ status.datum_status_gezet|timesince }} geleden
+                        </time>
+
+                        <strong>{{ status.statustype.omschrijving }}</strong>
+
+                        <div>{{ status.statustoelichting|linebreaksbr|default:'-' }}</div>
+                    </div>
+
+                </li>
+            {% endfor %}
+
+        </ul>
+
     </section>
 
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Geometrie</div>
+        TODO
     </section>
 
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Gerelateerde objecten</div>
+        TODO
     </section>
 
     <section class="zaak-detail__panel content-panel">
@@ -77,20 +116,6 @@
             <div>
 
                 <section class="zaak__box">
-                    <h2 class="zaak__box-title">{{ zaak.omschrijving }}</h2>
-
-                    <table>
-                        <tbody>
-                            {% widget 'key_value:label-value' label=_("Identificatie") value=zaak.identificatie %}
-                            {% widget 'key_value:label-value' label=_("Bronorganisatie") value=zaak.bronorganisatie %}
-                            {% widget 'key_value:label-value' label=_("Toelichting") value=zaak.toelichting %}
-                            {% widget 'key_value:label-value' label=_("Startdatum") value=zaak.startdatum %}
-                            {% widget 'key_value:label-value' label=_("Geplande einddatum") value=zaak.einddatum_gepland|default:"onbekend" %}
-                        </tbody>
-                    </table>
-                </section>
-
-                <section class="zaak__box">
                     <h2 class="zaak__box-title">Documenten</h2>
 
                     {% for document in documenten %}
@@ -107,29 +132,7 @@
             <section class="zaak__box zaak__box--statussen">
                 <h2 class="zaak__box-title zaak__box-title--space-bottom">Statussen</h2>
 
-                {% for status in statussen %}
-                    <article class="zaak-status {% if status.status_type.is_eindstatus %}zaak-status--eind{% endif %}">
 
-                        <div class="zaak-status__dot">
-                            {{ status.status_type.volgnummer }}
-                        </div>
-
-                        <div class="zaak-status__name">
-                            {{ status.status_type.omschrijving }}
-
-                            <span class="zaak-status__timestamp">
-                                {{ status.datum_status_gezet|timesince }} geleden
-                            </span>
-                        </div>
-
-                        <div class="zaak-status__info">
-                            {{ status.statustoelichting|default:'-' }}
-                        </div>
-
-                    </article>
-                {% empty %}
-                    Geen statussen bekend
-                {% endfor %}
 
             </section>
 

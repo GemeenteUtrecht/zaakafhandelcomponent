@@ -1,10 +1,9 @@
 import datetime
 from dataclasses import dataclass, field
 
+from django.utils import timezone
 from django.utils.functional import cached_property
 
-from dateutil.parser import parse
-from isodate import parse_duration
 from zgw_consumers.api_models.zaken import Zaak as _Zaak
 
 from .base import Model
@@ -26,13 +25,17 @@ class Zaak(_Zaak):
 
     @cached_property
     def deadline(self) -> datetime.date:
-        if self.uiterlijke_einddatum_afdoening:
-            return parse(self.uiterlijke_einddatum_afdoening)
+        if not self.uiterlijke_einddatum_afdoening:
+            zt = self.get_zaaktype()
+            end = self.startdatum + zt.doorlooptijd
+            self.uiterlijke_einddatum_afdoening = end
+        return self.uiterlijke_einddatum_afdoening
 
-        zt = self.get_zaaktype()
-        start = parse(self.startdatum)
-        duration = parse_duration(zt.doorlooptijd)
-        return (start + duration).date()
+    def deadline_progress(self) -> float:
+        today = timezone.now().date()
+        total_duration = (self.deadline - self.startdatum).days
+        spent_duration = (today - self.startdatum).days
+        return round(spent_duration / total_duration * 100, 2)
 
     @cached_property
     def status_information(self) -> dict:
@@ -56,15 +59,6 @@ class Zaak(_Zaak):
             "omschrijving": current_status.status_type.omschrijving,
             "totaal": len(statustypen),
         }
-
-
-@dataclass
-class Status(Model):
-    url: str
-    zaak: str
-    statustype: StatusType
-    datum_status_gezet: str
-    statustoelichting: str
 
 
 @dataclass

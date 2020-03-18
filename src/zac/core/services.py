@@ -7,18 +7,11 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
-from dateutil.parser import parse
 from nlx_url_rewriter.rewriter import Rewriter
-from zgw.models import (
-    Document,
-    Eigenschap,
-    InformatieObjectType,
-    Status,
-    StatusType,
-    Zaak,
-)
+from zgw.models import Document, Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -193,16 +186,18 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     statustypen = {st.url: st for st in get_statustypen(zaaktype)}
 
     # fetch the statusses
-    _statussen = client.list("status", query_params={"zaak": zaak.url})["results"]
-    statussen = []
-    for _status in _statussen:
-        # convert URL reference into object
-        _status["statustype"] = statustypen[_status["statustype"]]
-        _status["zaak"] = zaak
-        _status["datumStatusGezet"] = parse(_status["datumStatusGezet"])
-        statussen.append(Status.from_raw(_status))
+    _statussen = get_paginated_results(
+        client, "status", query_params={"zaak": zaak.url}
+    )
 
-    return sorted(statussen, key=lambda x: x.datum_status_gezet)
+    statussen = factory(Status, _statussen)
+
+    # convert URL references into objects
+    for status in statussen:
+        status.statustype = statustypen[status.statustype]
+        status.zaak = zaak
+
+    return sorted(statussen, key=lambda x: x.datum_status_gezet, reverse=True)
 
 
 def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:

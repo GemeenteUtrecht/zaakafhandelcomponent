@@ -1,0 +1,20 @@
+.key-value {
+  display: flex;
+  align-items: center;
+  text-align: left;
+
+  & + & {
+    margin-top: 0.5em;
+  }
+
+  & &__key {
+    display: block;
+    width: 60%;
+  }
+
+  & &__value {
+    display: block;
+    width: 40%;
+    font-weight: 600;
+  }
+}
