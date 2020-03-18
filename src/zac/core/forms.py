@@ -3,12 +3,12 @@ from django.template.defaultfilters import date
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from .services import get_zaaktypes
+from .services import get_zaaktypen
 
 
 def get_zaaktype_choices():
     today = timezone.now().date()
-    zaaktypen = get_zaaktypes()
+    zaaktypen = get_zaaktypen()
     for zaaktype in zaaktypen:
         if zaaktype.begin_geldigheid > today:
             continue

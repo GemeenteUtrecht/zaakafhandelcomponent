@@ -11,12 +11,11 @@ import requests
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
 from .services import (
-    fetch_zaaktype,
     find_document,
     find_zaak,
     get_documenten,
     get_statussen,
-    get_zaaktypes,
+    get_zaaktypen,
     get_zaken,
 )
 
@@ -36,10 +35,7 @@ class Index(LoginRequiredMixin, BaseListView):
             filters = filter_form.as_filters()
         else:
             filters = {}
-        return get_zaken(**filters)
-
-    def get_filter_form_initial(self):
-        return {"zaaktypen": [zt.url for zt in get_zaaktypes()]}
+        return get_zaken(**filters)[:50]
 
 
 class ZaakDetail(LoginRequiredMixin, BaseDetailView):

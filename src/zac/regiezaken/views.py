@@ -7,7 +7,7 @@ from zac.core.services import (
     get_related_zaken,
     get_statussen,
     get_zaak,
-    get_zaaktypes,
+    get_zaaktypen,
     get_zaken,
 )
 
@@ -52,7 +52,7 @@ class ZaakDetailView(BaseDetailView):
         regie = RegieZaakConfiguratie.objects.get(id=id)
         _related_zaken = get_related_zaken(self.get_object(), regie.zaaktypes_related)
 
-        all_zaaktypes = {zaaktype.url: zaaktype for zaaktype in get_zaaktypes()}
+        all_zaaktypes = {zaaktype.url: zaaktype for zaaktype in get_zaaktypen()}
 
         # add tasks to zaken:
         related_zaken = []

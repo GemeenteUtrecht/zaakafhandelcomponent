@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import logging
+from concurrent import futures
 from typing import Dict, List
 
 from django.core.cache import cache
@@ -58,7 +59,7 @@ def _get_zaaktypen() -> List[Dict]:
     return result
 
 
-def get_zaaktypes() -> List[ZaakType]:
+def get_zaaktypen() -> List[ZaakType]:
     zaaktypes_raw = _get_zaaktypen()
     zaaktypes = factory(ZaakType, zaaktypes_raw)
     return zaaktypes
@@ -81,40 +82,65 @@ def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     return statustypen
 
 
+@cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
+def _find_zaken(
+    client, zaaktype: str = "", identificatie: str = "", bronorganisatie: str = ""
+) -> List[Dict]:
+    """
+    Retrieve zaken for a particular client with filter parameters.
+    """
+    query = {
+        "zaaktype": zaaktype,
+        "identificatie": identificatie,
+        "bronorganisatie": bronorganisatie,
+    }
+    _zaken = get_paginated_results(client, "zaak", query_params=query, min_num=25)
+    return _zaken
+
+
 def get_zaken(
     zaaktypen: List[str] = None, identificatie: str = "", bronorganisatie: str = "",
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
     """
-    query = {
-        "zaaktype": zaaktypen,
-        "identificatie": identificatie,
-        "bronorganisatie": bronorganisatie,
-    }
-    if zaaktypen is None:
-        zaaktypen = [zt.url for zt in get_zaaktypes()]
-
-    zt_key = ",".join(sorted(zaaktypen))
-    cache_key = hashlib.md5(
-        f"zaken.{zt_key}.{identificatie}.{bronorganisatie}".encode("ascii")
-    ).hexdigest()
-
-    zaken = cache.get(cache_key)
-    if zaken is not None:
-        logger.debug("Zaken cache hit")
-        return zaken
-
+    _zaaktypen = get_zaaktypen()
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
 
     zaken = []
+
+    job_args = []
     for zrc in zrcs:
         client = zrc.build_client()
-        _zaken = client.list("zaak", query_params=query)["results"]
-        zaken += factory(Zaak, _zaken)
+        job_args.append(
+            {
+                "client": client,
+                "identificatie": identificatie,
+                "bronorganisatie": bronorganisatie,
+                "zaaktype": "",
+            }
+        )
 
-    # resolve zaaktype URL
-    _zaaktypen = {zt.url: zt for zt in get_zaaktypes()}
+    # expand job args with zaaktype filters if needed, parallelizes as much as possible
+    if zaaktypen:
+        _job_args = []
+        for job_arg in job_args:
+            for zaaktype_url in zaaktypen:
+                _job_args.append({"zaaktype": zaaktype_url, **job_arg})
+        job_args = _job_args
+
+    def _job(kwargs_dict):
+        return _find_zaken(**kwargs_dict)
+
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        results = executor.map(_job, job_args)
+        flattened = sum(list(results), [])
+
+    zaken = factory(Zaak, flattened)
+
+    # resolve zaaktype reference
+    _zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
     for zaak in zaken:
         if zaak.zaaktype not in _zaaktypen:
             zaaktype = fetch_zaaktype(zaak.zaaktype)
@@ -122,7 +148,13 @@ def get_zaken(
 
         zaak.zaaktype = _zaaktypen[zaak.zaaktype]
 
-    cache.set(cache_key, zaken, AN_HOUR / 2)
+    # sort results by startdatum / registratiedatum / identificatie
+
+    zaken = sorted(
+        zaken,
+        key=lambda zaak: (zaak.registratiedatum, zaak.startdatum, zaak.identificatie),
+        reverse=True,
+    )
 
     return zaken
 
