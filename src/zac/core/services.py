@@ -17,9 +17,14 @@ from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.utils.decorators import cache as cache_result
+
 from .utils import get_paginated_results
 
 logger = logging.getLogger(__name__)
+
+AN_HOUR = 60 * 60
+A_DAY = AN_HOUR * 24
 
 
 def _client_from_url(url: str):
@@ -38,17 +43,11 @@ def _client_from_object(obj):
     return _client_from_url(obj.url)
 
 
-def _get_zaaktypes() -> List[Dict]:
+@cache_result("zaaktypen", timeout=AN_HOUR)
+def _get_zaaktypen() -> List[Dict]:
     """
-    Read the configured zaaktypes and cache the result.
+    Retrieve all the zaaktypen from all catalogi in the configured APIs.
     """
-    KEY = "zaaktypes"
-
-    result = cache.get(KEY)
-    if result:
-        logger.debug("Zaaktypes cache hit")
-        return result
-
     result = []
 
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
@@ -56,44 +55,29 @@ def _get_zaaktypes() -> List[Dict]:
         client = ztc.build_client()
         result += get_paginated_results(client, "zaaktype")
 
-    cache.set(KEY, result, 60 * 60)
     return result
 
 
 def get_zaaktypes() -> List[ZaakType]:
-    zaaktypes_raw = _get_zaaktypes()
+    zaaktypes_raw = _get_zaaktypen()
     zaaktypes = factory(ZaakType, zaaktypes_raw)
     return zaaktypes
 
 
+@cache_result("zaaktype:{url}", timeout=A_DAY)
 def fetch_zaaktype(url: str) -> ZaakType:
-    key = f"zaaktype:{url}"
-
-    result = cache.get(key)
-    if result:
-        logger.debug("Cache hit for zaaktype %s", url)
-    else:
-        client = _client_from_url(url)
-        result = client.retrieve("zaaktype", url=url)
-        cache.set(key, result, 60 * 24)
-
+    client = _client_from_url(url)
+    result = client.retrieve("zaaktype", url=url)
     return factory(ZaakType, result)
 
 
+@cache_result("zt:statustypen:{zaaktype.url}", timeout=AN_HOUR / 2)
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
-    cache_key = f"zt:statustypen:{zaaktype.url}"
-    result = cache.get(cache_key)
-    if result is not None:
-        return result
-
     client = _client_from_object(zaaktype)
-    cat_uuid = zaaktype.catalogus.split("/")[-1]
-    _statustypen = client.list(
-        "statustype", catalogus_uuid=cat_uuid, zaaktype_uuid=zaaktype.uuid
-    )["results"]
-    statustypen = [StatusType.from_raw(raw) for raw in _statustypen]
-
-    cache.set(cache_key, statustypen, 60 * 30)
+    _statustypen = get_paginated_results(
+        client, "statustype", query_params={"zaaktype": zaaktype.url}
+    )
+    statustypen = factory(StatusType, _statustypen)
     return statustypen
 
 
@@ -138,29 +122,24 @@ def get_zaken(
 
         zaak.zaaktype = _zaaktypen[zaak.zaaktype]
 
-    cache.set(cache_key, zaken, 60 * 30)
+    cache.set(cache_key, zaken, AN_HOUR / 2)
 
     return zaken
 
 
+# TODO: listen for notifiations to invalidate cache OR look into ETag when it's available
+@cache_result("zaak:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)
 def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     """
     Find the Zaak, uniquely identified by bronorganisatie & identificatie.
     """
-    cache_key = f"zaak:{bronorganisatie}:{identificatie}"
-    zaak = cache.get(cache_key)
-    if zaak is not None:
-        # TODO: when ETag is implemented, check that the cache is still up to
-        # date!
-        return zaak
-
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # not in cache -> check it in all known ZRCs
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     for zrc in zrcs:
         client = zrc.build_client()
-        results = client.list("zaak", query_params=query)["results"]
+        results = get_paginated_results(client, "zaak", query_params=query)
 
         if not results:
             continue
@@ -178,7 +157,6 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     # resolve relation
     zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
-    cache.set(cache_key, zaak, 60 * 30)
     return zaak
 
 
@@ -213,20 +191,12 @@ def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
     return [Eigenschap.from_raw(_eigenschap) for _eigenschap in eigenschappen]
 
 
+@cache_result("statustype:{url}", timeout=A_DAY)
 def get_statustype(url: str) -> StatusType:
-    cache_key = f"statustype:{url}"
-    result = cache.get(cache_key)
-    if result is not None:
-        # TODO: when ETag is implemented, check that the cache is still up to
-        # date!
-        return result
-
     client = _client_from_url(url)
     status_type = client.retrieve("statustype", url=url)
-
-    result = StatusType.from_raw(status_type)
-    cache.set(cache_key, result, 60 * 30)
-    return result
+    status_type = factory(StatusType, status_type)
+    return status_type
 
 
 def get_documenten(zaak: Zaak) -> List[Document]:
@@ -288,17 +258,11 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     return documenten
 
 
+@cache_result("document:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)
 def find_document(bronorganisatie: str, identificatie: str) -> Document:
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
     """
-    cache_key = f"document:{bronorganisatie}:{identificatie}"
-    result = cache.get(cache_key)
-    if result is not None:
-        # TODO: when ETag is implemented, check that the cache is still up to
-        # date!
-        return result
-
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # not in cache -> check it in all known ZRCs
@@ -323,7 +287,6 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
             "Document object was not found in any known registrations"
         )
 
-    cache.set(cache_key, result, 60 * 30)
     return result
 
 
@@ -333,7 +296,6 @@ async def fetch(session: aiohttp.ClientSession, url: str):
         return await response.json()
 
 
-# TODO: add auth
 async def fetch_documents(zios: list):
     tasks = []
     async with aiohttp.ClientSession() as session:
@@ -361,8 +323,10 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
     return result
 
 
-def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None) -> Zaak:
-    """retrieve zaak with uuid or url"""
+def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypen=None) -> Zaak:
+    """
+    Retrieve zaak with uuid or url
+    """
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     result = None
 
@@ -381,17 +345,17 @@ def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypes=None) -> Zaak:
     return result
 
 
-def get_related_zaken(zaak: Zaak, zaaktypes) -> list:
+def get_related_zaken(zaak: Zaak, zaaktypen) -> list:
     """
-    return list of related zaken with selected zaaktypes
+    return list of related zaken with selected zaaktypen
     """
 
     related_urls = [related["url"] for related in zaak.relevante_andere_zaken]
 
     zaken = []
     for url in related_urls:
-        zaken.append(get_zaak(zaak_url=url, zaaktypes=zaaktypes))
+        zaken.append(get_zaak(zaak_url=url, zaaktypen=zaaktypen))
 
     # FIXME remove string after testing
-    zaken = get_zaken(zaaktypes)[:3]
+    zaken = get_zaken(zaaktypen)[:3]
     return zaken
