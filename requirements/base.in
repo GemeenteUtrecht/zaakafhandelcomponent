@@ -13,7 +13,7 @@ aiodns
 aiohttp
 
 gemma-zds-client
-zgw-consumers==0.6.0.dev4
+zgw-consumers==0.6.0.dev5
 nlx-url-rewriter
 
 # Framework libraries
