@@ -249,9 +249,6 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
     documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
 
-    # FIXME!
-    documenten = [doc for doc in documenten if "informatieobjecttype" in doc]
-
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
     # figure out relevant ztcs
     informatieobjecttypen = {
