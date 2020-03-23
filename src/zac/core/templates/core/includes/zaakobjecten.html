@@ -1,1 +1,8 @@
-{{ view }}
+{% for group in zaakobjecten %}
+<section>
+    <div class="section-title">{{ group.label }}</div>
+
+    {% include group.template with items=group.items only %}
+
+</section>
+{% endfor %}

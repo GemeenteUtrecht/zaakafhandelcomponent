@@ -123,7 +123,9 @@
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Gerelateerde objecten</div>
 
-        <div class="fetch-zaakobjecten" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-zaakobjecten' %}"></div>
+        <div class="fetch-zaakobjecten" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-zaakobjecten' %}">
+            {# include template is in core/includes/zaakobjecten.html #}
+        </div>
     </section>
 
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">

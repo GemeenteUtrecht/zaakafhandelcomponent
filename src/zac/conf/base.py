@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "zac.regiezaken",
     "zac.core",
     "zac.utils",
+    "zac.contrib.kadaster",
 ]
 
 MIDDLEWARE = [

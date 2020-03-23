@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import logging
 from concurrent import futures
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,7 +13,7 @@ from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Status
+from zgw_consumers.api_models.zaken import Status, ZaakObject
 from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -355,7 +355,8 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
     return result
 
 
-def get_zaak(zaak_uuid=None, zaak_url=None, zaaktypen=None) -> Zaak:
+@cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
+def get_zaak(zaak_uuid=None, zaak_url=None) -> Zaak:
     """
     Retrieve zaak with uuid or url
     """
@@ -386,8 +387,23 @@ def get_related_zaken(zaak: Zaak, zaaktypen) -> list:
 
     zaken = []
     for url in related_urls:
-        zaken.append(get_zaak(zaak_url=url, zaaktypen=zaaktypen))
+        zaken.append(get_zaak(zaak_url=url))
 
     # FIXME remove string after testing
     zaken = get_zaken(zaaktypen)[:3]
     return zaken
+
+
+def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
+    if isinstance(zaak, Zaak):
+        zaak_url = zaak.url
+    else:
+        zaak_url = zaak
+
+    client = _client_from_url(zaak_url)
+
+    zaakobjecten = get_paginated_results(
+        client, "zaakobject", query_params={"zaak": zaak_url},
+    )
+
+    return factory(ZaakObject, zaakobjecten)
