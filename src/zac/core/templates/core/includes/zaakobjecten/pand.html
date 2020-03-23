@@ -1,5 +1,37 @@
+{% load sniplates l10n %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
 {% for pand in items %}
 <article class="pand">
-    {{ pand }}
+    <div class="pand__identificatie">{{ pand.identificatiecode }}</div>
+
+    <div class="pand__meta">
+        {% nested_widget 'kv:key-value' label=_("Bouwjaar") %}
+            {{ pand.oorspronkelijkBouwjaar|unlocalize }}
+        {% endnested %}
+
+        {% nested_widget 'kv:key-value' label=_("Status") %}
+            {{ pand.status }}
+        {% endnested %}
+
+        {% nested_widget 'kv:key-value' label=_("Aantal verblijfsobjecten") %}
+            {{ pand.verblijfsobjecten|length }}
+        {% endnested %}
+    </div>
+
+    <section class="pand__adressen">
+        <div class="section-title">Adressen</div>
+
+        {% for adres in pand.adressen %}
+            <address class="pand__adres">
+                {{ adres.or_naam }} {{ adres.huisnummer|unlocalize }}
+                <br>
+                {{ adres.postcode|default:'geen postcode' }}
+                <br>
+                {{ adres.woonplaats }}
+            </address>
+        {% endfor %}
+    </section>
+
 </article>
 {% endfor %}
