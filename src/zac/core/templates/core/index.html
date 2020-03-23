@@ -39,7 +39,7 @@
         {% for zaak in zaken %}
             <tr>
                 <th class="table__id-column">
-                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}">
+                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link">
                         {{ zaak.identificatie }}
                     </a>
                 </th>

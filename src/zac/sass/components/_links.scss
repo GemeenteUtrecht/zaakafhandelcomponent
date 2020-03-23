@@ -1,0 +1,16 @@
+@import "../lib/colors";
+
+$link-color: #005ea5 !default;
+
+.link {
+  color: $link-color;
+
+  &:hover {
+    color: darken($link-color, 10%);
+  }
+
+  &:focus {
+    background: $color-secondary;
+    color: darken($link-color, 10%);
+  }
+}

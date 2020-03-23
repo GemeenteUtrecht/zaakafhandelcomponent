@@ -2,4 +2,8 @@
   padding: 0;
   margin: 0;
   list-style-type: none;
+
+  & &__option {
+    margin-bottom: 0.2rem;
+  }
 }
