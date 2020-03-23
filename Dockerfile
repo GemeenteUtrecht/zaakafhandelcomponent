@@ -31,13 +31,13 @@ RUN apk --no-cache add git
 
 WORKDIR /app
 
-COPY ./*.json /app/
+COPY ./*.json ./*.js ./.babelrc /app/
 RUN npm ci
 
-COPY ./Gulpfile.js /app/
 COPY ./build /app/build/
 
 COPY src/zac/sass/ /app/src/zac/sass/
+COPY src/zac/js/ /app/src/zac/js/
 RUN npm run build --production
 
 # Stage 4 - Build docker image suitable for execution and deployment
