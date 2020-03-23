@@ -1,6 +1,12 @@
 from django.urls import path
 
-from .views import DownloadDocumentView, FlushCacheView, Index, ZaakDetail
+from .views import (
+    DownloadDocumentView,
+    FetchZaakObjecten,
+    FlushCacheView,
+    Index,
+    ZaakDetail,
+)
 
 app_name = "core"
 
@@ -15,6 +21,9 @@ urlpatterns = [
         "documenten/<bronorganisatie>/<identificatie>/",
         DownloadDocumentView.as_view(),
         name="download-document",
+    ),
+    path(
+        "_fetch-zaakobjecten", FetchZaakObjecten.as_view(), name="fetch-zaakobjecten",
     ),
     path("_flush-cache/", FlushCacheView.as_view(), name="flush-cache"),
 ]

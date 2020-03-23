@@ -5,19 +5,13 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views import View
+from django.views.generic import TemplateView
 
 import requests
 
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
-from .services import (
-    find_document,
-    find_zaak,
-    get_documenten,
-    get_statussen,
-    get_zaaktypen,
-    get_zaken,
-)
+from .services import find_document, find_zaak, get_documenten, get_statussen, get_zaken
 
 
 class Index(LoginRequiredMixin, BaseListView):
@@ -69,6 +63,20 @@ class DownloadDocumentView(LoginRequiredMixin, View):
             "Content-Disposition"
         ] = f'attachment; filename="{document.bestandsnaam}"'
         return response
+
+
+class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
+    """
+    Retrieve the ZaakObjecten for a given zaak reference.
+
+    Intended to be called via AJAX.
+    """
+
+    template_name = "core/includes/zaakobjecten.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
 
 class FlushCacheView(LoginRequiredMixin, View):
