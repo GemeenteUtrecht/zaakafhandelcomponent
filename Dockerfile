@@ -68,9 +68,10 @@ WORKDIR /app
 COPY ./bin/docker_start.sh /start.sh
 RUN mkdir /app/log
 
+COPY ./src /app/src
 COPY --from=frontend-build /app/src/zac/static/fonts /app/src/zac/static/fonts
 COPY --from=frontend-build /app/src/zac/static/css /app/src/zac/static/css
-COPY ./src /app/src
+COPY --from=frontend-build /app/src/zac/static/js /app/src/zac/static/js
 
 ENV DJANGO_SETTINGS_MODULE=zac.conf.docker
 
