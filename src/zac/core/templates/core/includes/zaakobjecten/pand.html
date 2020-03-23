@@ -20,7 +20,7 @@
     </div>
 
     <section class="pand__adressen">
-        <div class="section-title">Adressen</div>
+        <div class="section-title">Adressen ({{ pand.adressen|length }})</div>
 
         {% for adres in pand.adressen %}
             <address class="pand__adres">
