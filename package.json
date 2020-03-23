@@ -2,7 +2,7 @@
   "name": "zac",
   "version": "0.1.0",
   "description": "ZAC referentie implementatie API",
-  "main": "src/index.js",
+  "main": "src/zac/static/js/main.js",
   "directories": {
     "doc": "doc"
   },
@@ -23,17 +23,29 @@
     "utrechtstijl": "^0.2.1"
   },
   "devDependencies": {
+    "@babel/core": "latest",
+    "@babel/polyfill": "latest",
+    "@babel/preset-env": "latest",
     "autoprefixer": "^9.7.4",
+    "babel-loader": "latest",
     "css-byebye": "^2.0.2",
     "cssnano": "^4.1.10",
     "eyeglass": "^2.4.2",
-    "gulp": "^4.0.2",
-    "gulp-hub": "^4.2.0",
-    "gulp-if": "^3.0.0",
-    "gulp-postcss": "^8.0.0",
-    "gulp-sass": "^4.0.2",
-    "gulp-sourcemaps": "^2.6.5",
+    "gulp": "latest",
+    "gulp-hub": "latest",
+    "gulp-if": "latest",
+    "gulp-postcss": "latest",
+    "gulp-sass": "latest",
+    "gulp-sourcemaps": "latest",
     "postcss-selector-lint": "^1.0.0",
-    "yargs": "^14.2.3"
+    "yargs": "^14.2.3",
+    "gulp-file": "latest",
+    "gulp-jshint": "latest",
+    "gulp-jshint-jslint-file-reporter": "latest",
+    "jshint": "latest",
+    "jshint-stylish": "latest",
+    "webpack": "latest",
+    "webpack-dev-server": "latest",
+    "webpack-stream": "latest"
   }
 }

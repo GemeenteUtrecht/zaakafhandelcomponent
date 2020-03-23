@@ -29,5 +29,21 @@ module.exports = {
     cssDir: `${staticRoot}css/`,
 
     // Path to the fonts directory
-    fontsDir: `${staticRoot}fonts/`
+    fontsDir: `${staticRoot}fonts/`,
+
+    // Path to the js entry point (source)
+    jsEntry: sourcesRoot + 'js/index.js',
+
+    // Path to the js (sources) directory
+    jsSrcDir: sourcesRoot + 'js/',
+
+    // Path to js (sources)
+    jsSrc: sourcesRoot + 'js/**/*.js',
+
+    // Path to the js (sources) directory
+    jsSrcDir: sourcesRoot + 'js/',
+
+    // Path to the (transpiled) js directory
+    jsDir: staticRoot + 'js/'
+
 };
