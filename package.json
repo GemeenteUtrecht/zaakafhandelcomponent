@@ -23,7 +23,6 @@
     "utrechtstijl": "^0.2.1"
   },
   "devDependencies": {
-    "@nl-design-system/nl-design-system": "git+https://gitlab.com/nl-design-system/nl-design-system.git",
     "autoprefixer": "^9.7.4",
     "css-byebye": "^2.0.2",
     "cssnano": "^4.1.10",
