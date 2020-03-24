@@ -49,6 +49,7 @@ pycares==3.0.0            # via aiodns
 pycparser==2.19           # via cffi
 pyjwt==1.7.1              # via django-auth-adfs, gemma-zds-client
 python-dateutil==2.8.0    # via -r requirements/base.in, django-camunda, django-relativedelta
+python-decouple==3.3      # via -r requirements/base.in
 python-dotenv==0.10.3     # via -r requirements/base.in
 pytz==2019.2              # via -r requirements/base.in, celery, django
 pyyaml==5.1.2             # via gemma-zds-client, tablib

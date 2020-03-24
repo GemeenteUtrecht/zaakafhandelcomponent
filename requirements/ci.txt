@@ -55,6 +55,7 @@ pycares==3.0.0            # via -r requirements/base.txt, aiodns
 pycparser==2.19           # via -r requirements/base.txt, cffi
 pyjwt==1.7.1              # via -r requirements/base.txt, django-auth-adfs, gemma-zds-client
 python-dateutil==2.8.0    # via -r requirements/base.txt, django-camunda, django-relativedelta, faker, freezegun
+python-decouple==3.3      # via -r requirements/base.txt
 python-dotenv==0.10.3     # via -r requirements/base.txt
 pytz==2019.2              # via -r requirements/base.txt, celery, django
 pyyaml==5.1.2             # via -r requirements/base.txt, gemma-zds-client, tablib
