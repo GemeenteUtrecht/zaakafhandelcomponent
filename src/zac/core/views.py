@@ -10,6 +10,8 @@ from django.views import View
 from django.views.generic import TemplateView
 
 import requests
+from django_camunda.camunda_models import Task, factory
+from django_camunda.client import get_client
 
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
@@ -110,6 +112,24 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
             group.retrieve_items(items)
             render_groups.append(group)
         return render_groups
+
+
+class FetchTasks(LoginRequiredMixin, TemplateView):
+    template_name = "core/includes/tasks.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        zaak_url = self.request.GET.get("zaak")
+        if not zaak_url:
+            raise ValueError("Expected zaak querystring parameter")
+
+        context["tasks"] = self._fetch_tasks(zaak_url)
+        return context
+
+    def _fetch_tasks(self, zaak_url: str):
+        client = get_client()
+        tasks = client.get("task", {"processVariables": f"zaakUrl_eq_{zaak_url}"},)
+        return factory(Task, tasks)
 
 
 class FlushCacheView(LoginRequiredMixin, View):

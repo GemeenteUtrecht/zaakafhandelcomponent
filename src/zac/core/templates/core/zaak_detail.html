@@ -45,9 +45,6 @@
             {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
         </p>
 
-    </section>
-
-    <section class="zaak-detail__panel content-panel">
         <div class="section-title">Betrokkenen</div>
         TODO
     </section>
@@ -113,6 +110,14 @@
 
         </ul>
 
+    </section>
+
+    <section class="zaak-detail__panel content-panel">
+        <div class="section-title">Taken</div>
+        <div class="fetch-tasks" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-tasks' %}">
+            {# include template is in core/includes/tasks.html #}
+            <span class="loader"></span>
+        </div>
     </section>
 
     <section class="zaak-detail__panel content-panel">

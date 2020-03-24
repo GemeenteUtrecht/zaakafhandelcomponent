@@ -1,0 +1,32 @@
+{% load sniplates l10n %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
+<section class="user-tasks">
+    {% for task in tasks %}
+        <div class="user-task" data-id="{{ task.id }}">
+            {% nested_widget 'kv:key-value' label=_("Naam") %}
+                {{ task.name }}
+            {% endnested %}
+
+            {% nested_widget 'kv:key-value' label=_("Assignee") %}
+                {{ task.assignee|default:"-" }}
+            {% endnested %}
+
+            {% nested_widget 'kv:key-value' label=_("Aangemaakt") %}
+                <time title="{{ task.created }}">
+                    {{ task.created|timesince }} geleden
+                </time>
+            {% endnested %}
+
+            {% if task.due %}
+                {% nested_widget 'kv:key-value' label=_("Deadline") %}
+                    <time title="{{ task.due }}">
+                        over {{ task.due|timeuntil }}
+                    </time>
+                {% endnested %}
+            {% endif %}
+
+            <a href="#" class="btn">Claim (TODO)</a>
+        </div>
+    {% endfor %}
+</section>

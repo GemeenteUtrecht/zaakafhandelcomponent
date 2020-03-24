@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     DownloadDocumentView,
+    FetchTasks,
     FetchZaakObjecten,
     FlushCacheView,
     Index,
@@ -25,5 +26,6 @@ urlpatterns = [
     path(
         "_fetch-zaakobjecten", FetchZaakObjecten.as_view(), name="fetch-zaakobjecten",
     ),
+    path("_fetch-tasks", FetchTasks.as_view(), name="fetch-tasks"),
     path("_flush-cache/", FlushCacheView.as_view(), name="flush-cache"),
 ]
