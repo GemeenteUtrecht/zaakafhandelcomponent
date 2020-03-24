@@ -4,9 +4,7 @@ Production environment settings module.
 Tweaks the base settings so that caching mechanisms are used where possible,
 and HTTPS is leveraged where possible to further secure things.
 """
-import os
-
-from .base import *  # noqa
+from .includes.base import *  # noqa
 
 # Caching sessions.
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -41,7 +39,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True  # Sets X-Content-Type-Options: nosniff
 SECURE_BROWSER_XSS_FILTER = True  # Sets X-XSS-Protection: 1; mode=block
 
 # Deal with being hosted on a subpath
-subpath = os.getenv("SUBPATH")
+subpath = config("SUBPATH", default=None)
 if subpath:
     if not subpath.startswith("/"):
         subpath = f"/{subpath}"

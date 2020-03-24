@@ -25,9 +25,7 @@ RUN pip install -r requirements/production.txt
 
 
 # Stage 2 - build frontend
-FROM mhart/alpine-node:10 AS frontend-build
-
-RUN apk --no-cache add git python
+FROM node:10-buster AS frontend-build
 
 WORKDIR /app
 

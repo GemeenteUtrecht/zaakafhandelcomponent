@@ -2,40 +2,66 @@ import os
 
 from django.urls import reverse_lazy
 
+import raven
+
+from .environ import config
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 DJANGO_PROJECT_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), os.path.pardir)
+    os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir)
 )
 BASE_DIR = os.path.abspath(
     os.path.join(DJANGO_PROJECT_DIR, os.path.pardir, os.path.pardir)
 )
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
+#
+# Core Django settings
+#
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "no").lower() in ["1", "yes", "true"]
+# NEVER run with DEBUG=True in production-like environments
+DEBUG = config("DEBUG", default=False)
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+# = domains we're running on
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", split=True)
 
+IS_HTTPS = config("IS_HTTPS", default=not DEBUG)
+
+# Internationalization
+# https://docs.djangoproject.com/en/2.0/topics/i18n/
+
+LANGUAGE_CODE = "nl"
+
+TIME_ZONE = "UTC"  # note: this *may* affect the output of DRF datetimes
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+USE_THOUSAND_SEPARATOR = True
+
+#
+# DATABASE and CACHING setup
+#
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "zac"),
-        "USER": os.getenv("DB_USER", "zac"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "zac"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", 5432),
-    }
+        "NAME": config("DB_NAME", "zac"),
+        "USER": config("DB_USER", "zac"),
+        "PASSWORD": config("DB_PASSWORD", "zac"),
+        "HOST": config("DB_HOST", "localhost"),
+        "PORT": config("DB_PORT", 5432),
+    },
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.getenv('CACHE_DEFAULT', 'localhost:6379/0')}",
+        "LOCATION": f"redis://{config('CACHE_DEFAULT', 'localhost:6379/0')}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,
@@ -43,7 +69,7 @@ CACHES = {
     },
     "axes": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.getenv('CACHE_AXES', 'localhost:6379/0')}",
+        "LOCATION": f"redis://{config('CACHE_AXES', 'localhost:6379/0')}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,
@@ -126,70 +152,53 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "zac.wsgi.application"
 
-# Database: Defined in target specific settings files.
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-# Password validation
-# https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/2.0/topics/i18n/
-
-LANGUAGE_CODE = "nl-nl"
-
-TIME_ZONE = "Europe/Amsterdam"
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
-
-USE_THOUSAND_SEPARATOR = True
-
 # Translations
 LOCALE_PATHS = (os.path.join(DJANGO_PROJECT_DIR, "conf", "locale"),)
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.0/howto/static-files/
+#
+# SERVING of static and media files
+#
 
 STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Additional locations of static files
-STATICFILES_DIRS = (
+STATICFILES_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "static"),
     os.path.join(BASE_DIR, "node_modules", "font-awesome"),
-)
+]
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 MEDIA_URL = "/media/"
 
-FIXTURE_DIRS = (os.path.join(DJANGO_PROJECT_DIR, "fixtures"),)
+DEFAULT_LOGO = f"{STATIC_URL}img/logo-placeholder.png"
 
-DEFAULT_FROM_EMAIL = "zac@example.com"
+#
+# Sending EMAIL
+#
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config(
+    "EMAIL_PORT", default=25
+)  # disabled on Google Cloud, use 487 instead
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False)
 EMAIL_TIMEOUT = 10
 
+DEFAULT_FROM_EMAIL = "zac@example.com"
+
+#
+# LOGGING
+#
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
 LOGGING = {
@@ -253,68 +262,95 @@ LOGGING = {
 }
 
 #
-# Additional Django settings
+# AUTH settings - user accounts, passwords, backends...
 #
-
-# Custom user model
 AUTH_USER_MODEL = "accounts.User"
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
 # Allow logging in with both username+password and email+password
 AUTHENTICATION_BACKENDS = [
-    "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
     "axes.backends.AxesBackend",
+    "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-LOGIN_URL = "accounts:login"
+SESSION_COOKIE_NAME = "zac_sessionid"
+
+LOGIN_URL = reverse_lazy("accounts:login")
 LOGIN_REDIRECT_URL = reverse_lazy("index")
 
-SESSION_COOKIE_NAME = "zac_sessionid"
-SESSION_COOKIE_SECURE = not DEBUG
+#
+# SECURITY settings
+#
+SESSION_COOKIE_SECURE = IS_HTTPS
 SESSION_COOKIE_HTTPONLY = True
 
-CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = IS_HTTPS
+
+X_FRAME_OPTIONS = "DENY"
 
 #
 # Custom settings
 #
 PROJECT_NAME = "zac"
+SITE_TITLE = "Zaakafhandeling"
+
 ENVIRONMENT = None
 SHOW_ALERT = True
 
-#
-# Library settings
-#
+if "GIT_SHA" in os.environ:
+    GIT_SHA = config("GIT_SHA", "")
+# in docker (build) context, there is no .git directory
+elif os.path.exists(os.path.join(BASE_DIR, ".git")):
+    GIT_SHA = raven.fetch_git_sha(BASE_DIR)
+else:
+    GIT_SHA = None
 
-# Django-axes
+##############################
+#                            #
+# 3RD PARTY LIBRARY SETTINGS #
+#                            #
+##############################
+
+#
+# DJANGO-AXES
+#
 AXES_CACHE = "axes"
 AXES_LOGIN_FAILURE_LIMIT = 30  # Default: 3
 AXES_LOCK_OUT_AT_FAILURE = True  # Default: True
 AXES_USE_USER_AGENT = False  # Default: False
 AXES_COOLOFF_TIME = 1  # One hour
-AXES_BEHIND_REVERSE_PROXY = (
-    True  # Default: False (we are typically using Nginx as reverse proxy)
-)
+AXES_BEHIND_REVERSE_PROXY = IS_HTTPS  # We have either Ingress or Nginx
 AXES_ONLY_USER_FAILURES = (
     False  # Default: False (you might want to block on username rather than IP)
 )
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = (
     False  # Default: False (you might want to block on username and IP)
 )
-AXES_BEHIND_REVERSE_PROXY = not DEBUG
 
+#
+# DJANGO AUTH ADFS
+#
+AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
 
-# Raven
-SENTRY_DSN = os.getenv("SENTRY_DSN")
+#
+# RAVEN/SENTRY - error monitoring
+#
+SENTRY_DSN = config("SENTRY_DSN", None)
 
 if SENTRY_DSN:
     INSTALLED_APPS = INSTALLED_APPS + ["raven.contrib.django.raven_compat"]
 
-    RAVEN_CONFIG = {
-        "dsn": SENTRY_DSN,
-        # 'release': raven.fetch_git_sha(BASE_DIR), doesn't work in Docker
-    }
+    RAVEN_CONFIG = {"dsn": SENTRY_DSN, "release": GIT_SHA}
     LOGGING["handlers"].update(
         {
             "sentry": {
@@ -325,9 +361,7 @@ if SENTRY_DSN:
         }
     )
 
+#
+# ZGW-CONSUMERS
+#
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
-
-#
-# DJANGO-AUTH-ADFS
-#
-AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
