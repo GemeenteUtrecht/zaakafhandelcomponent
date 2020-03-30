@@ -28,11 +28,18 @@
                     {% block nav-main-id %}{% endblock %}
                 </div>
 
-                <ul class="nav-menu">
+                <ul class="nav-panel__menu nav-menu">
                     {% nav_menu_item 'core:index' _("Alle zaken") %}
                     {% nav_menu_item 'regiezaken:index' _("Regiezaken") %}
                     {% nav_menu_item 'admin:index' _("Admin") %}
                 </ul>
+
+                <div class="nav-panel__controls">
+                    <form action="{% url 'core:flush-cache' %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn">Flush cache</button>
+                    </form>
+                </div>
 
             </nav>
 

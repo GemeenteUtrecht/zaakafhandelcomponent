@@ -7,9 +7,22 @@ $nav-panel-main-id-text-color: #fff !default;
 .nav-panel {
   background: $nav-panel-background;
 
+  display: flex;
+  flex-direction: column;
+
   & &__main-id {
     background: $nav-panel-main-id-background;
     min-height: 100px;
     color: $nav-panel-main-id-text-color;
+  }
+
+  & &__menu {
+    flex: 1;
+  }
+
+  & &__controls {
+    display: flex;
+    justify-content: space-around;
+    padding: 1em;
   }
 }
