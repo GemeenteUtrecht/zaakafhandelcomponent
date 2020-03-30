@@ -2,12 +2,13 @@ import asyncio
 import hashlib
 import logging
 from concurrent import futures
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
+import requests
 from nlx_url_rewriter.rewriter import Rewriter
 from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
@@ -287,6 +288,11 @@ def get_documenten(zaak: Zaak) -> List[Document]:
             document.informatieobjecttype
         ]
 
+    # cache results
+    for document in documenten:
+        cache_key = f"document:{document.bronorganisatie}:{document.identificatie}"
+        cache.set(cache_key, document, timeout=AN_HOUR / 2)
+
     return documenten
 
 
@@ -299,9 +305,8 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
 
     # not in cache -> check it in all known ZRCs
     drcs = Service.objects.filter(api_type=APITypes.drc)
-    claims = {}
     for drc in drcs:
-        client = drc.build_client(**claims)
+        client = drc.build_client()
         results = client.list("enkelvoudiginformatieobject", query_params=query)
 
         if not results:
@@ -311,7 +316,7 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
             logger.warning("Found multiple Zaken for query %r", query)
 
         # there's only supposed to be one unique case
-        result = Document.from_raw(results[0])
+        result = factory(Document, results[0])
         break
 
     if result is None:
@@ -320,6 +325,16 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
         )
 
     return result
+
+
+def download_document(
+    bronorganisatie: str, identificatie: str
+) -> Tuple[Document, bytes]:
+    document = find_document(bronorganisatie, identificatie)
+    client = _client_from_object(document)
+    response = requests.get(document.inhoud, headers=client.auth.credentials())
+    response.raise_for_status()
+    return document, response.content
 
 
 async def fetch(session: aiohttp.ClientSession, url: str):

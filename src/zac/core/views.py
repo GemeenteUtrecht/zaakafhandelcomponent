@@ -16,6 +16,7 @@ from django_camunda.client import get_client
 from .base_views import BaseDetailView, BaseListView
 from .forms import ZakenFilterForm
 from .services import (
+    download_document,
     find_document,
     find_zaak,
     get_documenten,
@@ -64,13 +65,11 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
 
 class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        document = find_document(**kwargs)
-        resp = requests.get(document.inhoud)
-
+        document, content = download_document(**kwargs)
         content_type = (
             document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
         )
-        response = HttpResponse(resp.content, content_type=content_type)
+        response = HttpResponse(content, content_type=content_type)
         response[
             "Content-Disposition"
         ] = f'attachment; filename="{document.bestandsnaam}"'
