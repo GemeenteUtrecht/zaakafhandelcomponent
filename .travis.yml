@@ -1,11 +1,11 @@
-dist: xenial
-
 language: python
 
-python: 3.7
+python: "3.7"
 
 services:
   - postgresql
+  - redis-server
+  - docker
 
 addons:
   postgresql: "10"
@@ -17,15 +17,53 @@ env:
   - DB_PASSWORD=
   - DB_USER=postgres
 
-install:
-  - pip install -r requirements/ci.txt
-  - pip install codecov
-  - npm ci
-  - npm run build
+jobs:
+  include:
+    - stage: Tests / Linting
+      name: Django tests
+      cache: pip
+      install:
+        - pip install -r requirements/ci.txt codecov
+        - npm ci
+        - npm run build
+      script:
+        - python src/manage.py collectstatic --noinput --link
+        - coverage run src/manage.py test src
+      after_success:
+        - codecov
 
-script:
-  - python src/manage.py collectstatic --noinput --link
-  - coverage run src/manage.py test src
+    - name: Import ordering
+      install:
+        - pip install isort
+      before_script: skip
+      script: isort --recursive --check-only --diff .
 
-after_success:
-  - codecov
+    - name: Code style
+      install:
+        - pip install black
+      before_script: skip
+      script: black --check src
+
+    - name: Test docker image build
+      before_install: skip
+      install: skip
+      before_script: skip
+      script: docker build .
+
+    - stage: Push Docker image(s)
+      if: fork = false
+      before_install: skip
+      install: skip
+      before_script: skip
+      script: echo "noop"
+      after_success: echo "trigger deploy?"
+      deploy:
+        - provider: script
+          script: bin/docker_push.sh latest
+          on:
+            branch: develop
+
+        - provider: script
+          script: bin/docker_push.sh $TRAVIS_TAG
+          on:
+            tags: true
