@@ -1,0 +1,31 @@
+@import "../lib/colors";
+@import "../lib/typography";
+
+
+.user-task {
+  display: flex;
+
+  & &__description {
+    font-weight: 600;
+    width: 50%;
+  }
+
+  & &__created {
+    display: block;
+    @include timestamp;
+    font-weight: 400;
+  }
+
+  & &__due {
+    width: 20%;
+
+    > * {
+      display: block;
+    }
+  }
+
+  & &__assignee {
+    flex-grow: 1;
+    text-align: right;
+  }
+}

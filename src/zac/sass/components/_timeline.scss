@@ -1,4 +1,5 @@
 @import "../lib/colors";
+@import "../lib/typography";
 
 $timeline__item-dot-color: $color-primary !default;
 $timeline__item-dot-size: 1.8rem !default;
@@ -81,7 +82,6 @@ $timeline__item-dot-size: 1.8rem !default;
 
   & &__item-timestamp {
     display: block;
-    color: lighten($color-text, 20%);
-    font-size: 0.9rem;
+    @include timestamp;
   }
 }

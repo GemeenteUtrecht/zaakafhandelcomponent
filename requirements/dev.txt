@@ -29,7 +29,7 @@ django-appconf==1.0.3     # via -r requirements/ci.txt, django-axes
 django-auth-adfs-db==0.2.0  # via -r requirements/ci.txt
 django-auth-adfs==1.3.1   # via -r requirements/ci.txt, django-auth-adfs-db
 django-axes==5.0.13       # via -r requirements/ci.txt
-django-camunda==0.5.1     # via -r requirements/ci.txt
+django-camunda==0.5.3     # via -r requirements/ci.txt
 django-choices==1.7.0     # via -r requirements/ci.txt, zgw-consumers
 django-debug-toolbar==1.11  # via -r requirements/dev.in
 django-extensions==2.1.6  # via -r requirements/dev.in

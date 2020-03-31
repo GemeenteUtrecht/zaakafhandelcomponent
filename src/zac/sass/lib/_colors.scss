@@ -5,3 +5,5 @@ $color-secondary: #ffcc00;
 $color-highlight: #9acbf0;
 
 $color-text: #1d1d1c; // asphalt
+
+$color-timestamp: lighten($color-text, 20%);
