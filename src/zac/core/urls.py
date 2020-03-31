@@ -1,13 +1,9 @@
 from django.urls import path
 
-from .views import (
-    DownloadDocumentView,
-    FetchTasks,
-    FetchZaakObjecten,
-    FlushCacheView,
-    Index,
-    ZaakDetail,
-)
+from .views.cache import FlushCacheView
+from .views.documents import DownloadDocumentView
+from .views.processes import FetchTasks
+from .views.zaken import FetchZaakObjecten, Index, ZaakDetail
 
 app_name = "core"
 

@@ -1,30 +1,19 @@
-import mimetypes
 from itertools import groupby
 from typing import List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.views import View
 from django.views.generic import TemplateView
 
-import requests
-from django_camunda.camunda_models import Task, factory
-from django_camunda.client import get_client
-
-from .base_views import BaseDetailView, BaseListView
-from .forms import ZakenFilterForm
-from .services import (
-    download_document,
-    find_document,
+from ..base_views import BaseDetailView, BaseListView
+from ..forms import ZakenFilterForm
+from ..services import (
     find_zaak,
     get_documenten,
     get_statussen,
     get_zaakobjecten,
     get_zaken,
 )
-from .zaakobjecten import GROUPS, ZaakObjectGroup
+from ..zaakobjecten import GROUPS, ZaakObjectGroup
 
 
 class Index(LoginRequiredMixin, BaseListView):
@@ -63,19 +52,6 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
         return context
 
 
-class DownloadDocumentView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        document, content = download_document(**kwargs)
-        content_type = (
-            document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
-        )
-        response = HttpResponse(content, content_type=content_type)
-        response[
-            "Content-Disposition"
-        ] = f'attachment; filename="{document.bestandsnaam}"'
-        return response
-
-
 class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
     """
     Retrieve the ZaakObjecten for a given zaak reference.
@@ -111,28 +87,3 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
             group.retrieve_items(items)
             render_groups.append(group)
         return render_groups
-
-
-class FetchTasks(LoginRequiredMixin, TemplateView):
-    template_name = "core/includes/tasks.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
-
-        context["tasks"] = self._fetch_tasks(zaak_url)
-        return context
-
-    def _fetch_tasks(self, zaak_url: str):
-        client = get_client()
-        tasks = client.get("task", {"processVariables": f"zaakUrl_eq_{zaak_url}"},)
-        return factory(Task, tasks)
-
-
-class FlushCacheView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        referer = request.META["HTTP_REFERER"]
-        cache.clear()
-        return redirect(referer)
