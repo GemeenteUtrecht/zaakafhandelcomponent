@@ -1,6 +1,8 @@
 from django import forms
+from django.conf import settings
 from django.template.defaultfilters import date
 from django.utils import timezone
+from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from .services import get_zaaktypen
@@ -45,3 +47,20 @@ class ZakenFilterForm(forms.Form):
             filters["identificatie"] = identificatie
 
         return filters
+
+
+class ClaimTaskForm(forms.Form):
+    task_id = forms.CharField(required=True)
+    next = forms.CharField(required=False)
+
+    def clean_next(self) -> str:
+        next_url = self.cleaned_data["next"]
+        if not next_url:
+            return ""
+
+        safe_url = is_safe_url(
+            next_url, settings.ALLOWED_HOSTS, require_https=settings.IS_HTTPS
+        )
+        if not safe_url:
+            raise forms.ValidationError(_("The redirect URL is untrusted."))
+        return next_url

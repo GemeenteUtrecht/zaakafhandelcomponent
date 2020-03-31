@@ -24,10 +24,11 @@
 
             <div class="user-task__assignee">
                 {% if task.assignee %}
-                    {{ task.assignee }}
+                    {{ task.assignee.get_full_name }}
                 {% else %}
-                    <form class="user-task__claim" method="post" action="#TODO">
-                        <input type="hidden" name="task-id" value="{{ task.id }}">
+                    <form class="user-task__claim" method="post" action="{% url 'core:claim-task' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="task_id" value="{{ task.id }}">
                         <button
                             type="submit"
                             class="btn btn--small"
