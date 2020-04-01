@@ -22,9 +22,14 @@
                 {% endif %}
             </div>
 
-            <div class="user-task__assignee">
+            <div class="user-task__assignee" title="Assignee {% if task.assignee == request.user %} (jij!){% endif %}">
                 {% if task.assignee %}
-                    {{ task.assignee.get_full_name }}
+                    <strong>{{ task.assignee.get_full_name }}</strong>
+
+                    {% if task.form_key %}
+                        <div>TODO: implement task forms!</div>
+                    {% endif %}
+
                 {% else %}
                     <form class="user-task__claim" method="post" action="{% url 'core:claim-task' %}">
                         {% csrf_token %}
