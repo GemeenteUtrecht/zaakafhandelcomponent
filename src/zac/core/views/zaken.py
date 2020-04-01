@@ -1,11 +1,12 @@
 from itertools import groupby
-from typing import List
+from typing import Any, Dict, List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
+from django.urls import reverse_lazy
+from django.views.generic import FormView, TemplateView
 
-from ..base_views import BaseDetailView, BaseListView
-from ..forms import ZakenFilterForm
+from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
+from ..forms import ZaakAfhandelForm, ZakenFilterForm
 from ..services import (
     find_zaak,
     get_documenten,
@@ -87,3 +88,33 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
             group.retrieve_items(items)
             render_groups.append(group)
         return render_groups
+
+
+class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
+    form_class = ZaakAfhandelForm
+    template_name = "core/zaak_afhandeling.html"
+    context_object_name = "zaak"
+    success_url = reverse_lazy("core:zaak-detail")
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
+
+    def get_object(self):
+        return find_zaak(**self.kwargs)
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        return context
+
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        kwargs = super().get_form_kwargs()
+        return {"zaak": self.object, **kwargs}
+
+    def form_valid(self, form: ZaakAfhandelForm):
+        form.save(user=self.request.user)
+        return super().form_valid(form)

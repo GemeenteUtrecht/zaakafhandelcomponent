@@ -3,7 +3,7 @@ from django.urls import path
 from .views.cache import FlushCacheView
 from .views.documents import DownloadDocumentView
 from .views.processes import ClaimTaskView, FetchTasks
-from .views.zaken import FetchZaakObjecten, Index, ZaakDetail
+from .views.zaken import FetchZaakObjecten, Index, ZaakAfhandelView, ZaakDetail
 
 app_name = "core"
 
@@ -13,6 +13,11 @@ urlpatterns = [
         "zaken/<bronorganisatie>/<identificatie>/",
         ZaakDetail.as_view(),
         name="zaak-detail",
+    ),
+    path(
+        "zaken/<bronorganisatie>/<identificatie>/afhandelen/",
+        ZaakAfhandelView.as_view(),
+        name="zaak-afhandeling",
     ),
     path(
         "documenten/<bronorganisatie>/<identificatie>/",

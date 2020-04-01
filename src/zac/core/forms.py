@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
-from .services import get_zaaktypen
+from .services import get_resultaattypen, get_zaaktypen
 
 
 def get_zaaktype_choices():
@@ -64,3 +64,38 @@ class ClaimTaskForm(forms.Form):
         if not safe_url:
             raise forms.ValidationError(_("The redirect URL is untrusted."))
         return next_url
+
+
+class ZaakAfhandelForm(forms.Form):
+    resultaattype = forms.ChoiceField(
+        required=False, label="Resultaat", widget=forms.RadioSelect,
+    )
+    result_remarks = forms.CharField(
+        required=False, label="Toelichting", widget=forms.Textarea,
+    )
+    close_zaak = forms.BooleanField(
+        required=False,
+        label="Zaak afsluiten?",
+        help_text="Sluit de zaak af als er een resultaat gezet is.",
+    )
+    close_zaak_remarks = forms.CharField(
+        required=False, label="Toelichting bij afsluiten zaak", widget=forms.Textarea,
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.zaak = kwargs.pop("zaak")
+        super().__init__(*args, **kwargs)
+
+        # fetch the possible result types
+        zaaktype = self.zaak.zaaktype
+
+        resultaattype_choices = [
+            (resultaattype.url, resultaattype.omschrijving)
+            for resultaattype in get_resultaattypen(zaaktype)
+        ]
+        self.fields["resultaattype"].choices = resultaattype_choices
+
+    def save(self, user):
+        import bpdb
+
+        bpdb.set_trace()

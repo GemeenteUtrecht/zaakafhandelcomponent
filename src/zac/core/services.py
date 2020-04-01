@@ -11,7 +11,7 @@ import aiohttp
 import requests
 from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import ResultaatType, ZaakType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakObject
 from zgw_consumers.constants import APITypes
@@ -34,6 +34,30 @@ def _client_from_url(url: str):
 
 def _client_from_object(obj):
     return _client_from_url(obj.url)
+
+
+async def fetch(session: aiohttp.ClientSession, url: str):
+    creds = _client_from_url(url).auth.credentials()
+    async with session.get(url, headers=creds) as response:
+        return await response.json()
+
+
+def fetch_async(cache_key: str, job, *args, **kwargs):
+    result = cache.get(cache_key)
+    if result is not None:
+        return result
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    coro = job(*args, **kwargs)
+    result = loop.run_until_complete(coro)
+    cache.set(cache_key, result, 30 * 60)
+    return result
+
+
+###################################################
+#                       ZTC                       #
+###################################################
 
 
 @cache_result("zaaktypen", timeout=AN_HOUR)
@@ -64,7 +88,7 @@ def fetch_zaaktype(url: str) -> ZaakType:
     return factory(ZaakType, result)
 
 
-@cache_result("zt:statustypen:{zaaktype.url}", timeout=AN_HOUR / 2)
+@cache_result("zt:statustypen:{zaaktype.url}", timeout=A_DAY)
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     client = _client_from_object(zaaktype)
     _statustypen = get_paginated_results(
@@ -72,6 +96,35 @@ def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     )
     statustypen = factory(StatusType, _statustypen)
     return statustypen
+
+
+@cache_result("statustype:{url}", timeout=A_DAY)
+def get_statustype(url: str) -> StatusType:
+    client = _client_from_url(url)
+    status_type = client.retrieve("statustype", url=url)
+    status_type = factory(StatusType, status_type)
+    return status_type
+
+
+@cache_result("zt:resultaattypen:{zaaktype.url}", timeout=A_DAY)
+def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
+    client = _client_from_object(zaaktype)
+    resultaattypen = get_paginated_results(
+        client, "resultaattype", query_params={"zaaktype": zaaktype.url},
+    )
+
+    resultaattypen = factory(ResultaatType, resultaattypen)
+
+    # resolve relations
+    for resultaattype in resultaattypen:
+        resultaattype.zaaktype = zaaktype
+
+    return resultaattypen
+
+
+###################################################
+#                       ZRC                       #
+###################################################
 
 
 @cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
@@ -215,12 +268,63 @@ def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
     return [Eigenschap.from_raw(_eigenschap) for _eigenschap in eigenschappen]
 
 
-@cache_result("statustype:{url}", timeout=A_DAY)
-def get_statustype(url: str) -> StatusType:
-    client = _client_from_url(url)
-    status_type = client.retrieve("statustype", url=url)
-    status_type = factory(StatusType, status_type)
-    return status_type
+@cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
+def get_zaak(zaak_uuid=None, zaak_url=None) -> Zaak:
+    """
+    Retrieve zaak with uuid or url
+    """
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    result = None
+
+    for zrc in zrcs:
+        client = zrc.build_client()
+        result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
+
+        if not result:
+            continue
+
+        result = factory(Zaak, result)
+
+    if result is None:
+        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
+
+    return result
+
+
+def get_related_zaken(zaak: Zaak, zaaktypen) -> list:
+    """
+    return list of related zaken with selected zaaktypen
+    """
+
+    related_urls = [related["url"] for related in zaak.relevante_andere_zaken]
+
+    zaken = []
+    for url in related_urls:
+        zaken.append(get_zaak(zaak_url=url))
+
+    # FIXME remove string after testing
+    zaken = get_zaken(zaaktypen)[:3]
+    return zaken
+
+
+def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
+    if isinstance(zaak, Zaak):
+        zaak_url = zaak.url
+    else:
+        zaak_url = zaak
+
+    client = _client_from_url(zaak_url)
+
+    zaakobjecten = get_paginated_results(
+        client, "zaakobject", query_params={"zaak": zaak_url},
+    )
+
+    return factory(ZaakObject, zaakobjecten)
+
+
+###################################################
+#                       DRC                       #
+###################################################
 
 
 def get_documenten(zaak: Zaak) -> List[Document]:
@@ -326,12 +430,6 @@ def download_document(
     return document, response.content
 
 
-async def fetch(session: aiohttp.ClientSession, url: str):
-    creds = _client_from_url(url).auth.credentials()
-    async with session.get(url, headers=creds) as response:
-        return await response.json()
-
-
 async def fetch_documents(zios: list):
     tasks = []
     async with aiohttp.ClientSession() as session:
@@ -344,70 +442,3 @@ async def fetch_documents(zios: list):
         responses = await asyncio.gather(*tasks)
 
     return responses
-
-
-def fetch_async(cache_key: str, job, *args, **kwargs):
-    result = cache.get(cache_key)
-    if result is not None:
-        return result
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    coro = job(*args, **kwargs)
-    result = loop.run_until_complete(coro)
-    cache.set(cache_key, result, 30 * 60)
-    return result
-
-
-@cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
-def get_zaak(zaak_uuid=None, zaak_url=None) -> Zaak:
-    """
-    Retrieve zaak with uuid or url
-    """
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    result = None
-
-    for zrc in zrcs:
-        client = zrc.build_client()
-        result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
-
-        if not result:
-            continue
-
-        result = factory(Zaak, result)
-
-    if result is None:
-        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
-
-    return result
-
-
-def get_related_zaken(zaak: Zaak, zaaktypen) -> list:
-    """
-    return list of related zaken with selected zaaktypen
-    """
-
-    related_urls = [related["url"] for related in zaak.relevante_andere_zaken]
-
-    zaken = []
-    for url in related_urls:
-        zaken.append(get_zaak(zaak_url=url))
-
-    # FIXME remove string after testing
-    zaken = get_zaken(zaaktypen)[:3]
-    return zaken
-
-
-def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
-    if isinstance(zaak, Zaak):
-        zaak_url = zaak.url
-    else:
-        zaak_url = zaak
-
-    client = _client_from_url(zaak_url)
-
-    zaakobjecten = get_paginated_results(
-        client, "zaakobject", query_params={"zaak": zaak_url},
-    )
-
-    return factory(ZaakObject, zaakobjecten)

@@ -29,17 +29,15 @@
 {% load_widgets kv='sniplates/key-value.html' %}
 
 <header class="zaak-detail-page__header">
-    <h1 class="page-title" title="Zaaktype">
-        {{ zaak.zaaktype.omschrijving }}
-        <small class="page-title__extra">
-            versie {{ zaak.zaaktype.versiedatum|date }}
-        </small>
-    </h1>
+    {% include "core/includes/zaaktype_header.html" %}
 
     <nav class="page-controls page-controls--align-right">
 
         {% if not zaak.einddatum %}
-            <a href="#" class="btn btn--control btn btn--control-focus">Handel zaak af</a>
+            <a href="{% url 'core:zaak-afhandeling' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+               class="btn btn--control btn btn--control-focus">
+                Handel zaak af
+            </a>
         {% endif %}
 
         <a href="#" class="btn btn--control">Zet nieuwe status</a>

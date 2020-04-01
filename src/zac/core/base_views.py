@@ -42,12 +42,17 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
         return self.render_to_response(context)
 
 
-class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
-    """
-    A base view to look up remote objects.
-    """
-
+class SingleObjectMixin(ContextMixin):
     context_object_name = "object"
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except ObjectDoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": self.context_object_name}
+            )
 
     def get_object(self):
         raise NotImplementedError
@@ -57,13 +62,13 @@ class BaseDetailView(TemplateResponseMixin, ContextMixin, View):
         context.update(kwargs)
         return super().get_context_data(**context)
 
+
+class BaseDetailView(TemplateResponseMixin, SingleObjectMixin, View):
+    """
+    A base view to look up remote objects.
+    """
+
     def get(self, request, *args, **kwargs):
-        try:
-            self.object = self.get_object()
-        except ObjectDoesNotExist:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": self.context_object_name}
-            )
+        self.object = self.get_object()
         context = self.get_context_data()
         return self.render_to_response(context)

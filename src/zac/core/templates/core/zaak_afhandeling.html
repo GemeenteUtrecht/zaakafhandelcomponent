@@ -1,0 +1,48 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates %}
+
+
+{% block content %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
+
+<form action="." method="post">
+    {% csrf_token %}
+
+    <header class="zaak-detail-page__header">
+        {% include "core/includes/zaaktype_header.html" %}
+
+        <nav class="page-controls page-controls--align-right">
+            <button type="submit" class="btn btn--control btn--control-focus">
+                Bewaar wijzigingen
+            </button>
+        </nav>
+
+    </header>
+
+    <article class="zaak-detail">
+
+        <section class="zaak-detail__panel content-panel">
+            <div class="section-title">Zaakinformatie</div>
+
+            <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
+                {{ zaak.omschrijving|default:"(geen omschrijving)" }}
+            </p>
+
+            <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
+                {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
+            </p>
+        </section>
+
+        <section class="zaak-detail__panel content-panel">
+            <div class="section-title">Resultaat / afsluiten</div>
+
+            {{ form.as_p }}
+
+        </section>
+
+    </article>
+
+</form>
+
+{% endblock content %}
