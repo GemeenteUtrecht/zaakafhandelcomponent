@@ -9,13 +9,11 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
 import requests
-from nlx_url_rewriter.rewriter import Rewriter
 from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakObject
-from zgw_consumers.client import get_client_class
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -30,14 +28,7 @@ A_DAY = AN_HOUR * 24
 
 
 def _client_from_url(url: str):
-    # build the client
-    Client = get_client_class()
-    client = Client.from_url(url)
-
-    base_urls = [client.base_url]
-    Rewriter().backwards(base_urls)
-    service = Service.objects.get(api_root=base_urls[0])
-
+    service = Service.get_service(url)
     return service.build_client()
 
 
@@ -234,7 +225,6 @@ def get_statustype(url: str) -> StatusType:
 
 def get_documenten(zaak: Zaak) -> List[Document]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
-    rewriter = Rewriter()
 
     zrc_client = _client_from_object(zaak)
 
@@ -259,7 +249,6 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     }
 
     _iot = list(informatieobjecttypen)
-    rewriter.backwards(_iot)
 
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     relevant_ztcs = []

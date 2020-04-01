@@ -2,7 +2,8 @@ import time
 from uuid import UUID, uuid4
 
 from zds_client.log import Log
-from zds_client.nlx import NLXClient
+from zgw_consumers.client import ZGWClient
+from zgw_consumers.nlx import NLXClientMixin
 
 
 class DurationLog(Log):
@@ -41,11 +42,13 @@ class DurationLog(Log):
             pass
 
 
-class Client(NLXClient):
+class Client(NLXClientMixin, ZGWClient):
     _log = DurationLog()
     request_starts = {}
 
     def pre_request(self, method, url, **kwargs) -> UUID:
+        super().pre_request(method, url, **kwargs)
+
         request_id = uuid4()
         self.request_starts[request_id] = time.time()
         request = (self.service, url, method, request_id)
@@ -53,6 +56,8 @@ class Client(NLXClient):
         return request_id
 
     def post_response(self, request_id, response_json) -> None:
+        super().post_response(request_id, response_json)
+
         start = self.request_starts.pop(request_id)
         duration = (time.time() - start) * 1000
         self._log.add_duration(request_id, int(duration))

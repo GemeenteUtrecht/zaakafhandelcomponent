@@ -98,7 +98,6 @@ INSTALLED_APPS = [
     "sniplates",
     "zgw_consumers",
     "django_camunda",
-    "nlx_url_rewriter",
     "import_export",
     "django_auth_adfs",
     "django_auth_adfs_db",

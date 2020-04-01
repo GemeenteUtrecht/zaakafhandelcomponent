@@ -2,7 +2,6 @@ import json
 
 from django_camunda.models import CamundaConfig
 from import_export import resources, widgets
-from nlx_url_rewriter.models import URLRewrite
 from zgw_consumers.models import Service
 
 
@@ -39,11 +38,6 @@ class SoloModelResource(resources.ModelResource):
 class ServiceResource(JSONResourceMixin, resources.ModelResource):
     class Meta:
         model = Service
-
-
-class URLRewriteResource(resources.ModelResource):
-    class Meta:
-        model = URLRewrite
 
 
 class CamundaConfigResource(SoloModelResource):

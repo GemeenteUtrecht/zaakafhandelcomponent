@@ -4,12 +4,12 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from nlx_url_rewriter.rewriter import Rewriter
 from zds_client import ClientError
 from zgw.models import ZaakType
 from zgw_consumers.admin_fields import get_zaaktypen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.nlx import Rewriter
 
 
 class ZaakTypeArrayField(ArrayField):
