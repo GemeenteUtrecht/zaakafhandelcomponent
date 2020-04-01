@@ -24,4 +24,19 @@ $btn-background-color: #efefef !default;
   &#{&}--small {
     padding: 4px 8px;
   }
+
+  &#{&}--control {
+    box-shadow: none;
+
+    &:hover {
+      background: $color-primary;
+      color: #fff;
+    }
+  }
+
+  &#{&}--control-focus {
+    background: #fff;
+    border-color: $color-primary;
+    color: $color-primary;
+  }
 }

@@ -2,6 +2,20 @@
 
 $zaak-detail__panel-spacing: $content-panel-spacing !default;
 
+.zaak-detail-page {
+
+  & &__header {
+    display: flex;
+    align-items: center;
+  }
+
+  .page-title,
+  .page-controls {
+    flex: 1;
+    margin-bottom: 1rem;
+  }
+}
+
 .zaak-detail {
 
   margin-left: -0.5em;
