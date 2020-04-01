@@ -1,4 +1,4 @@
-@import "../lib/colors";
+@import "../../lib/colors";
 
 .input {
   border: 0;
@@ -10,7 +10,7 @@
     border: 0;
     box-shadow: none;
     display: inline-block;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     margin-right: 2rem;
     min-width: 0;
     width: 100%;
@@ -26,6 +26,15 @@
 
       &:focus {
         box-shadow: none;
+        outline: 2px solid $color-secondary;
+      }
+    }
+
+    &--textarea {
+      border: solid 1px #eee;
+      padding: 0.3rem 0.4rem;
+
+      &:focus {
         outline: 2px solid $color-secondary;
       }
     }
@@ -50,6 +59,11 @@
   & &__label {
     display: block;
     margin-bottom: 0.4em;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
   }
+}
+
+.input__label .label {
+  font-size: 0.9rem;
+  color: $color-timestamp;
 }

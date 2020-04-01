@@ -23,7 +23,7 @@
 {% endif %}
 
 
-<form action="." method="post" class="form form--centered">
+<form action="." method="post" class="form form--centered form--large">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.GET.next }}">
 

@@ -1,3 +1,5 @@
+@import "../../lib/colors";
+
 $form-centered-width--normal: 40vw !default;
 
 .form {
@@ -11,5 +13,39 @@ $form-centered-width--normal: 40vw !default;
 
   &#{&}--centered-content {
     text-align: center;
+  }
+
+  &#{&}--large {
+    .input__label,
+    .input__control {
+      font-size: 1.4rem;
+    }
+  }
+
+  & &__group-title {
+    font-size: 1.2rem;
+
+    &:after {
+      content: " ";
+      display: block;
+      width: 75%;
+      border: solid 1px $color-primary;
+    }
+  }
+
+  & &__field-group {
+    display: flex;
+
+    margin: 1em 0;
+    padding: 0;
+    border: none;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    > * {
+      flex: 1;
+    }
   }
 }

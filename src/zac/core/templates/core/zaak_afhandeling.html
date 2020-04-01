@@ -3,10 +3,10 @@
 
 
 {% block content %}
-{% load_widgets kv='sniplates/key-value.html' %}
+{% load_widgets form='sniplates/forms.html' %}
 
 
-<form action="." method="post">
+<form action="." method="post" class="form">
     {% csrf_token %}
 
     <header class="zaak-detail-page__header">
@@ -22,6 +22,25 @@
 
     <article class="zaak-detail">
 
+        <section class="zaak-detail__panel content-panel content-panel--flat">
+            <div class="section-title">Resultaat / afsluiten</div>
+
+            {% widget 'form:non_field_errors' %}
+
+            <div class="form__group-title">Resultaat</div>
+            <div class="form__field-group" role="group">
+                {% form_field form.resultaattype label="&nbsp;" required=True %}
+                {% form_field form.result_remarks %}
+            </div>
+
+            <div class="form__group-title">Afsluiten</div>
+            <div class="form__field-group" role="group">
+                {% form_field form.close_zaak %}
+                {% form_field form.close_zaak_remarks %}
+            </div>
+
+        </section>
+
         <section class="zaak-detail__panel content-panel">
             <div class="section-title">Zaakinformatie</div>
 
@@ -32,13 +51,6 @@
             <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
                 {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
             </p>
-        </section>
-
-        <section class="zaak-detail__panel content-panel">
-            <div class="section-title">Resultaat / afsluiten</div>
-
-            {{ form.as_p }}
-
         </section>
 
     </article>
