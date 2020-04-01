@@ -3,17 +3,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.views.generic import FormView, TemplateView
 
-from django_camunda.camunda_models import Task, factory
 from django_camunda.client import get_client
 
+from ..camunda import get_zaak_tasks
 from ..forms import ClaimTaskForm
 
 User = get_user_model()
-
-
-def _resolve_assignee(username: str) -> User:
-    user = User.objects.get(username=username)
-    return user
 
 
 class FetchTasks(LoginRequiredMixin, TemplateView):
@@ -25,17 +20,8 @@ class FetchTasks(LoginRequiredMixin, TemplateView):
         if not zaak_url:
             raise ValueError("Expected zaak querystring parameter")
 
-        context["tasks"] = self._fetch_tasks(zaak_url)
+        context["tasks"] = get_zaak_tasks(zaak_url)
         return context
-
-    def _fetch_tasks(self, zaak_url: str):
-        client = get_client()
-        tasks = client.get("task", {"processVariables": f"zaakUrl_eq_{zaak_url}"},)
-        tasks = factory(Task, tasks)
-        for task in tasks:
-            if task.assignee:
-                task.assignee = _resolve_assignee(task.assignee)
-        return tasks
 
 
 class ClaimTaskView(LoginRequiredMixin, FormView):

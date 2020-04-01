@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.conf import settings
 from django.template.defaultfilters import date
@@ -5,7 +7,8 @@ from django.utils import timezone
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
-from .services import get_resultaattypen, get_zaaktypen
+from .camunda import complete_task, get_zaak_tasks
+from .services import _client_from_url, get_resultaattypen, get_zaaktypen
 
 
 def get_zaaktype_choices():
@@ -82,6 +85,13 @@ class ZaakAfhandelForm(forms.Form):
         required=False, label="Toelichting bij afsluiten zaak", widget=forms.Textarea,
     )
 
+    tasks = forms.MultipleChoiceField(
+        required=False,
+        label="Camunda taken",
+        help_text="Selecteer welke taken hiermee vervult zijn",
+        widget=forms.CheckboxSelectMultiple,
+    )
+
     def __init__(self, *args, **kwargs):
         self.zaak = kwargs.pop("zaak")
         super().__init__(*args, **kwargs)
@@ -95,7 +105,38 @@ class ZaakAfhandelForm(forms.Form):
         ]
         self.fields["resultaattype"].choices = resultaattype_choices
 
-    def save(self, user):
-        import bpdb
+        # fetch the possible camunda tasks this completes
+        tasks = get_zaak_tasks(self.zaak.url)
+        task_choices = [
+            (task.id, f"{task.name} ({task.assignee or 'n/a'})") for task in tasks
+        ]
+        self.fields["tasks"].choices = task_choices
 
-        bpdb.set_trace()
+    def save(self, user):
+        """
+        TODO: figure out which process variables to set!
+
+        This really depends on the process specific context, so we need to figure out
+        if we should use BPTL here at all or not. Maybe ZAC itself could be a consumer
+        for Camunda external tasks?
+        """
+
+        zrc_client = _client_from_url(self.zaak.url)
+        ztc_client = _client_from_url(self.zaak.zaaktype.url)
+
+        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
+        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
+
+        variables = {
+            "zaak": {"value": self.zaak.url},
+            "resultaattype": {"value": self.cleaned_data["resultaattype"]},
+            "services": {
+                "type": "Json",
+                "value": json.dumps(
+                    {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},}
+                ),
+            },
+        }
+
+        for task_id in self.cleaned_data["tasks"]:
+            complete_task(task_id, variables)

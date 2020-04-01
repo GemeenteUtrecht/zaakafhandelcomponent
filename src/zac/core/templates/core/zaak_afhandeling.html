@@ -23,9 +23,12 @@
     <article class="zaak-detail">
 
         <section class="zaak-detail__panel content-panel content-panel--flat">
-            <div class="section-title">Resultaat / afsluiten</div>
-
             {% widget 'form:non_field_errors' %}
+
+            <div class="form__group-title">Proces</div>
+            <div class="form__field-group" role="group">
+                {% form_field form.tasks %}
+            </div>
 
             <div class="form__group-title">Resultaat</div>
             <div class="form__field-group" role="group">

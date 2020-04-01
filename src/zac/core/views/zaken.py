@@ -2,7 +2,7 @@ from itertools import groupby
 from typing import Any, Dict, List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
@@ -94,7 +94,6 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
-    success_url = reverse_lazy("core:zaak-detail")
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -118,3 +117,6 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
     def form_valid(self, form: ZaakAfhandelForm):
         form.save(user=self.request.user)
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("core:zaak-detail", kwargs=self.kwargs)
