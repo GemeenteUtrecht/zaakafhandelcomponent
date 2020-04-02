@@ -56,3 +56,11 @@ class SearchIndexView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.update({"registrations": REGISTRATIONS})
         return context
+
+
+class SearchView(LoginRequiredMixin, TemplateView):
+    template_name = "search/includes/results.html"
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)

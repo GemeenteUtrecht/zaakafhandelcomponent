@@ -62,29 +62,45 @@ class Search {
             widget.classList.remove('search__widget--active');
             Array.from(widget.querySelectorAll('input')).forEach(input => {
                 input.disabled = true;
-                input.value = '';
+                if (input.name !== 'csrfmiddlewaretoken') {
+                    input.value = '';
+                }
             });
         });
 
         Array.from(container.querySelectorAll('input')).forEach(input => {
             input.disabled = false;
-            input.value = '';
+            if (input.name !== 'csrfmiddlewaretoken') {
+                input.value = '';
+            }
         });
         container.classList.add('search__widget--active');
     }
 
     bindSearch() {
-        const btn = this.node.querySelector('.search__button .btn');
+        const resultsContainer = this.node.querySelector('.search__results-container');
+        const btnContainer = this.node.querySelector('.search__button');
+        const btn = btnContainer.querySelector('.btn');
         btn.addEventListener('click', () => {
             const container = this.node.querySelector('.search__widget.search__widget--active');
-            const values = {};
+            const values = new window.URLSearchParams();
 
             Array
                 .from(container.querySelectorAll('input'))
                 .filter(input => input.name)
-                .forEach(input => {values[input.name] = input.value;});
+                .forEach(input => {
+                    values.append(input.name, input.value);
+                });
 
-            console.log(values);
+            resultsContainer.innerHTML = '<span class="loader"></span>';
+
+            window.fetch(btnContainer.dataset.url, {
+                method: 'post',
+                body: values
+            })
+            .then(response => response.text())
+            .then(content => resultsContainer.innerHTML = content)
+            .catch(console.error);
         });
     }
 }

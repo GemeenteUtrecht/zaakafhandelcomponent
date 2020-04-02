@@ -3,7 +3,7 @@ from django.urls import include, path
 from .views.cache import FlushCacheView
 from .views.documents import DownloadDocumentView
 from .views.processes import ClaimTaskView, FetchTasks
-from .views.search import SearchIndexView
+from .views.search import SearchIndexView, SearchView
 from .views.zaken import FetchZaakObjecten, Index, ZaakAfhandelView, ZaakDetail
 
 app_name = "core"
@@ -40,7 +40,13 @@ urlpatterns = [
         ),
     ),
     path(
-        "search/", include([path("", SearchIndexView.as_view(), name="search-index"),])
+        "search/",
+        include(
+            [
+                path("", SearchIndexView.as_view(), name="search-index"),
+                path("_search", SearchView.as_view(), name="search-results"),
+            ]
+        ),
     ),
     path(
         "_",

@@ -45,6 +45,7 @@
         {% for id, registration in registrations.items %}
             {% for object_type in registration.object_types %}
                 <div id="object-types-{{ id }}-{{ object_type.value }}" class="search__widget">
+                    {% csrf_token %}
                     {{ object_type.render_widget }}
                 </div>
             {% endfor %}
@@ -52,19 +53,12 @@
     </div>
 </div>
 
-<div class="search__button">
+<div class="search__button" data-url="{% url 'core:search-results' %}">
     <button type="button" class="btn">Zoek</button>
 </div>
 
 <section class="search__results">
     <div class="section-title">Resultaten</div>
-
-    <div>
-        {% for result in results %}
-            {{ result }}
-        {% empty %}
-            Geen resultaten.
-        {% endfor %}
-    </div>
+    <div class="search__results-container"></div>
 </section>
 {% endblock %}
