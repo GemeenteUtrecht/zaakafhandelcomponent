@@ -20,7 +20,7 @@ module.exports = {
     package: pkg,
 
     // Path to the sass (sources) directory
-    sassSrcDir: `${sourcesRoot}sass/*.scss`,
+    sassSrcDir: `${sourcesRoot}sass/**/*.scss`,
 
     // Path to the sass (sources) entry point
     sassSrc: `${sourcesRoot}sass/**/*.scss`,
