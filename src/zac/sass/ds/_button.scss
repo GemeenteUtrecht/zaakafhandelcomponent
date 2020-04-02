@@ -39,4 +39,27 @@ $btn-background-color: #efefef !default;
     border-color: $color-primary;
     color: $color-primary;
   }
+
+  // A button part of a button grop, representing a possible choice. Similar to radio
+  // buttons.
+  &#{&}--choice {
+    display: block;
+    box-shadow: none;
+    padding: 0.4em 0.8em;
+    border: solid 1px $color-text;
+
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+
+    &:hover {
+      background: $color-secondary;
+      color: $color-text;
+    }
+  }
+
+  &#{&}--choice-selected {
+    background: $color-primary;
+    color: #fff;
+  }
 }

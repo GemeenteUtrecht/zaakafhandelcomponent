@@ -1,7 +1,60 @@
 {% extends "master.html" %}
+{% load sniplates %}
+
+{% block body-class %}{{ block.super }} search{% endblock body-class %}
 
 {% block content %}
+
+{% load_widgets form='sniplates/forms.html' %}
+
 <h1 class="page-title">Zoeken</h1>
 
+<p>
+    Door in een (basis)registratie een object te zoeken kan je alle (lopende) zaken
+    rond dit object opvragen.
+</p>
 
+<div class="form search__form">
+    <div class="section-title">Type zoekopdracht</div>
+
+    <div class="search__type">
+
+        <div class="btn-group">
+            {% for id, registration in registrations.items %}
+                <button type="button" class="btn btn--choice {{ forloop.first|yesno:'btn--choice-selected,' }}" data-target="object-types-{{ id }}"
+                        {% if not registration.object_types %}disabled title="not implemented"{% endif %}
+                >
+                    {{ registration.label }}
+                </button>
+            {% endfor %}
+        </div>
+
+        {% for id, registration in registrations.items %}
+            {% if registration.object_types %}
+            <div class="object-type-choices" id="object-types-{{ id }}">
+                {% nested_widget 'form:_wrapper' %}
+                    {% widget 'form:_label' label="Kies het objecttype" required=True %}
+                    {% widget 'form:RadioSelect' html_name="object_type" choices=registration.object_types %}
+                {% endnested %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="search__query">
+
+    </div>
+</div>
+
+<section class="search__results">
+    <div class="section-title">Resultaten</div>
+
+    <div>
+        {% for result in results %}
+            {{ result }}
+        {% empty %}
+            Geen resultaten.
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

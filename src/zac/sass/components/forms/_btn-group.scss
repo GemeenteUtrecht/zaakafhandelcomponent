@@ -1,0 +1,14 @@
+.btn-group {
+  padding: 1em 0;
+  display: flex;
+
+  & > :first-child {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+  }
+
+  & > :last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+}
