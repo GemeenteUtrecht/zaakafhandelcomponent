@@ -11,6 +11,7 @@ class Search {
 
         this.registrationButtons = this.bindBtnClicks();
         this.bindObjectTypeSelect();
+        this.bindSearch();
     }
 
     bindBtnClicks() {
@@ -70,6 +71,21 @@ class Search {
             input.value = '';
         });
         container.classList.add('search__widget--active');
+    }
+
+    bindSearch() {
+        const btn = this.node.querySelector('.search__button .btn');
+        btn.addEventListener('click', () => {
+            const container = this.node.querySelector('.search__widget.search__widget--active');
+            const values = {};
+
+            Array
+                .from(container.querySelectorAll('input'))
+                .filter(input => input.name)
+                .forEach(input => {values[input.name] = input.value;});
+
+            console.log(values);
+        });
     }
 }
 

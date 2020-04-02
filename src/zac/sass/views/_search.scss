@@ -34,4 +34,9 @@
       display: block;
     }
   }
+
+  & &__button {
+    text-align: right;
+    margin-right: 4em;
+  }
 }
