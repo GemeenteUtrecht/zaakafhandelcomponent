@@ -6,3 +6,6 @@ docker-compose*
 .vscode
 env/
 local.py
+
+src/zac/static/css/
+src/zac/static/js/
