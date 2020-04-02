@@ -23,6 +23,17 @@ class PandSelection {
         this.bindReset();
 
         this.map = this.initMap();
+
+        this.installMutationObserver();
+    }
+
+    // hacky way to redraw map if parent changes visibility via display attribute
+    installMutationObserver() {
+        const container = this.node.parentNode;
+        const observer = new MutationObserver(() => {
+            this.map._map.invalidateSize();
+        });
+        observer.observe(container, {attributes: true});
     }
 
     bindAutoComplete() {

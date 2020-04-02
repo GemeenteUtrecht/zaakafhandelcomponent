@@ -17,6 +17,21 @@
 
   & &__query {
     flex: 1;
-    border: solid 1px pink;
+  }
+
+  & &__object-types {
+    display: none;
+
+    &--active {
+      display: block;
+    }
+  }
+
+  & &__widget {
+    display: none;
+
+    &--active {
+      display: block;
+    }
   }
 }
