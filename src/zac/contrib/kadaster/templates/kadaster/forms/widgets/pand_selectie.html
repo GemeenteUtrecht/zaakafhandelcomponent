@@ -1,0 +1,20 @@
+<div class="pand-selection"
+    data-autocomplete-url="{% url 'kadaster:adres-autocomplete' %}"
+    data-adres-pand-url="{% url 'kadaster:adres-pand' %}"
+>
+    <input
+        type="hidden" name="{{ widget.name }}"
+        {% if widget.value != None %} value="{{ widget.value }}"{% endif %}
+        {% include "django/forms/widgets/attrs.html" %}
+    >
+
+    <div class="pand-selection__map-container">
+        <div class="pand-selection__map"></div>
+
+        <input type="text"placeholder="Zoek adres"class="input leaflet-bar pand-selection__autocomplete">
+        <a class="pand-selection__reset" href="#">🗙</a>
+        <div class="pand-selection__autocomplete-results"></div>
+    </div>
+
+
+</div>
