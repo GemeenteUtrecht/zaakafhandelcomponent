@@ -31,18 +31,24 @@
 
         {% for id, registration in registrations.items %}
             {% if registration.object_types %}
-            <div class="object-type-choices" id="object-types-{{ id }}">
-                {% nested_widget 'form:_wrapper' %}
-                    {% widget 'form:_label' label="Kies het objecttype" required=True %}
-                    {% widget 'form:RadioSelect' html_name="object_type" choices=registration.object_types %}
-                {% endnested %}
-            </div>
+                <div class="object-type-choices" id="object-types-{{ id }}">
+                    {% nested_widget 'form:_wrapper' %}
+                        {% widget 'form:_label' label="Kies het objecttype" required=True %}
+                        {% widget 'form:RadioSelect' html_name="object_type" choices=registration.object_type_choices %}
+                    {% endnested %}
+                </div>
             {% endif %}
         {% endfor %}
     </div>
 
     <div class="search__query">
-
+        {% for id, registration in registrations.items %}
+            {% for object_type in registration.object_types %}
+                <div id="object-types-{{ id }}-{{ object_type.value }}">
+                    {{ object_type.render_widget }}
+                </div>
+            {% endfor %}
+        {% endfor %}
     </div>
 </div>
 
