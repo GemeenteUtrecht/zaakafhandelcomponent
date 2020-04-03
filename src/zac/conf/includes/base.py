@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "import_export",
     "django_auth_adfs",
     "django_auth_adfs_db",
+    "rest_framework",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",

@@ -25,3 +25,6 @@ django-choices
 django-import-export
 django-redis
 django-sniplates
+
+# Restful API
+djangorestframework

@@ -1,0 +1,64 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+{% block body-class %}{{ block.super }} search{% endblock body-class %}
+
+{% block content %}
+
+{% load_widgets form='sniplates/forms.html' %}
+
+<h1 class="page-title">Zoeken</h1>
+
+<p>
+    Door in een (basis)registratie een object te zoeken kan je alle (lopende) zaken
+    rond dit object opvragen.
+</p>
+
+<div class="form search__form">
+    <div class="section-title">Type zoekopdracht</div>
+
+    <div class="search__type">
+
+        <div class="btn-group">
+            {% for id, registration in registrations.items %}
+                <button type="button" class="btn btn--choice {{ forloop.first|yesno:'btn--choice-selected,' }}" data-target="object-types-{{ id }}" data-registration="{{ id }}"
+                        {% if not registration.object_types %}disabled title="not implemented"{% endif %}
+                >
+                    {{ registration.label }}
+                </button>
+            {% endfor %}
+        </div>
+
+        {% for id, registration in registrations.items %}
+            {% if registration.object_types %}
+                <div class="search__object-types {% if forloop.first %}search__object-types--active{% endif %}" id="object-types-{{ id }}">
+                    {% nested_widget 'form:_wrapper' %}
+                        {% widget 'form:_label' label="Kies het objecttype" required=True %}
+                        {% widget 'form:RadioSelect' html_name="object_type" choices=registration.object_type_choices %}
+                    {% endnested %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="search__query">
+        {% for id, registration in registrations.items %}
+            {% for object_type in registration.object_types %}
+                <div id="object-types-{{ id }}-{{ object_type.value }}" class="search__widget">
+                    {% csrf_token %}
+                    {{ object_type.render_widget }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="search__button" data-url="{% url 'core:search-results' %}">
+    <button type="button" class="btn">Zoek</button>
+</div>
+
+<section class="search__results">
+    <div class="section-title">Resultaten</div>
+    <div class="search__results-container"></div>
+</section>
+{% endblock %}

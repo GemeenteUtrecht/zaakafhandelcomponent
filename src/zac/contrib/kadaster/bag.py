@@ -25,6 +25,25 @@ class Bag:
         return response.json()
 
 
+class LocationServer:
+    def __init__(self):
+        config = KadasterConfig.get_solo()
+        self.url = config.locatieserver
+
+    def get(self, path: str, *args, **kwargs):
+        full_url = f"{self.url}{path}"
+        response = requests.get(full_url, *args, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
+    def suggest(self, query: dict):
+        return self.get("suggest", params=query)
+
+    def lookup(self, some_id: str):
+        resp_data = self.get("lookup", params={"id": some_id})
+        return resp_data["response"]
+
+
 @cache("pand:{url}", timeout=60 * 60 * 24)
 def fetch_pand(url: str) -> Dict[str, Any]:
     bag = Bag()

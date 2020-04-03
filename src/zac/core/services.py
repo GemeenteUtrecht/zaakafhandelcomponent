@@ -204,6 +204,32 @@ def get_zaken(
     return zaken
 
 
+def search_zaken_for_object(object_url: str) -> List[Zaak]:
+    """
+    Query the ZRCs for zaken that have object_url as a zaakobject.
+    """
+    query = {"object": object_url}
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    clients = [zrc.build_client() for zrc in zrcs]
+
+    def _get_zaakobjecten(client):
+        return get_paginated_results(client, "zaakobject", query_params=query)
+
+    def _get_zaak(args):
+        client, zaak_url = args
+        return get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
+
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        results = executor.map(_get_zaakobjecten, clients)
+
+        job_args = []
+        for client, zaakobjecten in zip(clients, results):
+            job_args += [(client, zo["zaak"]) for zo in zaakobjecten]
+        zaken_results = executor.map(_get_zaak, job_args)
+
+    return list(zaken_results)
+
+
 # TODO: listen for notifiations to invalidate cache OR look into ETag when it's available
 @cache_result("zaak:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)
 def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
@@ -269,21 +295,24 @@ def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
 
 
 @cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
-def get_zaak(zaak_uuid=None, zaak_url=None) -> Zaak:
+def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """
     Retrieve zaak with uuid or url
     """
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    result = None
+    if client is None:
+        zrcs = Service.objects.filter(api_type=APITypes.zrc)
+        result = None
 
-    for zrc in zrcs:
-        client = zrc.build_client()
+        for zrc in zrcs:
+            client = zrc.build_client()
+            result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
+
+            if not result:
+                continue
+    else:
         result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
 
-        if not result:
-            continue
-
-        result = factory(Zaak, result)
+    result = factory(Zaak, result)
 
     if result is None:
         raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
