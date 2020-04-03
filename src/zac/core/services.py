@@ -227,7 +227,16 @@ def search_zaken_for_object(object_url: str) -> List[Zaak]:
             job_args += [(client, zo["zaak"]) for zo in zaakobjecten]
         zaken_results = executor.map(_get_zaak, job_args)
 
-    return list(zaken_results)
+    zaken = list(zaken_results)
+
+    def _resolve_zaaktype(zaak):
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
+    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for zaak in zaken:
+            executor.submit(_resolve_zaaktype, zaak)
+
+    return zaken
 
 
 # TODO: listen for notifiations to invalidate cache OR look into ETag when it's available
