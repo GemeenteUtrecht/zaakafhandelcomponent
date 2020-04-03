@@ -86,7 +86,7 @@ function _scss() {
         .pipe(gulp.dest(paths.cssDir));
 }
 
-const scss = gulp.series(fontAwesome, _scss);
+const scss = gulp.parallel(fontAwesome, _scss);
 
 gulp.task('sass', scss);
 gulp.task('scss', scss);
