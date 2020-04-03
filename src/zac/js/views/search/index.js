@@ -85,6 +85,12 @@ class Search {
             const container = this.node.querySelector('.search__widget.search__widget--active');
             const values = new window.URLSearchParams();
 
+            // add the registration and object types
+            const registrationBtn = this.node.querySelector('.btn--choice-selected');
+            values.append('registration', registrationBtn.dataset.registration);
+            const objectType = this.node.querySelector(`input[name="object_type"]:checked`).value;
+            values.append('object_type', objectType);
+
             Array
                 .from(container.querySelectorAll('input'))
                 .filter(input => input.name)
