@@ -63,23 +63,30 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 ###################################################
 
 
-@cache_result("zaaktypen", timeout=AN_HOUR)
-def _get_zaaktypen() -> List[ZaakType]:
+@cache_result("zaaktypen:{catalogus}", timeout=AN_HOUR)
+def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
     """
     Retrieve all the zaaktypen from all catalogi in the configured APIs.
     """
-    result = []
-
+    query_params = {"catalogus": catalogus} if catalogus else None
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
-    for ztc in ztcs:
-        client = ztc.build_client()
-        result += get_paginated_results(client, "zaaktype")
+
+    if catalogus:
+        clients = [_client_from_url(catalogus)]
+    else:
+        clients = [ztc.build_client for ztc in ztcs]
+
+    result = []
+    for client in clients:
+        result += get_paginated_results(client, "zaaktype", query_params=query_params)
 
     return factory(ZaakType, result)
 
 
-def get_zaaktypen(user_perms: Optional[UserPermissions] = None) -> List[ZaakType]:
-    zaaktypen = _get_zaaktypen()
+def get_zaaktypen(
+    user_perms: Optional[UserPermissions] = None, catalogus: str = ""
+) -> List[ZaakType]:
+    zaaktypen = _get_zaaktypen(catalogus=catalogus)
     if user_perms is not None:
         # filter out zaaktypen from permissions
         zaaktypen = user_perms.filter_zaaktypen(zaaktypen)

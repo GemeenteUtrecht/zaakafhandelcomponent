@@ -1,11 +1,15 @@
 import uuid
+from typing import List
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .managers import UserManager
@@ -139,6 +143,19 @@ class PermissionSet(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.get_max_va_display()})"
+
+    @cached_property
+    def zaaktypen(self) -> List[ZaakType]:
+        from zac.core.services import get_zaaktypen
+
+        zaaktypen = get_zaaktypen(catalogus=self.catalogus)
+
+        if not self.zaaktype_identificaties:
+            return zaaktypen
+
+        return [
+            zt for zt in zaaktypen if zt.identificatie in self.zaaktype_identificaties
+        ]
 
 
 class UserEntitlement(models.Model):
