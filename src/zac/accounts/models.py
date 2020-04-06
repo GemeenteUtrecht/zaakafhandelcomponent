@@ -1,7 +1,12 @@
+import uuid
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .managers import UserManager
 
@@ -36,6 +41,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
+    # custom permissions
+    entitlements = models.ManyToManyField(
+        "Entitlement", blank=True, through="UserEntitlement",
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = "username"
@@ -55,3 +65,76 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+
+# Permissions
+
+
+class Entitlement(models.Model):
+    """
+    Model a set of permission groups that can be assigned to a user.
+
+    "Autorisatieprofiel" in Dutch. This is the finest-grained object that is exposed
+    to external systems (via SCIM eventually).
+    """
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(_("naam"), max_length=255)
+    permission_sets = models.ManyToManyField(
+        "PermissionSet",
+        verbose_name=_("permission sets"),
+        help_text=_(
+            "Selecting multiple sets makes them add/merge all the permissions together."
+        ),
+    )
+
+    class Meta:
+        verbose_name = _("entitlement")
+        verbose_name_plural = _("entitlements")
+
+    def __str__(self):
+        return self.name
+
+
+class PermissionSet(models.Model):
+    """
+    A collection of permissions that belong to a zaaktype.
+    """
+
+    name = models.CharField(_("naam"), max_length=255, unique=True)
+    description = models.TextField(_("description"), blank=True)
+    permissions = ArrayField(
+        models.CharField(max_length=255, blank=False),
+        blank=True,
+        default=list,
+        verbose_name=_("permissions"),
+        help_text=_("List of permissions given by this role."),
+    )
+    zaaktype = models.URLField(
+        _("zaaktype"),
+        help_text=_("All permissions selected are scoped to this zaaktype."),
+    )
+    max_va = models.CharField(
+        _("maximale vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_(
+            "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+        ),
+    )
+
+    class Meta:
+        verbose_name = _("permission set")
+        verbose_name_plural = _("permission sets")
+
+    def __str__(self):
+        return f"{self.name} ({self.get_max_va_display()})"
+
+
+class UserEntitlement(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    entitlement = models.ForeignKey("Entitlement", on_delete=models.CASCADE)
+
+    start = models.DateTimeField(_("start"), null=True)
+    end = models.DateTimeField(_("end"), null=True)
