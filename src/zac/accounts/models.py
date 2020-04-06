@@ -109,13 +109,19 @@ class PermissionSet(models.Model):
         default=list,
         verbose_name=_("permissions"),
     )
-    zaaktype = models.URLField(
-        _("zaaktype"),
-        help_text=_(
-            "All permissions selected are scoped to this zaaktype. "
+    catalogus = models.URLField(
+        _("catalogus"),
+        help_text=_("Zaaktypencatalogus waarin de zaaktypen voorkomen."),
+        blank=False,
+    )
+    zaaktype_identificaties = ArrayField(
+        models.CharField(max_length=100),
+        blank=True,
+        default=list,
+        help_text=(
+            "All permissions selected are scoped to these zaaktypen. "
             "If left empty, this applies to all zaaktypen."
         ),
-        blank=True,
     )
     max_va = models.CharField(
         _("maximale vertrouwelijkheidaanduiding"),
