@@ -1,0 +1,26 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+
+{% block content %}
+<h1 class="page-title">Nieuwe permission set</h1>
+
+
+<form action="." method="post" class="form">
+    {% csrf_token %}
+
+    {% load_widgets form='sniplates/forms.html' %}
+
+    {% widget 'form:non_field_errors' %}
+
+    {% form_field form.name %}
+    {% form_field form.description %}
+    {# {% form_field form.permissions %} #}
+    {# {% form_field form.catalogus %} #}
+    {# {% form_field form.zaaktype_identificaties %} #}
+    {% form_field form.max_va %}
+
+    {% widget 'form:submit' label=_("Toevoegen") %}
+</form>
+
+{% endblock %}
