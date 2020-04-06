@@ -23,4 +23,4 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
     model = PermissionSet
     form_class = PermissionSetForm
     permission_required = "accounts.can_add_permissionset"
-    success_url = reverse_lazy("accounts:entitlements-list")
+    success_url = reverse_lazy("accounts:entitlement-list")

@@ -202,11 +202,27 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block CheckboxSelectDynamic %}
+{% nested_widget ':_wrapper' %}
+    {% reuse '_label' %}
+    {% reuse '_help' %}
+    {% reuse '_errors' %}
+
+    <ul
+        id="{{ id }}"
+        class="checkbox-select checkbox-select--dynamic"
+        data-name="{{ html_name }}"
+        data-listen="{{ listen }}"
+        data-values="{{ values }}"
+    >
+    </ul>
+
+{% endnested %}
+{% endblock CheckboxSelectDynamic %}
 
 {% block PandSelectieField %}
 {{ django_field }}
 {% endblock PandSelectieField %}
-
 
 
 Button interactions

@@ -74,7 +74,7 @@ def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
     if catalogus:
         clients = [_client_from_url(catalogus)]
     else:
-        clients = [ztc.build_client for ztc in ztcs]
+        clients = [ztc.build_client() for ztc in ztcs]
 
     result = []
     for client in clients:

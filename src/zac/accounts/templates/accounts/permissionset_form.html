@@ -13,11 +13,19 @@
 
     {% widget 'form:non_field_errors' %}
 
-    {% form_field form.name %}
-    {% form_field form.description %}
+    <div class="form__field-group">
+        {% form_field form.name %}
+        {% form_field form.description %}
+    </div>
+
+    <div class="form__field-group">
+        {% form_field form.catalogus %}
+        {{ form.get_zaaktypen|json_script:"catalogus-zaaktypen" }}
+        {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" %}
+    </div>
+
     {# {% form_field form.permissions %} #}
-    {# {% form_field form.catalogus %} #}
-    {# {% form_field form.zaaktype_identificaties %} #}
+
     {% form_field form.max_va %}
 
     {% widget 'form:submit' label=_("Toevoegen") %}
