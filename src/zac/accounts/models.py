@@ -148,7 +148,16 @@ class PermissionSet(models.Model):
     def zaaktypen(self) -> List[ZaakType]:
         from zac.core.services import get_zaaktypen
 
-        zaaktypen = get_zaaktypen(catalogus=self.catalogus)
+        _zaaktypen = get_zaaktypen(catalogus=self.catalogus)
+
+        # de-duplicate versions for presentation
+        seen = set()
+        zaaktypen = []
+        for zaaktype in _zaaktypen:
+            if zaaktype.identificatie in seen:
+                continue
+            zaaktypen.append(zaaktype)
+            seen.add(zaaktype.identificatie)
 
         if not self.zaaktype_identificaties:
             return zaaktypen
