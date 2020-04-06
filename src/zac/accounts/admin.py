@@ -5,9 +5,14 @@ from django.utils.translation import gettext_lazy as _
 from .models import Entitlement, PermissionSet, User, UserEntitlement
 
 
+class UserEntitlementInline(admin.TabularInline):
+    model = UserEntitlement
+    extra = 1
+
+
 @admin.register(User)
 class _UserAdmin(UserAdmin):
-    pass
+    inlines = [UserEntitlementInline]
 
 
 @admin.register(PermissionSet)

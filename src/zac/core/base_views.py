@@ -15,15 +15,21 @@ class BaseListView(TemplateResponseMixin, ContextMixin, View):
     def get_filter_form_initial(self):
         return None
 
+    def get_filter_form_kwargs(self) -> dict:
+        data = self.request.GET or None
+        initial = self.get_filter_form_initial()
+        return {
+            "data": data,
+            "initial": initial,
+        }
+
     def get_filter_form(self):
         if self.filter_form_class is None:
             return
 
         if not hasattr(self, "_filter_form"):
-            data = self.request.GET or None
-            self._filter_form = self.filter_form_class(
-                data=data, initial=self.get_filter_form_initial()
-            )
+            form_kwargs = self.get_filter_form_kwargs()
+            self._filter_form = self.filter_form_class(**form_kwargs)
 
         return self._filter_form
 

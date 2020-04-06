@@ -145,5 +145,5 @@ class UserEntitlement(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     entitlement = models.ForeignKey("Entitlement", on_delete=models.CASCADE)
 
-    start = models.DateTimeField(_("start"), null=True)
-    end = models.DateTimeField(_("end"), null=True)
+    start = models.DateTimeField(_("start"), blank=True, null=True)
+    end = models.DateTimeField(_("end"), blank=True, null=True)

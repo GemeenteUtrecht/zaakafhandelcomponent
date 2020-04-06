@@ -6,6 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
+from zac.accounts.permissions import UserPermissions
+
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
 from ..services import (
@@ -16,6 +18,7 @@ from ..services import (
     get_statussen,
     get_zaak_eigenschappen,
     get_zaakobjecten,
+    get_zaaktypen,
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
@@ -24,11 +27,21 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup
 class Index(LoginRequiredMixin, BaseListView):
     """
     Display the landing screen.
+
+    The list of zaken that can be viewed is retrieved from the APIs.
+
+    Note that permission checks are in place - only zaken of zaaktypen are retrieved
+    where you have access to the zaaktype.
     """
 
     template_name = "core/index.html"
     context_object_name = "zaken"
     filter_form_class = ZakenFilterForm
+
+    def get_filter_form_kwargs(self):
+        kwargs = super().get_filter_form_kwargs()
+        kwargs["zaaktypen"] = get_zaaktypen(UserPermissions(self.request.user))
+        return kwargs
 
     def get_object_list(self):
         filter_form = self.get_filter_form()
@@ -36,7 +49,9 @@ class Index(LoginRequiredMixin, BaseListView):
             filters = filter_form.as_filters()
         else:
             filters = {}
-        return get_zaken(**filters)[:50]
+        zaken = get_zaken(UserPermissions(self.request.user), **filters)[:50]
+
+        return zaken
 
 
 class ZaakDetail(LoginRequiredMixin, BaseDetailView):

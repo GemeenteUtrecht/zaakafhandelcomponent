@@ -1,3 +1,5 @@
+from typing import Iterator, List, Tuple
+
 from django import forms
 from django.conf import settings
 from django.template.defaultfilters import date
@@ -5,18 +7,13 @@ from django.utils import timezone
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
-from .services import (
-    get_resultaattypen,
-    get_statustypen,
-    get_zaaktypen,
-    zet_resultaat,
-    zet_status,
-)
+from zgw_consumers.api_models.catalogi import ZaakType
+
+from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
 
 
-def get_zaaktype_choices():
+def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> Iterator[Tuple[str, str]]:
     today = timezone.now().date()
-    zaaktypen = get_zaaktypen()
     for zaaktype in zaaktypen:
         if zaaktype.begin_geldigheid > today:
             continue
@@ -36,6 +33,12 @@ class ZakenFilterForm(forms.Form):
         choices=get_zaaktype_choices,
         widget=forms.CheckboxSelectMultiple,
     )
+
+    def __init__(self, *args, **kwargs):
+        zaaktypen = kwargs.pop("zaaktypen")
+        super().__init__(*args, **kwargs)
+
+        self.fields["zaaktypen"].choices = get_zaaktype_choices(zaaktypen)
 
     def as_filters(self) -> dict:
         assert self.cleaned_data

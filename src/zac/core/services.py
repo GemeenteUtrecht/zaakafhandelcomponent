@@ -18,6 +18,7 @@ from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, Za
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache
@@ -63,7 +64,7 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 
 
 @cache_result("zaaktypen", timeout=AN_HOUR)
-def _get_zaaktypen() -> List[Dict]:
+def _get_zaaktypen() -> List[ZaakType]:
     """
     Retrieve all the zaaktypen from all catalogi in the configured APIs.
     """
@@ -74,13 +75,15 @@ def _get_zaaktypen() -> List[Dict]:
         client = ztc.build_client()
         result += get_paginated_results(client, "zaaktype")
 
-    return result
+    return factory(ZaakType, result)
 
 
-def get_zaaktypen() -> List[ZaakType]:
-    zaaktypes_raw = _get_zaaktypen()
-    zaaktypes = factory(ZaakType, zaaktypes_raw)
-    return zaaktypes
+def get_zaaktypen(user_perms: Optional[UserPermissions] = None) -> List[ZaakType]:
+    zaaktypen = _get_zaaktypen()
+    if user_perms is not None:
+        # filter out zaaktypen from permissions
+        zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
+    return zaaktypen
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -145,6 +148,7 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 ###################################################
 
 
+# TODO: invalidate on zaak creation/deletion!
 @cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
 def _find_zaken(
     client, zaaktype: str = "", identificatie: str = "", bronorganisatie: str = ""
@@ -162,54 +166,49 @@ def _find_zaken(
 
 
 def get_zaken(
-    zaaktypen: List[str] = None, identificatie: str = "", bronorganisatie: str = "",
+    user_perms: UserPermissions,
+    zaaktypen: List[str] = None,
+    identificatie: str = "",
+    bronorganisatie: str = "",
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
+
+    Only retrieve what the user permissions dictate.
     """
-    _zaaktypen = get_zaaktypen()
+    # TODO: superusers should be able to query without zaaktype qs param
+    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+
+    # list of URLs - no filter for superusers / blanket perms
+    query_zaaktypen = [
+        zt_url for zt_url in _base_zaaktypen if zaaktypen is None or zt_url in zaaktypen
+    ]
+
+    # build keyword arguments for retrieval jobs - running network calls in parallel
+    # if possible
+    find_kwargs = []
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
-
-    zaken = []
-
-    job_args = []
     for zrc in zrcs:
         client = zrc.build_client()
-        job_args.append(
-            {
-                "client": client,
-                "identificatie": identificatie,
-                "bronorganisatie": bronorganisatie,
-                "zaaktype": "",
-            }
-        )
-
-    # expand job args with zaaktype filters if needed, parallelizes as much as possible
-    if zaaktypen:
-        _job_args = []
-        for job_arg in job_args:
-            for zaaktype_url in zaaktypen:
-                _job_args.append({"zaaktype": zaaktype_url, **job_arg})
-        job_args = _job_args
-
-    def _job(kwargs_dict):
-        return _find_zaken(**kwargs_dict)
+        for zaaktype_url in query_zaaktypen:
+            find_kwargs.append(
+                {
+                    "client": client,
+                    "identificatie": identificatie,
+                    "bronorganisatie": bronorganisatie,
+                    "zaaktype": zaaktype_url,
+                }
+            )
 
     with futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = executor.map(_job, job_args)
+        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
         flattened = sum(list(results), [])
 
     zaken = factory(Zaak, flattened)
 
     # resolve zaaktype reference
-    _zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
-
     for zaak in zaken:
-        if zaak.zaaktype not in _zaaktypen:
-            zaaktype = fetch_zaaktype(zaak.zaaktype)
-            _zaaktypen[zaak.zaaktype] = zaaktype
-
-        zaak.zaaktype = _zaaktypen[zaak.zaaktype]
+        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
 
     # sort results by startdatum / registratiedatum / identificatie
 
