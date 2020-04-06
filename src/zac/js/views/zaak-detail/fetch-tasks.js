@@ -1,9 +1,11 @@
+import { apiCall } from '../../utils/fetch';
+
+
 const fetchTasks = (node) => {
     const { url, forZaak } = node.dataset;
 
     const fullUrl = `${url}?zaak=${forZaak}`;
-    window
-        .fetch(fullUrl)
+    apiCall(fullUrl)
         .then(response => response.text())
         .then(content => {node.innerHTML = content;})
         .catch(console.error);

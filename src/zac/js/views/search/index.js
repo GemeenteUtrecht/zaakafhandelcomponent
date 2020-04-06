@@ -5,6 +5,9 @@
  * while selecting an object type displays the relevant widget.
  */
 
+import { apiCall } from '../../utils/fetch';
+
+
 class Search {
     constructor(node) {
         this.node = node;
@@ -100,7 +103,7 @@ class Search {
 
             resultsContainer.innerHTML = '<span class="loader"></span>';
 
-            window.fetch(btnContainer.dataset.url, {
+            apiCall(btnContainer.dataset.url, {
                 method: 'post',
                 body: values
             })

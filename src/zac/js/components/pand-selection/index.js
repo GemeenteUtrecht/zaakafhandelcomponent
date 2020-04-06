@@ -1,6 +1,8 @@
 /**
  * Component to select a single pand based on adress entry with autocomplete.
  */
+import { apiCall } from '../../utils/fetch';
+
 import { Map } from './map';
 
 const DEBOUNCE_MS = 200;
@@ -79,8 +81,7 @@ class PandSelection {
         if (!q) {
             throw new Error('You must provide a search query');
         }
-        return window
-            .fetch(`${this.autocompleteUrl}?q=${q}`)
+        return apiCall(`${this.autocompleteUrl}?q=${q}`)
             .then(response => response.json())
             .catch(console.error)
         ;
@@ -108,8 +109,7 @@ class PandSelection {
             throw new Error('You must provide an appropriate ID');
         }
 
-        window
-            .fetch(`${this.adresPandUrl}?id=${id}`)
+        apiCall(`${this.adresPandUrl}?id=${id}`)
             .then(response => response.json())
             .then(json => this.showPand(json))
             .catch(console.error)
