@@ -11,6 +11,7 @@ from ..services import (
     find_zaak,
     get_documenten,
     get_statussen,
+    get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaken,
 )
@@ -44,10 +45,14 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # TODO: in parallel!
+
         context.update(
             {
                 "statussen": get_statussen(self.object),
                 "documenten": get_documenten(self.object),
+                "eigenschappen": get_zaak_eigenschappen(self.object),
             }
         )
         return context

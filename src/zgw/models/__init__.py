@@ -1,4 +1,4 @@
-from .zrc import Eigenschap, Zaak
+from .zrc import Zaak
 from .ztc import InformatieObjectType, StatusType, ZaakType
 
 __all__ = [

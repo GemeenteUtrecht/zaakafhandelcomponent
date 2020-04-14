@@ -60,6 +60,16 @@
             {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
         </p>
 
+        <div class="section-title">Eigenschappen</div>
+        <div>
+            {% for eigenschap in eigenschappen %}
+                {% nested_widget 'kv:key-value' label=eigenschap.naam %}
+                    {{ eigenschap.get_waarde }}
+                {% endnested %}
+            {% endfor %}
+            <br>
+        </div>
+
         <div class="section-title">Betrokkenen</div>
         TODO
     </section>

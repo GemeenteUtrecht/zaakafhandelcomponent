@@ -6,9 +6,6 @@ from django.utils.functional import cached_property
 
 from zgw_consumers.api_models.zaken import Zaak as _Zaak
 
-from .base import Model
-from .ztc import StatusType, ZaakType
-
 
 @dataclass
 class Zaak(_Zaak):
@@ -51,12 +48,3 @@ class Zaak(_Zaak):
             "omschrijving": current_status.status_type.omschrijving,
             "totaal": len(statustypen),
         }
-
-
-@dataclass
-class Eigenschap(Model):
-    url: str
-    zaak: Zaak
-    # eigenschap: str
-    naam: str
-    waarde: str

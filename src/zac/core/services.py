@@ -9,11 +9,11 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import aiohttp
 import requests
-from zgw.models import Eigenschap, InformatieObjectType, StatusType, Zaak
+from zgw.models import InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ResultaatType, ZaakType
+from zgw_consumers.api_models.catalogi import Eigenschap, ResultaatType, ZaakType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Status, ZaakObject
+from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -120,6 +120,22 @@ def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
         resultaattype.zaaktype = zaaktype
 
     return resultaattypen
+
+
+@cache_result("zt:eigenschappen:{zaaktype.url}", timeout=A_DAY)
+def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
+    client = _client_from_object(zaaktype)
+    eigenschappen = get_paginated_results(
+        client, "eigenschap", query_params={"zaaktype": zaaktype.url},
+    )
+
+    eigenschappen = factory(Eigenschap, eigenschappen)
+
+    # resolve relations
+    for eigenschap in eigenschappen:
+        eigenschap.zaaktype = zaaktype
+
+    return eigenschappen
 
 
 ###################################################
@@ -293,14 +309,27 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     return sorted(statussen, key=lambda x: x.datum_status_gezet, reverse=True)
 
 
-def get_eigenschappen(zaak: Zaak) -> List[Eigenschap]:
-    client = _client_from_object(zaak)
+def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
+    # the zaak object itself already contains a list of URL references
+    if not zaak.eigenschappen:
+        return []
 
-    eigenschappen = client.list("zaakeigenschap", zaak_uuid=zaak.id)
-    for _eigenschap in eigenschappen:
-        _eigenschap["zaak"] = zaak
+    zrc_client = _client_from_object(zaak)
+    eigenschappen = {
+        eigenschap.url: eigenschap for eigenschap in get_eigenschappen(zaak.zaaktype)
+    }
 
-    return [Eigenschap.from_raw(_eigenschap) for _eigenschap in eigenschappen]
+    zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
+    zaak_eigenschappen = factory(ZaakEigenschap, zaak_eigenschappen)
+
+    # import bpdb; bpdb.set_trace()
+
+    # resolve relations
+    for zaak_eigenschap in zaak_eigenschappen:
+        zaak_eigenschap.zaak = zaak
+        zaak_eigenschap.eigenschap = eigenschappen[zaak_eigenschap.eigenschap]
+
+    return zaak_eigenschappen
 
 
 @cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
