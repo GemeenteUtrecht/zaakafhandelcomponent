@@ -8,6 +8,7 @@ uwsgi
 python-dateutil
 isodate
 requests_mock
+defusedxml
 
 # zgw-integration
 aiodns

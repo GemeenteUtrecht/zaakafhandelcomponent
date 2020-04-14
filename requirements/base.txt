@@ -15,7 +15,7 @@ certifi==2019.9.11        # via requests
 cffi==1.12.3              # via cryptography, pycares
 chardet==3.0.4            # via aiohttp, requests
 cryptography==2.8         # via django-auth-adfs
-defusedxml==0.6.0         # via odfpy
+defusedxml==0.6.0         # via -r requirements/base.in, odfpy
 diff-match-patch==20181111  # via django-import-export
 django-appconf==1.0.3     # via django-axes
 django-auth-adfs-db==0.2.0  # via -r requirements/base.in

@@ -1,0 +1,53 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates %}
+
+
+{% block content %}
+{% load_widgets form='sniplates/forms.html' %}
+
+
+<form action="." method="post" class="form">
+    {% csrf_token %}
+
+    <header class="zaak-detail-page__header">
+        {% include "core/includes/zaaktype_header.html" %}
+
+        <nav class="page-controls page-controls--align-right">
+            <button type="submit" class="btn btn--control btn--control-focus">
+                Bewaren
+            </button>
+        </nav>
+
+    </header>
+
+    <article class="zaak-detail">
+
+        <section class="zaak-detail__panel content-panel content-panel--flat">
+            {% widget 'form:non_field_errors' %}
+
+            <div class="form__group-title">Gegevens</div>
+            <div class="form__field-group">
+                {% for field in form %}
+                    {% form_field field %}
+                {% endfor %}
+            </div>
+
+        </section>
+
+        <section class="zaak-detail__panel content-panel">
+            <div class="section-title">Zaakinformatie</div>
+
+            <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
+                {{ zaak.omschrijving|default:"(geen omschrijving)" }}
+            </p>
+
+            <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
+                {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
+            </p>
+        </section>
+
+    </article>
+
+</form>
+
+{% endblock content %}

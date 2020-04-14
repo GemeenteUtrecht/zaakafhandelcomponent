@@ -322,8 +322,6 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
     zaak_eigenschappen = factory(ZaakEigenschap, zaak_eigenschappen)
 
-    # import bpdb; bpdb.set_trace()
-
     # resolve relations
     for zaak_eigenschap in zaak_eigenschappen:
         zaak_eigenschap.zaak = zaak
