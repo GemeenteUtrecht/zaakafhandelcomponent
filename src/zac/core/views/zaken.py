@@ -1,3 +1,4 @@
+from concurrent import futures
 from itertools import groupby
 from typing import Any, Dict, List
 
@@ -46,15 +47,18 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # TODO: in parallel!
+        with futures.ThreadPoolExecutor() as executor:
+            statussen = executor.submit(get_statussen, self.object)
+            documenten = executor.submit(get_documenten, self.object)
+            eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
 
-        context.update(
-            {
-                "statussen": get_statussen(self.object),
-                "documenten": get_documenten(self.object),
-                "eigenschappen": get_zaak_eigenschappen(self.object),
-            }
-        )
+            context.update(
+                {
+                    "statussen": statussen.result(),
+                    "documenten": documenten.result(),
+                    "eigenschappen": eigenschappen.result(),
+                }
+            )
         return context
 
 
