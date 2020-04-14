@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from .views.cache import FlushCacheView
 from .views.documents import DownloadDocumentView
-from .views.processes import ClaimTaskView, FetchTasks
+from .views.processes import ClaimTaskView, FetchTasks, PerformTaskView
 from .views.search import SearchIndexView, SearchView
 from .views.zaken import FetchZaakObjecten, Index, ZaakAfhandelView, ZaakDetail
 
@@ -23,6 +23,11 @@ urlpatterns = [
                     "<bronorganisatie>/<identificatie>/afhandelen/",
                     ZaakAfhandelView.as_view(),
                     name="zaak-afhandeling",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/",
+                    PerformTaskView.as_view(),
+                    name="zaak-task",
                 ),
             ]
         ),

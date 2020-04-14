@@ -25,7 +25,7 @@ def get_zaak_tasks(zaak_url: str) -> List[Task]:
         if task.assignee:
             task.assignee = _resolve_assignee(task.assignee)
 
-        task._form = extract_task_form(task)
+        task.form = extract_task_form(task)
     return tasks
 
 
@@ -95,5 +95,6 @@ def formfield_from_xml(definition: Element) -> Tuple[str, forms.Field]:
             (value.attrib["id"], value.attrib["name"])
             for value in definition.getchildren()
         ]
+        field_kwargs["widget"] = forms.RadioSelect
 
     return name, field_class(required=True, **field_kwargs)
