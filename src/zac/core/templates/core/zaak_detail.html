@@ -189,6 +189,13 @@
                         </th>
                     </tr>
                 {% endfor %}
+                {% for io_url in documenten_gone %}
+                    <tr>
+                        <td colspan="5">
+                            Document <code>{{ io_url }}</code> bestaat niet (meer).
+                        </td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
 

@@ -394,7 +394,7 @@ def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
 ###################################################
 
 
-def get_documenten(zaak: Zaak) -> List[Document]:
+def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
     zrc_client = _client_from_object(zaak)
@@ -414,10 +414,21 @@ def get_documenten(zaak: Zaak) -> List[Document]:
     documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
 
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
+
+    gone = []
+    found = []
+    for document, zio in zip(documenten, zaak_informatieobjecten):
+        if "url" in document:  # resolved
+            found.append(document)
+            continue
+
+        if document["status"] != 404:  # unknown error
+            continue
+
+        gone.append(zio["informatieobject"])
+
     # figure out relevant ztcs
-    informatieobjecttypen = {
-        document["informatieobjecttype"] for document in documenten
-    }
+    informatieobjecttypen = {document["informatieobjecttype"] for document in found}
 
     _iot = list(informatieobjecttypen)
 
@@ -440,7 +451,7 @@ def get_documenten(zaak: Zaak) -> List[Document]:
         for raw in all_informatieobjecttypen
     }
 
-    documenten = factory(Document, documenten)
+    documenten = factory(Document, found)
 
     # resolve relations
     for document in documenten:
@@ -453,7 +464,7 @@ def get_documenten(zaak: Zaak) -> List[Document]:
         cache_key = f"document:{document.bronorganisatie}:{document.identificatie}"
         cache.set(cache_key, document, timeout=AN_HOUR / 2)
 
-    return documenten
+    return documenten, gone
 
 
 @cache_result("document:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)

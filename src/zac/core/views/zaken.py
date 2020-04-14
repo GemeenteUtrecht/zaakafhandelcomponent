@@ -49,13 +49,16 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
 
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
-            documenten = executor.submit(get_documenten, self.object)
+            _documenten = executor.submit(get_documenten, self.object)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
+
+            documenten, gone = _documenten.result()
 
             context.update(
                 {
                     "statussen": statussen.result(),
-                    "documenten": documenten.result(),
+                    "documenten": documenten,
+                    "documenten_gone": gone,
                     "eigenschappen": eigenschappen.result(),
                 }
             )
