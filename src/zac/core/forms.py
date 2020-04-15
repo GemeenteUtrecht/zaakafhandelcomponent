@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.conf import settings
 from django.template.defaultfilters import date
@@ -7,8 +5,13 @@ from django.utils import timezone
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
-from .camunda import complete_task, get_zaak_tasks
-from .services import _client_from_url, get_resultaattypen, get_zaaktypen
+from .services import (
+    get_resultaattypen,
+    get_statustypen,
+    get_zaaktypen,
+    zet_resultaat,
+    zet_status,
+)
 
 
 def get_zaaktype_choices():
@@ -70,7 +73,7 @@ class ClaimTaskForm(forms.Form):
 
 
 class ZaakAfhandelForm(forms.Form):
-    resultaattype = forms.ChoiceField(
+    resultaattype = forms.TypedChoiceField(
         required=False, label="Resultaat", widget=forms.RadioSelect,
     )
     result_remarks = forms.CharField(
@@ -92,37 +95,34 @@ class ZaakAfhandelForm(forms.Form):
         # fetch the possible result types
         zaaktype = self.zaak.zaaktype
 
+        _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaaktype)}
         resultaattype_choices = [
-            (resultaattype.url, resultaattype.omschrijving)
-            for resultaattype in get_resultaattypen(zaaktype)
+            (url, resultaattype.omschrijving)
+            for url, resultaattype in _resultaattypen.items()
         ]
         self.fields["resultaattype"].choices = resultaattype_choices
+        self.fields["resultaattype"].coerce = _resultaattypen.get
+
+    def clean_close_zaak(self):
+        close_zaak = self.cleaned_data["close_zaak"]
+        if close_zaak and self.zaak.einddatum:
+            raise forms.ValidationError(
+                _("De zaak is al gesloten en kan niet opnieuw gesloten worden.")
+            )
+        return close_zaak
 
     def save(self, user):
         """
-        TODO: figure out which process variables to set!
-
-        This really depends on the process specific context, so we need to figure out
-        if we should use BPTL here at all or not. Maybe ZAC itself could be a consumer
-        for Camunda external tasks?
+        Commit the changes to the backing API.
         """
+        resultaattype = self.cleaned_data["resultaattype"]
 
-        zrc_client = _client_from_url(self.zaak.url)
-        ztc_client = _client_from_url(self.zaak.zaaktype.url)
+        if resultaattype:
+            zet_resultaat(self.zaak, resultaattype, self.cleaned_data["result_remarks"])
 
-        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
-        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
-
-        variables = {
-            "zaak": {"value": self.zaak.url},
-            "resultaattype": {"value": self.cleaned_data["resultaattype"]},
-            "services": {
-                "type": "Json",
-                "value": json.dumps(
-                    {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},}
-                ),
-            },
-        }
-
-        for task_id in self.cleaned_data["tasks"]:
-            complete_task(task_id, variables)
+        if self.cleaned_data["close_zaak"]:
+            statustypen = get_statustypen(self.zaak.zaaktype)
+            last_statustype = sorted(statustypen, key=lambda st: st.volgnummer)[-1]
+            zet_status(
+                self.zaak, last_statustype, self.cleaned_data["close_zaak_remarks"]
+            )

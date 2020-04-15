@@ -15,7 +15,7 @@ aiodns
 aiohttp
 
 gemma-zds-client
-zgw-consumers==0.9.0.dev7
+zgw-consumers==0.9.0.dev8
 
 # Framework libraries
 Django

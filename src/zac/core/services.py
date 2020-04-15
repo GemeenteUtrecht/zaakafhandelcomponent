@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 
 import aiohttp
 import requests
@@ -13,12 +14,13 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import Eigenschap, ResultaatType, ZaakType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
+from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.utils.decorators import cache as cache_result
 
+from .cache import invalidate_zaak_cache
 from .utils import get_paginated_results
 
 logger = logging.getLogger(__name__)
@@ -385,6 +387,59 @@ def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
     )
 
     return factory(ZaakObject, zaakobjecten)
+
+
+def zet_resultaat(
+    zaak: Zaak, resultaattype: ResultaatType, toelichting: str = ""
+) -> Resultaat:
+    assert (
+        not zaak.resultaat
+    ), "Can't set a new resultaat for a zaak, must delete the old one first"
+    assert len(toelichting) <= 1000, "Toelichting is > 1000 characters"
+
+    client = _client_from_object(zaak)
+    resultaat = client.create(
+        "resultaat",
+        {
+            "zaak": zaak.url,
+            "resultaattype": resultaattype.url,
+            "toelichting": toelichting,
+        },
+    )
+    resultaat = factory(Resultaat, resultaat)
+
+    # resolve relations
+    resultaat.zaak = zaak
+    resultaat.resultaattype = resultaattype
+    zaak.resultaat = resultaat
+
+    invalidate_zaak_cache(zaak)
+    return resultaat
+
+
+def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Status:
+    assert len(toelichting) <= 1000, "Toelichting is > 1000 characters"
+
+    client = _client_from_object(zaak)
+    status = client.create(
+        "status",
+        {
+            "zaak": zaak.url,
+            "statustype": statustype.url,
+            "datumStatusGezet": timezone.now().isoformat(),
+            "statustoelichting": toelichting,
+        },
+    )
+
+    status = factory(Status, status)
+
+    # resolve relations
+    status.zaak = zaak
+    status.statustype = statustype
+    zaak.status = status
+
+    invalidate_zaak_cache(zaak)
+    return status
 
 
 ###################################################
