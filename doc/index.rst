@@ -1,11 +1,10 @@
 .. _index:
 
-======================================
-zac Documentation
-======================================
+=================
+ZAC Documentation
+=================
 
-Welcome to the documentation for zac.
-
+Welcome to the documentation for the zaakafhandelcomponent (ZAC).
 
 Documentation
 =============
@@ -13,5 +12,4 @@ Documentation
 .. toctree::
     :maxdepth: 3
 
-    general/index
-    coding_style/index
+    config
