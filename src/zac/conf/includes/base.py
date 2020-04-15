@@ -345,6 +345,18 @@ AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = (
 AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
 
 #
+# DRF
+#
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+}
+
+#
 # RAVEN/SENTRY - error monitoring
 #
 SENTRY_DSN = config("SENTRY_DSN", None)
