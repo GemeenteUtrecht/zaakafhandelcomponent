@@ -102,10 +102,12 @@ INSTALLED_APPS = [
     "django_auth_adfs",
     "django_auth_adfs_db",
     "rest_framework",
+    "rest_framework.authtoken",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",
     "zac.core",
+    "zac.notifications",
     "zac.utils",
     "zac.contrib.kadaster",
 ]
@@ -341,6 +343,18 @@ AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = (
 # DJANGO AUTH ADFS
 #
 AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
+
+#
+# DRF
+#
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+}
 
 #
 # RAVEN/SENTRY - error monitoring
