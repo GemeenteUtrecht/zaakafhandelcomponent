@@ -23,12 +23,15 @@
     <article class="zaak-detail">
 
         <section class="zaak-detail__panel content-panel content-panel--flat">
-            {% widget 'form:non_field_errors' %}
-
-            <div class="form__group-title">Proces</div>
-            <div class="form__field-group" role="group">
-                {% form_field form.tasks %}
+            <div class="info-text">
+                <i class="material-icons info-text__header">info</i>
+                <p class="info-text__body">Je kan hier het resultaat van de zaak zetten. Als er verder niets meer
+                hoeft te gebeuren, dan kan je ook meteen de zaak sluiten terwijl je het
+                resultaat zet.</p>
             </div>
+
+
+            {% widget 'form:non_field_errors' %}
 
             <div class="form__group-title">Resultaat</div>
             <div class="form__field-group" role="group">

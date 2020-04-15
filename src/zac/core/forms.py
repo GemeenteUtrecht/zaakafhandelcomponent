@@ -85,13 +85,6 @@ class ZaakAfhandelForm(forms.Form):
         required=False, label="Toelichting bij afsluiten zaak", widget=forms.Textarea,
     )
 
-    tasks = forms.MultipleChoiceField(
-        required=False,
-        label="Camunda taken",
-        help_text="Selecteer welke taken hiermee vervult zijn",
-        widget=forms.CheckboxSelectMultiple,
-    )
-
     def __init__(self, *args, **kwargs):
         self.zaak = kwargs.pop("zaak")
         super().__init__(*args, **kwargs)
@@ -104,13 +97,6 @@ class ZaakAfhandelForm(forms.Form):
             for resultaattype in get_resultaattypen(zaaktype)
         ]
         self.fields["resultaattype"].choices = resultaattype_choices
-
-        # fetch the possible camunda tasks this completes
-        tasks = get_zaak_tasks(self.zaak.url)
-        task_choices = [
-            (task.id, f"{task.name} ({task.assignee or 'n/a'})") for task in tasks
-        ]
-        self.fields["tasks"].choices = task_choices
 
     def save(self, user):
         """

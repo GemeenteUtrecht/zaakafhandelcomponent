@@ -1,0 +1,19 @@
+
+
+.info-text {
+
+  & &__header {
+    display: block;
+    font-size: 1.2em;
+    padding: 0.2rem 0.5rem;
+    text-align: right;
+  }
+
+  & &__body {
+    border: solid 1px #eee;
+    border-top: none;
+    padding: 0.5em 1em;
+    margin: 0;
+    background: #efefef;
+  }
+}
