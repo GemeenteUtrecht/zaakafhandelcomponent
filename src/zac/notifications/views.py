@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.zaken import Zaak
 
-from zac.core.cache import invalidate_zaak_list_cache
+from zac.core.cache import invalidate_zaak_cache, invalidate_zaak_list_cache
 from zac.core.services import _client_from_url
 
 from .serializers import NotificatieSerializer
@@ -21,8 +23,20 @@ class NotificationCallbackView(APIView):
 
         if data["resource"] == "zaak" and data["actie"] == "create":
             self._handle_zaak_creation(data["hoofd_object"])
+        elif data["resource"] in ["resultaat", "status"] and data["actie"] == "create":
+            self._handle_related_creation(data["hoofd_object"])
+
+    @staticmethod
+    def _retrieve_zaak(zaak_url) -> Zaak:
+        client = _client_from_url(zaak_url)
+        zaak = client.retrieve("zaak", url=zaak_url)
+        return factory(Zaak, zaak)
 
     def _handle_zaak_creation(self, zaak_url: str):
         client = _client_from_url(zaak_url)
-        zaak = client.retrieve("zaak", url=zaak_url)
+        zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
+
+    def _handle_related_creation(self, zaak_url):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaak_cache(zaak)
