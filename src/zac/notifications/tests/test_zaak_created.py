@@ -12,12 +12,14 @@ from zgw_consumers.models import APITypes, Service
 from zac.accounts.models import User
 from zac.core.services import _find_zaken
 
-from .utils import mock_service_oas_get
-
-ZAAKTYPE = "https://some.ztc.nl/api/v1/zaaktypen/ad4573d0-4d99-4e90-a05c-e08911e8673d"
-
-IDENTIFICATIE = "ZAAK-123"
-BRONORGANISATIE = "123456782"
+from .utils import (
+    BRONORGANISATIE,
+    IDENTIFICATIE,
+    ZAAK,
+    ZAAK_RESPONSE,
+    ZAAKTYPE,
+    mock_service_oas_get,
+)
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -32,18 +34,6 @@ NOTIFICATION = {
         "vertrouwelijkheidaanduiding": "geheim",
     },
 }
-
-
-def mock_zaak_retrieve(mocker):
-    mocker.get(
-        "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
-        json={
-            "url": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
-            "identificatie": IDENTIFICATIE,
-            "bronorganisatie": BRONORGANISATIE,
-            "zaaktype": ZAAKTYPE,
-        },
-    )
 
 
 @requests_mock.Mocker()
@@ -70,7 +60,7 @@ class ZaakCreatedTests(APITestCase):
 
     def test_zaak_created_invalidate_list_cache(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_zaak_retrieve(rm)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
         zrc_client = self.zrc.build_client()
         path = reverse("notifications:callback")
 
