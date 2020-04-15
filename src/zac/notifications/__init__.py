@@ -1,0 +1,3 @@
+"""
+App to receive notifications.
+"""

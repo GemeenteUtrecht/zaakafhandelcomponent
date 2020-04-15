@@ -102,10 +102,12 @@ INSTALLED_APPS = [
     "django_auth_adfs",
     "django_auth_adfs_db",
     "rest_framework",
+    "rest_framework.authtoken",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",
     "zac.core",
+    "zac.notifications",
     "zac.utils",
     "zac.contrib.kadaster",
 ]
