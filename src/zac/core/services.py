@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import logging
 from concurrent import futures
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -387,6 +387,23 @@ def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
     )
 
     return factory(ZaakObject, zaakobjecten)
+
+
+def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
+    if not zaak.resultaat:
+        return None
+
+    client = _client_from_object(zaak)
+    resultaat = client.retrieve("resultaat", url=zaak.resultaat)
+
+    resultaat = factory(Resultaat, resultaat)
+
+    # resolve relations
+    _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaak.zaaktype)}
+    resultaat.zaak = zaak
+    resultaat.resultaattype = _resultaattypen[resultaat.resultaattype]
+
+    return resultaat
 
 
 def zet_resultaat(

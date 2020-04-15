@@ -49,6 +49,13 @@
 
 <article class="zaak-detail">
 
+    {% if zaak.resultaat %}
+    <section class="zaak-detail__resultaat" title="{{ resultaat.toelichting }}">
+        <i class="material-icons" title="uitkomst">gavel</i>
+        <strong>{{ resultaat.resultaattype.omschrijving }}</strong>
+    </section>
+    {% endif %}
+
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Zaakinformatie</div>
 

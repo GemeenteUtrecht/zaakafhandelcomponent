@@ -56,4 +56,23 @@ $zaak-detail__panel-spacing: $content-panel-spacing !default;
   & &__status-toelichting {
     flex: 1;
   }
+
+  & &__resultaat {
+    width: 100%;
+    margin: 0 0.5rem 0.5rem;
+    font-size: 1.3em;
+
+    display: flex;
+    align-items: center;
+    background: $color-primary;
+    color: #fff;
+    padding: 0.5em;
+    border-radius: 3px;
+
+    .material-icons {
+      color: #fff;
+      margin-right: 0.5em;
+      font-size: 1.2em;
+    }
+  }
 }
