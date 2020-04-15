@@ -11,10 +11,19 @@ def cache(key: str, alias: str = "default", **set_options):
     def decorator(func: callable):
         argspec = inspect.getfullargspec(func)
 
+        if argspec.defaults:
+            positional_count = len(argspec.args) - len(argspec.defaults)
+            defaults = dict(zip(argspec.args[positional_count:], argspec.defaults))
+        else:
+            defaults = {}
+
         @wraps(func)
         def wrapped(*args, **kwargs):
+            key_kwargs = defaults.copy()
             named_args = dict(zip(argspec.args, args), **kwargs)
-            cache_key = key.format(**named_args)
+            key_kwargs.update(**named_args)
+
+            cache_key = key.format(**key_kwargs)
 
             _cache = caches[alias]
             result = _cache.get(cache_key)

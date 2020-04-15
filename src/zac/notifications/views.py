@@ -7,7 +7,7 @@ from .serializers import NotificatieSerializer
 
 class NotificationCallbackView(APIView):
     def post(self, request, *args, **kwargs):
-        serializer = NotificatieSerializer(request.data)
+        serializer = NotificatieSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.handle_notification(serializer.data)
         return Response(status=status.HTTP_204_NO_CONTENT)
