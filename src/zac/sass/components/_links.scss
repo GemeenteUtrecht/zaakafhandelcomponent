@@ -13,4 +13,13 @@ $link-color: #005ea5 !default;
     background: $color-secondary;
     color: darken($link-color, 10%);
   }
+
+  &--plain {
+    text-decoration: none;
+    color: $color-text;
+  }
+
+  &--disabled {
+    opacity: 0.3;
+  }
 }

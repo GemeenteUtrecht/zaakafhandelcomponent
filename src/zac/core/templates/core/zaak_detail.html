@@ -35,15 +35,15 @@
 
         {% if not zaak.einddatum %}
             <a href="{% url 'core:zaak-afhandeling' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
-               class="btn btn--control btn btn--control-focus">
-                Handel zaak af
+                class="link link--plain link--disabled"
+                data-msg="Zaakafhandeling moet via de taken verlopen.">
+                <button type="button" class="btn btn--control btn btn--control-focus">
+                    Handel zaak af
+                </button>
             </a>
         {% endif %}
 
-        <a href="#" class="btn btn--control">Zet nieuwe status</a>
-
-        <a href="#" class="btn btn--control">Start gerelateerde zaak</a>
-
+        <a href="#" class="btn btn--control link link--plain link--disabled">Zet nieuwe status</a>
     </nav>
 </header>
 
