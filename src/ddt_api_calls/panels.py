@@ -80,11 +80,13 @@ class APICallsPanel(Panel):
     template = "ddt_api_calls/requests.html"
 
     def enable_instrumentation(self):
-        self.mocker = PanelMocker(real_http=True)
-        self.mocker.start()
+        if not self.toolbar.request.is_ajax():
+            self.mocker = PanelMocker(real_http=True)
+            self.mocker.start()
 
     def disable_instrumentation(self):
-        self.mocker.stop()
+        if not self.toolbar.request.is_ajax():
+            self.mocker.stop()
 
     @property
     def nav_subtitle(self) -> str:

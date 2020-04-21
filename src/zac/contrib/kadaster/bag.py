@@ -1,3 +1,4 @@
+from concurrent import futures
 from typing import Any, Dict
 
 import requests
@@ -5,6 +6,8 @@ import requests
 from zac.utils.decorators import cache
 
 from .models import KadasterConfig
+
+A_DAY = 60 * 60 * 24
 
 
 class Bag:
@@ -44,35 +47,45 @@ class LocationServer:
         return resp_data["response"]
 
 
-@cache("pand:{url}", timeout=60 * 60 * 24)
+@cache("openbareruimte:{url}", timeout=A_DAY)
+def _fetch_openbare_ruimte(bag: Bag, url: str) -> dict:
+    return bag.retrieve(url)
+
+
+@cache("woonplaats:{url}", timeout=A_DAY)
+def _fetch_woonplaats(bag: Bag, url: str) -> dict:
+    return bag.retrieve(url)
+
+
+@cache("pand:{url}", timeout=A_DAY)
 def fetch_pand(url: str) -> Dict[str, Any]:
     bag = Bag()
 
     pand = bag.retrieve(url)
 
-    adressen = []
-
     _verblijfsobjecten = bag.retrieve(pand["_links"]["verblijfsobjecten"]["href"])[
         "_embedded"
     ]["verblijfsobjecten"]
 
-    # TODO: parallelize
-    for vo in _verblijfsobjecten:
+    def _fetch_adres(vo: dict) -> dict:
         _hoofdadres = bag.retrieve(vo["_links"]["hoofdadres"]["href"])
-        _openbare_ruimte = bag.retrieve(
-            _hoofdadres["_links"]["bijbehorendeOpenbareRuimte"]["href"]
+        _openbare_ruimte = _fetch_openbare_ruimte(
+            bag, _hoofdadres["_links"]["bijbehorendeOpenbareRuimte"]["href"]
         )
-        _woonplaats = bag.retrieve(
-            _openbare_ruimte["_links"]["bijbehorendeWoonplaats"]["href"]
+        _woonplaats = _fetch_woonplaats(
+            bag, _openbare_ruimte["_links"]["bijbehorendeWoonplaats"]["href"]
         )
-        adressen.append(
-            {
-                "huisnummer": _hoofdadres["huisnummer"],
-                "postcode": _hoofdadres.get("postcode", ""),
-                "or_naam": _openbare_ruimte["naam"],
-                "woonplaats": _woonplaats["naam"],
-            }
-        )
+        return {
+            "huisnummer": _hoofdadres["huisnummer"],
+            "huisletter": _hoofdadres.get("huisletter", ""),
+            "postcode": _hoofdadres.get("postcode", ""),
+            "or_naam": _openbare_ruimte["naam"],
+            "woonplaats": _woonplaats["naam"],
+        }
+
+    # TODO: parallelize
+    with futures.ThreadPoolExecutor() as executor:
+        adressen = list(executor.map(_fetch_adres, _verblijfsobjecten))
 
     verblijfsobjecten = [
         {
