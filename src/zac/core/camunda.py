@@ -23,7 +23,10 @@ CAMUNDA_NS = {
 
 
 def _resolve_assignee(username: str) -> User:
-    user = User.objects.get(username=username)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        user = User.objects.create_user(username=username)
     return user
 
 

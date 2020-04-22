@@ -24,11 +24,23 @@
 
             <div class="user-task__assignee" title="Assignee {% if task.assignee == request.user %} (jij!){% endif %}">
                 {% if task.assignee %}
-                    <strong>{{ task.assignee.get_full_name }}</strong>
+                    {% with task.assignee.get_full_name|default:task.assignee.username as assignee %}
 
-                    {% if task.form_key %}
-                        <div>TODO: implement task forms!</div>
-                    {% endif %}
+                        {% if task.form %}
+                            {% if task.assignee != user %}
+                                <div>Taak is al geclaimd!</div>
+                            {% else %}
+                                <div>
+                                    <a href="{% url 'core:zaak-task' task_id=task.id bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+                                       class="btn btn--small">Uitvoeren</a>
+                                </div>
+                            {% endif %}
+                        {% elif task.form_key %}
+                            <div>TODO: implement task forms!</div>
+                        {% endif %}
+
+                        <strong>{{ assignee }}</strong>
+                    {% endwith %}
 
                 {% else %}
                     <form class="user-task__claim" method="post" action="{% url 'core:claim-task' %}">
