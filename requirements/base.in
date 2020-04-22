@@ -18,7 +18,7 @@ gemma-zds-client
 zgw-consumers==0.9.0.dev8
 
 # Framework libraries
-Django
+Django<3.0
 django-auth-adfs-db
 django-axes
 django-camunda

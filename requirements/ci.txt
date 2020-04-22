@@ -32,7 +32,7 @@ django-relativedelta==1.1.1  # via -r requirements/base.txt, zgw-consumers
 django-sniplates==0.6.0   # via -r requirements/base.txt
 django-solo==1.1.3        # via -r requirements/base.txt, django-auth-adfs-db, django-camunda, zgw-consumers
 django-webtest==1.9.7     # via -r requirements/test-tools.in
-django==2.2.5             # via -r requirements/base.txt, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-import-export, django-redis, django-relativedelta, django-sniplates, djangorestframework, zgw-consumers
+django==2.2.12            # via -r requirements/base.txt, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-import-export, django-redis, django-relativedelta, django-sniplates, djangorestframework, zgw-consumers
 djangorestframework==3.11.0  # via -r requirements/base.txt
 et-xmlfile==1.0.1         # via -r requirements/base.txt, openpyxl
 factory-boy==2.12.0       # via -r requirements/test-tools.in
