@@ -44,6 +44,9 @@ module.exports = {
     jsSrcDir: sourcesRoot + 'js/',
 
     // Path to the (transpiled) js directory
-    jsDir: staticRoot + 'js/'
+    jsDir: staticRoot + 'js/',
+
+    // Path to js code coverage directory
+    coverageDir: 'reports/jstests/',
 
 };

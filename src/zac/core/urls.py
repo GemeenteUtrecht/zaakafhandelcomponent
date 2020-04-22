@@ -2,7 +2,13 @@ from django.urls import include, path
 
 from .views.cache import FlushCacheView
 from .views.documents import DownloadDocumentView
-from .views.processes import ClaimTaskView, FetchTasks, PerformTaskView
+from .views.processes import (
+    ClaimTaskView,
+    FetchMessages,
+    FetchTasks,
+    PerformTaskView,
+    SendMessage,
+)
 from .views.search import SearchIndexView, SearchView
 from .views.zaken import FetchZaakObjecten, Index, ZaakAfhandelView, ZaakDetail
 
@@ -64,6 +70,8 @@ urlpatterns = [
                 ),
                 path("fetch-tasks", FetchTasks.as_view(), name="fetch-tasks"),
                 path("claim-task", ClaimTaskView.as_view(), name="claim-task"),
+                path("fetch-messages", FetchMessages.as_view(), name="fetch-messages"),
+                path("send-message", SendMessage.as_view(), name="send-message"),
                 path("flush-cache/", FlushCacheView.as_view(), name="flush-cache"),
             ]
         ),

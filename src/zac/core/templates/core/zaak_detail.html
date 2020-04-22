@@ -145,7 +145,13 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
-        <div class="section-title">Taken</div>
+        <div class="section-title">Proces</div>
+
+        <div class="fetch-messages" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-messages' %}">
+            {# include template is in core/includes/tasks.html #}
+            <span class="loader"></span>
+        </div>
+
         <div class="fetch-tasks" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-tasks' %}">
             {# include template is in core/includes/tasks.html #}
             <span class="loader"></span>

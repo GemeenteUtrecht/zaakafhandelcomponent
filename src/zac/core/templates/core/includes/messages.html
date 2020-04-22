@@ -1,0 +1,14 @@
+{% load sniplates %}
+{% load_widgets form='sniplates/forms.html' %}
+
+<section class="zaak-detail__messages">
+    {% for form in forms %}
+    <form action="{% url 'core:send-message' %}" method="post" class="form">
+        {% csrf_token %}
+        {{ form.definition_id }}
+        {{ form.zaak_url }}
+        {% form_field form.message %}
+        <button type="submit" class="btn btn--small">Verstuur bericht</button>
+    </form>
+    {% endfor %}
+</section>
