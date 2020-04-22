@@ -109,6 +109,27 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block Select %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" id_for_label=None %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    <select name="{{ html_name }}" id="{{ id }}" class="input__control input__control--select" {{ widget.attrs|flatattrs }}>
+    {% for choice in choices %}
+        {% if choice.is_group %}
+        <optgroup label="{{ choice.value }}">
+            {% for val, display in choice.display %}
+                {% reuse '_Select_Option' val=val value=value display=display %}
+            {% endfor %}
+        </optgroup>
+        {% else %}
+            {% reuse '_Select_Option' val=choice.value value=value display=choice.display %}
+        {% endif %}
+    {% endfor %}
+    </select>
+{% endnested %}
+{% endblock %}
+
 {% block RadioSelect %}
 {% nested_widget ':_wrapper' %}
     {% reuse "_label" id_for_label=None %}

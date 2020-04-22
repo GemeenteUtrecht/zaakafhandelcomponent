@@ -75,4 +75,24 @@ $zaak-detail__panel-spacing: $content-panel-spacing !default;
       font-size: 1.2em;
     }
   }
+
+  & &__messages {
+    border-bottom: solid 1px #eee;
+    margin-bottom: 1em;
+    padding-bottom: 1em;
+  }
+
+  & &__message-form {
+    display: flex;
+    align-items: flex-end;
+
+    .input {
+      margin-right: 1em;
+      margin-bottom: 0;
+    }
+
+    .input__label {
+      font-weight: 700;
+    }
+  }
 }
