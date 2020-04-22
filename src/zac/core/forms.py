@@ -30,7 +30,6 @@ def get_zaaktype_choices():
 
 class ZakenFilterForm(forms.Form):
     identificatie = forms.CharField(label=_("identificatie"), required=False,)
-    bronorganisatie = forms.CharField(label=_("bronorganisatie"), required=False,)
     zaaktypen = forms.MultipleChoiceField(
         label=_("zaaktypen (huidige versies)"),
         required=False,
@@ -42,13 +41,10 @@ class ZakenFilterForm(forms.Form):
         assert self.cleaned_data
         zaaktypen = self.cleaned_data.get("zaaktypen")
         identificatie = self.cleaned_data.get("identificatie")
-        bronorganisatie = self.cleaned_data.get("bronorganisatie")
 
         filters = {}
         if zaaktypen:
             filters["zaaktypen"] = zaaktypen
-        if bronorganisatie:
-            filters["bronorganisatie"] = bronorganisatie
         if identificatie:
             filters["identificatie"] = identificatie
 
