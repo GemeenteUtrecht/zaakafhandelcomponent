@@ -43,3 +43,6 @@ class OpenFormsClient:
 
     def get_forms(self):
         return self.get("forms")
+
+    def get_form_fields(self, form_id: int):
+        return self.get(f"forms/{form_id}/fields")
