@@ -78,6 +78,13 @@ def _get_field(field_definition: dict) -> Tuple[str, forms.Field]:
         "help_text": field_definition["help_text"],
         "validators": [],
     }
+
+    if field_definition["choices"]:
+        choices = [
+            (choice["value"], choice["label"]) for choice in field_definition["choices"]
+        ]
+        field_kwargs["choices"] = choices
+
     if field_definition["max_length"]:
         max_len_validator = MaxLengthValidator(field_definition["max_length"])
         field_kwargs["validators"].append(max_len_validator)

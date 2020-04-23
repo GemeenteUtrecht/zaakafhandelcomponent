@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.views.generic import FormView
 
+from .client import OpenFormsClient
 from .forms import SelectFormForm, generate_form_class
 
 
@@ -21,3 +22,14 @@ class RenderFormView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         raise NotImplementedError("Not yet")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        client = OpenFormsClient()
+        form_definition = client.get(f"forms/{self.kwargs['form_id']}")
+
+        context.update(
+            {"form_name": form_definition["name"],}
+        )
+        return context
