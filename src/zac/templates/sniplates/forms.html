@@ -69,6 +69,33 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block EmailInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="email" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
+{% block DateInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="text" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
+{% block FileInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="file" value="" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
 {% block PasswordInput %}
 {% nested_widget ':_wrapper' %}
     {% reuse "_label" %}
