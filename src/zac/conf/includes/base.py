@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "zac.regiezaken",
     "zac.core",
     "zac.notifications",
+    "zac.forms",
     "zac.utils",
     "zac.contrib.kadaster",
 ]

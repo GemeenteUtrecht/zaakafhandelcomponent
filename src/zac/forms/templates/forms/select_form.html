@@ -1,0 +1,27 @@
+{% extends "master.html" %}
+{% load i18n sniplates %}
+
+{% block body-class %}{{ block.super }} forms{% endblock body-class %}
+
+{% block content %}
+{% load_widgets form='sniplates/forms.html' %}
+
+<h1 class="page-title">Formulier starten</h1>
+
+<p>
+    Selecteer het formulier dat je wenst te starten. Formulieren zijn gedefinieerd in
+    <a href="https://formulieren.utrechtproeftuin.nl">Open Forms</a>.
+</p>
+
+<form action="." method="post" class="form">
+    {% csrf_token %}
+
+    <div class="form__field-group">
+        {% form_field form.form_id %}
+    </div>
+
+    <button type="submit" class="btn">Start</button>
+
+</form>
+
+{% endblock content %}
