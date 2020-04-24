@@ -11,6 +11,7 @@ from ..forms import ZaakAfhandelForm, ZakenFilterForm
 from ..services import (
     find_zaak,
     get_documenten,
+    get_related_zaken,
     get_resultaat,
     get_statussen,
     get_zaak_eigenschappen,
@@ -52,6 +53,7 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
             statussen = executor.submit(get_statussen, self.object)
             _documenten = executor.submit(get_documenten, self.object)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
+            related_zaken = executor.submit(get_related_zaken, self.object)
 
             resultaat = executor.submit(get_resultaat, self.object)
 
@@ -64,8 +66,10 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
                     "documenten_gone": gone,
                     "eigenschappen": eigenschappen.result(),
                     "resultaat": resultaat.result(),
+                    "related_zaken": related_zaken.result(),
                 }
             )
+
         return context
 
 

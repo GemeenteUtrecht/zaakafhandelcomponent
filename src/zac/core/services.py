@@ -311,6 +311,18 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     return sorted(statussen, key=lambda x: x.datum_status_gezet, reverse=True)
 
 
+@cache_result("zaak-status:{zaak.status}")
+def get_status(zaak: Zaak) -> Status:
+    assert isinstance(zaak.status, str), "Status already resolved."
+    client = _client_from_object(zaak)
+    _status = client.retrieve("status", url=zaak.status)
+
+    # resolve statustype
+    status = factory(Status, _status)
+    status.statustype = get_statustype(_status["statustype"])
+    return status
+
+
 def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     # the zaak object itself already contains a list of URL references
     if not zaak.eigenschappen:
@@ -358,20 +370,26 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     return result
 
 
-def get_related_zaken(zaak: Zaak, zaaktypen) -> list:
+def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
     """
     return list of related zaken with selected zaaktypen
     """
 
-    related_urls = [related["url"] for related in zaak.relevante_andere_zaken]
+    def _fetch_zaak(relevante_andere_zaak: dict) -> Tuple[str, Zaak]:
+        zaak = get_zaak(zaak_url=relevante_andere_zaak["url"])
+        # resolve relation(s)
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
-    zaken = []
-    for url in related_urls:
-        zaken.append(get_zaak(zaak_url=url))
+        # resolve status & resultaat
+        zaak.status = get_status(zaak)
+        zaak.resultaat = get_resultaat(zaak)
 
-    # FIXME remove string after testing
-    zaken = get_zaken(zaaktypen)[:3]
-    return zaken
+        return relevante_andere_zaak["aard_relatie"], zaak
+
+    with futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(_fetch_zaak, zaak.relevante_andere_zaken))
+
+    return results
 
 
 def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
