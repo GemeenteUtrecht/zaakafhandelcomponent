@@ -19,7 +19,7 @@ from ..camunda import (
     send_message,
 )
 from ..forms import ClaimTaskForm
-from ..services import _client_from_url, find_zaak, get_zaak
+from ..services import _client_from_url, find_zaak, get_roltypen, get_zaak
 
 User = get_user_model()
 
@@ -182,14 +182,45 @@ class PerformTaskView(LoginRequiredMixin, FormView):
 class ClaimTaskView(LoginRequiredMixin, FormView):
     form_class = ClaimTaskForm
 
+    def get(self, request, *args, **kwargs):
+        self.zaak = find_zaak(
+            bronorganisatie=kwargs["bronorganisatie"],
+            identificatie=kwargs["identificatie"],
+        )
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form: ClaimTaskForm):
         _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         task_id = form.cleaned_data["task_id"]
 
-        client = get_client()
-        client.post(
+        camunda_client = get_client()
+        camunda_client.post(
             f"task/{task_id}/claim", json={"userId": self.request.user.username,}
         )
+
+        # fetch roltype
+        roltypen = get_roltypen(
+            self.zaak.zaaktype, query_params={"omschrijvingGeneriek": "behandelaar"}
+        )
+        if not roltypen:
+            return
+        roltype = roltypen[0]
+
+        zrc_client = _client_from_url(self.zaak.url)
+        voorletters = " ".join(
+            [part[0] for part in self.request.user.first_name.split()]
+        )
+        data = {
+            "zaak": self.zaak.url,
+            "betrokkeneType": "medewerker",
+            "roltype": roltype["url"],
+            "roltoelichting": "task claiming",
+            "betrokkeneIdentificatie": {
+                "achternaam": self.request.user.last_name,
+                "voorletters": voorletters,
+            },
+        }
+        zrc_client.create("rol", data)
 
         return HttpResponseRedirect(_next)
 
