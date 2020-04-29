@@ -17,12 +17,12 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache
-from .utils import get_paginated_results
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +158,11 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 # TODO: invalidate on zaak creation/deletion!
 @cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
 def _find_zaken(
-    client, zaaktype: str = "", identificatie: str = "", bronorganisatie: str = ""
+    client,
+    zaaktype: str = "",
+    identificatie: str = "",
+    bronorganisatie: str = "",
+    test_func: Optional[callable] = None,
 ) -> List[Dict]:
     """
     Retrieve zaken for a particular client with filter parameters.
@@ -168,7 +172,9 @@ def _find_zaken(
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
     }
-    _zaken = get_paginated_results(client, "zaak", query_params=query, min_num=25)
+    _zaken = get_paginated_results(
+        client, "zaak", query_params=query, min_num=25, test_func=test_func,
+    )
     return _zaken
 
 
@@ -207,8 +213,15 @@ def get_zaken(
                 }
             )
 
+    def _test_va(zaak: dict):
+        return user_perms.test_zaak_access(
+            zaak["zaaktype"], zaak["vertrouwelijkheidaanduiding"]
+        )
+
     with futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
+        results = executor.map(
+            lambda kwargs: _find_zaken(test_func=_test_va, **kwargs), find_kwargs
+        )
         flattened = sum(list(results), [])
 
     zaken = factory(Zaak, flattened)

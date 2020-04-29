@@ -8,9 +8,9 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import Catalogus
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.service import get_paginated_results
 
 from zac.core.services import get_zaaktypen
-from zac.core.utils import get_paginated_results
 
 from .models import PermissionSet
 
