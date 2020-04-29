@@ -6,6 +6,7 @@
             <th class="table__header">Startdatum</th>
             <th class="table__header">Geplande Einddatum</th>
             <th class="table__header">Einddatum</th>
+            <th class="table__header">Vertrouwelijkheid</th>
         </tr>
     </thead>
 
@@ -21,6 +22,7 @@
                 <td> {{ zaak.startdatum }} </td>
                 <td> {{ zaak.einddatum_gepland|default:"-" }} </td>
                 <td> {{ zaak.einddatum|default:"-" }} </td>
+                <td> {{ zaak.get_vertrouwelijkheidaanduiding_display }}</td>
             </tr>
         {% endfor %}
     </tbody>
