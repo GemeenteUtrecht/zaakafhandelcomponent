@@ -3,7 +3,9 @@ from itertools import groupby
 from typing import Any, Dict, List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView, TemplateView
 
 from zac.accounts.permissions import UserPermissions
@@ -59,7 +61,13 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
     context_object_name = "zaak"
 
     def get_object(self):
-        return find_zaak(**self.kwargs)
+        user_perms = UserPermissions(self.request.user)
+        zaak = find_zaak(**self.kwargs)
+        if not user_perms.test_zaak_access(
+            zaak.zaaktype.url, zaak.vertrouwelijkheidaanduiding
+        ):
+            raise PermissionDenied(_("Insuffucient permissions to view this Zaak."))
+        return zaak
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -139,7 +147,13 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def get_object(self):
-        return find_zaak(**self.kwargs)
+        user_perms = UserPermissions(self.request.user)
+        zaak = find_zaak(**self.kwargs)
+        if not user_perms.test_zaak_access(
+            zaak.zaaktype.url, zaak.vertrouwelijkheidaanduiding
+        ):
+            raise PermissionDenied(_("Insuffucient permissions to view this Zaak."))
+        return zaak
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
