@@ -2,17 +2,17 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import Entitlement, PermissionSet, User, UserEntitlement
+from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
 
 
-class UserEntitlementInline(admin.TabularInline):
-    model = UserEntitlement
+class UserAuthorizationProfileInline(admin.TabularInline):
+    model = UserAuthorizationProfile
     extra = 1
 
 
 @admin.register(User)
 class _UserAdmin(UserAdmin):
-    inlines = [UserEntitlementInline]
+    inlines = [UserAuthorizationProfileInline]
 
 
 @admin.register(PermissionSet)
@@ -22,8 +22,8 @@ class PermissionSetAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
-@admin.register(Entitlement)
-class EntitlementAdmin(admin.ModelAdmin):
+@admin.register(AuthorizationProfile)
+class AuthorizationProfileAdmin(admin.ModelAdmin):
     list_display = ("name", "display_permission_sets")
     list_filter = ("permission_sets",)
     search_fields = ("name", "uuid")
@@ -40,8 +40,8 @@ class EntitlementAdmin(admin.ModelAdmin):
     display_permission_sets.short_description = _("permission sets")
 
 
-@admin.register(UserEntitlement)
-class UserEntitlementAdmin(admin.ModelAdmin):
-    list_display = ("user", "entitlement", "start", "end")
-    list_filter = ("user", "entitlement", "start", "end")
-    search_fields = ("user__usernamae", "entitlement__name", "entitlement__uuid")
+@admin.register(UserAuthorizationProfile)
+class UserAuthorizationProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "auth_profile", "start", "end")
+    list_filter = ("user", "auth_profile", "start", "end")
+    search_fields = ("user__usernamae", "auth_profile__name", "auth_profile__uuid")

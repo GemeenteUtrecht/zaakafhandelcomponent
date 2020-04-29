@@ -4,15 +4,17 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 
 from .forms import PermissionSetForm
-from .models import Entitlement, PermissionSet
+from .models import AuthorizationProfile, PermissionSet
 
 
 class LoginView(_LoginView):
     template_name = "accounts/login.html"
 
 
-class EntitlementsView(LoginRequiredMixin, ListView):
-    queryset = Entitlement.objects.prefetch_related("user_set", "permission_sets")
+class AuthorizationProfileListView(LoginRequiredMixin, ListView):
+    queryset = AuthorizationProfile.objects.prefetch_related(
+        "user_set", "permission_sets"
+    )
 
 
 class PermissionSetsView(LoginRequiredMixin, ListView):
@@ -23,4 +25,4 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
     model = PermissionSet
     form_class = PermissionSetForm
     permission_required = "accounts.can_add_permissionset"
-    success_url = reverse_lazy("accounts:entitlement-list")
+    success_url = reverse_lazy("accounts:authprofile-list")

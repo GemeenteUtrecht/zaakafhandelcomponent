@@ -39,7 +39,7 @@ class UserPermissions:
         ids_per_catalogus = defaultdict(list)
         has_all = defaultdict(bool)
 
-        qs = self.user.entitlements.values_list(
+        qs = self.user.auth_profiles.values_list(
             "permission_sets__catalogus", "permission_sets__zaaktype_identificaties"
         )
         for catalogus_url, ids in qs:

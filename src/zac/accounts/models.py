@@ -8,7 +8,6 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
@@ -46,8 +45,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
     # custom permissions
-    entitlements = models.ManyToManyField(
-        "Entitlement", blank=True, through="UserEntitlement",
+    auth_profiles = models.ManyToManyField(
+        "AuthorizationProfile", blank=True, through="UserAuthorizationProfile",
     )
 
     objects = UserManager()
@@ -74,12 +73,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 # Permissions
 
 
-class Entitlement(models.Model):
+class AuthorizationProfile(models.Model):
     """
     Model a set of permission groups that can be assigned to a user.
 
     "Autorisatieprofiel" in Dutch. This is the finest-grained object that is exposed
-    to external systems (via SCIM eventually).
+    to external systems (via SCIM eventually). Towards IAM/SCIM, this maps to the
+    Entitlement concept.
     """
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -93,8 +93,8 @@ class Entitlement(models.Model):
     )
 
     class Meta:
-        verbose_name = _("entitlement")
-        verbose_name_plural = _("entitlements")
+        verbose_name = _("authorization profile")
+        verbose_name_plural = _("authorization profiles")
 
     def __str__(self):
         return self.name
@@ -167,9 +167,9 @@ class PermissionSet(models.Model):
         ]
 
 
-class UserEntitlement(models.Model):
+class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
-    entitlement = models.ForeignKey("Entitlement", on_delete=models.CASCADE)
+    auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
     start = models.DateTimeField(_("start"), blank=True, null=True)
     end = models.DateTimeField(_("end"), blank=True, null=True)
