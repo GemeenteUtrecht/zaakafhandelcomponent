@@ -19,12 +19,13 @@ from ..camunda import (
     send_message,
 )
 from ..forms import ClaimTaskForm
-from ..services import _client_from_url, find_zaak, get_zaak
+from ..services import _client_from_url, find_zaak
+from .mixins import TestZaakAccess
 
 User = get_user_model()
 
 
-class FetchTasks(LoginRequiredMixin, TemplateView):
+class FetchTasks(LoginRequiredMixin, TestZaakAccess, TemplateView):
     template_name = "core/includes/tasks.html"
 
     def get_context_data(self, **kwargs):
@@ -33,12 +34,14 @@ class FetchTasks(LoginRequiredMixin, TemplateView):
         if not zaak_url:
             raise ValueError("Expected zaak querystring parameter")
 
+        zaak = self.check_zaak_access(url=zaak_url)
+
         context["tasks"] = get_zaak_tasks(zaak_url)
-        context["zaak"] = get_zaak(zaak_url=zaak_url, zaak_uuid=None)
+        context["zaak"] = zaak
         return context
 
 
-class FetchMessages(LoginRequiredMixin, TemplateView):
+class FetchMessages(LoginRequiredMixin, TestZaakAccess, TemplateView):
     template_name = "core/includes/messages.html"
 
     def get_context_data(self, **kwargs):
@@ -47,13 +50,15 @@ class FetchMessages(LoginRequiredMixin, TemplateView):
         if not zaak_url:
             raise ValueError("Expected zaak querystring parameter")
 
+        zaak = self.check_zaak_access(url=zaak_url)
+
         definitions = get_process_definition_messages(zaak_url)
         context["forms"] = [definition.get_form() for definition in definitions]
-        context["zaak"] = get_zaak(zaak_url=zaak_url, zaak_uuid=None)
+        context["zaak"] = zaak
         return context
 
 
-class SendMessage(LoginRequiredMixin, FormView):
+class SendMessage(LoginRequiredMixin, TestZaakAccess, FormView):
     template_name = "core/includes/messages.html"
     form_class = MessageForm
 
@@ -80,7 +85,8 @@ class SendMessage(LoginRequiredMixin, FormView):
     def form_valid(self, form: ClaimTaskForm):
         # build service variables to continue execution
         zaak_url = form.cleaned_data["zaak_url"]
-        zaak = get_zaak(zaak_url=zaak_url)
+
+        zaak = self.check_zaak_access(url=zaak_url)
 
         zrc_client = _client_from_url(zaak.url)
         ztc_client = _client_from_url(zaak.zaaktype)
@@ -106,21 +112,23 @@ class SendMessage(LoginRequiredMixin, FormView):
         raise SuspiciousOperation("Unsafe HTTP_REFERER detected")
 
 
-class PerformTaskView(LoginRequiredMixin, FormView):
+class PerformTaskView(LoginRequiredMixin, TestZaakAccess, FormView):
     template_name = "core/zaak_task.html"
 
-    def get(self, request, *args, **kwargs):
-        self.zaak = find_zaak(
-            bronorganisatie=kwargs["bronorganisatie"],
-            identificatie=kwargs["identificatie"],
+    def get_zaak(self):
+        zaak = find_zaak(
+            bronorganisatie=self.kwargs["bronorganisatie"],
+            identificatie=self.kwargs["identificatie"],
         )
+        self.check_zaak_access(zaak=zaak)
+        return zaak
+
+    def get(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.zaak = find_zaak(
-            bronorganisatie=kwargs["bronorganisatie"],
-            identificatie=kwargs["identificatie"],
-        )
+        self.zaak = self.get_zaak()
         return super().post(request, *args, **kwargs)
 
     def _get_task(self):
@@ -179,6 +187,7 @@ class PerformTaskView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
+# TODO: permission checks!
 class ClaimTaskView(LoginRequiredMixin, FormView):
     form_class = ClaimTaskForm
 

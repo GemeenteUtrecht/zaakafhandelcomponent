@@ -3,10 +3,10 @@ from itertools import groupby
 from typing import Any, Dict, List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView, TemplateView
+
+from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.permissions import UserPermissions
 
@@ -24,6 +24,7 @@ from ..services import (
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .mixins import TestZaakAccess
 
 
 class Index(LoginRequiredMixin, BaseListView):
@@ -56,17 +57,13 @@ class Index(LoginRequiredMixin, BaseListView):
         return zaken
 
 
-class ZaakDetail(LoginRequiredMixin, BaseDetailView):
+class ZaakDetail(LoginRequiredMixin, TestZaakAccess, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
 
     def get_object(self):
-        user_perms = UserPermissions(self.request.user)
         zaak = find_zaak(**self.kwargs)
-        if not user_perms.test_zaak_access(
-            zaak.zaaktype.url, zaak.vertrouwelijkheidaanduiding
-        ):
-            raise PermissionDenied(_("Insuffucient permissions to view this Zaak."))
+        self.check_zaak_access(zaak=zaak)
         return zaak
 
     def get_context_data(self, **kwargs):
@@ -96,7 +93,7 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
         return context
 
 
-class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
+class FetchZaakObjecten(LoginRequiredMixin, TestZaakAccess, TemplateView):
     """
     Retrieve the ZaakObjecten for a given zaak reference.
 
@@ -111,13 +108,14 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
         if not zaak_url:
             raise ValueError("Expected zaak querystring parameter")
 
-        context["zaakobjecten"] = self._get_zaakobjecten(zaak_url)
+        zaak = self.check_zaak_access(url=zaak_url)
+        context["zaakobjecten"] = self._get_zaakobjecten(zaak)
 
         return context
 
-    def _get_zaakobjecten(self, zaak_url: str) -> List[ZaakObjectGroup]:
+    def _get_zaakobjecten(self, zaak: Zaak) -> List[ZaakObjectGroup]:
         # API call
-        zaakobjecten = get_zaakobjecten(zaak_url)
+        zaakobjecten = get_zaakobjecten(zaak.url)
 
         def group_key(zo):
             return zo.object_type
@@ -133,7 +131,7 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
         return render_groups
 
 
-class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
+class ZaakAfhandelView(LoginRequiredMixin, TestZaakAccess, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
@@ -147,12 +145,8 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def get_object(self):
-        user_perms = UserPermissions(self.request.user)
         zaak = find_zaak(**self.kwargs)
-        if not user_perms.test_zaak_access(
-            zaak.zaaktype.url, zaak.vertrouwelijkheidaanduiding
-        ):
-            raise PermissionDenied(_("Insuffucient permissions to view this Zaak."))
+        self.check_zaak_access(zaak=zaak)
         return zaak
 
     def get_context_data(self, **kwargs) -> dict:

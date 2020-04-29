@@ -368,6 +368,9 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """
     Retrieve zaak with uuid or url
     """
+    if client is None and zaak_url is not None:
+        client = _client_from_url(zaak_url)
+
     if client is None:
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         result = None
