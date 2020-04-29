@@ -213,7 +213,7 @@ class ClaimTaskView(LoginRequiredMixin, FormView):
         data = {
             "zaak": self.zaak.url,
             "betrokkeneType": "medewerker",
-            "roltype": roltype["url"],
+            "roltype": roltype.url,
             "roltoelichting": "task claiming",
             "betrokkeneIdentificatie": {
                 "achternaam": self.request.user.last_name,

@@ -12,9 +12,20 @@ import aiohttp
 import requests
 from zgw.models import InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import Eigenschap, ResultaatType, ZaakType
+from zgw_consumers.api_models.catalogi import (
+    Eigenschap,
+    ResultaatType,
+    RolType,
+    ZaakType,
+)
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
+from zgw_consumers.api_models.zaken import (
+    Resultaat,
+    Rol,
+    Status,
+    ZaakEigenschap,
+    ZaakObject,
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -147,6 +158,12 @@ def get_roltypen(zaaktype: ZaakType, query_params=None) -> list:
     client = _client_from_object(zaaktype)
     roltypen = get_paginated_results(client, "roltype", query_params=query_params)
 
+    roltypen = factory(RolType, roltypen)
+
+    # resolve relations
+    for roltype in roltypen:
+        roltype.zaaktype = zaaktype
+
     # TODO add RolType class to zgw_consumers
     return roltypen
 
@@ -180,8 +197,6 @@ def get_zaken(
     """
     _zaaktypen = get_zaaktypen()
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
-
-    zaken = []
 
     job_args = []
     for zrc in zrcs:
@@ -433,6 +448,20 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     resultaat.resultaattype = _resultaattypen[resultaat.resultaattype]
 
     return resultaat
+
+
+def get_rollen(zaak: Zaak) -> List[Rol]:
+    # fetch the rollen
+    client = _client_from_object(zaak)
+    _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
+
+    rollen = factory(Rol, _rollen)
+
+    # convert URL references into objects
+    for rol in rollen:
+        rol.zaak = zaak
+
+    return rollen
 
 
 def zet_resultaat(

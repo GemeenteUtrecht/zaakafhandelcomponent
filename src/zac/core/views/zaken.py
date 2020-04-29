@@ -13,6 +13,7 @@ from ..services import (
     get_documenten,
     get_related_zaken,
     get_resultaat,
+    get_rollen,
     get_statussen,
     get_zaak_eigenschappen,
     get_zaakobjecten,
@@ -54,6 +55,7 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
             _documenten = executor.submit(get_documenten, self.object)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
             related_zaken = executor.submit(get_related_zaken, self.object)
+            rollen = executor.submit(get_rollen, self.object)
 
             resultaat = executor.submit(get_resultaat, self.object)
 
@@ -67,6 +69,7 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
                     "eigenschappen": eigenschappen.result(),
                     "resultaat": resultaat.result(),
                     "related_zaken": related_zaken.result(),
+                    "rollen": rollen.result(),
                 }
             )
 
