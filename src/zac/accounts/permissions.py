@@ -1,8 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Optional
-
-from django.db.models import Max
+from typing import List
 
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
