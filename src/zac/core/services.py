@@ -151,10 +151,11 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
     return eigenschappen
 
 
-@cache_result("zt:roltypen:{zaaktype.url}", timeout=A_DAY)
-def get_roltypen(zaaktype: ZaakType, query_params=None) -> list:
-    query_params = query_params or {}
-    query_params.update({"zaaktype": zaaktype.url})
+@cache_result("zt:roltypen:{zaaktype.url}:{omschrijving_generiek}", timeout=A_DAY)
+def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
+    query_params = {"zaaktype": zaaktype.url}
+    if omschrijving_generiek:
+        query_params.update({"omschrijvingGeneriek": omschrijving_generiek})
     client = _client_from_object(zaaktype)
     roltypen = get_paginated_results(client, "roltype", query_params=query_params)
 
@@ -164,7 +165,6 @@ def get_roltypen(zaaktype: ZaakType, query_params=None) -> list:
     for roltype in roltypen:
         roltype.zaaktype = zaaktype
 
-    # TODO add RolType class to zgw_consumers
     return roltypen
 
 

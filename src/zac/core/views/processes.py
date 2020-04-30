@@ -19,7 +19,13 @@ from ..camunda import (
     send_message,
 )
 from ..forms import ClaimTaskForm
-from ..services import _client_from_url, find_zaak, get_roltypen, get_zaak
+from ..services import (
+    _client_from_url,
+    fetch_zaaktype,
+    find_zaak,
+    get_roltypen,
+    get_zaak,
+)
 
 User = get_user_model()
 
@@ -182,40 +188,35 @@ class PerformTaskView(LoginRequiredMixin, FormView):
 class ClaimTaskView(LoginRequiredMixin, FormView):
     form_class = ClaimTaskForm
 
-    def get(self, request, *args, **kwargs):
-        self.zaak = find_zaak(
-            bronorganisatie=kwargs["bronorganisatie"],
-            identificatie=kwargs["identificatie"],
-        )
-        return super().get(request, *args, **kwargs)
-
     def form_valid(self, form: ClaimTaskForm):
         _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         task_id = form.cleaned_data["task_id"]
+        zaak_url = form.cleaned_data["zaak"]
+        zaak = get_zaak(zaak_url=zaak_url)
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
         camunda_client = get_client()
         camunda_client.post(
-            f"task/{task_id}/claim", json={"userId": self.request.user.username,}
+            f"task/{task_id}/claim", json={"userId": self.request.user.username}
         )
 
         # fetch roltype
-        roltypen = get_roltypen(
-            self.zaak.zaaktype, query_params={"omschrijvingGeneriek": "behandelaar"}
-        )
+        roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
         if not roltypen:
             return
         roltype = roltypen[0]
 
-        zrc_client = _client_from_url(self.zaak.url)
+        zrc_client = _client_from_url(zaak_url)
         voorletters = " ".join(
             [part[0] for part in self.request.user.first_name.split()]
         )
         data = {
-            "zaak": self.zaak.url,
+            "zaak": zaak_url,
             "betrokkeneType": "medewerker",
             "roltype": roltype.url,
             "roltoelichting": "task claiming",
             "betrokkeneIdentificatie": {
+                "identificatie": self.request.user.username,
                 "achternaam": self.request.user.last_name,
                 "voorletters": voorletters,
             },
