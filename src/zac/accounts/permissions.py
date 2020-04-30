@@ -2,6 +2,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List
 
+from django.core.exceptions import ImproperlyConfigured
+
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
@@ -13,22 +15,23 @@ VA_ORDER = {
 }
 
 
-@dataclass
+registry = {}
+
+
+@dataclass(frozen=True)
 class Permission:
     name: str
     description: str
 
+    def __post_init__(self):
+        if self.name in registry:
+            raise ImproperlyConfigured(
+                "Permission with name '{self.name}' already exists"
+            )
+        registry[self.name] = self
 
-class Registry:
-    def __init__(self):
-        self._registry = {}
-
-    def __call__(self, perm: Permission):
-        """
-        Register a permission class.
-        """
-        self._registry[perm.name] = perm
-        return perm
+    def __hash__(self):
+        return hash(self.name)
 
 
 @dataclass
@@ -139,6 +142,3 @@ class UserPermissions:
         zaak_va = VA_ORDER[va]
         required_va = VA_ORDER[zaaktype_perm.max_va]
         return zaak_va <= required_va
-
-
-register = Registry()

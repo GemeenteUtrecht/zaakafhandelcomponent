@@ -8,10 +8,12 @@ from django.views.generic import FormView, TemplateView
 
 from zgw_consumers.api_models.zaken import Zaak
 
+from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
+from ..permissions import zaken_inzien
 from ..services import (
     find_zaak,
     get_documenten,
@@ -27,7 +29,7 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .mixins import TestZaakAccess
 
 
-class Index(LoginRequiredMixin, BaseListView):
+class Index(LoginRequiredMixin, PermissionRequiredMixin, BaseListView):
     """
     Display the landing screen.
 
@@ -40,6 +42,7 @@ class Index(LoginRequiredMixin, BaseListView):
     template_name = "core/index.html"
     context_object_name = "zaken"
     filter_form_class = ZakenFilterForm
+    permission_required = zaken_inzien.name
 
     def get_filter_form_kwargs(self):
         kwargs = super().get_filter_form_kwargs()
