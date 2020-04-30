@@ -1,4 +1,5 @@
 import os
+import random
 from typing import Any, Dict
 
 import yaml
@@ -51,6 +52,11 @@ def generate_oas_component(
 
 def generate_object(schema: dict, definition: dict, **properties):
     obj = properties.copy()
+
+    if "discriminator" in definition:
+        # Not implemented yet...
+        return {}
+
     for prop, prop_def in definition["properties"].items():
         if prop in obj:
             continue
@@ -69,6 +75,10 @@ def generate_prop(schema: dict, prop_definition: dict) -> Any:
 
     if prop_definition.get("nullable"):
         return None
+
+    enum = prop_definition.get("enum")
+    if enum:
+        return random.choice(enum)
 
     if prop_type == "string":
         fmt = prop_definition.get("format")
