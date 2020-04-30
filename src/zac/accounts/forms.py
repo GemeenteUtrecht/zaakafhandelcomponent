@@ -3,6 +3,8 @@ from typing import Dict, List, Tuple
 
 from django import forms
 from django.core import validators
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import Catalogus
@@ -13,6 +15,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.core.services import get_zaaktypen
 
 from .models import PermissionSet
+from .permissions import registry
 
 
 def get_catalogus_choices():
@@ -41,6 +44,12 @@ class SelectCatalogusField(forms.ChoiceField):
 
 
 class PermissionSetForm(forms.ModelForm):
+    permissions = forms.MultipleChoiceField(
+        label=_("Permissions"),
+        widget=forms.CheckboxSelectMultiple,
+        help_text=_("Permissions given."),
+    )
+
     class Meta:
         model = PermissionSet
         fields = (
@@ -58,6 +67,21 @@ class PermissionSetForm(forms.ModelForm):
             "max_va": forms.RadioSelect,
             "zaaktype_identificaties": forms.CheckboxSelectMultiple,
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["permissions"].choices = [
+            (
+                name,
+                format_html(
+                    "<strong>{name}</strong><br>{description}",
+                    name=name,
+                    description=permission.description,
+                ),
+            )
+            for name, permission in registry.items()
+        ]
 
     @staticmethod
     def get_zaaktypen() -> Dict[str, List[Tuple[str, str]]]:

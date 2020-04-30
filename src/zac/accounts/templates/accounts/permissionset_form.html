@@ -19,6 +19,10 @@
     </div>
 
     <div class="form__field-group">
+        {% form_field form.permissions %}
+    </div>
+
+    <div class="form__field-group">
         {% form_field form.catalogus %}
         {{ form.get_zaaktypen|json_script:"catalogus-zaaktypen" }}
         {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" %}

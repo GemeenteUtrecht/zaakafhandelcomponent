@@ -10,6 +10,7 @@ from zgw_consumers.models import Service
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
+from ..permissions import zaken_inzien
 from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -29,12 +30,20 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
-    def test_list_zaken_no_perms(self, m):
+    def test_list_zaken_no_zaaktype_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         zaaktype = generate_oas_component("ztc", "schemas/ZaakType")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={"count": 1, "previous": None, "next": None, "results": [zaaktype],},
+        )
+        # gives them access to the page, but no zaaktypen specified -> nothing visible
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va="zeer_geheim",
         )
 
         response = self.app.get(self.url, user=self.user)
@@ -73,6 +82,7 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         # set up user permissions
         PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
             for_user=self.user,
             catalogus=catalogus,
             zaaktype_identificaties=["ZT1"],

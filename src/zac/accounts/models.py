@@ -116,7 +116,7 @@ class PermissionSet(models.Model):
     catalogus = models.URLField(
         _("catalogus"),
         help_text=_("Zaaktypencatalogus waarin de zaaktypen voorkomen."),
-        blank=False,
+        blank=True,
     )
     zaaktype_identificaties = ArrayField(
         models.CharField(max_length=100),
@@ -147,6 +147,9 @@ class PermissionSet(models.Model):
     @cached_property
     def zaaktypen(self) -> List[ZaakType]:
         from zac.core.services import get_zaaktypen
+
+        if not self.catalogus:
+            return []
 
         _zaaktypen = get_zaaktypen(catalogus=self.catalogus)
 
