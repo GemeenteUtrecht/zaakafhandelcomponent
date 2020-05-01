@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
+import rules
+
 
 class UserModelEmailBackend(ModelBackend):
     """
@@ -35,6 +37,5 @@ class PermissionsBackend:
         if not obj:
             return True
 
-        import bpdb
-
-        bpdb.set_trace()
+        # defer object-level permission checks to the rules setup
+        return rules.test_rule(perm, user_obj, obj)
