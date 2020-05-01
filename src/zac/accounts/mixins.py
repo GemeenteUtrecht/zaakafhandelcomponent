@@ -1,5 +1,5 @@
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
-class PermissionRequiredMixin(PermissionRequiredMixin):
+class PermissionRequiredMixin(LoginRequiredMixin, PermissionRequiredMixin):
     pass

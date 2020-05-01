@@ -1,5 +1,6 @@
 from urllib.parse import parse_qs
 
+from django.conf import settings
 from django.urls import reverse_lazy
 
 import requests_mock
@@ -29,6 +30,11 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+    def test_login_required(self, m):
+        response = self.app.get(self.url)
+
+        self.assertRedirects(response, f"{settings.LOGIN_URL}?next={self.url}")
 
     def test_list_zaken_no_zaaktype_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

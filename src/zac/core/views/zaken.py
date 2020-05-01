@@ -29,7 +29,7 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .mixins import TestZaakAccess
 
 
-class Index(LoginRequiredMixin, PermissionRequiredMixin, BaseListView):
+class Index(PermissionRequiredMixin, BaseListView):
     """
     Display the landing screen.
 
@@ -61,9 +61,10 @@ class Index(LoginRequiredMixin, PermissionRequiredMixin, BaseListView):
         return zaken
 
 
-class ZaakDetail(LoginRequiredMixin, TestZaakAccess, BaseDetailView):
+class ZaakDetail(PermissionRequiredMixin, TestZaakAccess, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
+    permission_required = zaken_inzien.name
 
     def get_object(self):
         zaak = find_zaak(**self.kwargs)
