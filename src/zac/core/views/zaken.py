@@ -68,7 +68,7 @@ class ZaakDetail(PermissionRequiredMixin, TestZaakAccess, BaseDetailView):
 
     def get_object(self):
         zaak = find_zaak(**self.kwargs)
-        self.check_zaak_access(zaak=zaak)
+        self.check_object_permissions(zaak)
         return zaak
 
     def get_context_data(self, **kwargs):

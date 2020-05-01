@@ -83,6 +83,7 @@ redis==3.3.8              # via -r requirements/ci.txt, django-redis
 regex==2020.2.20          # via black
 requests-mock==1.7.0      # via -r requirements/ci.txt, ddt-api-calls
 requests==2.22.0          # via -r requirements/ci.txt, ddt-api-calls, django-auth-adfs, django-camunda, gemma-zds-client, requests-mock, sphinx
+rules==2.2                # via -r requirements/ci.txt
 six==1.12.0               # via -r requirements/ci.txt, cryptography, django-appconf, django-extensions, freezegun, isodate, packaging, pip-tools, python-dateutil, requests-mock, webtest
 snowballstemmer==2.0.0    # via sphinx
 soupsieve==2.0            # via -r requirements/ci.txt, beautifulsoup4

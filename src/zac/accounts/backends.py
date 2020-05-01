@@ -23,14 +23,18 @@ class PermissionsBackend:
         if not user_obj.is_active:
             return False
 
-        if obj:
-            import bpdb
-
-            bpdb.set_trace()
-
         # inventory of non-object level permissions
         qs = user_obj.auth_profiles.values_list(
             "permission_sets__permissions", flat=True
         )
         permission_codes = set(sum(qs, []))
-        return perm in permission_codes
+        if perm not in permission_codes:
+            return False
+
+        # "does the user have the permission at all?" -> yes
+        if not obj:
+            return True
+
+        import bpdb
+
+        bpdb.set_trace()

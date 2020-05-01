@@ -9,6 +9,7 @@ python-dateutil
 isodate
 requests_mock
 defusedxml
+rules  # permissions backend
 
 # zgw-integration
 aiodns

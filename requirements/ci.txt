@@ -63,6 +63,7 @@ raven==6.10.0             # via -r requirements/base.txt
 redis==3.3.8              # via -r requirements/base.txt, django-redis
 requests-mock==1.7.0      # via -r requirements/base.txt, -r requirements/test-tools.in
 requests==2.22.0          # via -r requirements/base.txt, django-auth-adfs, django-camunda, gemma-zds-client, requests-mock
+rules==2.2                # via -r requirements/base.txt
 six==1.12.0               # via -r requirements/base.txt, cryptography, django-appconf, freezegun, isodate, python-dateutil, requests-mock, webtest
 soupsieve==2.0            # via beautifulsoup4
 sqlparse==0.3.0           # via -r requirements/base.txt, django

@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "django_auth_adfs_db",
     "rest_framework",
     "rest_framework.authtoken",
+    "rules.apps.AutodiscoverRulesConfig",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",

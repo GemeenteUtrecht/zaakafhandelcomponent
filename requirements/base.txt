@@ -57,6 +57,7 @@ raven==6.10.0             # via -r requirements/base.in
 redis==3.3.8              # via django-redis
 requests-mock==1.7.0      # via -r requirements/base.in
 requests==2.22.0          # via django-auth-adfs, django-camunda, gemma-zds-client, requests-mock
+rules==2.2                # via -r requirements/base.in
 six==1.12.0               # via cryptography, django-appconf, isodate, python-dateutil, requests-mock
 sqlparse==0.3.0           # via django
 tablib==0.14.0            # via django-import-export
