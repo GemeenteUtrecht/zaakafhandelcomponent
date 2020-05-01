@@ -53,6 +53,7 @@ class ZakenFilterForm(forms.Form):
 
 class ClaimTaskForm(forms.Form):
     task_id = forms.CharField(required=True)
+    zaak = forms.CharField(required=True)
     next = forms.CharField(required=False)
 
     def clean_next(self) -> str:

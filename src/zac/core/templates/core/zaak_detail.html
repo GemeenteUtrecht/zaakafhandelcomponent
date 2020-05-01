@@ -78,7 +78,14 @@
         </div>
 
         <div class="section-title">Betrokkenen</div>
-        TODO
+                <div>
+            {% for rol in rollen %}
+                {% nested_widget 'kv:key-value' label=rol.get_betrokkene_type_display %}
+                    {{ rol.get_omschrijving_generiek_display }}
+                {% endnested %}
+            {% endfor %}
+            <br>
+        </div>
     </section>
 
     <section class="zaak-detail__panel content-panel">

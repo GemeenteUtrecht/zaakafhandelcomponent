@@ -78,5 +78,5 @@ webtest==2.0.34           # via django-webtest
 xlrd==1.2.0               # via -r requirements/base.txt, tablib
 xlwt==1.3.0               # via -r requirements/base.txt, tablib
 yarl==1.3.0               # via -r requirements/base.txt, aiohttp
-zgw-consumers==0.9.0.dev8  # via -r requirements/base.txt
+zgw-consumers==0.9.0.dev9  # via -r requirements/base.txt
 zipp==0.6.0               # via -r requirements/base.txt, importlib-metadata
