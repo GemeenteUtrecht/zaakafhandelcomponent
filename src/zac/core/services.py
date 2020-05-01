@@ -157,7 +157,7 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 
 
 # TODO: invalidate on zaak creation/deletion!
-@cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
+# @cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
 def _find_zaken(
     client,
     zaaktype: str = "",
@@ -217,7 +217,7 @@ def get_zaken(
     def _test_va(zaak: dict):
         return user_perms.user.has_perm(zaken_inzien.name, obj=zaak)
 
-    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with futures.ThreadPoolExecutor() as executor:
         results = executor.map(
             lambda kwargs: _find_zaken(test_func=_test_va, **kwargs), find_kwargs
         )

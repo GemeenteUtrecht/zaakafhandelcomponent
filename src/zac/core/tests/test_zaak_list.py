@@ -87,7 +87,6 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
             f"{CATALOGI_ROOT}zaaktypen",
             json={"count": 2, "previous": None, "next": None, "results": [zt1, zt2],},
         )
-        m.get(zt1["url"], json=zt1)
         # set up user permissions
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
@@ -151,10 +150,6 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={"count": 1, "previous": None, "next": None, "results": [zaaktype],},
-        )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
-            json=zaaktype,
         )
         # set up user permissions
         PermissionSetFactory.create(

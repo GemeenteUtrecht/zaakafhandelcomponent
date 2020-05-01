@@ -1,11 +1,7 @@
 from typing import Union
 
 import rules
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import Zaak
-
-from zac.accounts.permissions import VA_ORDER, PermissionSet
-from zac.core.services import fetch_zaaktype
 
 from .permissions import zaken_inzien
 
@@ -28,29 +24,16 @@ class dictwrapper:
 def can_read_zaak(user, zaak: Union[dict, Zaak]):
     zaak = dictwrapper(zaak)
 
-    zaaktype = zaak.zaaktype
-    if isinstance(zaaktype, str):
-        zaaktype = fetch_zaaktype(zaaktype)
+    zaaktype_url = zaak.zaaktype
+    if not isinstance(zaaktype_url, str):
+        zaaktype_url = zaaktype_url.url
 
-    zt_identificatie = zaaktype.identificatie
-
-    zaak_va = VA_ORDER[zaak.vertrouwelijkheidaanduiding]
-
-    # check permission sets
-    perm_sets = (
-        PermissionSet.objects.filter(
-            authorizationprofile__user=user,
-            catalogus=zaaktype.catalogus,
-            permissions__contains=[zaken_inzien.name],
-            zaaktype_identificaties__contains=[zt_identificatie],
-        )
-        .annotate(
-            _max_va_order=VertrouwelijkheidsAanduidingen.get_order_expression("max_va")
-        )
-        .filter(_max_va_order__gte=zaak_va)
+    permissions = user._zaaktype_perms
+    return permissions.contains(
+        permission=zaken_inzien.name,
+        zaaktype=zaaktype_url,
+        vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
     )
-
-    return perm_sets.exists()
 
 
 rules.add_rule(zaken_inzien.name, can_read_zaak)

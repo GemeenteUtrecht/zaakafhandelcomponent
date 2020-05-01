@@ -102,6 +102,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
             identificatie="ZT1",
         )
         m.get(
@@ -142,6 +143,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
             identificatie="ZT1",
         )
         m.get(
@@ -151,6 +153,10 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             json=zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json={"count": 1, "previous": None, "next": None, "results": [zaaktype]},
         )
 
         # gives them access to the page, but no zaaktypen specified -> nothing visible
