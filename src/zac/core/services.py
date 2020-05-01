@@ -23,6 +23,7 @@ from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache
+from .permissions import zaken_inzien
 
 logger = logging.getLogger(__name__)
 
@@ -214,9 +215,7 @@ def get_zaken(
             )
 
     def _test_va(zaak: dict):
-        return user_perms.test_zaak_access(
-            zaak["zaaktype"], zaak["vertrouwelijkheidaanduiding"]
-        )
+        return user_perms.user.has_perm(zaken_inzien.name, obj=zaak)
 
     with futures.ThreadPoolExecutor(max_workers=10) as executor:
         results = executor.map(
