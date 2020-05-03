@@ -1,0 +1,30 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+
+{% block content %}
+<h1 class="page-title">Nieuwe authorization profile</h1>
+
+
+<form action="{% url 'accounts:authprofile-create' %}" method="post" class="form">
+    {% csrf_token %}
+
+    {% load_widgets form='sniplates/forms.html' %}
+
+    {% widget 'form:non_field_errors' %}
+
+    <div class="form__field-group">
+        {% form_field form.name %}
+    </div>
+
+    <div class="form__field-group">
+        {% form_field form.permission_sets%}
+    </div>
+
+    {% widget 'form:submit' label=_("Toevoegen") %}
+
+    {#    {{ form }}#}
+{#<button type="submit" class="btn btn--primary">{{ label|default:_("Submit") }}</button>#}
+</form>
+
+{% endblock %}

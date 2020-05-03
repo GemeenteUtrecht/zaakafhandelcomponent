@@ -14,7 +14,7 @@ from zgw_consumers.service import get_paginated_results
 
 from zac.core.services import get_zaaktypen
 
-from .models import PermissionSet
+from .models import AuthorizationProfile, PermissionSet
 from .permissions import registry
 
 
@@ -105,3 +105,10 @@ class PermissionSetForm(forms.ModelForm):
             _zaaktypen[catalogus_url] = representations
 
         return _zaaktypen
+
+
+class AuthorizationProfileForm(forms.ModelForm):
+    class Meta:
+        model = AuthorizationProfile
+        fields = ("name", "permission_sets")
+        widgets = {"permission_sets": forms.CheckboxSelectMultiple()}
