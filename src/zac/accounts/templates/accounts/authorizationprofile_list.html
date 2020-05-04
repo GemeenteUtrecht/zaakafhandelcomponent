@@ -24,7 +24,7 @@
         {% for entitlement in object_list %}
             <tr>
                 <th class="table__id-column">
-                    <a href="#" class="link">
+                    <a href="{% url 'accounts:authprofile-detail' entitlement.uuid %}" class="link">
                         {{ entitlement.name }}
                     </a>
                 </th>

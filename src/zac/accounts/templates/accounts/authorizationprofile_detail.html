@@ -1,0 +1,63 @@
+{% extends "master.html" %}
+
+{% block nav-main-id %}
+<article class="object-id">
+    <h1 class="object-id__identifier" title="Identificatie">
+        {{ auth_profile.name }}
+    </h1>
+</article>
+{% endblock %}
+
+{% block content %}
+<header>
+    <h1 class="page-title">
+        {{ auth_profile.name }}
+        <small class="page-title__extra">
+            {{ auth_profile.uuid }}
+        </small>
+    </h1>
+</header>
+
+<article>
+    <section>
+        <div class="section-title">Permission sets</div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">Name</th>
+                    <th class="table__header">Description</th>
+                    <th class="table__header">Vertrouwelijkheidaanduiding</th>
+                    <th class="table__header">Zaaktypen</th>
+                    <th class="table__header">Permissions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for permission_set in auth_profile.permission_sets.all %}
+                <tr>
+                    <td>{{ permission_set.name }}</td>
+                    <td>{{ permission_set.description }}</td>
+                    <td>{{ permission_set.get_max_va_display }}</td>
+                    <td>
+                        {% for zaaktype in permission_set.zaaktypen %}
+                            {{ zaaktype.omschrijving }}
+                        {% empty %}
+                            All
+                        {% endfor %}
+                    </td>
+                    <td>{{ permission_set.permissions|join:", " }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+    </section>
+
+    <section>
+        <div class="section-title">Users</div>
+        {{ auth_profile.user_set.all|join:", " }}
+    </section>
+
+</article>
+
+{% endblock %}

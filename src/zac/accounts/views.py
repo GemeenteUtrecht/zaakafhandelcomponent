@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView as _LoginView
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, DetailView, ListView
 
 from .forms import PermissionSetForm
 from .models import AuthorizationProfile, PermissionSet
@@ -15,6 +15,15 @@ class AuthorizationProfileListView(LoginRequiredMixin, ListView):
     queryset = AuthorizationProfile.objects.prefetch_related(
         "user_set", "permission_sets"
     )
+
+
+class AuthorizationProfileDetailView(LoginRequiredMixin, DetailView):
+    queryset = AuthorizationProfile.objects.prefetch_related(
+        "user_set", "permission_sets"
+    )
+    slug_field = "uuid"
+    slug_url_kwarg = "uuid"
+    context_object_name = "auth_profile"
 
 
 class PermissionSetsView(LoginRequiredMixin, ListView):
