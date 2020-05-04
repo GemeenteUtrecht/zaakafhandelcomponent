@@ -107,8 +107,25 @@ class PermissionSetForm(forms.ModelForm):
         return _zaaktypen
 
 
+def get_permission_sets_choices():
+    permision_sets = PermissionSet.objects.all()
+    for permision_set in permision_sets:
+        zaaktypen = "<br>".join(
+            [zaaktype.omschrijving for zaaktype in permision_set.zaaktypen]
+        )
+        representation = f"<strong>{permision_set.name} - {permision_set.get_max_va_display()}</strong>"
+        if zaaktypen:
+            representation = f"{representation}<br>{zaaktypen}"
+        yield permision_set.id, format_html(representation)
+
+
 class AuthorizationProfileForm(forms.ModelForm):
     class Meta:
         model = AuthorizationProfile
         fields = ("name", "permission_sets")
         widgets = {"permission_sets": forms.CheckboxSelectMultiple()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["permission_sets"].choices = get_permission_sets_choices()

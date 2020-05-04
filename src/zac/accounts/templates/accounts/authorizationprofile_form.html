@@ -21,10 +21,13 @@
         {% form_field form.permission_sets%}
     </div>
 
+    <p>You can <a href="{% url 'accounts:permission-set-create' %}">create</a> the required permission sets if needed.</p>
+
+
     {% widget 'form:submit' label=_("Toevoegen") %}
 
-    {#    {{ form }}#}
-{#<button type="submit" class="btn btn--primary">{{ label|default:_("Submit") }}</button>#}
 </form>
+
+
 
 {% endblock %}
