@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1 class="page-title">
-    {% if form.instance %}
+    {% if form.instance.id %}
         Change {{ form.instance.name }}
     {% else %}
         Nieuwe permission set
@@ -31,7 +31,8 @@
     <div class="form__field-group">
         {% form_field form.catalogus %}
         {{ form.get_zaaktypen|json_script:"catalogus-zaaktypen" }}
-        {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" %}
+        {{ form.get_initial_zaaktypen|json_script:"initial-zaaktypen" }}
+        {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" initial="initial-zaaktypen"%}
     </div>
 
     {% form_field form.max_va %}
