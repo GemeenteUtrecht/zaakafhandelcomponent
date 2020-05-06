@@ -4,6 +4,7 @@ from typing import List
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -168,6 +169,9 @@ class PermissionSet(models.Model):
         return [
             zt for zt in zaaktypen if zt.identificatie in self.zaaktype_identificaties
         ]
+
+    def get_absolute_url(self):
+        return reverse("accounts:permission-set-detail", args=[self.id])
 
 
 class UserAuthorizationProfile(models.Model):

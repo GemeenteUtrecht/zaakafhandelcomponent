@@ -8,6 +8,7 @@ from .views import (
     PermissionSetCreateView,
     PermissionSetDetailView,
     PermissionSetsView,
+    PermissionSetUpdateView,
 )
 
 app_name = "accounts"
@@ -39,5 +40,10 @@ urlpatterns = [
         "permission-sets/<pk>/",
         PermissionSetDetailView.as_view(),
         name="permission-set-detail",
+    ),
+    path(
+        "permission-sets/<pk>/change/",
+        PermissionSetUpdateView.as_view(),
+        name="permission-set-change",
     ),
 ]

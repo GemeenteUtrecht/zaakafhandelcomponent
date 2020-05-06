@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView as _LoginView
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import AuthorizationProfileForm, PermissionSetForm
 from .models import AuthorizationProfile, PermissionSet
@@ -47,3 +47,9 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
 class PermissionSetDetailView(LoginRequiredMixin, DetailView):
     queryset = PermissionSet.objects.prefetch_related("authorizationprofile_set")
     context_object_name = "permission_set"
+
+
+class PermissionSetUpdateView(PermissionRequiredMixin, UpdateView):
+    model = PermissionSet
+    form_class = PermissionSetForm
+    permission_required = "accounts.can_change_permissionset"

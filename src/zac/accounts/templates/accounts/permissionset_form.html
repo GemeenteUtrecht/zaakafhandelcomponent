@@ -3,7 +3,13 @@
 
 
 {% block content %}
-<h1 class="page-title">Nieuwe permission set</h1>
+<h1 class="page-title">
+    {% if form.instance %}
+        Change {{ form.instance.name }}
+    {% else %}
+        Nieuwe permission set
+    {% endif %}
+</h1>
 
 
 <form action="." method="post" class="form">

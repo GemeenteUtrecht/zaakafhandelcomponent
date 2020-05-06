@@ -9,13 +9,15 @@
 {% endblock %}
 
 {% block content %}
-{% load_widgets kv='sniplates/key-value.html' %}
-
 
 <header>
     <h1 class="page-title">
         {{ permission_set.name }}
     </h1>
+
+    <nav class="page-controls page-controls--align-right">
+        <a href="{% url 'accounts:permission-set-change' permission_set.id %}" class="btn btn--control btn--control-focus link--plain">Change</a>
+    </nav>
 </header>
 
 <article class="permission-set-detail">
