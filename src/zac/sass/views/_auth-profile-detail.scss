@@ -1,0 +1,10 @@
+@import "../lib/colors";
+
+.auth-profile-detail {
+  &__title {
+    margin-bottom: 0.5em;
+      margin-left: -0.5em;
+      padding-left: 0.5em;
+      border-left: solid 4px rgba($color-secondary, 0.8);
+  }
+}

@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     AuthorizationProfileCreateView,
+    AuthorizationProfileDetailView,
     AuthorizationProfileListView,
     LoginView,
     PermissionSetCreateView,
@@ -16,6 +17,11 @@ urlpatterns = [
         "auth-profiles/",
         AuthorizationProfileListView.as_view(),
         name="authprofile-list",
+    ),
+    path(
+        "auth-profiles/<uuid>/",
+        AuthorizationProfileDetailView.as_view(),
+        name="authprofile-detail",
     ),
     path(
         "auth-profiles/add/",
