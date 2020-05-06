@@ -1,5 +1,8 @@
 {% extends "master.html" %}
 
+{% block body-class %}permission-set-page{% endblock %}
+
+
 {% block nav-main-id %}
 <article class="object-id">
     <h1 class="object-id__identifier" title="Identificatie">
@@ -8,9 +11,9 @@
 </article>
 {% endblock %}
 
-{% block content %}
 
-<header>
+{% block content %}
+<header class="permission-set-page__header">
     <h1 class="page-title">
         {{ permission_set.name }}
     </h1>

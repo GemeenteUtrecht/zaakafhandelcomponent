@@ -1,6 +1,20 @@
 @import "../lib/colors";
 
-$zaak-detail__panel-spacing: $content-panel-spacing !default;
+$permission-set-detail__panel-spacing: $content-panel-spacing !default;
+
+.permission-set-page {
+
+  &__header {
+    display: flex;
+    align-items: center;
+  }
+
+  .page-title,
+  .page-controls {
+    flex: 1;
+    margin-bottom: 1rem;
+  }
+}
 
 .permission-set-detail {
   margin-left: -0.5em;
@@ -11,7 +25,7 @@ $zaak-detail__panel-spacing: $content-panel-spacing !default;
 
   &__panel {
     display: block;
-    width: calc(50% - #{$zaak-detail__panel-spacing});
+    width: calc(50% - #{$permission-set-detail__panel-spacing});
   }
 
   &__title {
