@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 from django import forms
 from django.core import validators
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import factory
@@ -110,12 +110,18 @@ class PermissionSetForm(forms.ModelForm):
 def get_permission_sets_choices():
     permision_sets = PermissionSet.objects.all()
     for permision_set in permision_sets:
+        representation = "<strong>{name} - {va}</strong>"
         zaaktypen = "<br>".join(
-            [zaaktype.omschrijving for zaaktype in permision_set.zaaktypen]
+            [format_html(zaaktype.omschrijving) for zaaktype in permision_set.zaaktypen]
         )
-        representation = f"<strong>{permision_set.name} - {permision_set.get_max_va_display()}</strong>"
-        if zaaktypen:
-            representation = f"{representation}<br>{zaaktypen}"
+        if permision_set.zaaktypen:
+            representation = representation + "<br>{zaaktypen}"
+        representation = format_html(
+            representation,
+            name=permision_set.name,
+            va=permision_set.get_max_va_display(),
+            zaaktypen=mark_safe(zaaktypen),
+        )
         yield permision_set.id, format_html(representation)
 
 
