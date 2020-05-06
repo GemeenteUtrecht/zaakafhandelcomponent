@@ -110,19 +110,20 @@ class PermissionSetForm(forms.ModelForm):
 def get_permission_sets_choices():
     permision_sets = PermissionSet.objects.all()
     for permision_set in permision_sets:
-        representation = "<strong>{name} - {va}</strong>"
-        zaaktypen = "<br>".join(
-            [format_html(zaaktype.omschrijving) for zaaktype in permision_set.zaaktypen]
+        representation = "<strong>{name} - {va}</strong>{br}{zaaktypen}"
+        zaaktypen = format_html_join(
+            mark_safe("<br>"),
+            "{}",
+            [(zaaktype.omschrijving,) for zaaktype in permision_set.zaaktypen]
         )
-        if permision_set.zaaktypen:
-            representation = representation + "<br>{zaaktypen}"
         representation = format_html(
             representation,
             name=permision_set.name,
             va=permision_set.get_max_va_display(),
-            zaaktypen=mark_safe(zaaktypen),
+            zaaktypen=zaaktypen,
+            br=mark_safe("<br>") if zaaktypen else ""
         )
-        yield permision_set.id, format_html(representation)
+        yield permision_set.id, representation
 
 
 class AuthorizationProfileForm(forms.ModelForm):
