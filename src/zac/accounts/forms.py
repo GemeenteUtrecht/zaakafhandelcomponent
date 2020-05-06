@@ -114,14 +114,14 @@ def get_permission_sets_choices():
         zaaktypen = format_html_join(
             mark_safe("<br>"),
             "{}",
-            [(zaaktype.omschrijving,) for zaaktype in permision_set.zaaktypen]
+            [(zaaktype.omschrijving,) for zaaktype in permision_set.zaaktypen],
         )
         representation = format_html(
             representation,
             name=permision_set.name,
             va=permision_set.get_max_va_display(),
             zaaktypen=zaaktypen,
-            br=mark_safe("<br>") if zaaktypen else ""
+            br=mark_safe("<br>") if zaaktypen else "",
         )
         yield permision_set.id, representation
 
