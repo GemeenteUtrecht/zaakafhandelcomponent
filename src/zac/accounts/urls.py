@@ -18,7 +18,7 @@ urlpatterns = [
         name="authprofile-list",
     ),
     path(
-        "auth-profiles/add",
+        "auth-profiles/add/",
         AuthorizationProfileCreateView.as_view(),
         name="authprofile-create",
     ),
