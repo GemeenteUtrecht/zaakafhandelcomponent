@@ -2,7 +2,6 @@ import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import SuspiciousOperation
 from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.urls import reverse
@@ -10,6 +9,8 @@ from django.utils.http import is_safe_url
 from django.views.generic import FormView, TemplateView
 
 from django_camunda.client import get_client
+
+from zac.accounts.mixins import PermissionRequiredMixin
 
 from ..camunda import (
     MessageForm,
@@ -19,48 +20,46 @@ from ..camunda import (
     send_message,
 )
 from ..forms import ClaimTaskForm
-from ..services import _client_from_url, find_zaak
-from .mixins import TestZaakAccess
+from ..permissions import zaakproces_send_message, zaakproces_usertasks
+from ..services import _client_from_url, find_zaak, get_zaak
+from .utils import get_zaak_from_query
 
 User = get_user_model()
 
 
-class FetchTasks(LoginRequiredMixin, TestZaakAccess, TemplateView):
+class FetchTasks(PermissionRequiredMixin, TemplateView):
     template_name = "core/includes/tasks.html"
+    permission_required = zaakproces_usertasks.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
 
-        zaak = self.check_zaak_access(url=zaak_url)
-
-        context["tasks"] = get_zaak_tasks(zaak_url)
+        context["tasks"] = get_zaak_tasks(zaak.url)
         context["zaak"] = zaak
         return context
 
 
-class FetchMessages(LoginRequiredMixin, TestZaakAccess, TemplateView):
+class FetchMessages(PermissionRequiredMixin, TemplateView):
     template_name = "core/includes/messages.html"
+    permission_required = zaakproces_send_message.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
 
-        zaak = self.check_zaak_access(url=zaak_url)
-
-        definitions = get_process_definition_messages(zaak_url)
+        definitions = get_process_definition_messages(zaak.url)
         context["forms"] = [definition.get_form() for definition in definitions]
         context["zaak"] = zaak
         return context
 
 
-class SendMessage(LoginRequiredMixin, TestZaakAccess, FormView):
+class SendMessage(PermissionRequiredMixin, FormView):
     template_name = "core/includes/messages.html"
     form_class = MessageForm
+    permission_required = zaakproces_send_message.name
 
     def get_form(self, **kwargs):
         form = super().get_form(**kwargs)
@@ -84,9 +83,8 @@ class SendMessage(LoginRequiredMixin, TestZaakAccess, FormView):
 
     def form_valid(self, form: ClaimTaskForm):
         # build service variables to continue execution
-        zaak_url = form.cleaned_data["zaak_url"]
-
-        zaak = self.check_zaak_access(url=zaak_url)
+        zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
+        self.check_object_permissions(zaak)
 
         zrc_client = _client_from_url(zaak.url)
         ztc_client = _client_from_url(zaak.zaaktype)
@@ -112,15 +110,16 @@ class SendMessage(LoginRequiredMixin, TestZaakAccess, FormView):
         raise SuspiciousOperation("Unsafe HTTP_REFERER detected")
 
 
-class PerformTaskView(LoginRequiredMixin, TestZaakAccess, FormView):
+class PerformTaskView(PermissionRequiredMixin, FormView):
     template_name = "core/zaak_task.html"
+    permission_required = zaakproces_usertasks.name
 
     def get_zaak(self):
         zaak = find_zaak(
             bronorganisatie=self.kwargs["bronorganisatie"],
             identificatie=self.kwargs["identificatie"],
         )
-        self.check_zaak_access(zaak=zaak)
+        self.check_object_permissions(zaak)
         return zaak
 
     def get(self, request, *args, **kwargs):
@@ -187,9 +186,10 @@ class PerformTaskView(LoginRequiredMixin, TestZaakAccess, FormView):
         return super().form_valid(form)
 
 
-# TODO: permission checks!
-class ClaimTaskView(LoginRequiredMixin, FormView):
+# TODO: object permission checks!
+class ClaimTaskView(PermissionRequiredMixin, FormView):
     form_class = ClaimTaskForm
+    permission_required = zaakproces_usertasks.name
 
     def form_valid(self, form: ClaimTaskForm):
         _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]

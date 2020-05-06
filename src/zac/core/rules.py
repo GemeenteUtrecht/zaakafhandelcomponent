@@ -1,14 +1,21 @@
+import logging
 from typing import Union
 
-import rules
 from zgw_consumers.api_models.zaken import Zaak
 
-from .permissions import zaken_inzien
+from zac.accounts.permissions import Permission, register
+
+from .permissions import zaakproces_send_message, zaakproces_usertasks, zaken_inzien
+
+logger = logging.getLogger(__name__)
 
 
 class dictwrapper:
     def __init__(self, obj):
         self._obj = obj
+
+    def __repr__(self):
+        return repr(self._obj)
 
     def __getattr__(self, attr: str):
         if hasattr(self._obj, attr):
@@ -20,8 +27,9 @@ class dictwrapper:
         raise AttributeError(f"Obj {self._obj} has no attribute '{attr}'")
 
 
-@rules.predicate
-def can_read_zaak(user, zaak: Union[dict, Zaak]):
+@register(zaken_inzien, zaakproces_send_message, zaakproces_usertasks)
+def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
+    logger.debug("Checking permission %r for user %r", permission, user)
     zaak = dictwrapper(zaak)
 
     zaaktype_url = zaak.zaaktype
@@ -30,10 +38,7 @@ def can_read_zaak(user, zaak: Union[dict, Zaak]):
 
     permissions = user._zaaktype_perms
     return permissions.contains(
-        permission=zaken_inzien.name,
+        permission=permission.name,
         zaaktype=zaaktype_url,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
     )
-
-
-rules.add_rule(zaken_inzien.name, can_read_zaak)

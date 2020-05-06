@@ -1,3 +1,4 @@
+import functools
 import itertools
 from collections import defaultdict
 from dataclasses import dataclass
@@ -5,6 +6,7 @@ from typing import List
 
 from django.core.exceptions import ImproperlyConfigured
 
+import rules
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
@@ -220,3 +222,28 @@ class UserPermissions:
         zaak_va = VA_ORDER[va]
         required_va = VA_ORDER[zaaktype_perm.max_va]
         return zaak_va <= required_va
+
+
+def register(*permissions: Permission):
+    """
+    Register a permission with a generic predicate check.
+    """
+
+    def wrapper_factory(func, permission):
+        @functools.wraps(func)
+        def wrapper(user, obj):
+            return func(user, obj, permission)
+
+        return wrapper
+
+    def decorator(func):
+
+        for permission in permissions:
+            wrapper = wrapper_factory(func, permission)
+            predicate = rules.predicate(wrapper)
+            rules.add_rule(permission.name, predicate)
+
+        # keep unmodified original callable
+        return func
+
+    return decorator

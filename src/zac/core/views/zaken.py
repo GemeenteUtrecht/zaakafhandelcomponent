@@ -27,6 +27,7 @@ from ..services import (
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .mixins import TestZaakAccess
+from .utils import get_zaak_from_query
 
 
 class Index(PermissionRequiredMixin, BaseListView):
@@ -61,7 +62,7 @@ class Index(PermissionRequiredMixin, BaseListView):
         return zaken
 
 
-class ZaakDetail(PermissionRequiredMixin, TestZaakAccess, BaseDetailView):
+class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
     permission_required = zaken_inzien.name
@@ -98,7 +99,7 @@ class ZaakDetail(PermissionRequiredMixin, TestZaakAccess, BaseDetailView):
         return context
 
 
-class FetchZaakObjecten(LoginRequiredMixin, TestZaakAccess, TemplateView):
+class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):
     """
     Retrieve the ZaakObjecten for a given zaak reference.
 
@@ -106,14 +107,14 @@ class FetchZaakObjecten(LoginRequiredMixin, TestZaakAccess, TemplateView):
     """
 
     template_name = "core/includes/zaakobjecten.html"
+    permission_required = zaken_inzien.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
 
-        zaak = self.check_zaak_access(url=zaak_url)
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
+
         context["zaakobjecten"] = self._get_zaakobjecten(zaak)
 
         return context
