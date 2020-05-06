@@ -5,5 +5,16 @@
 
   & &__option {
     margin-bottom: 0.2rem;
+
+    display: flex;
+
+    > input[type="checkbox"] {
+      margin-top: 5px;
+      margin-right: 10px;
+    }
+
+    > label {
+      margin-top: 0;
+    }
   }
 }
