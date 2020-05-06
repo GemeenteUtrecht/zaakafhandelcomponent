@@ -42,3 +42,8 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
     form_class = PermissionSetForm
     permission_required = "accounts.can_add_permissionset"
     success_url = reverse_lazy("accounts:authprofile-list")
+
+
+class PermissionSetDetailView(LoginRequiredMixin, DetailView):
+    model = PermissionSet
+    context_object_name = "permission_set"

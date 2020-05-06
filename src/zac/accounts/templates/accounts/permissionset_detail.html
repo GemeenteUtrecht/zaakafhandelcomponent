@@ -1,0 +1,59 @@
+{% extends "master.html" %}
+{% load i18n sniplates %}
+
+{% block nav-main-id %}
+<article class="object-id">
+    <h1 class="object-id__identifier" title="Identificatie">
+        {{ permission_set.name }}
+    </h1>
+</article>
+{% endblock %}
+
+{% block content %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
+
+<header>
+    <h1 class="page-title">
+        {{ permission_set.name }}
+    </h1>
+</header>
+
+<article class="permission-set-detail">
+    <section class="permission-set-detail__panel content-panel">
+        <div class="permission-set-detail__title section-title">Permission set informatie</div>
+        <p class="content-panel__content">{{ permission_set.name }}</p>
+        <p class="content-panel__content {% if not permission_set.description %}content-panel__content--blurred{% endif %}">
+            {{ permission_set.description|default:"(geen omschrijving)" }}
+        </p>
+
+        <div class="permission-set-detail__title section-title">Permissions</div>
+        <ul>
+        {% for permission in permission_set.permissions %}
+            <li>{{ permission }}</li>
+        {% endfor %}
+        </ul>
+
+        <div class="permission-set-detail__title section-title">Used in authorization profiles</div>
+        <ul>
+        {% for auth_profile in permission_set.authorizationprofile_set.all %}
+            <li><a href="{% url 'accounts:authprofile-detail'  auth_profile.uuid %}">{{ auth_profile.name }}</a></li>
+        {% endfor %}
+        </ul>
+    </section>
+
+    <section class="permission-set-detail__panel content-panel">
+        <div class="permission-set-detail__title section-title">Vertrouwelijkheidaanduiding</div>
+        <p class="content-panel__content">{{ permission_set.get_max_va_display }}</p>
+
+        <div class="permission-set-detail__title section-title">Zaaktypen</div>
+        <ul>
+        {% for zaaktype in permission_set.zaaktypen %}
+            <li>{{ zaaktype.omschrijving }}</li>
+        {% endfor %}
+        </ul>
+    </section>
+
+</article>
+
+{% endblock %}

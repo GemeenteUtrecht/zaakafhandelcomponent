@@ -6,6 +6,7 @@ from .views import (
     AuthorizationProfileListView,
     LoginView,
     PermissionSetCreateView,
+    PermissionSetDetailView,
     PermissionSetsView,
 )
 
@@ -33,5 +34,10 @@ urlpatterns = [
         "permission-sets/add/",
         PermissionSetCreateView.as_view(),
         name="permission-set-create",
+    ),
+    path(
+        "permission-sets/<pk>/",
+        PermissionSetDetailView.as_view(),
+        name="permission-set-detail",
     ),
 ]
