@@ -40,7 +40,7 @@
                     <td>{{ permission_set.get_max_va_display }}</td>
                     <td>
                         {% for zaaktype in permission_set.zaaktypen %}
-                            <a href="{{ zaaktype.url }}">{{ zaaktype.omschrijving }}</a><br>
+                            {{ zaaktype.omschrijving }}<br>
                         {% empty %}
                             All
                         {% endfor %}
