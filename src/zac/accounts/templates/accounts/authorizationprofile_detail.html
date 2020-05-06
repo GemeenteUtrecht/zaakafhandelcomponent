@@ -18,9 +18,9 @@
     </h1>
 </header>
 
-<article>
-    <section>
-        <div class="section-title">Permission sets</div>
+<article class="auth-profile-detail">
+    <section class="content-panel">
+        <div class="auth-profile-detail__title section-title">Permission sets</div>
 
         <table class="table">
             <thead>
@@ -40,12 +40,12 @@
                     <td>{{ permission_set.get_max_va_display }}</td>
                     <td>
                         {% for zaaktype in permission_set.zaaktypen %}
-                            {{ zaaktype.omschrijving }}
+                            <a href="{{ zaaktype.url }}">{{ zaaktype.omschrijving }}</a>
                         {% empty %}
                             All
                         {% endfor %}
                     </td>
-                    <td>{{ permission_set.permissions|join:", " }}</td>
+                    <td>{{ permission_set.permissions|join:"<br>" }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -53,9 +53,28 @@
         </table>
     </section>
 
-    <section>
-        <div class="section-title">Users</div>
-        {{ auth_profile.user_set.all|join:", " }}
+    <section class="content-panel">
+        <div class="auth-profile-detail__title section-title">Users</div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">User</th>
+                    <th class="table__header">Name</th>
+                    <th class="table__header">Start date</th>
+                    <th class="table__header">End date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user_auth in auth_profile.userauthorizationprofile_set.all %}
+                <tr>
+                    <td>{{ user_auth.user.username }}</td>
+                    <td>{{ user_auth.user.get_full_name|default:"-" }}</td>
+                    <td>{{ user_auth.start|default:"-" }}</td>
+                    <td>{{ user_auth.end|default:"-" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </section>
 
 </article>
