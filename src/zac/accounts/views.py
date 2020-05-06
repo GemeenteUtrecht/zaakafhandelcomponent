@@ -45,5 +45,5 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
 
 
 class PermissionSetDetailView(LoginRequiredMixin, DetailView):
-    model = PermissionSet
+    queryset = PermissionSet.objects.prefetch_related("authorizationprofile_set")
     context_object_name = "permission_set"

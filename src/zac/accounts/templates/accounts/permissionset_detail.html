@@ -1,5 +1,4 @@
 {% extends "master.html" %}
-{% load i18n sniplates %}
 
 {% block nav-main-id %}
 <article class="object-id">
@@ -30,7 +29,7 @@
         <div class="permission-set-detail__title section-title">Permissions</div>
         <ul>
         {% for permission in permission_set.permissions %}
-            <li>{{ permission }}</li>
+            <li><code>{{ permission }}</code></li>
         {% endfor %}
         </ul>
 
