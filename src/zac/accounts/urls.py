@@ -21,14 +21,14 @@ urlpatterns = [
         name="authprofile-list",
     ),
     path(
-        "auth-profiles/<uuid>/",
-        AuthorizationProfileDetailView.as_view(),
-        name="authprofile-detail",
-    ),
-    path(
         "auth-profiles/add/",
         AuthorizationProfileCreateView.as_view(),
         name="authprofile-create",
+    ),
+    path(
+        "auth-profiles/<uuid>/",
+        AuthorizationProfileDetailView.as_view(),
+        name="authprofile-detail",
     ),
     path("permission-sets/", PermissionSetsView.as_view(), name="permission-set-list"),
     path(
