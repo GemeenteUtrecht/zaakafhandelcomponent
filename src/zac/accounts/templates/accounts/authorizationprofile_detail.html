@@ -35,12 +35,12 @@
             <tbody>
             {% for permission_set in auth_profile.permission_sets.all %}
                 <tr>
-                    <td>{{ permission_set.name }}</td>
+                    <td><a href="{% url 'accounts:permission-set-detail' permission_set.id %}">{{ permission_set.name }}</a></td>
                     <td>{{ permission_set.description }}</td>
                     <td>{{ permission_set.get_max_va_display }}</td>
                     <td>
                         {% for zaaktype in permission_set.zaaktypen %}
-                            <a href="{{ zaaktype.url }}">{{ zaaktype.omschrijving }}</a><br>
+                            {{ zaaktype.omschrijving }}<br>
                         {% empty %}
                             All
                         {% endfor %}

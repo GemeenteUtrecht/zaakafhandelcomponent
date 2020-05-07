@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 from django import forms
 from django.core import validators
-from django.utils.html import format_html, mark_safe
+from django.utils.html import format_html, format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import factory
@@ -105,6 +105,12 @@ class PermissionSetForm(forms.ModelForm):
             _zaaktypen[catalogus_url] = representations
 
         return _zaaktypen
+
+    def get_initial_zaaktypen(self) -> list:
+        if not self.instance:
+            return []
+
+        return self.instance.zaaktype_identificaties
 
 
 def get_permission_sets_choices():
