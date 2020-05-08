@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 from django.conf import settings
@@ -13,6 +14,7 @@ from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..permissions import zaakproces_send_message, zaakproces_usertasks, zaken_inzien
+from .mocks import get_camunda_task_mock
 from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -317,3 +319,64 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         with patch("zac.core.views.processes.get_zaak_tasks", return_value=[]):
             response = self.app.get(f"{tasks_url}?zaak={zaak_url}")
         self.assertEqual(response.status_code, 200)
+
+    def test_claim_task_no_permission(self):
+        task = get_camunda_task_mock()
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910371",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=self.zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        self.mocker.get(zaak["url"], json=zaak)
+        self.mocker.get(
+            f"https://camunda.example.com/engine-rest/task?processVariables=zaakUrl_eq_{zaak['url']}",
+            json=[task],
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name, zaakproces_usertasks.name,],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        url = reverse("core:claim-task")
+
+        with patch("zac.core.camunda.extract_task_form", return_value=None):
+            self.client.force_login(self.user)
+            response = self.client.post(
+                url, {"task_id": task["id"], "zaak": zaak["url"]},
+            )
+        self.assertEqual(response.status_code, 403)
+
+    def test_claim_task_with_permission(self):
+        task = get_camunda_task_mock()
+        zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name, zaakproces_usertasks.name,],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        url = reverse("core:claim-task")
+
+        self.mocker.get(
+            f"https://camunda.example.com/engine-rest/task?processVariables=zaakUrl_eq_{zaak_url}",
+            json=[task],
+        )
+
+        with patch("zac.core.views.processes.get_client") as m_client, patch(
+            "zac.core.camunda.extract_task_form", return_value=None,
+        ):
+            self.client.force_login(self.user)
+            response = self.client.post(
+                url, {"task_id": task["id"], "zaak": zaak_url, "next": "/"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        m_client.return_value.post.assert_called_once()

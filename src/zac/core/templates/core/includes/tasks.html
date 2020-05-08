@@ -46,6 +46,7 @@
                     <form class="user-task__claim" method="post" action="{% url 'core:claim-task' %}">
                         {% csrf_token %}
                         <input type="hidden" name="task_id" value="{{ task.id }}">
+                        <input type="hidden" name="zaak" value="{{ zaak.url }}">
                         <button
                             type="submit"
                             class="btn btn--small"

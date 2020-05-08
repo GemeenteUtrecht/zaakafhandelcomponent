@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.catalogi import ZaakType
 
+from .camunda import get_zaak_tasks
 from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
 
 
@@ -55,7 +56,8 @@ class ZakenFilterForm(forms.Form):
 
 
 class ClaimTaskForm(forms.Form):
-    task_id = forms.CharField(required=True)
+    zaak = forms.URLField(required=True)
+    task_id = forms.UUIDField(required=True)
     next = forms.CharField(required=False)
 
     def clean_next(self) -> str:
@@ -69,6 +71,18 @@ class ClaimTaskForm(forms.Form):
         if not safe_url:
             raise forms.ValidationError(_("The redirect URL is untrusted."))
         return next_url
+
+    def clean(self):
+        cleaned_data = super().clean()
+        zaak = cleaned_data.get("zaak")
+        task_id = cleaned_data.get("task_id")
+
+        if zaak and task_id:
+            zaak_tasks = get_zaak_tasks(zaak)
+            task = next((task for task in zaak_tasks if task.id == task_id), None,)
+            if task is None:
+                self.add_error("task_id", _("This is not a valid task for the zaak."))
+        return cleaned_data
 
 
 class ZaakAfhandelForm(forms.Form):

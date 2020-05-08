@@ -186,12 +186,14 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-# TODO: object permission checks!
 class ClaimTaskView(PermissionRequiredMixin, FormView):
     form_class = ClaimTaskForm
     permission_required = zaakproces_usertasks.name
 
     def form_valid(self, form: ClaimTaskForm):
+        zaak = get_zaak(zaak_url=form.cleaned_data["zaak"])
+        self.check_object_permissions(zaak)
+
         _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         task_id = form.cleaned_data["task_id"]
 
