@@ -35,7 +35,11 @@
             <tbody>
             {% for permission_set in auth_profile.permission_sets.all %}
                 <tr>
-                    <td><a href="{% url 'accounts:permission-set-detail' permission_set.id %}">{{ permission_set.name }}</a></td>
+                    <td>
+                        <a href="{% url 'accounts:permission-set-detail' permission_set.id %}" class="link">
+                            {{ permission_set.name }}
+                        </a>
+                    </td>
                     <td>{{ permission_set.description }}</td>
                     <td>{{ permission_set.get_max_va_display }}</td>
                     <td>

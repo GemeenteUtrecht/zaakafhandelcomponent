@@ -41,7 +41,11 @@
         <div class="permission-set-detail__title section-title">Used in authorization profiles</div>
         <ul>
         {% for auth_profile in permission_set.authorizationprofile_set.all %}
-            <li><a href="{% url 'accounts:authprofile-detail'  auth_profile.uuid %}">{{ auth_profile.name }}</a></li>
+            <li>
+                <a href="{% url 'accounts:authprofile-detail' auth_profile.uuid %}" class="link">
+                    {{ auth_profile.name }}
+                </a>
+            </li>
         {% endfor %}
         </ul>
     </section>
