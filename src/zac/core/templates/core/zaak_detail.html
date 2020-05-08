@@ -152,7 +152,7 @@
 
             {% if can_send_bpmn_messages %}
             <div class="fetch-messages" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-messages' %}">
-                {# include template is in core/includes/tasks.html #}
+                {# include template is in core/includes/messages.html #}
                 <span class="loader"></span>
             </div>
             {% endif %}

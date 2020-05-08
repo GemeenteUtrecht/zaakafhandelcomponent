@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.conf import settings
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -12,7 +12,7 @@ from zgw_consumers.models import Service
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
-from ..permissions import zaken_inzien
+from ..permissions import zaakproces_send_message, zaakproces_usertasks, zaken_inzien
 from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -178,4 +178,142 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         ):
             response = self.app.get(self.url, user=self.user)
 
+        self.assertEqual(response.status_code, 200)
+
+
+class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        self.mocker = requests_mock.Mocker()
+        self.mocker.start()
+        self.addCleanup(self.mocker.stop)
+        self._setUpMocks()
+
+    def _setUpMocks(self):
+        m = self.mocker
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+            identificatie="ZT1",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=self.zaaktype["url"],
+            status=None,
+            relevanteAndereZaken=[],
+        )
+        m.get(zaak["url"], json=zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak],},
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[],
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}statussen?zaak={zaak['url']}",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(f"{zaak['url']}/zaakeigenschappen", json=[])
+
+    def test_no_process_permissions(self):
+        zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        url = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": BRONORGANISATIE,
+                "identificatie": IDENTIFICATIE,
+            },
+        )
+        response = self.app.get(url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(response.pyquery(".fetch-messages"))
+        self.assertFalse(response.pyquery(".fetch-tasks"))
+
+        messages_url = reverse("core:fetch-messages")
+        response = self.app.get(f"{messages_url}?zaak={zaak_url}", status=403)
+
+        tasks_url = reverse("core:fetch-tasks")
+        response = self.app.get(f"{tasks_url}?zaak={zaak_url}", status=403)
+
+    def test_process_permissions(self):
+        zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
+        PermissionSetFactory.create(
+            permissions=[
+                zaken_inzien.name,
+                zaakproces_usertasks.name,
+                zaakproces_send_message.name,
+            ],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        url = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": BRONORGANISATIE,
+                "identificatie": IDENTIFICATIE,
+            },
+        )
+        response = self.app.get(url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertTrue(response.pyquery(".fetch-messages"))
+        self.assertTrue(response.pyquery(".fetch-tasks"))
+
+        messages_url = reverse("core:fetch-messages")
+        with patch(
+            "zac.core.views.processes.get_process_definition_messages", return_value=[]
+        ):
+            response = self.app.get(f"{messages_url}?zaak={zaak_url}")
+        self.assertEqual(response.status_code, 200)
+
+        tasks_url = reverse("core:fetch-tasks")
+        with patch("zac.core.views.processes.get_zaak_tasks", return_value=[]):
+            response = self.app.get(f"{tasks_url}?zaak={zaak_url}")
         self.assertEqual(response.status_code, 200)
