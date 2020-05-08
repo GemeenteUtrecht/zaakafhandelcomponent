@@ -108,6 +108,10 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             identificatie="ZT1",
         )
         m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json={"count": 1, "previous": None, "next": None, "results": [zaaktype]},
+        )
+        m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json={"count": 1, "previous": None, "next": None, "results": [zaak],},
         )

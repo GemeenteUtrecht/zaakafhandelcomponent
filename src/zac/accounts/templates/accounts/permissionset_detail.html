@@ -56,7 +56,7 @@
 
         <div class="permission-set-detail__title section-title">Zaaktypen</div>
         <ul>
-        {% for zaaktype in permission_set.zaaktypen %}
+        {% for zaaktype in permission_set.zaaktypen.get_for_presentation %}
             <li>{{ zaaktype.omschrijving }}</li>
         {% endfor %}
         </ul>

@@ -39,7 +39,7 @@
                             </div>
                             <div class="permission-set__va">{{ permission_set.get_max_va_display }}</div>
                             <div class="permission-set__zaaktypen">
-                                {% for zaaktype in permission_set.zaaktypen %}
+                                {% for zaaktype in permission_set.zaaktypen.get_for_presentation %}
                                     <div class="permission_set__zaaktype">
                                         {{ zaaktype.omschrijving }}
                                     </div>

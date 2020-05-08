@@ -4,7 +4,7 @@ from django.contrib.auth.hashers import check_password
 
 import rules
 
-from .permissions import ZaakPermissionCollection
+from .datastructures import ZaakPermissionCollection
 
 
 class UserModelEmailBackend(ModelBackend):

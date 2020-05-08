@@ -158,7 +158,8 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 
 # TODO: invalidate on zaak creation/deletion!
 @cache_result(
-    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}"
+    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
+    timeout=AN_HOUR,
 )
 def _find_zaken(
     client,
@@ -177,6 +178,7 @@ def _find_zaken(
         "bronorganisatie": bronorganisatie,
         # "maximaleVertrouwelijkheidaanduiding": max_va,
     }
+    logger.debug("Querying zaken with %r", query)
     _zaken = get_paginated_results(
         client, "zaak", query_params=query, min_num=25, test_func=test_func,
     )
@@ -194,13 +196,17 @@ def get_zaken(
 
     Only retrieve what the user permissions dictate.
     """
-    # TODO: superusers should be able to query without zaaktype qs param
     _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+    allowed_zaaktypen = _base_zaaktypen
 
-    # list of URLs - no filter for superusers / blanket perms
-    query_zaaktypen = [
-        zt_url for zt_url in _base_zaaktypen if zaaktypen is None or zt_url in zaaktypen
-    ]
+    if user_perms.user.is_superuser:
+        query_zaaktypen = [""]
+    else:
+        query_zaaktypen = (
+            allowed_zaaktypen
+            if not zaaktypen
+            else set(zaaktypen).intersection(set(allowed_zaaktypen))
+        )
 
     # build keyword arguments for retrieval jobs - running network calls in parallel
     # if possible
@@ -215,15 +221,12 @@ def get_zaken(
                 for perm in user_perms.zaaktype_permissions
                 if perm.permission == zaken_inzien.name and perm.contains(zaaktype_url)
             ]
-            # there should at least be one permission for the zaaktype, else we wouldn't
-            # be making the API call
-            assert relevant_perms
 
             # sort them by max va
             relevant_perms = sorted(
                 relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
             )
-            max_va = relevant_perms[0].max_va
+            max_va = relevant_perms[0].max_va if relevant_perms else ""
             find_kwargs.append(
                 {
                     "client": client,
@@ -349,7 +352,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     return sorted(statussen, key=lambda x: x.datum_status_gezet, reverse=True)
 
 
-@cache_result("zaak-status:{zaak.status}")
+@cache_result("zaak-status:{zaak.status}", timeout=AN_HOUR)
 def get_status(zaak: Zaak) -> Status:
     assert isinstance(zaak.status, str), "Status already resolved."
     client = _client_from_object(zaak)
@@ -382,7 +385,7 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     return zaak_eigenschappen
 
 
-@cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
+@cache_result("get_zaak:{zaak_uuid}:{zaak_url}", timeout=AN_HOUR)
 def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """
     Retrieve zaak with uuid or url

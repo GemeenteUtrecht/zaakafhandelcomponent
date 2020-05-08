@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
+from .datastructures import ZaaktypeCollection
 from .managers import UserManager
 
 
@@ -145,33 +146,14 @@ class PermissionSet(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_max_va_display()})"
 
-    @cached_property
-    def zaaktypen(self) -> List[ZaakType]:
-        from zac.core.services import get_zaaktypen
-
-        if not self.catalogus:
-            return []
-
-        _zaaktypen = get_zaaktypen(catalogus=self.catalogus)
-
-        # de-duplicate versions for presentation
-        seen = set()
-        zaaktypen = []
-        for zaaktype in _zaaktypen:
-            if zaaktype.identificatie in seen:
-                continue
-            zaaktypen.append(zaaktype)
-            seen.add(zaaktype.identificatie)
-
-        if not self.zaaktype_identificaties:
-            return zaaktypen
-
-        return [
-            zt for zt in zaaktypen if zt.identificatie in self.zaaktype_identificaties
-        ]
-
     def get_absolute_url(self):
         return reverse("accounts:permission-set-detail", args=[self.id])
+
+    @cached_property
+    def zaaktypen(self) -> ZaaktypeCollection:
+        return ZaaktypeCollection(
+            catalogus=self.catalogus, identificaties=self.zaaktype_identificaties
+        )
 
 
 class UserAuthorizationProfile(models.Model):
