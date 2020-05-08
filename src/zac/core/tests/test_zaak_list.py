@@ -127,11 +127,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         (
             req_ztc_schema,
             req_zaaktypen,
+            req_zaaktypen_catalogus,
             req_zrc_schema,
             req_zaken,
-            req_zaaktypen_catalogus,
         ) = m.request_history
         query = parse_qs(req_zaken.query)
+
         self.assertEqual(len(query["zaaktype"]), 1)
         self.assertEqual(query["zaaktype"][0], zt1["url"])
 

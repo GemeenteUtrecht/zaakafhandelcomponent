@@ -76,6 +76,9 @@ class ZaakPermissionCollection:
             ):
                 self._permissions[perm_key] = list(_perms)
 
+    def __iter__(self):
+        return iter(self._perms)
+
     @classmethod
     def for_user(cls, user):
         """
@@ -141,38 +144,9 @@ class UserPermissions:
 
     @property
     def zaaktype_permissions(self):
-        """
-        Translate the database permission sets for the user into Python objects.
-
-        This keeps a registry of the permissions pinned to a particular zaaktype, and
-        caches it on the instance. UserPermission objects are intantiated for every
-        request, so the cache is contained in the request-response cycle.
-        """
-        if not hasattr(self, "_zaaktype_perms"):
-            _zt_perms = {}
-
-            perm_sets = PermissionSet.objects.filter(
-                authorizationprofile__user=self.user
-            )
-            for perm_set in perm_sets:
-                for identificatie in perm_set.zaaktype_identificaties:
-                    unique_id = (perm_set.catalogus, identificatie)
-                    if unique_id not in _zt_perms:
-                        _zt_perms[unique_id] = perm_set.max_va
-                    else:
-                        current_order = VA_ORDER[_zt_perms[unique_id]]
-                        perm_order = VA_ORDER[perm_set.max_va]
-                        if perm_order > current_order:
-                            _zt_perms[unique_id] = perm_set.max_va
-
-            self._zaaktype_perms = [
-                ZaaktypePermission(
-                    catalogus=catalogus_url, identificatie=identificatie, max_va=max_va,
-                )
-                for (catalogus_url, identificatie), max_va in _zt_perms.items()
-            ]
-
-        return self._zaaktype_perms
+        if not hasattr(self.user, "_zaaktype_perms"):
+            self.user._zaaktype_perms = ZaakPermissionCollection.for_user(self.user)
+        return self.user._zaaktype_perms
 
     def filter_zaaktypen(self, zaaktypen: List[ZaakType]) -> List[ZaakType]:
         """

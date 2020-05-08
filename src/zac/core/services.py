@@ -19,7 +19,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.permissions import UserPermissions
+from zac.accounts.permissions import VA_ORDER, UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache
@@ -157,12 +157,15 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 
 
 # TODO: invalidate on zaak creation/deletion!
-# @cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
+@cache_result(
+    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}"
+)
 def _find_zaken(
     client,
     zaaktype: str = "",
     identificatie: str = "",
     bronorganisatie: str = "",
+    max_va: str = "",
     test_func: Optional[callable] = None,
 ) -> List[Dict]:
     """
@@ -172,6 +175,7 @@ def _find_zaken(
         "zaaktype": zaaktype,
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
+        # "maximaleVertrouwelijkheidaanduiding": max_va,
     }
     _zaken = get_paginated_results(
         client, "zaak", query_params=query, min_num=25, test_func=test_func,
@@ -205,12 +209,28 @@ def get_zaken(
     for zrc in zrcs:
         client = zrc.build_client()
         for zaaktype_url in query_zaaktypen:
+            # figure out the max va
+            relevant_perms = [
+                perm
+                for perm in user_perms.zaaktype_permissions
+                if perm.permission == zaken_inzien.name and perm.contains(zaaktype_url)
+            ]
+            # there should at least be one permission for the zaaktype, else we wouldn't
+            # be making the API call
+            assert relevant_perms
+
+            # sort them by max va
+            relevant_perms = sorted(
+                relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
+            )
+            max_va = relevant_perms[0].max_va
             find_kwargs.append(
                 {
                     "client": client,
                     "identificatie": identificatie,
                     "bronorganisatie": bronorganisatie,
                     "zaaktype": zaaktype_url,
+                    "max_va": max_va,
                 }
             )
 
