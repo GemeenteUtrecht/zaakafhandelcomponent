@@ -1,5 +1,4 @@
 import functools
-from collections import defaultdict
 from dataclasses import dataclass
 from typing import List
 
@@ -80,6 +79,9 @@ def register(*permissions: Permission):
     def wrapper_factory(func, permission):
         @functools.wraps(func)
         def wrapper(user, obj):
+            # this only deals with object-level permission checks
+            if obj is None:
+                return None
             return func(user, obj, permission)
 
         return wrapper

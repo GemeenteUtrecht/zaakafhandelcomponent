@@ -2,7 +2,6 @@ from concurrent import futures
 from itertools import groupby
 from typing import Any, Dict, List
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
@@ -26,7 +25,6 @@ from ..services import (
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .mixins import TestZaakAccess
 from .utils import get_zaak_from_query
 
 
@@ -153,7 +151,7 @@ class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
 
     def get_object(self):
         zaak = find_zaak(**self.kwargs)
-        self.check_zaak_access(zaak=zaak)
+        self.check_object_permissions(zaak)
         return zaak
 
     def get_context_data(self, **kwargs) -> dict:

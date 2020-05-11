@@ -45,8 +45,10 @@ class PermissionsBackend:
             "permission_sets__permissions", flat=True
         )
         permission_codes = set(sum(qs, []))
-        if perm not in permission_codes:
-            return False
+        if not obj and perm not in permission_codes:
+            if not rules.rule_exists(perm):
+                return False
+            return rules.test_rule(perm, user_obj)
 
         # "does the user have the permission at all?" -> yes
         if not obj:
