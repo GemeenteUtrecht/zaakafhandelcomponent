@@ -1,4 +1,3 @@
-import uuid
 from unittest.mock import patch
 
 from django.conf import settings
@@ -75,7 +74,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             json=zaaktype,
         )
 
-        # gives them access to the page, but no zaaktypen specified -> nothing visible
+        # gives them access to the page, but no catalogus specified -> nothing visible
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=self.user,
@@ -120,7 +119,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             json=zaaktype,
         )
 
-        # gives them access to the page, but no zaaktypen specified -> nothing visible
+        # gives them access to the page and zaaktype, but insufficient VA
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=self.user,
@@ -165,12 +164,65 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             json={"count": 1, "previous": None, "next": None, "results": [zaaktype]},
         )
 
-        # gives them access to the page, but no zaaktypen specified -> nothing visible
+        # gives them access to the page, zaaktype and VA specified -> visible
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=self.user,
             catalogus=zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+
+        # mock out all the other calls - we're testing auth here
+        with patch("zac.core.views.zaken.get_statussen", return_value=[]), patch(
+            "zac.core.views.zaken.get_documenten", return_value=([], [])
+        ), patch("zac.core.views.zaken.get_zaak_eigenschappen", return_value=[]), patch(
+            "zac.core.views.zaken.get_related_zaken", return_value=[]
+        ), patch(
+            "zac.core.views.zaken.get_resultaat", return_value=None
+        ):
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_has_all_zaaktype_perms(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/fa988e62-c1fe-4496-8c0f-29b85373e4df",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak],},
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json={"count": 1, "previous": None, "next": None, "results": [zaaktype]},
+        )
+
+        # gives them access to the page, catalogus and VA specified -> all zaaktypen visible
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=zaaktype["catalogus"],
+            zaaktype_identificaties=[],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
 
