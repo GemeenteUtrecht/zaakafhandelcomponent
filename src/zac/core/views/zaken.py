@@ -137,10 +137,11 @@ class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):
         return render_groups
 
 
-class ZaakAfhandelView(LoginRequiredMixin, TestZaakAccess, SingleObjectMixin, FormView):
+class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
+    permission_required = "zaken:afhandelen"
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

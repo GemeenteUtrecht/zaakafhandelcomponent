@@ -17,7 +17,7 @@ const getOptionsHtml = (name, options, selectedValues) => {
                 <label for="${id}">${display}</label>
             </li>`;
     });
-    return htmlBits.join("\n");
+    return htmlBits.join('\n');
 };
 
 const checkboxSelect = (node) => {

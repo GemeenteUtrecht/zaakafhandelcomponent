@@ -23,6 +23,9 @@ class UserModelEmailBackend(ModelBackend):
 
 
 class PermissionsBackend:
+    def authenticate(self, request):
+        return None
+
     def set_user_permissions(self, user):
         """
         Fetch the (zaaktype) permissions for the user and cache them…
