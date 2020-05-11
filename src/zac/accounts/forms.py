@@ -120,7 +120,10 @@ def get_permission_sets_choices():
         zaaktypen = format_html_join(
             mark_safe("<br>"),
             "{}",
-            [(zaaktype.omschrijving,) for zaaktype in permision_set.zaaktypen],
+            [
+                (zaaktype.omschrijving,)
+                for zaaktype in permision_set.zaaktypen.get_for_presentation()
+            ],
         )
         representation = format_html(
             representation,
