@@ -19,7 +19,8 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.permissions import VA_ORDER, UserPermissions
+from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache

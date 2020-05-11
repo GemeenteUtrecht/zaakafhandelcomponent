@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 import rules
 from zgw_consumers.api_models.catalogi import ZaakType
 
-from .datastructures import VA_ORDER, ZaakPermissionCollection
+from .datastructures import ZaakPermissionCollection
 from .models import User
 
 registry = {}
@@ -49,26 +49,6 @@ class UserPermissions:
 
         valid_urls = self.zaaktype_permissions.zaaktype_urls
         return [zt for zt in zaaktypen if zt.url in valid_urls]
-
-    def test_zaak_access(self, zaaktype: str, va: str) -> bool:
-        if self.user.is_superuser:
-            return True
-
-        zaaktype_perm = next(
-            (
-                zt_perm
-                for zt_perm in self.zaaktype_permissions
-                if zt_perm.contains(zaaktype)
-            ),
-            None,
-        )
-        if zaaktype_perm is None:  # permission on zaaktype found
-            return False
-
-        # lower number means more public
-        zaak_va = VA_ORDER[va]
-        required_va = VA_ORDER[zaaktype_perm.max_va]
-        return zaak_va <= required_va
 
 
 def register(*permissions: Permission):
