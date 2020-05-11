@@ -79,7 +79,17 @@
             {% endfor %}
             </tbody>
         </table>
+
+        <p>
+            <a
+                href="{% url 'accounts:authprofile-add-user' uuid=auth_profile.uuid %}"
+                class="btn btn--default">
+                <i class="material-icons">add</i>
+                Gebruiker toevoegen
+            </a>
+        </p>
     </section>
+
 
 </article>
 

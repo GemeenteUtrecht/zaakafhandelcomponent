@@ -87,6 +87,15 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block DateTimeInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="text" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
 {% block FileInput %}
 {% nested_widget ':_wrapper' %}
     {% reuse "_label" %}

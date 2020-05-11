@@ -14,7 +14,7 @@ from zgw_consumers.service import get_paginated_results
 
 from zac.core.services import get_zaaktypen
 
-from .models import AuthorizationProfile, PermissionSet
+from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
 from .permissions import registry
 
 
@@ -142,3 +142,30 @@ class AuthorizationProfileForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields["permission_sets"].choices = get_permission_sets_choices()
+
+
+class UserAuthorizationProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserAuthorizationProfile
+        fields = (
+            "user",
+            "start",
+            "end",
+        )
+        widgets = {
+            "user": forms.RadioSelect,
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.auth_profile = kwargs.pop("auth_profile")
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["user"].empty_label = None
+        self.fields["user"].queryset = User.objects.exclude(
+            id__in=self.auth_profile.user_set.all()
+        )
+
+    def save(self, *args, **kwargs):
+        self.instance.auth_profile = self.auth_profile
+        return super().save(*args, **kwargs)

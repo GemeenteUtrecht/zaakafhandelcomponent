@@ -9,6 +9,7 @@ from .views import (
     PermissionSetDetailView,
     PermissionSetsView,
     PermissionSetUpdateView,
+    UserAuthorizationProfileCreateView,
 )
 
 app_name = "accounts"
@@ -26,9 +27,14 @@ urlpatterns = [
         name="authprofile-create",
     ),
     path(
-        "auth-profiles/<uuid>/",
+        "auth-profiles/<uuid:uuid>/",
         AuthorizationProfileDetailView.as_view(),
         name="authprofile-detail",
+    ),
+    path(
+        "auth-profiles/<uuid:uuid>/add-user/",
+        UserAuthorizationProfileCreateView.as_view(),
+        name="authprofile-add-user",
     ),
     path("permission-sets/", PermissionSetsView.as_view(), name="permission-set-list"),
     path(
