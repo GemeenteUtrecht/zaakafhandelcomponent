@@ -35,7 +35,13 @@ class dictwrapper:
         raise AttributeError(f"Obj {self._obj} has no attribute '{attr}'")
 
 
-@register(zaken_inzien, zaakproces_send_message, zaakproces_usertasks)
+@register(
+    zaken_inzien,
+    zaakproces_send_message,
+    zaakproces_usertasks,
+    zaken_set_result,
+    zaken_close,
+)
 def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
     logger.debug("Checking permission %r for user %r", permission, user)
     zaak = dictwrapper(zaak)

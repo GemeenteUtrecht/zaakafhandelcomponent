@@ -1,10 +1,13 @@
 {% extends "core/zaak_detail.html" %}
-{% load i18n sniplates %}
+{% load i18n sniplates rules %}
 
 
 {% block content %}
 {% load_widgets form='sniplates/forms.html' %}
 
+{% has_perm 'zaken:inzien' user zaak as can_read_zaak %}
+{% has_perm 'zaken:afsluiten' user zaak as can_close_zaak %}
+{% has_perm 'zaken:set-result' user zaak as can_set_result %}
 
 <form action="." method="post" class="form">
     {% csrf_token %}
@@ -25,38 +28,58 @@
         <section class="zaak-detail__panel content-panel content-panel--flat">
             <div class="info-text">
                 <i class="material-icons info-text__header">info</i>
-                <p class="info-text__body">Je kan hier het resultaat van de zaak zetten. Als er verder niets meer
-                hoeft te gebeuren, dan kan je ook meteen de zaak sluiten terwijl je het
-                resultaat zet.</p>
+                <p class="info-text__body">
+                    Je kan hier het resultaat van de zaak zetten. Als er verder niets meer
+                    hoeft te gebeuren, dan kan je ook meteen de zaak sluiten terwijl je het
+                    resultaat zet.
+                </p>
             </div>
 
 
             {% widget 'form:non_field_errors' %}
 
+            {% if can_set_result %}
             <div class="form__group-title">Resultaat</div>
             <div class="form__field-group" role="group">
                 {% form_field form.resultaattype label="&nbsp;" required=True %}
                 {% form_field form.result_remarks %}
             </div>
+            {% else %}
+                <p class="permission-check permission-check--failed">
+                    Je hebt onvoldoende rechten om het zaakresultaat te zetten.
+                </p>
+            {% endif %}
 
+            {% if can_close_zaak %}
             <div class="form__group-title">Afsluiten</div>
             <div class="form__field-group" role="group">
                 {% form_field form.close_zaak %}
                 {% form_field form.close_zaak_remarks %}
             </div>
+            {% else %}
+                <p class="permission-check permission-check--failed">
+                    Je hebt onvoldoende rechten om deze zaak af te sluiten.
+                </p>
+            {% endif %}
 
         </section>
 
         <section class="zaak-detail__panel content-panel">
             <div class="section-title">Zaakinformatie</div>
 
-            <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
-                {{ zaak.omschrijving|default:"(geen omschrijving)" }}
-            </p>
+            {% if can_read_zaak %}
+                <p class="content-panel__content {% if not zaak.omschrijving %}content-panel__content--blurred{% endif %}">
+                    {{ zaak.omschrijving|default:"(geen omschrijving)" }}
+                </p>
 
-            <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
-                {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
-            </p>
+                <p class="content-panel__content {% if not zaak.toelichting %}content-panel__content--blurred{% endif %}">
+                    {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
+                </p>
+            {% else %}
+                <p class="permission-check permission-check--failed">
+                    Je hebt onvoldoende rechten om deze zaak in te zien.
+                </p>
+            {% endif %}
         </section>
 
     </article>
