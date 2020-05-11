@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import yaml
 from faker import Faker
@@ -106,3 +106,13 @@ def generate_prop(schema: dict, prop_definition: dict) -> Any:
 
     elif prop_type == "object":
         return generate_object(schema, prop_definition)
+
+
+def paginated_response(results: List[dict]) -> Dict[str, Any]:
+    body = {
+        "count": len(results),
+        "previous": None,
+        "next": None,
+        "results": results,
+    }
+    return body
