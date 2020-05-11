@@ -1,0 +1,96 @@
+{% extends "master.html" %}
+
+{% block nav-main-id %}
+<article class="object-id">
+    <h1 class="object-id__identifier" title="Identificatie">
+        {{ auth_profile.name }}
+    </h1>
+</article>
+{% endblock %}
+
+{% block content %}
+<header>
+    <h1 class="page-title">
+        {{ auth_profile.name }}
+        <small class="page-title__extra">
+            {{ auth_profile.uuid }}
+        </small>
+    </h1>
+</header>
+
+<article class="auth-profile-detail">
+    <section class="content-panel">
+        <div class="auth-profile-detail__title section-title">Permission sets</div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">Name</th>
+                    <th class="table__header">Description</th>
+                    <th class="table__header">Vertrouwelijkheidaanduiding</th>
+                    <th class="table__header">Zaaktypen</th>
+                    <th class="table__header">Permissions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for permission_set in auth_profile.permission_sets.all %}
+                <tr>
+                    <td>
+                        <a href="{% url 'accounts:permission-set-detail' permission_set.id %}" class="link">
+                            {{ permission_set.name }}
+                        </a>
+                    </td>
+                    <td>{{ permission_set.description }}</td>
+                    <td>{{ permission_set.get_max_va_display }}</td>
+                    <td>
+                        {% for zaaktype in permission_set.zaaktypen.get_for_presentation %}
+                            {{ zaaktype.omschrijving }}<br>
+                        {% empty %}
+                            All
+                        {% endfor %}
+                    </td>
+                    <td>{{ permission_set.permissions|join:"<br>" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+    </section>
+
+    <section class="content-panel">
+        <div class="auth-profile-detail__title section-title">Users</div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">User</th>
+                    <th class="table__header">Name</th>
+                    <th class="table__header">Start date</th>
+                    <th class="table__header">End date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user_auth in auth_profile.userauthorizationprofile_set.all %}
+                <tr>
+                    <td>{{ user_auth.user.username }}</td>
+                    <td>{{ user_auth.user.get_full_name|default:"-" }}</td>
+                    <td>{{ user_auth.start|default:"-" }}</td>
+                    <td>{{ user_auth.end|default:"-" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <p>
+            <a
+                href="{% url 'accounts:authprofile-add-user' uuid=auth_profile.uuid %}"
+                class="btn btn--default">
+                <i class="material-icons">add</i>
+                Gebruiker toevoegen
+            </a>
+        </p>
+    </section>
+
+
+</article>
+
+{% endblock %}

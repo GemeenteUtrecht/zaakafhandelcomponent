@@ -1,0 +1,33 @@
+{% extends "master.html" %}
+{% load sniplates %}
+
+
+{% block content %}
+<h1 class="page-title">Nieuw autorisatieprofiel</h1>
+
+
+<form action="{% url 'accounts:authprofile-create' %}" method="post" class="form">
+    {% csrf_token %}
+
+    {% load_widgets form='sniplates/forms.html' %}
+
+    {% widget 'form:non_field_errors' %}
+
+    <div class="form__field-group">
+        {% form_field form.name %}
+    </div>
+
+    <div class="form__field-group">
+        {% form_field form.permission_sets%}
+    </div>
+
+    <p>You can <a href="{% url 'accounts:permission-set-create' %}">create</a> the required permission sets if needed.</p>
+
+
+    {% widget 'form:submit' label=_("Toevoegen") %}
+
+</form>
+
+
+
+{% endblock %}

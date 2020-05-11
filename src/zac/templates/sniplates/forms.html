@@ -87,6 +87,15 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block DateTimeInput %}
+{% nested_widget ':_wrapper' %}
+    {% reuse "_label" %}
+    {% reuse "_help" %}
+    {% reuse "_errors" %}
+    {% reuse "input" input_type="text" css_classes=css_classes|add:" input__control--text" %}
+{% endnested %}
+{% endblock %}
+
 {% block FileInput %}
 {% nested_widget ':_wrapper' %}
     {% reuse "_label" %}
@@ -202,11 +211,28 @@ Actual input types
 {% endnested %}
 {% endblock %}
 
+{% block CheckboxSelectDynamic %}
+{% nested_widget ':_wrapper' %}
+    {% reuse '_label' %}
+    {% reuse '_help' %}
+    {% reuse '_errors' %}
+
+    <ul
+        id="{{ id }}"
+        class="checkbox-select checkbox-select--dynamic"
+        data-name="{{ html_name }}"
+        data-listen="{{ listen }}"
+        data-values="{{ values }}"
+        data-initial="{{ initial }}"
+    >
+    </ul>
+
+{% endnested %}
+{% endblock CheckboxSelectDynamic %}
 
 {% block PandSelectieField %}
 {{ django_field }}
 {% endblock PandSelectieField %}
-
 
 
 Button interactions

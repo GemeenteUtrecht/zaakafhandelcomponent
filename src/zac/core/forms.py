@@ -1,3 +1,5 @@
+from typing import Iterator, List, Tuple
+
 from django import forms
 from django.conf import settings
 from django.template.defaultfilters import date
@@ -5,18 +7,14 @@ from django.utils import timezone
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
-from .services import (
-    get_resultaattypen,
-    get_statustypen,
-    get_zaaktypen,
-    zet_resultaat,
-    zet_status,
-)
+from zgw_consumers.api_models.catalogi import ZaakType
+
+from .camunda import get_zaak_tasks
+from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
 
 
-def get_zaaktype_choices():
+def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> Iterator[Tuple[str, str]]:
     today = timezone.now().date()
-    zaaktypen = get_zaaktypen()
     for zaaktype in zaaktypen:
         if zaaktype.begin_geldigheid > today:
             continue
@@ -37,6 +35,12 @@ class ZakenFilterForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
 
+    def __init__(self, *args, **kwargs):
+        zaaktypen = kwargs.pop("zaaktypen")
+        super().__init__(*args, **kwargs)
+
+        self.fields["zaaktypen"].choices = get_zaaktype_choices(zaaktypen)
+
     def as_filters(self) -> dict:
         assert self.cleaned_data
         zaaktypen = self.cleaned_data.get("zaaktypen")
@@ -52,8 +56,8 @@ class ZakenFilterForm(forms.Form):
 
 
 class ClaimTaskForm(forms.Form):
-    task_id = forms.CharField(required=True)
-    zaak = forms.CharField(required=True)
+    zaak = forms.URLField(required=True)
+    task_id = forms.UUIDField(required=True)
     next = forms.CharField(required=False)
 
     def clean_next(self) -> str:
@@ -67,6 +71,18 @@ class ClaimTaskForm(forms.Form):
         if not safe_url:
             raise forms.ValidationError(_("The redirect URL is untrusted."))
         return next_url
+
+    def clean(self):
+        cleaned_data = super().clean()
+        zaak = cleaned_data.get("zaak")
+        task_id = cleaned_data.get("task_id")
+
+        if zaak and task_id:
+            zaak_tasks = get_zaak_tasks(zaak)
+            task = next((task for task in zaak_tasks if task.id == task_id), None,)
+            if task is None:
+                self.add_error("task_id", _("This is not a valid task for the zaak."))
+        return cleaned_data
 
 
 class ZaakAfhandelForm(forms.Form):
@@ -87,18 +103,29 @@ class ZaakAfhandelForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.zaak = kwargs.pop("zaak")
+        self.can_set_result = kwargs.pop("can_set_result")
+        self.can_close = kwargs.pop("can_close")
+
         super().__init__(*args, **kwargs)
 
-        # fetch the possible result types
-        zaaktype = self.zaak.zaaktype
+        if self.can_set_result:
+            # fetch the possible result types
+            zaaktype = self.zaak.zaaktype
 
-        _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaaktype)}
-        resultaattype_choices = [
-            (url, resultaattype.omschrijving)
-            for url, resultaattype in _resultaattypen.items()
-        ]
-        self.fields["resultaattype"].choices = resultaattype_choices
-        self.fields["resultaattype"].coerce = _resultaattypen.get
+            _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaaktype)}
+            resultaattype_choices = [
+                (url, resultaattype.omschrijving)
+                for url, resultaattype in _resultaattypen.items()
+            ]
+            self.fields["resultaattype"].choices = resultaattype_choices
+            self.fields["resultaattype"].coerce = _resultaattypen.get
+        else:
+            del self.fields["resultaattype"]
+            del self.fields["result_remarks"]
+
+        if not self.can_close:
+            del self.fields["close_zaak"]
+            del self.fields["close_zaak_remarks"]
 
     def clean_close_zaak(self):
         close_zaak = self.cleaned_data["close_zaak"]
@@ -112,12 +139,15 @@ class ZaakAfhandelForm(forms.Form):
         """
         Commit the changes to the backing API.
         """
-        resultaattype = self.cleaned_data["resultaattype"]
+        if not any((self.can_set_result, self.can_close)):
+            return
 
-        if resultaattype:
+        resultaattype = self.cleaned_data.get("resultaattype")
+
+        if self.can_set_result and resultaattype:
             zet_resultaat(self.zaak, resultaattype, self.cleaned_data["result_remarks"])
 
-        if self.cleaned_data["close_zaak"]:
+        if self.can_close and self.cleaned_data["close_zaak"]:
             statustypen = get_statustypen(self.zaak.zaaktype)
             last_statustype = sorted(statustypen, key=lambda st: st.volgnummer)[-1]
             zet_status(

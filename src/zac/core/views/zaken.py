@@ -2,12 +2,17 @@ from concurrent import futures
 from itertools import groupby
 from typing import Any, Dict, List
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
+from zgw_consumers.api_models.zaken import Zaak
+
+from zac.accounts.mixins import PermissionRequiredMixin
+from zac.accounts.permissions import UserPermissions
+
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
+from ..permissions import zaken_close, zaken_inzien, zaken_set_result
 from ..services import (
     find_zaak,
     get_documenten,
@@ -17,19 +22,32 @@ from ..services import (
     get_statussen,
     get_zaak_eigenschappen,
     get_zaakobjecten,
+    get_zaaktypen,
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .utils import get_zaak_from_query
 
 
-class Index(LoginRequiredMixin, BaseListView):
+class Index(PermissionRequiredMixin, BaseListView):
     """
     Display the landing screen.
+
+    The list of zaken that can be viewed is retrieved from the APIs.
+
+    Note that permission checks are in place - only zaken of zaaktypen are retrieved
+    where you have access to the zaaktype.
     """
 
     template_name = "core/index.html"
     context_object_name = "zaken"
     filter_form_class = ZakenFilterForm
+    permission_required = zaken_inzien.name
+
+    def get_filter_form_kwargs(self):
+        kwargs = super().get_filter_form_kwargs()
+        kwargs["zaaktypen"] = get_zaaktypen(UserPermissions(self.request.user))
+        return kwargs
 
     def get_object_list(self):
         filter_form = self.get_filter_form()
@@ -37,15 +55,21 @@ class Index(LoginRequiredMixin, BaseListView):
             filters = filter_form.as_filters()
         else:
             filters = {}
-        return get_zaken(**filters)[:50]
+        user_perms = UserPermissions(self.request.user)
+        zaken = get_zaken(user_perms, **filters)[:50]
+
+        return zaken
 
 
-class ZaakDetail(LoginRequiredMixin, BaseDetailView):
+class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
+    permission_required = zaken_inzien.name
 
     def get_object(self):
-        return find_zaak(**self.kwargs)
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -76,7 +100,7 @@ class ZaakDetail(LoginRequiredMixin, BaseDetailView):
         return context
 
 
-class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
+class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):
     """
     Retrieve the ZaakObjecten for a given zaak reference.
 
@@ -84,20 +108,21 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
     """
 
     template_name = "core/includes/zaakobjecten.html"
+    permission_required = zaken_inzien.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
 
-        context["zaakobjecten"] = self._get_zaakobjecten(zaak_url)
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
+
+        context["zaakobjecten"] = self._get_zaakobjecten(zaak)
 
         return context
 
-    def _get_zaakobjecten(self, zaak_url: str) -> List[ZaakObjectGroup]:
+    def _get_zaakobjecten(self, zaak: Zaak) -> List[ZaakObjectGroup]:
         # API call
-        zaakobjecten = get_zaakobjecten(zaak_url)
+        zaakobjecten = get_zaakobjecten(zaak.url)
 
         def group_key(zo):
             return zo.object_type
@@ -113,10 +138,11 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
         return render_groups
 
 
-class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
+class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
+    permission_required = "zaken:afhandelen"
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -127,7 +153,9 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def get_object(self):
-        return find_zaak(**self.kwargs)
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
@@ -135,7 +163,17 @@ class ZaakAfhandelView(LoginRequiredMixin, SingleObjectMixin, FormView):
 
     def get_form_kwargs(self) -> Dict[str, Any]:
         kwargs = super().get_form_kwargs()
-        return {"zaak": self.object, **kwargs}
+
+        user = self.request.user
+        can_set_result = user.has_perm(zaken_set_result.name, self.object)
+        can_close = user.has_perm(zaken_close.name, self.object)
+
+        return {
+            "zaak": self.object,
+            "can_set_result": can_set_result,
+            "can_close": can_close,
+            **kwargs,
+        }
 
     def form_valid(self, form: ZaakAfhandelForm):
         form.save(user=self.request.user)

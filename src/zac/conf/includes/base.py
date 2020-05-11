@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "django_auth_adfs_db",
     "rest_framework",
     "rest_framework.authtoken",
+    "rules.apps.AutodiscoverRulesConfig",
     # Project applications.
     "zac.accounts",
     "zac.regiezaken",
@@ -281,9 +282,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Allow logging in with both username+password and email+password
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
+    # authentication
     "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
+    # authorization
+    "zac.accounts.backends.PermissionsBackend",
 ]
 
 SESSION_COOKIE_NAME = "zac_sessionid"

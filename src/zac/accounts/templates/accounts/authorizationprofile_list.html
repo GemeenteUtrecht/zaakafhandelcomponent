@@ -1,0 +1,65 @@
+{% extends "master.html" %}
+
+
+{% block content %}
+<h1 class="page-title">Autorisatieprofielen</h1>
+
+<p>
+    Autorisatieprofielen zijn collecties van permissies over zaaktypen. Deze profielen
+    kunnen indien gewenst in IAM opgenomen worden, waarbij het IAM de koppeling met
+    de gebruikers beheert (TODO, via SCIM).
+</p>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="table__header">Naam</th>
+            <th class="table__header">Permission sets</th>
+            <th class="table__header">Gebruikers</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for entitlement in object_list %}
+            <tr>
+                <th class="table__id-column">
+                    <a href="{% url 'accounts:authprofile-detail' entitlement.uuid %}" class="link">
+                        {{ entitlement.name }}
+                    </a>
+                </th>
+                <td>
+                    {% for permission_set in entitlement.permission_sets.all %}
+                        <div class="permission-set">
+                            <div class="permission-set__name">
+                                <a
+                                    href="{% url 'accounts:permission-set-detail' permission_set.id %}"
+                                    class="link"
+                                >{{ permission_set.name }}</a>
+                            </div>
+                            <div class="permission-set__va">{{ permission_set.get_max_va_display }}</div>
+                            <div class="permission-set__zaaktypen">
+                                {% for zaaktype in permission_set.zaaktypen.get_for_presentation %}
+                                    <div class="permission_set__zaaktype">
+                                        {{ zaaktype.omschrijving }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </td>
+                <td>
+                    {{ entitlement.user_set.all|join:", " }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
+<p>
+    <a href="{% url 'accounts:authprofile-create' %}" class="btn">Autorisatieprofiel toevoegen</a>
+    <a href="{% url 'accounts:permission-set-create' %}" class="btn">Permission set toevoegen</a>
+</p>
+
+{% endblock %}

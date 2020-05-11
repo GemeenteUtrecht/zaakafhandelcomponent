@@ -1,8 +1,16 @@
+import uuid
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+
+from .datastructures import ZaaktypeCollection
 from .managers import UserManager
 
 
@@ -36,6 +44,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
+    # custom permissions
+    auth_profiles = models.ManyToManyField(
+        "AuthorizationProfile", blank=True, through="UserAuthorizationProfile",
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = "username"
@@ -55,3 +68,95 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+
+# Permissions
+
+
+class AuthorizationProfile(models.Model):
+    """
+    Model a set of permission groups that can be assigned to a user.
+
+    "Autorisatieprofiel" in Dutch. This is the finest-grained object that is exposed
+    to external systems (via SCIM eventually). Towards IAM/SCIM, this maps to the
+    Entitlement concept.
+    """
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(_("naam"), max_length=255)
+    permission_sets = models.ManyToManyField(
+        "PermissionSet",
+        verbose_name=_("permission sets"),
+        help_text=_(
+            "Selecting multiple sets makes them add/merge all the permissions together."
+        ),
+    )
+
+    class Meta:
+        verbose_name = _("authorization profile")
+        verbose_name_plural = _("authorization profiles")
+
+    def __str__(self):
+        return self.name
+
+
+class PermissionSet(models.Model):
+    """
+    A collection of permissions that belong to a zaaktype.
+    """
+
+    name = models.CharField(_("naam"), max_length=255, unique=True)
+    description = models.TextField(_("description"), blank=True)
+    permissions = ArrayField(
+        models.CharField(max_length=255, blank=False),
+        blank=True,
+        default=list,
+        verbose_name=_("permissions"),
+    )
+    catalogus = models.URLField(
+        _("catalogus"),
+        help_text=_("Zaaktypencatalogus waarin de zaaktypen voorkomen."),
+        blank=True,
+    )
+    zaaktype_identificaties = ArrayField(
+        models.CharField(max_length=100),
+        blank=True,
+        default=list,
+        help_text=(
+            "All permissions selected are scoped to these zaaktypen. "
+            "If left empty, this applies to all zaaktypen."
+        ),
+    )
+    max_va = models.CharField(
+        _("maximale vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_(
+            "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+        ),
+    )
+
+    class Meta:
+        verbose_name = _("permission set")
+        verbose_name_plural = _("permission sets")
+
+    def __str__(self):
+        return f"{self.name} ({self.get_max_va_display()})"
+
+    def get_absolute_url(self):
+        return reverse("accounts:permission-set-detail", args=[self.id])
+
+    @cached_property
+    def zaaktypen(self) -> ZaaktypeCollection:
+        return ZaaktypeCollection(
+            catalogus=self.catalogus, identificaties=self.zaaktype_identificaties
+        )
+
+
+class UserAuthorizationProfile(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
+
+    start = models.DateTimeField(_("start"), blank=True, null=True)
+    end = models.DateTimeField(_("end"), blank=True, null=True)

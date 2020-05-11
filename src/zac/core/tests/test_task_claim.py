@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import requests_mock
@@ -7,10 +9,11 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User
+from zac.tests.utils import mock_service_oas_get, paginated_response
+from zac.tests.zrc import get_zaak_response
+from zac.tests.ztc import get_roltype_response, get_zaaktype_response
 
-from .utils import mock_service_oas_get
-from .zrc import get_zaak_response
-from .ztc import get_roltype_response, get_zaaktype_response
+from .mocks import get_camunda_task_mock
 
 ZTC_URL = "https://some.ztc.nl/api/v1/"
 ZRC_URL = "https://some.zrc.nl/api/v1/"
@@ -21,7 +24,6 @@ ZAAK = f"{ZRC_URL}zaken/4f8b4811-5d7e-4e9b-8201-b35f5101f891"
 CAMUNDA_ROOT = "https://camunda.example.com/"
 CAMUNDA_API = "engine-rest/"
 CAMUNDA = f"{CAMUNDA_ROOT}{CAMUNDA_API}"
-TASK_ID = "5a461dc8-891e-11ea-ae32-0e13a3f6559d"
 
 
 class TaskClaimTests(WebTest):
@@ -68,32 +70,36 @@ class TaskClaimTests(WebTest):
     @requests_mock.Mocker()
     def test_claim_task(self, m):
         # mock ztc
-        mock_service_oas_get(m, "ztc", ZTC_URL)
+        mock_service_oas_get(m, ZTC_URL, "ztc")
+        mock_service_oas_get(m, ZRC_URL, "zrc")
+        zaak = get_zaak_response(ZAAK, ZAAKTYPE)
+        task = get_camunda_task_mock()
+        m.get(
+            f"{CAMUNDA_ROOT}{CAMUNDA_API}task?processVariables=zaakUrl_eq_{zaak['url']}",
+            json=[task],
+        )
+
         m.get(ZAAKTYPE, json=get_zaaktype_response(CATALOGUS, ZAAKTYPE))
         roltypen_url = (
             f"{ZTC_URL}roltypen?zaaktype={ZAAKTYPE}&&omschrijvingGeneriek=behandelaar"
         )
-        roltypen_data = {
-            "count": 1,
-            "next": None,
-            "results": [get_roltype_response(ROLTYPE, ZAAKTYPE)],
-        }
-        m.get(roltypen_url, json=roltypen_data)
+        roltype = get_roltype_response(ROLTYPE, ZAAKTYPE)
+        m.get(roltypen_url, json=paginated_response([roltype]))
         # mock zrc
-        mock_service_oas_get(m, "zrc", ZRC_URL)
-        m.get(ZAAK, json=get_zaak_response(ZAAK, ZAAKTYPE))
+        m.get(ZAAK, json=zaak)
         rollen_url = f"{ZRC_URL}rollen"
         m.post(rollen_url, status_code=201)
         # mock camunda
-        task_claim_url = f"{CAMUNDA}task/{TASK_ID}/claim"
+        task_claim_url = f"{CAMUNDA}task/{task['id']}/claim"
         m.post(task_claim_url, json={})
 
         url = reverse("core:claim-task")
         next_url = reverse("index")
 
-        response = self.client.post(
-            url, {"zaak": ZAAK, "task_id": TASK_ID}, HTTP_REFERER=next_url
-        )
+        with patch("zac.core.camunda.extract_task_form", return_value=None):
+            response = self.client.post(
+                url, {"zaak": ZAAK, "task_id": task["id"]}, HTTP_REFERER=next_url
+            )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, next_url)

@@ -2,6 +2,10 @@
 
 $link-color: #005ea5 !default;
 
+$link-color--backlink: rgba($color-text, 0.75) !default;
+$backlink-travel: 0.2em !default;
+$backlink-padding: 0.5em !default;
+
 .link {
   color: $link-color;
 
@@ -21,5 +25,33 @@ $link-color: #005ea5 !default;
 
   &--disabled {
     opacity: 0.3;
+  }
+
+  &--backlink {
+    display: block;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    color: $link-color--backlink;
+
+    margin-bottom: 0.5em;
+
+    &:before {
+      font-family: 'Material icons';
+      content: "arrow_back";
+      padding-right: $backlink-padding;
+      margin-left: $backlink-travel;
+      transition: all 0.2s ease;
+    }
+
+    &:hover {
+      color: $link-color--backlink;
+
+      &:before {
+        margin-left: 0;
+        padding-right: $backlink-travel + $backlink-padding;
+      }
+    }
   }
 }

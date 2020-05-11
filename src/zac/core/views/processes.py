@@ -2,7 +2,6 @@ import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import SuspiciousOperation
 from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.urls import reverse
@@ -10,6 +9,8 @@ from django.utils.http import is_safe_url
 from django.views.generic import FormView, TemplateView
 
 from django_camunda.client import get_client
+
+from zac.accounts.mixins import PermissionRequiredMixin
 
 from ..camunda import (
     MessageForm,
@@ -19,6 +20,7 @@ from ..camunda import (
     send_message,
 )
 from ..forms import ClaimTaskForm
+from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import (
     _client_from_url,
     fetch_zaaktype,
@@ -26,42 +28,44 @@ from ..services import (
     get_roltypen,
     get_zaak,
 )
+from .utils import get_zaak_from_query
 
 User = get_user_model()
 
 
-class FetchTasks(LoginRequiredMixin, TemplateView):
+class FetchTasks(PermissionRequiredMixin, TemplateView):
     template_name = "core/includes/tasks.html"
+    permission_required = zaakproces_usertasks.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
 
-        context["tasks"] = get_zaak_tasks(zaak_url)
-        context["zaak"] = get_zaak(zaak_url=zaak_url, zaak_uuid=None)
+        context["tasks"] = get_zaak_tasks(zaak.url)
+        context["zaak"] = zaak
         return context
 
 
-class FetchMessages(LoginRequiredMixin, TemplateView):
+class FetchMessages(PermissionRequiredMixin, TemplateView):
     template_name = "core/includes/messages.html"
+    permission_required = zaakproces_send_message.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaak_url = self.request.GET.get("zaak")
-        if not zaak_url:
-            raise ValueError("Expected zaak querystring parameter")
+        zaak = get_zaak_from_query(self.request)
+        self.check_object_permissions(zaak)
 
-        definitions = get_process_definition_messages(zaak_url)
+        definitions = get_process_definition_messages(zaak.url)
         context["forms"] = [definition.get_form() for definition in definitions]
-        context["zaak"] = get_zaak(zaak_url=zaak_url, zaak_uuid=None)
+        context["zaak"] = zaak
         return context
 
 
-class SendMessage(LoginRequiredMixin, FormView):
+class SendMessage(PermissionRequiredMixin, FormView):
     template_name = "core/includes/messages.html"
     form_class = MessageForm
+    permission_required = zaakproces_send_message.name
 
     def get_form(self, **kwargs):
         form = super().get_form(**kwargs)
@@ -85,8 +89,8 @@ class SendMessage(LoginRequiredMixin, FormView):
 
     def form_valid(self, form: ClaimTaskForm):
         # build service variables to continue execution
-        zaak_url = form.cleaned_data["zaak_url"]
-        zaak = get_zaak(zaak_url=zaak_url)
+        zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
+        self.check_object_permissions(zaak)
 
         zrc_client = _client_from_url(zaak.url)
         ztc_client = _client_from_url(zaak.zaaktype)
@@ -112,21 +116,24 @@ class SendMessage(LoginRequiredMixin, FormView):
         raise SuspiciousOperation("Unsafe HTTP_REFERER detected")
 
 
-class PerformTaskView(LoginRequiredMixin, FormView):
+class PerformTaskView(PermissionRequiredMixin, FormView):
     template_name = "core/zaak_task.html"
+    permission_required = zaakproces_usertasks.name
+
+    def get_zaak(self):
+        zaak = find_zaak(
+            bronorganisatie=self.kwargs["bronorganisatie"],
+            identificatie=self.kwargs["identificatie"],
+        )
+        self.check_object_permissions(zaak)
+        return zaak
 
     def get(self, request, *args, **kwargs):
-        self.zaak = find_zaak(
-            bronorganisatie=kwargs["bronorganisatie"],
-            identificatie=kwargs["identificatie"],
-        )
+        self.zaak = self.get_zaak()
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.zaak = find_zaak(
-            bronorganisatie=kwargs["bronorganisatie"],
-            identificatie=kwargs["identificatie"],
-        )
+        self.zaak = self.get_zaak()
         return super().post(request, *args, **kwargs)
 
     def _get_task(self):
@@ -185,10 +192,38 @@ class PerformTaskView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-class ClaimTaskView(LoginRequiredMixin, FormView):
+class ClaimTaskView(PermissionRequiredMixin, FormView):
     form_class = ClaimTaskForm
+    permission_required = zaakproces_usertasks.name
+
+    def _create_rol(self, zaak):
+        # fetch roltype
+        roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
+        if not roltypen:
+            return
+        roltype = roltypen[0]
+
+        zrc_client = _client_from_url(zaak.url)
+        voorletters = " ".join(
+            [part[0] for part in self.request.user.first_name.split()]
+        )
+        data = {
+            "zaak": zaak.url,
+            "betrokkeneType": "medewerker",
+            "roltype": roltype.url,
+            "roltoelichting": "task claiming",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.request.user.username,
+                "achternaam": self.request.user.last_name,
+                "voorletters": voorletters,
+            },
+        }
+        zrc_client.create("rol", data)
 
     def form_valid(self, form: ClaimTaskForm):
+        zaak = get_zaak(zaak_url=form.cleaned_data["zaak"])
+        self.check_object_permissions(zaak)
+
         _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         task_id = form.cleaned_data["task_id"]
         zaak_url = form.cleaned_data["zaak"]
@@ -200,28 +235,7 @@ class ClaimTaskView(LoginRequiredMixin, FormView):
             f"task/{task_id}/claim", json={"userId": self.request.user.username}
         )
 
-        # fetch roltype
-        roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
-        if not roltypen:
-            return
-        roltype = roltypen[0]
-
-        zrc_client = _client_from_url(zaak_url)
-        voorletters = " ".join(
-            [part[0] for part in self.request.user.first_name.split()]
-        )
-        data = {
-            "zaak": zaak_url,
-            "betrokkeneType": "medewerker",
-            "roltype": roltype.url,
-            "roltoelichting": "task claiming",
-            "betrokkeneIdentificatie": {
-                "identificatie": self.request.user.username,
-                "achternaam": self.request.user.last_name,
-                "voorletters": voorletters,
-            },
-        }
-        zrc_client.create("rol", data)
+        self._create_rol(zaak)
 
         return HttpResponseRedirect(_next)
 

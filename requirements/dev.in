@@ -8,6 +8,7 @@ isort
 
 # Debug tooling
 django-debug-toolbar
+ddt_api_calls
 django-extensions
 
 # Documentation

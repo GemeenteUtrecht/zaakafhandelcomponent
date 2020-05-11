@@ -28,11 +28,14 @@ from zgw_consumers.api_models.zaken import (
 )
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.service import get_paginated_results
 
+from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
 from .cache import invalidate_zaak_cache
-from .utils import get_paginated_results
+from .permissions import zaken_inzien
 
 logger = logging.getLogger(__name__)
 
@@ -73,25 +76,34 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 ###################################################
 
 
-@cache_result("zaaktypen", timeout=AN_HOUR)
-def _get_zaaktypen() -> List[Dict]:
+@cache_result("zaaktypen:{catalogus}", timeout=AN_HOUR)
+def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
     """
     Retrieve all the zaaktypen from all catalogi in the configured APIs.
     """
-    result = []
-
+    query_params = {"catalogus": catalogus} if catalogus else None
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
-    for ztc in ztcs:
-        client = ztc.build_client()
-        result += get_paginated_results(client, "zaaktype")
 
-    return result
+    if catalogus:
+        clients = [_client_from_url(catalogus)]
+    else:
+        clients = [ztc.build_client() for ztc in ztcs]
+
+    result = []
+    for client in clients:
+        result += get_paginated_results(client, "zaaktype", query_params=query_params)
+
+    return factory(ZaakType, result)
 
 
-def get_zaaktypen() -> List[ZaakType]:
-    zaaktypes_raw = _get_zaaktypen()
-    zaaktypes = factory(ZaakType, zaaktypes_raw)
-    return zaaktypes
+def get_zaaktypen(
+    user_perms: Optional[UserPermissions] = None, catalogus: str = ""
+) -> List[ZaakType]:
+    zaaktypen = _get_zaaktypen(catalogus=catalogus)
+    if user_perms is not None:
+        # filter out zaaktypen from permissions
+        zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
+    return zaaktypen
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -173,9 +185,18 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
 ###################################################
 
 
-@cache_result("zaken:{client.base_url}:{zaaktype}:{identificatie}:{bronorganisatie}")
+# TODO: invalidate on zaak creation/deletion!
+@cache_result(
+    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
+    timeout=AN_HOUR,
+)
 def _find_zaken(
-    client, zaaktype: str = "", identificatie: str = "", bronorganisatie: str = ""
+    client,
+    zaaktype: str = "",
+    identificatie: str = "",
+    bronorganisatie: str = "",
+    max_va: str = "",
+    test_func: Optional[callable] = None,
 ) -> List[Dict]:
     """
     Retrieve zaken for a particular client with filter parameters.
@@ -184,58 +205,81 @@ def _find_zaken(
         "zaaktype": zaaktype,
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
+        # "maximaleVertrouwelijkheidaanduiding": max_va,
     }
-    _zaken = get_paginated_results(client, "zaak", query_params=query, min_num=25)
+    logger.debug("Querying zaken with %r", query)
+    _zaken = get_paginated_results(
+        client, "zaak", query_params=query, min_num=25, test_func=test_func,
+    )
     return _zaken
 
 
 def get_zaken(
-    zaaktypen: List[str] = None, identificatie: str = "", bronorganisatie: str = "",
+    user_perms: UserPermissions,
+    zaaktypen: List[str] = None,
+    identificatie: str = "",
+    bronorganisatie: str = "",
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
-    """
-    _zaaktypen = get_zaaktypen()
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
 
-    job_args = []
-    for zrc in zrcs:
-        client = zrc.build_client()
-        job_args.append(
-            {
-                "client": client,
-                "identificatie": identificatie,
-                "bronorganisatie": bronorganisatie,
-                "zaaktype": "",
-            }
+    Only retrieve what the user permissions dictate.
+    """
+    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+    allowed_zaaktypen = _base_zaaktypen
+
+    if user_perms.user.is_superuser:
+        query_zaaktypen = [""]
+    else:
+        query_zaaktypen = (
+            allowed_zaaktypen
+            if not zaaktypen
+            else set(zaaktypen).intersection(set(allowed_zaaktypen))
         )
 
-    # expand job args with zaaktype filters if needed, parallelizes as much as possible
-    if zaaktypen:
-        _job_args = []
-        for job_arg in job_args:
-            for zaaktype_url in zaaktypen:
-                _job_args.append({"zaaktype": zaaktype_url, **job_arg})
-        job_args = _job_args
+    # build keyword arguments for retrieval jobs - running network calls in parallel
+    # if possible
+    find_kwargs = []
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    for zrc in zrcs:
+        client = zrc.build_client()
+        for zaaktype_url in query_zaaktypen:
+            # figure out the max va
+            relevant_perms = [
+                perm
+                for perm in user_perms.zaaktype_permissions
+                if perm.permission == zaken_inzien.name and perm.contains(zaaktype_url)
+            ]
 
-    def _job(kwargs_dict):
-        return _find_zaken(**kwargs_dict)
+            # sort them by max va
+            relevant_perms = sorted(
+                relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
+            )
+            max_va = relevant_perms[0].max_va if relevant_perms else ""
+            find_kwargs.append(
+                {
+                    "client": client,
+                    "identificatie": identificatie,
+                    "bronorganisatie": bronorganisatie,
+                    "zaaktype": zaaktype_url,
+                    "max_va": max_va,
+                }
+            )
 
-    with futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = executor.map(_job, job_args)
+    def _test_va(zaak: dict):
+        return user_perms.user.has_perm(zaken_inzien.name, obj=zaak)
+
+    with futures.ThreadPoolExecutor() as executor:
+        results = executor.map(
+            lambda kwargs: _find_zaken(test_func=_test_va, **kwargs), find_kwargs
+        )
         flattened = sum(list(results), [])
 
     zaken = factory(Zaak, flattened)
 
     # resolve zaaktype reference
-    _zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
-
     for zaak in zaken:
-        if zaak.zaaktype not in _zaaktypen:
-            zaaktype = fetch_zaaktype(zaak.zaaktype)
-            _zaaktypen[zaak.zaaktype] = zaaktype
-
-        zaak.zaaktype = _zaaktypen[zaak.zaaktype]
+        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
 
     # sort results by startdatum / registratiedatum / identificatie
 
@@ -337,7 +381,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
     return sorted(statussen, key=lambda x: x.datum_status_gezet, reverse=True)
 
 
-@cache_result("zaak-status:{zaak.status}")
+@cache_result("zaak-status:{zaak.status}", timeout=AN_HOUR)
 def get_status(zaak: Zaak) -> Status:
     assert isinstance(zaak.status, str), "Status already resolved."
     client = _client_from_object(zaak)
@@ -370,11 +414,14 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     return zaak_eigenschappen
 
 
-@cache_result("get_zaak:{zaak_uuid}:{zaak_url}")
+@cache_result("get_zaak:{zaak_uuid}:{zaak_url}", timeout=AN_HOUR)
 def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """
     Retrieve zaak with uuid or url
     """
+    if client is None and zaak_url is not None:
+        client = _client_from_url(zaak_url)
+
     if client is None:
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         result = None

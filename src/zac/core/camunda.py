@@ -92,7 +92,7 @@ FIELD_TYPE_MAP = {
 
 def formfield_from_xml(definition: Element) -> Tuple[str, forms.Field]:
     name = definition.attrib["id"]
-    label = definition.attrib["label"]
+    label = definition.attrib.get("label", "")
     default = definition.attrib.get("defaultValue")
 
     field_type = definition.attrib["type"]
