@@ -28,6 +28,7 @@
 {% has_perm 'zaakproces:send-bpmn-message' user zaak as can_send_bpmn_messages %}
 {% has_perm 'zaakproces:usertasks-uitvoeren' user zaak as can_do_usertasks %}
 {% has_perm 'zaak:afhandelen' user zaak as can_do_zaakafhandeling %}
+{% has_perm 'zaken:create-status' user zaak as can_create_status %}
 
 {% load_widgets kv='sniplates/key-value.html' %}
 
@@ -48,7 +49,9 @@
             </a>
             {% endif %}
 
-            <a href="#" class="btn btn--control link link--plain link--disabled">Zet nieuwe status</a>
+            {% if can_create_status %}
+                <a href="#" class="btn btn--control link link--plain link--disabled">Zet nieuwe status</a>
+            {% endif %}
         {% endif %}
     </nav>
 </header>
