@@ -2,6 +2,8 @@ import os
 import random
 from typing import Any, Dict, List
 
+from django.utils import timezone
+
 import yaml
 from faker import Faker
 from requests_mock import Mocker
@@ -90,6 +92,9 @@ def generate_prop(schema: dict, prop_definition: dict) -> Any:
 
         elif fmt == "date":
             return fake.date()
+
+        elif fmt == "date-time":
+            return fake.date_time(tzinfo=timezone.utc).isoformat()
 
         elif fmt is None:
             return fake.pystr(

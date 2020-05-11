@@ -211,3 +211,149 @@ class ZaakAfhandelingGETTests(ClearCachesMixin, WebTest):
                 self.assertGreater(m.call_count, 0)
 
                 transaction.savepoint_rollback(sid)
+
+
+@requests_mock.Mocker()
+class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
+    """
+    Permission tests for afhandel-form submission.
+    """
+
+    url = reverse_lazy(
+        "core:zaak-afhandeling",
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE,},
+    )
+
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+    def _setUpMocks(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
+            identificatie="ZT1",
+        )
+        resultaattype = generate_oas_component(
+            "ztc",
+            "schemas/ResultaatType",
+            url=f"{CATALOGI_ROOT}resultaattypen/ee512886-d0d9-4c12-9bbb-78b0d22bfb61",
+            zaaktype=zaaktype["url"],
+        )
+        statustype = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/f4e659c4-8b56-4596-beae-ee1353a3d95b",
+            volgnummer=1,
+            isEindstatus=True,
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/05b2c190-b1f6-4767-9e35-38bcf7702968",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=zaaktype["url"],
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json=paginated_response([zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}resultaattypen?zaaktype={zaaktype['url']}",
+            json=paginated_response([resultaattype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={zaaktype['url']}",
+            json=paginated_response([statustype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(zaaktype["url"], json=zaaktype)
+
+        resultaat = generate_oas_component(
+            "zrc",
+            "schemas/Resultaat",
+            url=f"{ZAKEN_ROOT}resultaten/a11dd05c-e1c7-4b12-bf77-7e35790e1ce4",
+            zaak=zaak["url"],
+            resultaattype=resultaattype["url"],
+        )
+        m.post(f"{ZAKEN_ROOT}resultaten", status_code=201, json=resultaat)
+
+        status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/3bdc9329-3f19-4de0-ad6a-845d063611f4",
+            zaak=zaak["url"],
+            statustype=statustype["url"],
+            # datumStatusGezet="2020-05-11T12:20:00Z",
+        )
+        m.post(f"{ZAKEN_ROOT}statussen", status_code=201, json=status)
+
+        self.zaaktype = zaaktype
+        self.resultaattype = resultaattype
+        self.zaak = zaak
+
+    def test_set_result_close_blocked(self, m):
+        self._setUpMocks(m)
+        PermissionSetFactory.create(
+            permissions=[zaken_set_result.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        self.client.force_login(self.user)
+        data = {
+            "resultaattype": self.resultaattype["url"],
+            "close_zaak": True,
+        }
+
+        response = self.client.post(self.url, data)
+
+        self.assertEqual(response.status_code, 302)
+
+        # assert API calls -> closing zaak is forbidden, so we only expect a post for
+        # resultaat creation
+        post_requests = [req for req in m.request_history if req.method == "POST"]
+        self.assertEqual(len(post_requests), 1)
+        self.assertEqual(
+            post_requests[0].url, f"{ZAKEN_ROOT}resultaten",
+        )
+
+    def test_close_set_result_blocked(self, m):
+        self._setUpMocks(m)
+        PermissionSetFactory.create(
+            permissions=[zaken_close.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        self.client.force_login(self.user)
+        data = {
+            "resultaattype": self.resultaattype["url"],
+            "close_zaak": True,
+        }
+
+        response = self.client.post(self.url, data)
+
+        self.assertEqual(response.status_code, 302)
+
+        # assert API calls -> closing zaak is forbidden, so we only expect a post for
+        # resultaat creation
+        post_requests = [req for req in m.request_history if req.method == "POST"]
+        self.assertEqual(len(post_requests), 1)
+        self.assertEqual(
+            post_requests[0].url, f"{ZAKEN_ROOT}statussen",
+        )
