@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from .camunda import get_zaak_tasks
+from .permissions import zaken_close, zaken_set_result
 from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
 
 
@@ -103,18 +104,29 @@ class ZaakAfhandelForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.zaak = kwargs.pop("zaak")
+        self.can_set_result = kwargs.pop("can_set_result")
+        self.can_close = kwargs.pop("can_close")
+
         super().__init__(*args, **kwargs)
 
-        # fetch the possible result types
-        zaaktype = self.zaak.zaaktype
+        if self.can_set_result:
+            # fetch the possible result types
+            zaaktype = self.zaak.zaaktype
 
-        _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaaktype)}
-        resultaattype_choices = [
-            (url, resultaattype.omschrijving)
-            for url, resultaattype in _resultaattypen.items()
-        ]
-        self.fields["resultaattype"].choices = resultaattype_choices
-        self.fields["resultaattype"].coerce = _resultaattypen.get
+            _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaaktype)}
+            resultaattype_choices = [
+                (url, resultaattype.omschrijving)
+                for url, resultaattype in _resultaattypen.items()
+            ]
+            self.fields["resultaattype"].choices = resultaattype_choices
+            self.fields["resultaattype"].coerce = _resultaattypen.get
+        else:
+            del self.fields["resultaattype"]
+            del self.fields["result_remarks"]
+
+        if not self.can_close:
+            del self.fields["close_zaak"]
+            del self.fields["close_zaak_remarks"]
 
     def clean_close_zaak(self):
         close_zaak = self.cleaned_data["close_zaak"]
@@ -128,12 +140,15 @@ class ZaakAfhandelForm(forms.Form):
         """
         Commit the changes to the backing API.
         """
-        resultaattype = self.cleaned_data["resultaattype"]
+        if not any((self.can_set_result, self.can_close)):
+            return
 
-        if resultaattype:
+        resultaattype = self.cleaned_data.get("resultaattype")
+
+        if self.can_set_result and resultaattype:
             zet_resultaat(self.zaak, resultaattype, self.cleaned_data["result_remarks"])
 
-        if self.cleaned_data["close_zaak"]:
+        if self.can_close and self.cleaned_data["close_zaak"]:
             statustypen = get_statustypen(self.zaak.zaaktype)
             last_statustype = sorted(statustypen, key=lambda st: st.volgnummer)[-1]
             zet_status(

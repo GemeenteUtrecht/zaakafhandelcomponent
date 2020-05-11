@@ -12,7 +12,7 @@ from zac.accounts.permissions import UserPermissions
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
-from ..permissions import zaken_inzien
+from ..permissions import zaken_close, zaken_inzien, zaken_set_result
 from ..services import (
     find_zaak,
     get_documenten,
@@ -160,7 +160,17 @@ class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
 
     def get_form_kwargs(self) -> Dict[str, Any]:
         kwargs = super().get_form_kwargs()
-        return {"zaak": self.object, **kwargs}
+
+        user = self.request.user
+        can_set_result = user.has_perm(zaken_set_result.name, self.object)
+        can_close = user.has_perm(zaken_close.name, self.object)
+
+        return {
+            "zaak": self.object,
+            "can_set_result": can_set_result,
+            "can_close": can_close,
+            **kwargs,
+        }
 
     def form_valid(self, form: ZaakAfhandelForm):
         form.save(user=self.request.user)
