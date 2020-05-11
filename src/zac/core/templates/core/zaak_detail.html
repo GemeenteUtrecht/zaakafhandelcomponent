@@ -27,6 +27,7 @@
 
 {% has_perm 'zaakproces:send-bpmn-message' user zaak as can_send_bpmn_messages %}
 {% has_perm 'zaakproces:usertasks-uitvoeren' user zaak as can_do_usertasks %}
+{% has_perm 'zaak:afhandelen' user zaak as can_do_zaakafhandeling %}
 
 {% load_widgets kv='sniplates/key-value.html' %}
 
@@ -36,6 +37,8 @@
     <nav class="page-controls page-controls--align-right">
 
         {% if not zaak.einddatum %}
+
+            {% if can_do_zaakafhandeling %}
             <a href="{% url 'core:zaak-afhandeling' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
                 class="link link--plain link--disabled"
                 data-msg="Zaakafhandeling moet via de taken verlopen.">
@@ -43,6 +46,7 @@
                     Handel zaak af
                 </button>
             </a>
+            {% endif %}
 
             <a href="#" class="btn btn--control link link--plain link--disabled">Zet nieuwe status</a>
         {% endif %}

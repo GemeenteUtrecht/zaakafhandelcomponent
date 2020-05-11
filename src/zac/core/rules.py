@@ -67,6 +67,8 @@ def _has_permission_key(permission_name: str, user: User):
 def can_close_zaken(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return _has_permission_key(zaken_close.name, user)
+    if zaak.einddatum:
+        return False
     return _generic_zaakpermission(user, zaak, zaken_close)
 
 
@@ -74,6 +76,8 @@ def can_close_zaken(user: User, zaak: Optional[Zaak]):
 def can_set_results(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return _has_permission_key(zaken_set_result.name, user)
+    if zaak.einddatum:
+        return False
     return _generic_zaakpermission(user, zaak, zaken_set_result)
 
 
