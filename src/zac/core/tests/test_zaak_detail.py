@@ -323,7 +323,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
                 "identificatie": IDENTIFICATIE,
             },
         )
-        response = self.app.get(url, user=self.user)
+        self.app.set_user(self.user)
+        response = self.app.get(url)
 
         self.assertEqual(response.status_code, 200)
 
@@ -357,7 +358,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
                 "identificatie": IDENTIFICATIE,
             },
         )
-        response = self.app.get(url, user=self.user)
+        self.app.set_user(self.user)
+        response = self.app.get(url)
 
         self.assertEqual(response.status_code, 200)
 
