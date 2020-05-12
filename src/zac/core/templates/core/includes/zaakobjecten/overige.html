@@ -1,39 +1,16 @@
 {% load sniplates l10n %}
-{% load_widgets kv='sniplates/key-value.html' %}
 
 <article class="overige">
 {% for group, objects in items %}
     <section class="overige__group">
-        <div class="section-title">{{ group }}</div>
-
-        {% for object in objects %}
-            {% if group == 'verblijfsobject' %}
-
-                <div class="overige__identificatie">{{ object.identificatiecode }}</div>
-                <div class="overige__meta">
-                    {% nested_widget 'kv:key-value' label=_("Oppervlakte") %}
-                        {{ object.oppervlakte }}
-                    {% endnested %}
-
-                    {% nested_widget 'kv:key-value' label=_("Status") %}
-                        {{ object.status }}
-                    {% endnested %}
-                </div>
-                <section class="overige__adressen">
-                <div class="section-title">Adres</div>
-                    <address class="overige__adres">
-                        {{ object.adres.or_naam }} {{ object.adres.huisnummer|unlocalize }}{{ object.adres.huisletter }}
-                        <br>
-                        {{ object.adres.postcode|default:'geen postcode' }}
-                        <br>
-                        {{ object.adres.woonplaats }}
-                    </address>
-                </section>
-
-            {% else %}
+        <div class="section-subtitle">{{ group }}</div>
+        {% if group == 'verblijfsobject' %}
+            {% include 'core/includes/zaakobjecten/verblijfsobject.html' with items=objects only %}
+        {% else %}
+            {% for object in objects %}
                 {{ object.url|urlize }}
-            {% endif %}
-        {% endfor %}
+            {% endfor %}
+        {% endif %}
     </section>
 </article>
 {% endfor %}
