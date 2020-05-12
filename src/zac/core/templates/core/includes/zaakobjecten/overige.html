@@ -1,0 +1,14 @@
+{% load sniplates l10n %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
+{% for group, objects in items %}
+<article class="overige">
+    <div class="section-title">{{ group }}</div>
+
+    {% for object in objects %}
+        {{ object.url|urlize }}
+
+    {% endfor %}
+
+</article>
+{% endfor %}
