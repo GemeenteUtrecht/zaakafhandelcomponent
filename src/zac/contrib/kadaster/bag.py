@@ -57,6 +57,7 @@ def _fetch_woonplaats(bag: Bag, url: str) -> dict:
     return bag.retrieve(url)
 
 
+@cache("nummeraanduiding:{url}", timeout=A_DAY)
 def _fetch_adres(bag: Bag, url: str) -> dict:
     _hoofdadres = bag.retrieve(url)
     _openbare_ruimte = _fetch_openbare_ruimte(
@@ -115,4 +116,16 @@ def fetch_pand(url: str) -> Dict[str, Any]:
 
 @cache("verblijfsobject:{url}", timeout=A_DAY)
 def fetch_verblijfsobject(url: str) -> Dict[str, Any]:
-    return {"url": url}
+    bag = Bag()
+
+    verblijfsobject = bag.retrieve(url)
+    adres = _fetch_adres(bag, verblijfsobject["_links"]["hoofdadres"]["href"])
+
+    return {
+        "url": verblijfsobject["_links"]["self"]["href"],
+        "identificatiecode": verblijfsobject["identificatiecode"],
+        "oppervlakte": verblijfsobject["oppervlakte"],
+        "status": verblijfsobject["status"],
+        "geometry": verblijfsobject["_embedded"]["geometrie"],
+        "adres": adres,
+    }
