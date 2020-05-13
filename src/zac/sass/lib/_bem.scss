@@ -1,0 +1,22 @@
+/**
+ * Output rules for elements within a block.
+ */
+@mixin element($element) {
+  & &__#{$element} {
+    @content;
+  }
+}
+
+/**
+ * Apply styling to an element of a modified block.
+ * @param  {String} $modifier Block modifier to target elements for
+ * @param  {String} $element  Element within the modified block to target
+ */
+@mixin modified-element($modifier, $element) {
+  // put .block and .block--modifier together into .block.block--modifier
+  $modified-block: selector-append(&, #{&--#{$modifier}});
+  // e.g. .block.block--modifier .element
+  @at-root #{$modified-block} &__#{$element} {
+    @content;
+  }
+}

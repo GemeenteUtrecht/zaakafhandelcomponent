@@ -2,10 +2,10 @@
 {% load_widgets kv='sniplates/key-value.html' %}
 
 {% for pand in items %}
-<article class="pand">
-    <div class="pand__identificatie">{{ pand.identificatiecode }}</div>
+<article class="bag-object bag-object--pand">
+    <div class="bag-object__identificatie">{{ pand.identificatiecode }}</div>
 
-    <div class="pand__meta">
+    <div class="bag-object__meta">
         {% nested_widget 'kv:key-value' label=_("Bouwjaar") %}
             {{ pand.oorspronkelijkBouwjaar|unlocalize }}
         {% endnested %}
@@ -19,11 +19,11 @@
         {% endnested %}
     </div>
 
-    <section class="pand__adressen">
+    <section class="bag-object__adressen">
         <div class="section-title">Adressen ({{ pand.adressen|length }})</div>
 
         {% for adres in pand.adressen %}
-            <address class="pand__adres">
+            <address class="bag-object__adres">
                 {{ adres.or_naam }} {{ adres.huisnummer|unlocalize }}{{ adres.huisletter }}
                 <br>
                 {{ adres.postcode|default:'geen postcode' }}

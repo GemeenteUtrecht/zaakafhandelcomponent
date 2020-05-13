@@ -1,17 +1,22 @@
-.pand {
+@import "../lib/bem";
 
+.bag-object {
   padding: 1em 0;
   display: flex;
   flex-wrap: wrap;
 
-  & &__identificatie {
+  @include element('identificatie') {
     width: 100%;
     font-weight: 700;
     font-size: 1.2rem;
     margin-bottom: 1rem;
   }
 
-  & &__meta {
+  @include modified-element('verblijfsobject', 'meta') {
+    min-width: 30em;
+  }
+
+  @include element('meta') {
     min-width: 320px;
     margin-right: 2em;
 
@@ -20,7 +25,7 @@
     }
   }
 
-  & &__adressen {
+  @include element('adressen') {
     flex: 1;
 
     display: flex;
@@ -36,12 +41,15 @@
     }
   }
 
-  & &__adres {
+  @include element('adres') {
     min-width: 100px;
-    width: 20%;
     font-style: normal;
     font-size: 0.9em;
     line-height: 1.2;
     padding: 5px;
+  }
+
+  @include modified-element('pand', 'adres') {
+    width: 20%;
   }
 }
