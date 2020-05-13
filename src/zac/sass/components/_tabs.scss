@@ -1,0 +1,67 @@
+// mostly inspired/taken from nl-design-system
+@import "../lib/colors";
+
+$tab-height: 3rem !default;
+$tab-height--inline: 2rem !default;
+$tab-bg: #f3f3f3 !default;
+
+.tab {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 -0.5rem;
+  padding: 0;
+
+  &__tab {
+    background: $tab-bg;
+    flex-grow: 1;
+    height: $tab-height;
+    line-height: $tab-height;
+    list-style-type: none;
+    margin: 0 0.5rem;
+    text-align: center;
+    white-space: nowrap;
+
+    a {
+      display: block;
+      overflow: hidden;
+      padding: 0 1rem;
+      text-overflow: ellipsis;
+      text-decoration: none;
+      color: $color-text;
+    }
+  }
+
+  &#{&}--inline {
+    .tab__tab {
+      background: transparent;
+      height: $tab-height--inline;
+      line-height: $tab-height--inline;
+      position: relative;
+
+      &:not(.tab__tab--disabled):hover {
+        background: $tab-bg;
+      }
+
+      &::before {
+        border-bottom: 1px solid darken($tab-bg, 20%);
+        bottom: 0;
+        content: ' ';
+        left: -1rem;
+        position: absolute;
+        right: -1rem;
+      }
+
+      &:first-child {
+        &::before {
+          left: 0;
+        }
+      }
+
+      &:last-child {
+        &::before {
+          right: 0;
+        }
+      }
+    }
+  }
+}
