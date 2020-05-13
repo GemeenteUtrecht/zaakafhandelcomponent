@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator
+from typing import Iterator
 
 import requests
 from zgw_consumers.api_models.zaken import ZaakObject
@@ -20,10 +20,6 @@ class ZaakObjectGroup:
 
     def retrieve_items(self, items: Iterator[ZaakObject]) -> None:
         self.items = [self.retriever(item.object) for item in items]
-
-
-def fetch_overige(url: str) -> Dict[str, Any]:
-    return {"url": url}
 
 
 GROUPS = {
