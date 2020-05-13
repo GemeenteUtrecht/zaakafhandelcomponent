@@ -50,7 +50,7 @@ $tab-border-color: darken($tab-bg, 10%) !default;
       line-height: $tab-height--inline;
       position: relative;
 
-      &:not(.tab__tab--disabled):hover {
+      &:not(.tab__tab--disabled):not(.tab__tab--active):hover {
         background: $tab-bg;
       }
 
