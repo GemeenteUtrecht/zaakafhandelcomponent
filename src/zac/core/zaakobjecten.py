@@ -4,7 +4,7 @@ from typing import Iterator
 import requests
 from zgw_consumers.api_models.zaken import ZaakObject
 
-from zac.contrib.kadaster.bag import fetch_pand
+from zac.contrib.kadaster.bag import fetch_pand, fetch_verblijfsobject
 
 
 @dataclass
@@ -27,5 +27,10 @@ GROUPS = {
         label="Panden",
         retriever=fetch_pand,
         template="core/includes/zaakobjecten/pand.html",
+    ),
+    "verblijfsobject": ZaakObjectGroup(
+        label="Verblijfsobjecten",
+        retriever=fetch_verblijfsobject,
+        template="core/includes/zaakobjecten/verblijfsobject.html",
     ),
 }

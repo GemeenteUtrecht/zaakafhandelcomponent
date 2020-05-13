@@ -1,0 +1,29 @@
+{% load sniplates l10n %}
+{% load_widgets kv='sniplates/key-value.html' %}
+
+{% for vo in items %}
+<article class="bag-object bag-object--verblijfsobject">
+    <div class="bag-object__identificatie">{{ vo.identificatiecode }}</div>
+
+    <div class="bag-object__meta">
+        {% nested_widget 'kv:key-value' label=_("Oppervlakte") %}
+            {{ vo.oppervlakte }} m²
+        {% endnested %}
+
+        {% nested_widget 'kv:key-value' label=_("Status") %}
+            {{ vo.status }}
+        {% endnested %}
+    </div>
+
+    <section class="bag-object__adressen">
+        <div class="section-title">Adres</div>
+        <address class="bag-object__adres">
+            {{ vo.adres.or_naam }} {{ vo.adres.huisnummer|unlocalize }}{{ vo.adres.huisletter }}
+            <br>
+            {{ vo.adres.postcode|default:'geen postcode' }}
+            <br>
+            {{ vo.adres.woonplaats }}
+        </address>
+    </section>
+</article>
+{% endfor %}

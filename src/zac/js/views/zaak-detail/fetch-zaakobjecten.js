@@ -1,4 +1,13 @@
 import { apiCall } from '../../utils/fetch';
+import { initTab } from '../../components/tabs';
+
+
+const initTabs = (parentNode) => {
+    const nodes = parentNode.querySelectorAll('.tab');
+    for (const node of nodes) {
+        initTab(node);
+    }
+};
 
 
 const fetchZaakobjecten = (node) => {
@@ -8,6 +17,7 @@ const fetchZaakobjecten = (node) => {
     apiCall(fullUrl)
         .then(response => response.text())
         .then(content => {node.innerHTML = content;})
+        .then(() => initTabs(node))
         .catch(console.error);
 };
 

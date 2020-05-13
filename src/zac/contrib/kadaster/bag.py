@@ -57,6 +57,24 @@ def _fetch_woonplaats(bag: Bag, url: str) -> dict:
     return bag.retrieve(url)
 
 
+@cache("nummeraanduiding:{url}", timeout=A_DAY)
+def _fetch_adres(bag: Bag, url: str) -> dict:
+    _hoofdadres = bag.retrieve(url)
+    _openbare_ruimte = _fetch_openbare_ruimte(
+        bag, _hoofdadres["_links"]["bijbehorendeOpenbareRuimte"]["href"]
+    )
+    _woonplaats = _fetch_woonplaats(
+        bag, _openbare_ruimte["_links"]["bijbehorendeWoonplaats"]["href"]
+    )
+    return {
+        "huisnummer": _hoofdadres["huisnummer"],
+        "huisletter": _hoofdadres.get("huisletter", ""),
+        "postcode": _hoofdadres.get("postcode", ""),
+        "or_naam": _openbare_ruimte["naam"],
+        "woonplaats": _woonplaats["naam"],
+    }
+
+
 @cache("pand:{url}", timeout=A_DAY)
 def fetch_pand(url: str) -> Dict[str, Any]:
     bag = Bag()
@@ -67,25 +85,12 @@ def fetch_pand(url: str) -> Dict[str, Any]:
         "_embedded"
     ]["verblijfsobjecten"]
 
-    def _fetch_adres(vo: dict) -> dict:
-        _hoofdadres = bag.retrieve(vo["_links"]["hoofdadres"]["href"])
-        _openbare_ruimte = _fetch_openbare_ruimte(
-            bag, _hoofdadres["_links"]["bijbehorendeOpenbareRuimte"]["href"]
-        )
-        _woonplaats = _fetch_woonplaats(
-            bag, _openbare_ruimte["_links"]["bijbehorendeWoonplaats"]["href"]
-        )
-        return {
-            "huisnummer": _hoofdadres["huisnummer"],
-            "huisletter": _hoofdadres.get("huisletter", ""),
-            "postcode": _hoofdadres.get("postcode", ""),
-            "or_naam": _openbare_ruimte["naam"],
-            "woonplaats": _woonplaats["naam"],
-        }
+    def fetch_adres(vo: dict) -> dict:
+        return _fetch_adres(bag, vo["_links"]["hoofdadres"]["href"])
 
     # TODO: parallelize
     with futures.ThreadPoolExecutor() as executor:
-        adressen = list(executor.map(_fetch_adres, _verblijfsobjecten))
+        adressen = list(executor.map(fetch_adres, _verblijfsobjecten))
 
     verblijfsobjecten = [
         {
@@ -106,4 +111,21 @@ def fetch_pand(url: str) -> Dict[str, Any]:
         "geldigVoorkomen": pand["_embedded"]["geldigVoorkomen"],
         "verblijfsobjecten": verblijfsobjecten,
         "adressen": adressen,
+    }
+
+
+@cache("verblijfsobject:{url}", timeout=A_DAY)
+def fetch_verblijfsobject(url: str) -> Dict[str, Any]:
+    bag = Bag()
+
+    verblijfsobject = bag.retrieve(url)
+    adres = _fetch_adres(bag, verblijfsobject["_links"]["hoofdadres"]["href"])
+
+    return {
+        "url": verblijfsobject["_links"]["self"]["href"],
+        "identificatiecode": verblijfsobject["identificatiecode"],
+        "oppervlakte": verblijfsobject["oppervlakte"],
+        "status": verblijfsobject["status"],
+        "geometry": verblijfsobject["_embedded"]["geometrie"],
+        "adres": adres,
     }
