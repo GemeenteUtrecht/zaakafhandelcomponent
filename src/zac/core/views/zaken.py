@@ -100,6 +100,8 @@ class FetchZaakObjecten(LoginRequiredMixin, TemplateView):
         zaakobjecten = get_zaakobjecten(zaak_url)
 
         def group_key(zo):
+            if zo.object_type == "overige":
+                return zo.object_type_overige
             return zo.object_type
 
         # re-group by type
