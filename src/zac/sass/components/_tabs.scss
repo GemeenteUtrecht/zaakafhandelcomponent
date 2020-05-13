@@ -2,8 +2,9 @@
 @import "../lib/colors";
 
 $tab-height: 3rem !default;
-$tab-height--inline: 2rem !default;
+$tab-height--inline: 2.2rem !default;
 $tab-bg: #f3f3f3 !default;
+$tab-border-color: darken($tab-bg, 10%) !default;
 
 .tab {
   display: flex;
@@ -29,6 +30,17 @@ $tab-bg: #f3f3f3 !default;
       text-decoration: none;
       color: $color-text;
     }
+
+    &#{&}--active {
+      background: white;
+
+      & > a {
+        font-weight: bold;
+        cursor: default;
+        pointer-events: none;
+        text-decoration: none;
+      }
+    }
   }
 
   &#{&}--inline {
@@ -43,7 +55,7 @@ $tab-bg: #f3f3f3 !default;
       }
 
       &::before {
-        border-bottom: 1px solid darken($tab-bg, 20%);
+        border-bottom: 1px solid $tab-border-color;
         bottom: 0;
         content: ' ';
         left: -1rem;
@@ -62,6 +74,40 @@ $tab-bg: #f3f3f3 !default;
           right: 0;
         }
       }
+
+      &--active {
+        border: 1px solid $tab-border-color;
+        border-bottom: 1px solid transparent;
+
+        &::before {
+          border-bottom: 1px solid transparent;
+        }
+      }
     }
   }
+
+  &__content {
+    border: solid 1px $tab-border-color;
+    border-top: none;
+    padding: 1em;
+
+    &#{&}--inline {
+      border-bottom: 1px solid $tab-border-color;
+      margin-bottom: 1em;
+    }
+  }
+
+  &__pane {
+    display: none;
+
+    &#{&}--active {
+      display: block;
+
+      ~ .tab__pane--active {
+        // Prevent multiple active panes
+        display: none;
+      }
+    }
+  }
+
 }
