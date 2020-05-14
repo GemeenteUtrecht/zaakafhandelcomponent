@@ -3,16 +3,25 @@ from typing import Iterator, List, Tuple
 from django import forms
 from django.conf import settings
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
+from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.models import User
 
-from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
+from .services import (
+    get_documenten,
+    get_resultaattypen,
+    get_statustypen,
+    get_zaak,
+    zet_resultaat,
+    zet_status,
+)
 
 
 def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> Iterator[Tuple[str, str]]:
@@ -159,17 +168,68 @@ class ZaakAfhandelForm(forms.Form):
             )
 
 
-class SelectDocumentsForm(forms.Form):
+class BaseTaskForm(forms.Form):
+    """
+    Define a base class for forms driven by a particular form key in Camunda.
+
+    The form expects a :class:`Task` instance as param, which subclasses can use to
+    retrieve related information.
+    """
+
+    def __init__(self, task: Task, *args, **kwargs):
+        self.task = task
+        super().__init__(*args, **kwargs)
+
+
+def _repr(doc):
+    download_path = reverse(
+        "core:download-document",
+        kwargs={
+            "bronorganisatie": doc.bronorganisatie,
+            "identificatie": doc.identificatie,
+        },
+    )
+    name = doc.titel or doc.bestandsnaam
+    extra = f"({doc.informatieobjecttype.omschrijving}, {doc.get_vertrouwelijkheidaanduiding_display()})"
+    return format_html(
+        '<a href="{download_path}" class="link" target="_blank" '
+        'rel="noopener nofollow">{name}</a> {extra}',
+        download_path=download_path,
+        name=name,
+        extra=extra,
+    )
+
+
+class SelectDocumentsForm(BaseTaskForm):
     """
     Select (a subset) of documents belonging to a Zaak.
     """
 
-    def __init__(self, zaak: Zaak, *args, **kwargs):
-        self.zaak = zaak
+    documents = forms.MultipleChoiceField(
+        label=_("Selecteer de relevante documenten"),
+        help_text=_(
+            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
+            "documenten voor het vervolg van het proces."
+        ),
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    def __init__(self, *args, **kwargs):
+        from .camunda import get_process_instance_variable
+
         super().__init__(*args, **kwargs)
 
+        # retrieve process instance variables
+        zaak_url = get_process_instance_variable(
+            self.task.process_instance_id, "zaakUrl"
+        )
+        zaak = get_zaak(zaak_url=zaak_url)
+        documenten, _ = get_documenten(zaak)
 
-class SelectUsersForm(forms.Form):
+        self.fields["documents"].choices = [(doc.url, _repr(doc)) for doc in documenten]
+
+
+class SelectUsersForm(BaseTaskForm):
     """
     Select a (subset of) application users.
     """
