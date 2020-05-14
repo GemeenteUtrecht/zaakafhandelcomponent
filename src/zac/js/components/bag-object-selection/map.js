@@ -2,6 +2,15 @@ import * as L from 'leaflet';
 
 import { RD_CRS } from './rd';
 
+// fix leaflet images import - https://github.com/Leaflet/Leaflet/issues/4968
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
 
 const TILES = 'https://geodata.nationaalgeoregister.nl/tiles/service';
 const ATTRIBUTION = `
