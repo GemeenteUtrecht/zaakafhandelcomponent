@@ -1,6 +1,6 @@
 <div class="bag-object-selection"
     data-autocomplete-url="{% url 'kadaster:adres-autocomplete' %}"
-    data-adres-bag-object-url="{% url 'kadaster:adres-pand' %}"
+    data-adres-bag-object-url="{% if widget.name == 'verblijfsobject' %}{% url 'kadaster:adres-verblijfsobject' %}{% else %}{% url 'kadaster:adres-pand' %}{% endif %}"
 >
     <input
         type="hidden" name="{{ widget.name }}"

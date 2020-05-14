@@ -62,7 +62,7 @@ REGISTRATIONS = {
             ObjectType(value="pand", label="Pand", widget=BagObjectSelectieWidget),
             ObjectType(
                 value="verblijfsobject",
-                label="Verblijfsobject",
+                label="Verblijfs object",
                 widget=BagObjectSelectieWidget,
             ),
             ObjectType(value="address", label="Adres (TODO)", widget=TextInput),
