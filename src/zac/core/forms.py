@@ -8,8 +8,10 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.zaken import Zaak
 
-from .camunda import get_zaak_tasks
+from zac.accounts.models import User
+
 from .services import get_resultaattypen, get_statustypen, zet_resultaat, zet_status
 
 
@@ -73,6 +75,8 @@ class ClaimTaskForm(forms.Form):
         return next_url
 
     def clean(self):
+        from .camunda import get_zaak_tasks
+
         cleaned_data = super().clean()
         zaak = cleaned_data.get("zaak")
         task_id = cleaned_data.get("task_id")
@@ -153,3 +157,23 @@ class ZaakAfhandelForm(forms.Form):
             zet_status(
                 self.zaak, last_statustype, self.cleaned_data["close_zaak_remarks"]
             )
+
+
+class SelectDocumentsForm(forms.Form):
+    """
+    Select (a subset) of documents belonging to a Zaak.
+    """
+
+    def __init__(self, zaak: Zaak, *args, **kwargs):
+        self.zaak = zaak
+        super().__init__(*args, **kwargs)
+
+
+class SelectUsersForm(forms.Form):
+    """
+    Select a (subset of) application users.
+    """
+
+    users = forms.ModelMultipleChoiceField(
+        required=True, label=_("Users"), queryset=User.objects.filter(is_active=True),
+    )

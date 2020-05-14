@@ -3,6 +3,7 @@
 <section class="user-tasks">
 
     {% for task in tasks %}
+
         <div class="user-task" data-id="{{ task.id }}">
 
             <div class="user-task__description">
@@ -26,7 +27,7 @@
                 {% if task.assignee %}
                     {% with task.assignee.get_full_name|default:task.assignee.username as assignee %}
 
-                        {% if task.form %}
+                        {% if task.form is not None %}
                             {% if task.assignee != user %}
                                 <div>Taak is al geclaimd!</div>
                             {% else %}
@@ -35,8 +36,6 @@
                                        class="btn btn--small">Uitvoeren</a>
                                 </div>
                             {% endif %}
-                        {% elif task.form_key %}
-                            <div>TODO: implement task forms!</div>
                         {% endif %}
 
                         <strong>{{ assignee }}</strong>
