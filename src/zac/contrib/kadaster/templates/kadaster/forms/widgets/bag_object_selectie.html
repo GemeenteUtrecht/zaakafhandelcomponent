@@ -1,0 +1,20 @@
+<div class="bag-object-selection"
+    data-autocomplete-url="{% url 'kadaster:adres-autocomplete' %}"
+    data-adres-bag-object-url="{% url 'kadaster:adres-pand' %}"
+>
+    <input
+        type="hidden" name="{{ widget.name }}"
+        {% if widget.value != None %} value="{{ widget.value }}"{% endif %}
+        {% include "django/forms/widgets/attrs.html" %}
+    >
+
+    <div class="bag-object-selection__map-container">
+        <div class="bag-object-selection__map"></div>
+
+        <input type="text" placeholder="Zoek adres" class="input leaflet-bar bag-object-selection__autocomplete">
+        <a class="bag-object-selection__reset" href="#">🗙</a>
+        <div class="bag-object-selection__autocomplete-results"></div>
+    </div>
+
+
+</div>

@@ -1,4 +1,4 @@
-import './pand-selection';
+import './bag-object-selection';
 import './links';
 import './checkbox-select-dynamic';
 import './tabs';

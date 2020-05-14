@@ -72,7 +72,7 @@ class PandFetchView(APIView):
                 "postcode": doc.get("postcode", ""),
                 "provincienaam": doc.get("provincienaam", ""),
             },
-            "pand": {
+            "bagObject": {
                 "url": pand["_links"]["self"]["href"],
                 "geometrie": pand["_embedded"]["geometrie"],
                 "oorspronkelijkBouwjaar": pand["oorspronkelijkBouwjaar"],

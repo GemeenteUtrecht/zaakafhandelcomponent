@@ -1,15 +1,15 @@
 from django import forms
 
 
-class PandSelectieWidget(forms.URLInput):
-    template_name = "kadaster/forms/widgets/pand_selectie.html"
+class BagObjectSelectieWidget(forms.URLInput):
+    template_name = "kadaster/forms/widgets/bag_object_selectie.html"
 
     def __init__(self, attrs=None):
         super().__init__(attrs=attrs)
 
         self.attrs.setdefault("class", "")
-        self.attrs["class"] += " pand-selection__value"
+        self.attrs["class"] += " bag-object-selection__value"
 
 
-class PandSelectieField(forms.URLField):
-    widget = PandSelectieWidget
+class BagObjectSelectieField(forms.URLField):
+    widget = BagObjectSelectieWidget
