@@ -1,4 +1,4 @@
-from typing import Iterator, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
@@ -10,6 +10,8 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.camunda_models import Task
+from django_camunda.types import ProcessVariables
+from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.models import User
@@ -180,6 +182,14 @@ class BaseTaskForm(forms.Form):
         self.task = task
         super().__init__(*args, **kwargs)
 
+    def get_process_variables(self) -> ProcessVariables:
+        assert self.is_valid(), "Form does not pass validation"
+        variables = {
+            field: serialize_variable(value)
+            for field, value in self.cleaned_data.items()
+        }
+        return variables
+
 
 def _repr(doc):
     download_path = reverse(
@@ -205,7 +215,7 @@ class SelectDocumentsForm(BaseTaskForm):
     Select (a subset) of documents belonging to a Zaak.
     """
 
-    documents = forms.MultipleChoiceField(
+    documenten = forms.MultipleChoiceField(
         label=_("Selecteer de relevante documenten"),
         help_text=_(
             "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
@@ -226,7 +236,9 @@ class SelectDocumentsForm(BaseTaskForm):
         zaak = get_zaak(zaak_url=zaak_url)
         documenten, _ = get_documenten(zaak)
 
-        self.fields["documents"].choices = [(doc.url, _repr(doc)) for doc in documenten]
+        self.fields["documenten"].choices = [
+            (doc.url, _repr(doc)) for doc in documenten
+        ]
 
 
 class SelectUsersForm(BaseTaskForm):
