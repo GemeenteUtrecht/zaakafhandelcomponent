@@ -170,7 +170,7 @@ class ZaakAfhandelForm(forms.Form):
             )
 
 
-class BaseTaskForm(forms.Form):
+class TaskFormMixin:
     """
     Define a base class for forms driven by a particular form key in Camunda.
 
@@ -181,6 +181,15 @@ class BaseTaskForm(forms.Form):
     def __init__(self, task: Task, *args, **kwargs):
         self.task = task
         super().__init__(*args, **kwargs)
+
+    def set_context(self, context: dict):
+        self.context = context
+
+    def on_submission(self):
+        """
+        Hook for forms that do need to persist data.
+        """
+        pass
 
     def get_process_variables(self) -> ProcessVariables:
         assert self.is_valid(), "Form does not pass validation"
@@ -210,7 +219,7 @@ def _repr(doc):
     )
 
 
-class SelectDocumentsForm(BaseTaskForm):
+class SelectDocumentsForm(TaskFormMixin, forms.Form):
     """
     Select (a subset) of documents belonging to a Zaak.
     """
@@ -241,7 +250,7 @@ class SelectDocumentsForm(BaseTaskForm):
         ]
 
 
-class SelectUsersForm(BaseTaskForm):
+class SelectUsersForm(TaskFormMixin, forms.Form):
     """
     Select a (subset of) application users.
     """

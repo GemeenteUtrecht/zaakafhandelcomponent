@@ -15,7 +15,7 @@ from django_camunda.utils import deserialize_variable
 
 from zac.utils.decorators import cache
 
-from .forms import BaseTaskForm, SelectDocumentsForm, SelectUsersForm
+from .forms import SelectDocumentsForm, SelectUsersForm, TaskFormMixin
 
 User = get_user_model()
 
@@ -69,7 +69,7 @@ def complete_task(task_id: str, variables: dict) -> None:
     client.post(f"task/{task_id}/complete", json={"variables": variables})
 
 
-def extract_task_form(task: Task) -> Optional[Type[BaseTaskForm]]:
+def extract_task_form(task: Task) -> Optional[Type[TaskFormMixin]]:
     if task.form_key in FORM_KEYS:
         return FORM_KEYS[task.form_key]
 
@@ -88,7 +88,7 @@ def extract_task_form(task: Task) -> Optional[Type[BaseTaskForm]]:
         name, field = formfield_from_xml(definition)
         _fields[name] = field
 
-    return type("Form", (BaseTaskForm,), _fields)
+    return type("Form", (TaskFormMixin, forms.Form), _fields)
 
 
 FIELD_TYPE_MAP = {

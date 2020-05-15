@@ -159,6 +159,11 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         extra = {"task": task}
         return {**base, **extra}
 
+    def get_form(self, *args, **kwargs):
+        form = super().get_form(*args, **kwargs)
+        form.set_context({"request": self.request, "view": self})
+        return form
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -176,6 +181,8 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         )
 
     def form_valid(self, form):
+        form.on_submission()
+
         task = self._get_task()
 
         zrc_client = _client_from_url(self.zaak.url)

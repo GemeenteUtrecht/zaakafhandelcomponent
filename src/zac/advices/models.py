@@ -56,4 +56,6 @@ class Advice(models.Model):
         verbose_name_plural = _("advices")
 
     def __str__(self):
+        if not self.pk:
+            return "Pending Advice"
         return f"{self.created.isoformat()} - {self.object_url}"
