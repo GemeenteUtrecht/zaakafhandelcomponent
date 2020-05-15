@@ -1,7 +1,6 @@
-import uuid
 from dataclasses import dataclass, field
 from itertools import groupby
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type
 from xml.etree.ElementTree import Element
 
 from django import forms
@@ -11,7 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from defusedxml import ElementTree as ET
 from django_camunda.camunda_models import Task, factory
 from django_camunda.client import get_client
-from django_camunda.utils import deserialize_variable
 
 from zac.utils.decorators import cache
 
@@ -196,16 +194,3 @@ def send_message(name: str, process_instance_ids: List[str], variables=None) -> 
             "processVariables": variables or {},
         }
         client.post("message", json=body)
-
-
-def get_process_instance_variable(
-    instance_id: Union[uuid.UUID, str], name: str
-) -> dict:
-    client = get_client()
-
-    response_data = client.get(
-        f"process-instance/{instance_id}/variables/{name}",
-        params={"deserializeValues": "false"},
-        underscoreize=False,
-    )
-    return deserialize_variable(response_data)

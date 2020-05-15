@@ -1,6 +1,7 @@
 from django import forms
 
-from zac.core.camunda import get_process_instance_variable
+from django_camunda.api import get_process_instance_variable
+
 from zac.core.forms import TaskFormMixin
 
 from .constants import AdviceObjectTypes

@@ -9,6 +9,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
+from zac.advices.models import Advice
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -74,6 +75,8 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["advices"] = Advice.objects.get_for(self.object)
+
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
             _documenten = executor.submit(get_documenten, self.object)
@@ -96,6 +99,9 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "rollen": rollen.result(),
                 }
             )
+
+        # count the amount of advices
+        Advice.objects.set_counts([zaak for (_, zaak) in context["related_zaken"]])
 
         return context
 

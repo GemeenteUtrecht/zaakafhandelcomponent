@@ -9,6 +9,7 @@ from django.utils.html import format_html
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
+from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from django_camunda.types import ProcessVariables
 from django_camunda.utils import serialize_variable
@@ -234,8 +235,6 @@ class SelectDocumentsForm(TaskFormMixin, forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        from .camunda import get_process_instance_variable
-
         super().__init__(*args, **kwargs)
 
         # retrieve process instance variables

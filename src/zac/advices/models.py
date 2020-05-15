@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from .constants import AdviceObjectTypes
+from .query import AdviceQuerySet
 
 
 class Advice(models.Model):
@@ -50,6 +51,8 @@ class Advice(models.Model):
         help_text=_("User giving the advice"),
     )
     created = models.DateTimeField(_("created"), auto_now_add=True)
+
+    objects = AdviceQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("advice")
