@@ -52,7 +52,7 @@
                             title="Claim de taak om deze uit te voeren. Je wordt hierdoor de assignee.">
                             Claim
                         </button>
-                        {% if task.form %}
+                        {% if task.form is not None %}
                             of
                             <a href="{% url 'core:zaak-task' task_id=task.id bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
                                class="btn btn--small">Uitvoeren</a>

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
@@ -247,5 +247,12 @@ class SelectUsersForm(BaseTaskForm):
     """
 
     users = forms.ModelMultipleChoiceField(
-        required=True, label=_("Users"), queryset=User.objects.filter(is_active=True),
+        required=True,
+        label=_("Users"),
+        queryset=User.objects.filter(is_active=True),
+        widget=forms.CheckboxSelectMultiple,
     )
+
+    def get_process_variables(self) -> ProcessVariables:
+        user_names = [user.username for user in self.cleaned_data["users"]]
+        return {"users": serialize_variable(user_names)}
