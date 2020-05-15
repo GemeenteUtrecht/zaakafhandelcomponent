@@ -156,7 +156,7 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
     def get_form_kwargs(self):
         base = super().get_form_kwargs()
         task = self._get_task()
-        extra = {"task": task} if task.form_key else {}
+        extra = {"task": task}
         return {**base, **extra}
 
     def get_context_data(self, **kwargs):
