@@ -201,6 +201,7 @@
                     <th class="table__header">Aard</th>
                     <th class="table__header">Status</th>
                     <th class="table__header">Resultaat</th>
+                    <th class="table__header"># Adviezen</th>
                 </tr>
             </thead>
 
@@ -218,6 +219,7 @@
                         <td> {{ relatie_aard }} </td>
                         <td> {{ zaak.status.statustype.omschrijving }} </td>
                         <td> {{ zaak.resultaat.resultaattype.omschrijving }} </td>
+                        <td> {{ zaak.n_advices|default:"-" }} </td>
                     </tr>
                 {% endfor %}
                 {% for io_url in documenten_gone %}
@@ -282,6 +284,13 @@
             </tbody>
         </table>
 
+    </section>
+    {% endif %}
+
+    {% if advices %}
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
+        <div class="section-title">Adviezen</div>
+        {% include "advices/includes/advice_table.html" with advices=advices only %}
     </section>
     {% endif %}
 

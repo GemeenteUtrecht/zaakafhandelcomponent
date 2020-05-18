@@ -5,6 +5,9 @@
 {% block content %}
 {% load_widgets form='sniplates/forms.html' %}
 
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
 
 <form action="." method="post" class="form">
     {% csrf_token %}

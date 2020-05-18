@@ -1,0 +1,25 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th class="table__header">Advies</th>
+            <th class="table__header">Van</th>
+            <th class="table__header">Akkoord?</th>
+            <th class="table__header">Gegeven op</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for advice in advices %}
+            <tr>
+                <td> {{ advice.advice|linebreaksbr }} </td>
+                <td> {% firstof advice.user.get_full_name advice.user.username %}</td>
+                <td> <i class="material-icons">{{ advice.accord|yesno:"check_circle_outline,block" }}</i> </td>
+                <td>
+                    <time title="{{ advice.created.isoformat }}">
+                        {{ advice.created|timesince }} geleden
+                    </time>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

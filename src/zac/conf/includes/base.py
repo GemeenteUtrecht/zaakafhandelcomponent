@@ -112,6 +112,8 @@ INSTALLED_APPS = [
     "zac.forms",
     "zac.utils",
     "zac.contrib.kadaster",
+    # FIXME: should be moved to it's own API
+    "zac.advices",
 ]
 
 MIDDLEWARE = [

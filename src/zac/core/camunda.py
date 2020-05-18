@@ -13,12 +13,19 @@ from django_camunda.client import get_client
 
 from zac.utils.decorators import cache
 
+from .forms import SelectDocumentsForm, SelectUsersForm, TaskFormMixin
+
 User = get_user_model()
 
 
 CAMUNDA_NS = {
     "bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL",
     "camunda": "http://camunda.org/schema/1.0/bpmn",
+}
+
+FORM_KEYS = {
+    "zac:documentSelectie": SelectDocumentsForm,
+    "zac:gebruikerSelectie": SelectUsersForm,
 }
 
 
@@ -60,7 +67,10 @@ def complete_task(task_id: str, variables: dict) -> None:
     client.post(f"task/{task_id}/complete", json={"variables": variables})
 
 
-def extract_task_form(task: Task) -> Optional[Type[forms.Form]]:
+def extract_task_form(task: Task) -> Optional[Type[TaskFormMixin]]:
+    if task.form_key in FORM_KEYS:
+        return FORM_KEYS[task.form_key]
+
     tree = _get_bpmn(task.process_definition_id)
 
     task_id = task.task_definition_key
@@ -71,14 +81,12 @@ def extract_task_form(task: Task) -> Optional[Type[forms.Form]]:
 
     # construct the Form class
 
-    Form = forms.Form
-    Form.base_fields = {}
-
+    _fields = {}
     for definition in formfields:
         name, field = formfield_from_xml(definition)
-        Form.base_fields[name] = field
+        _fields[name] = field
 
-    return Form
+    return type("Form", (TaskFormMixin, forms.Form), _fields)
 
 
 FIELD_TYPE_MAP = {

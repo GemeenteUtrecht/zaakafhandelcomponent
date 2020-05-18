@@ -9,6 +9,7 @@ from django.utils.http import is_safe_url
 from django.views.generic import FormView, TemplateView
 
 from django_camunda.client import get_client
+from django_camunda.utils import serialize_variable
 
 from zac.accounts.mixins import PermissionRequiredMixin
 
@@ -152,6 +153,17 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         task = self._get_task()
         return task.form
 
+    def get_form_kwargs(self):
+        base = super().get_form_kwargs()
+        task = self._get_task()
+        extra = {"task": task}
+        return {**base, **extra}
+
+    def get_form(self, *args, **kwargs):
+        form = super().get_form(*args, **kwargs)
+        form.set_context({"request": self.request, "view": self})
+        return form
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -169,6 +181,8 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         )
 
     def form_valid(self, form):
+        form.on_submission()
+
         task = self._get_task()
 
         zrc_client = _client_from_url(self.zaak.url)
@@ -177,14 +191,14 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
         zrc_jwt = zrc_client.auth.credentials()["Authorization"]
         ztc_jwt = ztc_client.auth.credentials()["Authorization"]
 
+        services = {
+            "zrc": {"jwt": zrc_jwt},
+            "ztc": {"jwt": ztc_jwt},
+        }
+
         variables = {
-            "services": {
-                "type": "Json",
-                "value": json.dumps(
-                    {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},}
-                ),
-            },
-            **{name: {"value": value} for name, value in form.cleaned_data.items()},
+            "services": serialize_variable(services),
+            **form.get_process_variables(),
         }
 
         complete_task(task.id, variables)
