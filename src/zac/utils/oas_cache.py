@@ -1,7 +1,7 @@
 """
 Replace the OAS schema cache with django's cache mechanism.
 """
-from django.core.cache import cache
+from django.core.cache import caches
 
 from zds_client.oas import schema_fetcher
 
@@ -18,7 +18,7 @@ class OASCache:
         if key in self._local_cache:
             return True
         else:
-            schema = cache.get(key)
+            schema = caches["oas"].get(key)
             if schema is None:
                 return False
 
@@ -32,7 +32,7 @@ class OASCache:
 
     def __setitem__(self, key: str, value: dict):
         key = f"{self.KEY_PREFIX}:{key}"
-        cache.set(key, value, self.DURATION)
+        caches["oas"].set(key, value, self.DURATION)
         self._local_cache[key] = value
 
 
