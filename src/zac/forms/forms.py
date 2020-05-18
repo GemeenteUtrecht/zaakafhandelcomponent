@@ -80,6 +80,7 @@ def _get_field(field_definition: dict) -> Tuple[str, forms.Field]:
     }
 
     if field_definition["choices"]:
+        field_class = forms.ChoiceField
         choices = [
             (choice["value"], choice["label"]) for choice in field_definition["choices"]
         ]
