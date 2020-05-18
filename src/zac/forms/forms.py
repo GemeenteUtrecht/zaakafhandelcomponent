@@ -6,7 +6,7 @@ from django import forms
 from django.core.validators import MaxLengthValidator, RegexValidator
 from django.utils.translation import gettext_lazy as _
 
-from zac.contrib.kadaster.forms import PandSelectieField
+from zac.contrib.kadaster.forms import BagObjectSelectieField
 
 from .client import OpenFormsClient
 
@@ -41,7 +41,7 @@ def generate_form_class(form_id: int):
 
 
 KNOWN_FIELD_TYPES = {
-    "openforms.contrib.kadaster.field_types.PandSelectie": PandSelectieField,
+    "openforms.contrib.kadaster.field_types.BagObjectSelectie": BagObjectSelectieField,
     "openforms.contrib.zgw.field_types.DocumentUpload": forms.FileField,
 }
 

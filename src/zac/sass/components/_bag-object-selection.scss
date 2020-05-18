@@ -1,8 +1,8 @@
-$pand-selection__min-width: 400px !default;
-$pand-selection__map-min-height: 400px !default;
+$bag-object-selection__min-width: 400px !default;
+$bag-object-selection__map-min-height: 400px !default;
 
-.pand-selection {
-  min-width: $pand-selection__min-width;
+.bag-object-selection {
+  min-width: $bag-object-selection__min-width;
 
   & &__map-container {
     display: block;
@@ -11,7 +11,7 @@ $pand-selection__map-min-height: 400px !default;
 
   & &__map {
     display: block;
-    min-height: $pand-selection__map-min-height;
+    min-height: $bag-object-selection__map-min-height;
   }
 
   & &__autocomplete {

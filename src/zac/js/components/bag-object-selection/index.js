@@ -1,5 +1,5 @@
 /**
- * Component to select a single pand based on adress entry with autocomplete.
+ * Component to select a single bag object based on adress entry with autocomplete.
  */
 import { apiCall } from '../../utils/fetch';
 
@@ -8,16 +8,16 @@ import { Map } from './map';
 const DEBOUNCE_MS = 200;
 
 // TODO: should probably just be a React component
-class PandSelection {
+class BagObjectSelection {
     constructor(node) {
         this.node = node;
-        this.autocompleteInput = node.querySelector('.pand-selection__autocomplete');
-        this.autocompleteContainer = node.querySelector('.pand-selection__autocomplete-results');
-        this.valueInput = node.querySelector('.pand-selection__value');
+        this.autocompleteInput = node.querySelector('.bag-object-selection__autocomplete');
+        this.autocompleteContainer = node.querySelector('.bag-object-selection__autocomplete-results');
+        this.valueInput = node.querySelector('.bag-object-selection__value');
 
         // parse config
-        const { autocompleteUrl, adresPandUrl } = node.dataset;
-        Object.assign(this, { autocompleteUrl, adresPandUrl });
+        const { autocompleteUrl, adresBagObjectUrl } = node.dataset;
+        Object.assign(this, { autocompleteUrl, adresBagObjectUrl });
 
         this.bindAutoComplete();
         this._keyupDebounce = null;
@@ -43,18 +43,18 @@ class PandSelection {
     }
 
     bindResultClicks() {
-        const nodes = this.autocompleteContainer.querySelectorAll('.pand-selection__result');
+        const nodes = this.autocompleteContainer.querySelectorAll('.bag-object-selection__result');
         nodes.forEach(result => {
             result.addEventListener('click', (event) => {
                 event.preventDefault();
                 const id = result.dataset.id;
-                this.getPand(id);
+                this.getBagObject(id);
             });
         });
     }
 
     bindReset() {
-        const reset = this.node.querySelector('.pand-selection__reset');
+        const reset = this.node.querySelector('.bag-object-selection__reset');
         reset.addEventListener('click', (event) => {this.reset(event);});
     }
 
@@ -92,7 +92,7 @@ class PandSelection {
         const results = docs.map(doc => {
             const text = json.highlighting[doc.id].suggest;
             const result = `
-                <a href="#" class="pand-selection__result"
+                <a href="#" class="bag-object-selection__result"
                    data-id="${doc.id}" title="${doc.weergavenaam}"
                 >${text}</a>
             `;
@@ -100,24 +100,24 @@ class PandSelection {
 
         });
         this.autocompleteContainer.innerHTML = results.join('\n');
-        this.autocompleteContainer.classList.add('pand-selection__autocomplete-results--active');
+        this.autocompleteContainer.classList.add('bag-object-selection__autocomplete-results--active');
         this.bindResultClicks();
     }
 
-    getPand(id) {
+    getBagObject(id) {
         if (!id) {
             throw new Error('You must provide an appropriate ID');
         }
 
-        apiCall(`${this.adresPandUrl}?id=${id}`)
+        apiCall(`${this.adresBagObjectUrl}?id=${id}`)
             .then(response => response.json())
-            .then(json => this.showPand(json))
+            .then(json => this.showBagObject(json))
             .catch(console.error)
         ;
     }
 
     initMap() {
-        const mapNode = this.node.querySelector('.pand-selection__map');
+        const mapNode = this.node.querySelector('.bag-object-selection__map');
         const map = new Map(mapNode, {
             center: [52.1326332, 5.291266],
             zoom: 3,
@@ -126,21 +126,20 @@ class PandSelection {
         return map;
     }
 
-    showPand(pandLookup) {
-        const { pand, adres } = pandLookup;
+    showBagObject(bagObjectLookup) {
+        const { bagObject, adres } = bagObjectLookup;
         const feature = {
             type: 'Feature',
             properties: {
-                url: pand.url,
+                url: bagObject.url,
                 adres: adres,
-                oorspronkelijkBouwjaar: pand.oorspronkelijkBouwjaar,
-                status: pand.status,
+                status: bagObject.status,
             },
-            geometry: pand.geometrie,
+            geometry: bagObject.geometrie,
         };
         this.map.showFeature(feature);
-        this.valueInput.value = pand.url;
-        this.autocompleteContainer.classList.remove('pand-selection__autocomplete-results--active');
+        this.valueInput.value = bagObject.url;
+        this.autocompleteContainer.classList.remove('bag-object-selection__autocomplete-results--active');
     }
 
     reset(event) {
@@ -160,5 +159,5 @@ class PandSelection {
 
 
 // initialize
-const selections = document.querySelectorAll('.pand-selection');
-Array.from(selections).forEach(node => new PandSelection(node));
+const selections = document.querySelectorAll('.bag-object-selection');
+Array.from(selections).forEach(node => new BagObjectSelection(node));

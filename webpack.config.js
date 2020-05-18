@@ -30,6 +30,14 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.(png)$/i,
+                use: [
+                    {
+                       loader: 'base64-inline-loader',
+                    },
+                ],
+            },
+            {
                 exclude: /node_modules/,
                 loader: 'babel-loader',
                 test: /.js?$/

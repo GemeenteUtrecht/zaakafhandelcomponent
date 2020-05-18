@@ -35,34 +35,40 @@ class AdresSearchView(APIView):
         return Response(results)
 
 
-class PandFetchView(APIView):
+class BagObjectFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+
+    def get_address(self, address_id: str) -> dict:
+        location_server = LocationServer()
+        resp_data = location_server.lookup(address_id)
+
+        return resp_data
+
+    def get_bag_object(self, address: dict):
+        return NotImplementedError(
+            "Subclasses of BagObjectFetchView must provide a get_bag_object() method."
+        )
+
+    def get_bag_data(self, bag_object: dict) -> dict:
+        return {
+            "url": bag_object["_links"]["self"]["href"],
+            "geometrie": bag_object["_embedded"]["geometrie"],
+            "status": bag_object["status"],
+        }
 
     def get(self, request: Request, *args, **kwargs):
         address_id = request.GET.get("id")
         if not address_id:
             return Response({"error": "missing ID"}, status=status.HTTP_400_BAD_REQUEST)
 
-        location_server = LocationServer()
-        resp_data = location_server.lookup(address_id)
-
-        if not resp_data["numFound"] == 1:
+        address = self.get_address(address_id)
+        if not address["numFound"] == 1:
             return Response(
                 {"error": "Invalid ID provided"}, status=status.HTTP_400_BAD_REQUEST
             )
-
-        doc = resp_data["docs"][0]
-        vo_id = doc["adresseerbaarobject_id"]
-
-        bag = Bag()
-
-        verblijfsobject = bag.get(f"verblijfsobjecten/{vo_id}")
-        panden = [
-            pandrel["href"] for pandrel in verblijfsobject["_links"]["pandrelateringen"]
-        ]
-        assert len(panden) == 1
-
-        pand = bag.retrieve(panden[0])
+        doc = address["docs"][0]
+        bag_object = self.get_bag_object(doc)
+        bag_data = self.get_bag_data(bag_object)
 
         data = {
             "adres": {
@@ -72,12 +78,44 @@ class PandFetchView(APIView):
                 "postcode": doc.get("postcode", ""),
                 "provincienaam": doc.get("provincienaam", ""),
             },
-            "pand": {
-                "url": pand["_links"]["self"]["href"],
-                "geometrie": pand["_embedded"]["geometrie"],
-                "oorspronkelijkBouwjaar": pand["oorspronkelijkBouwjaar"],
-                "status": pand["status"],
-            },
+            "bagObject": bag_data,
         }
 
         return Response(data)
+
+
+class PandFetchView(BagObjectFetchView):
+    def get_bag_object(self, address):
+        vo_id = address["adresseerbaarobject_id"]
+        bag = Bag()
+
+        verblijfsobject = bag.get(f"verblijfsobjecten/{vo_id}")
+
+        panden = [
+            pandrel["href"] for pandrel in verblijfsobject["_links"]["pandrelateringen"]
+        ]
+        assert len(panden) == 1
+
+        pand = bag.retrieve(panden[0])
+
+        return pand
+
+    def get_bag_data(self, bag_object: dict) -> dict:
+        data = super().get_bag_data(bag_object)
+        data["oorspronkelijkBouwjaar"] = bag_object["oorspronkelijkBouwjaar"]
+        return data
+
+
+class VerblijfsobjectFetchView(BagObjectFetchView):
+    def get_bag_object(self, address):
+        vo_id = address["adresseerbaarobject_id"]
+        bag = Bag()
+
+        verblijfsobject = bag.get(f"verblijfsobjecten/{vo_id}")
+
+        return verblijfsobject
+
+    def get_bag_data(self, bag_object: dict) -> dict:
+        data = super().get_bag_data(bag_object)
+        data["oppervlakte"] = bag_object["oppervlakte"]
+        return data

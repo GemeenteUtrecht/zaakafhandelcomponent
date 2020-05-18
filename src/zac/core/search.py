@@ -5,15 +5,15 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 from django.forms import TextInput, Widget
 from django.http import QueryDict
 
-from zac.contrib.kadaster.forms import PandSelectieWidget
+from zac.contrib.kadaster.forms import BagObjectSelectieWidget
 
 
 def _clean_url(url: str) -> str:
     scheme, netloc, path, query, fragment = urlsplit(url)
     query_dict = parse_qs(query)
 
-    # Delete the geldigOp querystring, which contains the date the pand was retrieved.
-    # It's still the same pand, but might a different representation on another date.
+    # Delete the geldigOp querystring, which contains the date the BAG object was retrieved.
+    # It's still the same BAG object, but might a different representation on another date.
     # Dropping the QS allows the zaakobject list filter to work when passing in the
     # object to find related zaken.
     if "geldigOp" in query_dict:
@@ -59,7 +59,12 @@ REGISTRATIONS = {
     "bag": Registration(
         label="BAG",
         object_types=[
-            ObjectType(value="pand", label="Pand", widget=PandSelectieWidget),
+            ObjectType(value="pand", label="Pand", widget=BagObjectSelectieWidget),
+            ObjectType(
+                value="verblijfsobject",
+                label="Verblijfs object",
+                widget=BagObjectSelectieWidget,
+            ),
             ObjectType(value="address", label="Adres (TODO)", widget=TextInput),
             ObjectType(
                 value="geometry",
