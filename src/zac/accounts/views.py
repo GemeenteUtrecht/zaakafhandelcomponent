@@ -25,7 +25,7 @@ class AuthorizationProfileListView(LoginRequiredMixin, ListView):
 class AuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):
     model = AuthorizationProfile
     form_class = AuthorizationProfileForm
-    permission_required = "accounts.can_add_authorizationprofile"
+    permission_required = "accounts.add_authorizationprofile"
     success_url = reverse_lazy("accounts:authprofile-list")
 
 
@@ -45,7 +45,7 @@ class PermissionSetsView(LoginRequiredMixin, ListView):
 class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
     model = PermissionSet
     form_class = PermissionSetForm
-    permission_required = "accounts.can_add_permissionset"
+    permission_required = "accounts.add_permissionset"
     success_url = reverse_lazy("accounts:authprofile-list")
 
 
@@ -57,12 +57,12 @@ class PermissionSetDetailView(LoginRequiredMixin, DetailView):
 class PermissionSetUpdateView(PermissionRequiredMixin, UpdateView):
     model = PermissionSet
     form_class = PermissionSetForm
-    permission_required = "accounts.can_change_permissionset"
+    permission_required = "accounts.change_permissionset"
 
 
 class UserAuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):
     model = UserAuthorizationProfile
-    permission_required = "accounts.can_add_userauthorizationprofile"
+    permission_required = "accounts.add_userauthorizationprofile"
     form_class = UserAuthorizationProfileForm
 
     def _get_auth_profile(self):
