@@ -23,6 +23,8 @@ class NotificationCallbackView(APIView):
 
         if data["resource"] == "zaak" and data["actie"] == "create":
             self._handle_zaak_creation(data["hoofd_object"])
+        elif data["resource"] == "zaak" and data["actie"] == "update":
+            self._handle_zaak_update(data["hoofd_object"])
         elif (
             data["resource"] in ["resultaat", "status", "zaakeigenschap"]
             and data["actie"] == "create"
@@ -34,6 +36,10 @@ class NotificationCallbackView(APIView):
         client = _client_from_url(zaak_url)
         zaak = client.retrieve("zaak", url=zaak_url)
         return factory(Zaak, zaak)
+
+    def _handle_zaak_update(self, zaak_url: str):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaak_cache(zaak)
 
     def _handle_zaak_creation(self, zaak_url: str):
         client = _client_from_url(zaak_url)
