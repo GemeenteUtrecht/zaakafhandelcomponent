@@ -168,24 +168,18 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        zaak2 = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
         m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zaak1, zaak2],
-            },
+            f"{ZAKEN_ROOT}zaken?maximaleVertrouwelijkheidaanduiding=openbaar",
+            json={"count": 2, "previous": None, "next": None, "results": [zaak1],},
         )
 
         response = self.app.get(self.url, user=self.user)
+
+        # note that requests_mock defaults to case-insensitive
+        self.assertEqual(
+            m.last_request.qs["maximalevertrouwelijkheidaanduiding"],
+            [VertrouwelijkheidsAanduidingen.openbaar],
+        )
 
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)

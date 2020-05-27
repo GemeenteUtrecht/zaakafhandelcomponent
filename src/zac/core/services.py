@@ -204,7 +204,7 @@ def _find_zaken(
         "zaaktype": zaaktype,
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
-        # "maximaleVertrouwelijkheidaanduiding": max_va,
+        "maximaleVertrouwelijkheidaanduiding": max_va,
     }
     logger.debug("Querying zaken with %r", query)
     _zaken = get_paginated_results(
@@ -265,13 +265,8 @@ def get_zaken(
                 }
             )
 
-    def _test_va(zaak: dict):
-        return user_perms.user.has_perm(zaken_inzien.name, obj=zaak)
-
     with futures.ThreadPoolExecutor() as executor:
-        results = executor.map(
-            lambda kwargs: _find_zaken(test_func=_test_va, **kwargs), find_kwargs
-        )
+        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
         flattened = sum(list(results), [])
 
     zaken = factory(Zaak, flattened)
