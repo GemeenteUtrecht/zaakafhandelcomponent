@@ -208,7 +208,7 @@ def _find_zaken(
     }
     logger.debug("Querying zaken with %r", query)
     _zaken = get_paginated_results(
-        client, "zaak", query_params=query, min_num=25, test_func=test_func,
+        client, "zaak", query_params=query, minimum=25, test_func=test_func,
     )
     return _zaken
 
