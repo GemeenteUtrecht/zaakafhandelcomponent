@@ -185,7 +185,6 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
 ###################################################
 
 
-# TODO: invalidate on zaak creation/deletion!
 @cache_result(
     "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
     timeout=AN_HOUR,
