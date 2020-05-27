@@ -1,0 +1,87 @@
+from unittest.mock import patch
+
+from django.core.cache import cache, caches
+from django.urls import reverse
+from django.utils import timezone
+
+import requests_mock
+from rest_framework import status
+from rest_framework.test import APITestCase
+from zgw_consumers.models import APITypes, Service
+
+from zac.accounts.models import User
+from zac.core.services import get_zaak
+
+from .utils import (
+    BRONORGANISATIE,
+    IDENTIFICATIE,
+    ZAAK,
+    ZAAK_RESPONSE,
+    ZAAKTYPE,
+    mock_service_oas_get,
+)
+
+NOTIFICATION = {
+    "kanaal": "zaken",
+    "hoofdObject": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resource": "zaak",
+    "resourceUrl": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "actie": "update",
+    "aanmaakdatum": timezone.now().isoformat(),
+    "kenmerken": {
+        "bronorganisatie": BRONORGANISATIE,
+        "zaaktype": ZAAKTYPE,
+        "vertrouwelijkheidaanduiding": "geheim",
+    },
+}
+
+
+@requests_mock.Mocker()
+class ZaakUpdateTests(APITestCase):
+    """
+    Test that the appropriate actions happen on zaak-creation notifications.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create(username="notifs")
+        cls.zrc = Service.objects.create(
+            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
+        )
+
+    def setUp(self):
+        super().setUp()
+
+        cache.clear()
+        self.client.force_authenticate(user=self.user)
+
+    @patch("zac.core.services.fetch_zaaktype", return_value=None)
+    def test_get_zaak_resultaat_created(self, rm, mock_zaaktype):
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        path = reverse("notifications:callback")
+
+        matrix = [
+            {"zaak_uuid": "f3ff2713-2f53-42ff-a154-16842309ad60"},
+            {"zaak_url": ZAAK},
+            {"zaak_uuid": "f3ff2713-2f53-42ff-a154-16842309ad60", "zaak_url": ZAAK},
+        ]
+
+        for kwargs in matrix:
+            with self.subTest(**kwargs):
+                # call to populate cache
+                get_zaak(**kwargs)
+                self.assertEqual(rm.last_request.url, ZAAK)
+                first_retrieve = rm.last_request
+
+                response = self.client.post(path, NOTIFICATION)
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+                num_calls_before = len(rm.request_history)
+
+                # second call should not hit the cache
+                get_zaak(**kwargs)
+
+                self.assertEqual(rm.last_request.url, ZAAK)
+                self.assertNotEqual(rm.last_request, first_retrieve)
+                self.assertEqual(len(rm.request_history), num_calls_before + 1)
