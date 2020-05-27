@@ -185,7 +185,6 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
 ###################################################
 
 
-# TODO: invalidate on zaak creation/deletion!
 @cache_result(
     "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
     timeout=AN_HOUR,
@@ -205,11 +204,11 @@ def _find_zaken(
         "zaaktype": zaaktype,
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
-        # "maximaleVertrouwelijkheidaanduiding": max_va,
+        "maximaleVertrouwelijkheidaanduiding": max_va,
     }
     logger.debug("Querying zaken with %r", query)
     _zaken = get_paginated_results(
-        client, "zaak", query_params=query, min_num=25, test_func=test_func,
+        client, "zaak", query_params=query, minimum=25, test_func=test_func,
     )
     return _zaken
 
@@ -266,13 +265,8 @@ def get_zaken(
                 }
             )
 
-    def _test_va(zaak: dict):
-        return user_perms.user.has_perm(zaken_inzien.name, obj=zaak)
-
     with futures.ThreadPoolExecutor() as executor:
-        results = executor.map(
-            lambda kwargs: _find_zaken(test_func=_test_va, **kwargs), find_kwargs
-        )
+        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
         flattened = sum(list(results), [])
 
     zaken = factory(Zaak, flattened)
