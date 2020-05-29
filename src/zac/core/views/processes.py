@@ -117,7 +117,34 @@ class SendMessage(PermissionRequiredMixin, FormView):
         raise SuspiciousOperation("Unsafe HTTP_REFERER detected")
 
 
-class PerformTaskView(PermissionRequiredMixin, FormView):
+class FormSetMixin:
+    def get_formset_class(self):
+        task = self._get_task()
+        return task.form.get("formset")
+
+    def get_formset(self, **kwargs):
+        formset_class = self.get_formset_class()
+        if not formset_class:
+            return
+
+        # FIXME how to feed initial data into formset ???
+        # kwargs = {"initial": formset_class.get_initial()}
+
+        if self.request.method in ("POST", "PUT"):
+            kwargs.update(
+                {"data": self.request.POST.copy(), "files": self.request.FILES}
+            )
+        formset = formset_class(**kwargs, task=self._get_task())
+        return formset
+
+    def get_context_data(self, **kwargs):
+        if "formset" not in kwargs:
+            kwargs["formset"] = self.get_formset(**kwargs)
+
+        return super().get_context_data(**kwargs)
+
+
+class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
     template_name = "core/zaak_task.html"
     permission_required = zaakproces_usertasks.name
 
@@ -151,7 +178,7 @@ class PerformTaskView(PermissionRequiredMixin, FormView):
 
     def get_form_class(self):
         task = self._get_task()
-        return task.form
+        return task.form["form"]
 
     def get_form_kwargs(self):
         base = super().get_form_kwargs()

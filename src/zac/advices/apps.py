@@ -13,8 +13,8 @@ class AdviceConfig(AppConfig):
 def register_form_keys():
     from zac.core.camunda import FORM_KEYS
 
-    from .forms import AdviceForm
+    from .forms import AdviceForm, UploadDocumentFormset
 
     FORM_KEYS.update(
-        {"zac:getAdvice": AdviceForm,}
+        {"zac:getAdvice": {"form": AdviceForm, "formset": UploadDocumentFormset}}
     )

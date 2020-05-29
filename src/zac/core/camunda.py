@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from itertools import groupby
-from typing import List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 from xml.etree.ElementTree import Element
 
 from django import forms
@@ -24,8 +24,8 @@ CAMUNDA_NS = {
 }
 
 FORM_KEYS = {
-    "zac:documentSelectie": SelectDocumentsForm,
-    "zac:gebruikerSelectie": SelectUsersForm,
+    "zac:documentSelectie": {"form": SelectDocumentsForm},
+    "zac:gebruikerSelectie": {"form": SelectUsersForm},
 }
 
 
@@ -67,7 +67,7 @@ def complete_task(task_id: str, variables: dict) -> None:
     client.post(f"task/{task_id}/complete", json={"variables": variables})
 
 
-def extract_task_form(task: Task) -> Optional[Type[TaskFormMixin]]:
+def extract_task_form(task: Task) -> Optional[Dict[str, Type[TaskFormMixin]]]:
     if task.form_key in FORM_KEYS:
         return FORM_KEYS[task.form_key]
 
@@ -86,7 +86,7 @@ def extract_task_form(task: Task) -> Optional[Type[TaskFormMixin]]:
         name, field = formfield_from_xml(definition)
         _fields[name] = field
 
-    return type("Form", (TaskFormMixin, forms.Form), _fields)
+    return {"form": type("Form", (TaskFormMixin, forms.Form), _fields)}
 
 
 FIELD_TYPE_MAP = {

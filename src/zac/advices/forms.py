@@ -2,7 +2,8 @@ from django import forms
 
 from django_camunda.api import get_process_instance_variable
 
-from zac.core.forms import TaskFormMixin
+from zac.core.forms import TaskFormMixin, _repr
+from zac.core.services import get_documenten, get_zaak
 
 from .constants import AdviceObjectTypes
 from .models import Advice
@@ -32,3 +33,11 @@ class AdviceForm(TaskFormMixin, forms.ModelForm):
     def get_process_variables(self):
         # does not set any variables
         return {}
+
+
+class UploadDocumentForm(forms.Form):
+    doc_id = forms.CharField()
+    new_version = forms.FileField()
+
+
+UploadDocumentFormset = forms.formset_factory(UploadDocumentForm, extra=1)
