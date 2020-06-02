@@ -36,8 +36,31 @@ class AdviceForm(TaskFormMixin, forms.ModelForm):
 
 
 class UploadDocumentForm(forms.Form):
-    doc_id = forms.CharField()
-    new_version = forms.FileField()
+    url = forms.CharField(widget=forms.HiddenInput())
+    titel = forms.CharField()
+    upload = forms.FileField(widget=forms.FileInput(), label="Upload new version")
 
 
-UploadDocumentFormset = forms.formset_factory(UploadDocumentForm, extra=1)
+class UploadDocumentBaseFormSet(forms.BaseFormSet):
+    def __init__(self, task, *args, **kwargs):
+        self.task = task
+
+        if "initial" in kwargs:
+            super().__init__(**kwargs)
+
+        # retrieve process instance variables
+        zaak_url = get_process_instance_variable(
+            self.task.process_instance_id, "zaakUrl"
+        )
+        zaak = get_zaak(zaak_url=zaak_url)
+        documenten, _ = get_documenten(zaak)
+
+        initial = [{"url": doc.url, "titel": doc.titel} for doc in documenten]
+        kwargs["initial"] = initial
+
+        super().__init__(*args, **kwargs)
+
+
+UploadDocumentFormset = forms.formset_factory(
+    UploadDocumentForm, formset=UploadDocumentBaseFormSet, extra=0
+)
