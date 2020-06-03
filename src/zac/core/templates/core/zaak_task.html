@@ -50,16 +50,15 @@
         </section>
 
         {% if formset %}
-            <section class="content-panel">
+            <section class="content-panel formset">
             {{ formset.management_form }}
             {{ formset.non_form_errors }}
 
             {% for inline_form in formset %}
                 {{  inline_form.non_field_errors }}
-                <div class="form__field-group">
+                <div class="form__field-group formset__group">
                 {% for field in inline_form %}
                     {% form_field field %}
-{#                    {{ field }}#}
                 {% endfor %}
                 </div>
 

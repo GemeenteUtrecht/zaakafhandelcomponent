@@ -2,7 +2,8 @@ from django import forms
 
 from django_camunda.api import get_process_instance_variable
 
-from zac.core.forms import TaskFormMixin, _repr
+from zac.core.cache import invalid_zio_cache, invalidate_zaak_cache
+from zac.core.forms import TaskFormMixin
 from zac.core.services import get_documenten, get_zaak, update_document
 
 from .constants import AdviceObjectTypes
@@ -61,25 +62,30 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         initial = [{"url": doc.url, "titel": doc.titel} for doc in documenten]
         kwargs["initial"] = initial
 
+        self.zaak = zaak
+
         super().__init__(*args, **kwargs)
 
     def on_submission(self):
         assert self.is_valid(), "FormSet must be validated first"
-        updated_eios = []
+
+        changed = False
         for form in self.forms:
             if form.has_changed() and form.cleaned_data["upload"]:
+                changed = True
                 data = {
                     "titel": form.cleaned_data["titel"],
                     "auter": self.user.username,
                 }
-                # todo add auter from request!
                 document = update_document(
                     url=form.cleaned_data["url"],
                     data=data,
                     file=form.cleaned_data["upload"],
                 )
-                updated_eios.append(document)
-        print("updated eios = ", updated_eios)
+
+        if changed:
+            invalidate_zaak_cache(self.zaak)
+            invalid_zio_cache(self.zaak)
 
 
 UploadDocumentFormset = forms.formset_factory(

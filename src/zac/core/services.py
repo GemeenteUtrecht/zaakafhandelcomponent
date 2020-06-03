@@ -35,7 +35,7 @@ from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
-from .cache import invalidate_zaak_cache
+from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
 
 logger = logging.getLogger(__name__)
@@ -506,6 +506,14 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     return rollen
 
 
+def get_zaak_informatieobjecten(zaak: Zaak) -> list:
+    client = _client_from_object(zaak)
+    zaak_informatieobjecten = client.list(
+        "zaakinformatieobject", query_params={"zaak": zaak.url}
+    )
+    return zaak_informatieobjecten
+
+
 def zet_resultaat(
     zaak: Zaak, resultaattype: ResultaatType, toelichting: str = ""
 ) -> Resultaat:
@@ -567,12 +575,8 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
 def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
-    zrc_client = _client_from_object(zaak)
-
     # get zaakinformatieobjecten
-    zaak_informatieobjecten = zrc_client.list(
-        "zaakinformatieobject", query_params={"zaak": zaak.url}
-    )
+    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
 
     # retrieve the documents themselves, in parallel
     cache_key = "zios:{}".format(
@@ -719,5 +723,8 @@ def update_document(url, file, data):
         expected_status=204,
         json={"lock": lock},
     )
+
+    # invalid cache
+    invalidate_document_cache(document)
 
     return document
