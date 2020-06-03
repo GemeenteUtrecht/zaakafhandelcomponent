@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import hashlib
 import logging
 from concurrent import futures
@@ -689,3 +690,34 @@ async def fetch_documents(zios: list):
         responses = await asyncio.gather(*tasks)
 
     return responses
+
+
+def update_document(url, file, data):
+    client = _client_from_url(url)
+
+    # lock eio
+    lock_result = client.operation(
+        "enkelvoudiginformatieobject_lock", data={}, url=f"{url}/lock"
+    )
+    lock = lock_result["lock"]
+
+    # update eio
+    content = base64.b64encode(file.read()).decode("utf-8")
+    data["inhoud"] = content
+    data["bestandsomvang"] = file.size
+    data["bestandsnaam"] = file.name
+    data["lock"] = lock
+    response = client.partial_update("enkelvoudiginformatieobject", data=data, url=url)
+
+    document = factory(Document, response)
+
+    # unlock
+    client.request(
+        f"{url}/unlock",
+        "enkelvoudiginformatieobject_unlock",
+        "POST",
+        expected_status=204,
+        json={"lock": lock},
+    )
+
+    return document

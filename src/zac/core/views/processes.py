@@ -134,7 +134,7 @@ class FormSetMixin:
             kwargs.update(
                 {"data": self.request.POST.copy(), "files": self.request.FILES}
             )
-        formset = formset_class(**kwargs, task=self._get_task())
+        formset = formset_class(**kwargs, task=self._get_task(), user=self.request.user)
         return formset
 
     def get_context_data(self, **kwargs):
@@ -208,6 +208,17 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         )
 
     def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context["formset"]
+
+        if formset and not formset.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, formset=formset)
+            )
+
+        if formset and formset.is_valid():
+            formset.on_submission()
+
         form.on_submission()
 
         task = self._get_task()

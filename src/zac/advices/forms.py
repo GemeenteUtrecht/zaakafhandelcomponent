@@ -3,7 +3,7 @@ from django import forms
 from django_camunda.api import get_process_instance_variable
 
 from zac.core.forms import TaskFormMixin, _repr
-from zac.core.services import get_documenten, get_zaak
+from zac.core.services import get_documenten, get_zaak, update_document
 
 from .constants import AdviceObjectTypes
 from .models import Advice
@@ -38,12 +38,15 @@ class AdviceForm(TaskFormMixin, forms.ModelForm):
 class UploadDocumentForm(forms.Form):
     url = forms.CharField(widget=forms.HiddenInput())
     titel = forms.CharField()
-    upload = forms.FileField(widget=forms.FileInput(), label="Upload new version")
+    upload = forms.FileField(
+        widget=forms.FileInput(), label="Upload new version", required=False
+    )
 
 
 class UploadDocumentBaseFormSet(forms.BaseFormSet):
-    def __init__(self, task, *args, **kwargs):
+    def __init__(self, task, user, *args, **kwargs):
         self.task = task
+        self.user = user
 
         if "initial" in kwargs:
             super().__init__(**kwargs)
@@ -59,6 +62,24 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         kwargs["initial"] = initial
 
         super().__init__(*args, **kwargs)
+
+    def on_submission(self):
+        assert self.is_valid(), "FormSet must be validated first"
+        updated_eios = []
+        for form in self.forms:
+            if form.has_changed() and form.cleaned_data["upload"]:
+                data = {
+                    "titel": form.cleaned_data["titel"],
+                    "auter": self.user.username,
+                }
+                # todo add auter from request!
+                document = update_document(
+                    url=form.cleaned_data["url"],
+                    data=data,
+                    file=form.cleaned_data["upload"],
+                )
+                updated_eios.append(document)
+        print("updated eios = ", updated_eios)
 
 
 UploadDocumentFormset = forms.formset_factory(
