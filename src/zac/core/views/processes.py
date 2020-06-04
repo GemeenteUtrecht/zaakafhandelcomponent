@@ -130,7 +130,7 @@ class FormSetMixin:
         # FIXME how to feed initial data into formset ???
         # kwargs = {"initial": formset_class.get_initial()}
 
-        if self.request.method in ("POST", "PUT"):
+        if self.request.method == "POST":
             kwargs.update(
                 {"data": self.request.POST.copy(), "files": self.request.FILES}
             )

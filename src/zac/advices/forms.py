@@ -75,7 +75,7 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
                 changed = True
                 data = {
                     "titel": form.cleaned_data["titel"],
-                    "auter": self.user.username,
+                    "auteur": self.user.username,
                 }
                 document = update_document(
                     url=form.cleaned_data["url"],
