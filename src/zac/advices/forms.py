@@ -42,6 +42,7 @@ class DocDescWidget(forms.TextInput):
 
 class UploadDocumentForm(forms.Form):
     url = forms.CharField(widget=forms.HiddenInput())
+    identificatie = forms.CharField(widget=forms.HiddenInput())
     document = forms.CharField(
         widget=DocDescWidget(), disabled=True, label="Source document"
     )
@@ -67,7 +68,10 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         documenten, _ = get_documenten(zaak)
         self.zaak = zaak
 
-        initial = [{"url": doc.url, "document": _repr(doc)} for doc in documenten]
+        initial = [
+            {"url": doc.url, "document": _repr(doc), "identificatie": doc.identificatie}
+            for doc in documenten
+        ]
         kwargs.setdefault("initial", initial)
 
         super().__init__(*args, **kwargs)
@@ -79,7 +83,10 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         for form in self.forms:
             if form.has_changed() and form.cleaned_data["upload"]:
                 changed = True
-                data = {"auteur": self.user.username}
+                data = {
+                    "auteur": self.user.username,
+                    "identificatie": form.cleaned_data["identificatie"],
+                }
                 update_document(
                     url=form.cleaned_data["url"],
                     data=data,
