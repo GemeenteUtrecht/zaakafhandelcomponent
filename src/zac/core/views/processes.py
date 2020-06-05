@@ -1,17 +1,22 @@
 import json
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import SuspiciousOperation
 from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import is_safe_url
-from django.views.generic import FormView, TemplateView
+from django.views import View
+from django.views.generic import FormView, RedirectView, TemplateView
 
+from django_camunda.api import get_process_instance_variable
 from django_camunda.client import get_client
 from django_camunda.utils import serialize_variable
 
 from zac.accounts.mixins import PermissionRequiredMixin
+from zac.camunda.models import UserTaskCallback
 
 from ..camunda import (
     MessageForm,
@@ -29,6 +34,7 @@ from ..services import (
     get_roltypen,
     get_zaak,
 )
+from ..task_handlers import HANDLERS
 from .utils import get_zaak_from_query
 
 User = get_user_model()
@@ -146,10 +152,7 @@ class FormSetMixin:
         return kwargs
 
 
-class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
-    template_name = "core/zaak_task.html"
-    permission_required = zaakproces_usertasks.name
-
+class UserTaskMixin:
     def get_zaak(self):
         zaak = find_zaak(
             bronorganisatie=self.kwargs["bronorganisatie"],
@@ -157,14 +160,6 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         )
         self.check_object_permissions(zaak)
         return zaak
-
-    def get(self, request, *args, **kwargs):
-        self.zaak = self.get_zaak()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.zaak = self.get_zaak()
-        return super().post(request, *args, **kwargs)
 
     def _get_task(self):
         if not hasattr(self, "_task"):
@@ -177,6 +172,38 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
                 raise Http404("No such task for this zaak.") from exc
             self._task = task
         return self._task
+
+
+class RouteTaskView(PermissionRequiredMixin, UserTaskMixin, View):
+    """
+    Analyze the user task definition and redirect to the appropriate page.
+    """
+
+    permission_required = zaakproces_usertasks.name
+
+    def get(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        task = self._get_task()
+
+        # FIXME - do not patch the form key. this is for dev purposes only
+        if settings.DEBUG:
+            task.form_key = "zac:doRedirect"
+
+        handler = HANDLERS.get(task.form_key, "perform-task")
+        return redirect(handler, *args, **kwargs)
+
+
+class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, FormView):
+    template_name = "core/zaak_task.html"
+    permission_required = zaakproces_usertasks.name
+
+    def get(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        return super().post(request, *args, **kwargs)
 
     def get_form_class(self):
         task = self._get_task()
@@ -243,6 +270,49 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         complete_task(task.id, variables)
 
         return super().form_valid(form)
+
+
+class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
+    permission_required = zaakproces_usertasks.name
+
+    def get_redirect_url(self, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        task = self._get_task()
+
+        # prepare the callback URL
+        if settings.DEBUG:
+            redirect_url = (
+                "http://localhost:8000/kownsl/50f99778-32d7-423f-8032-fa6eadfc56dd/"
+            )
+        else:
+            redirect_url = get_process_instance_variable(
+                task.process_instance_id, "redirectTo"
+            )
+        expected_callback = UserTaskCallback.objects.create(task_id=task.id)
+
+        # return back to the zaak when do
+        success_url = self.request.build_absolute_uri(
+            reverse(
+                "core:zaak-detail",
+                kwargs={
+                    "bronorganisatie": kwargs["bronorganisatie"],
+                    "identificatie": kwargs["identificatie"],
+                },
+            )
+        )
+        callback_url = self.request.build_absolute_uri(
+            reverse(
+                "camunda:user-task-callback",
+                kwargs={"callback_id": expected_callback.callback_id},
+            )
+        )
+
+        qs = urlencode({"redirectUrl": success_url, "callbackUrl": callback_url})
+
+        # we do not check of safe URLs here, as the URL should have been sanitized from
+        # the process... can't white list this, since we go to external applications
+        # TODO: we should generate one-time-token URLs etc.
+        return f"{redirect_url}?{qs}"
 
 
 class ClaimTaskView(PermissionRequiredMixin, FormView):

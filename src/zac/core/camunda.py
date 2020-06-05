@@ -1,6 +1,7 @@
+import uuid
 from dataclasses import dataclass, field
 from itertools import groupby
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type, Union
 from xml.etree.ElementTree import Element
 
 from django import forms
@@ -62,7 +63,7 @@ def get_zaak_tasks(zaak_url: str) -> List[Task]:
     return tasks
 
 
-def complete_task(task_id: str, variables: dict) -> None:
+def complete_task(task_id: Union[str, uuid.UUID], variables: dict) -> None:
     client = get_client()
     client.post(f"task/{task_id}/complete", json={"variables": variables})
 

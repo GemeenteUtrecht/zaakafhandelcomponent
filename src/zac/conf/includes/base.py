@@ -114,6 +114,7 @@ INSTALLED_APPS = [
     "rules.apps.AutodiscoverRulesConfig",
     # Project applications.
     "zac.accounts",
+    "zac.camunda",
     "zac.regiezaken",
     "zac.core",
     "zac.notifications",
