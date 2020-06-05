@@ -3,7 +3,7 @@ from django import forms
 from django_camunda.api import get_process_instance_variable
 
 from zac.core.cache import invalid_zio_cache, invalidate_zaak_cache
-from zac.core.forms import TaskFormMixin
+from zac.core.forms import TaskFormMixin, _repr
 from zac.core.services import get_documenten, get_zaak, update_document
 
 from .constants import AdviceObjectTypes
@@ -36,21 +36,28 @@ class AdviceForm(TaskFormMixin, forms.ModelForm):
         return {}
 
 
+class DocDescWidget(forms.TextInput):
+    template_name = "advices/forms/widgets/doc_title.html"
+
+
 class UploadDocumentForm(forms.Form):
     url = forms.CharField(widget=forms.HiddenInput())
-    titel = forms.CharField()
-    upload = forms.FileField(
-        widget=forms.FileInput(), label="Upload new version", required=False
+    document = forms.CharField(
+        widget=DocDescWidget(), disabled=True, label="Source document"
     )
+    upload = forms.FileField(
+        widget=forms.FileInput(), label="Upload edited document", required=False
+    )
+
+    def clean(self):
+        if self.has_changed() and "url" in self.changed_data:
+            raise forms.ValidationError("Url should not be changed")
 
 
 class UploadDocumentBaseFormSet(forms.BaseFormSet):
-    def __init__(self, task, user, *args, **kwargs):
-        self.task = task
-        self.user = user
-
-        if "initial" in kwargs:
-            super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        self.task = kwargs.pop("task")
+        self.user = kwargs.pop("user")
 
         # retrieve process instance variables
         zaak_url = get_process_instance_variable(
@@ -58,11 +65,10 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         )
         zaak = get_zaak(zaak_url=zaak_url)
         documenten, _ = get_documenten(zaak)
-
-        initial = [{"url": doc.url, "titel": doc.titel} for doc in documenten]
-        kwargs["initial"] = initial
-
         self.zaak = zaak
+
+        initial = [{"url": doc.url, "document": _repr(doc)} for doc in documenten]
+        kwargs.setdefault("initial", initial)
 
         super().__init__(*args, **kwargs)
 
@@ -73,11 +79,8 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
         for form in self.forms:
             if form.has_changed() and form.cleaned_data["upload"]:
                 changed = True
-                data = {
-                    "titel": form.cleaned_data["titel"],
-                    "auteur": self.user.username,
-                }
-                document = update_document(
+                data = {"auteur": self.user.username}
+                update_document(
                     url=form.cleaned_data["url"],
                     data=data,
                     file=form.cleaned_data["upload"],

@@ -1,5 +1,6 @@
 import hashlib
 import itertools
+from typing import Iterable
 
 from django.core.cache import cache
 
@@ -59,6 +60,12 @@ def invalidate_document_cache(document: Document):
     cache.delete(key)
 
 
+def get_zios_cache_key(zios: Iterable[str]):
+    key = "zios:{}".format(",".join(zios))
+    key = hashlib.md5(key.encode("ascii")).hexdigest()
+    return key
+
+
 def invalid_zio_cache(zaak: Zaak):
     from .services import get_zaak_informatieobjecten
 
@@ -68,6 +75,5 @@ def invalid_zio_cache(zaak: Zaak):
     # construct cache keys
     permutations = itertools.permutations(zios)
     for permutation in permutations:
-        key = "zios:{}".format(",".join(permutation))
-        key = hashlib.md5(key.encode("ascii")).hexdigest()
+        key = get_zios_cache_key(permutation)
         cache.delete(key)

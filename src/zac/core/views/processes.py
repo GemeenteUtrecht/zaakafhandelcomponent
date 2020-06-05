@@ -122,26 +122,28 @@ class FormSetMixin:
         task = self._get_task()
         return task.form.get("formset")
 
-    def get_formset(self, **kwargs):
+    def get_formset(self):
         formset_class = self.get_formset_class()
         if not formset_class:
             return
 
-        # FIXME how to feed initial data into formset ???
-        # kwargs = {"initial": formset_class.get_initial()}
+        formset = formset_class(**self.get_formset_kwargs())
+        return formset
+
+    def get_context_data(self, **kwargs):
+        if "formset" not in kwargs:
+            kwargs["formset"] = self.get_formset()
+
+        return super().get_context_data(**kwargs)
+
+    def get_formset_kwargs(self):
+        kwargs = {"task": self._get_task(), "user": self.request.user}
 
         if self.request.method == "POST":
             kwargs.update(
                 {"data": self.request.POST.copy(), "files": self.request.FILES}
             )
-        formset = formset_class(**kwargs, task=self._get_task(), user=self.request.user)
-        return formset
-
-    def get_context_data(self, **kwargs):
-        if "formset" not in kwargs:
-            kwargs["formset"] = self.get_formset(**kwargs)
-
-        return super().get_context_data(**kwargs)
+        return kwargs
 
 
 class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
@@ -208,8 +210,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         )
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context["formset"]
+        formset = self.get_formset()
 
         if formset and not formset.is_valid():
             return self.render_to_response(

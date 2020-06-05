@@ -50,19 +50,35 @@
         </section>
 
         {% if formset %}
-            <section class="content-panel formset">
+            <section class="content-panel">
             {{ formset.management_form }}
             {{ formset.non_form_errors }}
 
-            {% for inline_form in formset %}
-                {{  inline_form.non_field_errors }}
-                <div class="form__field-group formset__group">
-                {% for field in inline_form %}
-                    {% form_field field %}
-                {% endfor %}
-                </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                    {% for inline_form in formset.forms %}
+                        {% if forloop.first %}
+                            {% for field in inline_form %}
+                                <th class="table__header {% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field.label_tag }} </th>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                </thead>
 
-            {% endfor %}
+                <tbody>
+                {% for inline_form in formset %}
+                    {{  inline_form.non_field_errors }}
+                    <tr>
+                        {% for field in inline_form %}
+                            <td class="{% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
             </section>
 
         {% endif %}

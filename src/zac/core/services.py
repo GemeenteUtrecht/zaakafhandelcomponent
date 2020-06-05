@@ -1,12 +1,12 @@
 import asyncio
 import base64
-import hashlib
 import logging
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
 
 import aiohttp
@@ -35,7 +35,7 @@ from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
-from .cache import invalidate_document_cache, invalidate_zaak_cache
+from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
 
 logger = logging.getLogger(__name__)
@@ -579,10 +579,8 @@ def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
 
     # retrieve the documents themselves, in parallel
-    cache_key = "zios:{}".format(
-        ",".join([zio["informatieobject"] for zio in zaak_informatieobjecten])
-    )
-    cache_key = hashlib.md5(cache_key.encode("ascii")).hexdigest()
+    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
+    cache_key = get_zios_cache_key(zios)
 
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
     documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
@@ -696,7 +694,7 @@ async def fetch_documents(zios: list):
     return responses
 
 
-def update_document(url, file, data):
+def update_document(url: str, file: UploadedFile, data: dict):
     client = _client_from_url(url)
 
     # lock eio
