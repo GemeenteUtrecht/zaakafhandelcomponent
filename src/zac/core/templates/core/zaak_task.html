@@ -9,7 +9,7 @@
     Terug naar de zaakgegevens
 </a>
 
-<form action="." method="post" class="form">
+<form action="." method="post" class="form" enctype="multipart/form-data">
     {% csrf_token %}
 
     <header class="zaak-detail-page__header">
@@ -48,6 +48,40 @@
                 {{ zaak.toelichting|linebreaksbr|default:"(geen toelichting)" }}
             </p>
         </section>
+
+        {% if formset %}
+            <section class="content-panel formset">
+            {{ formset.management_form }}
+            {{ formset.non_form_errors }}
+
+            <table class="table table--comfortable">
+                <thead>
+                    <tr>
+                    {% for inline_form in formset.forms %}
+                        {% if forloop.first %}
+                            {% for field in inline_form %}
+                                <th class="table__header {% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field.label }}</th>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for inline_form in formset %}
+                    {{  inline_form.non_field_errors }}
+                    <tr>
+                        {% for field in inline_form %}
+                            <td class="{% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            </section>
+
+        {% endif %}
 
     </article>
 

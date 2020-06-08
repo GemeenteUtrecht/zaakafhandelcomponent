@@ -1,11 +1,12 @@
 import asyncio
-import hashlib
+import base64
 import logging
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
 
 import aiohttp
@@ -34,7 +35,7 @@ from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
 
-from .cache import invalidate_zaak_cache
+from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
 
 logger = logging.getLogger(__name__)
@@ -505,6 +506,14 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     return rollen
 
 
+def get_zaak_informatieobjecten(zaak: Zaak) -> list:
+    client = _client_from_object(zaak)
+    zaak_informatieobjecten = client.list(
+        "zaakinformatieobject", query_params={"zaak": zaak.url}
+    )
+    return zaak_informatieobjecten
+
+
 def zet_resultaat(
     zaak: Zaak, resultaattype: ResultaatType, toelichting: str = ""
 ) -> Resultaat:
@@ -566,18 +575,12 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
 def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
-    zrc_client = _client_from_object(zaak)
-
     # get zaakinformatieobjecten
-    zaak_informatieobjecten = zrc_client.list(
-        "zaakinformatieobject", query_params={"zaak": zaak.url}
-    )
+    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
 
     # retrieve the documents themselves, in parallel
-    cache_key = "zios:{}".format(
-        ",".join([zio["informatieobject"] for zio in zaak_informatieobjecten])
-    )
-    cache_key = hashlib.md5(cache_key.encode("ascii")).hexdigest()
+    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
+    cache_key = get_zios_cache_key(zios)
 
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
     documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
@@ -689,3 +692,37 @@ async def fetch_documents(zios: list):
         responses = await asyncio.gather(*tasks)
 
     return responses
+
+
+def update_document(url: str, file: UploadedFile, data: dict):
+    client = _client_from_url(url)
+
+    # lock eio
+    lock_result = client.operation(
+        "enkelvoudiginformatieobject_lock", data={}, url=f"{url}/lock"
+    )
+    lock = lock_result["lock"]
+
+    # update eio
+    content = base64.b64encode(file.read()).decode("utf-8")
+    data["inhoud"] = content
+    data["bestandsomvang"] = file.size
+    data["bestandsnaam"] = file.name
+    data["lock"] = lock
+    response = client.partial_update("enkelvoudiginformatieobject", data=data, url=url)
+
+    document = factory(Document, response)
+
+    # unlock
+    client.request(
+        f"{url}/unlock",
+        "enkelvoudiginformatieobject_unlock",
+        "POST",
+        expected_status=204,
+        json={"lock": lock},
+    )
+
+    # invalid cache
+    invalidate_document_cache(document)
+
+    return document

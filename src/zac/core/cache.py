@@ -1,9 +1,12 @@
+import hashlib
 import itertools
+from typing import Iterable
 
 from django.core.cache import cache
 
 from zgw.models.zrc import Zaak
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.client import Client
 
 ALL_VAS_SORTED = list(VertrouwelijkheidsAanduidingen.values.keys())
@@ -49,4 +52,28 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
     ]
 
     for key in cache_keys:
+        cache.delete(key)
+
+
+def invalidate_document_cache(document: Document):
+    key = f"document:{document.bronorganisatie}:{document.identificatie}"
+    cache.delete(key)
+
+
+def get_zios_cache_key(zios: Iterable[str]):
+    key = "zios:{}".format(",".join(zios))
+    key = hashlib.md5(key.encode("ascii")).hexdigest()
+    return key
+
+
+def invalid_zio_cache(zaak: Zaak):
+    from .services import get_zaak_informatieobjecten
+
+    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
+    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
+
+    # construct cache keys
+    permutations = itertools.permutations(zios)
+    for permutation in permutations:
+        key = get_zios_cache_key(permutation)
         cache.delete(key)

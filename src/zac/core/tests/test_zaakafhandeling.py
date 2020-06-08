@@ -33,7 +33,7 @@ class ZaakAfhandelingGETTests(ClearCachesMixin, WebTest):
 
     url = reverse_lazy(
         "core:zaak-afhandeling",
-        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE,},
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
     )
 
     def setUp(self):
