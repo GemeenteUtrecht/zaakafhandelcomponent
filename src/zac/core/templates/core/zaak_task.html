@@ -54,13 +54,13 @@
             {{ formset.management_form }}
             {{ formset.non_form_errors }}
 
-            <table class="table">
+            <table class="table table--comfortable">
                 <thead>
                     <tr>
                     {% for inline_form in formset.forms %}
                         {% if forloop.first %}
                             {% for field in inline_form %}
-                                <th class="table__header {% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field.label_tag }} </th>
+                                <th class="table__header {% if field in inline_form.hidden_fields %}table__column--hidden{% endif %}">{{ field.label }}</th>
                             {% endfor %}
                         {% endif %}
                     {% endfor %}

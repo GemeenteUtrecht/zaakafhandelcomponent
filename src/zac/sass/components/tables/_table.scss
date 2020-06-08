@@ -1,4 +1,5 @@
 @import "../../lib/colors";
+@import "../../lib/bem";
 
 $table-head-border-color: $color-secondary !default;
 
@@ -11,7 +12,14 @@ $table-head-border-color: $color-secondary !default;
     border-bottom: solid 1px #eee;
   }
 
-  & &__header {
+  @include modifier('comfortable') {
+    td {
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+  }
+
+  @include element('header') {
     font-size: 1.3em;
     font-weight: 400;
     font-variant: small-caps;
@@ -20,13 +28,13 @@ $table-head-border-color: $color-secondary !default;
     border-bottom: solid 1px $table-head-border-color;
   }
 
-  & &__id-column {
+  @include element('id-column') {
     font-weight: 600;
     padding: 0.3em 0.5em 0.3em 0;
     text-align: left;
   }
 
-  & &__column--hidden {
+  @include element('column--hidden') {
     display: none;
   }
 }
