@@ -670,6 +670,16 @@ def find_document(bronorganisatie: str, identificatie: str) -> Document:
     return result
 
 
+@cache_result("get_document:{url}", timeout=AN_HOUR)
+def get_document(url: str) -> Document:
+    """
+    Retrieve document by URL.
+    """
+    client = _client_from_url(url)
+    result = client.retrieve("enkelvoudiginformatieobject", url=url)
+    return factory(Document, result)
+
+
 def download_document(
     bronorganisatie: str, identificatie: str
 ) -> Tuple[Document, bytes]:
@@ -721,8 +731,9 @@ def update_document(url: str, file: UploadedFile, data: dict):
         expected_status=204,
         json={"lock": lock},
     )
-
     # invalid cache
     invalidate_document_cache(document)
 
+    # refresh new state
+    document = get_document(document.url)
     return document

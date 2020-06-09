@@ -217,10 +217,10 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
                 self.get_context_data(form=form, formset=formset)
             )
 
-        if formset and formset.is_valid():
-            formset.on_submission()
-
         form.on_submission()
+
+        if formset and formset.is_valid():
+            formset.on_submission(form=form)
 
         task = self._get_task()
 

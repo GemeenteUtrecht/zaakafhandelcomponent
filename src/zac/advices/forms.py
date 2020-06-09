@@ -4,10 +4,10 @@ from django_camunda.api import get_process_instance_variable
 
 from zac.core.cache import invalid_zio_cache, invalidate_zaak_cache
 from zac.core.forms import TaskFormMixin, _repr
-from zac.core.services import get_documenten, get_zaak, update_document
+from zac.core.services import get_document, get_documenten, get_zaak, update_document
 
 from .constants import AdviceObjectTypes
-from .models import Advice
+from .models import Advice, DocumentAdvice
 
 
 class AdviceForm(TaskFormMixin, forms.ModelForm):
@@ -72,18 +72,28 @@ class UploadDocumentBaseFormSet(forms.BaseFormSet):
 
         super().__init__(*args, **kwargs)
 
-    def on_submission(self):
+    def on_submission(self, form: AdviceForm):
         assert self.is_valid(), "FormSet must be validated first"
+
+        advice = form.instance
 
         changed = False
         for form in self.forms:
             if form.has_changed() and form.cleaned_data["upload"]:
                 changed = True
                 data = {"auteur": self.user.username}
-                update_document(
-                    url=form.cleaned_data["url"],
-                    data=data,
-                    file=form.cleaned_data["upload"],
+                eio_url = form.cleaned_data["url"]
+                original = get_document(url=eio_url)
+                new_document = update_document(
+                    url=eio_url, data=data, file=form.cleaned_data["upload"],
+                )
+
+                # track which version of feedback matches the original version
+                DocumentAdvice.objects.create(
+                    advice=advice,
+                    document=eio_url,
+                    source_version=original.versie,
+                    advice_version=new_document.versie,
                 )
 
         if changed:

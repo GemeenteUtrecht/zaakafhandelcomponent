@@ -88,7 +88,7 @@ class DocumentAdvice(models.Model):
         ),
     )
     source_version = models.PositiveSmallIntegerField(_("source version"))
-    advice_version = models.PositiveSmallIntegerField(_("source version"))
+    advice_version = models.PositiveSmallIntegerField(_("advice version"))
 
     class Meta:
         verbose_name = _("document advice")

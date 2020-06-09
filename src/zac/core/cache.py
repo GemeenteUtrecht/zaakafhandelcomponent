@@ -23,8 +23,7 @@ def invalidate_zaak_cache(zaak: Zaak):
         for product in products
     ]
 
-    for key in keys:
-        cache.delete(key)
+    cache.delete_many(keys)
 
 
 def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
@@ -51,13 +50,15 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
         )
     ]
 
-    for key in cache_keys:
-        cache.delete(key)
+    cache.delete_many(cache_keys)
 
 
 def invalidate_document_cache(document: Document):
-    key = f"document:{document.bronorganisatie}:{document.identificatie}"
-    cache.delete(key)
+    keys = [
+        f"document:{document.bronorganisatie}:{document.identificatie}",
+        f"get_document:{document.url}",
+    ]
+    cache.delete_many(keys)
 
 
 def get_zios_cache_key(zios: Iterable[str]):

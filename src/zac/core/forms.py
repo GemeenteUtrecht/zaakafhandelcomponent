@@ -211,12 +211,14 @@ def _repr(doc):
     )
     name = doc.titel or doc.bestandsnaam
     extra = f"({doc.informatieobjecttype.omschrijving}, {doc.get_vertrouwelijkheidaanduiding_display()})"
+    title = f"v{doc.versie}"
     return format_html(
         '<a href="{download_path}" class="link" target="_blank" '
-        'rel="noopener nofollow">{name}</a> {extra}',
+        'rel="noopener nofollow">{name}</a> <span title="{title}">{extra}</span>',
         download_path=download_path,
         name=name,
         extra=extra,
+        title=title,
     )
 
 
