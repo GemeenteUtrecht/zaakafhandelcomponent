@@ -9,7 +9,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
-from zac.advices.models import Advice
+from zac.advices.models import Advice, DocumentAdvice
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -77,11 +77,20 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
         context["advices"] = Advice.objects.get_for(self.object)
 
+        related_zaken = get_related_zaken(self.object)
+
+        _related_zaken = [zaak for (_, zaak) in related_zaken]
+        # count the amount of advices
+        Advice.objects.set_counts(_related_zaken)
+        # get the advice versions
+        doc_versions = dict(
+            DocumentAdvice.objects.get_document_source_versions(_related_zaken)
+        )
+
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
-            _documenten = executor.submit(get_documenten, self.object)
+            _documenten = executor.submit(get_documenten, self.object, doc_versions)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
-            related_zaken = executor.submit(get_related_zaken, self.object)
             rollen = executor.submit(get_rollen, self.object)
 
             resultaat = executor.submit(get_resultaat, self.object)
@@ -95,13 +104,10 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "documenten_gone": gone,
                     "eigenschappen": eigenschappen.result(),
                     "resultaat": resultaat.result(),
-                    "related_zaken": related_zaken.result(),
+                    "related_zaken": related_zaken,
                     "rollen": rollen.result(),
                 }
             )
-
-        # count the amount of advices
-        Advice.objects.set_counts([zaak for (_, zaak) in context["related_zaken"]])
 
         return context
 

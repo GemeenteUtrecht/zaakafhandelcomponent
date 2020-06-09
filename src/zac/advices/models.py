@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from .constants import AdviceObjectTypes
-from .query import AdviceQuerySet
+from .query import AdviceQuerySet, DocumentAdviceQuerySet
 
 
 class Advice(models.Model):
@@ -89,6 +89,8 @@ class DocumentAdvice(models.Model):
     )
     source_version = models.PositiveSmallIntegerField(_("source version"))
     advice_version = models.PositiveSmallIntegerField(_("advice version"))
+
+    objects = DocumentAdviceQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("document advice")

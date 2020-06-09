@@ -22,3 +22,21 @@ class AdviceQuerySet(models.QuerySet):
         for api_object in api_objects:
             count = counts.get(api_object.url, 0)
             setattr(api_object, to_attr, count)
+
+
+class DocumentAdviceQuerySet(models.QuerySet):
+    def get_document_source_versions(
+        self, api_objects: List[ZGWModel]
+    ) -> models.QuerySet:
+        """
+        Retrieve the earliest version of a document that got document feedback.
+
+        Returns a values_list queryset of ``(doc_url: str, version: int)`` tuples.
+        """
+        object_urls = [obj.url for obj in api_objects]
+        qs = (
+            self.filter(advice__object_url__in=object_urls)
+            .values("document")
+            .annotate(min=models.Min("source_version"))
+        )
+        return qs.values_list("document", "min")

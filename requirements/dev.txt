@@ -49,6 +49,7 @@ et-xmlfile==1.0.1         # via -r requirements/ci.txt, openpyxl
 factory-boy==2.12.0       # via -r requirements/ci.txt
 faker==4.0.2              # via -r requirements/ci.txt, factory-boy
 freezegun==0.3.15         # via -r requirements/ci.txt
+furl==2.1.0               # via -r requirements/ci.txt
 gemma-zds-client==0.13.0  # via -r requirements/ci.txt, zgw-consumers
 idna==2.8                 # via -r requirements/ci.txt, requests, yarl
 imagesize==1.2.0          # via sphinx
@@ -66,6 +67,7 @@ more-itertools==7.2.0     # via -r requirements/ci.txt, zipp
 multidict==4.5.2          # via -r requirements/ci.txt, aiohttp, yarl
 odfpy==1.4.0              # via -r requirements/ci.txt, tablib
 openpyxl==3.0.0           # via -r requirements/ci.txt, tablib
+orderedmultidict==1.0.1   # via -r requirements/ci.txt, furl
 packaging==20.3           # via sphinx
 pathspec==0.7.0           # via black
 pip-tools==5.1.0          # via -r requirements/dev.in
@@ -87,7 +89,7 @@ regex==2020.2.20          # via black
 requests-mock==1.7.0      # via -r requirements/ci.txt, ddt-api-calls
 requests==2.22.0          # via -r requirements/ci.txt, ddt-api-calls, django-auth-adfs, django-camunda, gemma-zds-client, requests-mock, sphinx
 rules==2.2                # via -r requirements/ci.txt
-six==1.12.0               # via -r requirements/ci.txt, cryptography, django-appconf, django-extensions, freezegun, isodate, packaging, pip-tools, python-dateutil, requests-mock, webtest
+six==1.12.0               # via -r requirements/ci.txt, cryptography, django-appconf, django-extensions, freezegun, furl, isodate, orderedmultidict, packaging, pip-tools, python-dateutil, requests-mock, webtest
 snowballstemmer==2.0.0    # via sphinx
 soupsieve==2.0            # via -r requirements/ci.txt, beautifulsoup4
 sphinx-rtd-theme==0.4.3   # via -r requirements/dev.in

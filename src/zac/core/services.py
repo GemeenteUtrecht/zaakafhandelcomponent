@@ -2,7 +2,7 @@ import asyncio
 import base64
 import logging
 from concurrent import futures
-from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,6 +11,7 @@ from django.utils import timezone
 
 import aiohttp
 import requests
+from furl import furl
 from zgw.models import InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import (
@@ -572,7 +573,9 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
 ###################################################
 
 
-def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
+def get_documenten(
+    zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
+) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
     # get zaakinformatieobjecten
@@ -583,7 +586,9 @@ def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     cache_key = get_zios_cache_key(zios)
 
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
-    documenten = fetch_async(cache_key, fetch_documents, zaak_informatieobjecten)
+    documenten = fetch_async(
+        cache_key, fetch_documents, zaak_informatieobjecten, doc_versions=doc_versions,
+    )
 
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
 
@@ -690,13 +695,15 @@ def download_document(
     return document, response.content
 
 
-async def fetch_documents(zios: list):
+async def fetch_documents(zios: list, doc_versions: Optional[Dict[str, int]] = None):
+    doc_versions = doc_versions or {}
     tasks = []
     async with aiohttp.ClientSession() as session:
         for zio in zios:
-            task = asyncio.ensure_future(
-                fetch(session=session, url=zio["informatieobject"])
-            )
+            document_furl = furl(zio["informatieobject"])
+            if zio["informatieobject"] in doc_versions:
+                document_furl.args["versie"] = doc_versions[zio["informatieobject"]]
+            task = asyncio.ensure_future(fetch(session=session, url=document_furl.url))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)

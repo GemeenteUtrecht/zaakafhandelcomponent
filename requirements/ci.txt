@@ -39,6 +39,7 @@ et-xmlfile==1.0.1         # via -r requirements/base.txt, openpyxl
 factory-boy==2.12.0       # via -r requirements/test-tools.in
 faker==4.0.2              # via factory-boy
 freezegun==0.3.15         # via -r requirements/test-tools.in
+furl==2.1.0               # via -r requirements/base.txt
 gemma-zds-client==0.13.0  # via -r requirements/base.txt, zgw-consumers
 idna==2.8                 # via -r requirements/base.txt, requests, yarl
 importlib-metadata==0.23  # via -r requirements/base.txt, kombu
@@ -52,6 +53,7 @@ more-itertools==7.2.0     # via -r requirements/base.txt, zipp
 multidict==4.5.2          # via -r requirements/base.txt, aiohttp, yarl
 odfpy==1.4.0              # via -r requirements/base.txt, tablib
 openpyxl==3.0.0           # via -r requirements/base.txt, tablib
+orderedmultidict==1.0.1   # via -r requirements/base.txt, furl
 psycopg2==2.8.3           # via -r requirements/base.txt
 pycares==3.0.0            # via -r requirements/base.txt, aiodns
 pycparser==2.19           # via -r requirements/base.txt, cffi
@@ -67,7 +69,7 @@ redis==3.3.8              # via -r requirements/base.txt, django-redis
 requests-mock==1.7.0      # via -r requirements/base.txt, -r requirements/test-tools.in
 requests==2.22.0          # via -r requirements/base.txt, django-auth-adfs, django-camunda, gemma-zds-client, requests-mock
 rules==2.2                # via -r requirements/base.txt
-six==1.12.0               # via -r requirements/base.txt, cryptography, django-appconf, freezegun, isodate, python-dateutil, requests-mock, webtest
+six==1.12.0               # via -r requirements/base.txt, cryptography, django-appconf, freezegun, furl, isodate, orderedmultidict, python-dateutil, requests-mock, webtest
 soupsieve==2.0            # via beautifulsoup4
 sqlparse==0.3.0           # via -r requirements/base.txt, django
 tablib==0.14.0            # via -r requirements/base.txt, django-import-export
