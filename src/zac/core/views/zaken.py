@@ -1,21 +1,24 @@
 from concurrent import futures
 from itertools import groupby
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
+from furl import furl
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
-from zac.advices.models import Advice
+from zac.advices.models import Advice, DocumentAdvice
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
 from ..permissions import zaken_close, zaken_inzien, zaken_set_result
 from ..services import (
     find_zaak,
+    get_document,
     get_documenten,
     get_related_zaken,
     get_resultaat,
@@ -75,13 +78,22 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["advices"] = Advice.objects.get_for(self.object)
+        advices = Advice.objects.get_for(self.object)
+
+        related_zaken = get_related_zaken(self.object)
+
+        _related_zaken = [zaak for (_, zaak) in related_zaken]
+        # count the amount of advices
+        Advice.objects.set_counts(_related_zaken)
+        # get the advice versions
+        doc_versions = dict(
+            DocumentAdvice.objects.get_document_source_versions(_related_zaken)
+        )
 
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
-            _documenten = executor.submit(get_documenten, self.object)
+            _documenten = executor.submit(get_documenten, self.object, doc_versions)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
-            related_zaken = executor.submit(get_related_zaken, self.object)
             rollen = executor.submit(get_rollen, self.object)
 
             resultaat = executor.submit(get_resultaat, self.object)
@@ -95,15 +107,53 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "documenten_gone": gone,
                     "eigenschappen": eigenschappen.result(),
                     "resultaat": resultaat.result(),
-                    "related_zaken": related_zaken.result(),
+                    "related_zaken": related_zaken,
                     "rollen": rollen.result(),
+                    "advices": advices,
                 }
             )
-
-        # count the amount of advices
-        Advice.objects.set_counts([zaak for (_, zaak) in context["related_zaken"]])
-
+        self._set_advice_documents(advices, documenten)
         return context
+
+    @staticmethod
+    def _set_advice_documents(advices: Iterable[Advice], documents: List[Document]):
+        _document_versions = set()
+
+        for advice in advices:
+            for document_advice in advice.documentadvice_set.all():
+                source_version = furl(document_advice.document)
+                source_version.args["versie"] = document_advice.source_version
+                _document_versions.add(source_version.url)
+
+                advice_version = furl(document_advice.document)
+                advice_version.args["versie"] = document_advice.advice_version
+                _document_versions.add(advice_version.url)
+
+        document_versions = list(_document_versions)
+
+        with futures.ThreadPoolExecutor() as executor:
+            results = executor.map(get_document, document_versions)
+
+        versioned_documents = {
+            (document.url, document.versie): document for document in results
+        }
+
+        for advice in advices:
+            _docs = []
+            for document_advice in advice.documentadvice_set.all():
+                source_key, advice_key = (
+                    (document_advice.document, document_advice.source_version),
+                    (document_advice.document, document_advice.advice_version),
+                )
+
+                _docs.append(
+                    {
+                        "source": versioned_documents[source_key],
+                        "advice": versioned_documents[advice_key],
+                    }
+                )
+
+            advice.documents = _docs
 
 
 class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):

@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from .constants import AdviceObjectTypes
-from .query import AdviceQuerySet
+from .query import AdviceQuerySet, DocumentAdviceQuerySet
 
 
 class Advice(models.Model):
@@ -62,3 +62,39 @@ class Advice(models.Model):
         if not self.pk:
             return "Pending Advice"
         return f"{self.created.isoformat()} - {self.object_url}"
+
+
+class DocumentAdvice(models.Model):
+    """
+    Record which version of a document contains suggestions for an earlier version.
+
+    Users giving advice can choose to download the original document and upload an
+    edited version of this document. The edited version can contain fixes or annotations
+    with feedback.
+
+    This model tracks:
+    * which advice it's a part of
+    * which particular document was updated
+    * what the source version of the document was
+    * what the new version is of this particular document
+    """
+
+    advice = models.ForeignKey("Advice", on_delete=models.CASCADE)
+    document = models.URLField(
+        _("document URL"),
+        help_text=_(
+            "URL reference to the source document in the Documents API. May "
+            "include the 'versie' querystring parameter."
+        ),
+    )
+    source_version = models.PositiveSmallIntegerField(_("source version"))
+    advice_version = models.PositiveSmallIntegerField(_("advice version"))
+
+    objects = DocumentAdviceQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _("document advice")
+        verbose_name_plural = _("document advices")
+
+    def __str__(self):
+        return f"{self.source_version} -> {self.advice_version}"

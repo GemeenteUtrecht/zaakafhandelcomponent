@@ -266,11 +266,7 @@
                         <td> {{ document.get_vertrouwelijkheidaanduiding_display }} </td>
                         <td> {{ document.bestandsomvang|filesizeformat }} </td>
                         <th class="table__id-column">
-                            <a
-                                href="{% url 'core:download-document' bronorganisatie=document.bronorganisatie identificatie=document.identificatie %}"
-                                target="_blank" rel="nofollow noopener">
-                                {{ document.bestandsnaam|default:document.identificatie }}
-                            </a>
+                            {% include "core/includes/document_link.html" with document=document only %}
                         </th>
                     </tr>
                 {% endfor %}

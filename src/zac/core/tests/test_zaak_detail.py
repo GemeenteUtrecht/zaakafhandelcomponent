@@ -131,7 +131,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             identificatie=IDENTIFICATIE,
             url=f"{ZAKEN_ROOT}zaken/85a59d62-2ac7-432e-9ca7-4f6c9bde4d10",
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            vertrouwelijkheindaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         zaaktype = generate_oas_component(
             "ztc",

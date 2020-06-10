@@ -9,7 +9,8 @@ from ..services import download_document
 
 class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        document, content = download_document(**kwargs)
+        versie = request.GET.get("versie", None)
+        document, content = download_document(versie=versie, **kwargs)
         content_type = (
             document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
         )
