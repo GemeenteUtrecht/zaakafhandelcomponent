@@ -1,13 +1,11 @@
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.utils import serialize_variable
+from django_camunda.api import complete_task
 from rest_framework import permissions, status, views
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
-
-from zac.core.camunda import complete_task
 
 from ..models import UserTaskCallback
 
@@ -34,9 +32,6 @@ class CallbackView(views.APIView):
         callback.save()
 
         # TODO process request.data
-        variables = {
-            name: serialize_variable(value) for name, value in request.data.items()
-        }
-        complete_task(callback.task_id, variables)
+        complete_task(callback.task_id, request.data.items())
 
         return Response(status=status.HTTP_204_NO_CONTENT)

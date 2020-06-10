@@ -1,4 +1,4 @@
-from typing import Iterator, List, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
@@ -10,12 +10,10 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.api import get_process_instance_variable
-from django_camunda.camunda_models import Task
-from django_camunda.types import ProcessVariables
-from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.models import User
+from zac.camunda.forms import TaskFormMixin
 
 from .services import (
     get_documenten,
@@ -171,36 +169,6 @@ class ZaakAfhandelForm(forms.Form):
             )
 
 
-class TaskFormMixin:
-    """
-    Define a base class for forms driven by a particular form key in Camunda.
-
-    The form expects a :class:`Task` instance as param, which subclasses can use to
-    retrieve related information.
-    """
-
-    def __init__(self, task: Task, *args, **kwargs):
-        self.task = task
-        super().__init__(*args, **kwargs)
-
-    def set_context(self, context: dict):
-        self.context = context
-
-    def on_submission(self):
-        """
-        Hook for forms that do need to persist data.
-        """
-        pass
-
-    def get_process_variables(self) -> ProcessVariables:
-        assert self.is_valid(), "Form does not pass validation"
-        variables = {
-            field: serialize_variable(value)
-            for field, value in self.cleaned_data.items()
-        }
-        return variables
-
-
 def _repr(doc):
     download_path = reverse(
         "core:download-document",
@@ -263,6 +231,6 @@ class SelectUsersForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
 
-    def get_process_variables(self) -> ProcessVariables:
+    def get_process_variables(self) -> Dict[str, List[str]]:
         user_names = [user.username for user in self.cleaned_data["users"]]
-        return {"users": serialize_variable(user_names)}
+        return {"users": user_names}

@@ -10,19 +10,19 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView, TemplateView
 
-from django_camunda.api import get_process_instance_variable, send_message
+from django_camunda.api import (
+    complete_task,
+    get_process_instance_variable,
+    send_message,
+)
 from django_camunda.client import get_client
-from django_camunda.utils import serialize_variable
 
 from zac.accounts.mixins import PermissionRequiredMixin
+from zac.camunda.forms import MessageForm
+from zac.camunda.messages import get_process_definition_messages
 from zac.camunda.models import UserTaskCallback
 
-from ..camunda import (
-    MessageForm,
-    complete_task,
-    get_process_definition_messages,
-    get_zaak_tasks,
-)
+from ..camunda import get_zaak_tasks
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import (
@@ -62,7 +62,10 @@ class FetchMessages(PermissionRequiredMixin, TemplateView):
         self.check_object_permissions(zaak)
 
         definitions = get_process_definition_messages(zaak.url)
-        context["forms"] = [definition.get_form() for definition in definitions]
+        context["forms"] = [
+            definition.get_form(initial={"zaak_url": zaak.url})
+            for definition in definitions
+        ]
         context["zaak"] = zaak
         return context
 
@@ -105,7 +108,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
         variables = {
             "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
-            **form.cleaned_data.items(),
+            **form.cleaned_data,
         }
 
         send_message(form.cleaned_data["message"], form._instance_ids, variables)
@@ -256,7 +259,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
         }
 
         variables = {
-            "services": serialize_variable(services),
+            "services": services,
             **form.get_process_variables(),
         }
 
