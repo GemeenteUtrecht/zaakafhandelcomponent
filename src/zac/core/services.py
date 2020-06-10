@@ -644,12 +644,18 @@ def get_documenten(
     return documenten, gone
 
 
-@cache_result("document:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)
-def find_document(bronorganisatie: str, identificatie: str) -> Document:
+@cache_result(
+    "document:{bronorganisatie}:{identificatie}:{versie}", timeout=AN_HOUR / 2
+)
+def find_document(
+    bronorganisatie: str, identificatie: str, versie: Optional[int] = None
+) -> Document:
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
     """
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
+    if versie:
+        query["versie"] = versie
 
     # not in cache -> check it in all known ZRCs
     drcs = Service.objects.filter(api_type=APITypes.drc)
@@ -686,9 +692,9 @@ def get_document(url: str) -> Document:
 
 
 def download_document(
-    bronorganisatie: str, identificatie: str
+    bronorganisatie: str, identificatie: str, versie: Optional[int] = None
 ) -> Tuple[Document, bytes]:
-    document = find_document(bronorganisatie, identificatie)
+    document = find_document(bronorganisatie, identificatie, versie=versie)
     client = _client_from_object(document)
     response = requests.get(document.inhoud, headers=client.auth.credentials())
     response.raise_for_status()

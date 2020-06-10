@@ -5,6 +5,7 @@
             <th class="table__header">Van</th>
             <th class="table__header">Akkoord?</th>
             <th class="table__header">Gegeven op</th>
+            <th class="table__header">Documentadviezen</th>
         </tr>
     </thead>
 
@@ -19,7 +20,43 @@
                         {{ advice.created|timesince }} geleden
                     </time>
                 </td>
+                <td>
+                    {{ advice.documents|length }}
+                </td>
             </tr>
+            {% if advice.documents %}
+                <tr>
+                    <td colspan="5" class="table__nested-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <td class="table__subheader">Brondocument</td>
+                                    <td class="table__subheader">Aantekeningen/bijgewerkte versie</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc_advice in advice.documents %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ doc_advice.source.titel }}</strong>:
+                                            <span class="table__id-column">
+                                                {% include "core/includes/document_link.html" with document=doc_advice.source only %}
+                                            </span>
+                                            (versie {{ doc_advice.source.versie }} &mdash; {{ doc_advice.source.bestandsomvang|filesizeformat }})
+                                        </td>
+                                        <td>
+                                            <span class="table__id-column">
+                                                {% include "core/includes/document_link.html" with document=doc_advice.advice only %}
+                                            </span>
+                                            (versie {{ doc_advice.advice.versie }} &mdash; {{ doc_advice.advice.bestandsomvang|filesizeformat }})
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            {% endif %}
         {% endfor %}
     </tbody>
 </table>
