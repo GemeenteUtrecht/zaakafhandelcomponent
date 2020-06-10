@@ -34,7 +34,28 @@ $table-head-border-color: $color-secondary !default;
     text-align: left;
   }
 
-  @include element('column--hidden') {
-    display: none;
+  @include element('column') {
+    @include modifier('hidden') {
+      display: none;
+    }
+  }
+
+  @include element('nested-table') {
+    padding-left: 2em;
+    padding-bottom: 1em;
+
+    tbody td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+  }
+
+  @include element('subheader') {
+    font-size: 1.1em;
+    font-weight: 400;
+    text-align: left;
+    font-style: italic;
+    padding: 0.3em 0.5em 0.3em 0;
+    border-bottom: dashed 1px $table-head-border-color;
   }
 }
