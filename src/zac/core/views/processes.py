@@ -1,4 +1,3 @@
-import json
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -11,7 +10,7 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView, TemplateView
 
-from django_camunda.api import get_process_instance_variable
+from django_camunda.api import get_process_instance_variable, send_message
 from django_camunda.client import get_client
 from django_camunda.utils import serialize_variable
 
@@ -23,7 +22,6 @@ from ..camunda import (
     complete_task,
     get_process_definition_messages,
     get_zaak_tasks,
-    send_message,
 )
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
@@ -106,13 +104,8 @@ class SendMessage(PermissionRequiredMixin, FormView):
         ztc_jwt = ztc_client.auth.credentials()["Authorization"]
 
         variables = {
-            "services": {
-                "type": "Json",
-                "value": json.dumps(
-                    {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},}
-                ),
-            },
-            **{name: {"value": value} for name, value in form.cleaned_data.items()},
+            "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
+            **form.cleaned_data.items(),
         }
 
         send_message(form.cleaned_data["message"], form._instance_ids, variables)

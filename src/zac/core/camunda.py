@@ -184,14 +184,3 @@ def get_process_definition_messages(zaak_url: str) -> List[ProcessDefinition]:
         definition.message_names = [message.attrib["name"] for message in messages]
 
     return [definition for definition in defs if definition.message_names]
-
-
-def send_message(name: str, process_instance_ids: List[str], variables=None) -> None:
-    client = get_client()
-    for instance_id in process_instance_ids:
-        body = {
-            "messageName": name,
-            "processInstanceId": instance_id,
-            "processVariables": variables or {},
-        }
-        client.post("message", json=body)
