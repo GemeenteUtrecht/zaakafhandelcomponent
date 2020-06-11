@@ -14,6 +14,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.models import User
 from zac.camunda.forms import TaskFormMixin
+from zac.contrib.kownsl.api import create_review_request
 
 from .services import (
     get_documenten,
@@ -264,15 +265,19 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
 
         # retrieve process instance variables
-        zaak_url = get_process_instance_variable(
+        self.zaak_url = get_process_instance_variable(
             self.task.process_instance_id, "zaakUrl"
         )
-        zaak = get_zaak(zaak_url=zaak_url)
+        zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, _ = get_documenten(zaak)
 
         self.fields["documenten"].choices = [
             (doc.url, _repr(doc)) for doc in documenten
         ]
+
+    def on_submission(self):
+        review_request = create_review_request(self.zaak_url)
+        self.cleaned_data["review_request"] = review_request["id"]
 
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
@@ -280,4 +285,5 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         return {
             "users": user_names,
             "documenten": self.cleaned_data["documenten"],
+            "kownslReviewRequestId": self.cleaned_data["review_request"],
         }
