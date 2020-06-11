@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "zac.forms",
     "zac.utils",
     "zac.contrib.kadaster",
+    "zac.contrib.kownsl",
     # FIXME: should be moved to it's own API
     "zac.advices",
 ]
