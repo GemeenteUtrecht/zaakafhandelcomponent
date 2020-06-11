@@ -181,11 +181,7 @@ class RouteTaskView(PermissionRequiredMixin, UserTaskMixin, View):
         self.zaak = self.get_zaak()
         task = self._get_task()
 
-        # FIXME - do not patch the form key. this is for dev purposes only
-        if settings.DEBUG:
-            task.form_key = "zac:doRedirect"
-
-        handler = HANDLERS.get(task.form_key, "perform-task")
+        handler = HANDLERS.get(task.form_key, "core:perform-task")
         return redirect(handler, *args, **kwargs)
 
 

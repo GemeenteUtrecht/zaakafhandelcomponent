@@ -234,3 +234,50 @@ class SelectUsersForm(TaskFormMixin, forms.Form):
     def get_process_variables(self) -> Dict[str, List[str]]:
         user_names = [user.username for user in self.cleaned_data["users"]]
         return {"users": user_names}
+
+
+class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
+    """
+    Select the documents from a zaak and desired advisers.
+
+    This is essentially the combination of :class:`SelectDocumentsForm` and
+    :class:`SelectUsersForm`, which deprecates these.
+    """
+
+    documenten = forms.MultipleChoiceField(
+        label=_("Selecteer de relevante documenten"),
+        help_text=_(
+            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
+            "documenten voor het vervolg van het proces."
+        ),
+        widget=forms.CheckboxSelectMultiple,
+    )
+    users = forms.ModelMultipleChoiceField(
+        required=True,
+        label=_("Users"),
+        queryset=User.objects.filter(is_active=True),
+        widget=forms.CheckboxSelectMultiple,
+        help_text=_("Selecteer de gewenste adviseurs."),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # retrieve process instance variables
+        zaak_url = get_process_instance_variable(
+            self.task.process_instance_id, "zaakUrl"
+        )
+        zaak = get_zaak(zaak_url=zaak_url)
+        documenten, _ = get_documenten(zaak)
+
+        self.fields["documenten"].choices = [
+            (doc.url, _repr(doc)) for doc in documenten
+        ]
+
+    def get_process_variables(self) -> Dict[str, List[str]]:
+        assert self.is_valid(), "Form must be valid"
+        user_names = [user.username for user in self.cleaned_data["users"]]
+        return {
+            "users": user_names,
+            "documenten": self.cleaned_data["documenten"],
+        }
