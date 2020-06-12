@@ -1,8 +1,11 @@
+import base64
+import json
+import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -10,17 +13,12 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView, TemplateView
 
-from django_camunda.api import (
-    complete_task,
-    get_process_instance_variable,
-    send_message,
-)
+from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import MessageForm
 from zac.camunda.messages import get_process_definition_messages
-from zac.camunda.models import UserTaskCallback
 
 from ..camunda import get_zaak_tasks
 from ..forms import ClaimTaskForm
@@ -34,6 +32,8 @@ from ..services import (
 )
 from ..task_handlers import HANDLERS
 from .utils import get_zaak_from_query
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -180,7 +180,6 @@ class RouteTaskView(PermissionRequiredMixin, UserTaskMixin, View):
     def get(self, request, *args, **kwargs):
         self.zaak = self.get_zaak()
         task = self._get_task()
-
         handler = HANDLERS.get(task.form_key, "core:perform-task")
         return redirect(handler, *args, **kwargs)
 
@@ -267,44 +266,91 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
     permission_required = zaakproces_usertasks.name
 
+    def get(self, request, *args, **kwargs):
+        # check if we're returning from an external application - indicated by the
+        # presence of the state parameter
+        if "state" in self.request.GET:
+            self.zaak = self.get_zaak()
+            self.validate_state(self.request.GET["state"])
+            return self.complete_task()
+        return super().get(request, *args, **kwargs)
+
     def get_redirect_url(self, *args, **kwargs):
         self.zaak = self.get_zaak()
         task = self._get_task()
 
         # prepare the callback URL
-        if settings.DEBUG:
-            redirect_url = (
-                "http://localhost:8000/kownsl/50f99778-32d7-423f-8032-fa6eadfc56dd/"
-            )
-        else:
-            redirect_url = get_process_instance_variable(
-                task.process_instance_id, "redirectTo"
-            )
-        expected_callback = UserTaskCallback.objects.create(task_id=task.id)
+        redirect_url = get_task_variable(task.id, "redirectTo")
+
+        # prepare state so that we know what to do
+        state = {
+            "user_id": self.request.user.id,
+            "task_id": str(task.id),
+        }
 
         # return back to the zaak when do
-        success_url = self.request.build_absolute_uri(
-            reverse(
-                "core:zaak-detail",
-                kwargs={
-                    "bronorganisatie": kwargs["bronorganisatie"],
-                    "identificatie": kwargs["identificatie"],
-                },
-            )
+        return_url = self.request.build_absolute_uri(self.request.path)
+        encoded_state = urlencode(
+            {"state": base64.b64encode(json.dumps(state).encode("utf-8"))}
         )
-        callback_url = self.request.build_absolute_uri(
-            reverse(
-                "camunda:user-task-callback",
-                kwargs={"callback_id": expected_callback.callback_id},
-            )
-        )
+        return_url = f"{return_url}?{encoded_state}"
 
-        qs = urlencode({"redirectUrl": success_url, "callbackUrl": callback_url})
+        # encapsulate that entire return URL as redirect parameter
+        qs = urlencode({"returnUrl": return_url})
 
-        # we do not check of safe URLs here, as the URL should have been sanitized from
+        # we do not check for safe URLs here, as the URL should have been sanitized from
         # the process... can't white list this, since we go to external applications
         # TODO: we should generate one-time-token URLs etc.
         return f"{redirect_url}?{qs}"
+
+    def validate_state(self, encoded_state: str) -> dict:
+        try:
+            state = json.loads(base64.b64decode(encoded_state))
+        except Exception:
+            logger.warning("Tampered state", exc_info=True, extra={"state": state})
+            raise PermissionDenied("State parameter is tampered with")
+
+        user = self.request.user
+
+        if user.id != state.get("user_id"):
+            logger.warning(
+                "Invalid user in state",
+                extra={"expected": user.id, "received": state.get("user_id"),},
+            )
+            raise PermissionDenied("State is for a different user")
+
+        # now check that the assignee of the task is the correct user
+        task = self._get_task()
+        if str(task.id) != state.get("task_id"):
+            logger.warning(
+                "Invalid Task ID in state",
+                extra={"expected": str(task.id), "received": state.get("task_id"),},
+            )
+            raise PermissionDenied("Invalid task ID in state")
+
+        if not task.assignee:
+            logger.warning(
+                "Task did not have an assignee - can not verify ownership!",
+                extra={"task": str(task.id)},
+            )
+            return
+
+        if task.assignee != user:
+            raise PermissionDenied("Current user is not assignee of task.")
+
+        return state
+
+    def complete_task(self) -> HttpResponseRedirect:
+        task = self._get_task()
+        complete_task(task.id, {})
+        zaak_detail = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": self.zaak.bronorganisatie,
+                "identificatie": self.zaak.identificatie,
+            },
+        )
+        return HttpResponseRedirect(zaak_detail)
 
 
 class ClaimTaskView(PermissionRequiredMixin, FormView):

@@ -27,15 +27,13 @@
                 {% if task.assignee %}
                     {% with task.assignee.get_full_name|default:task.assignee.username as assignee %}
 
-                        {% if task.form is not None %}
-                            {% if task.assignee != user %}
-                                <div>Taak is al geclaimd!</div>
-                            {% else %}
-                                <div>
-                                    <a href="{% url 'core:zaak-task' task_id=task.id bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
-                                       class="btn btn--small">Uitvoeren</a>
-                                </div>
-                            {% endif %}
+                        {% if task.assignee != user %}
+                            <div>Taak is al geclaimd!</div>
+                        {% else %}
+                            <div>
+                                <a href="{% url 'core:zaak-task' task_id=task.id bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+                                   class="btn btn--small">Uitvoeren</a>
+                            </div>
                         {% endif %}
 
                         <strong>{{ assignee }}</strong>
