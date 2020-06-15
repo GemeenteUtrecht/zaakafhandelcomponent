@@ -14,9 +14,7 @@
         {% for zaak in zaken %}
             <tr>
                 <th class="table__id-column">
-                    <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link">
-                        {{ zaak.identificatie }}
-                    </a>
+                    {% include "core/includes/zaak_link.html" with zaak=zaak css_classes="link" only %}
                 </th>
                 <td> {{ zaak.zaaktype.omschrijving }} </td>
                 <td> {{ zaak.startdatum }} </td>

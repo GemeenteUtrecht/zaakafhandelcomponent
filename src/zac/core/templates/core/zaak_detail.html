@@ -233,11 +233,7 @@
                 {% for relatie_aard, zaak in related_zaken %}
                     <tr>
                         <th class="table__id-column">
-                            <a
-                                href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
-                                target="_blank" rel="nofollow noopener">
-                                {{ zaak.identificatie }}
-                            </a>
+                            {% include "core/includes/zaak_link.html" with zaak=zaak blank=True only %}
                         </th>
                         <td> {{ zaak.zaaktype.omschrijving }}</td>
                         <td> {{ relatie_aard }} </td>
