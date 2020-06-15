@@ -185,8 +185,33 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
-        <div class="section-title">Geometrie</div>
-        TODO
+        <div class="section-title">Adviseren en accorderen</div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">Type</th>
+                    <th class="table__header">Advieszaak</th>
+                    <th class="table__header"># Opgehaald</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review_request in review_requests %}
+                    <tr>
+                        <td>{{ review_request.get_review_type_display }}</td>
+                        <th class="table__id-column">
+                            <a
+                                href="{% url 'core:zaak-detail' bronorganisatie=review_request.advice_zaak.bronorganisatie identificatie=review_request.advice_zaak.identificatie %}"
+                                target="_blank" rel="nofollow noopener">
+                                {{ review_request.advice_zaak.identificatie }}
+                            </a>
+                        </th>
+                        {# one of both fields should always be zero #}
+                        <td>{% firstof review_request.num_advices review_request.num_approvals %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </section>
 
     {% if related_zaken %}
@@ -201,7 +226,6 @@
                     <th class="table__header">Aard</th>
                     <th class="table__header">Status</th>
                     <th class="table__header">Resultaat</th>
-                    <th class="table__header"># Adviezen</th>
                 </tr>
             </thead>
 
@@ -219,7 +243,6 @@
                         <td> {{ relatie_aard }} </td>
                         <td> {{ zaak.status.statustype.omschrijving }} </td>
                         <td> {{ zaak.resultaat.resultaattype.omschrijving }} </td>
-                        <td> {{ zaak.n_advices|default:"-" }} </td>
                     </tr>
                 {% endfor %}
                 {% for io_url in documenten_gone %}
@@ -283,10 +306,13 @@
     </section>
     {% endif %}
 
-    {% if advices %}
+    {% if advice_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Adviezen</div>
-        {% include "advices/includes/advice_table.html" with advices=advices only %}
+        <a href="{% url 'core:zaak-detail' bronorganisatie=advice_collection.for_zaak.bronorganisatie identificatie=advice_collection.for_zaak.identificatie %}" class="link">
+            Voor: {{ advice_collection.for_zaak.identificatie }}
+        </a>
+        {% include "advices/includes/advice_table.html" with advices=advice_collection.advices only %}
     </section>
     {% endif %}
 

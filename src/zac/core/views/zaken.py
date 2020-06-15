@@ -11,7 +11,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
-from zac.advices.models import Advice, DocumentAdvice
+from zac.contrib.kownsl.api import get_review_requests, retrieve_advice_collection
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -24,6 +24,7 @@ from ..services import (
     get_resultaat,
     get_rollen,
     get_statussen,
+    get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
@@ -78,27 +79,52 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        advices = Advice.objects.get_for(self.object)
+        with futures.ThreadPoolExecutor() as executor:
+            _advice_collection = executor.submit(
+                retrieve_advice_collection, self.object
+            )
+            _related_zaken = executor.submit(get_related_zaken, self.object)
+            _review_requests = executor.submit(get_review_requests, self.object)
 
-        related_zaken = get_related_zaken(self.object)
+            advice_collection = _advice_collection.result()
+            related_zaken = _related_zaken.result()
+            review_requests = _review_requests.result()
 
-        _related_zaken = [zaak for (_, zaak) in related_zaken]
-        # count the amount of advices
-        Advice.objects.set_counts(_related_zaken)
-        # get the advice versions
-        doc_versions = dict(
-            DocumentAdvice.objects.get_document_source_versions(_related_zaken)
-        )
+            # fetch the review cases
+            _review_zaken = {
+                review_request.advice_zaak: review_request
+                for review_request in review_requests
+            }
+
+            _review_zaken = executor.map(
+                lambda url: get_zaak(zaak_url=url),
+                [review_request.advice_zaak for review_request in review_requests],
+            )
+            for review_zaak, review_request in zip(_review_zaken, review_requests):
+                review_request.advice_zaak = review_zaak
+
+        # # get the advice versions
+        # doc_versions = dict(
+        #     DocumentAdvice.objects.get_document_source_versions(_related_zaken)
+        # )
 
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
-            _documenten = executor.submit(get_documenten, self.object, doc_versions)
+            _documenten = executor.submit(
+                get_documenten, self.object
+            )  # , doc_versions)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
             rollen = executor.submit(get_rollen, self.object)
 
             resultaat = executor.submit(get_resultaat, self.object)
 
             documenten, gone = _documenten.result()
+
+            if advice_collection:
+                _get_zaak = executor.submit(
+                    get_zaak, zaak_url=advice_collection.for_zaak
+                )
+                advice_collection.for_zaak = _get_zaak.result()
 
             context.update(
                 {
@@ -109,14 +135,15 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "resultaat": resultaat.result(),
                     "related_zaken": related_zaken,
                     "rollen": rollen.result(),
-                    "advices": advices,
+                    "advice_collection": advice_collection,
+                    "review_requests": review_requests,
                 }
             )
-        self._set_advice_documents(advices, documenten)
+        # self._set_advice_documents(advices, documenten)
         return context
 
     @staticmethod
-    def _set_advice_documents(advices: Iterable[Advice], documents: List[Document]):
+    def _set_advice_documents(advices: Iterable, documents: List[Document]):
         _document_versions = set()
 
         for advice in advices:

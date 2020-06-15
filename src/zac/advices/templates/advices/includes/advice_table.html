@@ -13,7 +13,7 @@
         {% for advice in advices %}
             <tr>
                 <td> {{ advice.advice|linebreaksbr }} </td>
-                <td> {% firstof advice.user.get_full_name advice.user.username %}</td>
+                <td> {% firstof advice.author.get_full_name advice.author.username %}</td>
                 <td> <i class="material-icons">{{ advice.accord|yesno:"check_circle_outline,block" }}</i> </td>
                 <td>
                     <time title="{{ advice.created.isoformat }}">
