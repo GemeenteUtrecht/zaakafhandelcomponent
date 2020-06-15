@@ -91,13 +91,8 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             review_requests = _review_requests.result()
 
             # fetch the review cases
-            _review_zaken = {
-                review_request.advice_zaak: review_request
-                for review_request in review_requests
-            }
-
             _review_zaken = executor.map(
-                lambda url: get_zaak(zaak_url=url),
+                lambda url: get_zaak(zaak_url=url) if url else None,
                 [review_request.advice_zaak for review_request in review_requests],
             )
             for review_zaak, review_request in zip(_review_zaken, review_requests):

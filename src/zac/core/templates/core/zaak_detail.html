@@ -199,13 +199,13 @@
                 {% for review_request in review_requests %}
                     <tr>
                         <td>{{ review_request.get_review_type_display }}</td>
-                        <th class="table__id-column">
-                            <a
-                                href="{% url 'core:zaak-detail' bronorganisatie=review_request.advice_zaak.bronorganisatie identificatie=review_request.advice_zaak.identificatie %}"
-                                target="_blank" rel="nofollow noopener">
-                                {{ review_request.advice_zaak.identificatie }}
-                            </a>
-                        </th>
+                        {% if review_request.advice_zaak %}
+                            <th class="table__id-column">
+                                {% include "core/includes/zaak_link.html" with zaak=review_request.advice_zaak blank=True only %}
+                            </th>
+                        {% else %}
+                            <td>(zaak nog niet aangemaakt)</td>
+                        {% endif %}
                         {# one of both fields should always be zero #}
                         <td>{% firstof review_request.num_advices review_request.num_approvals %}</td>
                     </tr>

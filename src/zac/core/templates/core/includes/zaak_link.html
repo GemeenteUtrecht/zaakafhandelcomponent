@@ -1,0 +1,10 @@
+{% comment %}
+Variables:
+  zaak: a Zaak instance
+  blank: boolean whether to open in new tab or not, defaults to False
+{% endcomment %}
+<a
+    href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+    {% if blank %}target="_blank" rel="nofollow noopener"{% endif %}>
+    {{ zaak.identificatie }}
+</a>
