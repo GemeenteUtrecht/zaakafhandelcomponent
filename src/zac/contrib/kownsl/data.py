@@ -50,11 +50,18 @@ class Author(Model):
 
 
 @dataclass
+class AdviceDocument(Model):
+    document: str
+    source_version: int
+    advice_version: int
+
+
+@dataclass
 class Advice(Model):
     created: datetime
     author: Author
     advice: str
-    documents: list
+    documents: List[AdviceDocument]
 
 
 @dataclass

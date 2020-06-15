@@ -1,6 +1,6 @@
 from concurrent import futures
 from itertools import groupby
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List, Optional
 
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
@@ -12,6 +12,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advice_collection
+from zac.contrib.kownsl.data import AdviceCollection
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -98,16 +99,13 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             for review_zaak, review_request in zip(_review_zaken, review_requests):
                 review_request.advice_zaak = review_zaak
 
-        # # get the advice versions
-        # doc_versions = dict(
-        #     DocumentAdvice.objects.get_document_source_versions(_related_zaken)
-        # )
+        # get the advice versions - the minimal versions are needed
+        # for the documents table
+        doc_versions = self.get_source_doc_versions(advice_collection)
 
         with futures.ThreadPoolExecutor() as executor:
             statussen = executor.submit(get_statussen, self.object)
-            _documenten = executor.submit(
-                get_documenten, self.object
-            )  # , doc_versions)
+            _documenten = executor.submit(get_documenten, self.object, doc_versions)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
             rollen = executor.submit(get_rollen, self.object)
 
@@ -134,15 +132,39 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "review_requests": review_requests,
                 }
             )
-        # self._set_advice_documents(advices, documenten)
+        self._set_advice_documents(advice_collection, documenten)
         return context
 
     @staticmethod
-    def _set_advice_documents(advices: Iterable, documents: List[Document]):
+    def get_source_doc_versions(
+        advice_collection: Optional[AdviceCollection],
+    ) -> Optional[Dict[str, int]]:
+        if advice_collection is None:
+            return None
+
+        all_documents = sum(
+            (advice.documents for advice in advice_collection.advices), []
+        )
+        sort_key = lambda ad: ad.document  # noqa
+        all_documents = sorted(all_documents, key=sort_key)
+        doc_versions = {
+            document_url: min(doc.source_version for doc in docs)
+            for document_url, docs in groupby(all_documents, key=sort_key)
+        }
+        return doc_versions
+
+    @staticmethod
+    def _set_advice_documents(
+        advice_collection: Optional[AdviceCollection], documents: List[Document]
+    ):
+        if advice_collection is None:
+            return
+
         _document_versions = set()
+        advices = advice_collection.advices
 
         for advice in advices:
-            for document_advice in advice.documentadvice_set.all():
+            for document_advice in advice.documents:
                 source_version = furl(document_advice.document)
                 source_version.args["versie"] = document_advice.source_version
                 _document_versions.add(source_version.url)
@@ -162,7 +184,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
         for advice in advices:
             _docs = []
-            for document_advice in advice.documentadvice_set.all():
+            for document_advice in advice.documents:
                 source_key, advice_key = (
                     (document_advice.document, document_advice.source_version),
                     (document_advice.document, document_advice.advice_version),
