@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from zds_client import ClientError
 from zds_client.client import get_operation_url
@@ -16,14 +16,14 @@ def get_client() -> ZGWClient:
     return config.service.build_client()
 
 
-def create_review_request(zaak_url: str, review_type: str = "advice") -> Dict[str, Any]:
+def create_review_request(zaak_url: str, review_type: str = "advice") -> ReviewRequest:
     client = get_client()
     data = {
         "for_zaak": zaak_url,
         "review_type": review_type,
     }
     resp = client.create("reviewrequest", data=data)
-    return resp
+    return factory(ReviewRequest, resp)
 
 
 def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:

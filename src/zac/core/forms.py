@@ -277,7 +277,7 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
 
     def on_submission(self):
         review_request = create_review_request(self.zaak_url)
-        self.cleaned_data["review_request"] = review_request["id"]
+        self.cleaned_data["review_request"] = str(review_request.id)
 
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
