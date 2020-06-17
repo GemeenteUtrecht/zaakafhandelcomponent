@@ -47,7 +47,7 @@ def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
     return factory(AdviceCollection, result)
 
 
-def get_review_requests(zaak: Zaak) -> List:
+def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
     result = client.list("reviewrequest", query_params={"for_zaak": zaak.url})
     review_requests = factory(ReviewRequest, result)
