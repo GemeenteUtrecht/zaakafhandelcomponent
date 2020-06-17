@@ -3,7 +3,6 @@
         <tr>
             <th class="table__header">Advies</th>
             <th class="table__header">Van</th>
-            <th class="table__header">Akkoord?</th>
             <th class="table__header">Gegeven op</th>
             <th class="table__header">Documentadviezen</th>
         </tr>
@@ -13,8 +12,7 @@
         {% for advice in advices %}
             <tr>
                 <td> {{ advice.advice|linebreaksbr }} </td>
-                <td> {% firstof advice.user.get_full_name advice.user.username %}</td>
-                <td> <i class="material-icons">{{ advice.accord|yesno:"check_circle_outline,block" }}</i> </td>
+                <td> {% firstof advice.author.get_full_name advice.author.username %}</td>
                 <td>
                     <time title="{{ advice.created.isoformat }}">
                         {{ advice.created|timesince }} geleden

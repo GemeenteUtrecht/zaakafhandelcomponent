@@ -7,6 +7,8 @@ from .views.processes import (
     FetchMessages,
     FetchTasks,
     PerformTaskView,
+    RedirectTaskView,
+    RouteTaskView,
     SendMessage,
 )
 from .views.search import SearchIndexView, SearchView
@@ -32,8 +34,19 @@ urlpatterns = [
                 ),
                 path(
                     "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/",
-                    PerformTaskView.as_view(),
+                    RouteTaskView.as_view(),
                     name="zaak-task",
+                ),
+                # task handlers
+                path(
+                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/perform/",
+                    PerformTaskView.as_view(),
+                    name="perform-task",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/redirect/",
+                    RedirectTaskView.as_view(),
+                    name="redirect-task",
                 ),
             ]
         ),

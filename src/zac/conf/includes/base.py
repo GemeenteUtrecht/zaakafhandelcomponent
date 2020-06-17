@@ -114,12 +114,14 @@ INSTALLED_APPS = [
     "rules.apps.AutodiscoverRulesConfig",
     # Project applications.
     "zac.accounts",
+    "zac.camunda",
     "zac.regiezaken",
     "zac.core",
     "zac.notifications",
     "zac.forms",
     "zac.utils",
     "zac.contrib.kadaster",
+    "zac.contrib.kownsl",
     # FIXME: should be moved to it's own API
     "zac.advices",
 ]

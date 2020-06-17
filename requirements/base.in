@@ -9,7 +9,6 @@ uwsgi
 python-dateutil
 isodate
 requests_mock
-defusedxml
 rules  # permissions backend
 
 # zgw-integration
@@ -17,7 +16,7 @@ aiodns
 aiohttp
 
 gemma-zds-client
-zgw-consumers==0.9.0.dev10
+zgw-consumers
 
 # Framework libraries
 Django<3.0

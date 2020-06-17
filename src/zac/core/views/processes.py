@@ -1,25 +1,26 @@
+import base64
 import json
+import logging
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import is_safe_url
-from django.views.generic import FormView, TemplateView
+from django.views import View
+from django.views.generic import FormView, RedirectView, TemplateView
 
+from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
-from django_camunda.utils import serialize_variable
 
 from zac.accounts.mixins import PermissionRequiredMixin
+from zac.camunda.forms import MessageForm
+from zac.camunda.messages import get_process_definition_messages
 
-from ..camunda import (
-    MessageForm,
-    complete_task,
-    get_process_definition_messages,
-    get_zaak_tasks,
-    send_message,
-)
+from ..camunda import get_zaak_tasks
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import (
@@ -29,7 +30,10 @@ from ..services import (
     get_roltypen,
     get_zaak,
 )
+from ..task_handlers import HANDLERS
 from .utils import get_zaak_from_query
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -58,7 +62,10 @@ class FetchMessages(PermissionRequiredMixin, TemplateView):
         self.check_object_permissions(zaak)
 
         definitions = get_process_definition_messages(zaak.url)
-        context["forms"] = [definition.get_form() for definition in definitions]
+        context["forms"] = [
+            definition.get_form(initial={"zaak_url": zaak.url})
+            for definition in definitions
+        ]
         context["zaak"] = zaak
         return context
 
@@ -100,13 +107,8 @@ class SendMessage(PermissionRequiredMixin, FormView):
         ztc_jwt = ztc_client.auth.credentials()["Authorization"]
 
         variables = {
-            "services": {
-                "type": "Json",
-                "value": json.dumps(
-                    {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},}
-                ),
-            },
-            **{name: {"value": value} for name, value in form.cleaned_data.items()},
+            "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
+            **form.cleaned_data,
         }
 
         send_message(form.cleaned_data["message"], form._instance_ids, variables)
@@ -146,10 +148,7 @@ class FormSetMixin:
         return kwargs
 
 
-class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
-    template_name = "core/zaak_task.html"
-    permission_required = zaakproces_usertasks.name
-
+class UserTaskMixin:
     def get_zaak(self):
         zaak = find_zaak(
             bronorganisatie=self.kwargs["bronorganisatie"],
@@ -157,14 +156,6 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         )
         self.check_object_permissions(zaak)
         return zaak
-
-    def get(self, request, *args, **kwargs):
-        self.zaak = self.get_zaak()
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.zaak = self.get_zaak()
-        return super().post(request, *args, **kwargs)
 
     def _get_task(self):
         if not hasattr(self, "_task"):
@@ -177,6 +168,33 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
                 raise Http404("No such task for this zaak.") from exc
             self._task = task
         return self._task
+
+
+class RouteTaskView(PermissionRequiredMixin, UserTaskMixin, View):
+    """
+    Analyze the user task definition and redirect to the appropriate page.
+    """
+
+    permission_required = zaakproces_usertasks.name
+
+    def get(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        task = self._get_task()
+        handler = HANDLERS.get(task.form_key, "core:perform-task")
+        return redirect(handler, *args, **kwargs)
+
+
+class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, FormView):
+    template_name = "core/zaak_task.html"
+    permission_required = zaakproces_usertasks.name
+
+    def get(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        return super().post(request, *args, **kwargs)
 
     def get_form_class(self):
         task = self._get_task()
@@ -236,13 +254,103 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, FormView):
         }
 
         variables = {
-            "services": serialize_variable(services),
+            "services": services,
             **form.get_process_variables(),
         }
 
         complete_task(task.id, variables)
 
         return super().form_valid(form)
+
+
+class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
+    permission_required = zaakproces_usertasks.name
+
+    def get(self, request, *args, **kwargs):
+        # check if we're returning from an external application - indicated by the
+        # presence of the state parameter
+        if "state" in self.request.GET:
+            self.zaak = self.get_zaak()
+            self.validate_state(self.request.GET["state"])
+            return self.complete_task()
+        return super().get(request, *args, **kwargs)
+
+    def get_redirect_url(self, *args, **kwargs):
+        self.zaak = self.get_zaak()
+        task = self._get_task()
+
+        # prepare the callback URL
+        redirect_url = get_task_variable(task.id, "redirectTo")
+
+        # prepare state so that we know what to do
+        state = {
+            "user_id": self.request.user.id,
+            "task_id": str(task.id),
+        }
+
+        # return back to the zaak when do
+        return_url = self.request.build_absolute_uri(self.request.path)
+        encoded_state = urlencode(
+            {"state": base64.b64encode(json.dumps(state).encode("utf-8"))}
+        )
+        return_url = f"{return_url}?{encoded_state}"
+
+        # encapsulate that entire return URL as redirect parameter
+        qs = urlencode({"returnUrl": return_url})
+
+        # we do not check for safe URLs here, as the URL should have been sanitized from
+        # the process... can't white list this, since we go to external applications
+        # TODO: we should generate one-time-token URLs etc.
+        return f"{redirect_url}?{qs}"
+
+    def validate_state(self, encoded_state: str) -> dict:
+        try:
+            state = json.loads(base64.b64decode(encoded_state))
+        except Exception:
+            logger.warning("Tampered state", exc_info=True, extra={"state": state})
+            raise PermissionDenied("State parameter is tampered with")
+
+        user = self.request.user
+
+        if user.id != state.get("user_id"):
+            logger.warning(
+                "Invalid user in state",
+                extra={"expected": user.id, "received": state.get("user_id"),},
+            )
+            raise PermissionDenied("State is for a different user")
+
+        # now check that the assignee of the task is the correct user
+        task = self._get_task()
+        if str(task.id) != state.get("task_id"):
+            logger.warning(
+                "Invalid Task ID in state",
+                extra={"expected": str(task.id), "received": state.get("task_id"),},
+            )
+            raise PermissionDenied("Invalid task ID in state")
+
+        if not task.assignee:
+            logger.warning(
+                "Task did not have an assignee - can not verify ownership!",
+                extra={"task": str(task.id)},
+            )
+            return
+
+        if task.assignee != user:
+            raise PermissionDenied("Current user is not assignee of task.")
+
+        return state
+
+    def complete_task(self) -> HttpResponseRedirect:
+        task = self._get_task()
+        complete_task(task.id, {})
+        zaak_detail = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": self.zaak.bronorganisatie,
+                "identificatie": self.zaak.identificatie,
+            },
+        )
+        return HttpResponseRedirect(zaak_detail)
 
 
 class ClaimTaskView(PermissionRequiredMixin, FormView):

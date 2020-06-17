@@ -1,4 +1,4 @@
-from typing import Iterator, List, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
@@ -10,12 +10,11 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.api import get_process_instance_variable
-from django_camunda.camunda_models import Task
-from django_camunda.types import ProcessVariables
-from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.models import User
+from zac.camunda.forms import TaskFormMixin
+from zac.contrib.kownsl.api import create_review_request
 
 from .services import (
     get_documenten,
@@ -171,36 +170,6 @@ class ZaakAfhandelForm(forms.Form):
             )
 
 
-class TaskFormMixin:
-    """
-    Define a base class for forms driven by a particular form key in Camunda.
-
-    The form expects a :class:`Task` instance as param, which subclasses can use to
-    retrieve related information.
-    """
-
-    def __init__(self, task: Task, *args, **kwargs):
-        self.task = task
-        super().__init__(*args, **kwargs)
-
-    def set_context(self, context: dict):
-        self.context = context
-
-    def on_submission(self):
-        """
-        Hook for forms that do need to persist data.
-        """
-        pass
-
-    def get_process_variables(self) -> ProcessVariables:
-        assert self.is_valid(), "Form does not pass validation"
-        variables = {
-            field: serialize_variable(value)
-            for field, value in self.cleaned_data.items()
-        }
-        return variables
-
-
 def _repr(doc):
     download_path = reverse(
         "core:download-document",
@@ -263,6 +232,58 @@ class SelectUsersForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
 
-    def get_process_variables(self) -> ProcessVariables:
+    def get_process_variables(self) -> Dict[str, List[str]]:
         user_names = [user.username for user in self.cleaned_data["users"]]
-        return {"users": serialize_variable(user_names)}
+        return {"users": user_names}
+
+
+class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
+    """
+    Select the documents from a zaak and desired advisers.
+
+    This is essentially the combination of :class:`SelectDocumentsForm` and
+    :class:`SelectUsersForm`, which deprecates these.
+    """
+
+    documenten = forms.MultipleChoiceField(
+        label=_("Selecteer de relevante documenten"),
+        help_text=_(
+            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
+            "documenten voor het vervolg van het proces."
+        ),
+        widget=forms.CheckboxSelectMultiple,
+    )
+    users = forms.ModelMultipleChoiceField(
+        required=True,
+        label=_("Users"),
+        queryset=User.objects.filter(is_active=True),
+        widget=forms.CheckboxSelectMultiple,
+        help_text=_("Selecteer de gewenste adviseurs."),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # retrieve process instance variables
+        self.zaak_url = get_process_instance_variable(
+            self.task.process_instance_id, "zaakUrl"
+        )
+        zaak = get_zaak(zaak_url=self.zaak_url)
+        documenten, _ = get_documenten(zaak)
+
+        self.fields["documenten"].choices = [
+            (doc.url, _repr(doc)) for doc in documenten
+        ]
+
+    def on_submission(self):
+        review_request = create_review_request(self.zaak_url)
+        self.cleaned_data["review_request"] = str(review_request.id)
+
+    def get_process_variables(self) -> Dict[str, List[str]]:
+        assert self.is_valid(), "Form must be valid"
+        user_names = [user.username for user in self.cleaned_data["users"]]
+        return {
+            "users": user_names,
+            "documenten": self.cleaned_data["documenten"],
+            "kownslReviewRequestId": self.cleaned_data["review_request"],
+        }
