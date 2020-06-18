@@ -666,9 +666,6 @@ def find_document(
         if not results:
             continue
 
-        if len(results) > 1:
-            logger.warning("Found multiple Zaken for query %r", query)
-
         # get the latest one if no explicit version is given
         if versie is None:
             result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
