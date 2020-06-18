@@ -654,14 +654,14 @@ def find_document(
     Find the document uniquely identified by bronorganisatie and identificatie.
     """
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
-    if versie:
-        query["versie"] = versie
 
-    # not in cache -> check it in all known ZRCs
+    # not in cache -> check it in all known DRCs
     drcs = Service.objects.filter(api_type=APITypes.drc)
     for drc in drcs:
         client = drc.build_client()
-        results = client.list("enkelvoudiginformatieobject", query_params=query)
+        results = get_paginated_results(
+            client, "enkelvoudiginformatieobject", query_params=query
+        )
 
         if not results:
             continue
@@ -669,8 +669,29 @@ def find_document(
         if len(results) > 1:
             logger.warning("Found multiple Zaken for query %r", query)
 
-        # there's only supposed to be one unique case
-        result = factory(Document, results[0])
+        # get the latest one if no explicit version is given
+        if versie is None:
+            result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
+        else:
+            # there's only supposed to be one unique case
+            # NOTE: there are known issues with DRC-CMIS returning multiple docs for
+            # the same version...
+            candidates = [result for result in results if result["versie"] == versie]
+            if not candidates:
+                raise RuntimeError(
+                    f"Version '{versie}' for document does not seem to exist..."
+                )
+            if len(candidates) > 1:
+                logger.warning(
+                    "Multiple results for version '%d' found, this is an error in the DRC "
+                    "implementation!",
+                    versie,
+                    extra={"query": query},
+                )
+
+            result = candidates[0]
+
+        result = factory(Document, result)
         break
 
     if result is None:
