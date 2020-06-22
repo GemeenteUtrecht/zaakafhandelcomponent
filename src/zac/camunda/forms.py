@@ -50,6 +50,10 @@ class TaskFormMixin:
         return self.cleaned_data
 
 
+class DummyForm(TaskFormMixin, forms.Form):
+    pass
+
+
 def extract_task_form(
     task: Task, form_key_mapping: dict
 ) -> Optional[Dict[str, Type[TaskFormMixin]]]:

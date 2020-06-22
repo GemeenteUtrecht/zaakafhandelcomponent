@@ -17,7 +17,7 @@ from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
 from zac.accounts.mixins import PermissionRequiredMixin
-from zac.camunda.forms import MessageForm
+from zac.camunda.forms import DummyForm, MessageForm
 from zac.camunda.messages import get_process_definition_messages
 
 from ..camunda import get_zaak_tasks
@@ -122,7 +122,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
 class FormSetMixin:
     def get_formset_class(self):
         task = self._get_task()
-        return task.form.get("formset")
+        return task.form.get("formset") if task.form else None
 
     def get_formset(self):
         formset_class = self.get_formset_class()
@@ -198,7 +198,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
     def get_form_class(self):
         task = self._get_task()
-        return task.form["form"]
+        return task.form["form"] if task.form else DummyForm
 
     def get_form_kwargs(self):
         base = super().get_form_kwargs()
