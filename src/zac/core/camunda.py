@@ -7,7 +7,12 @@ from django_camunda.client import get_client
 
 from zac.camunda.forms import extract_task_form
 
-from .forms import ConfigureAdviceRequestForm, SelectDocumentsForm, SelectUsersForm
+from .forms import (
+    ConfigureAdviceRequestForm,
+    ConfigureApprovalRequestForm,
+    SelectDocumentsForm,
+    SelectUsersForm,
+)
 
 User = get_user_model()
 
@@ -16,6 +21,7 @@ FORM_KEYS = {
     "zac:documentSelectie": {"form": SelectDocumentsForm},
     "zac:gebruikerSelectie": {"form": SelectUsersForm},
     "zac:configureAdviceRequest": {"form": ConfigureAdviceRequestForm},
+    "zac:configureApprovalRequest": {"form": ConfigureApprovalRequestForm},
 }
 
 

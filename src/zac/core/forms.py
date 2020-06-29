@@ -287,3 +287,19 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
             "documenten": self.cleaned_data["documenten"],
             "kownslReviewRequestId": self.cleaned_data["review_request"],
         }
+
+
+class ConfigureApprovalRequestForm(ConfigureAdviceRequestForm):
+    """
+    Select the documents on which to request approval and the
+    user who should submit their (dis)approval.
+    """
+
+    documenten = forms.MultipleChoiceField(
+        label=_("Selecteer de relevante documenten"),
+        help_text=_(
+            "Dit zijn de documenten die bij de zaak horen. Selecteer de "
+            "documenten die moeten worden goedgekeurd."
+        ),
+        widget=forms.CheckboxSelectMultiple,
+    )
