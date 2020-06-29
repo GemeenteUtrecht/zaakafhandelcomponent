@@ -276,7 +276,9 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         ]
 
     def on_submission(self):
-        review_request = create_review_request(self.zaak_url)
+        review_request = create_review_request(
+            self.zaak_url, num_assigned_users=len(self.cleaned_data["users"])
+        )
         self.cleaned_data["review_request"] = str(review_request.id)
 
     def get_process_variables(self) -> Dict[str, List[str]]:
