@@ -6,7 +6,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
 
-from .data import AdviceCollection, ReviewRequest
+from .data import AdviceCollection, ApprovalCollection, ReviewRequest
 from .models import KownslConfig
 
 
@@ -23,7 +23,7 @@ def create_review_request(
     data = {
         "for_zaak": zaak_url,
         "review_type": review_type,
-        "num_assigned_users: int": num_assigned_users,
+        "num_assigned_users": num_assigned_users,
     }
     resp = client.create("reviewrequest", data=data)
     return factory(ReviewRequest, resp)
@@ -33,7 +33,7 @@ def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
     """
     Retrieve the advice collection for a single advice case.
 
-    :param zaak_url: URL of the case to check. This particular case is supposed to be
+    :param zaak: URL of the case to check. This particular case is supposed to be
       the case that is used to collect the advices, not the case that requests for
       advices.
     :return: an advice-collection object
@@ -48,6 +48,28 @@ def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
             return None
         raise
     return factory(AdviceCollection, result)
+
+
+def retrieve_approval_collection(zaak: Zaak) -> Optional[ApprovalCollection]:
+    """
+    Retrieve the approval collection for a single approval case.
+
+    :param zaak: URL of the case to check. This particular case is supposed to be
+      the case that is used to collect the approvals, not the case that requests for
+      approvals.
+    :return: an approval-collection object
+    """
+
+    client = get_client()
+    operation_id = "approvalcollection_retrieve"
+    url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
+    try:
+        result = client.request(url, operation_id, params={"objectUrl": zaak.url})
+    except ClientError as exc:
+        if exc.__context__.response.status_code == 404:
+            return None
+        raise
+    return factory(ApprovalCollection, result)
 
 
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:

@@ -17,6 +17,7 @@ from ..api import (
     get_client,
     get_review_requests,
     retrieve_advice_collection,
+    retrieve_approval_collection,
 )
 from ..models import KownslConfig
 
@@ -64,10 +65,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": str(_uuid),
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
-            "advice_zaak": "",
+            "review_zaak": "",
             "frontend_url": "",
             "num_advices": 0,
             "num_approvals": 0,
+            "num_assigned_users": 0,
         }
         m.post(
             "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
@@ -96,6 +98,23 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             m.last_request.qs["objecturl"], ["https://zaken.nl/api/v1/zaken/123"],
         )
 
+    def test_retrieve_approval_collection_empty(self, m):
+        mock_service_oas_get(
+            m, self.service.api_root, "kownsl", oas_url=self.service.oas
+        )
+        _zaak = generate_oas_component(
+            "zrc", "schemas/Zaak", url="https://zaken.nl/api/v1/zaken/123"
+        )
+        zaak = factory(Zaak, _zaak)
+        m.get("https://kownsl.nl/api/v1/approval-collection", status_code=404)
+
+        approval_collection = retrieve_approval_collection(zaak)
+
+        self.assertIsNone(approval_collection)
+        self.assertEqual(
+            m.last_request.qs["objecturl"], ["https://zaken.nl/api/v1/zaken/123"],
+        )
+
     def test_retrieve_advice_collection(self, m):
         mock_service_oas_get(
             m, self.service.api_root, "kownsl", oas_url=self.service.oas
@@ -105,7 +124,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         )
         zaak = factory(Zaak, _zaak)
         response = {
-            "advice_zaak": "https://zaken.nl/api/v1/zaken/123",
+            "review_zaak": "https://zaken.nl/api/v1/zaken/123",
             "for_zaak": "https://zaken.nl/api/v1/zaken/abc",
             "advices": [
                 {
@@ -130,6 +149,39 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(User.objects.get().username, "foo")
 
+    def test_retrieve_approval_collection(self, m):
+        mock_service_oas_get(
+            m, self.service.api_root, "kownsl", oas_url=self.service.oas
+        )
+        _zaak = generate_oas_component(
+            "zrc", "schemas/Zaak", url="https://zaken.nl/api/v1/zaken/123"
+        )
+        zaak = factory(Zaak, _zaak)
+        response = {
+            "review_zaak": "https://zaken.nl/api/v1/zaken/123",
+            "for_zaak": "https://zaken.nl/api/v1/zaken/abc",
+            "approvals": [
+                {
+                    "created": "2020-06-17T10:21:16Z",
+                    "author": {"username": "foo", "first_name": "", "last_name": "",},
+                    "approved": True,
+                }
+            ],
+        }
+        m.get("https://kownsl.nl/api/v1/approval-collection", json=response)
+
+        approval_collection = retrieve_approval_collection(zaak)
+
+        self.assertIsNotNone(approval_collection)
+        self.assertEqual(
+            approval_collection.for_zaak, "https://zaken.nl/api/v1/zaken/abc"
+        )
+        self.assertEqual(approval_collection.approvals[0].approved, True)
+        # side effect: user created
+        approval_collection.approvals[0].author.user
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(User.objects.get().username, "foo")
+
     def test_get_review_requests(self, m):
         mock_service_oas_get(
             m, self.service.api_root, "kownsl", oas_url=self.service.oas
@@ -143,10 +195,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": str(_uuid),
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
-            "advice_zaak": "",
+            "review_zaak": "",
             "frontend_url": "",
             "num_advices": 0,
             "num_approvals": 0,
+            "num_assigned_users": 0,
         }
         m.get(
             f"https://kownsl.nl/api/v1/review-requests?for_zaak={zaak.url}",

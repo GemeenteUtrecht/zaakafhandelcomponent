@@ -21,7 +21,7 @@ class ReviewRequest(Model):
     id: uuid.UUID
     for_zaak: str
     review_type: str
-    advice_zaak: str
+    review_zaak: str
     frontend_url: str
     num_advices: int
     num_approvals: int
@@ -65,7 +65,21 @@ class Advice(Model):
 
 
 @dataclass
+class Approval(Model):
+    created: datetime
+    author: Author
+    approved: bool
+
+
+@dataclass
 class AdviceCollection(Model):
-    advice_zaak: str
+    review_zaak: str
     for_zaak: str
     advices: List[Advice]
+
+
+@dataclass
+class ApprovalCollection(Model):
+    review_zaak: str
+    for_zaak: str
+    approvals: List[Approval]

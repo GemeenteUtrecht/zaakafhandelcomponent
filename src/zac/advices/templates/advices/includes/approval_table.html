@@ -1,0 +1,27 @@
+{% load i18n %}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="table__header">{% trans "Approval" %}</th>
+            <th class="table__header">{% trans "From" %}</th>
+            <th class="table__header">{% trans "Given on" %}</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for approval in approvals %}
+            <tr>
+                <td>
+                    {% if approval.approved %} {% trans "Approved" %} {% else %} {% trans "Not approved" %} {% endif %}
+                </td>
+                <td> {% firstof approval.author.get_full_name approval.author.username %}</td>
+                <td>
+                    <time title="{{ approval.created.isoformat }}">
+                        {{ approval.created|timesince }} {% trans "ago" %}
+                    </time>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

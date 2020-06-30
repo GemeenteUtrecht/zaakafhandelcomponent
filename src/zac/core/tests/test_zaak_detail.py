@@ -52,6 +52,10 @@ def mock_zaak_detail_context():
         "zac.core.views.zaken.retrieve_advice_collection", return_value=None
     )
     m_retrieve_advice_collection.start()
+    m_retrieve_approval_collection = patch(
+        "zac.core.views.zaken.retrieve_approval_collection", return_value=None
+    )
+    m_retrieve_approval_collection.start()
     m_get_review_requests = patch(
         "zac.core.views.zaken.get_review_requests", return_value=[]
     )
@@ -64,6 +68,7 @@ def mock_zaak_detail_context():
     m_get_resultaat.stop()
     m_get_rollen.stop()
     m_retrieve_advice_collection.stop()
+    m_retrieve_approval_collection.stop()
     m_get_review_requests.stop()
 
 
