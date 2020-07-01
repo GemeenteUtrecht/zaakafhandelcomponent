@@ -314,7 +314,7 @@
 
     {% if approval_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
-        <div class="section-title">{% trans "Approvals" %}</div>
+        <div class="section-title">{% blocktrans %}Approvals{% endblocktrans %}</div>
         {% include "advices/includes/approval_table.html" with approvals=approval_collection.approvals only %}
     </section>
     {% endif %}

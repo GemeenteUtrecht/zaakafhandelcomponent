@@ -3,9 +3,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th class="table__header">{% trans "Approval" %}</th>
-            <th class="table__header">{% trans "From" %}</th>
-            <th class="table__header">{% trans "Given on" %}</th>
+            <th class="table__header">{% blocktrans %}Approval{% endblocktrans %}</th>
+            <th class="table__header">{% blocktrans %}From{% endblocktrans %}</th>
+            <th class="table__header">{% blocktrans %}Given on{% endblocktrans %}</th>
         </tr>
     </thead>
 
@@ -13,12 +13,16 @@
         {% for approval in approvals %}
             <tr>
                 <td>
-                    {% if approval.approved %} {% trans "Approved" %} {% else %} {% trans "Not approved" %} {% endif %}
+                    {% if approval.approved %}
+                        {% blocktrans %}Approved{% endblocktrans %}
+                    {% else %}
+                        {% blocktrans %}Not approved{% endblocktrans %}
+                    {% endif %}
                 </td>
                 <td> {% firstof approval.author.get_full_name approval.author.username %}</td>
                 <td>
                     <time title="{{ approval.created.isoformat }}">
-                        {{ approval.created|timesince }} {% trans "ago" %}
+                        {{ approval.created|timesince }} {% blocktrans %}ago{% endblocktrans %}
                     </time>
                 </td>
             </tr>
