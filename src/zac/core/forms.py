@@ -237,9 +237,9 @@ class SelectUsersForm(TaskFormMixin, forms.Form):
         return {"users": user_names}
 
 
-class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
+class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     """
-    Select the documents from a zaak and desired advisers.
+    Select the documents from a zaak and users that will perform the review.
 
     This is essentially the combination of :class:`SelectDocumentsForm` and
     :class:`SelectUsersForm`, which deprecates these.
@@ -253,6 +253,7 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         ),
         widget=forms.CheckboxSelectMultiple,
     )
+
     users = forms.ModelMultipleChoiceField(
         required=True,
         label=_("Users"),
@@ -260,6 +261,8 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
         help_text=_("Selecteer de gewenste adviseurs."),
     )
+
+    _review_type = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -275,12 +278,6 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
             (doc.url, _repr(doc)) for doc in documenten
         ]
 
-    def on_submission(self):
-        review_request = create_review_request(
-            self.zaak_url, num_assigned_users=len(self.cleaned_data["users"])
-        )
-        self.cleaned_data["review_request"] = str(review_request.id)
-
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
         user_names = [user.username for user in self.cleaned_data["users"]]
@@ -290,18 +287,33 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
             "kownslReviewRequestId": self.cleaned_data["review_request"],
         }
 
+    def on_submission(self):
+        if self._review_type is not None:
+            review_request = create_review_request(
+                self.zaak_url,
+                review_type=self._review_type,
+                num_assigned_users=len(self.cleaned_data["users"]),
+            )
+            self.cleaned_data["review_request"] = str(review_request.id)
+        else:
+            raise NotImplementedError(
+                f"Variable _review_type needs to be defined in {self.__name__}"
+            )
 
-class ConfigureApprovalRequestForm(ConfigureAdviceRequestForm):
+
+class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):
     """
-    Select the documents on which to request approval and the
-    user who should submit their (dis)approval.
+    Child class of ConfigureReviewRequestForm which specifies that the type of review requested
+    is an advice request.
     """
 
-    documenten = forms.MultipleChoiceField(
-        label=_("Selecteer de relevante documenten"),
-        help_text=_(
-            "Dit zijn de documenten die bij de zaak horen. Selecteer de "
-            "documenten die moeten worden goedgekeurd."
-        ),
-        widget=forms.CheckboxSelectMultiple,
-    )
+    _review_type = "advice"
+
+
+class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
+    """
+    Child class of ConfigureReviewRequestForm which specifies that the type of review requested
+    is an advice request.
+    """
+
+    _review_type = "approval"
