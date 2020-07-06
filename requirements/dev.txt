@@ -56,7 +56,7 @@ imagesize==1.2.0          # via sphinx
 importlib-metadata==0.23  # via -r requirements/ci.txt, kombu
 inflection==0.3.1         # via -r requirements/ci.txt, django-camunda
 isodate==0.6.0            # via -r requirements/ci.txt
-isort==4.3.15             # via -r requirements/dev.in
+isort==5.0.3              # via -r requirements/dev.in
 jdcal==1.4.1              # via -r requirements/ci.txt, openpyxl
 jinja2==2.11.1            # via sphinx
 kombu==4.6.4              # via -r requirements/ci.txt, celery

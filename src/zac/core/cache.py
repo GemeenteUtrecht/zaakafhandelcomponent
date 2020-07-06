@@ -4,10 +4,11 @@ from typing import Iterable
 
 from django.core.cache import cache
 
-from zgw.models.zrc import Zaak
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.client import Client
+
+from zgw.models.zrc import Zaak
 
 ALL_VAS_SORTED = list(VertrouwelijkheidsAanduidingen.values.keys())
 

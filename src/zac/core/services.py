@@ -12,7 +12,6 @@ from django.utils import timezone
 import aiohttp
 import requests
 from furl import furl
-from zgw.models import InformatieObjectType, StatusType, Zaak
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import (
     Eigenschap,
@@ -35,6 +34,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.utils.decorators import cache as cache_result
+from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
