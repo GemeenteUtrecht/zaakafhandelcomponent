@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 from unittest.mock import patch
 
 from django.conf import settings
@@ -6,6 +7,7 @@ from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
+from freezegun import freeze_time
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -53,7 +55,22 @@ def mock_zaak_detail_context():
     )
     m_retrieve_advice_collection.start()
     m_retrieve_approval_collection = patch(
-        "zac.core.views.zaken.retrieve_approval_collection", return_value=None
+        "zac.core.views.zaken.retrieve_approval_collection",
+        return_value={
+            "review_zaak": f"{ZAKEN_ROOT}zaken/fa988e62-c1fe-4496-8c0f-29b85373e4df",
+            "for_zaak": "http://some_test.url",
+            "approvals": [
+                {
+                    "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
+                    "author": {
+                        "username": "test_reviewer",
+                        "first_name": "TestFirstName",
+                        "last_name": "TestLastName",
+                    },
+                    "approved": False,
+                }
+            ],
+        },
     )
     m_retrieve_approval_collection.start()
     m_get_review_requests = patch(
@@ -274,6 +291,62 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
+
+    @freeze_time("2020-01-02 12:00:01")
+    def test_approval_case_details(self, m):
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/fa988e62-c1fe-4496-8c0f-29b85373e4df",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json=paginated_response([zaaktype]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        table_of_approval_results = [
+            "Not approved",
+            "test_reviewer",
+            "1 dag ago",
+        ]
+
+        for item in table_of_approval_results:
+            self.assertIn(item, response.html.text)
 
 
 class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):

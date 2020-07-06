@@ -19,10 +19,10 @@
                         {% blocktrans %}Not approved{% endblocktrans %}
                     {% endif %}
                 </td>
-                <td> {% firstof approval.author.get_full_name approval.author.username %}</td>
+                <td>{% firstof approval.author.get_full_name approval.author.username %}</td>
                 <td>
                     <time title="{{ approval.created.isoformat }}">
-                        {{ approval.created|timesince }} {% blocktrans %}ago{% endblocktrans %}
+                        {% blocktrans with time_passed=approval.created|timesince %}{{ time_passed }} ago{% endblocktrans %}
                     </time>
                 </td>
             </tr>
