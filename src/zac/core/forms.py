@@ -288,23 +288,19 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
         }
 
     def on_submission(self):
-        if self._review_type is not None:
-            review_request = create_review_request(
-                self.zaak_url,
-                review_type=self._review_type,
-                num_assigned_users=len(self.cleaned_data["users"]),
-            )
-            self.cleaned_data["review_request"] = str(review_request.id)
-        else:
-            raise NotImplementedError(
-                f"Variable _review_type needs to be defined in {self.__name__}"
-            )
+        assert self._review_type, "Subclasses must define a '_review_type'"
+
+        review_request = create_review_request(
+            self.zaak_url,
+            review_type=self._review_type,
+            num_assigned_users=len(self.cleaned_data["users"]),
+        )
+        self.cleaned_data["review_request"] = str(review_request.id)
 
 
 class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):
     """
-    Child class of ConfigureReviewRequestForm which specifies that the type of review requested
-    is an advice request.
+    Create an "advice" type of review request on valid submission.
     """
 
     _review_type = "advice"
@@ -312,8 +308,7 @@ class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):
 
 class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
     """
-    Child class of ConfigureReviewRequestForm which specifies that the type of review requested
-    is an advice request.
+    Create an "approval" type of review request on valid submission.
     """
 
     _review_type = "approval"
