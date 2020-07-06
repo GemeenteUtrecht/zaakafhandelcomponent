@@ -51,10 +51,10 @@ paths:
                       enum:
                       - advice
                       - approval
-                    advice_zaak:
+                    review_zaak:
                       type: string
                       format: uri
-                      description: URL reference to the zaak used for the advice in
+                      description: URL reference to the zaak used for the review in
                         the API.
                       maxLength: 1000
                       pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -109,10 +109,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                advice_zaak:
+                review_zaak:
                   type: string
                   format: uri
-                  description: URL reference to the zaak used for the advice in the
+                  description: URL reference to the zaak used for the review in the
                     API.
                   maxLength: 1000
                   pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -153,10 +153,10 @@ paths:
                     enum:
                     - advice
                     - approval
-                  advice_zaak:
+                  review_zaak:
                     type: string
                     format: uri
-                    description: URL reference to the zaak used for the advice in
+                    description: URL reference to the zaak used for the review in
                       the API.
                     maxLength: 1000
                     pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -200,10 +200,10 @@ paths:
             application/json:
               schema:
                 properties:
-                  advice_zaak:
+                  review_zaak:
                     type: string
                     format: uri
-                    description: URL reference to the zaak used for the advice in
+                    description: URL reference to the zaak used for the review in
                       the API.
                     maxLength: 1000
                     pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -289,9 +289,85 @@ paths:
                       - documents
                     description: A particular advice given by a single user.
                 required:
-                - advice_zaak
+                - review_zaak
                 - for_zaak
                 - advices
+          description: ''
+  /api/v1/approval-collection:
+    get:
+      operationId: approvalcollection_retrieve
+      description: 'Get a collection of all the approvals for a given zaak reference.
+
+
+          Requires the ``?objectUrl`` parameter, which must be a fully qualified URL
+          to a
+
+          ZAAK.'
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  review_zaak:
+                    type: string
+                    format: uri
+                    description: URL reference to the zaak used for the review in
+                      the API.
+                    maxLength: 1000
+                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
+                        d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
+                        [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
+                        -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
+                        .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
+                        .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                  for_zaak:
+                    type: string
+                    format: uri
+                    description: URL reference to the zaak in the API.
+                    maxLength: 1000
+                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
+                        d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
+                        [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
+                        -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
+                        .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
+                        .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                  approvals:
+                    type: array
+                    items:
+                      properties:
+                        created:
+                          type: string
+                          format: date-time
+                          readOnly: true
+                        author:
+                          properties:
+                            username:
+                              type: string
+                              description: Required. 150 characters or fewer.
+                              maxLength: 150
+                            first_name:
+                              type: string
+                              maxLength: 255
+                            last_name:
+                              type: string
+                              maxLength: 255
+                          required:
+                            - username
+                          type: object
+                          description: Author of the approval
+                        approved:
+                          type: bool
+                          description: Whether the zaak has been approved or not
+                          maxLength: 1000
+                      required:
+                        - author
+                    description: A particular approval given by a single user.
+                required:
+                  - review_zaak
+                  - for_zaak
+                  - approvals
           description: ''
   /api/v1/review-requests/{uuid}:
     put:
@@ -333,10 +409,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                advice_zaak:
+                review_zaak:
                   type: string
                   format: uri
-                  description: URL reference to the zaak used for the advice in the
+                  description: URL reference to the zaak used for the review in the
                     API.
                   maxLength: 1000
                   pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -377,10 +453,10 @@ paths:
                     enum:
                     - advice
                     - approval
-                  advice_zaak:
+                  review_zaak:
                     type: string
                     format: uri
-                    description: URL reference to the zaak used for the advice in
+                    description: URL reference to the zaak used for the review in
                       the API.
                     maxLength: 1000
                     pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -446,10 +522,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                advice_zaak:
+                review_zaak:
                   type: string
                   format: uri
-                  description: URL reference to the zaak used for the advice in the
+                  description: URL reference to the zaak used for the review in the
                     API.
                   maxLength: 1000
                   pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
@@ -487,10 +563,10 @@ paths:
                     enum:
                     - advice
                     - approval
-                  advice_zaak:
+                  review_zaak:
                     type: string
                     format: uri
-                    description: URL reference to the zaak used for the advice in
+                    description: URL reference to the zaak used for the review in
                       the API.
                     maxLength: 1000
                     pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\

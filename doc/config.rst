@@ -11,10 +11,13 @@ Configuring the services
 The ZAC does not copy data, but reads it from the external APIs. These APIs need to be
 configured.
 
+Most API's are added as services under **ZGW_Consumers > Services** in the admin
+interface.
+
 API's for Zaakgericht werken
 ----------------------------
 
-In the admin, navigate to **ZGW_Consumers** and add the following services:
+Add the following services:
 
 * Catalogi API
 * Zaken API
@@ -35,6 +38,26 @@ Kadaster configuration
 If you make use of BAG objects, you'll need to configure the Kadaster APIs. Navigate
 to **Kadasterconfiguratie** in the admin and verify/fill out the fields.
 
+Kownsl
+------
+
+`Kownsl`_ manage advices and approvals. Add a **Service** for it:
+
+- Type: ORC (Overige)
+- Authorization type: API Key
+- Header key: ``Authorization``
+- Header value: ``Token <insert kownsl token>``
+
+Open Forms
+----------
+
+Open Forms is a form builder engine, for which the ZAC has some basic support at the
+moment. Add a **Service** for it:
+
+- Type: ORC (Overige)
+- Authorization type: API Key
+- Header key: ``Authorization``
+- Header value: ``Token <insert open forms token>``
 
 Subscribing to notifications
 ============================
@@ -52,3 +75,5 @@ a container:
 
 This will set up the ZAC to receive notifications sent from the other APIs and act
 accordingly.
+
+.. _Kownsl: https://github.com/GemeenteUtrecht/kownsl

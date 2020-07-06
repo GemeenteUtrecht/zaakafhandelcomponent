@@ -199,9 +199,9 @@
                 {% for review_request in review_requests %}
                     <tr>
                         <td>{{ review_request.get_review_type_display }}</td>
-                        {% if review_request.advice_zaak %}
+                        {% if review_request.review_zaak %}
                             <th class="table__id-column">
-                                {% include "core/includes/zaak_link.html" with zaak=review_request.advice_zaak blank=True only %}
+                                {% include "core/includes/zaak_link.html" with zaak=review_request.review_zaak blank=True only %}
                             </th>
                         {% else %}
                             <td>(zaak nog niet aangemaakt)</td>
@@ -309,6 +309,13 @@
             Voor: {{ advice_collection.for_zaak.identificatie }}
         </a>
         {% include "advices/includes/advice_table.html" with advices=advice_collection.advices only %}
+    </section>
+    {% endif %}
+
+    {% if approval_collection %}
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
+        <div class="section-title">{% blocktrans %}Approvals{% endblocktrans %}</div>
+        {% include "advices/includes/approval_table.html" with approvals=approval_collection.approvals only %}
     </section>
     {% endif %}
 

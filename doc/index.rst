@@ -1,4 +1,7 @@
-.. _index:
+.. ZAC documentation master file, created by
+   sphinx-quickstart on Mon Jul  6 11:52:09 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
 =================
 ZAC Documentation
@@ -6,10 +9,17 @@ ZAC Documentation
 
 Welcome to the documentation for the zaakafhandelcomponent (ZAC).
 
-Documentation
-=============
-
 .. toctree::
-    :maxdepth: 3
+   :maxdepth: 2
+   :caption: Contents:
 
-    config
+   config
+   forms
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

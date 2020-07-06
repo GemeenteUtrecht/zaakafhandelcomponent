@@ -11,7 +11,11 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
-from zac.contrib.kownsl.api import get_review_requests, retrieve_advice_collection
+from zac.contrib.kownsl.api import (
+    get_review_requests,
+    retrieve_advice_collection,
+    retrieve_approval_collection,
+)
 from zac.contrib.kownsl.data import AdviceCollection
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
@@ -84,20 +88,24 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             _advice_collection = executor.submit(
                 retrieve_advice_collection, self.object
             )
+            _approval_collection = executor.submit(
+                retrieve_approval_collection, self.object
+            )
             _related_zaken = executor.submit(get_related_zaken, self.object)
             _review_requests = executor.submit(get_review_requests, self.object)
 
             advice_collection = _advice_collection.result()
+            approval_collection = _approval_collection.result()
             related_zaken = _related_zaken.result()
             review_requests = _review_requests.result()
 
             # fetch the review cases
             _review_zaken = executor.map(
                 lambda url: get_zaak(zaak_url=url) if url else None,
-                [review_request.advice_zaak for review_request in review_requests],
+                [review_request.review_zaak for review_request in review_requests],
             )
             for review_zaak, review_request in zip(_review_zaken, review_requests):
-                review_request.advice_zaak = review_zaak
+                review_request.review_zaak = review_zaak
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
@@ -129,6 +137,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "related_zaken": related_zaken,
                     "rollen": rollen.result(),
                     "advice_collection": advice_collection,
+                    "approval_collection": approval_collection,
                     "review_requests": review_requests,
                 }
             )

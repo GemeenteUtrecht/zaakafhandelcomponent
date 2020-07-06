@@ -237,9 +237,9 @@ class SelectUsersForm(TaskFormMixin, forms.Form):
         return {"users": user_names}
 
 
-class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
+class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     """
-    Select the documents from a zaak and desired advisers.
+    Select the documents from a zaak and users that will perform the review.
 
     This is essentially the combination of :class:`SelectDocumentsForm` and
     :class:`SelectUsersForm`, which deprecates these.
@@ -253,6 +253,7 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         ),
         widget=forms.CheckboxSelectMultiple,
     )
+
     users = forms.ModelMultipleChoiceField(
         required=True,
         label=_("Users"),
@@ -260,6 +261,8 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
         help_text=_("Selecteer de gewenste adviseurs."),
     )
+
+    _review_type = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -275,10 +278,6 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
             (doc.url, _repr(doc)) for doc in documenten
         ]
 
-    def on_submission(self):
-        review_request = create_review_request(self.zaak_url)
-        self.cleaned_data["review_request"] = str(review_request.id)
-
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
         user_names = [user.username for user in self.cleaned_data["users"]]
@@ -287,3 +286,29 @@ class ConfigureAdviceRequestForm(TaskFormMixin, forms.Form):
             "documenten": self.cleaned_data["documenten"],
             "kownslReviewRequestId": self.cleaned_data["review_request"],
         }
+
+    def on_submission(self):
+        assert self._review_type, "Subclasses must define a '_review_type'"
+
+        review_request = create_review_request(
+            self.zaak_url,
+            review_type=self._review_type,
+            num_assigned_users=len(self.cleaned_data["users"]),
+        )
+        self.cleaned_data["review_request"] = str(review_request.id)
+
+
+class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):
+    """
+    Create an "advice" type of review request on valid submission.
+    """
+
+    _review_type = "advice"
+
+
+class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
+    """
+    Create an "approval" type of review request on valid submission.
+    """
+
+    _review_type = "approval"
