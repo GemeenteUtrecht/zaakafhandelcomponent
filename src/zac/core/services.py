@@ -4,6 +4,7 @@ import logging
 from concurrent import futures
 from typing import Dict, List, Optional, Tuple, Union
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
@@ -324,7 +325,26 @@ def search_zaken_for_object(object_url: str) -> List[Zaak]:
 
 
 def search_zaken_for_bsn(bsn: str) -> List[Zaak]:
-    return []
+    # FIXME use from Service
+    brp_url = f"{settings.BRP_API_ROOT}ingeschrevenpersonen?burgerservicenummer={bsn}"
+    queries = [
+        {"betrokkeneIdentificatie__natuurlijkPersoon__inpBsn": bsn},
+        {"betrokkene": brp_url},
+    ]
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    zaken = []
+    for zrc in zrcs:
+        client = zrc.build_client()
+        rollen = []
+        for query in queries:
+            rollen += get_paginated_results(client, "rol", query_params=query)
+        zaak_urls = set(rol["url"] for rol in rollen)
+        for zaak_url in zaak_urls:
+            zaak = get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
+            zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+            zaken.append(zaak)
+
+    return zaken
 
 
 # TODO: listen for notifiations to invalidate cache OR look into ETag when it's available

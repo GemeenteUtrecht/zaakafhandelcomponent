@@ -396,3 +396,6 @@ if SENTRY_DSN:
 # ZGW-CONSUMERS
 #
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
+
+# BRP
+BRP_API_ROOT = "https://haalcentraal.lostlemon.nl/"
