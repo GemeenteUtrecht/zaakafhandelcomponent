@@ -34,9 +34,9 @@ class SearchView(LoginRequiredMixin, TemplateView):
 
         registration = REGISTRATIONS[form.cleaned_data["registration"]]
         object_type = registration.get_object_type(form.cleaned_data["object_type"])
-        object_url = object_type.get_object_url(request.POST)
+        object_value = object_type.get_object_value(request.POST)
 
-        zaken = search_zaken_for_object(object_url)
+        zaken = registration.search_zaken(object_value)
 
         context = self.get_context_data(zaken=zaken, **kwargs)
         return self.render_to_response(context)

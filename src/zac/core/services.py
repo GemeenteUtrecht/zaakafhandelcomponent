@@ -323,6 +323,10 @@ def search_zaken_for_object(object_url: str) -> List[Zaak]:
     return zaken
 
 
+def search_zaken_for_bsn(bsn: str) -> List[Zaak]:
+    return []
+
+
 # TODO: listen for notifiations to invalidate cache OR look into ETag when it's available
 @cache_result("zaak:{bronorganisatie}:{identificatie}", timeout=AN_HOUR / 2)
 def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:

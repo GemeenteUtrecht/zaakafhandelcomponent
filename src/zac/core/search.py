@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Type
+from typing import Callable, List, Tuple, Type
 
 from django.forms import TextInput, Widget
 from django.http import QueryDict
@@ -7,6 +7,8 @@ from django.http import QueryDict
 from furl import furl
 
 from zac.contrib.kadaster.forms import BagObjectSelectieWidget
+
+from .services import search_zaken_for_bsn, search_zaken_for_object
 
 
 def _clean_url(url: str) -> str:
@@ -30,16 +32,17 @@ class ObjectType:
         widget = self.widget()
         return widget.render(name=self.value, value="")
 
-    def get_object_url(self, data: QueryDict) -> str:
-        object_url = data[self.value]
+    def get_object_value(self, data: QueryDict) -> str:
+        object_value = data[self.value]
         # TODO: make this configurable
-        return _clean_url(object_url)
+        return _clean_url(object_value)
 
 
 @dataclass
 class Registration:
     label: str
     object_types: List[ObjectType]
+    search_function: Callable = None
 
     @property
     def object_type_choices(self) -> List[Tuple[str, str]]:
@@ -51,10 +54,17 @@ class Registration:
         object_type = next((ot for ot in self.object_types if ot.value == object_type))
         return object_type
 
+    def search_zaken(self, param):
+        if self.search_function:
+            return self.search_function(param)
+
+        return []
+
 
 REGISTRATIONS = {
     "bag": Registration(
         label="BAG",
+        search_function=search_zaken_for_object,
         object_types=[
             ObjectType(value="pand", label="Pand", widget=BagObjectSelectieWidget),
             ObjectType(
@@ -70,6 +80,12 @@ REGISTRATIONS = {
             ),
         ],
     ),
-    "brp": Registration(label="BRP", object_types=[]),
+    "brp": Registration(
+        label="BRP",
+        object_types=[
+            ObjectType(value="bsn", label="Burgerservicenummer (BSN)", widget=TextInput)
+        ],
+        search_function=search_zaken_for_bsn,
+    ),
     "bgt_brt": Registration(label="BGT/BRT", object_types=[]),
 }
