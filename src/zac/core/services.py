@@ -2,7 +2,7 @@ import asyncio
 import base64
 import logging
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from django.conf import settings
 from django.core.cache import cache
@@ -289,27 +289,28 @@ def get_zaken(
     return zaken
 
 
-def search_zaken_for_object(object_url: str) -> List[Zaak]:
-    """
-    Query the ZRCs for zaken that have object_url as a zaakobject.
-    """
-    query = {"object": object_url}
+def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     clients = [zrc.build_client() for zrc in zrcs]
 
-    def _get_zaakobjecten(client):
-        return get_paginated_results(client, "zaakobject", query_params=query)
+    def _get_related_objects(client) -> set:
+        related_objects = []
+        for query in queries:
+            related_objects += get_paginated_results(
+                client, resource, query_params=query
+            )
+        return set(related_objects)
 
     def _get_zaak(args):
         client, zaak_url = args
         return get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
 
     with futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = executor.map(_get_zaakobjecten, clients)
+        results = executor.map(_get_related_objects, clients)
 
         job_args = []
-        for client, zaakobjecten in zip(clients, results):
-            job_args += [(client, zo["zaak"]) for zo in zaakobjecten]
+        for client, related_objects in zip(clients, results):
+            job_args += [(client, zo["zaak"]) for zo in related_objects]
         zaken_results = executor.map(_get_zaak, job_args)
 
     zaken = list(zaken_results)
@@ -324,27 +325,22 @@ def search_zaken_for_object(object_url: str) -> List[Zaak]:
     return zaken
 
 
+def search_zaken_for_object(object_url: str) -> List[Zaak]:
+    """
+    Query the ZRCs for zaken that have object_url as a zaakobject.
+    """
+    query = {"object": object_url}
+    return search_zaak_for_related_object([query], "zaakobject")
+
+
 def search_zaken_for_bsn(bsn: str) -> List[Zaak]:
-    # FIXME use from Service
-    brp_url = f"{settings.BRP_API_ROOT}ingeschrevenpersonen?burgerservicenummer={bsn}"
+    brp_url = f"{settings.BRP_API_ROOT}ingeschrevenpersonen"
     queries = [
         {"betrokkeneIdentificatie__natuurlijkPersoon__inpBsn": bsn},
-        {"betrokkene": brp_url},
+        {"betrokkene": f"{brp_url}/{bsn}"},
+        {"betrokkene": f"{brp_url}?burgerservicenummer={bsn}"},
     ]
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    zaken = []
-    for zrc in zrcs:
-        client = zrc.build_client()
-        rollen = []
-        for query in queries:
-            rollen += get_paginated_results(client, "rol", query_params=query)
-        zaak_urls = set(rol["url"] for rol in rollen)
-        for zaak_url in zaak_urls:
-            zaak = get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
-            zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
-            zaken.append(zaak)
-
-    return zaken
+    return search_zaak_for_related_object(queries, "rol")
 
 
 # TODO: listen for notifiations to invalidate cache OR look into ETag when it's available
