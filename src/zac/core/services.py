@@ -21,7 +21,13 @@ from zgw_consumers.api_models.catalogi import (
     ZaakType,
 )
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
+from zgw_consumers.api_models.zaken import (
+    Resultaat,
+    Rol,
+    Status,
+    ZaakEigenschap,
+    ZaakObject,
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
@@ -34,7 +40,7 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
-from .rollen import NamedRol
+from .rollen import display_rol_name
 
 logger = logging.getLogger(__name__)
 
@@ -518,16 +524,17 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     return resultaat
 
 
-def get_rollen(zaak: Zaak) -> List[NamedRol]:
+def get_rollen(zaak: Zaak) -> List[Rol]:
     # fetch the rollen
     client = _client_from_object(zaak)
     _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
 
-    rollen = factory(NamedRol, _rollen)
+    rollen = factory(Rol, _rollen)
 
     # convert URL references into objects
     for rol in rollen:
         rol.zaak = zaak
+        rol.name = display_rol_name(rol)
 
     return rollen
 
@@ -793,13 +800,3 @@ def update_document(url: str, file: UploadedFile, data: dict):
     # refresh new state
     document = get_document(document.url)
     return document
-
-
-###################################################
-#                       BRP                       #
-###################################################
-@cache_result("natuurlijkpersoon:{url}", timeout=A_DAY)
-def fetch_natuurlijkpersoon(url: str) -> dict:
-    client = _client_from_url(url)
-    result = client.retrieve("ingeschrevenNatuurlijkPersoon", url=url)
-    return result
