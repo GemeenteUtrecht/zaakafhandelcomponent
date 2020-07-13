@@ -1,4 +1,4 @@
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse_lazy
 
 import requests_mock
@@ -7,6 +7,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import UserFactory
+from zac.contrib.brp.models import BRPConfig
 from zac.tests.utils import (
     generate_oas_component,
     mock_service_oas_get,
@@ -61,6 +62,11 @@ class SearchResultWebTest(ClearCachesMixin, TestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        brp = Service.objects.create(api_type=APITypes.orc, api_root=BRP_API_ROOT)
+
+        brp_config = BRPConfig.get_solo()
+        brp_config.service = brp
+        brp_config.save()
 
     def setUp(self) -> None:
         super().setUp()
@@ -169,7 +175,6 @@ class SearchResultWebTest(ClearCachesMixin, TestCase):
         zaak = zaken[0]
         self.assertEqual(zaak.identificatie, "zaak1")
 
-    @override_settings(BRP_API_ROOT=BRP_API_ROOT)
     def test_search_brp(self, m):
         self._setUpMocks(m)
         data = {

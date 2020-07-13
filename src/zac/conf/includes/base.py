@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     "zac.notifications",
     "zac.forms",
     "zac.utils",
+    "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
     # FIXME: should be moved to it's own API
@@ -396,6 +397,3 @@ if SENTRY_DSN:
 # ZGW-CONSUMERS
 #
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
-
-# BRP
-BRP_API_ROOT = "https://haalcentraal.lostlemon.nl/"

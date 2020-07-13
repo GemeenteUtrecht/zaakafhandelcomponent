@@ -2,7 +2,8 @@ import asyncio
 import base64
 import logging
 from concurrent import futures
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.core.cache import cache
@@ -34,6 +35,7 @@ from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
+from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
@@ -335,12 +337,20 @@ def search_zaken_for_object(object_url: str) -> List[Zaak]:
 
 
 def search_zaken_for_bsn(bsn: str) -> List[Zaak]:
-    brp_url = f"{settings.BRP_API_ROOT}ingeschrevenpersonen"
+    brp_config = BRPConfig.get_solo()
+    service = brp_config.service
+
     queries = [
         {"betrokkeneIdentificatie__natuurlijkPersoon__inpBsn": bsn},
-        {"betrokkene": f"{brp_url}/{bsn}"},
-        {"betrokkene": f"{brp_url}?burgerservicenummer={bsn}"},
     ]
+
+    if service:
+        brp_url = urljoin(service.api_root, "ingeschrevenpersonen")
+        queries += [
+            {"betrokkene": f"{brp_url}/{bsn}"},
+            {"betrokkene": f"{brp_url}?burgerservicenummer={bsn}"},
+        ]
+
     return search_zaak_for_related_object(queries, "rol")
 
 
