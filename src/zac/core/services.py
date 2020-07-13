@@ -293,13 +293,13 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     clients = [zrc.build_client() for zrc in zrcs]
 
-    def _get_related_objects(client) -> set:
+    def _get_related_objects(client) -> list:
         related_objects = []
         for query in queries:
             related_objects += get_paginated_results(
                 client, resource, query_params=query
             )
-        return set(related_objects)
+        return related_objects
 
     def _get_zaak(args):
         client, zaak_url = args
@@ -310,7 +310,8 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
 
         job_args = []
         for client, related_objects in zip(clients, results):
-            job_args += [(client, zo["zaak"]) for zo in related_objects]
+            zaak_urls = set(ro["zaak"] for ro in related_objects)
+            job_args += [(client, zaak_url) for zaak_url in zaak_urls]
         zaken_results = executor.map(_get_zaak, job_args)
 
     zaken = list(zaken_results)

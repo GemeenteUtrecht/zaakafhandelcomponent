@@ -4,7 +4,6 @@ from django.http import HttpResponseBadRequest
 from django.views.generic import TemplateView
 
 from ..search import REGISTRATIONS
-from ..services import search_zaken_for_object
 
 
 class SearchIndexView(LoginRequiredMixin, TemplateView):
