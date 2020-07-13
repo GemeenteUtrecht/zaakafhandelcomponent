@@ -32,6 +32,20 @@ Camunda process engine
 
 Navigate to **Camunda configuration** in the admin and fill out the details.
 
+BRP configuration
+-----------------
+
+If you make use of HaalCentraal BRP objects, you'll need to configure the BRP API.
+Navigate to **BPRconfiguratie** in the admin and verify/fill out the fields.
+
+The service for BRP should have the following properties:
+
+- Type: ORC (Overige)
+- Authorization type: API Key or none
+
+Header key and value should be configured according to the instructions of of the BRP
+API provider.
+
 Kadaster configuration
 ----------------------
 
