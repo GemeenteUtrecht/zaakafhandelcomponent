@@ -5,7 +5,6 @@ from concurrent import futures
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
-from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
@@ -22,13 +21,7 @@ from zgw_consumers.api_models.catalogi import (
     ZaakType,
 )
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import (
-    Resultaat,
-    Rol,
-    Status,
-    ZaakEigenschap,
-    ZaakObject,
-)
+from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
@@ -41,6 +34,7 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
+from .rollen import NamedRol
 
 logger = logging.getLogger(__name__)
 
@@ -524,12 +518,12 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     return resultaat
 
 
-def get_rollen(zaak: Zaak) -> List[Rol]:
+def get_rollen(zaak: Zaak) -> List[NamedRol]:
     # fetch the rollen
     client = _client_from_object(zaak)
     _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
 
-    rollen = factory(Rol, _rollen)
+    rollen = factory(NamedRol, _rollen)
 
     # convert URL references into objects
     for rol in rollen:
@@ -799,3 +793,13 @@ def update_document(url: str, file: UploadedFile, data: dict):
     # refresh new state
     document = get_document(document.url)
     return document
+
+
+###################################################
+#                       BRP                       #
+###################################################
+@cache_result("natuurlijkpersoon:{url}", timeout=A_DAY)
+def fetch_natuurlijkpersoon(url: str) -> dict:
+    client = _client_from_url(url)
+    result = client.retrieve("ingeschrevenNatuurlijkPersoon", url=url)
+    return result
