@@ -7,6 +7,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.contrib.brp.models import BRPConfig
 from zac.tests.utils import (
     generate_oas_component,
     mock_service_oas_get,
@@ -30,7 +31,13 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
     def setUpTestData(cls):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.orc, api_root=BRP_API_ROOT)
+        brp_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=BRP_API_ROOT
+        )
+
+        config = BRPConfig.get_solo()
+        config.service = brp_service
+        config.save()
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

@@ -24,7 +24,6 @@ class HalClient(ZGWClient):
         headers["Accept"] = "application/hal+json"
         headers["Content-Type"] = "application/hal+json"
 
-        print(kwargs)
         return result
 
 
