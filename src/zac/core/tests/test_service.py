@@ -1,15 +1,12 @@
 from django.test import TestCase
 
 import requests_mock
-from django_webtest import WebTest
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.accounts.tests.factories import UserFactory
-from zac.contrib.brp.models import BRPConfig
 from zac.tests.utils import (
     generate_oas_component,
     mock_service_oas_get,
@@ -28,7 +25,7 @@ BSN2 = "890"
 
 
 @requests_mock.Mocker()
-class ZGWServiceTests(TestCase):
+class ZGWServiceTests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -100,23 +97,12 @@ class ZGWServiceTests(TestCase):
         }
         naturlijk_persoon = {
             "burgerservicenummer": BSN1,
-            "geheimhoudingPersoonsgegevens": True,
             "geslachtsaanduiding": "man",
             "leeftijd": 34,
-            "naam": {"geslachtsnaam": "Boer", "voornamen": "Jip", "voorvoegsel": "de",},
-            "datumEersteInschrijvingGBA": {},
+            "naam": {"geslachtsnaam": "Boer", "voornamen": "Jip", "voorvoegsel": "de"},
             "kiesrecht": {},
-            "inOnderzoek": {},
-            "nationaliteit": [],
             "geboorte": {},
-            "opschortingBijhouding": {},
-            "overlijden": {},
-            "verblijfplaats": {},
-            "gezagsverhouding": {},
-            "verblijfstitel": {},
-            "reisdocumenten": [],
             "_links": {},
-            "_embedded": {},
         }
 
         m.get(

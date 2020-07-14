@@ -7,13 +7,14 @@ from zgw_consumers.models import Service
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_service_oas_get
 
-from ..api import fetch_natuurlijkpersoon
+from ..api import fetch_natuurlijkpersoon, get_client
+from ..models import BRPConfig
 
 BRP_API_ROOT = "https://brp.nl/api/v1/"
 PERSOON_URL = f"{BRP_API_ROOT}ingeschrevenpersonen/123456782"
 
 
-class KownslAPITests(ClearCachesMixin, TestCase):
+class BrpApiTests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -27,28 +28,20 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             header_value="Token foobarbaz",
             oas=f"{BRP_API_ROOT}schema",
         )
+        config = BRPConfig.get_solo()
+        config.service = cls.service
+        config.save()
 
     def _setUpMock(self, m):
         # generate_oas_component doesn't support allOf objects
         naturlijk_persoon = {
             "burgerservicenummer": "1234536782",
-            "geheimhoudingPersoonsgegevens": True,
             "geslachtsaanduiding": "man",
             "leeftijd": 34,
-            "datumEersteInschrijvingGBA": {},
             "kiesrecht": {},
             "naam": {},
-            "inOnderzoek": {},
-            "nationaliteit": [],
             "geboorte": {},
-            "opschortingBijhouding": {},
-            "overlijden": {},
-            "verblijfplaats": {},
-            "gezagsverhouding": {},
-            "verblijfstitel": {},
-            "reisdocumenten": [],
             "_links": {},
-            "_embedded": {},
         }
 
         mock_service_oas_get(m, self.service.api_root, "brp", oas_url=self.service.oas)
@@ -58,7 +51,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     def test_client(self, m):
         self._setUpMock(m)
 
-        client = self.service.build_client()
+        client = get_client()
 
         self.assertIsInstance(client.schema, dict)
         self.assertIsNone(client.auth)
@@ -73,4 +66,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         result = fetch_natuurlijkpersoon(PERSOON_URL)
 
         self.assertEqual(result.burgerservicenummer, "1234536782")
-        self.assertEqual(m.last_request.headers["Authorization"], "Token foobarbaz")
+
+        headers = m.last_request.headers
+        self.assertEqual(headers["Authorization"], "Token foobarbaz")
+        self.assertEqual(headers["Content-Type"], "application/hal+json")
+        self.assertEqual(headers["Accept"], "application/hal+json")
