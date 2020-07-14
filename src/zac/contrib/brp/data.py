@@ -9,10 +9,10 @@ class IngeschrevenNatuurlijkPersoon(Model):
     geheimhouding_persoonsgegevens: bool
     geslachtsaanduiding: str
     leeftijd: int
-    datum_eerste_inschrijving_GBA: dict
+    datum_eerste_inschrijving_gb_a: dict
     kiesrecht: dict
     naam: dict
-    inOnderzoek: dict
+    in_onderzoek: dict
     nationaliteit: list
     geboorte: dict
     opschorting_bijhouding: dict
