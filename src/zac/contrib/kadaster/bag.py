@@ -2,6 +2,7 @@ from concurrent import futures
 from typing import Any, Dict
 
 import requests
+from zgw_consumers.concurrent import parallel
 
 from zac.utils.decorators import cache
 
@@ -88,8 +89,7 @@ def fetch_pand(url: str) -> Dict[str, Any]:
     def fetch_adres(vo: dict) -> dict:
         return _fetch_adres(bag, vo["_links"]["hoofdadres"]["href"])
 
-    # TODO: parallelize
-    with futures.ThreadPoolExecutor() as executor:
+    with parallel() as executor:
         adressen = list(executor.map(fetch_adres, _verblijfsobjecten))
 
     verblijfsobjecten = [

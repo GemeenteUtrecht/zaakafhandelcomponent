@@ -27,6 +27,7 @@ from zgw_consumers.api_models.zaken import (
     ZaakEigenschap,
     ZaakObject,
 )
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
@@ -34,7 +35,6 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
-from zac.utils.concurrent import parallel
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 

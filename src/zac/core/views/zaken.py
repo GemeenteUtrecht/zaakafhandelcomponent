@@ -7,6 +7,7 @@ from django.views.generic import FormView, TemplateView
 from furl import furl
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
@@ -16,7 +17,6 @@ from zac.contrib.kownsl.api import (
     retrieve_approval_collection,
 )
 from zac.contrib.kownsl.data import AdviceCollection
-from zac.utils.concurrent import parallel
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
