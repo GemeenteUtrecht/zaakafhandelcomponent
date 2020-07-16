@@ -14,4 +14,9 @@ class IngeschrevenNatuurlijkPersoon(Model):
     _links: dict
 
     def get_full_name(self) -> str:
-        return f'{self.naam["voornamen"]} {self.naam["voorvoegsel"]} {self.naam["geslachtsnaam"]}'
+        bits = [
+            self.naam["voornamen"],
+            self.naam.get("voorvoegsel", ""),
+            self.naam["geslachtsnaam"],
+        ]
+        return " ".join(bits)
