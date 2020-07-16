@@ -87,14 +87,25 @@
         </div>
 
         <div class="section-title">Betrokkenen</div>
-                <div>
-            {% for rol in rollen %}
-                {% nested_widget 'kv:key-value' label=rol.get_betrokkene_type_display %}
-                    {{ rol.get_omschrijving_generiek_display }}
-                {% endnested %}
-            {% endfor %}
-            <br>
-        </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="table__header">Type</th>
+                        <th class="table__header">Rol</th>
+                        <th class="table__header">Naam</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rol in rollen %}
+                        <tr>
+                            <td>{{ rol.get_betrokkene_type_display }}</td>
+                            <td>{{ rol.get_omschrijving_generiek_display }}</td>
+                            <td>{{ rol.name }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
     </section>
 
     <section class="zaak-detail__panel content-panel">

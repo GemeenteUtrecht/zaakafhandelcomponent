@@ -5,7 +5,6 @@ from concurrent import futures
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
-from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
@@ -41,6 +40,7 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
+from .rollen import display_rol_name
 
 logger = logging.getLogger(__name__)
 
@@ -534,6 +534,7 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     # convert URL references into objects
     for rol in rollen:
         rol.zaak = zaak
+        rol.name = display_rol_name(rol)
 
     return rollen
 
