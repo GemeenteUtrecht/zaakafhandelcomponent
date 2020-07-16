@@ -1,4 +1,3 @@
-from concurrent import futures
 from itertools import groupby
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +16,7 @@ from zac.contrib.kownsl.api import (
     retrieve_approval_collection,
 )
 from zac.contrib.kownsl.data import AdviceCollection
+from zac.utils.concurrent import parallel
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -84,7 +84,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        with futures.ThreadPoolExecutor() as executor:
+        with parallel() as executor:
             _advice_collection = executor.submit(
                 retrieve_advice_collection, self.object
             )
@@ -111,7 +111,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
         # for the documents table
         doc_versions = self.get_source_doc_versions(advice_collection)
 
-        with futures.ThreadPoolExecutor() as executor:
+        with parallel() as executor:
             statussen = executor.submit(get_statussen, self.object)
             _documenten = executor.submit(get_documenten, self.object, doc_versions)
             eigenschappen = executor.submit(get_zaak_eigenschappen, self.object)
@@ -184,7 +184,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
         document_versions = list(_document_versions)
 
-        with futures.ThreadPoolExecutor() as executor:
+        with parallel() as executor:
             results = executor.map(get_document, document_versions)
 
         versioned_documents = {

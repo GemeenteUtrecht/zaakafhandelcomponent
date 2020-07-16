@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import logging
-from concurrent import futures
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
@@ -35,6 +34,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
+from zac.utils.concurrent import parallel
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
@@ -270,7 +270,7 @@ def get_zaken(
                 }
             )
 
-    with futures.ThreadPoolExecutor() as executor:
+    with parallel() as executor:
         results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
         flattened = sum(list(results), [])
 
@@ -307,7 +307,7 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
         client, zaak_url = args
         return get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
 
-    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with parallel(max_workers=10) as executor:
         results = executor.map(_get_related_objects, clients)
 
         job_args = []
@@ -321,7 +321,7 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
     def _resolve_zaaktype(zaak):
         zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
-    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with parallel(max_workers=10) as executor:
         for zaak in zaken:
             executor.submit(_resolve_zaaktype, zaak)
 
@@ -486,7 +486,7 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
 
         return relevante_andere_zaak["aard_relatie"], zaak
 
-    with futures.ThreadPoolExecutor() as executor:
+    with parallel() as executor:
         results = list(executor.map(_fetch_zaak, zaak.relevante_andere_zaken))
 
     return results
