@@ -20,13 +20,7 @@ from zgw_consumers.api_models.catalogi import (
     ZaakType,
 )
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import (
-    Resultaat,
-    Rol,
-    Status,
-    ZaakEigenschap,
-    ZaakObject,
-)
+from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -40,7 +34,7 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
-from .rollen import display_rol_name
+from .rollen import Rol
 
 logger = logging.getLogger(__name__)
 
@@ -534,7 +528,6 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     # convert URL references into objects
     for rol in rollen:
         rol.zaak = zaak
-        rol.name = display_rol_name(rol)
 
     return rollen
 

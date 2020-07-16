@@ -93,6 +93,7 @@
                         <th class="table__header">Type</th>
                         <th class="table__header">Rol</th>
                         <th class="table__header">Naam</th>
+                        <th class="table__header">BSN</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,7 +101,8 @@
                         <tr>
                             <td>{{ rol.get_betrokkene_type_display }}</td>
                             <td>{{ rol.get_omschrijving_generiek_display }}</td>
-                            <td>{{ rol.name }}</td>
+                            <td>{{ rol.get_name }}</td>
+                            <td>{{ rol.get_bsn }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
