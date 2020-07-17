@@ -13,11 +13,16 @@ services:
 
   web:
     image: scrumteamzgw/zaakafhandelcomponent
+    build: .
     environment:
       - DJANGO_SETTINGS_MODULE=zac.conf.docker
       - SECRET_KEY=${SECRET_KEY:-kvilzgj7=*hi*1$$nf2p-%&r*(@83q^wkdkb^^y#!(yaw=8_o!-}
       - REDIS_HOST=redis
+      - DB_HOST=/var/run/postgresql
+    volumes:
+      - /var/run/postgresql:/var/run/postgresql
     ports:
       - 8000:8000
     depends_on:
       - db
+      - redis
