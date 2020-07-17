@@ -1,5 +1,7 @@
 from typing import Optional
 
+from django.utils.translation import gettext_lazy as _
+
 from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.zaken import Rol as _Rol
 
@@ -24,11 +26,12 @@ class Rol(_Rol):
         if self.betrokkene:
             return self.natuurlijkpersoon.get_full_name()
 
-        return "{} {} {}".format(
+        bits = [
             self.betrokkene_identificatie["voornamen"],
             self.betrokkene_identificatie["voorvoegsel_geslachtsnaam"],
             self.betrokkene_identificatie["geslachtsnaam"],
-        )
+        ]
+        return " ".join(bits).strip() or _("(not set)")
 
     def get_bsn(self) -> Optional[str]:
         if self.betrokkene_type != RolTypes.natuurlijk_persoon:

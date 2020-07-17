@@ -3,7 +3,6 @@ import uuid
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
 from zgw_consumers.constants import AuthTypes
-from zgw_consumers.models import Service
 
 from zac.utils.decorators import cache as cache_result
 
