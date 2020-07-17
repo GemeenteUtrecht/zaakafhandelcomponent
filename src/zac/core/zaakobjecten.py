@@ -19,7 +19,9 @@ class ZaakObjectGroup:
     items: list = None
 
     def retrieve_items(self, items: Iterator[ZaakObject]) -> None:
-        self.items = [self.retriever(item.object) for item in items]
+        self.items = [
+            self.retriever(item.object) if item.object else item for item in items
+        ]
 
 
 GROUPS = {
