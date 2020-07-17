@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from zgw_consumers.api_models.base import Model
 
@@ -8,10 +9,10 @@ class IngeschrevenNatuurlijkPersoon(Model):
     burgerservicenummer: str
     geslachtsaanduiding: str
     leeftijd: int
-    kiesrecht: dict
     naam: dict
     geboorte: dict
     _links: dict
+    kiesrecht: Optional[dict] = None
 
     def get_full_name(self) -> str:
         bits = [
