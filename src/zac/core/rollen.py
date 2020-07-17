@@ -8,7 +8,7 @@ from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
 
 
 class Rol(_Rol):
-    _naturlijkpersoon = None
+    _natuurlijkpersoon = None
 
     @property
     def naturlijkpersoon(self) -> Optional[IngeschrevenNatuurlijkPersoon]:
