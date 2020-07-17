@@ -6,6 +6,8 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
 
+from zac.utils.decorators import optional_service
+
 from .data import AdviceCollection, ApprovalCollection, ReviewRequest
 from .models import KownslConfig
 
@@ -29,6 +31,7 @@ def create_review_request(
     return factory(ReviewRequest, resp)
 
 
+@optional_service
 def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
     """
     Retrieve the advice collection for a single advice case.
@@ -50,6 +53,7 @@ def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
     return factory(AdviceCollection, result)
 
 
+@optional_service
 def retrieve_approval_collection(zaak: Zaak) -> Optional[ApprovalCollection]:
     """
     Retrieve the approval collection for a single approval case.
@@ -72,6 +76,7 @@ def retrieve_approval_collection(zaak: Zaak) -> Optional[ApprovalCollection]:
     return factory(ApprovalCollection, result)
 
 
+@optional_service
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
     result = client.list("reviewrequest", query_params={"for_zaak": zaak.url})
