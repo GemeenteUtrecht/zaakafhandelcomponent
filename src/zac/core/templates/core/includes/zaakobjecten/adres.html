@@ -1,0 +1,22 @@
+{% load l10n %}
+{% for zo in items %}
+    {% if zo.object_identificatie %}
+        {% with adres=zo.object_identificatie %}
+        <article class="bag-object">
+            <div class="bag-object__identificatie">{{ adres.identificatie }}</div>
+
+            <address class="bag-object__adres bag-object__adres--primary">
+                {{ adres.gor_openbare_ruimte_naam }} {{ adres.huisnummer|unlocalize }}{{ adres.huisletter }}
+                <br>
+                {{ adres.postcode|default:'geen postcode' }}
+                <br>
+                {{ adres.wpl_woonplaats_naam }}
+            </address>
+
+        </article>
+        {% endwith %}
+    {% else %}
+        <div>TODO: support {{ adres.object }}</div>
+    {% endif %}
+
+{% endfor %}

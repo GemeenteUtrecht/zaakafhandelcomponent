@@ -47,6 +47,12 @@
     font-size: 0.9em;
     line-height: 1.2;
     padding: 5px;
+
+    @include modifier('primary') {
+      font-size: 1rem;
+      line-height: 1.5em;
+      padding: 0;
+    }
   }
 
   @include modifier('adres') {

@@ -39,7 +39,10 @@ GROUPS = {
         retriever=fetch_verblijfsobject,
         template="core/includes/zaakobjecten/verblijfsobject.html",
     ),
-    # Roxxit Squit 20/20 POC
+    # Roxit Squit 20/20 POC
+    "adres": ZaakObjectGroup(
+        label="Adressen", template="core/includes/zaakobjecten/adres.html",
+    ),
     "omgevingsdossier": ZaakObjectGroup(
         label="Omgevingsdossiers",
         retriever=noop,
