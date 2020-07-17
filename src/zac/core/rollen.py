@@ -11,18 +11,18 @@ class Rol(_Rol):
     _natuurlijkpersoon = None
 
     @property
-    def naturlijkpersoon(self) -> Optional[IngeschrevenNatuurlijkPersoon]:
-        if not self._naturlijkpersoon:
+    def natuurlijkpersoon(self) -> Optional[IngeschrevenNatuurlijkPersoon]:
+        if not self._natuurlijkpersoon:
             # extract from brp
-            self._naturlijkpersoon = fetch_natuurlijkpersoon(self.betrokkene)
-        return self._naturlijkpersoon
+            self._natuurlijkpersoon = fetch_natuurlijkpersoon(self.betrokkene)
+        return self._natuurlijkpersoon
 
     def get_name(self) -> Optional[str]:
         if self.betrokkene_type != RolTypes.natuurlijk_persoon:
             return None
 
         if self.betrokkene:
-            return self.naturlijkpersoon.get_full_name()
+            return self.natuurlijkpersoon.get_full_name()
 
         return "{} {} {}".format(
             self.betrokkene_identificatie["voornamen"],
@@ -35,6 +35,6 @@ class Rol(_Rol):
             return None
 
         if self.betrokkene:
-            return self.naturlijkpersoon.burgerservicenummer
+            return self.natuurlijkpersoon.burgerservicenummer
 
         return self.betrokkene_identificatie["inp_bsn"]
