@@ -1,0 +1,23 @@
+$screen--xs: 1000px !default;
+$screen--lg: 1600px !default;
+
+@mixin screen-xs() {
+  @media only screen and (max-width: $screen--xs - 1px) {
+    @content;
+  }
+}
+
+
+@mixin screen-small() {
+  @media only screen and (max-width: $screen--lg - 1px) {
+    @content;
+  }
+}
+
+
+@mixin screen-large() {
+  @media only screen and (min-width: $screen--lg) {
+    @content;
+  }
+}
+
