@@ -95,7 +95,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
         return form
 
-    def form_valid(self, form: ClaimTaskForm):
+    def form_valid(self, form: MessageForm):
         # build service variables to continue execution
         zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
         self.check_object_permissions(zaak)
@@ -108,7 +108,6 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
         variables = {
             "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
-            **form.cleaned_data,
         }
 
         send_message(form.cleaned_data["message"], form._instance_ids, variables)
