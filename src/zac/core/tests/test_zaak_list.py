@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlsplit
 
 from django.conf import settings
 from django.urls import reverse_lazy
@@ -184,3 +184,53 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)
         self.assertEqual(zaken[0].identificatie, zaak1["identificatie"])
+
+    def test_list_zaken_filter_zaaktype_superuser(self, m):
+        superuser = UserFactory.create(is_superuser=True)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        # set up catalogi data
+        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        zt1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        zt2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/ce05e9c7-b9cd-42d1-ba0e-e0b3d2001be9",
+            identificatie="ZT2",
+        )
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zt1["url"],
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={"count": 2, "previous": None, "next": None, "results": [zt1, zt2],},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?zaaktype={zt1['url']}",
+            json={"count": 2, "previous": None, "next": None, "results": [zaak1],},
+        )
+
+        response = self.app.get(self.url, {"zaaktypen": zt1["url"]}, user=superuser)
+
+        self.assertEqual(response.status_code, 200)
+
+        zaken = response.context["zaken"]
+        self.assertEqual(len(zaken), 1)
+        self.assertEqual(zaken[0].url, zaak1["url"])
+
+        # verify API calls
+        req_zaken = m.last_request
+        query = parse_qs(req_zaken.query)
+        self.assertEqual(len(query["zaaktype"]), 1)
+        self.assertEqual(query["zaaktype"][0], zt1["url"])
