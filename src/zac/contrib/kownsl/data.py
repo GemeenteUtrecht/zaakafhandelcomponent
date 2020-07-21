@@ -25,6 +25,7 @@ class ReviewRequest(Model):
     frontend_url: str
     num_advices: int
     num_approvals: int
+    num_assigned_users: int
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
