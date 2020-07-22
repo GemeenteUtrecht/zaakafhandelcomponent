@@ -10,6 +10,11 @@ $main-content-background-color: #fefefe !default;
     width: 16vw;
     margin: 1rem;
     margin-right: 0.5em;
+
+    // stick nav bar when scrolling
+    position: sticky;
+    align-self: flex-start;
+    top: 1em;
   }
 
   & &__content {

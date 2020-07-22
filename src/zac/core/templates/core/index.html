@@ -15,7 +15,10 @@
     </div>
 
     <div class="filters__group">
-        {% form_field filter_form.zaaktypen %}
+        {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
+        <div class="zaaktypen-select" data-name="zaaktypen">
+            {# React managed #}
+        </div>
     </div>
 
     <div class="filters__submit">
