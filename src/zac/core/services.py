@@ -227,7 +227,7 @@ def get_zaken(
     allowed_zaaktypen = _base_zaaktypen
 
     if user_perms.user.is_superuser:
-        query_zaaktypen = [""]
+        query_zaaktypen = zaaktypen or [""]
     else:
         query_zaaktypen = (
             allowed_zaaktypen
