@@ -114,7 +114,7 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
 
         zt_choices = response.context["filter_form"].fields["zaaktypen"].choices
         self.assertEqual(len(zt_choices), 1)
-        self.assertEqual(zt_choices[0][0], zt1["url"])
+        self.assertEqual(zt_choices[0][1][0][0], zt1["url"])
 
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)

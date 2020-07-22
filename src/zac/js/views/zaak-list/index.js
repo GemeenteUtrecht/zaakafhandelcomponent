@@ -12,10 +12,11 @@ const init = () => {
     }
 
     const zaaktypen = jsonScriptToVar('zaaktypeChoices');
+    const selected = jsonScriptToVar('selectedZaaktypen') ?? [];
 
     for (const node of nodes) {
         ReactDOM.render(
-            <ZaaktypeSelect zaaktypen={zaaktypen} {...node.dataset} />,
+            <ZaaktypeSelect zaaktypen={zaaktypen} selected={selected} {...node.dataset} />,
             node
         );
     }

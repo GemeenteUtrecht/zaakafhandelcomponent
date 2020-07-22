@@ -127,8 +127,8 @@ ZaaktypeGroup.propTypes = {
  * @param  {String} options.name      The HTML input name
  * @return {JSX}
  */
-const ZaaktypeSelect = ({ zaaktypen=[], name }) => {
-    const [checked, setChecked] = useState([]);
+const ZaaktypeSelect = ({ name, zaaktypen=[], selected=[] }) => {
+    const [checked, setChecked] = useState(selected);
 
     return (
         <div className="zaaktype-select">
@@ -149,8 +149,9 @@ const ZaaktypeSelect = ({ zaaktypen=[], name }) => {
 };
 
 ZaaktypeSelect.propTypes = {
-    zaaktypen: PropTypes.arrayOf(PropTypes.array),
     name: PropTypes.string.isRequired,
+    zaaktypen: PropTypes.arrayOf(PropTypes.array),
+    selected: PropTypes.arrayOf(PropTypes.string),
 };
 
 export { ZaaktypeSelect };
