@@ -1,0 +1,26 @@
+@import "../../lib/bem";
+@import "../../lib/typography";
+
+/**
+ * A single filter, usually part of a set of filters.
+ */
+.filter {
+  position: relative;
+  padding: 0.5em 1em;
+  border: solid 1px #ccc;
+
+  & + & {
+    margin-left: 1em;
+  }
+
+  @include element("title") {
+    @include ellipsis;
+    display: block;
+    font-weight: 500;
+  }
+
+  @include element("fields") {
+    display: none;
+  }
+
+}

@@ -10,15 +10,21 @@
 {% load_widgets form='sniplates/filters.html' %}
 <form class="filters" action="." method="get">
 
-    <div class="filters__group">
-        {% form_field filter_form.identificatie %}
+    <div class="filter">
+        <span class="filter__title">Identificatie</span>
+        <div class="filter__fields">
+            {% form_field filter_form.identificatie %}
+        </div>
     </div>
 
-    <div class="filters__group">
-        {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
-        {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
-        <div class="zaaktypen-select" data-name="zaaktypen">
-            {# React managed #}
+    <div class="filter">
+        <span class="filter__title">Zaaktype(n)</span>
+        <div class="filter__fields">
+            {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
+            {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
+            <div class="zaaktypen-select" data-name="zaaktypen">
+                {# React managed #}
+            </div>
         </div>
     </div>
 
