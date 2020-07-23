@@ -7,19 +7,21 @@
 
 <div class="section-title">Filters</div>
 
-{% load_widgets form='sniplates/filters.html' %}
+{% load_widgets form='sniplates/forms.html' %}
 <form class="filters" action="." method="get">
 
     <div class="filter">
-        <span class="filter__title">Identificatie</span>
-        <div class="filter__fields">
+        <input type="checkbox" id="_filter_identificatie" class="filter__toggle">
+        <label class="filter__title" for="_filter_identificatie">Identificatie</label>
+        <div class="filter__fields" style="--index: 0rem;">
             {% form_field filter_form.identificatie %}
         </div>
     </div>
 
     <div class="filter">
-        <span class="filter__title">Zaaktype(n)</span>
-        <div class="filter__fields">
+        <input type="checkbox" id="_filter_zaaktypen" class="filter__toggle">
+        <label class="filter__title" for="_filter_zaaktypen">Zaaktype(n)</label>
+        <div class="filter__fields" style="--index: 1rem;">
             {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
             {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
             <div class="zaaktypen-select" data-name="zaaktypen">

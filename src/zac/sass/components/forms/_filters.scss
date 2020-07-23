@@ -4,7 +4,7 @@ $filters-background: white !default;
   display: flex;
   flex-wrap: wrap;
   background: $filters-background;
-  padding: 1.5em 0;
+  padding: 1rem 0;
   border-bottom: solid 1px rgba(black, 0.1);
 
   position: sticky;
@@ -14,5 +14,13 @@ $filters-background: white !default;
     text-align: right;
     align-self: center;
     margin-left: auto;
+  }
+
+  & + .table {
+    margin-top: 2rem;
+  }
+
+  .input .input__control {
+    margin-right: 0;
   }
 }
