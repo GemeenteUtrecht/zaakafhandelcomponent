@@ -1,0 +1,29 @@
+{% load sniplates i18n %}
+
+Widget library for list-filters
+
+
+{% comment %}
+A single filter within the filter form, use as {% nested_widget %}
+
+Takes the following variables:
+    - `name`: internal field name
+    - `index`: the index of the filter within the entire filter form
+    - `label` the user-visible label for the button
+{% endcomment %}
+{% block filter %}
+<div class="filter">
+    <input type="checkbox" id="_filter_{{ name }}" class="filter__toggle">
+    <label class="filter__title" for="_filter_{{ name }}">{{ label }}</label>
+    <div class="filter__fields" style="--index: {{ index }}rem;">
+        {{ content }}
+    </div>
+</div>
+{% endblock filter %}
+
+
+{% block submit %}
+<div class="filters__submit">
+    <button type="submit" class="btn btn--small">{% trans "Filter" %}</button>
+</div>
+{% endblock submit %}

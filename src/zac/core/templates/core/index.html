@@ -8,31 +8,22 @@
 <div class="section-title">Filters</div>
 
 {% load_widgets form='sniplates/forms.html' %}
+{% load_widgets filters='sniplates/filters.html' %}
+
 <form class="filters" action="." method="get">
 
-    <div class="filter">
-        <input type="checkbox" id="_filter_identificatie" class="filter__toggle">
-        <label class="filter__title" for="_filter_identificatie">Identificatie</label>
-        <div class="filter__fields" style="--index: 0rem;">
-            {% form_field filter_form.identificatie %}
-        </div>
-    </div>
+    {% nested_widget 'filters:filter' name="identificatie" index=0 label=_("Identificatie") %}
+        {% form_field filter_form.identificatie %}
+    {% endnested %}
 
-    <div class="filter">
-        <input type="checkbox" id="_filter_zaaktypen" class="filter__toggle">
-        <label class="filter__title" for="_filter_zaaktypen">Zaaktype(n)</label>
-        <div class="filter__fields" style="--index: 1rem;">
-            {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
-            {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
-            <div class="zaaktypen-select" data-name="zaaktypen">
-                {# React managed #}
-            </div>
-        </div>
-    </div>
+    {% nested_widget 'filters:filter' name="zaaktypen" index=1 label=_("Zaaktype(n)") %}
+        {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
+        {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
+        <div class="zaaktypen-select" data-name="zaaktypen"> {# React managed #} </div>
+    {% endnested %}
 
-    <div class="filters__submit">
-        <button type="submit" class="btn btn--small">{% trans "Filter" %}</button>
-    </div>
+    {% widget 'filters:submit' %}
+
 </form>
 
 {% include "core/includes/zaken_table.html" with zaken=zaken %}
