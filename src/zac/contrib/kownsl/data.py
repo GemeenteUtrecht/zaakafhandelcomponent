@@ -70,17 +70,3 @@ class Approval(Model):
     created: datetime
     author: Author
     approved: bool
-
-
-@dataclass
-class AdviceCollection(Model):
-    review_zaak: str
-    for_zaak: str
-    advices: List[Advice]
-
-
-@dataclass
-class ApprovalCollection(Model):
-    review_zaak: str
-    for_zaak: str
-    approvals: List[Approval]
