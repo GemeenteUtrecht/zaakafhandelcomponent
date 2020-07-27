@@ -31,7 +31,7 @@ def create_review_request(
 
 
 @optional_service
-def retrieve_advices(review_request_uuid: str) -> List[Advice]:
+def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     """
     Retrieve the advices for a single review request.
 
@@ -40,15 +40,13 @@ def retrieve_advices(review_request_uuid: str) -> List[Advice]:
     """
     client = get_client()
     operation_id = "reviewrequest_advices"
-    url = get_operation_url(
-        client.schema, operation_id, base_url=client.base_url, uuid=review_request_uuid
-    )
-    result = client.request(url, operation_id, uuid=review_request_uuid)
+    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
+    result = client.request(url, operation_id)
     return factory(Advice, result)
 
 
 @optional_service
-def retrieve_approvals(review_request_uuid: str) -> List[Approval]:
+def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     """
     Retrieve the approvals for a single review request.
 
@@ -57,10 +55,8 @@ def retrieve_approvals(review_request_uuid: str) -> List[Approval]:
     """
     client = get_client()
     operation_id = "reviewrequest_approvals"
-    url = get_operation_url(
-        client.schema, operation_id, base_url=client.base_url, uuid=review_request_uuid
-    )
-    result = client.request(url, operation_id, uuid=review_request_uuid)
+    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
+    result = client.request(url, operation_id)
     return factory(Approval, result)
 
 

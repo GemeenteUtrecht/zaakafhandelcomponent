@@ -21,7 +21,6 @@ class ReviewRequest(Model):
     id: uuid.UUID
     for_zaak: str
     review_type: str
-    review_zaak: str
     frontend_url: str
     num_advices: int
     num_approvals: int

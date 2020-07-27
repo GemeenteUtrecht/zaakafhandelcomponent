@@ -5,7 +5,6 @@ from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
 from furl import furl
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 
@@ -29,14 +28,13 @@ from ..services import (
     get_resultaat,
     get_rollen,
     get_statussen,
-    get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .utils import get_uuid_from_path, get_zaak_from_query
+from .utils import get_zaak_from_query
 
 
 class Index(PermissionRequiredMixin, BaseListView):
@@ -92,24 +90,16 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             _advices = executor.map(
                 retrieve_advices,
-                [
-                    get_uuid_from_path(review_request.frontend_url)
-                    for review_request in review_requests
-                    if review_request.num_advices
-                ],
+                list(filter(lambda x: x.num_advices, review_requests)),
             )
             _approvals = executor.map(
                 retrieve_approvals,
-                [
-                    get_uuid_from_path(review_request.frontend_url)
-                    for review_request in review_requests
-                    if review_request.num_approvals
-                ],
+                list(filter(lambda x: x.num_approvals, review_requests)),
             )
 
             related_zaken = _related_zaken.result()
-            advices = _advices.result()
-            approvals = _approvals.result()
+            advices = [result[0] for result in _advices]
+            approvals = [result[0] for result in _approvals]
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
@@ -144,7 +134,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
     @staticmethod
     def get_source_doc_versions(advices: List[Advice]) -> Optional[Dict[str, int]]:
-        all_documents = sum(advice.documents for advice in advices)
+        all_documents = sum((advice.documents for advice in advices), [])
         sort_key = lambda ad: ad.document  # noqa
         all_documents = sorted(all_documents, key=sort_key)
         doc_versions = {

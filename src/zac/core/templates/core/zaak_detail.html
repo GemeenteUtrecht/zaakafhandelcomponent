@@ -315,14 +315,14 @@
         <a href="{% url 'core:zaak-detail' bronorganisatie=advice_collection.for_zaak.bronorganisatie identificatie=advice_collection.for_zaak.identificatie %}" class="link">
             Voor: {{ advice_collection.for_zaak.identificatie }}
         </a>
-        {% include "advices/includes/advice_table.html" with advices=advice_collection.advices only %}
+        {% include "advices/includes/advice_table.html" with advices=advice_collection only %}
     </section>
     {% endif %}
 
     {% if approval_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">{% blocktrans %}Approvals{% endblocktrans %}</div>
-        {% include "advices/includes/approval_table.html" with approvals=approval_collection.approvals only %}
+        {% include "advices/includes/approval_table.html" with approvals=approval_collection only %}
     </section>
     {% endif %}
 
