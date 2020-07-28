@@ -204,7 +204,6 @@
             <thead>
                 <tr>
                     <th class="table__header">Type</th>
-                    <th class="table__header">Advieszaak</th>
                     <th class="table__header"># Opgehaald</th>
                 </tr>
             </thead>
@@ -312,9 +311,6 @@
     {% if advice_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Adviezen</div>
-        <a href="{% url 'core:zaak-detail' bronorganisatie=advice_collection.for_zaak.bronorganisatie identificatie=advice_collection.for_zaak.identificatie %}" class="link">
-            Voor: {{ advice_collection.for_zaak.identificatie }}
-        </a>
         {% include "advices/includes/advice_table.html" with advices=advice_collection only %}
     </section>
     {% endif %}
