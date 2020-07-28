@@ -198,28 +198,10 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
-        {{ review_requests_json|json_script:"reviewRequests" }}
-
         <div class="section-title">Adviseren en accorderen</div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="table__header">Type</th>
-                    <th class="table__header"># Opgehaald</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for review_request in review_requests %}
-                    <tr>
-                        <td>{{ review_request.get_review_type_display }}</td>
-                        <td>
-                            {% firstof review_request.num_advices review_request.num_approvals '0' %}/{{ review_request.num_assigned_users }}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {{ review_requests_json|json_script:"reviewRequests" }}
+        <div id="review-requests-react"> {# React managed #} </div>
     </section>
 
     {% if related_zaken %}
