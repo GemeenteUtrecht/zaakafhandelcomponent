@@ -89,17 +89,27 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             review_requests = _review_requests.result()
 
             _advices = executor.map(
-                retrieve_advices,
-                list(filter(lambda x: x.num_advices, review_requests)),
+                lambda rr: retrieve_advices(rr) if rr else [],
+                [rr if rr.num_advices else None for rr in review_requests],
             )
             _approvals = executor.map(
-                retrieve_approvals,
-                list(filter(lambda x: x.num_approvals, review_requests)),
+                lambda rr: retrieve_approvals(rr) if rr else [],
+                [rr if rr.num_approvals else None for rr in review_requests],
             )
 
             related_zaken = _related_zaken.result()
-            advices = [result[0] for result in _advices]
-            approvals = [result[0] for result in _approvals]
+
+            _advices = list(_advices)
+            _approvals = list(_approvals)
+            advices = [result[0] for result in _advices if result]
+            approvals = [result[0] for result in _approvals if result]
+            for rr, rr_advices, rr_approvals in zip(
+                review_requests, _advices, _approvals
+            ):
+                rr.advices = rr_advices
+                rr.approvals = rr_approvals
+                rr._data["advices"] = [advice._data for advice in rr_advices]
+                rr._data["approvals"] = [approval._data for approval in rr_approvals]
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
@@ -127,6 +137,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "advice_collection": advices,
                     "approval_collection": approvals,
                     "review_requests": review_requests,
+                    "review_requests_json": [rr._data for rr in review_requests],
                 }
             )
         self._set_advice_documents(advices)

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from zds_client.client import get_operation_url
 from zgw_consumers.api_models.base import factory
@@ -9,6 +9,17 @@ from zac.utils.decorators import optional_service
 
 from .data import Advice, Approval, ReviewRequest
 from .models import KownslConfig
+
+
+def factory_with_data(model: type, data: Union[dict, list]) -> Union[type, List[type]]:
+    instances = factory(model, data)
+
+    if isinstance(instances, list):
+        for instance, data_instance in zip(instances, data):
+            instance._data = data_instance
+    else:
+        instances._data = data
+    return instances
 
 
 def get_client() -> ZGWClient:
@@ -42,7 +53,7 @@ def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     operation_id = "reviewrequest_advices"
     url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
     result = client.request(url, operation_id)
-    return factory(Advice, result)
+    return factory_with_data(Advice, result)
 
 
 @optional_service
@@ -57,14 +68,14 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     operation_id = "reviewrequest_approvals"
     url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
     result = client.request(url, operation_id)
-    return factory(Approval, result)
+    return factory_with_data(Approval, result)
 
 
 @optional_service
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
     result = client.list("reviewrequest", query_params={"for_zaak": zaak.url})
-    review_requests = factory(ReviewRequest, result)
+    review_requests = factory_with_data(ReviewRequest, result)
 
     # fix relation reference
     for review_request in review_requests:

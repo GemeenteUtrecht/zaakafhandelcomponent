@@ -198,6 +198,8 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
+        {{ review_requests_json|json_script:"reviewRequests" }}
+
         <div class="section-title">Adviseren en accorderen</div>
 
         <table class="table">
