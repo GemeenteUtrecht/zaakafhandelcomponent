@@ -1,10 +1,9 @@
-from typing import Dict, Iterator, List, Tuple
+import itertools
+from typing import Dict, List, Tuple
 
 from django import forms
 from django.conf import settings
-from django.template.defaultfilters import date
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
@@ -15,6 +14,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zac.accounts.models import User
 from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
+from zac.utils.sorting import sort
 
 from .services import (
     get_documenten,
@@ -26,17 +26,17 @@ from .services import (
 )
 
 
-def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> Iterator[Tuple[str, str]]:
-    today = timezone.now().date()
-    for zaaktype in zaaktypen:
-        if zaaktype.begin_geldigheid > today:
-            continue
+def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
+    zaaktypen = sort(zaaktypen, ["omschrijving", "-versiedatum"])
+    choices = []
+    for key, group in itertools.groupby(zaaktypen, lambda zt: zt.omschrijving):
+        group_choices = [
+            (zt.url, _("Version {zt.versiedatum} - {zt.identificatie}").format(zt=zt))
+            for zt in group
+        ]
+        choices.append((key, group_choices))
 
-        if zaaktype.einde_geldigheid and zaaktype.einde_geldigheid < today:
-            continue
-
-        label = f"{zaaktype.omschrijving} (versie {date(zaaktype.versiedatum)})"
-        yield (zaaktype.url, label)
+    return choices
 
 
 class ZakenFilterForm(forms.Form):
@@ -44,7 +44,7 @@ class ZakenFilterForm(forms.Form):
     zaaktypen = forms.MultipleChoiceField(
         label=_("zaaktypen (huidige versies)"),
         required=False,
-        choices=get_zaaktype_choices,
+        choices=[],
         widget=forms.CheckboxSelectMultiple,
     )
 

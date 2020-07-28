@@ -7,20 +7,23 @@
 
 <div class="section-title">Filters</div>
 
-{% load_widgets form='sniplates/filters.html' %}
+{% load_widgets form='sniplates/forms.html' %}
+{% load_widgets filters='sniplates/filters.html' %}
+
 <form class="filters" action="." method="get">
 
-    <div class="filters__group">
+    {% nested_widget 'filters:filter' name="identificatie" index=0 label=_("Identificatie") %}
         {% form_field filter_form.identificatie %}
-    </div>
+    {% endnested %}
 
-    <div class="filters__group">
-        {% form_field filter_form.zaaktypen %}
-    </div>
+    {% nested_widget 'filters:filter' name="zaaktypen" index=1 label=_("Zaaktype(n)") %}
+        {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
+        {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
+        <div class="zaaktypen-select" data-name="zaaktypen"> {# React managed #} </div>
+    {% endnested %}
 
-    <div class="filters__submit">
-        <button type="submit" class="btn btn--small">{% trans "Filter" %}</button>
-    </div>
+    {% widget 'filters:submit' %}
+
 </form>
 
 {% include "core/includes/zaken_table.html" with zaken=zaken %}
