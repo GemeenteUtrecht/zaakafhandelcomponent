@@ -46,6 +46,7 @@
     "jshint-stylish": "latest",
     "leaflet": "^1.6.0",
     "moment": "^2.27.0",
+    "moment-locales-webpack-plugin": "^1.2.0",
     "postcss-selector-lint": "^1.0.1",
     "proj4leaflet": "^1.0.2",
     "prop-types": "^15.7.2",
