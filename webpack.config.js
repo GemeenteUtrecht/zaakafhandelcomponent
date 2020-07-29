@@ -52,7 +52,7 @@ module.exports = {
     // Set which locales to keep for momentjs
     plugins: [
         new MomentLocalesPlugin({
-            localesToKeep: ['en', 'nl'],
+            localesToKeep: ['nl'],
         }),
     ]
 };

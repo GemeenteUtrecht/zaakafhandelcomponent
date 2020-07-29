@@ -1,7 +1,10 @@
 import React from "react";
 import moment from "moment";
+import 'moment/locale/nl.js';
 
 import {getAuthorName} from "./utils";
+
+moment.locale('nl');
 
 
 const AdviceRow = ({ advice }) =>
