@@ -12,12 +12,18 @@
 <form action="." method="post" class="form" enctype="multipart/form-data">
     {% csrf_token %}
 
+    {% if return_url %} <input type="hidden" name="return_url" value="{{ return_url }}"> {% endif %}
+
     <header class="zaak-detail-page__header">
         {% include "core/includes/zaaktype_header.html" %}
 
         <nav class="page-controls page-controls--align-right">
             <button type="submit" class="btn btn--control btn--control-focus">
-                Bewaren
+                {% if open_url %}
+                    Uitgevoerd
+                {% else %}
+                    Bewaren
+                {% endif %}
             </button>
         </nav>
 
@@ -86,5 +92,7 @@
     </article>
 
 </form>
+
+{{ open_url|json_script:"openUrl" }}
 
 {% endblock content %}

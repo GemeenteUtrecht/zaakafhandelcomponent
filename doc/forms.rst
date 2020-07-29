@@ -43,6 +43,10 @@ implemented by the ZAC:
   to this location. A ``?state`` parameter is added for the receiving application, which
   is consumed when the external application redirects the user back to the ZAC.
 
+  If you set the proces/task variable ``openInNewWindow`` to the boolean "true" value,
+  then the page will be opened in a new tab or window, and the end-user can mark the
+  task as completed.
+
 Form definition
 ---------------
 
