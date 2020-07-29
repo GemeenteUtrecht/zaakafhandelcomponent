@@ -212,7 +212,7 @@
                     <tr>
                         <td>{{ review_request.get_review_type_display }}</td>
                         <td>
-                            {% firstof review_request.num_advices review_request.num_approvals %}/{{ review_request.num_assigned_users }}
+                            {% firstof review_request.num_advices review_request.num_approvals '0' %}/{{ review_request.num_assigned_users }}
                         </td>
                     </tr>
                 {% endfor %}
