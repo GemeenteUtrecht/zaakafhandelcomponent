@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Modal from "react-modal";
 
 import './fetch-zaakobjecten';
 import './fetch-tasks';
@@ -14,6 +15,7 @@ const init = () => {
         return;
     }
 
+    Modal.setAppElement('#review-requests-react');
     const reviewRequests = jsonScriptToVar('reviewRequests');
 
     ReactDOM.render(

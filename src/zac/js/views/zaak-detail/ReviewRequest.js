@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import Modal from 'react-modal';
+
+import {AdviceTable} from "./Advice";
+import {ApprovalTable} from "./Approval";
+
 
 const kownslTypes = {
     advice: 'Advies',
@@ -6,13 +11,39 @@ const kownslTypes = {
 };
 
 
+const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
+    const closeModal = () => setIsOpen(false);
+    console.log("reviewRequest=", reviewRequest);
+
+    return (
+        <Modal isOpen={isOpen}>
+            <button onClick={closeModal} className="modal__close btn">&times;</button>
+
+            <AdviceTable advices={reviewRequest.advices}/>
+            <ApprovalTable approvals={reviewRequest.approvals}/>
+        </Modal>
+    );
+};
+
+
 const ReviewRequestRow = ({ reviewRequest }) => {
     const numReviews = reviewRequest.review_type === 'advice' ? reviewRequest.num_advices : reviewRequest.num_approvals;
+    // modal
+    const [isOpen, setIsOpen] = useState(false);
+    const openModal = () => setIsOpen(true);
+
     return (
-        <tr>
-            <td>{kownslTypes[reviewRequest.review_type]}</td>
-            <td>{`${numReviews} / ${reviewRequest.num_assigned_users}`}</td>
-        </tr>
+        <>
+            <tr onClick={openModal}>
+                <td>{kownslTypes[reviewRequest.review_type]}</td>
+                <td>{`${numReviews} / ${reviewRequest.num_assigned_users}`}</td>
+            </tr>
+            <ReviewRequestModal
+                isOpen={isOpen}
+                setIsOpen={setIsOpen}
+                reviewRequest={reviewRequest}
+            />
+        </>
     );
 };
 
