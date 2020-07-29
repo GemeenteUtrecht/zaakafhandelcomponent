@@ -213,11 +213,22 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
-            {"zaak": self.zaak, "task": self._get_task(),}
+            {
+                "zaak": self.zaak,
+                "task": self._get_task(),
+                "open_url": self.request.session.get("open_url"),
+                "return_url": self.request.GET.get("returnUrl"),
+            }
         )
         return context
 
     def get_success_url(self):
+        return_url = self.request.POST.get("return_url")
+        if return_url and is_safe_url(
+            return_url, allowed_hosts=[self.request.get_host()]
+        ):
+            return return_url
+
         return reverse(
             "core:zaak-detail",
             kwargs={
@@ -280,6 +291,12 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
 
         # prepare the callback URL
         redirect_url = get_task_variable(task.id, "redirectTo")
+        new_window = get_task_variable(task.id, "openInNewWindow", False)
+
+        if new_window:
+            # TODO: session is annoying, quick workaround
+            self.request.session["open_url"] = redirect_url
+            redirect_url = reverse("core:perform-task", kwargs=self.kwargs)
 
         # prepare state so that we know what to do
         state = {
