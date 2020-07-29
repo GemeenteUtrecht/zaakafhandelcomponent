@@ -44,24 +44,18 @@ jobs:
       before_script: skip
       script: black --check src
 
-    - name: Test docker image build
-      before_install: skip
-      install: skip
-      before_script: skip
-      script: docker build .
-
-    - stage: Push Docker image(s)
+    - stage: "Docker image"
       if: fork = false
-      before_install: skip
+      name: Docker image build
+      services:
+        - docker
       install: skip
-      before_script: skip
-      script: echo "noop"
-      after_success: echo "trigger deploy?"
+      script: docker build .
       deploy:
         - provider: script
           script: bin/docker_push.sh latest
           on:
-            branch: develop
+            branch: master
 
         - provider: script
           script: bin/docker_push.sh $TRAVIS_TAG
