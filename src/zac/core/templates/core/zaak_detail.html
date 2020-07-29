@@ -204,7 +204,6 @@
             <thead>
                 <tr>
                     <th class="table__header">Type</th>
-                    <th class="table__header">Advieszaak</th>
                     <th class="table__header"># Opgehaald</th>
                 </tr>
             </thead>
@@ -212,16 +211,8 @@
                 {% for review_request in review_requests %}
                     <tr>
                         <td>{{ review_request.get_review_type_display }}</td>
-                        {% if review_request.review_zaak %}
-                            <th class="table__id-column">
-                                {% include "core/includes/zaak_link.html" with zaak=review_request.review_zaak blank=True only %}
-                            </th>
-                        {% else %}
-                            <td>(zaak nog niet aangemaakt)</td>
-                        {% endif %}
-                        {# one of both fields should always be zero #}
                         <td>
-                            {% firstof review_request.num_advices review_request.num_approvals %}/{{ review_request.num_assigned_users }}
+                            {% firstof review_request.num_advices review_request.num_approvals '0' %}/{{ review_request.num_assigned_users }}
                         </td>
                     </tr>
                 {% endfor %}
@@ -320,17 +311,14 @@
     {% if advice_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Adviezen</div>
-        <a href="{% url 'core:zaak-detail' bronorganisatie=advice_collection.for_zaak.bronorganisatie identificatie=advice_collection.for_zaak.identificatie %}" class="link">
-            Voor: {{ advice_collection.for_zaak.identificatie }}
-        </a>
-        {% include "advices/includes/advice_table.html" with advices=advice_collection.advices only %}
+        {% include "advices/includes/advice_table.html" with advices=advice_collection only %}
     </section>
     {% endif %}
 
     {% if approval_collection %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">{% blocktrans %}Approvals{% endblocktrans %}</div>
-        {% include "advices/includes/approval_table.html" with approvals=approval_collection.approvals only %}
+        {% include "advices/includes/approval_table.html" with approvals=approval_collection only %}
     </section>
     {% endif %}
 

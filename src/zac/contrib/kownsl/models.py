@@ -3,6 +3,7 @@ from django.utils.encoding import force_text
 from django.utils.translation import gettext_lazy as _
 
 from solo.models import SingletonModel
+from zgw_consumers.constants import APITypes
 
 
 class KownslConfigManager(models.Manager):
@@ -13,7 +14,10 @@ class KownslConfigManager(models.Manager):
 
 class KownslConfig(SingletonModel):
     service = models.ForeignKey(
-        "zgw_consumers.Service", null=True, on_delete=models.SET_NULL
+        "zgw_consumers.Service",
+        null=True,
+        on_delete=models.SET_NULL,
+        limit_choices_to={"api_type": APITypes.orc},
     )
 
     objects = KownslConfigManager()

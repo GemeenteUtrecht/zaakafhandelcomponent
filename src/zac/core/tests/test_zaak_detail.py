@@ -8,11 +8,13 @@ from django.urls import reverse, reverse_lazy
 import requests_mock
 from django_webtest import TransactionWebTest
 from freezegun import freeze_time
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.tests.utils import (
     generate_oas_component,
     mock_service_oas_get,
@@ -32,6 +34,23 @@ IDENTIFICATIE = "ZAAK-001"
 
 @contextlib.contextmanager
 def mock_zaak_detail_context():
+    review_request_data = {
+        "id": "45638aa6-e177-46cc-b580-43339795d5b5",
+        "for_zaak": f"{ZAKEN_ROOT}zaak/123",
+        "review_type": "approval",
+        "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
+        "num_advices": 0,
+        "num_approvals": 1,
+        "num_assigned_users": 1,
+    }
+    approval_data = {
+        "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
+        "author": {"username": "test_reviewer", "first_name": "", "last_name": "",},
+        "approved": False,
+    }
+    review_request = factory(ReviewRequest, review_request_data)
+    approval = factory(Approval, approval_data)
+
     m_get_statussen = patch("zac.core.views.zaken.get_statussen", return_value=[])
     m_get_statussen.start()
     m_get_documenten = patch(
@@ -50,31 +69,14 @@ def mock_zaak_detail_context():
     m_get_resultaat.start()
     m_get_rollen = patch("zac.core.views.zaken.get_rollen", return_value=[])
     m_get_rollen.start()
-    m_retrieve_advice_collection = patch(
-        "zac.core.views.zaken.retrieve_advice_collection", return_value=None
+    m_retrieve_advices = patch("zac.core.views.zaken.retrieve_advices", return_value=[])
+    m_retrieve_advices.start()
+    m_retrieve_approvals = patch(
+        "zac.core.views.zaken.retrieve_approvals", return_value=[approval]
     )
-    m_retrieve_advice_collection.start()
-    m_retrieve_approval_collection = patch(
-        "zac.core.views.zaken.retrieve_approval_collection",
-        return_value={
-            "review_zaak": f"{ZAKEN_ROOT}zaken/fa988e62-c1fe-4496-8c0f-29b85373e4df",
-            "for_zaak": "http://some_test.url",
-            "approvals": [
-                {
-                    "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
-                    "author": {
-                        "username": "test_reviewer",
-                        "first_name": "TestFirstName",
-                        "last_name": "TestLastName",
-                    },
-                    "approved": False,
-                }
-            ],
-        },
-    )
-    m_retrieve_approval_collection.start()
+    m_retrieve_approvals.start()
     m_get_review_requests = patch(
-        "zac.core.views.zaken.get_review_requests", return_value=[]
+        "zac.core.views.zaken.get_review_requests", return_value=[review_request]
     )
     m_get_review_requests.start()
     yield
@@ -84,8 +86,8 @@ def mock_zaak_detail_context():
     m_get_related_zaken.stop()
     m_get_resultaat.stop()
     m_get_rollen.stop()
-    m_retrieve_advice_collection.stop()
-    m_retrieve_approval_collection.stop()
+    m_retrieve_advices.stop()
+    m_retrieve_approvals.stop()
     m_get_review_requests.stop()
 
 
@@ -294,7 +296,6 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
 
     @freeze_time("2020-01-02 12:00:01")
     def test_approval_case_details(self, m):
-
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         zaak = generate_oas_component(

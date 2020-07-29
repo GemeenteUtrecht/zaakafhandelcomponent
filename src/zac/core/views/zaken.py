@@ -5,7 +5,6 @@ from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
 from furl import furl
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 
@@ -13,10 +12,10 @@ from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.kownsl.api import (
     get_review_requests,
-    retrieve_advice_collection,
-    retrieve_approval_collection,
+    retrieve_advices,
+    retrieve_approvals,
 )
-from zac.contrib.kownsl.data import AdviceCollection
+from zac.contrib.kownsl.data import Advice
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -29,7 +28,6 @@ from ..services import (
     get_resultaat,
     get_rollen,
     get_statussen,
-    get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
@@ -85,31 +83,27 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
         context = super().get_context_data(**kwargs)
 
         with parallel() as executor:
-            _advice_collection = executor.submit(
-                retrieve_advice_collection, self.object
-            )
-            _approval_collection = executor.submit(
-                retrieve_approval_collection, self.object
-            )
             _related_zaken = executor.submit(get_related_zaken, self.object)
             _review_requests = executor.submit(get_review_requests, self.object)
 
-            advice_collection = _advice_collection.result()
-            approval_collection = _approval_collection.result()
-            related_zaken = _related_zaken.result()
             review_requests = _review_requests.result()
 
-            # fetch the review cases
-            _review_zaken = executor.map(
-                lambda url: get_zaak(zaak_url=url) if url else None,
-                [review_request.review_zaak for review_request in review_requests],
+            _advices = executor.map(
+                retrieve_advices,
+                list(filter(lambda x: x.num_advices, review_requests)),
             )
-            for review_zaak, review_request in zip(_review_zaken, review_requests):
-                review_request.review_zaak = review_zaak
+            _approvals = executor.map(
+                retrieve_approvals,
+                list(filter(lambda x: x.num_approvals, review_requests)),
+            )
+
+            related_zaken = _related_zaken.result()
+            advices = [result[0] for result in _advices]
+            approvals = [result[0] for result in _approvals]
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
-        doc_versions = self.get_source_doc_versions(advice_collection)
+        doc_versions = self.get_source_doc_versions(advices)
 
         with parallel() as executor:
             statussen = executor.submit(get_statussen, self.object)
@@ -121,12 +115,6 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             documenten, gone = _documenten.result()
 
-            if advice_collection:
-                _get_zaak = executor.submit(
-                    get_zaak, zaak_url=advice_collection.for_zaak
-                )
-                advice_collection.for_zaak = _get_zaak.result()
-
             context.update(
                 {
                     "statussen": statussen.result(),
@@ -136,24 +124,17 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "resultaat": resultaat.result(),
                     "related_zaken": related_zaken,
                     "rollen": rollen.result(),
-                    "advice_collection": advice_collection,
-                    "approval_collection": approval_collection,
+                    "advice_collection": advices,
+                    "approval_collection": approvals,
                     "review_requests": review_requests,
                 }
             )
-        self._set_advice_documents(advice_collection, documenten)
+        self._set_advice_documents(advices)
         return context
 
     @staticmethod
-    def get_source_doc_versions(
-        advice_collection: Optional[AdviceCollection],
-    ) -> Optional[Dict[str, int]]:
-        if advice_collection is None:
-            return None
-
-        all_documents = sum(
-            (advice.documents for advice in advice_collection.advices), []
-        )
+    def get_source_doc_versions(advices: List[Advice]) -> Optional[Dict[str, int]]:
+        all_documents = sum((advice.documents for advice in advices), [])
         sort_key = lambda ad: ad.document  # noqa
         all_documents = sorted(all_documents, key=sort_key)
         doc_versions = {
@@ -163,14 +144,8 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
         return doc_versions
 
     @staticmethod
-    def _set_advice_documents(
-        advice_collection: Optional[AdviceCollection], documents: List[Document]
-    ):
-        if advice_collection is None:
-            return
-
+    def _set_advice_documents(advices: List[Advice]):
         _document_versions = set()
-        advices = advice_collection.advices
 
         for advice in advices:
             for document_advice in advice.documents:

@@ -1,6 +1,5 @@
-from typing import List, Optional
+from typing import List
 
-from zds_client import ClientError
 from zds_client.client import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
@@ -8,7 +7,7 @@ from zgw_consumers.client import ZGWClient
 
 from zac.utils.decorators import optional_service
 
-from .data import AdviceCollection, ApprovalCollection, ReviewRequest
+from .data import Advice, Approval, ReviewRequest
 from .models import KownslConfig
 
 
@@ -32,48 +31,33 @@ def create_review_request(
 
 
 @optional_service
-def retrieve_advice_collection(zaak: Zaak) -> Optional[AdviceCollection]:
+def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     """
-    Retrieve the advice collection for a single advice case.
+    Retrieve the advices for a single review request.
 
-    :param zaak: URL of the case to check. This particular case is supposed to be
-      the case that is used to collect the advices, not the case that requests for
-      advices.
-    :return: an advice-collection object
+    :param review_request_uuid: uuid of review request in Kownsl API
+    :return: an list of advice object
     """
     client = get_client()
-    operation_id = "advicecollection_retrieve"
-    url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
-    try:
-        result = client.request(url, operation_id, params={"objectUrl": zaak.url})
-    except ClientError as exc:
-        if exc.__context__.response.status_code == 404:
-            return None
-        raise
-    return factory(AdviceCollection, result)
+    operation_id = "reviewrequest_advices"
+    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
+    result = client.request(url, operation_id)
+    return factory(Advice, result)
 
 
 @optional_service
-def retrieve_approval_collection(zaak: Zaak) -> Optional[ApprovalCollection]:
+def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     """
-    Retrieve the approval collection for a single approval case.
+    Retrieve the approvals for a single review request.
 
-    :param zaak: URL of the case to check. This particular case is supposed to be
-      the case that is used to collect the approvals, not the case that requests for
-      approvals.
+    :param review_request_uuid: uuid of review request in Kownsl API
     :return: an approval-collection object
     """
-
     client = get_client()
-    operation_id = "approvalcollection_retrieve"
-    url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
-    try:
-        result = client.request(url, operation_id, params={"objectUrl": zaak.url})
-    except ClientError as exc:
-        if exc.__context__.response.status_code == 404:
-            return None
-        raise
-    return factory(ApprovalCollection, result)
+    operation_id = "reviewrequest_approvals"
+    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
+    result = client.request(url, operation_id)
+    return factory(Approval, result)
 
 
 @optional_service

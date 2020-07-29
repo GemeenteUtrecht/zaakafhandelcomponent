@@ -193,7 +193,10 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
     def post(self, request, *args, **kwargs):
         self.zaak = self.get_zaak()
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        if "open_url" in self.request.session:
+            del self.request.session["open_url"]
+        return response
 
     def get_form_class(self):
         task = self._get_task()

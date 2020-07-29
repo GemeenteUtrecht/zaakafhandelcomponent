@@ -51,18 +51,6 @@ paths:
                       enum:
                       - advice
                       - approval
-                    review_zaak:
-                      type: string
-                      format: uri
-                      description: URL reference to the zaak used for the review in
-                        the API.
-                      maxLength: 1000
-                      pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                        d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                        [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                        -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                        .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                        .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
                     frontend_url:
                       type: string
                       readOnly: true
@@ -78,6 +66,10 @@ paths:
                       description: The number of approvals registered for this request.
                         Note that does not mean they are all positive approvals -
                         this includes the rejections.
+                    num_assigned_users:
+                      type: integer
+                      maximum: 32767
+                      minimum: 0
                   required:
                   - for_zaak
                   - review_type
@@ -109,18 +101,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                review_zaak:
-                  type: string
-                  format: uri
-                  description: URL reference to the zaak used for the review in the
-                    API.
-                  maxLength: 1000
-                  pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                    d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                    [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                    -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1\
-                    -\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\\
-                    d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                num_assigned_users:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
               required:
               - for_zaak
               - review_type
@@ -153,18 +137,6 @@ paths:
                     enum:
                     - advice
                     - approval
-                  review_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak used for the review in
-                      the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                      d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                      [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                      -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                      .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                      .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
                   frontend_url:
                     type: string
                     readOnly: true
@@ -179,195 +151,137 @@ paths:
                     description: The number of approvals registered for this request.
                       Note that does not mean they are all positive approvals - this
                       includes the rejections.
+                  num_assigned_users:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
                 required:
                 - for_zaak
                 - review_type
           description: ''
-  /api/v1/advice-collection:
+  /api/v1/review-requests/{uuid}/advices:
     get:
-      operationId: advicecollection_retrieve
-      description: 'Get a collection of all the advices for a given zaak reference.
-
-
-        Requires the ``?objectUrl`` parameter, which must be a fully qualified URL
-        to a
-
-        ZAAK.'
-      parameters: []
+      operationId: reviewrequest_advices
+      description: Get a collection of all the advices for a given review request
+      parameters:
+      - name: uuid
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
       responses:
         '200':
           content:
             application/json:
               schema:
-                properties:
-                  review_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak used for the review in
-                      the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                      d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                      [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                      -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                      .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                      .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
-                  for_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak in the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                      d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                      [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                      -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                      .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                      .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
-                  advices:
-                    type: array
-                    items:
+                type: array
+                items:
+                  properties:
+                    created:
+                      type: string
+                      format: date-time
+                      readOnly: true
+                    author:
                       properties:
-                        created:
+                        username:
                           type: string
-                          format: date-time
-                          readOnly: true
-                        author:
-                          properties:
-                            username:
-                              type: string
-                              description: Required. 150 characters or fewer.
-                              maxLength: 150
-                            first_name:
-                              type: string
-                              maxLength: 255
-                            last_name:
-                              type: string
-                              maxLength: 255
-                          required:
-                          - username
-                          type: object
-                          description: Author of the advice
-                        advice:
+                          description: Required. 150 characters or fewer.
+                          maxLength: 150
+                        first_name:
                           type: string
-                          description: The content of the advice
-                          maxLength: 1000
-                        documents:
-                          type: array
-                          items:
-                            properties:
-                              document:
-                                type: string
-                                format: uri
-                                description: URL reference to the source document
-                                  in the Documents API. May include the 'versie' querystring
-                                  parameter.
-                                maxLength: 1000
-                                pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\\
-                                  s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\\
-                                  d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                                  [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1\
-                                  -\uFFFF0-9-]{0,61}[a-z\xA1-\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1\
-                                  -\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1-\uFFFF\
-                                  -]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\\
-                                  d{2,5})?(?:[/?#][^\\s]*)?\\Z"
-                              source_version:
-                                type: integer
-                                maximum: 32767
-                                minimum: 0
-                              advice_version:
-                                type: integer
-                                maximum: 32767
-                                minimum: 0
-                            required:
-                            - document
-                            - source_version
-                            - advice_version
-                          description: (New) versions of documents that were uploaded
-                            as part of the advice round.
+                          maxLength: 255
+                        last_name:
+                          type: string
+                          maxLength: 255
                       required:
-                      - author
-                      - documents
-                    description: A particular advice given by a single user.
-                required:
-                - review_zaak
-                - for_zaak
-                - advices
+                      - username
+                      type: object
+                      description: Author of the advice
+                    advice:
+                      type: string
+                      description: Het inhoudelijke advies
+                      maxLength: 1000
+                    documents:
+                      type: array
+                      items:
+                        properties:
+                          document:
+                            type: string
+                            format: uri
+                            description: URL-referentie naar het brondocument in de
+                              Documenten API. Deze mag de 'versie' querystring parameter
+                              bevatten.
+                            maxLength: 1000
+                            pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\\
+                              s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\\
+                              .(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\[[0-9a-f:\\\
+                              .]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
+                              -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
+                              .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
+                              .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                          source_version:
+                            type: integer
+                            maximum: 32767
+                            minimum: 0
+                          advice_version:
+                            type: integer
+                            maximum: 32767
+                            minimum: 0
+                        required:
+                        - document
+                        - source_version
+                        - advice_version
+                      description: (New) versions of documents that were uploaded
+                        as part of the advice round.
+                  required:
+                  - author
+                  - documents
           description: ''
-  /api/v1/approval-collection:
+  /api/v1/review-requests/{uuid}/approvals:
     get:
-      operationId: approvalcollection_retrieve
-      description: 'Get a collection of all the approvals for a given zaak reference.
-
-
-          Requires the ``?objectUrl`` parameter, which must be a fully qualified URL
-          to a
-
-          ZAAK.'
-      parameters: []
+      operationId: reviewrequest_approvals
+      description: Get a collection of all the approvals for a given review request
+      parameters:
+      - name: uuid
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
       responses:
         '200':
           content:
             application/json:
               schema:
-                properties:
-                  review_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak used for the review in
-                      the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                        d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                        [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                        -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                        .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                        .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
-                  for_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak in the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                        d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                        [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                        -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                        .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                        .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
-                  approvals:
-                    type: array
-                    items:
+                type: array
+                items:
+                  properties:
+                    created:
+                      type: string
+                      format: date-time
+                      readOnly: true
+                    author:
                       properties:
-                        created:
+                        username:
                           type: string
-                          format: date-time
-                          readOnly: true
-                        author:
-                          properties:
-                            username:
-                              type: string
-                              description: Required. 150 characters or fewer.
-                              maxLength: 150
-                            first_name:
-                              type: string
-                              maxLength: 255
-                            last_name:
-                              type: string
-                              maxLength: 255
-                          required:
-                            - username
-                          type: object
-                          description: Author of the approval
-                        approved:
-                          type: bool
-                          description: Whether the zaak has been approved or not
-                          maxLength: 1000
+                          description: Required. 150 characters or fewer.
+                          maxLength: 150
+                        first_name:
+                          type: string
+                          maxLength: 255
+                        last_name:
+                          type: string
+                          maxLength: 255
                       required:
-                        - author
-                    description: A particular approval given by a single user.
-                required:
-                  - review_zaak
-                  - for_zaak
-                  - approvals
+                      - username
+                      type: object
+                      description: Author of the approval
+                    approved:
+                      type: boolean
+                      description: Vink dit aan om akkoord te gaan met het/de document(en).
+                  required:
+                  - author
           description: ''
   /api/v1/review-requests/{uuid}:
     put:
@@ -409,18 +323,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                review_zaak:
-                  type: string
-                  format: uri
-                  description: URL reference to the zaak used for the review in the
-                    API.
-                  maxLength: 1000
-                  pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                    d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                    [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                    -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1\
-                    -\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\\
-                    d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                num_assigned_users:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
               required:
               - for_zaak
               - review_type
@@ -453,18 +359,6 @@ paths:
                     enum:
                     - advice
                     - approval
-                  review_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak used for the review in
-                      the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                      d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                      [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                      -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                      .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                      .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
                   frontend_url:
                     type: string
                     readOnly: true
@@ -479,6 +373,10 @@ paths:
                     description: The number of approvals registered for this request.
                       Note that does not mean they are all positive approvals - this
                       includes the rejections.
+                  num_assigned_users:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
                 required:
                 - for_zaak
                 - review_type
@@ -522,18 +420,10 @@ paths:
                   enum:
                   - advice
                   - approval
-                review_zaak:
-                  type: string
-                  format: uri
-                  description: URL reference to the zaak used for the review in the
-                    API.
-                  maxLength: 1000
-                  pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                    d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                    [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                    -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1\
-                    -\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\.?|localhost))(?::\\\
-                    d{2,5})?(?:[/?#][^\\s]*)?\\Z"
+                num_assigned_users:
+                  type: integer
+                  maximum: 32767
+                  minimum: 0
           application/x-www-form-urlencoded:
             schema: *id003
           multipart/form-data:
@@ -563,18 +453,6 @@ paths:
                     enum:
                     - advice
                     - approval
-                  review_zaak:
-                    type: string
-                    format: uri
-                    description: URL reference to the zaak used for the review in
-                      the API.
-                    maxLength: 1000
-                    pattern: "^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:25[0-5]|2[0-4]\\\
-                      d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}|\\\
-                      [[0-9a-f:\\.]+\\]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1\
-                      -\uFFFF0-9])?(?:\\.(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\\
-                      .(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
-                      .?|localhost))(?::\\d{2,5})?(?:[/?#][^\\s]*)?\\Z"
                   frontend_url:
                     type: string
                     readOnly: true
@@ -589,6 +467,10 @@ paths:
                     description: The number of approvals registered for this request.
                       Note that does not mean they are all positive approvals - this
                       includes the rejections.
+                  num_assigned_users:
+                    type: integer
+                    maximum: 32767
+                    minimum: 0
                 required:
                 - for_zaak
                 - review_type
