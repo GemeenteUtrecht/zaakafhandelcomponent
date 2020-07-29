@@ -13,7 +13,6 @@ const kownslTypes = {
 
 const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
-    console.log("reviewRequest=", reviewRequest);
 
     return (
         <Modal isOpen={isOpen}>

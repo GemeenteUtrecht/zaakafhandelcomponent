@@ -1,4 +1,6 @@
 import React from "react";
+import moment from "moment";
+
 import {getAuthorName} from "./utils";
 
 
@@ -6,7 +8,7 @@ const ApprovalRow = ({approval}) =>
     <tr>
         <td>{approval.approved ? 'Approved' : 'Not approved'}</td>
         <td>{getAuthorName(approval.author)}</td>
-        <td>{approval.created}</td>
+        <td>{moment(approval.created).fromNow()}</td>
     </tr>
 ;
 

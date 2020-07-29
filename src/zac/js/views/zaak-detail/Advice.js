@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 
 import {getAuthorName} from "./utils";
 
@@ -7,7 +8,7 @@ const AdviceRow = ({ advice }) =>
     <tr>
         <td>{advice.advice}</td>
         <td>{getAuthorName(advice.author)}</td>
-        <td>{advice.created}</td>
+        <td>{moment(advice.created).fromNow()}</td>
         <td>{advice.documents.length}</td>
     </tr>
 ;
@@ -38,7 +39,6 @@ const AdviceTable = ({ advices }) => {
                         {rows}
                     </tbody>
                 </table>
-
             }
         </section>
     );
