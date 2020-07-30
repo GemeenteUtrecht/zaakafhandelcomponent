@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import moment from "moment";
 import 'moment/locale/nl.js';
 
@@ -14,6 +15,10 @@ const ApprovalRow = ({approval}) =>
         <td>{moment(approval.created).fromNow()}</td>
     </tr>
 ;
+
+ApprovalRow.propTypes = {
+    approval: PropTypes.object.isRequired,
+};
 
 
 const ApprovalTable = ({ approvals }) => {
@@ -43,6 +48,10 @@ const ApprovalTable = ({ approvals }) => {
             }
         </section>
     );
+};
+
+ApprovalTable.propTypes = {
+    approvals: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
 };
 
 

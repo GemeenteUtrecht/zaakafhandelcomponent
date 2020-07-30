@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import PropTypes from 'prop-types';
 import fileSize from "filesize";
 import moment from "moment";
 import 'moment/locale/nl.js';
@@ -50,6 +51,10 @@ const AdviceDocumentRow = ({document}) => {
     )
 };
 
+AdviceDocumentRow.propTypes = {
+    document: PropTypes.object.isRequired,
+};
+
 
 const AdviceDocumentsTable = ({ documents }) => {
     const rows = documents.map((document, index) =>
@@ -71,6 +76,10 @@ const AdviceDocumentsTable = ({ documents }) => {
     );
 };
 
+AdviceDocumentsTable.propTypes = {
+    documents: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
 
 const AdviceRow = ({ advice }) => {
     return (
@@ -90,6 +99,9 @@ const AdviceRow = ({ advice }) => {
             : null }
         </>
     );
+};
+AdviceRow.propTypes = {
+    advice: PropTypes.object.isRequired,
 };
 
 
@@ -121,6 +133,10 @@ const AdviceTable = ({ advices }) => {
             }
         </section>
     );
+};
+
+AdviceTable.propTypes = {
+    advices: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 

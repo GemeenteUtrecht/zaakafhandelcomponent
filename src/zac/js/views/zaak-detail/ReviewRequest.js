@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from 'react-modal';
+import PropTypes from 'prop-types';
 
 import {AdviceTable} from "./Advice";
 import {ApprovalTable} from "./Approval";
@@ -32,6 +33,12 @@ const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     );
 };
 
+ReviewRequestModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    setIsOpen: PropTypes.func.isRequired,
+    reviewRequest: PropTypes.object.isRequired,
+};
+
 
 const ReviewRequestRow = ({ reviewRequest }) => {
     const numReviews = reviewRequest.review_type === 'advice' ? reviewRequest.num_advices : reviewRequest.num_approvals;
@@ -54,6 +61,10 @@ const ReviewRequestRow = ({ reviewRequest }) => {
     );
 };
 
+ReviewRequestRow.propTypes = {
+    reviewRequest: PropTypes.object.isRequired,
+};
+
 
 const ReviewRequestTable = ({ reviewRequests }) => {
     const rows = reviewRequests.map( (reviewRequest) =>
@@ -74,5 +85,10 @@ const ReviewRequestTable = ({ reviewRequests }) => {
         </table>
     );
 };
+
+ReviewRequestTable.propTypes = {
+    reviewRequests: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
 
 export { ReviewRequestTable };
