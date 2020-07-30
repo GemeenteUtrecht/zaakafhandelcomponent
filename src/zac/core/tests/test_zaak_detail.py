@@ -340,15 +340,6 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-        table_of_approval_results = [
-            "Not approved",
-            "test_reviewer",
-            "1 dag ago",
-        ]
-
-        for item in table_of_approval_results:
-            self.assertIn(item, response.html.text)
-
 
 class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
     def setUp(self):
