@@ -107,7 +107,9 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                 rr.approvals = rr_approvals
 
         advices = list(chain(*[rr.advices for rr in review_requests if rr.advices]))
-        approvals = list(chain(*[rr.approvals for rr in review_requests if rr.approvals]))
+        approvals = list(
+            chain(*[rr.approvals for rr in review_requests if rr.approvals])
+        )
 
         # get the advice versions - the minimal versions are needed
         # for the documents table

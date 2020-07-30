@@ -1,20 +1,95 @@
-import React from "react";
+import React, { useContext } from "react";
 import moment from "moment";
 import 'moment/locale/nl.js';
 
 import {getAuthorName} from "./utils";
+import {DownloadUrlContext} from "./context";
 
 moment.locale('nl');
 
 
-const AdviceRow = ({ advice }) =>
-    <tr>
-        <td>{advice.advice}</td>
-        <td>{getAuthorName(advice.author)}</td>
-        <td>{moment(advice.created).fromNow()}</td>
-        <td>{advice.documents.length}</td>
-    </tr>
-;
+const getDownloadUrl = (template, doc) => {
+    let url = template;
+    for (const attr of ['bronorganisatie', 'identificatie', 'versie']) {
+        url = url.replace(`_${attr}_`, doc[attr]);
+    }
+    return url;
+};
+
+
+const AdviceDocumentRow = ({document}) => {
+    const source = document.source;
+    const advice = document.advice;
+    const downloadUrlTemlate = useContext(DownloadUrlContext);
+
+    return (
+        <tr>
+            <td>
+                <strong>{source.titel}</strong>:&nbsp;
+                <span className="table__id-column">
+                    <a
+                        href={getDownloadUrl(downloadUrlTemlate, source)}
+                        target="_blank" rel="nofollow noopener">
+                        { source.bestandsnaam ? source.bestandsnaam : source.identificatie }
+                    </a>
+                </span>
+                {`(versie ${source.versie} — ${source.bestandsomvang})`}
+            </td>
+            <td>
+            <span className="table__id-column">
+                <a
+                    href={getDownloadUrl(downloadUrlTemlate, advice)}
+                    target="_blank" rel="nofollow noopener">
+                    { advice.bestandsnaam ? advice.bestandsnaam : advice.identificatie }
+                </a>
+            </span>
+                {`(versie ${advice.versie} — ${advice.bestandsomvang})`}
+            </td>
+        </tr>
+    )
+};
+
+
+const AdviceDocumentsTable = ({ documents }) => {
+    const rows = documents.map((document, index) =>
+        <AdviceDocumentRow key={index} document={document}/>
+    );
+
+    return (
+        <table className="table">
+            <thead>
+            <tr>
+                <td className="table__subheader">Brondocument</td>
+                <td className="table__subheader">Aantekeningen/bijgewerkte versie</td>
+            </tr>
+            </thead>
+            <tbody>
+                {rows}
+            </tbody>
+        </table>
+    );
+};
+
+
+const AdviceRow = ({ advice }) => {
+    return (
+        <>
+            <tr>
+                <td>{advice.advice}</td>
+                <td>{getAuthorName(advice.author)}</td>
+                <td>{moment(advice.created).fromNow()}</td>
+                <td>{advice.documents.length}</td>
+            </tr>
+            {advice.documents ?
+                <tr>
+                    <td colSpan="5" className="table__nested-table">
+                        <AdviceDocumentsTable documents={advice.documents}/>
+                    </td>
+                </tr>
+            : null }
+        </>
+    );
+};
 
 
 const AdviceTable = ({ advices }) => {

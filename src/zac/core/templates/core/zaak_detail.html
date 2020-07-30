@@ -201,7 +201,10 @@
         <div class="section-title">Adviseren en accorderen</div>
 
         {{ review_requests_json|json_script:"reviewRequests" }}
-        <div id="review-requests-react"> {# React managed #} </div>
+        <div
+            id="review-requests-react"
+            data-download-url="{% url 'core:download-document' '_bronorganisatie_' '_identificatie_'%}?versie=_versie_"
+        > {# React managed #} </div>
     </section>
 
     {% if related_zaken %}
