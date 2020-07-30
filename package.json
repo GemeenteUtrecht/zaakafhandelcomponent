@@ -33,6 +33,7 @@
     "css-byebye": "^2.0.2",
     "cssnano": "^4.1.10",
     "eyeglass": "^2.5.0",
+    "filesize": "^6.1.0",
     "gulp": "latest",
     "gulp-file": "latest",
     "gulp-hub": "latest",
