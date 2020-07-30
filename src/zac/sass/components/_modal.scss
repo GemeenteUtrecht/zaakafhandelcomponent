@@ -13,7 +13,6 @@ $content-panel-border-color: #ddd !default;
   overflow: auto;
   outline: none;
   padding: 20px;
-  z-index: 300;
 
   @include element("close") {
     float: right;

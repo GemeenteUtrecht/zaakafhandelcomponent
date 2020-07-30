@@ -11,11 +11,16 @@ const kownslTypes = {
 };
 
 
+const modalStyles = {
+  overlay : {zIndex: '100'}
+};
+
+
 const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
 
     return (
-        <Modal isOpen={isOpen} className="modal">
+        <Modal isOpen={isOpen} className="modal" style={modalStyles}>
             <button onClick={closeModal} className="modal__close btn">&times;</button>
             <h1 className="page-title">{`Review request for ${reviewRequest.review_type}`}</h1>
 
