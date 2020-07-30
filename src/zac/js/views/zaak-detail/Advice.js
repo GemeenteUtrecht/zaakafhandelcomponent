@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import fileSize from "filesize";
 import moment from "moment";
 import 'moment/locale/nl.js';
 
@@ -33,7 +34,7 @@ const AdviceDocumentRow = ({document}) => {
                         { source.bestandsnaam ? source.bestandsnaam : source.identificatie }
                     </a>
                 </span>
-                {`(versie ${source.versie} — ${source.bestandsomvang})`}
+                {`(versie ${source.versie} — ${fileSize(source.bestandsomvang)})`}
             </td>
             <td>
             <span className="table__id-column">
@@ -43,7 +44,7 @@ const AdviceDocumentRow = ({document}) => {
                     { advice.bestandsnaam ? advice.bestandsnaam : advice.identificatie }
                 </a>
             </span>
-                {`(versie ${advice.versie} — ${advice.bestandsomvang})`}
+                {`(versie ${advice.versie} — ${fileSize(advice.bestandsomvang)})`}
             </td>
         </tr>
     )
