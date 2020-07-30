@@ -19,6 +19,12 @@ const getDownloadUrl = (template, doc) => {
 };
 
 
+/**
+ * A table row, containing information about document advice and displaying links
+ * to download document versions
+ * @param   {Object}    document   An object with a single document advice
+ * @return  {JSX}
+ */
 const AdviceDocumentRow = ({document}) => {
     const source = document.source;
     const advice = document.advice;
@@ -56,6 +62,11 @@ AdviceDocumentRow.propTypes = {
 };
 
 
+/**
+ * A table displaying document advices of a single advice
+ * @param   {Array}  documents A list of the document advice objects
+ * @return  {JSX}
+ */
 const AdviceDocumentsTable = ({ documents }) => {
     const rows = documents.map((document, index) =>
         <AdviceDocumentRow key={index} document={document}/>
@@ -81,6 +92,11 @@ AdviceDocumentsTable.propTypes = {
 };
 
 
+/**
+ * A table row, containing information about single advice
+ * @param   {Object}    advice   An object with a single advice data
+ * @return  {JSX}
+ */
 const AdviceRow = ({ advice }) => {
     return (
         <>
@@ -105,6 +121,11 @@ AdviceRow.propTypes = {
 };
 
 
+/**
+ * A table displaying advices of a single review request
+ * @param   {Array}  advices A list of the advice objects
+ * @return  {JSX}
+ */
 const AdviceTable = ({ advices }) => {
     const rows = advices.map((advice, index) =>
         <AdviceRow key={index} advice={advice}/>

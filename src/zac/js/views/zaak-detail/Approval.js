@@ -8,6 +8,11 @@ import {getAuthorName} from "./utils";
 moment.locale('nl');
 
 
+/**
+ * A table row, containing information about single approval
+ * @param   {Object}    approval   An object with a single approval data
+ * @return  {JSX}
+ */
 const ApprovalRow = ({approval}) =>
     <tr>
         <td>{approval.approved ? 'Approved' : 'Not approved'}</td>
@@ -21,6 +26,11 @@ ApprovalRow.propTypes = {
 };
 
 
+/**
+ * A table displaying approvals of a single review request
+ * @param   {Array}  approvals A list of the approval objects
+ * @return  {JSX}
+ */
 const ApprovalTable = ({ approvals }) => {
     const rows = approvals.map((approval, index) =>
         <ApprovalRow key={index} approval={approval}/>

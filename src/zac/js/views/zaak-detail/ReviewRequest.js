@@ -17,6 +17,10 @@ const modalStyles = {
 };
 
 
+/**
+ * A modal window, containing information about advices or approvals of the selected review request
+ * @return  {JSX}
+ */
 const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
 
@@ -40,6 +44,11 @@ ReviewRequestModal.propTypes = {
 };
 
 
+/**
+ * A table row, containing information about single review request and allowing the display of modal on click
+ * @param   {Object}    reviewRequest   An object with a single review request data
+ * @return  {JSX}
+ */
 const ReviewRequestRow = ({ reviewRequest }) => {
     const numReviews = reviewRequest.review_type === 'advice' ? reviewRequest.num_advices : reviewRequest.num_approvals;
     // modal
@@ -66,6 +75,11 @@ ReviewRequestRow.propTypes = {
 };
 
 
+/**
+ * A review request table allowing the display of related advices and approvals in the modal
+ * @param   {Array}  reviewRequests A list of the review requests objects
+ * @return  {JSX}
+ */
 const ReviewRequestTable = ({ reviewRequests }) => {
     const rows = reviewRequests.map( (reviewRequest) =>
         <ReviewRequestRow reviewRequest={reviewRequest} key={reviewRequest.id}/>
