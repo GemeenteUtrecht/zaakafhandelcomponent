@@ -15,11 +15,14 @@ const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
 
     return (
-        <Modal isOpen={isOpen}>
+        <Modal isOpen={isOpen} className="modal">
             <button onClick={closeModal} className="modal__close btn">&times;</button>
+            <h1 className="page-title">{`Review request for ${reviewRequest.review_type}`}</h1>
 
-            <AdviceTable advices={reviewRequest.advices}/>
-            <ApprovalTable approvals={reviewRequest.approvals}/>
+            {reviewRequest.review_type === 'advice'
+                ? <AdviceTable advices={reviewRequest.advices}/>
+                : <ApprovalTable approvals={reviewRequest.approvals}/>
+            }
         </Modal>
     );
 };
@@ -33,7 +36,7 @@ const ReviewRequestRow = ({ reviewRequest }) => {
 
     return (
         <>
-            <tr onClick={openModal}>
+            <tr onClick={openModal} className="table__column table__column--clickable">
                 <td>{kownslTypes[reviewRequest.review_type]}</td>
                 <td>{`${numReviews} / ${reviewRequest.num_assigned_users}`}</td>
             </tr>

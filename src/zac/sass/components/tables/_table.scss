@@ -38,6 +38,9 @@ $table-head-border-color: $color-secondary !default;
     @include modifier('hidden') {
       display: none;
     }
+    @include modifier('clickable') {
+      cursor: pointer;
+    }
   }
 
   @include element('nested-table') {
