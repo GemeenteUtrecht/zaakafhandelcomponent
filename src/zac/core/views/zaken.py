@@ -1,4 +1,4 @@
-from itertools import groupby
+from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
 from django.urls import reverse
@@ -15,7 +15,8 @@ from zac.contrib.kownsl.api import (
     retrieve_advices,
     retrieve_approvals,
 )
-from zac.contrib.kownsl.data import Advice
+from zac.contrib.kownsl.data import Advice, ReviewRequest
+from zac.utils.api_models import convert_model_to_json
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -99,21 +100,19 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             related_zaken = _related_zaken.result()
 
-            _advices = list(_advices)
-            _approvals = list(_approvals)
-            advices = [result[0] for result in _advices if result]
-            approvals = [result[0] for result in _approvals if result]
             for rr, rr_advices, rr_approvals in zip(
                 review_requests, _advices, _approvals
             ):
                 rr.advices = rr_advices
                 rr.approvals = rr_approvals
-                rr._data["advices"] = [advice._data for advice in rr_advices]
-                rr._data["approvals"] = [approval._data for approval in rr_approvals]
+
+        advices = list(chain(*[rr.advices for rr in review_requests if rr.advices]))
+        approvals = list(chain(*[rr.approvals for rr in review_requests if rr.approvals]))
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
         doc_versions = self.get_source_doc_versions(advices)
+        self._set_advice_documents(advices)
 
         with parallel() as executor:
             statussen = executor.submit(get_statussen, self.object)
@@ -124,6 +123,8 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             resultaat = executor.submit(get_resultaat, self.object)
 
             documenten, gone = _documenten.result()
+
+            review_requests_json = convert_model_to_json(review_requests)
 
             context.update(
                 {
@@ -137,10 +138,9 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "advice_collection": advices,
                     "approval_collection": approvals,
                     "review_requests": review_requests,
-                    "review_requests_json": [rr._data for rr in review_requests],
+                    "review_requests_json": review_requests_json,
                 }
             )
-        self._set_advice_documents(advices)
         return context
 
     @staticmethod
