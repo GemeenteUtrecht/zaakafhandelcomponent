@@ -7,6 +7,7 @@ if (argv.production) {
     isProduction = true;
 }
 
+const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 /**
  * Webpack configuration
  * Run using "webpack" or "gulp js"
@@ -47,4 +48,11 @@ module.exports = {
 
     // Use --sourcemap to generate sourcemap.
     devtool: argv.sourcemap ? 'sourcemap' : false,
-}
+
+    // Set which locales to keep for momentjs
+    plugins: [
+        new MomentLocalesPlugin({
+            localesToKeep: ['nl'],
+        }),
+    ]
+};

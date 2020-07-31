@@ -200,24 +200,11 @@
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Adviseren en accorderen</div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="table__header">Type</th>
-                    <th class="table__header"># Opgehaald</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for review_request in review_requests %}
-                    <tr>
-                        <td>{{ review_request.get_review_type_display }}</td>
-                        <td>
-                            {% firstof review_request.num_advices review_request.num_approvals '0' %}/{{ review_request.num_assigned_users }}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {{ review_requests_json|json_script:"reviewRequests" }}
+        <div
+            id="review-requests-react"
+            data-download-url="{% url 'core:download-document' '_bronorganisatie_' '_identificatie_'%}?versie=_versie_"
+        > {# React managed #} </div>
     </section>
 
     {% if related_zaken %}
@@ -305,20 +292,6 @@
             </tbody>
         </table>
 
-    </section>
-    {% endif %}
-
-    {% if advice_collection %}
-    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
-        <div class="section-title">Adviezen</div>
-        {% include "advices/includes/advice_table.html" with advices=advice_collection only %}
-    </section>
-    {% endif %}
-
-    {% if approval_collection %}
-    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
-        <div class="section-title">{% blocktrans %}Approvals{% endblocktrans %}</div>
-        {% include "advices/includes/approval_table.html" with approvals=approval_collection only %}
     </section>
     {% endif %}
 

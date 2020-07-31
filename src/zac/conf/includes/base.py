@@ -123,8 +123,6 @@ INSTALLED_APPS = [
     "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
-    # FIXME: should be moved to it's own API
-    "zac.advices",
 ]
 
 MIDDLEWARE = [

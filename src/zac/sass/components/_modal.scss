@@ -1,0 +1,21 @@
+@import "../lib/bem";
+
+$content-panel-border-color: #ddd !default;
+
+.modal {
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  right: 15%;
+  border: 1px solid $content-panel-border-color;
+  box-shadow: 1px 1px 2px 0 rgba(black, 0.2);
+  background: rgb(255, 255, 255);
+  overflow: auto;
+  outline: none;
+  padding: 20px;
+
+  @include element("close") {
+    float: right;
+    padding: 0.25em  0.5em;
+  }
+}

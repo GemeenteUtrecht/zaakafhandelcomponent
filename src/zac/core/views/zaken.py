@@ -1,4 +1,4 @@
-from itertools import groupby
+from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
 from django.urls import reverse
@@ -15,7 +15,8 @@ from zac.contrib.kownsl.api import (
     retrieve_advices,
     retrieve_approvals,
 )
-from zac.contrib.kownsl.data import Advice
+from zac.contrib.kownsl.data import Advice, ReviewRequest
+from zac.utils.api_models import convert_model_to_json
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -89,21 +90,26 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             review_requests = _review_requests.result()
 
             _advices = executor.map(
-                retrieve_advices,
-                list(filter(lambda x: x.num_advices, review_requests)),
+                lambda rr: retrieve_advices(rr) if rr else [],
+                [rr if rr.num_advices else None for rr in review_requests],
             )
             _approvals = executor.map(
-                retrieve_approvals,
-                list(filter(lambda x: x.num_approvals, review_requests)),
+                lambda rr: retrieve_approvals(rr) if rr else [],
+                [rr if rr.num_approvals else None for rr in review_requests],
             )
 
             related_zaken = _related_zaken.result()
-            advices = [result[0] for result in _advices]
-            approvals = [result[0] for result in _approvals]
+
+            for rr, rr_advices, rr_approvals in zip(
+                review_requests, _advices, _approvals
+            ):
+                rr.advices = rr_advices
+                rr.approvals = rr_approvals
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
-        doc_versions = self.get_source_doc_versions(advices)
+        doc_versions = self.get_source_doc_versions(review_requests)
+        self._set_advice_documents(review_requests)
 
         with parallel() as executor:
             statussen = executor.submit(get_statussen, self.object)
@@ -115,6 +121,8 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             documenten, gone = _documenten.result()
 
+            review_requests_json = convert_model_to_json(review_requests)
+
             context.update(
                 {
                     "statussen": statussen.result(),
@@ -124,16 +132,16 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "resultaat": resultaat.result(),
                     "related_zaken": related_zaken,
                     "rollen": rollen.result(),
-                    "advice_collection": advices,
-                    "approval_collection": approvals,
-                    "review_requests": review_requests,
+                    "review_requests_json": review_requests_json,
                 }
             )
-        self._set_advice_documents(advices)
         return context
 
     @staticmethod
-    def get_source_doc_versions(advices: List[Advice]) -> Optional[Dict[str, int]]:
+    def get_source_doc_versions(
+        review_requests: List[ReviewRequest],
+    ) -> Optional[Dict[str, int]]:
+        advices = list(chain(*[rr.advices for rr in review_requests if rr.advices]))
         all_documents = sum((advice.documents for advice in advices), [])
         sort_key = lambda ad: ad.document  # noqa
         all_documents = sorted(all_documents, key=sort_key)
@@ -144,18 +152,19 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
         return doc_versions
 
     @staticmethod
-    def _set_advice_documents(advices: List[Advice]):
+    def _set_advice_documents(review_requests: List[ReviewRequest]):
         _document_versions = set()
 
-        for advice in advices:
-            for document_advice in advice.documents:
-                source_version = furl(document_advice.document)
-                source_version.args["versie"] = document_advice.source_version
-                _document_versions.add(source_version.url)
+        for review_request in review_requests:
+            for advice in review_request.advices:
+                for document_advice in advice.documents:
+                    source_version = furl(document_advice.document)
+                    source_version.args["versie"] = document_advice.source_version
+                    _document_versions.add(source_version.url)
 
-                advice_version = furl(document_advice.document)
-                advice_version.args["versie"] = document_advice.advice_version
-                _document_versions.add(advice_version.url)
+                    advice_version = furl(document_advice.document)
+                    advice_version.args["versie"] = document_advice.advice_version
+                    _document_versions.add(advice_version.url)
 
         document_versions = list(_document_versions)
 
@@ -166,22 +175,23 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             (document.url, document.versie): document for document in results
         }
 
-        for advice in advices:
-            _docs = []
-            for document_advice in advice.documents:
-                source_key, advice_key = (
-                    (document_advice.document, document_advice.source_version),
-                    (document_advice.document, document_advice.advice_version),
-                )
+        for review_request in review_requests:
+            for advice in review_request.advices:
+                _docs = []
+                for document_advice in advice.documents:
+                    source_key, advice_key = (
+                        (document_advice.document, document_advice.source_version),
+                        (document_advice.document, document_advice.advice_version),
+                    )
 
-                _docs.append(
-                    {
-                        "source": versioned_documents[source_key],
-                        "advice": versioned_documents[advice_key],
-                    }
-                )
+                    _docs.append(
+                        {
+                            "source": versioned_documents[source_key],
+                            "advice": versioned_documents[advice_key],
+                        }
+                    )
 
-            advice.documents = _docs
+                advice.documents = _docs
 
 
 class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):
