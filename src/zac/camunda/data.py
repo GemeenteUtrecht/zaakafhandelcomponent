@@ -12,3 +12,4 @@ class ProcessInstance(Model):
     sub_processes: list = field(default_factory=list)
     parent_process: str = None
     zaak_url: str = None
+    messages: list = field(default_factory=list)

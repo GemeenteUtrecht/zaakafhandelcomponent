@@ -25,6 +25,13 @@ class DefinitionMessages:
         return MessageForm(initial=initial, *args, **kwargs)
 
 
+def get_messages(definition_id: str) -> list:
+    tree = get_bpmn(definition_id)
+    messages = tree.findall(".//bpmn:message", CAMUNDA_NS)
+
+    return [message.attrib["name"] for message in messages]
+
+
 def get_process_definition_messages(zaak_url: str) -> List[DefinitionMessages]:
     """
     Extract the possible messages that can be sent into the process.
@@ -45,8 +52,6 @@ def get_process_definition_messages(zaak_url: str) -> List[DefinitionMessages]:
     ]
 
     for definition in defs:
-        tree = get_bpmn(definition.id)
-        messages = tree.findall(".//bpmn:message", CAMUNDA_NS)
-        definition.message_names = [message.attrib["name"] for message in messages]
+        definition.message_names = get_messages(definition.id)
 
     return [definition for definition in defs if definition.message_names]

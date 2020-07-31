@@ -10,3 +10,6 @@ class ProcessInstanceSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     definition_id = serializers.CharField(max_length=1000)
     sub_processes = RecursiveField(many=True)
+    messages = serializers.ListField(
+        child=serializers.CharField(max_length=100), allow_empty=True
+    )

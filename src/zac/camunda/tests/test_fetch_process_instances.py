@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
 
@@ -13,6 +15,10 @@ CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 
 
+@patch(
+    "zac.camunda.processes.get_messages",
+    return_value=["Annuleer behandeling", "Advies vragen"],
+)
 @requests_mock.Mocker()
 class ProcessInstanceTests(TestCase):
     @classmethod
@@ -62,8 +68,8 @@ class ProcessInstanceTests(TestCase):
             json=[],
         )
 
-    def test_fetch_process_instances(self, m):
-        self._setUpMock(m)
+    def test_fetch_process_instances(self, m_messages, m_request):
+        self._setUpMock(m_request)
 
         url = reverse("camunda:fetch-process-instances")
 
@@ -79,14 +85,17 @@ class ProcessInstanceTests(TestCase):
                 {
                     "id": self.data[0]["id"],
                     "definition_id": self.data[0]["definitionId"],
+                    "messages": ["Annuleer behandeling", "Advies vragen"],
                     "sub_processes": [
                         {
                             "id": self.data[1]["id"],
                             "definition_id": self.data[1]["definitionId"],
+                            "messages": [],
                             "sub_processes": [
                                 {
                                     "id": self.data[2]["id"],
                                     "definition_id": self.data[2]["definitionId"],
+                                    "messages": [],
                                     "sub_processes": [],
                                 }
                             ],

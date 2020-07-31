@@ -4,6 +4,7 @@ from django_camunda.client import get_client
 from zgw_consumers.api_models.base import factory
 
 from .data import ProcessInstance
+from .messages import get_messages
 
 
 def add_subprocesses(process_instance, process_instances, client):
@@ -47,4 +48,12 @@ def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
     top_level_processes = list(
         filter(lambda x: not x.parent_process, process_instances.values())
     )
+    #  add messages for top level processes
+    definition_ids = {p.definition_id for p in top_level_processes}
+    def_messages = {
+        definition_id: get_messages(definition_id) for definition_id in definition_ids
+    }
+    for process in top_level_processes:
+        process.messages = def_messages[process.definition_id]
+
     return top_level_processes
