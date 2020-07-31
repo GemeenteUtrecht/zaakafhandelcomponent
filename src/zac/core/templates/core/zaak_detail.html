@@ -173,7 +173,7 @@
 
     </section>
 
-    <section class="zaak-detail__panel content-panel">
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         {% if can_send_bpmn_messages or can_do_usertasks %}
             <div class="section-title">Processen</div>
 
@@ -182,6 +182,8 @@
                  data-can-send-bpmn-messages="{{ can_send_bpmn_messages|yesno:'true,false' }}"
                  data-can-do-usertasks="{{ can_do_usertasks|yesno:'true,false' }}"
                  data-endpoint="#TODO"
+                 data-send-message-url="{% url 'core:send-message' %}"
+                 data-csrftoken="{{ csrf_token }}"
                 >
                     <!-- React managed -->
                     <span class="loader"></span>
