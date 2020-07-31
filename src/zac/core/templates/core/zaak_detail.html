@@ -174,22 +174,18 @@
     </section>
 
     <section class="zaak-detail__panel content-panel">
-        {% if pmn_messages or can_do_usertasks %}
-            <div class="section-title">Proces</div>
+        {% if can_send_bpmn_messages or can_do_usertasks %}
+            <div class="section-title">Processen</div>
 
-            {% if can_send_bpmn_messages %}
-            <div class="fetch-messages" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-messages' %}">
-                {# include template is in core/includes/messages.html #}
-                <span class="loader"></span>
+            <div class="process-interaction"
+                 data-zaak="{{ zaak.url }}"
+                 data-can-send-bpmn-messages="{{ can_send_bpmn_messages|yesno:'true,false' }}"
+                 data-can-do-usertasks="{{ can_do_usertasks|yesno:'true,false' }}"
+                 data-endpoint="#TODO"
+                >
+                    <!-- React managed -->
+                    <span class="loader"></span>
             </div>
-            {% endif %}
-
-            {% if can_do_usertasks %}
-            <div class="fetch-tasks" data-for-zaak="{{ zaak.url }}" data-url="{% url 'core:fetch-tasks' %}">
-                {# include template is in core/includes/tasks.html #}
-                <span class="loader"></span>
-            </div>
-            {% endif %}
         {% else %}
             <p class="permission-check permission-check--failed">
                 Je hebt onvoldoende rechten op processturing.
