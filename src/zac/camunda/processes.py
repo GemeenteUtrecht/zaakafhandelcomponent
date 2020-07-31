@@ -1,19 +1,9 @@
-from dataclasses import dataclass, field
 from typing import List
 
 from django_camunda.client import get_client
-from django_camunda.types import CamundaId
-from zgw_consumers.api_models.base import Model, factory
+from zgw_consumers.api_models.base import factory
 
-
-@dataclass
-class ProcessInstance(Model):
-    id: CamundaId
-    definition_id: str
-
-    sub_processes: list = field(default_factory=list)
-    parent_process: str = None
-    zaak_url: str = None
+from .data import ProcessInstance
 
 
 def add_subprocesses(process_instance, process_instances, client):
