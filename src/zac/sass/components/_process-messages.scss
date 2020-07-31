@@ -1,0 +1,19 @@
+@import "../lib/bem";
+
+.process-messages {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  padding-bottom: 0.5em;
+  border-bottom: dashed 1px #eee;
+
+  @include element("intro") {
+    margin-right: 1em;
+  }
+
+  @include element("form") {
+    margin-right: 1em;
+  }
+
+}

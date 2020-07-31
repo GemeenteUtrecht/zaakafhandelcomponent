@@ -10,7 +10,7 @@ const MessageForm = ({ name }) => {
     const messageContext = useContext(MessageContext);
 
     return (
-        <form action={messageContext.sendMessageUrl} method="post">
+        <form action={messageContext.sendMessageUrl} method="post" className="form process-messages__form">
             <CsrfInput />
             <input type="hidden" name="process_instance_id" defaultValue={messageContext.processInstanceId} />
             <button
