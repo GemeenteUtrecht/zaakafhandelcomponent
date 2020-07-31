@@ -1,12 +1,8 @@
 import React from "react";
 import PropTypes from 'prop-types';
-import moment from "moment";
-import 'moment/locale/nl.js';
 
+import { timeSince } from '../../utils/time-since';
 import {getAuthorName} from "./utils";
-
-moment.locale('nl');
-
 
 /**
  * A table row, containing information about single approval
@@ -17,7 +13,7 @@ const ApprovalRow = ({approval}) =>
     <tr>
         <td>{approval.approved ? 'Approved' : 'Not approved'}</td>
         <td>{getAuthorName(approval.author)}</td>
-        <td>{moment(approval.created).fromNow()}</td>
+        <td>{timeSince(approval.created)}</td>
     </tr>
 ;
 

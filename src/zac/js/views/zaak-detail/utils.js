@@ -1,6 +1,7 @@
-const getAuthorName = (author) => {
-    return author.last_name ? `${author.first_name} ${author.last_name}` : author.username;
+const getAuthorName = (user) => {
+    const lastName = user.last_name ?? user.lastName;
+    const firstName = user.first_name ?? user.firstName;
+    return lastName ? `${firstName} ${lastName}` : author.username;
 };
-
 
 export { getAuthorName };

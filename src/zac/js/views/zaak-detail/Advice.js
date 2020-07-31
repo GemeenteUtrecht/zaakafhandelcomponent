@@ -1,13 +1,10 @@
 import React, { useContext } from "react";
 import PropTypes from 'prop-types';
 import fileSize from "filesize";
-import moment from "moment";
-import 'moment/locale/nl.js';
 
+import { timeSince } from '../../utils/time-since';
 import {getAuthorName} from "./utils";
 import {DownloadUrlContext} from "./context";
-
-moment.locale('nl');
 
 
 const getDownloadUrl = (template, doc) => {
@@ -103,7 +100,7 @@ const AdviceRow = ({ advice }) => {
             <tr>
                 <td>{advice.advice}</td>
                 <td>{getAuthorName(advice.author)}</td>
-                <td>{moment(advice.created).fromNow()}</td>
+                <td>{timeSince(advice.created)}</td>
                 <td>{advice.documents.length}</td>
             </tr>
             {advice.documents ?

@@ -6,4 +6,12 @@ const MessageContext = React.createContext({
     hasPermission: false,
 });
 
-export { MessageContext };
+
+const CurrentUserContext = React.createContext({
+    id: null,
+    username: '',
+    firstName: '',
+    lastName: '',
+});
+
+export { MessageContext, CurrentUserContext };
