@@ -24,7 +24,7 @@
 
         {% for adres in pand.adressen %}
             <address class="bag-object__adres">
-                {{ adres.or_naam }} {{ adres.huisnummer|unlocalize }}{{ adres.huisletter }}
+                {{ adres.or_naam }} {{ adres.huisnummer|unlocalize }}{{ adres.huisletter|default:'' }}
                 <br>
                 {{ adres.postcode|default:'geen postcode' }}
                 <br>

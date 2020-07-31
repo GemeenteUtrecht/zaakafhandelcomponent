@@ -18,7 +18,7 @@
     <section class="bag-object__adressen">
         <div class="section-title">Adres</div>
         <address class="bag-object__adres">
-            {{ vo.adres.or_naam }} {{ vo.adres.huisnummer|unlocalize }}{{ vo.adres.huisletter }}
+            {{ vo.adres.or_naam }} {{ vo.adres.huisnummer|unlocalize }}{{ vo.adres.huisletter|default:'' }}
             <br>
             {{ vo.adres.postcode|default:'geen postcode' }}
             <br>
