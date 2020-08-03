@@ -30,6 +30,7 @@ const init = () => {
             canDoUsertasks: node.dataset.canDoUsertasks === "true",
             canSendBpmnMessages: node.dataset.canSendBpmnMessages === "true",
             sendMessageUrl: node.dataset.sendMessageUrl,
+            claimTaskUrl: node.dataset.claimTaskUrl,
         };
 
         ReactDOM.render(

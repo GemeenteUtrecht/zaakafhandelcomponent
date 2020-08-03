@@ -183,6 +183,7 @@
                  data-can-do-usertasks="{{ can_do_usertasks|yesno:'true,false' }}"
                  {# TODO: correct URL #}
                  data-endpoint="{% url 'mock-data' %}?zaak_url={{ zaak.url }}"
+                 data-claim-task-url="{% url 'core:claim-task' %}"
                  data-send-message-url="{% url 'core:send-message' %}"
                  data-csrftoken="{{ csrf_token }}"
                 >

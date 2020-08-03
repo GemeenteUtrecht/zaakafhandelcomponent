@@ -5,7 +5,7 @@ import { useAsync } from 'react-use';
 
 import { apiCall } from '../../utils/fetch';
 import { TabList, TabContent } from '../Tabs';
-import { MessageContext } from './context';
+import { MessageContext, UserTaskContext } from './context';
 import { ProcessMessages } from './ProcessMessages';
 import { Assignee, UserTask } from './UserTasks';
 
@@ -101,7 +101,14 @@ UserTasksPanel.propTypes = {
 };
 
 
-const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=false, canSendBpmnMessages=false}) => {
+const ProcessInteraction = ({
+    zaak,
+    endpoint,
+    sendMessageUrl,
+    claimTaskUrl,
+    canDoUsertasks=false,
+    canSendBpmnMessages=false
+}) => {
 
     const state = useAsync(async () => {
         const response = await apiCall(endpoint);
@@ -134,15 +141,19 @@ const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=fals
                         { !canDoUsertasks ? null : (
                             <div className="user-tasks">
 
-                                <UserTasksPanel numChildren={processInstance.userTasks.length} title="Taken" modifier="primary">
-                                    <UserTaskList zaakUrl={zaak} userTasks={processInstance.userTasks} />
-                                </UserTasksPanel>
+                                <UserTaskContext.Provider value={{ claimTaskUrl }}>
 
-                                <UserTasksPanel numChildren={processInstance.subProcesses.length} title="Deeltaken" modifier="nested">
-                                    { processInstance.subProcesses.map( (subProcess) => (
-                                        <SubProcessUserTaskList key={subProcess.id} zaakUrl={zaak} processInstance={subProcess} />
-                                    ) ) }
-                                </UserTasksPanel>
+                                    <UserTasksPanel numChildren={processInstance.userTasks.length} title="Taken" modifier="primary">
+                                        <UserTaskList zaakUrl={zaak} userTasks={processInstance.userTasks} />
+                                    </UserTasksPanel>
+
+                                    <UserTasksPanel numChildren={processInstance.subProcesses.length} title="Deeltaken" modifier="nested">
+                                        { processInstance.subProcesses.map( (subProcess) => (
+                                            <SubProcessUserTaskList key={subProcess.id} zaakUrl={zaak} processInstance={subProcess} />
+                                        ) ) }
+                                    </UserTasksPanel>
+
+                                </UserTaskContext.Provider>
 
                             </div>
                         ) }
@@ -159,6 +170,7 @@ ProcessInteraction.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
     sendMessageUrl: PropTypes.string.isRequired,
+    claimTaskUrl: PropTypes.string.isRequired,
     canDoUsertasks: PropTypes.bool,
     canSendBpmnMessages: PropTypes.bool,
 };

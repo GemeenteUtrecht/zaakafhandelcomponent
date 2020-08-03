@@ -14,4 +14,8 @@ const CurrentUserContext = React.createContext({
     lastName: '',
 });
 
-export { MessageContext, CurrentUserContext };
+const UserTaskContext = React.createContext({
+    claimTaskUrl: '',
+});
+
+export { MessageContext, CurrentUserContext, UserTaskContext };

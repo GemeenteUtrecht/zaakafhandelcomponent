@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { timeSince, timeUntil } from '../../utils/time-since';
 import { CsrfInput } from '../forms/csrf';
-import { CurrentUserContext } from './context';
+import { CurrentUserContext, UserTaskContext } from './context';
 
 // TODO: move to general utils!
 import { getAuthorName } from '../../views/zaak-detail/utils';
@@ -47,6 +47,8 @@ TaskAssignee.propTypes = {
 
 
 const UserTaskForm = ({ zaakUrl, taskId, taskUrl, hasForm=false }) => {
+    const userTaskContext = useContext(UserTaskContext);
+
     let executeBtn = null;
     if (hasForm) {
         executeBtn = (
@@ -57,10 +59,9 @@ const UserTaskForm = ({ zaakUrl, taskId, taskUrl, hasForm=false }) => {
         );
     }
     return (
-        <form className="user-task__claim" method="post" action="#TODO">
+        <form className="user-task__claim" method="post" action={userTaskContext.claimTaskUrl}>
             <CsrfInput />
             <input type="hidden" name="task_id" value={taskId} />
-            <input type="hidden" name="zaak" value={zaakUrl} />
             <button
                 type="submit"
                 className="btn btn--small"
