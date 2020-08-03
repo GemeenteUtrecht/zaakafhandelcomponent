@@ -13,6 +13,7 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView, TemplateView
 
+import requests
 from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
@@ -20,16 +21,10 @@ from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import DummyForm, MessageForm
 from zac.camunda.messages import get_process_definition_messages
 
-from ..camunda import get_zaak_tasks
+from ..camunda import get_process_zaak_url, get_task, get_zaak_tasks
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
-from ..services import (
-    _client_from_url,
-    fetch_zaaktype,
-    find_zaak,
-    get_roltypen,
-    get_zaak,
-)
+from ..services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from ..task_handlers import HANDLERS
 from .utils import get_zaak_from_query
 
@@ -149,22 +144,18 @@ class FormSetMixin:
 
 class UserTaskMixin:
     def get_zaak(self):
-        zaak = find_zaak(
-            bronorganisatie=self.kwargs["bronorganisatie"],
-            identificatie=self.kwargs["identificatie"],
-        )
+        task = self._get_task()
+        zaak_url = get_process_zaak_url(task.process_instance_id)
+        zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)
         return zaak
 
     def _get_task(self):
         if not hasattr(self, "_task"):
-            tasks = get_zaak_tasks(self.zaak.url)
             try:
-                task = next(
-                    (_task for _task in tasks if _task.id == self.kwargs["task_id"])
-                )
-            except StopIteration as exc:
-                raise Http404("No such task for this zaak.") from exc
+                task = get_task(self.kwargs["task_id"])
+            except requests.RequestException as exc:
+                raise Http404("The task was not found") from exc
             self._task = task
         return self._task
 

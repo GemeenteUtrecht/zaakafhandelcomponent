@@ -32,19 +32,22 @@ urlpatterns = [
                     ZaakAfhandelView.as_view(),
                     name="zaak-afhandeling",
                 ),
-                path(
-                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/",
-                    RouteTaskView.as_view(),
-                    name="zaak-task",
-                ),
+            ]
+        ),
+    ),
+    path(
+        "user-tasks/",
+        include(
+            [
+                path("<uuid:task_id>/", RouteTaskView.as_view(), name="zaak-task",),
                 # task handlers
                 path(
-                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/perform/",
+                    "<uuid:task_id>/perform/",
                     PerformTaskView.as_view(),
                     name="perform-task",
                 ),
                 path(
-                    "<bronorganisatie>/<identificatie>/task/<uuid:task_id>/redirect/",
+                    "<uuid:task_id>/redirect/",
                     RedirectTaskView.as_view(),
                     name="redirect-task",
                 ),
