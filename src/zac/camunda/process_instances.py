@@ -1,22 +1,16 @@
-from dataclasses import dataclass
 from typing import Optional
 
 import requests
-from django_camunda.camunda_models import Model, factory
+from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 
+from zac.utils.decorators import cache
 
-@dataclass
-class ProcessInstance(Model):
-    id: str
-    definition_id: str
-    business_key: str
-    case_instance_id: str
-    suspended: bool
-    tenant_id: str
+from .data import ProcessInstance
 
 
+@cache("process-instance:{instance_id}", timeout=2)
 def get_process_instance(instance_id: CamundaId) -> Optional[ProcessInstance]:
     client = get_client()
     try:

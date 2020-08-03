@@ -19,7 +19,7 @@ from django_camunda.client import get_client
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import DummyForm, MessageForm
-from zac.camunda.messages import get_process_definition_messages
+from zac.camunda.messages import get_messages
 from zac.camunda.process_instances import get_process_instance
 
 from ..camunda import get_process_zaak_url, get_task, get_zaak_tasks
@@ -53,39 +53,21 @@ class SendMessage(PermissionRequiredMixin, FormView):
         if process_instance is None:
             return form
 
-        form.data["process_instance_id"]
-
-        import bpdb
-
-        bpdb.set_trace()
-
-        definitions = get_process_definition_messages(form.data["zaak_url"])
-        definition = next(
-            (
-                definition
-                for definition in definitions
-                if definition.id == form.data["definition_id"]
-            ),
-            None,
-        )
-
-        if definition is None:
-            return form  # the empty message names will fail validation
-
-        form.set_message_choices(definition.message_names)
-        form._instance_ids = definition.instance_ids
+        messages = get_messages(process_instance.definition_id)
+        form.set_message_choices(messages)
 
         return form
 
     def form_valid(self, form: MessageForm):
-        # build service variables to continue execution
-        zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
+        # check permissions
+        process_instance_id = form.cleaned_data["process_instance_id"]
+        process_instance = get_process_instance(process_instance_id)
 
-        import bpdb
-
-        bpdb.set_trace()
+        zaak_url = process_instance.get_variable("zaakUrl")
+        zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)
 
+        # build service variables to continue execution
         zrc_client = _client_from_url(zaak.url)
         ztc_client = _client_from_url(zaak.zaaktype)
 
@@ -96,7 +78,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
             "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
         }
 
-        send_message(form.cleaned_data["message"], form._instance_ids, variables)
+        send_message(form.cleaned_data["message"], [process_instance.id], variables)
 
         _next = self.request.META["HTTP_REFERER"]
         if is_safe_url(_next, [self.request.get_host()], settings.IS_HTTPS):

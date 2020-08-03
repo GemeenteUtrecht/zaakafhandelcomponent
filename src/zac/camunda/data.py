@@ -1,16 +1,21 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from django.urls import reverse
 
-from django_camunda.camunda_models import Task as _Task
+from django_camunda.api import get_process_instance_variable
+from django_camunda.camunda_models import Model, Task as _Task
 from django_camunda.types import CamundaId
-from zgw_consumers.api_models.base import Model
 
 
 @dataclass
 class ProcessInstance(Model):
     id: CamundaId
     definition_id: str
+    business_key: str
+    case_instance_id: str
+    suspended: bool
+    tenant_id: str
 
     definition: str = None
     sub_processes: list = field(default_factory=list)
@@ -26,3 +31,6 @@ class Task(_Task):
 
     def execute_url(self) -> str:
         return reverse("core:zaak-task", args=[self.id])
+
+    def get_variable(self, name: str) -> Any:
+        return get_process_instance_variable(self.id, name)

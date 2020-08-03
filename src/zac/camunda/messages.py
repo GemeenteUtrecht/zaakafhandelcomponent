@@ -25,7 +25,7 @@ class DefinitionMessages:
         return MessageForm(initial=initial, *args, **kwargs)
 
 
-def get_messages(definition_id: str) -> list:
+def get_messages(definition_id: str) -> List[str]:
     tree = get_bpmn(definition_id)
     messages = tree.findall(".//bpmn:message", CAMUNDA_NS)
 
