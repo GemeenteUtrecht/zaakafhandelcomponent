@@ -60,14 +60,26 @@ class ProcessInstanceTests(TestCase):
             {
                 "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
                 "definitionId": self.process_definition_data[0]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
             },
             {
                 "id": "905abd5f-d26f-11ea-86dc-e22fafe5f405",
                 "definitionId": self.process_definition_data[1]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
             },
             {
                 "id": "010fe90d-c122-11ea-a817-b6551116eb32",
                 "definitionId": self.process_definition_data[2]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
             },
         ]
         self.task_data = [
