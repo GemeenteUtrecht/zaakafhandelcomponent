@@ -163,3 +163,24 @@ class BPMNMessageSendTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         mock_send_message.assert_not_called()
+
+    def test_process_instance_does_not_exist(self, m):
+        PROCESS_INSTANCE_ID = "proces:1:f0a2e2c4-b35c-49f1-9fba-aaa7a161f247"
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/{PROCESS_INSTANCE_ID}",
+            status_code=404,
+        )
+
+        response = self.client.post(
+            self.url,
+            {"process_instance_id": PROCESS_INSTANCE_ID, "message": "dummy",},
+            HTTP_REFERER="http://testserver/",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(
+            response,
+            "form",
+            "message",
+            ["Selecteer een geldige keuze. dummy is geen beschikbare keuze."],
+        )
