@@ -11,8 +11,7 @@ from .bpmn import get_bpmn
 
 
 class MessageForm(forms.Form):
-    definition_id = forms.CharField(widget=forms.HiddenInput)
-    zaak_url = forms.CharField(widget=forms.HiddenInput)
+    process_instance_id = forms.CharField(widget=forms.HiddenInput)
     message = forms.ChoiceField(label=_("Message"), choices=())
 
     def __init__(self, *args, **kwargs):

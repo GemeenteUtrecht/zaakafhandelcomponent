@@ -20,6 +20,7 @@ from django_camunda.client import get_client
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import DummyForm, MessageForm
 from zac.camunda.messages import get_process_definition_messages
+from zac.camunda.process_instances import get_process_instance
 
 from ..camunda import get_process_zaak_url, get_task, get_zaak_tasks
 from ..forms import ClaimTaskForm
@@ -39,6 +40,25 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
     def get_form(self, **kwargs):
         form = super().get_form(**kwargs)
+
+        process_instance_id = form.data.get("process_instance_id")
+
+        # no (valid) process instance ID -> get a form with no valid messages -> invalid
+        # form submission
+        if not process_instance_id:
+            return form
+
+        # set the valid process instance messages _if_ a process instance exists
+        process_instance = get_process_instance(process_instance_id)
+        if process_instance is None:
+            return form
+
+        form.data["process_instance_id"]
+
+        import bpdb
+
+        bpdb.set_trace()
+
         definitions = get_process_definition_messages(form.data["zaak_url"])
         definition = next(
             (
@@ -60,6 +80,10 @@ class SendMessage(PermissionRequiredMixin, FormView):
     def form_valid(self, form: MessageForm):
         # build service variables to continue execution
         zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
+
+        import bpdb
+
+        bpdb.set_trace()
         self.check_object_permissions(zaak)
 
         zrc_client = _client_from_url(zaak.url)
