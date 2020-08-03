@@ -365,22 +365,27 @@ class ClaimTaskView(PermissionRequiredMixin, FormView):
         zrc_client.create("rol", data)
 
     def form_valid(self, form: ClaimTaskForm):
-        zaak = get_zaak(zaak_url=form.cleaned_data["zaak"])
+        # check permissions
+        task = form.cleaned_data["task_id"]
+        process_instance = get_process_instance(task.process_instance_id)
+        zaak_url = process_instance.get_variable("zaakUrl")
+
+        zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)
 
-        _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
-        task_id = form.cleaned_data["task_id"]
-        zaak_url = form.cleaned_data["zaak"]
-        zaak = get_zaak(zaak_url=zaak_url)
         zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
+        # claim in Camunda
         camunda_client = get_client()
         camunda_client.post(
-            f"task/{task_id}/claim", json={"userId": self.request.user.username}
+            f"task/{task.id}/claim", json={"userId": self.request.user.username}
         )
 
+        # register the 'medewerker' if sufficient information
+        # TODO: celery!
         self._create_rol(zaak)
 
+        _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         return HttpResponseRedirect(_next)
 
     def form_invalid(self, form):

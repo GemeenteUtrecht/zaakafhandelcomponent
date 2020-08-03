@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, Optional
 
 from django.contrib.auth import get_user_model
 
-from django_camunda.camunda_models import factory
+import requests
+from django_camunda.camunda_models import Task, factory
 from django_camunda.client import get_client
+from django_camunda.types import CamundaId
 
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
@@ -57,11 +59,18 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
     return get_tasks(query)
 
 
-def get_task(task_id: str) -> Task:
+def get_task(task_id: CamundaId) -> Optional[Task]:
     client = get_client()
-    response = client.get(f"task/{task_id}")
-    task = factory(Task, response)
+    try:
+        data = client.get(f"task/{task_id}")
+    except requests.HTTPError as exc:
+        if exc.response.status_code == 404:
+            return None
+        raise
 
+    task = factory(Task, data)
+
+    # add Django integration
     if task.assignee:
         task.assignee = _resolve_assignee(task.assignee)
     task.form = extract_task_form(task, FORM_KEYS)
