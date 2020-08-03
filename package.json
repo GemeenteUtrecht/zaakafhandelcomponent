@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@babel/core": "latest",
-    "@babel/polyfill": "latest",
     "@babel/preset-env": "latest",
     "@babel/preset-react": "^7.10.4",
     "autoprefixer": "^9.7.5",

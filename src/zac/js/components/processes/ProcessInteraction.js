@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
+import { useAsync } from 'react-use';
+
+import { apiCall } from '../../utils/fetch';
 import { TabList, TabContent } from '../Tabs';
 import { MessageContext } from './context';
 import { ProcessMessages } from './ProcessMessages';
 import { Assignee, UserTask } from './UserTasks';
-
-import { PROCESS_INSTANCES } from './mock';
 
 const UserTaskType = PropTypes.shape({
     id: PropTypes.string.isRequired,
@@ -102,6 +103,16 @@ UserTasksPanel.propTypes = {
 
 const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=false, canSendBpmnMessages=false}) => {
 
+    const state = useAsync(async () => {
+        const response = await apiCall(endpoint);
+        const processInstances = await response.json();
+        return processInstances;
+    }, [endpoint]);
+
+    if (state.loading) {
+        return (<span className="loader"></span>);
+    }
+
     const getMessageContext = (instanceId) => {
         return {
             processInstanceId: instanceId,
@@ -113,7 +124,7 @@ const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=fals
     return (
         <TabList>
             {
-                PROCESS_INSTANCES.map( (processInstance) => (
+                state.value.map( (processInstance) => (
                     <TabContent key={processInstance.id} title={processInstance.title}>
 
                         <MessageContext.Provider value={ getMessageContext(processInstance.id) }>

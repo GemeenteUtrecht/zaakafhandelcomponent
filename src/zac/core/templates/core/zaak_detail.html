@@ -181,12 +181,12 @@
                  data-zaak="{{ zaak.url }}"
                  data-can-send-bpmn-messages="{{ can_send_bpmn_messages|yesno:'true,false' }}"
                  data-can-do-usertasks="{{ can_do_usertasks|yesno:'true,false' }}"
-                 data-endpoint="#TODO"
+                 {# TODO: correct URL #}
+                 data-endpoint="{% url 'mock-data' %}?zaak_url={{ zaak.url }}"
                  data-send-message-url="{% url 'core:send-message' %}"
                  data-csrftoken="{{ csrf_token }}"
                 >
                     <!-- React managed -->
-                    <span class="loader"></span>
             </div>
         {% else %}
             <p class="permission-check permission-check--failed">
