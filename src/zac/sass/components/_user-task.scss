@@ -1,3 +1,4 @@
+@import "../lib/bem";
 @import "../lib/colors";
 @import "../lib/typography";
 
@@ -5,18 +6,18 @@
 .user-task {
   display: flex;
 
-  & &__description {
+  @include element("description") {
     font-weight: 600;
     width: 50%;
   }
 
-  & &__created {
+  @include element("created") {
     display: block;
     @include timestamp;
     font-weight: 400;
   }
 
-  & &__due {
+  @include element("due") {
     width: 20%;
 
     > * {
@@ -24,8 +25,12 @@
     }
   }
 
-  & &__assignee {
+  @include element("assignee") {
     flex-grow: 1;
     text-align: right;
+  }
+
+  & + & {
+    margin-top: 1em;
   }
 }

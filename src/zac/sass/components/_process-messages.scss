@@ -10,6 +10,7 @@
 
   @include element("intro") {
     margin-right: 1em;
+    text-decoration: underline;
   }
 
   @include element("form") {
