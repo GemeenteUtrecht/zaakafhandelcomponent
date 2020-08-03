@@ -1,7 +1,12 @@
 from typing import List
 
+from django.urls import reverse
+
 from django_camunda.client import get_client
 from zgw_consumers.api_models.base import factory
+
+from zac.core.camunda import get_process_tasks
+from zac.core.services import get_zaak
 
 from .data import ProcessInstance
 from .messages import get_messages
@@ -44,10 +49,15 @@ def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
     for id, process_instance in process_instances.copy().items():
         add_subprocesses(process_instance, process_instances, client)
 
+    # add user tasks
+    for id, process_instance in process_instances.items():
+        if not process_instance.tasks:
+            process_instance.tasks = get_process_tasks(process_instance)
+
     #  display them prettily
-    top_level_processes = list(
-        filter(lambda x: not x.parent_process, process_instances.values())
-    )
+    top_level_processes = [
+        p for p in process_instances.values() if not p.parent_process
+    ]
     #  add messages for top level processes
     definition_ids = {p.definition_id for p in top_level_processes}
     def_messages = {
