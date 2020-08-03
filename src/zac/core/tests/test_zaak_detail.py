@@ -474,11 +474,28 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
             zaaktype=self.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
-        self.mocker.get(zaak["url"], json=zaak)
         self.mocker.get(
-            f"https://camunda.example.com/engine-rest/task?processVariables=zaakUrl_eq_{zaak['url']}",
-            json=[task],
+            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
         )
+        self.mocker.get(
+            f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
+            json={
+                "id": task["process_instance_id"],
+                "definitionId": "proces:1",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        self.mocker.get(
+            (
+                f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
+                "/variables/zaakUrl?deserializeValues=false"
+            ),
+            json={"value": zaak["url"], "type": "String",},
+        )
+        self.mocker.get(zaak["url"], json=zaak)
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name, zaakproces_usertasks.name,],
             for_user=self.user,
@@ -509,8 +526,25 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         url = reverse("core:claim-task")
 
         self.mocker.get(
-            f"https://camunda.example.com/engine-rest/task?processVariables=zaakUrl_eq_{zaak_url}",
-            json=[task],
+            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
+        )
+        self.mocker.get(
+            f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
+            json={
+                "id": task["process_instance_id"],
+                "definitionId": "proces:1",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        self.mocker.get(
+            (
+                f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
+                "/variables/zaakUrl?deserializeValues=false"
+            ),
+            json={"value": zaak_url, "type": "String",},
         )
 
         with patch("zac.core.views.processes.get_client") as m_client, patch(
