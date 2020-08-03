@@ -157,7 +157,7 @@ const ProcessInteraction = ({
         <TabList>
             {
                 state.value.map( (processInstance) => (
-                    <TabContent key={processInstance.id} title={ <TaskSummary processInstance={processInstance} /> }>
+                    <TabContent key={processInstance.id} title={ canDoUsertasks ? <TaskSummary processInstance={processInstance} /> : processInstance.title }>
 
                         <MessageContext.Provider value={ getMessageContext(processInstance.id) }>
                             <ProcessMessages messages={processInstance.messages} />
