@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from zac.accounts.serializers import UserSerializer
+
 
 class RecursiveField(serializers.Serializer):
     def to_representation(self, instance):
@@ -12,7 +14,7 @@ class TaskSerializer(serializers.Serializer):
     created = serializers.DateTimeField()
     has_form = serializers.BooleanField()
     # todo replace with user serializer
-    assignee = serializers.CharField()
+    assignee = UserSerializer(allow_null=True, required=False)
 
 
 class ProcessInstanceSerializer(serializers.Serializer):
