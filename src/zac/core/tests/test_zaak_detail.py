@@ -408,7 +408,6 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         m.get(f"{zaak['url']}/zaakeigenschappen", json=[])
 
     def test_no_process_permissions(self):
-        zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=self.user,
@@ -430,17 +429,10 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertFalse(response.pyquery(".fetch-messages"))
-        self.assertFalse(response.pyquery(".fetch-tasks"))
-
-        messages_url = reverse("core:fetch-messages")
-        response = self.app.get(f"{messages_url}?zaak={zaak_url}", status=403)
-
-        tasks_url = reverse("core:fetch-tasks")
-        response = self.app.get(f"{tasks_url}?zaak={zaak_url}", status=403)
+        react_div = response.pyquery(".process-interaction").eq(0)
+        self.assertFalse(react_div)
 
     def test_process_permissions(self):
-        zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
         PermissionSetFactory.create(
             permissions=[
                 zaken_inzien.name,
@@ -467,20 +459,9 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertTrue(response.pyquery(".fetch-messages"))
-        self.assertTrue(response.pyquery(".fetch-tasks"))
-
-        messages_url = reverse("core:fetch-messages")
-        with patch(
-            "zac.core.views.processes.get_process_definition_messages", return_value=[]
-        ):
-            response = self.app.get(f"{messages_url}?zaak={zaak_url}")
-        self.assertEqual(response.status_code, 200)
-
-        tasks_url = reverse("core:fetch-tasks")
-        with patch("zac.core.views.processes.get_zaak_tasks", return_value=[]):
-            response = self.app.get(f"{tasks_url}?zaak={zaak_url}")
-        self.assertEqual(response.status_code, 200)
+        react_div = response.pyquery(".process-interaction").eq(0)
+        self.assertEqual(react_div.attr("data-can-do-usertasks"), "true")
+        self.assertEqual(react_div.attr("data-can-send-bpmn-messages"), "true")
 
     def test_claim_task_no_permission(self):
         task = get_camunda_task_mock()
