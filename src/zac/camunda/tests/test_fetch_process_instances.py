@@ -144,6 +144,9 @@ class ProcessInstanceTests(TestCase):
                         "tasks": [
                             {
                                 "id": self.task_data[1][0]["id"],
+                                "execute_url": reverse(
+                                    "core:zaak-task", args=[self.task_data[1][0]["id"]]
+                                ),
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
                                 "has_form": False,

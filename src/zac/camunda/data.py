@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from django.urls import reverse
+
 from django_camunda.camunda_models import Task as _Task
 from django_camunda.types import CamundaId
 from zgw_consumers.api_models.base import Model
@@ -21,3 +23,6 @@ class ProcessInstance(Model):
 class Task(_Task):
     def has_form(self) -> bool:
         return bool(self.form)
+
+    def execute_url(self) -> str:
+        return reverse("core:zaak-task", args=[self.id])
