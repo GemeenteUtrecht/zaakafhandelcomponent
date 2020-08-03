@@ -135,4 +135,4 @@ UserTask.propTypes = {
 };
 
 
-export { UserTask };
+export { Assignee, UserTask };

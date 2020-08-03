@@ -4,7 +4,100 @@ import PropTypes from 'prop-types';
 import { TabList, TabContent } from '../Tabs';
 import { MessageContext } from './context';
 import { ProcessMessages } from './ProcessMessages';
-import { UserTask } from './UserTasks';
+import { Assignee, UserTask } from './UserTasks';
+
+import { PROCESS_INSTANCES } from './mock';
+
+const UserTaskType = PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    executeUrl: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    created: PropTypes.string.isRequired,
+    hasForm: PropTypes.bool.isRequired,
+    assignee: Assignee,
+});
+
+const ProcessInstance = PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    definitionId: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    subProcesses: PropTypes.array,
+    messages: PropTypes.array,
+    userTasks: PropTypes.arrayOf(UserTaskType),
+});
+
+
+const UserTaskList = ({ zaakUrl, userTasks }) => {
+    return (
+        <React.Fragment>
+            { userTasks.map( (userTask) => (
+                <UserTask
+                    key={userTask.id}
+                    zaakUrl={zaakUrl}
+                    taskId={userTask.id}
+                    taskUrl={userTask.executeUrl}
+                    name={userTask.name}
+                    created={userTask.created}
+                    assignee={userTask.assignee}
+                    hasForm={userTask.hasForm}
+                />
+            ) ) }
+        </React.Fragment>
+    );
+};
+
+UserTaskList.propTypes = {
+    zaakUrl: PropTypes.string.isRequired,
+    userTasks: PropTypes.arrayOf(UserTaskType),
+};
+
+
+const SubProcessUserTaskList = ({ zaakUrl, processInstance, parentTitles=[] }) => {
+    const breadcrumbs = [...parentTitles, processInstance.title];
+    return (
+        <React.Fragment>
+            { processInstance.userTasks.length ?
+                <div className="user-tasks__subprocess">{ breadcrumbs.join(' > ') } </div>
+                : null
+            }
+            <UserTaskList zaakUrl={zaakUrl} userTasks={processInstance.userTasks} />
+            {
+                processInstance.subProcesses.map( (subProcess) => (
+                    <SubProcessUserTaskList
+                        key={subProcess.id}
+                        zaakUrl={zaakUrl}
+                        processInstance={subProcess}
+                        parentTitles={breadcrumbs}
+                    />
+                ) )
+            }
+        </React.Fragment>
+    );
+};
+
+SubProcessUserTaskList.propTypes = {
+    zaakUrl: PropTypes.string.isRequired,
+    processInstance: ProcessInstance.isRequired,
+    parentTitles: PropTypes.arrayOf(PropTypes.string),
+};
+
+
+const UserTasksPanel = ({ numChildren, title, modifier='primary', children }) => {
+    if (!numChildren) return null;
+    return (
+        <div className={`user-tasks__task-list user-tasks__task-list--${modifier}`}>
+            <h2 className="user-tasks__title">{title}</h2>
+            {children}
+        </div>
+    );
+};
+
+UserTasksPanel.propTypes = {
+    numChildren: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    modifier: PropTypes.string,
+    children: PropTypes.node,
+};
 
 
 const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=false, canSendBpmnMessages=false}) => {
@@ -19,91 +112,33 @@ const ProcessInteraction = ({zaak, endpoint, sendMessageUrl, canDoUsertasks=fals
 
     return (
         <TabList>
+            {
+                PROCESS_INSTANCES.map( (processInstance) => (
+                    <TabContent key={processInstance.id} title={processInstance.title}>
 
-            <TabContent title="Proces 1">
+                        <MessageContext.Provider value={ getMessageContext(processInstance.id) }>
+                            <ProcessMessages messages={processInstance.messages} />
+                        </MessageContext.Provider>
 
-                <MessageContext.Provider value={ getMessageContext('proces:1') }>
-                    <ProcessMessages messages={['Annuleer behandeling', 'Advies vragen']} />
-                </MessageContext.Provider>
+                        { !canDoUsertasks ? null : (
+                            <div className="user-tasks">
 
-                {
-                    !canDoUsertasks ? null : (
-                        <div className="user-tasks">
-                            <div className="user-tasks__task-list user-tasks__task-list--primary">
-                                <h2 className="user-tasks__title">Taken</h2>
+                                <UserTasksPanel numChildren={processInstance.userTasks.length} title="Taken" modifier="primary">
+                                    <UserTaskList zaakUrl={zaak} userTasks={processInstance.userTasks} />
+                                </UserTasksPanel>
 
-                                <UserTask
-                                    zaakUrl={zaak}
-                                    taskId="proces:1:task:1"
-                                    taskUrl="/core/zaken/:org/:identificatie/proces:1:task:1"
-                                    name="Bepalen resultaat"
-                                    created="2020-07-30T15:03:21Z"
-                                    assignee={{username: 'sergei', firstName: 'Sergei', lastName: 'Maertens'}}
-                                    hasForm={true}
-                                />
-
-                                <UserTask
-                                    zaakUrl={zaak}
-                                    taskId="proces:1:task:2"
-                                    taskUrl="/core/zaken/:org/:identificatie/proces:1:task:2"
-                                    name="Adviesvraag configureren"
-                                    created="2020-07-30T18:05:59Z"
-                                    hasForm={true}
-                                />
+                                <UserTasksPanel numChildren={processInstance.subProcesses.length} title="Deeltaken" modifier="nested">
+                                    { processInstance.subProcesses.map( (subProcess) => (
+                                        <SubProcessUserTaskList key={subProcess.id} zaakUrl={zaak} processInstance={subProcess} />
+                                    ) ) }
+                                </UserTasksPanel>
 
                             </div>
+                        ) }
 
-                            <div className="user-tasks__task-list user-tasks__task-list--nested">
-                                <h2 className="user-tasks__title">Deeltaken</h2>
-
-                                <div className="user-tasks__subprocess"> Sub 1 </div>
-
-                                <UserTask
-                                    zaakUrl={zaak}
-                                    taskId="proces:3:task:1"
-                                    taskUrl="/core/zaken/:org/:identificatie/proces:3:task:1"
-                                    name="Adviseren"
-                                    created="2020-07-30T15:03:21Z"
-                                    assignee={{username: 'johndoe', firstName: '', lastName: ''}}
-                                    hasForm={true}
-                                />
-
-                                <div className="user-tasks__subprocess"> Sub 2 &gt; Sub 3 </div>
-
-                                <UserTask
-                                    zaakUrl={zaak}
-                                    taskId="proces:4:task:1"
-                                    taskUrl="/core/zaken/:org/:identificatie/proces:4:task:1"
-                                    name="Beoordelen"
-                                    created="2020-07-30T15:03:21Z"
-                                    assignee={{username: 'johndoe', firstName: '', lastName: ''}}
-                                    hasForm={true}
-                                />
-
-                                <UserTask
-                                    zaakUrl={zaak}
-                                    taskId="proces:4:task:2"
-                                    taskUrl="/core/zaken/:org/:identificatie/proces:4:task:2"
-                                    name="Debugging"
-                                    created="2020-07-30T15:03:21Z"
-                                    hasForm={true}
-                                />
-
-                            </div>
-                        </div>
-                    )
-                }
-
-            </TabContent>
-
-            <TabContent title="Proces 2">
-
-                <MessageContext.Provider value={ getMessageContext('proces:2') }>
-                    <ProcessMessages messages={['Dummy message']} />
-                </MessageContext.Provider>
-
-            </TabContent>
-
+                    </TabContent>
+                ) )
+            }
         </TabList>
     );
 };
