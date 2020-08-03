@@ -20,7 +20,7 @@ const Tab = ({ index, title, onClick, active=false }) => {
 
 Tab.propTypes = {
     index: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
+    title: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
     active: PropTypes.bool,
 };
@@ -89,7 +89,7 @@ const TabContent = ({ title, children }) => {
 
 
 TabContent.propTypes = {
-    title: PropTypes.string.isRequired,
+    title: PropTypes.node.isRequired,
     children: PropTypes.node,
 };
 

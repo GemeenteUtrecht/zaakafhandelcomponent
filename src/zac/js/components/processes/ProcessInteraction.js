@@ -101,6 +101,31 @@ UserTasksPanel.propTypes = {
 };
 
 
+const TaskSummary = ({ processInstance }) => {
+    const getNumTasks = (processInstance) => {
+        const num = processInstance.subProcesses.reduce(
+            (acc, currentValue) => acc + getNumTasks(currentValue),
+            processInstance.userTasks.length
+        );
+        return num;
+    };
+    const numTasks = getNumTasks(processInstance);
+
+    return (
+        <React.Fragment>
+            {processInstance.title}
+            <span className="badge badge--spacing" title={`${numTasks} open taken`}>
+                { numTasks }
+            </span>
+        </React.Fragment>
+    );
+};
+
+TaskSummary.propTypes = {
+    processInstance: ProcessInstance.isRequired,
+};
+
+
 const ProcessInteraction = ({
     zaak,
     endpoint,
@@ -132,7 +157,7 @@ const ProcessInteraction = ({
         <TabList>
             {
                 state.value.map( (processInstance) => (
-                    <TabContent key={processInstance.id} title={processInstance.title}>
+                    <TabContent key={processInstance.id} title={ <TaskSummary processInstance={processInstance} /> }>
 
                         <MessageContext.Provider value={ getMessageContext(processInstance.id) }>
                             <ProcessMessages messages={processInstance.messages} />
