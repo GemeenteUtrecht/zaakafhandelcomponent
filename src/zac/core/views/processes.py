@@ -11,7 +11,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.views import View
-from django.views.generic import FormView, RedirectView, TemplateView
+from django.views.generic import FormView, RedirectView
 
 import requests
 from django_camunda.api import complete_task, get_task_variable, send_message
@@ -26,43 +26,10 @@ from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from ..task_handlers import HANDLERS
-from .utils import get_zaak_from_query
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
-
-
-class FetchTasks(PermissionRequiredMixin, TemplateView):
-    template_name = "core/includes/tasks.html"
-    permission_required = zaakproces_usertasks.name
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        zaak = get_zaak_from_query(self.request)
-        self.check_object_permissions(zaak)
-
-        context["tasks"] = get_zaak_tasks(zaak.url)
-        context["zaak"] = zaak
-        return context
-
-
-class FetchMessages(PermissionRequiredMixin, TemplateView):
-    template_name = "core/includes/messages.html"
-    permission_required = zaakproces_send_message.name
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        zaak = get_zaak_from_query(self.request)
-        self.check_object_permissions(zaak)
-
-        definitions = get_process_definition_messages(zaak.url)
-        context["forms"] = [
-            definition.get_form(initial={"zaak_url": zaak.url})
-            for definition in definitions
-        ]
-        context["zaak"] = zaak
-        return context
 
 
 class SendMessage(PermissionRequiredMixin, FormView):

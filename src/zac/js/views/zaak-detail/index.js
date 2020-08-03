@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom';
 import Modal from "react-modal";
 
 import './fetch-zaakobjecten';
-import './fetch-tasks';
-import './fetch-messages';
 import { ReviewRequestTable } from "./ReviewRequest";
 import { jsonScriptToVar } from '../../utils/json-script';
 import { DownloadUrlContext } from "./context";
