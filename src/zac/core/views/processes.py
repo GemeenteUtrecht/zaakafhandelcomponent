@@ -118,8 +118,11 @@ class FormSetMixin:
 class UserTaskMixin:
     def get_zaak(self):
         task = self._get_task()
-        zaak_url = get_process_zaak_url(task.process_instance_id)
+        process_instance = get_process_instance(task.process_instance_id)
+        zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
         self.check_object_permissions(zaak)
         return zaak
 

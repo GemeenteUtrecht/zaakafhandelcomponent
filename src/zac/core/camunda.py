@@ -3,6 +3,7 @@ from typing import List, Optional
 from django.contrib.auth import get_user_model
 
 import requests
+from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
@@ -78,23 +79,20 @@ def get_task(task_id: CamundaId) -> Optional[Task]:
     return task
 
 
-def get_process_zaak_url(process_instance_id):
+def get_process_zaak_url(process: ProcessInstance):
     camunda_client = get_client()
 
-    zaak_url_response = camunda_client.get(
-        f"process-instance/{process_instance_id}/variables/zaakUrl"
-    )
-    zaak_url = zaak_url_response.get("value", "")
+    zaak_url = process.get_variable("zaakUrl")
 
     if zaak_url:
         return zaak_url
 
     # search parent processes
     parent_processes_response = camunda_client.get(
-        "process-instance", {"subProcessInstance": process_instance_id}
+        "process-instance", {"subProcessInstance": process.id}
     )
     if not parent_processes_response:
         return
 
     parent_process = factory(ProcessInstance, parent_processes_response[0])
-    return get_process_zaak_url(parent_process.id)
+    return get_process_zaak_url(parent_process)
