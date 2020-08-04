@@ -3,7 +3,7 @@ from typing import List, Optional
 from django.contrib.auth import get_user_model
 
 import requests
-from django_camunda.camunda_models import Task, factory
+from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 
