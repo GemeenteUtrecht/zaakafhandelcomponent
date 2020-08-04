@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
+    "zac.activities",
 ]
 
 MIDDLEWARE = [
