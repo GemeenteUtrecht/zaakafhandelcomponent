@@ -22,7 +22,7 @@ from zac.camunda.forms import DummyForm, MessageForm
 from zac.camunda.messages import get_messages
 from zac.camunda.process_instances import get_process_instance
 
-from ..camunda import get_process_zaak_url, get_task, get_zaak_tasks
+from ..camunda import get_process_zaak_url, get_task
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak

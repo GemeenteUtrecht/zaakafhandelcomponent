@@ -3,7 +3,6 @@ from typing import List, Optional
 from django.contrib.auth import get_user_model
 
 import requests
-from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
@@ -37,9 +36,9 @@ def _resolve_assignee(username: str) -> User:
     return user
 
 
-def get_tasks(query: dict) -> List[Task]:
+def get_process_tasks(process: ProcessInstance) -> List[Task]:
     client = get_client()
-    tasks = client.get("task", query)
+    tasks = client.get("task", {"processInstanceId": process.id})
     tasks = factory(Task, tasks)
 
     for task in tasks:
@@ -48,16 +47,6 @@ def get_tasks(query: dict) -> List[Task]:
 
         task.form = extract_task_form(task, FORM_KEYS)
     return tasks
-
-
-def get_zaak_tasks(zaak_url: str) -> List[Task]:
-    query = {"processVariables": f"zaakUrl_eq_{zaak_url}"}
-    return get_tasks(query)
-
-
-def get_process_tasks(process: ProcessInstance) -> List[Task]:
-    query = {"processInstanceId": process.id}
-    return get_tasks(query)
 
 
 def get_task(task_id: CamundaId) -> Optional[Task]:
