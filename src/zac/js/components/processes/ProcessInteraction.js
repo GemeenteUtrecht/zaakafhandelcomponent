@@ -24,14 +24,14 @@ const ProcessInstance = PropTypes.shape({
     title: PropTypes.string.isRequired,
     subProcesses: PropTypes.array,
     messages: PropTypes.array,
-    userTasks: PropTypes.arrayOf(UserTaskType),
+    tasks: PropTypes.arrayOf(UserTaskType),
 });
 
 
-const UserTaskList = ({ zaakUrl, userTasks }) => {
+const UserTaskList = ({ zaakUrl, tasks }) => {
     return (
         <React.Fragment>
-            { userTasks.map( (userTask) => (
+            { tasks.map( (userTask) => (
                 <UserTask
                     key={userTask.id}
                     zaakUrl={zaakUrl}
@@ -49,7 +49,7 @@ const UserTaskList = ({ zaakUrl, userTasks }) => {
 
 UserTaskList.propTypes = {
     zaakUrl: PropTypes.string.isRequired,
-    userTasks: PropTypes.arrayOf(UserTaskType),
+    tasks: PropTypes.arrayOf(UserTaskType),
 };
 
 
@@ -57,11 +57,11 @@ const SubProcessUserTaskList = ({ zaakUrl, processInstance, parentTitles=[] }) =
     const breadcrumbs = [...parentTitles, processInstance.title];
     return (
         <React.Fragment>
-            { processInstance.userTasks.length ?
+            { processInstance.tasks.length ?
                 <div className="user-tasks__subprocess">{ breadcrumbs.join(' > ') } </div>
                 : null
             }
-            <UserTaskList zaakUrl={zaakUrl} userTasks={processInstance.userTasks} />
+            <UserTaskList zaakUrl={zaakUrl} tasks={processInstance.tasks} />
             {
                 processInstance.subProcesses.map( (subProcess) => (
                     <SubProcessUserTaskList
@@ -105,7 +105,7 @@ const TaskSummary = ({ processInstance }) => {
     const getNumTasks = (processInstance) => {
         const num = processInstance.subProcesses.reduce(
             (acc, currentValue) => acc + getNumTasks(currentValue),
-            processInstance.userTasks.length
+            processInstance.tasks.length
         );
         return num;
     };
@@ -168,8 +168,8 @@ const ProcessInteraction = ({
 
                                 <UserTaskContext.Provider value={{ claimTaskUrl }}>
 
-                                    <UserTasksPanel numChildren={processInstance.userTasks.length} title="Taken" modifier="primary">
-                                        <UserTaskList zaakUrl={zaak} userTasks={processInstance.userTasks} />
+                                    <UserTasksPanel numChildren={processInstance.tasks.length} title="Taken" modifier="primary">
+                                        <UserTaskList zaakUrl={zaak} tasks={processInstance.tasks} />
                                     </UserTasksPanel>
 
                                     <UserTasksPanel numChildren={processInstance.subProcesses.length} title="Deeltaken" modifier="nested">
