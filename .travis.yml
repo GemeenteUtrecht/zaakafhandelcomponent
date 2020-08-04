@@ -16,6 +16,7 @@ env:
   - SECRET_KEY=dummy
   - DB_PASSWORD=
   - DB_USER=postgres
+  - IS_HTTPS=no
 
 jobs:
   include:

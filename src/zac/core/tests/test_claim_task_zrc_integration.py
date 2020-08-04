@@ -68,17 +68,33 @@ class TaskClaimTests(WebTest):
         )
 
     @requests_mock.Mocker()
-    def test_claim_task(self, m):
+    def test_claim_task_create_rol(self, m):
         # mock ztc
         mock_service_oas_get(m, ZTC_URL, "ztc")
         mock_service_oas_get(m, ZRC_URL, "zrc")
         zaak = get_zaak_response(ZAAK, ZAAKTYPE)
         task = get_camunda_task_mock()
         m.get(
-            f"{CAMUNDA_ROOT}{CAMUNDA_API}task?processVariables=zaakUrl_eq_{zaak['url']}",
-            json=[task],
+            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
         )
-
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
+            json={
+                "id": task["process_instance_id"],
+                "definitionId": "proces:1",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        m.get(
+            (
+                f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
+                "/variables/zaakUrl?deserializeValues=false"
+            ),
+            json={"value": zaak["url"], "type": "String",},
+        )
         m.get(ZAAKTYPE, json=get_zaaktype_response(CATALOGUS, ZAAKTYPE))
         roltypen_url = (
             f"{ZTC_URL}roltypen?zaaktype={ZAAKTYPE}&&omschrijvingGeneriek=behandelaar"

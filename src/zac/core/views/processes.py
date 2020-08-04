@@ -11,63 +11,25 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.views import View
-from django.views.generic import FormView, RedirectView, TemplateView
+from django.views.generic import FormView, RedirectView
 
 from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import DummyForm, MessageForm
-from zac.camunda.messages import get_process_definition_messages
+from zac.camunda.messages import get_messages
+from zac.camunda.process_instances import get_process_instance
 
-from ..camunda import get_zaak_tasks
+from ..camunda import get_process_zaak_url, get_task
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
-from ..services import (
-    _client_from_url,
-    fetch_zaaktype,
-    find_zaak,
-    get_roltypen,
-    get_zaak,
-)
+from ..services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from ..task_handlers import HANDLERS
-from .utils import get_zaak_from_query
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
-
-
-class FetchTasks(PermissionRequiredMixin, TemplateView):
-    template_name = "core/includes/tasks.html"
-    permission_required = zaakproces_usertasks.name
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        zaak = get_zaak_from_query(self.request)
-        self.check_object_permissions(zaak)
-
-        context["tasks"] = get_zaak_tasks(zaak.url)
-        context["zaak"] = zaak
-        return context
-
-
-class FetchMessages(PermissionRequiredMixin, TemplateView):
-    template_name = "core/includes/messages.html"
-    permission_required = zaakproces_send_message.name
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        zaak = get_zaak_from_query(self.request)
-        self.check_object_permissions(zaak)
-
-        definitions = get_process_definition_messages(zaak.url)
-        context["forms"] = [
-            definition.get_form(initial={"zaak_url": zaak.url})
-            for definition in definitions
-        ]
-        context["zaak"] = zaak
-        return context
 
 
 class SendMessage(PermissionRequiredMixin, FormView):
@@ -77,29 +39,34 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
     def get_form(self, **kwargs):
         form = super().get_form(**kwargs)
-        definitions = get_process_definition_messages(form.data["zaak_url"])
-        definition = next(
-            (
-                definition
-                for definition in definitions
-                if definition.id == form.data["definition_id"]
-            ),
-            None,
-        )
 
-        if definition is None:
-            return form  # the empty message names will fail validation
+        process_instance_id = form.data.get("process_instance_id")
 
-        form.set_message_choices(definition.message_names)
-        form._instance_ids = definition.instance_ids
+        # no (valid) process instance ID -> get a form with no valid messages -> invalid
+        # form submission
+        if not process_instance_id:
+            return form
+
+        # set the valid process instance messages _if_ a process instance exists
+        process_instance = get_process_instance(process_instance_id)
+        if process_instance is None:
+            return form
+
+        messages = get_messages(process_instance.definition_id)
+        form.set_message_choices(messages)
 
         return form
 
     def form_valid(self, form: MessageForm):
-        # build service variables to continue execution
-        zaak = get_zaak(zaak_url=form.cleaned_data["zaak_url"])
+        # check permissions
+        process_instance_id = form.cleaned_data["process_instance_id"]
+        process_instance = get_process_instance(process_instance_id)
+
+        zaak_url = process_instance.get_variable("zaakUrl")
+        zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)
 
+        # build service variables to continue execution
         zrc_client = _client_from_url(zaak.url)
         ztc_client = _client_from_url(zaak.zaaktype)
 
@@ -110,7 +77,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
             "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
         }
 
-        send_message(form.cleaned_data["message"], form._instance_ids, variables)
+        send_message(form.cleaned_data["message"], [process_instance.id], variables)
 
         _next = self.request.META["HTTP_REFERER"]
         if is_safe_url(_next, [self.request.get_host()], settings.IS_HTTPS):
@@ -149,22 +116,20 @@ class FormSetMixin:
 
 class UserTaskMixin:
     def get_zaak(self):
-        zaak = find_zaak(
-            bronorganisatie=self.kwargs["bronorganisatie"],
-            identificatie=self.kwargs["identificatie"],
-        )
+        task = self._get_task()
+        process_instance = get_process_instance(task.process_instance_id)
+        zaak_url = get_process_zaak_url(process_instance)
+        zaak = get_zaak(zaak_url=zaak_url)
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
         self.check_object_permissions(zaak)
         return zaak
 
     def _get_task(self):
         if not hasattr(self, "_task"):
-            tasks = get_zaak_tasks(self.zaak.url)
-            try:
-                task = next(
-                    (_task for _task in tasks if _task.id == self.kwargs["task_id"])
-                )
-            except StopIteration as exc:
-                raise Http404("No such task for this zaak.") from exc
+            task = get_task(self.kwargs["task_id"])
+            if task is None:
+                raise Http404("No such task")
             self._task = task
         return self._task
 
@@ -401,22 +366,27 @@ class ClaimTaskView(PermissionRequiredMixin, FormView):
         zrc_client.create("rol", data)
 
     def form_valid(self, form: ClaimTaskForm):
-        zaak = get_zaak(zaak_url=form.cleaned_data["zaak"])
+        # check permissions
+        task = form.cleaned_data["task_id"]
+        process_instance = get_process_instance(task.process_instance_id)
+        zaak_url = get_process_zaak_url(process_instance)
+
+        zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)
 
-        _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
-        task_id = form.cleaned_data["task_id"]
-        zaak_url = form.cleaned_data["zaak"]
-        zaak = get_zaak(zaak_url=zaak_url)
         zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
+        # claim in Camunda
         camunda_client = get_client()
         camunda_client.post(
-            f"task/{task_id}/claim", json={"userId": self.request.user.username}
+            f"task/{task.id}/claim", json={"userId": self.request.user.username}
         )
 
+        # register the 'medewerker' if sufficient information
+        # TODO: celery!
         self._create_rol(zaak)
 
+        _next = form.cleaned_data["next"] or self.request.META["HTTP_REFERER"]
         return HttpResponseRedirect(_next)
 
     def form_invalid(self, form):

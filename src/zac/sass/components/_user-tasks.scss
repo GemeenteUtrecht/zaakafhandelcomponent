@@ -1,0 +1,38 @@
+@import "../lib/bem";
+@import "../lib/colors";
+
+.user-tasks {
+  display: flex;
+
+  @include element("task-list") {
+    flex-grow: 1;
+    margin-top: 1em;
+
+    @include modifier("primary") {
+      padding-right: 1em;
+      border-right: dashed 1px rgba($color-secondary, 0.5);
+    }
+
+    @include modifier("nested") {
+      padding-left: 1em;
+    }
+  }
+
+  @include element("title") {
+    margin: 0;
+    margin-bottom: 1em;
+    padding: 0;
+    font-weight: normal;
+    font-size: 1.2em;
+    text-decoration: underline;
+  }
+
+  @include element("subprocess") {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
+
+  @include element("blurred") {
+    color: lighten($color-text, 40%);
+  }
+}

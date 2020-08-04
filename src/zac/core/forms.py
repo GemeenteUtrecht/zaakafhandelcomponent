@@ -9,6 +9,7 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.api import get_process_instance_variable
+from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.models import User
@@ -69,7 +70,6 @@ class ZakenFilterForm(forms.Form):
 
 
 class ClaimTaskForm(forms.Form):
-    zaak = forms.URLField(required=True)
     task_id = forms.UUIDField(required=True)
     next = forms.CharField(required=False)
 
@@ -85,19 +85,14 @@ class ClaimTaskForm(forms.Form):
             raise forms.ValidationError(_("The redirect URL is untrusted."))
         return next_url
 
-    def clean(self):
-        from .camunda import get_zaak_tasks
+    def clean_task_id(self) -> Task:
+        from .camunda import get_task
 
-        cleaned_data = super().clean()
-        zaak = cleaned_data.get("zaak")
-        task_id = cleaned_data.get("task_id")
-
-        if zaak and task_id:
-            zaak_tasks = get_zaak_tasks(zaak)
-            task = next((task for task in zaak_tasks if task.id == task_id), None,)
-            if task is None:
-                self.add_error("task_id", _("This is not a valid task for the zaak."))
-        return cleaned_data
+        task_id = self.cleaned_data["task_id"]
+        task = get_task(task_id)
+        if task is None:
+            raise forms.ValidationError(_("Invalid task referenced."))
+        return task
 
 
 class ZaakAfhandelForm(forms.Form):

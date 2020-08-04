@@ -3,3 +3,4 @@ import './links';
 import './checkbox-select-dynamic';
 import './tabs';
 import './openUrl';
+import './processes';
