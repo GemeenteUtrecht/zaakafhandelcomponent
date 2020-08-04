@@ -13,7 +13,6 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView
 
-import requests
 from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
@@ -128,10 +127,9 @@ class UserTaskMixin:
 
     def _get_task(self):
         if not hasattr(self, "_task"):
-            try:
-                task = get_task(self.kwargs["task_id"])
-            except requests.RequestException as exc:
-                raise Http404("The task was not found") from exc
+            task = get_task(self.kwargs["task_id"])
+            if task is None:
+                raise Http404("No such task")
             self._task = task
         return self._task
 
@@ -371,7 +369,7 @@ class ClaimTaskView(PermissionRequiredMixin, FormView):
         # check permissions
         task = form.cleaned_data["task_id"]
         process_instance = get_process_instance(task.process_instance_id)
-        zaak_url = process_instance.get_variable("zaakUrl")
+        zaak_url = get_process_zaak_url(process_instance)
 
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(zaak)

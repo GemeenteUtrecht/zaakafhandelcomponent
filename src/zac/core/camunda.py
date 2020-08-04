@@ -68,7 +68,7 @@ def get_task(task_id: CamundaId) -> Optional[Task]:
     return task
 
 
-def get_process_zaak_url(process: ProcessInstance):
+def get_process_zaak_url(process: ProcessInstance) -> str:
     camunda_client = get_client()
 
     zaak_url = process.get_variable("zaakUrl")
