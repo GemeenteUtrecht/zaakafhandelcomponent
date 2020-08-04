@@ -116,6 +116,10 @@ class ProcessInstanceTests(TestCase):
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
             json=[self.process_instance_data[0]],
         )
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={','.join([d['id'] for d in self.process_definition_data])}",
+            json=self.process_definition_data,
+        )
         for i, process in enumerate(self.process_instance_data):
             m.get(
                 f"{CAMUNDA_URL}process-instance?superProcessInstance={process['id']}",
@@ -124,10 +128,6 @@ class ProcessInstanceTests(TestCase):
             m.get(
                 f"{CAMUNDA_URL}task?processInstanceId={process['id']}",
                 json=self.task_data[i],
-            )
-            m.get(
-                f"{CAMUNDA_URL}process-definition/{process['definitionId']}",
-                json=self.process_definition_data[i],
             )
 
     def test_fetch_process_instances(self, m_messages, m_task_from, m_request):

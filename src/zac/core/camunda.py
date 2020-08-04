@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 
 import requests
 from django_camunda.camunda_models import factory
-from django_camunda.client import get_client
+from django_camunda.client import Camunda, get_client
 from django_camunda.types import CamundaId
 
 from zac.camunda.data import ProcessInstance, Task

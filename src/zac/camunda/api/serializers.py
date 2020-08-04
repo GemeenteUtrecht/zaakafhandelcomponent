@@ -20,7 +20,7 @@ class TaskSerializer(serializers.Serializer):
 class ProcessInstanceSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     definition_id = serializers.CharField(max_length=1000)
-    title = serializers.CharField(max_length=100, source="definition.key")
+    title = serializers.CharField(max_length=100)
     sub_processes = RecursiveField(many=True)
     messages = serializers.ListField(
         child=serializers.CharField(max_length=100), allow_empty=True

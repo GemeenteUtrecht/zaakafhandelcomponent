@@ -26,6 +26,9 @@ class ProcessInstance(Model):
     def get_variable(self, name: str) -> Any:
         return get_process_instance_variable(self.id, name)
 
+    def title(self) -> str:
+        return self.definition.name or self.definition.key
+
 
 @dataclass
 class Task(_Task):

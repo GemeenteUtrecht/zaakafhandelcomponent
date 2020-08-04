@@ -1,8 +1,9 @@
-from typing import List
+from typing import Dict, List
 
 from django_camunda.camunda_models import ProcessDefinition
-from django_camunda.client import get_client
+from django_camunda.client import Camunda, get_client
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.concurrent import parallel
 
 from zac.core.camunda import get_process_tasks
 
@@ -10,14 +11,19 @@ from .data import ProcessInstance
 from .messages import get_messages
 
 
-def get_process_definition(definition_id: str) -> ProcessDefinition:
+def get_process_definitions(definition_ids: list) -> List[ProcessDefinition]:
     client = get_client()
-
-    response = client.get(f"process-definition/{definition_id}")
+    response = client.get(
+        f"process-definition", {"processDefinitionIdIn": ",".join(definition_ids)}
+    )
     return factory(ProcessDefinition, response)
 
 
-def add_subprocesses(process_instance, process_instances, client):
+def add_subprocesses(
+    process_instance: ProcessInstance,
+    process_instances: Dict[str, ProcessInstance],
+    client: Camunda,
+):
     if process_instance.sub_processes:
         return
 
@@ -42,22 +48,19 @@ def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
 
     #  get process-instances for particular zaak
     response = client.get("process-instance", {"variables": f"zaakUrl_eq_{zaak_url}"})
+    process_instances = {
+        data["id"]: factory(ProcessInstance, data) for data in response
+    }
 
-    process_instances = {}
-    for data in response:
-        process_instance = factory(ProcessInstance, data)
-        process_instances[data["id"]] = process_instance
-
-    #  todo concurrency?
     # fill in all subpocesses into the dict
     for id, process_instance in process_instances.copy().items():
         add_subprocesses(process_instance, process_instances, client)
 
-    # add definitions and user tasks
-    definition_ids = {p.definition_id for p in process_instances.values()}
+    # add definitions add user tasks
+    definition_ids = [p.definition_id for p in process_instances.values()]
     definitions = {
-        definition_id: get_process_definition(definition_id)
-        for definition_id in definition_ids
+        definition.id: definition
+        for definition in get_process_definitions(definition_ids)
     }
     for id, process_instance in process_instances.items():
         process_instance.definition = definitions[process_instance.definition_id]
