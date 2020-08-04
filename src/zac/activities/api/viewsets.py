@@ -6,6 +6,6 @@ from .serializers import ActivitySerializer
 
 
 class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Activity.objects.all()
+    queryset = Activity.objects.order_by("created")
     serializer_class = ActivitySerializer
     filterset_class = ActivityFilter

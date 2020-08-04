@@ -5,35 +5,20 @@ import { useAsync } from 'react-use';
 import { apiCall } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
 import { TabList, TabContent } from '../Tabs';
-
+import { Activity, CaseActivity } from './CaseActivity';
 
 const ActivityList = ({ children }) => {
     return (
-        <ul>
-            { children.map( activity => (
-                <li key={activity.id}>
-                    { activity.name }
-                    <br />
-                    ({ timeSince(activity.created) })
-                </li>
-            ) ) }
-        </ul>
+        <React.Fragment>
+            {
+                children.map( (activity) => (<CaseActivity key={activity.id} activity={activity} />) )
+            }
+        </React.Fragment>
     );
 };
 
 ActivityList.propTypes = {
-    children: PropTypes.arrayOf(
-        PropTypes.shape({
-            id: PropTypes.number.isRequired,
-            zaak: PropTypes.string.isRequired,
-            name: PropTypes.string.isRequired,
-            remarks: PropTypes.string.isRequired,
-            status: PropTypes.oneOf(['on_going', 'finished']),
-            created: PropTypes.string.isRequired,
-            assignee: PropTypes.number,
-            document: PropTypes.string,
-        }),
-    ),
+    children: PropTypes.arrayOf(Activity),
 };
 
 

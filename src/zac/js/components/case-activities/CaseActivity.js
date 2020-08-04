@@ -1,0 +1,63 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+
+import { timeSince } from '../../utils/time-since';
+
+
+const Activity = PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    zaak: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    remarks: PropTypes.string.isRequired,
+    status: PropTypes.oneOf(['on_going', 'finished']),
+    created: PropTypes.string.isRequired,
+    assignee: PropTypes.number,
+    document: PropTypes.string,
+});
+
+
+const CaseActivity = ({ activity }) => {
+    return (
+        <article className="case-activity">
+
+            <header className="case-activity__id">
+                <span className="case-activity__name">
+                    {activity.name}
+                </span>
+
+                <span className="case-activity__timestamp">
+                    {timeSince(activity.created)}
+                </span>
+            </header>
+
+            <section className="case-activity__content">
+                {activity.remarks}
+
+                <div className="case-activity__document">
+                    {
+                        activity.document ? (
+                            <a className="btn btn--small" onClick={() => alert('todo')}>
+                                Toon documentinformatie
+                            </a>
+                        )
+                        : 'Document ontbreekt.'
+                    }
+                </div>
+            </section>
+
+            <section className="case-activity__assignee">
+                {/* TODO: serialize user */}
+                {activity.assignee}
+            </section>
+
+        </article>
+    );
+};
+
+
+CaseActivity.propTypes = {
+    activity: Activity,
+};
+
+
+export { Activity, CaseActivity };
