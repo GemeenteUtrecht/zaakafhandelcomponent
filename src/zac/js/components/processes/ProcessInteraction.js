@@ -116,9 +116,13 @@ const TaskSummary = ({ processInstance }) => {
     return (
         <React.Fragment>
             {processInstance.title}
-            <span className="badge badge--spacing" title={`${numTasks} open taken`}>
-                { numTasks }
-            </span>
+            { numTasks ?
+                <span className="badge badge--spacing" title={`${numTasks} open taken`}>
+                    { numTasks }
+                </span>
+                : null
+            }
+
         </React.Fragment>
     );
 };
