@@ -14,7 +14,6 @@ class TaskSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     created = serializers.DateTimeField()
     has_form = serializers.BooleanField()
-    # todo replace with user serializer
     assignee = UserSerializer(allow_null=True, required=False)
 
 
