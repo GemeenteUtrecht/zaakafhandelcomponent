@@ -31,4 +31,8 @@
     margin-top: 1em;
     margin-bottom: 0.5em;
   }
+
+  @include element("blurred") {
+    color: lighten($color-text, 40%);
+  }
 }

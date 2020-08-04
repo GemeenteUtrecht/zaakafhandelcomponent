@@ -84,11 +84,13 @@ SubProcessUserTaskList.propTypes = {
 
 
 const UserTasksPanel = ({ numChildren, title, modifier='primary', children }) => {
-    if (!numChildren) return null;
     return (
         <div className={`user-tasks__task-list user-tasks__task-list--${modifier}`}>
             <h2 className="user-tasks__title">{title}</h2>
-            {children}
+            { !numChildren ?
+                <div className="user-tasks__blurred">(geen taken)</div>
+                : children
+            }
         </div>
     );
 };
