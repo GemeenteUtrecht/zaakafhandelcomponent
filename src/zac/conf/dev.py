@@ -44,6 +44,11 @@ LOGGING["loggers"].update(
 # Library settings
 #
 
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += (
+    "djangorestframework_camel_case.render.CamelCaseBrowsableAPIRenderer",
+)
+
+
 # Django debug toolbar
 INSTALLED_APPS += ["debug_toolbar", "ddt_api_calls"]
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
