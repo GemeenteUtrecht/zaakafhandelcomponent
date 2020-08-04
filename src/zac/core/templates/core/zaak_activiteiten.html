@@ -34,7 +34,13 @@
 </header>
 
 <article class="zaak-detail">
-
+    <div
+        class="case-activities"
+        data-zaak="{{ zaak.url }}"
+        data-endpoint="{% url 'activities:activity-list' %}"
+    >
+        <!-- react managed -->
+    </div>
 </article>
 
 {% endblock content %}
