@@ -1,9 +1,7 @@
 from dataclasses import dataclass, field
-from itertools import groupby
 from typing import List
 
 from django_camunda.bpmn import CAMUNDA_NS
-from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 
 from .bpmn import get_bpmn
@@ -30,28 +28,3 @@ def get_messages(definition_id: str) -> List[str]:
     messages = tree.findall(".//bpmn:message", CAMUNDA_NS)
 
     return [message.attrib["name"] for message in messages]
-
-
-def get_process_definition_messages(zaak_url: str) -> List[DefinitionMessages]:
-    """
-    Extract the possible messages that can be sent into the process.
-    """
-    client = get_client()
-
-    instances = client.get("process-instance", {"variables": f"zaakUrl_eq_{zaak_url}"},)
-
-    instances = sorted(instances, key=lambda i: (i["definition_id"], i["id"]))
-
-    defs = [
-        DefinitionMessages(
-            id=definition_id, instance_ids=[instance["id"] for instance in instances],
-        )
-        for definition_id, instances in groupby(
-            instances, key=lambda i: i["definition_id"]
-        )
-    ]
-
-    for definition in defs:
-        definition.message_names = get_messages(definition.id)
-
-    return [definition for definition in defs if definition.message_names]
