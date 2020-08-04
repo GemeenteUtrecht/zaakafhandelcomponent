@@ -285,6 +285,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             "users": user_names,
             "documenten": self.cleaned_data["documenten"],
             "kownslReviewRequestId": self.cleaned_data["review_request"],
+            "kownslFrontendUrl": self.cleaned_data["kownslFrontendUrl"],
         }
 
     def on_submission(self):
@@ -296,6 +297,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             num_assigned_users=len(self.cleaned_data["users"]),
         )
         self.cleaned_data["review_request"] = str(review_request.id)
+        self.cleaned_data["kownslFrontendUrl"] = review_request.frontend_url
 
 
 class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):
