@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import camelcaseKeys from 'camelcase-keys';
+
 import { jsonScriptToVar } from '../../utils/json-script';
 import { CsrfTokenContext } from '../forms/context';
 import { CurrentUserContext } from './context';
@@ -14,12 +16,7 @@ const init = () => {
 
     if (!nodes.length) return;
 
-    const currentUser = {
-        id: jsonScriptToVar('userId'),
-        username: jsonScriptToVar('username'),
-        firstName: 'TODO',
-        lastName: 'TODO',
-    };
+    const currentUser = camelcaseKeys(jsonScriptToVar('currentUser'));
 
     for (const node of nodes) {
 

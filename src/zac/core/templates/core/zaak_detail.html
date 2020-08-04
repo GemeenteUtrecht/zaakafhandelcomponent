@@ -295,7 +295,6 @@
 
 </article>
 
-{{ user.id|json_script:"userId" }}
-{{ user.username|json_script:"username" }}
+{{ user_serializer.data|json_script:"currentUser" }}
 
 {% endblock content %}

@@ -29,6 +29,8 @@
     "autoprefixer": "^9.7.5",
     "babel-loader": "latest",
     "base64-inline-loader": "^1.1.1",
+    "camelcase": "^6.0.0",
+    "camelcase-keys": "^6.2.2",
     "css-byebye": "^2.0.2",
     "cssnano": "^4.1.10",
     "eyeglass": "^2.5.0",
