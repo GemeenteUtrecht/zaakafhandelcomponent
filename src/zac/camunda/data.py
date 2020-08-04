@@ -12,10 +12,10 @@ from django_camunda.types import CamundaId
 class ProcessInstance(Model):
     id: CamundaId
     definition_id: str
-    business_key: str
-    case_instance_id: str
-    suspended: bool
-    tenant_id: str
+    business_key: str = ""
+    case_instance_id: str = ""
+    suspended: bool = False
+    tenant_id: str = ""
 
     definition: str = None
     sub_processes: list = field(default_factory=list)
