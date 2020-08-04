@@ -7,10 +7,6 @@
 
 {% has_perm 'zaken:inzien' user zaak as can_read_zaak %}
 {% has_perm 'zaken:afsluiten' user zaak as can_close_zaak %}
-{% has_perm 'zaken:set-result' user zaak as can_set_result %}
-
-
-
 <a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
     Terug naar de zaakgegevens
 </a>
@@ -38,6 +34,7 @@
         class="case-activities"
         data-zaak="{{ zaak.url }}"
         data-endpoint="{% url 'activities:activity-list' %}"
+        style="width: 100%;"
     >
         <!-- react managed -->
     </div>
