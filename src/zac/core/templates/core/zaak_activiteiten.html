@@ -1,0 +1,40 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates rules %}
+
+
+{% block content %}
+{% load_widgets form='sniplates/forms.html' %}
+
+{% has_perm 'zaken:inzien' user zaak as can_read_zaak %}
+{% has_perm 'zaken:afsluiten' user zaak as can_close_zaak %}
+{% has_perm 'zaken:set-result' user zaak as can_set_result %}
+
+
+
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
+
+<header class="zaak-detail-page__header">
+
+    <h1 class="page-title" title="Zaaktype">
+        Activiteiten voor "{{ zaak.omschrijving }}"
+        <br>
+        <small class="page-title__extra" title="Zaaktype">
+            {{ zaak.zaaktype.omschrijving }}
+        </small>
+    </h1>
+
+    <nav class="page-controls page-controls--align-right">
+        <button type="button" class="btn btn--control btn--control-focus">
+            TODO
+        </button>
+    </nav>
+
+</header>
+
+<article class="zaak-detail">
+
+</article>
+
+{% endblock content %}
