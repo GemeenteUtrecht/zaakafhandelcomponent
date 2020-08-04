@@ -131,42 +131,42 @@ class ProcessInstanceTests(TestCase):
         expected_data = [
             {
                 "id": self.process_instance_data[0]["id"],
-                "definition_id": self.process_instance_data[0]["definitionId"],
+                "definitionId": self.process_instance_data[0]["definitionId"],
                 "title": self.process_definition_data[0]["key"],
                 "messages": ["Annuleer behandeling", "Advies vragen"],
                 "tasks": [],
-                "sub_processes": [
+                "subProcesses": [
                     {
                         "id": self.process_instance_data[1]["id"],
-                        "definition_id": self.process_instance_data[1]["definitionId"],
+                        "definitionId": self.process_instance_data[1]["definitionId"],
                         "title": self.process_definition_data[1]["key"],
                         "messages": [],
                         "tasks": [
                             {
                                 "id": self.task_data[1][0]["id"],
-                                "execute_url": reverse(
+                                "executeUrl": reverse(
                                     "core:zaak-task", args=[self.task_data[1][0]["id"]]
                                 ),
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
-                                "has_form": False,
+                                "hasForm": False,
                                 "assignee": {
                                     "username": self.user.username,
-                                    "first_name": self.user.first_name,
-                                    "last_name": self.user.last_name,
+                                    "firstName": self.user.first_name,
+                                    "lastName": self.user.last_name,
                                 },
                             }
                         ],
-                        "sub_processes": [
+                        "subProcesses": [
                             {
                                 "id": self.process_instance_data[2]["id"],
-                                "definition_id": self.process_instance_data[2][
+                                "definitionId": self.process_instance_data[2][
                                     "definitionId"
                                 ],
                                 "title": self.process_definition_data[2]["key"],
                                 "messages": [],
                                 "tasks": [],
-                                "sub_processes": [],
+                                "subProcesses": [],
                             }
                         ],
                     }

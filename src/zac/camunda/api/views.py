@@ -1,3 +1,4 @@
+from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from .serializers import ProcessInstanceSerializer
 
 class ProcessInstanceFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    renderer_classes = (CamelCaseJSONRenderer,)
 
     def get(self, request: Request, *args, **kwargs):
         zaak_url = request.GET.get("zaak_url")
