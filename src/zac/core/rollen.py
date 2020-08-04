@@ -24,6 +24,8 @@ class Rol(_Rol):
             return None
 
         if self.betrokkene:
+            if not self.natuurlijkpersoon:
+                return _("(invalid BRP reference!)")
             return self.natuurlijkpersoon.get_full_name()
 
         bits = [
@@ -38,6 +40,8 @@ class Rol(_Rol):
             return None
 
         if self.betrokkene:
+            if not self.natuurlijkpersoon:
+                return _("(invalid BRP reference!)")
             return self.natuurlijkpersoon.burgerservicenummer
 
         return self.betrokkene_identificatie["inp_bsn"]

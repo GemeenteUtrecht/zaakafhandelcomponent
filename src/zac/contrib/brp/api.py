@@ -1,5 +1,7 @@
+import logging
 import uuid
 
+from zds_client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
 from zgw_consumers.constants import AuthTypes
@@ -8,6 +10,8 @@ from zac.utils.decorators import cache as cache_result
 
 from .data import IngeschrevenNatuurlijkPersoon
 from .models import BRPConfig
+
+logger = logging.getLogger(__name__)
 
 A_DAY = 60 * 60 * 24
 
@@ -50,5 +54,11 @@ def get_client() -> HalClient:
 @cache_result("natuurlijkpersoon:{url}", timeout=A_DAY)
 def fetch_natuurlijkpersoon(url: str) -> IngeschrevenNatuurlijkPersoon:
     client = get_client()
-    result = client.retrieve("ingeschrevenNatuurlijkPersoon", url=url)
+    try:
+        result = client.retrieve("ingeschrevenNatuurlijkPersoon", url=url)
+    except ClientError as exc:
+        if exc.args[0]["status"] == 404:
+            logger.warning("Invalid BRP reference submitted: %s", url, exc_info=True)
+            return None
+        raise
     return factory(IngeschrevenNatuurlijkPersoon, result)
