@@ -159,6 +159,10 @@ const ProcessInteraction = ({
         };
     }
 
+    if (!state.value.length) {
+        return (<p className="soft-info soft-info--normal-size">Er lopen geen actieve processen</p>);
+    }
+
     return (
         <TabList>
             {

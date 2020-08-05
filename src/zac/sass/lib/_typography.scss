@@ -22,9 +22,13 @@
   text-transform: uppercase;
 }
 
-@mixin timestamp() {
+@mixin mute() {
   color: $color-timestamp;
   font-size: $font-size-timestamp;
+}
+
+@mixin timestamp() {
+  @include mute;
 }
 
 @mixin ellipsis() {
