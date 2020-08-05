@@ -11,6 +11,10 @@ $main-content-background-color: #fefefe !default;
     margin: 1rem;
     margin-right: 0.5em;
 
+    // depth
+    border: solid 1px #ddd;
+    box-shadow: 1px 1px 2px 0px rgba(black, 0.1);
+
     // stick nav bar when scrolling
     position: sticky;
     align-self: flex-start;
