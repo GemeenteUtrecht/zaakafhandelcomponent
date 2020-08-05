@@ -278,7 +278,6 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
         user_names = [user.username for user in self.cleaned_data["users"]]
         return {
             "users": user_names,
-            "documenten": self.cleaned_data["documenten"],
             "kownslReviewRequestId": self.cleaned_data["review_request"],
             "kownslFrontendUrl": self.cleaned_data["kownslFrontendUrl"],
         }
@@ -288,6 +287,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
 
         review_request = create_review_request(
             self.zaak_url,
+            documents=self.cleaned_data["documenten"],
             review_type=self._review_type,
             num_assigned_users=len(self.cleaned_data["users"]),
         )

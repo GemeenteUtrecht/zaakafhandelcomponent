@@ -38,6 +38,7 @@ def mock_zaak_detail_context():
         "id": "45638aa6-e177-46cc-b580-43339795d5b5",
         "for_zaak": f"{ZAKEN_ROOT}zaak/123",
         "review_type": "approval",
+        "documents": [],
         "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
         "num_advices": 0,
         "num_approvals": 1,

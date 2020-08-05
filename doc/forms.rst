@@ -23,11 +23,8 @@ implemented by the ZAC:
   Upon succesful submission, the following process variables are set:
 
     - ``users``: a (JSON) list of user identifiers, e.g.: ``["marte004", "beer001"]``
-
-    - ``documenten``: a (JSON) list of EnkelvoudiginformatieObject (=document) URLs, e.g.:
-      ``["https://documenten-api.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/123"]``
-
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
+    - ``kownslFrontendUrl``: the URL for end users to submit their advice.
 
 - ``zac:configureApprovalRequest``: presents a form to the end user to select documents
   from the case to create an approval request, and allows selection of assignees.
@@ -35,9 +32,8 @@ implemented by the ZAC:
   Upon succesful submission, the following process variables are set:
 
     - ``users``: a (JSON) list of user identifiers, e.g.: ``["marte004", "beer001"]``
-    - ``documenten``: a (JSON) list of EnkelvoudiginformatieObject (=document) URLs, e.g.:
-      ``["https://documenten-api.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/123"]``
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
+    - ``kownslFrontendUrl``: the URL for end users to submit their approval.
 
 - ``zac:doRedirect``: grabs the ``redirectTo`` process variable, and redirects the user
   to this location. A ``?state`` parameter is added for the receiving application, which

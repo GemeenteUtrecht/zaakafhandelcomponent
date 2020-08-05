@@ -18,13 +18,17 @@ def get_client() -> ZGWClient:
 
 
 def create_review_request(
-    zaak_url: str, review_type: str = "advice", num_assigned_users: int = 0
+    zaak_url: str,
+    documents: List[str],
+    review_type: str = "advice",
+    num_assigned_users: int = 0,
 ) -> ReviewRequest:
     client = get_client()
     data = {
         "for_zaak": zaak_url,
         "review_type": review_type,
         "num_assigned_users": num_assigned_users,
+        "documents": documents,
     }
     resp = client.create("reviewrequest", data=data)
     return factory(ReviewRequest, resp)

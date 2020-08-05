@@ -66,6 +66,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": str(_uuid),
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
+            "documents": ["https://doc.nl/123"],
             "frontend_url": "",
             "num_advices": 0,
             "num_approvals": 0,
@@ -75,7 +76,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
         )
 
-        review_request = create_review_request("https://zaken.nl/api/v1/zaak/123")
+        review_request = create_review_request(
+            "https://zaken.nl/api/v1/zaak/123", documents=["https://doc.nl/123"],
+        )
 
         self.assertEqual(review_request.id, _uuid)
         self.assertEqual(review_request.for_zaak, "https://zaken.nl/api/v1/zaak/123")
@@ -87,6 +90,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
+            "documents": [],
             "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "num_advices": 1,
             "num_approvals": 0,
@@ -128,6 +132,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "approval",
+            "documents": [],
             "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "num_advices": 0,
             "num_approvals": 1,
@@ -176,6 +181,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "id": str(_uuid),
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
+            "documents": [],
             "frontend_url": "",
             "num_advices": 0,
             "num_approvals": 0,
