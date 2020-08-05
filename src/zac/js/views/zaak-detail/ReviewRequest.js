@@ -57,7 +57,7 @@ const ReviewRequestRow = ({ reviewRequest }) => {
 
     return (
         <>
-            <tr onClick={openModal} className="table__column table__column--clickable">
+            <tr onClick={openModal} className="table__column table__column--clickable" title="Toon details">
                 <td>{kownslTypes[reviewRequest.review_type]}</td>
                 <td>{`${numReviews} / ${reviewRequest.num_assigned_users}`}</td>
             </tr>

@@ -35,11 +35,22 @@ $table-head-border-color: $color-secondary !default;
   }
 
   @include element('column') {
+
     @include modifier('hidden') {
       display: none;
     }
+
     @include modifier('clickable') {
       cursor: pointer;
+
+      td {
+        padding: 0.2em 0.5em;
+      }
+
+      &:hover {
+        background: $color-secondary;
+        text-decoration: underline;
+      }
     }
   }
 
