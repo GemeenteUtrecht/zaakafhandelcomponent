@@ -50,6 +50,9 @@ const CaseActivity = ({ activity }) => {
                 {activity.assignee ?? <span className="soft-info">-</span>}
             </section>
 
+            <section className="case-activity__timeline">
+            </section>
+
         </article>
     );
 };

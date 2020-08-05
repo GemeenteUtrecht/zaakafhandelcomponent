@@ -3,7 +3,19 @@ from rest_framework import serializers
 from ..models import Activity, Event
 
 
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = (
+            "activity",
+            "notes",
+            "created",
+        )
+
+
 class ActivitySerializer(serializers.ModelSerializer):
+    events = EventSerializer(many=True, read_only=True)
+
     class Meta:
         model = Activity
         fields = (
@@ -15,4 +27,5 @@ class ActivitySerializer(serializers.ModelSerializer):
             "assignee",
             "document",
             "created",
+            "events",
         )

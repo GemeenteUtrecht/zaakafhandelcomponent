@@ -18,3 +18,4 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ("activity",)
     search_fields = ("activity__zaak",)
     date_hierarchy = "created"
+    autocomplete_fields = ("activity",)

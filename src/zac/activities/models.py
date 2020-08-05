@@ -55,7 +55,9 @@ class Event(models.Model):
     Represent a single log-entry worthy event for a given activity.
     """
 
-    activity = models.ForeignKey("Activity", on_delete=models.CASCADE)
+    activity = models.ForeignKey(
+        "Activity", on_delete=models.CASCADE, related_name="events",
+    )
     notes = models.TextField(_("notes"))
     created = models.DateTimeField(_("created"), auto_now_add=True)
 
