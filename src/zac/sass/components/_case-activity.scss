@@ -3,12 +3,12 @@
 @import "../lib/typography";
 
 .case-activity {
-
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
 
   @include element("id") {
-    width: 40%;
+
   }
 
   @include element("name") {
@@ -20,15 +20,18 @@
     @include mute;
   }
 
+  @include element("assignee") {
+  }
+
   @include element("content") {
-    width: 60%;
+    justify-self: center;
+    max-width: 50%;
   }
 
   @include element("document") {
   }
 
-  @include element("assignee") {
-    width: 100%;
+  @include element("timeline") {
+    justify-self: flex-end;
   }
-
 }

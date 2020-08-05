@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
 
+import { EventType, EventTimeline } from './Event';
+
 
 const Activity = PropTypes.shape({
     id: PropTypes.number.isRequired,
@@ -13,6 +15,7 @@ const Activity = PropTypes.shape({
     created: PropTypes.string.isRequired,
     assignee: PropTypes.number,
     document: PropTypes.string,
+    events: PropTypes.arrayOf(EventType),
 });
 
 
@@ -28,6 +31,11 @@ const CaseActivity = ({ activity }) => {
                 <span className="case-activity__timestamp">
                     {timeSince(activity.created)}
                 </span>
+
+                <div className="case-activity__assignee">
+                    {'Verantwoordelijke: '}
+                    {activity.assignee ?? <span className="soft-info">-</span>}
+                </div>
             </header>
 
             <section className="case-activity__content">
@@ -45,12 +53,8 @@ const CaseActivity = ({ activity }) => {
                 </div>
             </section>
 
-            <section className="case-activity__assignee">
-                {'Verantwoordelijke: '}
-                {activity.assignee ?? <span className="soft-info">-</span>}
-            </section>
-
             <section className="case-activity__timeline">
+                <EventTimeline>{activity.events}</EventTimeline>
             </section>
 
         </article>
