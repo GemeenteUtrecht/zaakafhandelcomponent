@@ -33,6 +33,10 @@ const CaseActivityList = ({ zaak, endpoint }) => {
         return (<span className="loader"></span>);
     }
 
+    if (!state.value.length) {
+        return (<div className="soft-info soft-info--normal-size">Geen ad-hoc activiteiten bekend</div>);
+    }
+
     const onGoing = state.value.filter(activity => activity.status === 'on_going');
     const finished = state.value.filter(activity => activity.status === 'finished');
 

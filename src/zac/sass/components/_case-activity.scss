@@ -1,0 +1,34 @@
+@import "../lib/bem";
+@import "../lib/colors";
+@import "../lib/typography";
+
+.case-activity {
+
+  display: flex;
+  flex-wrap: wrap;
+
+  @include element("id") {
+    width: 40%;
+  }
+
+  @include element("name") {
+    display: block;
+    font-weight: 600;
+  }
+
+  @include element("timestamp") {
+    @include mute;
+  }
+
+  @include element("content") {
+    width: 60%;
+  }
+
+  @include element("document") {
+  }
+
+  @include element("assignee") {
+    width: 100%;
+  }
+
+}

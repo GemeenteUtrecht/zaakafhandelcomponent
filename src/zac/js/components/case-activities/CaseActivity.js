@@ -40,14 +40,14 @@ const CaseActivity = ({ activity }) => {
                                 Toon documentinformatie
                             </a>
                         )
-                        : 'Document ontbreekt.'
+                        : <span className="soft-info">Document ontbreekt.</span>
                     }
                 </div>
             </section>
 
             <section className="case-activity__assignee">
-                {/* TODO: serialize user */}
-                {activity.assignee}
+                {'Verantwoordelijke: '}
+                {activity.assignee ?? <span className="soft-info">-</span>}
             </section>
 
         </article>
