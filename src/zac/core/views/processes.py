@@ -192,8 +192,11 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
     def get_success_url(self):
         return_url = self.request.POST.get("return_url")
+
         if return_url and is_safe_url(
-            return_url, allowed_hosts=[self.request.get_host()]
+            return_url,
+            allowed_hosts=[self.request.get_host()],
+            require_https=self.request.is_secure(),
         ):
             return return_url
 
@@ -265,6 +268,16 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
             # TODO: session is annoying, quick workaround
             self.request.session["open_url"] = redirect_url
             redirect_url = reverse("core:perform-task", kwargs=self.kwargs)
+            return_url = reverse(
+                "core:zaak-detail",
+                kwargs={
+                    "bronorganisatie": self.zaak.bronorganisatie,
+                    "identificatie": self.zaak.identificatie,
+                },
+            )
+        else:
+            # return back to the zaak when done
+            return_url = self.request.build_absolute_uri(self.request.path)
 
         # prepare state so that we know what to do
         state = {
@@ -272,8 +285,6 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
             "task_id": str(task.id),
         }
 
-        # return back to the zaak when do
-        return_url = self.request.build_absolute_uri(self.request.path)
         encoded_state = urlencode(
             {"state": base64.b64encode(json.dumps(state).encode("utf-8"))}
         )
