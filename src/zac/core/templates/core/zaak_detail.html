@@ -39,6 +39,17 @@
 
         {% if not zaak.einddatum %}
 
+            {# TODO: permissions #}
+            <a
+                href="{% url 'core:zaak-activiteiten' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+                class="link link--plain"
+            >
+                <button type="button" class="btn btn--control btn btn--control-focus">
+                    Ad-hoc activiteiten {% if activity_count %}({{ activity_count }}){% endif %}
+                </button>
+            </a>
+
+
             {% if can_do_zaakafhandeling %}
             <a href="{% url 'core:zaak-afhandeling' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
                 class="link link--plain link--disabled"

@@ -10,6 +10,8 @@ from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
+from zac.activities.constants import ActivityStatuses
+from zac.activities.models import Activity
 from zac.contrib.kownsl.api import (
     get_review_requests,
     retrieve_advices,
@@ -135,6 +137,15 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "review_requests_json": review_requests_json,
                 }
             )
+
+        context.update(
+            {
+                "activity_count": Activity.objects.filter(
+                    zaak=self.object.url, status=ActivityStatuses.on_going
+                ).count()
+            }
+        )
+
         return context
 
     @staticmethod
