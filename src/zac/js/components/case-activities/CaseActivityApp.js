@@ -13,6 +13,7 @@ const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
             <AddActivityButton portalNode={controlsNode} onClick={ () => setIsAdding(true) } />
             <AddActvityModal
                 endpoint={endpoint}
+                zaak={zaak}
                 isOpen={isAdding}
                 closeModal={ () => setIsAdding(false) }
             />

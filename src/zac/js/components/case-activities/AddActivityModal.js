@@ -24,19 +24,31 @@ const initialState = {
 
 function reducer(draft, action) {
     switch (action.type) {
-        case 'FIELD_CHANGED':
-            const { name, value } = action.payload;
-            draft[name].value = value;
-            return void null;
         case 'RESET':
             return initialState;
+
+        case 'FIELD_CHANGED': {
+            const { name, value } = action.payload;
+            draft[name].value = value;
+            draft[name].errors = [];
+            break;
+        }
+
+        case 'VALIDATION_ERRORS': {
+            const errors = action.payload;
+            for (const [field, errors] of Object.entries(errors)) {
+                draft[field].errors = errors;
+            }
+            break;
+        }
+
         default:
             break;
     }
 }
 
 
-const AddActvityModal = ({ endpoint, isOpen, closeModal }) => {
+const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal }) => {
     const [state, dispatch] = useImmerReducer(reducer, initialState);
     const csrftoken = useContext(CsrfTokenContext);
 
@@ -59,6 +71,7 @@ const AddActvityModal = ({ endpoint, isOpen, closeModal }) => {
     const onSubmit = async (event) => {
         event.preventDefault();
         const {ok, status, data} = await post(endpoint, csrftoken, {
+            zaak: zaak,
             name: state.name.value,
             remarks: state.remarks.value,
         });
@@ -70,10 +83,11 @@ const AddActvityModal = ({ endpoint, isOpen, closeModal }) => {
             closeModal();
             // TODO: trigger reload of data for list
         } else {
-
+            dispatch({
+                type: 'VALIDATION_ERRORS',
+                payload: data,
+            });
         }
-        console.log(data);
-        debugger;
     };
 
     return (
@@ -112,6 +126,7 @@ const AddActvityModal = ({ endpoint, isOpen, closeModal }) => {
 };
 
 AddActvityModal.propTypes = {
+    zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
     isOpen: PropTypes.bool.isRequired,
     closeModal: PropTypes.func.isRequired,

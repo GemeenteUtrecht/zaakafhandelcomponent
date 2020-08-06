@@ -13,7 +13,7 @@ const ErrorList = ({ errors=[] }) => {
 
 const Wrapper = ({ errors=[], children }) => {
     const hasErrors = errors && errors.length > 0;
-    const className = "input";
+    let className = "input";
     if (hasErrors) {
         className += " input--invalid";
     }

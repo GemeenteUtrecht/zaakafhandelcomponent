@@ -58,13 +58,13 @@ const Input = ({
 
 
 const TextInput = (props) => {
-    const { label, helpText, id, required } = props;
+    const { label, helpText, id, required, errors=[] } = props;
 
     return (
-        <Wrapper>
+        <Wrapper errors={errors}>
             <Label label={label} required={required} idForLabel={id} />
             <Help helpText={helpText} idForLabel={id} />
-            <ErrorList />
+            <ErrorList errors={errors} />
             <Input type="text" {...props} />
         </Wrapper>
     );
