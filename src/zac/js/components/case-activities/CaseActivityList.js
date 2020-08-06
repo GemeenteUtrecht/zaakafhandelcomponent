@@ -6,7 +6,7 @@ import { apiCall } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
 import { TabList, TabContent } from '../Tabs';
 import { Activity, CaseActivity } from './CaseActivity';
-import { AddActivityButton } from './AddActivityButton';
+
 
 const ActivityList = ({ children }) => {
     return (
@@ -23,7 +23,7 @@ ActivityList.propTypes = {
 };
 
 
-const CaseActivityList = ({ zaak, endpoint, controlsNode }) => {
+const CaseActivityList = ({ zaak, endpoint }) => {
     const state = useAsync(async () => {
         const response = await apiCall(endpoint);
         const activities = await response.json();
@@ -43,7 +43,6 @@ const CaseActivityList = ({ zaak, endpoint, controlsNode }) => {
 
     return (
         <React.Fragment>
-            <AddActivityButton portalNode={controlsNode} />
             <TabList>
                 <TabContent title="Lopend">
                     <ActivityList>{onGoing}</ActivityList>
@@ -60,7 +59,6 @@ const CaseActivityList = ({ zaak, endpoint, controlsNode }) => {
 CaseActivityList.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
-    controlsNode: PropTypes.object.isRequired,
 };
 
 export { CaseActivityList };

@@ -3,9 +3,13 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
 
-const AddActivityButton = ({ portalNode }) => {
+const AddActivityButton = ({ portalNode, onClick }) => {
     const btn = (
-        <button type="button" className="btn btn--control btn--control-focus">
+        <button
+          type="button"
+          className="btn btn--control btn--control-focus"
+          onClick={onClick}
+        >
             <i className="material-icons">add</i>
             Activiteit toevoegen
         </button>
@@ -15,6 +19,7 @@ const AddActivityButton = ({ portalNode }) => {
 
 AddActivityButton.propTypes = {
     portalNode: PropTypes.object.isRequired,
+    onClick: PropTypes.func.isRequired,
 };
 
 

@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { CaseActivityList } from './CaseActivityList';
+import Modal from 'react-modal';
+
+import { CaseActivityApp } from './CaseActivityApp';
 
 const CLASS_NAME = 'case-activities';
 
@@ -10,6 +12,9 @@ const init = () => {
     const nodes = document.querySelectorAll(`.${CLASS_NAME}`);
 
     if (!nodes.length) return;
+
+    // accessibility
+    Modal.setAppElement('main.main');
 
     // TODO: what if multiple nodes are available?
     const pageControls = document.querySelector('.page-controls');
@@ -22,7 +27,7 @@ const init = () => {
         };
 
         ReactDOM.render(
-            <CaseActivityList controlsNode={pageControls} {...props} />,
+            <CaseActivityApp controlsNode={pageControls} {...props} />,
             node
         );
     }
