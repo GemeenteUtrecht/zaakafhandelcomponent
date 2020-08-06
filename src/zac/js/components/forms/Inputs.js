@@ -1,4 +1,8 @@
-import React from "react";
+import React from 'react';
+
+import { Help } from './Help';
+import { Label } from './Label';
+import { ErrorList, Wrapper } from './Utils';
 
 
 const Input = ({ type='text', id='', name='', initial, classes=null, checked=false, onBlur, onChange, required=false, disabled=false }) => {
@@ -34,23 +38,23 @@ const Input = ({ type='text', id='', name='', initial, classes=null, checked=fal
 };
 
 
-// const TextInput = (props) => {
-//     const { label, helpText, id, required } = props;
+const TextInput = (props) => {
+    const { label, helpText, id, required } = props;
 
-//     return (
-//         <Wrapper>
-//             <Label label={label} required={required} idForLabel={id} />
-//             <Help helpText={helpText} idForLabel={id} />
-//             <ErrorList />
-//             <Input type="text" {...props} />
-//         </Wrapper>
-//     );
-// };
+    return (
+        <Wrapper>
+            <Label label={label} required={required} idForLabel={id} />
+            <Help helpText={helpText} idForLabel={id} />
+            <ErrorList />
+            <Input type="text" {...props} />
+        </Wrapper>
+    );
+};
 
 
-// const DateInput = (props) => {
-//     return <Input type="date" {...props} />;
-// };
+const DateInput = (props) => {
+    return <Input type="date" {...props} />;
+};
 
 const CheckboxInput = (props) => {
     return <Input type="checkbox" {...props} />;
@@ -65,5 +69,4 @@ const HiddenInput = ({name, value}) => {
 }
 
 
-// export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput};
-export {Input, CheckboxInput, RadioInput, HiddenInput};
+export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput};

@@ -2,6 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 
+import { TextInput } from '../forms/Inputs';
+import { TextArea } from '../forms/TextArea';
+import { SubmitRow } from '../forms/Utils';
+
 
 const AddActvityModal = ({ isOpen, closeModal }) => {
     return (
@@ -12,7 +16,13 @@ const AddActvityModal = ({ isOpen, closeModal }) => {
         >
             <button onClick={ closeModal } className="modal__close btn">&times;</button>
 
-            Hello world.
+            <h1 className="page-title">Activiteit toevoegen</h1>
+
+            <form className="form form--modal">
+                <TextInput id="id_name" name="name" label="Naam" required={true} />
+                <TextArea id="id_remarks" name="remarks" label="Opmerkingen" />
+                <SubmitRow text="Toevoegen"/>
+            </form>
 
         </Modal>
     );
