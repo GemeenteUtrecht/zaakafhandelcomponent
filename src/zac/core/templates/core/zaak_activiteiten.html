@@ -32,6 +32,7 @@
         class="case-activities"
         data-zaak="{{ zaak.url }}"
         data-endpoint="{% url 'activities:activity-list' %}"
+        data-csrftoken="{{ csrf_token }}"
         style="width: 100%;"
     >
         <!-- react managed -->

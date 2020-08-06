@@ -11,7 +11,11 @@ const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
     return (
         <React.Fragment>
             <AddActivityButton portalNode={controlsNode} onClick={ () => setIsAdding(true) } />
-            <AddActvityModal isOpen={isAdding} closeModal={ () => setIsAdding(false) } />
+            <AddActvityModal
+                endpoint={endpoint}
+                isOpen={isAdding}
+                closeModal={ () => setIsAdding(false) }
+            />
             <CaseActivityList zaak={zaak} endpoint={endpoint} />
         </React.Fragment>
     );

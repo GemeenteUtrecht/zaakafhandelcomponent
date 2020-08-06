@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import Modal from 'react-modal';
 
+import { CsrfTokenContext } from '../forms/context';
 import { CaseActivityApp } from './CaseActivityApp';
 
 const CLASS_NAME = 'case-activities';
@@ -27,7 +28,9 @@ const init = () => {
         };
 
         ReactDOM.render(
-            <CaseActivityApp controlsNode={pageControls} {...props} />,
+            <CsrfTokenContext.Provider value={node.dataset.csrftoken} >
+                <CaseActivityApp controlsNode={pageControls} {...props} />
+            </CsrfTokenContext.Provider>,
             node
         );
     }

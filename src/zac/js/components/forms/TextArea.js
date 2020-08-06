@@ -6,13 +6,33 @@ import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
 
 
-const RawTextArea = ({ id='', name='', initial, classes=null, onBlur, onChange, required=false, disabled=false }) => {
+const RawTextArea = ({
+    id='',
+    name='',
+    initial='',
+    value='',
+    classes=null,
+    onBlur,
+    onChange,
+    required=false,
+    disabled=false
+}) => {
     const classNames = classes ?? 'input__control input__control--text';
+
+    let extraProps = {};
+    if (id) {
+        extraProps.id = id;
+    }
+    // not-controlled vs. controlled
+    if (initial) {
+        extraProps.defaultValue = initial;
+    } else {
+        extraProps.value = value;
+    }
+
     return (
         <textarea
             name={name}
-            id={id}
-            defaultValue={initial || ''}
             className={classNames}
             onBlur={ (event) => {
                 if (onBlur) {
@@ -26,6 +46,7 @@ const RawTextArea = ({ id='', name='', initial, classes=null, onBlur, onChange, 
             }}
             required={required}
             disabled={disabled}
+            {...extraProps}
         ></textarea>
     );
 };

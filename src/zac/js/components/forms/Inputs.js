@@ -5,7 +5,20 @@ import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
 
 
-const Input = ({ type='text', id='', name='', initial, classes=null, checked=false, onBlur, onChange, required=false, disabled=false }) => {
+const Input = ({
+    type='text',
+    id='',
+    name='',
+    initial='',
+    value='',
+    classes=null,
+    checked=false,
+    onBlur,
+    onChange,
+    required=false,
+    disabled=false
+}) => {
+
     const classNames = classes ??`input__control input__control--${type}`;
 
     let extraProps = {};
@@ -13,11 +26,17 @@ const Input = ({ type='text', id='', name='', initial, classes=null, checked=fal
         extraProps.id = id;
     }
 
+    // not-controlled vs. controlled
+    if (initial) {
+        extraProps.defaultValue = initial;
+    } else {
+        extraProps.value = value;
+    }
+
     return (
         <input
             name={name}
             type={type}
-            defaultValue={initial || ''}
             checked={checked}
             className={classNames}
             onBlur={ (event) => {
