@@ -48,7 +48,7 @@ function reducer(draft, action) {
 }
 
 
-const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId }) => {
+const AddActvityForm = ({ zaak, endpoint, onCreated }) => {
     const [state, dispatch] = useImmerReducer(reducer, initialState);
     const csrftoken = useContext(CsrfTokenContext);
 
@@ -80,8 +80,7 @@ const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId
                 type: 'RESET',
                 payload: null,
             });
-            closeModal();
-            setLastActivityId(data.id);
+            onCreated(data);
         } else {
             dispatch({
                 type: 'VALIDATION_ERRORS',
@@ -91,36 +90,54 @@ const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId
     };
 
     return (
+        <form className="form form--modal" onSubmit={onSubmit}>
+            <TextInput
+                id="id_name"
+                name="name"
+                label="Naam"
+                required={true}
+                onChange={ onFieldChange }
+                value={state.name.value}
+                errors={state.name.errors}
+            />
+            <TextArea
+                id="id_remarks"
+                name="remarks"
+                label="Opmerkingen"
+                onChange={ onFieldChange }
+                value={state.remarks.value}
+                errors={state.remarks.errors}
+            />
+            <SubmitRow text="Toevoegen"/>
+        </form>
+    );
+};
+
+AddActvityForm.propTypes = {
+    zaak: PropTypes.string.isRequired,
+    endpoint: PropTypes.string.isRequired,
+    onCreated: PropTypes.func.isRequired,
+};
+
+
+const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId }) => {
+    const [state, dispatch] = useImmerReducer(reducer, initialState);
+    const csrftoken = useContext(CsrfTokenContext);
+
+    const onCreated = (data) => {
+        setLastActivityId(data.id);
+        closeModal();
+    };
+
+    return (
         <Modal
           isOpen={isOpen}
           className="modal"
           onRequestClose={ closeModal }
         >
             <button onClick={ closeModal } className="modal__close btn">&times;</button>
-
             <h1 className="page-title">Activiteit toevoegen</h1>
-
-            <form className="form form--modal" onSubmit={onSubmit}>
-                <TextInput
-                    id="id_name"
-                    name="name"
-                    label="Naam"
-                    required={true}
-                    onChange={ onFieldChange }
-                    value={state.name.value}
-                    errors={state.name.errors}
-                />
-                <TextArea
-                    id="id_remarks"
-                    name="remarks"
-                    label="Opmerkingen"
-                    onChange={ onFieldChange }
-                    value={state.remarks.value}
-                    errors={state.remarks.errors}
-                />
-                <SubmitRow text="Toevoegen"/>
-            </form>
-
+            <AddActvityForm zaak={zaak} endpoint={endpoint} onCreated={onCreated} />
         </Modal>
     );
 };
