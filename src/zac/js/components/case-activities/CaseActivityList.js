@@ -23,12 +23,13 @@ ActivityList.propTypes = {
 };
 
 
-const CaseActivityList = ({ zaak, endpoint }) => {
+const CaseActivityList = ({ zaak, endpoint, lastActivityId=null }) => {
+    // lastActivityId is included so that data is reloaded on creation of a new activity
     const state = useAsync(async () => {
         const response = await apiCall(endpoint);
         const activities = await response.json();
         return activities;
-    }, [endpoint]);
+    }, [endpoint, lastActivityId]);
 
     if (state.loading) {
         return (<span className="loader"></span>);
@@ -59,6 +60,7 @@ const CaseActivityList = ({ zaak, endpoint }) => {
 CaseActivityList.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
+    lastActivityId: PropTypes.number,
 };
 
 export { CaseActivityList };

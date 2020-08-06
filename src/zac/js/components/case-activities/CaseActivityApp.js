@@ -8,6 +8,8 @@ import { CaseActivityList } from './CaseActivityList';
 
 const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
     const [isAdding, setIsAdding] = useState(false);
+    const [lastActivityId, setLastActivityId] = useState(null);
+
     return (
         <React.Fragment>
             <AddActivityButton portalNode={controlsNode} onClick={ () => setIsAdding(true) } />
@@ -16,8 +18,9 @@ const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
                 zaak={zaak}
                 isOpen={isAdding}
                 closeModal={ () => setIsAdding(false) }
+                setLastActivityId={setLastActivityId}
             />
-            <CaseActivityList zaak={zaak} endpoint={endpoint} />
+            <CaseActivityList zaak={zaak} endpoint={endpoint} lastActivityId={lastActivityId} />
         </React.Fragment>
     );
 };

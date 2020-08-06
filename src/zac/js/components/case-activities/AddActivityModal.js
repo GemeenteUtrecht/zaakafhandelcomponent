@@ -48,7 +48,7 @@ function reducer(draft, action) {
 }
 
 
-const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal }) => {
+const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId }) => {
     const [state, dispatch] = useImmerReducer(reducer, initialState);
     const csrftoken = useContext(CsrfTokenContext);
 
@@ -81,7 +81,7 @@ const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal }) => {
                 payload: null,
             });
             closeModal();
-            // TODO: trigger reload of data for list
+            setLastActivityId(data.id);
         } else {
             dispatch({
                 type: 'VALIDATION_ERRORS',
@@ -130,6 +130,7 @@ AddActvityModal.propTypes = {
     endpoint: PropTypes.string.isRequired,
     isOpen: PropTypes.bool.isRequired,
     closeModal: PropTypes.func.isRequired,
+    setLastActivityId: PropTypes.func.isRequired,
 };
 
 
