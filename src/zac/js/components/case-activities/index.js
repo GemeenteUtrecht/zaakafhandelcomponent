@@ -11,6 +11,9 @@ const init = () => {
 
     if (!nodes.length) return;
 
+    // TODO: what if multiple nodes are available?
+    const pageControls = document.querySelector('.page-controls');
+
     for (const node of nodes) {
 
         const props = {
@@ -19,7 +22,7 @@ const init = () => {
         };
 
         ReactDOM.render(
-            <CaseActivityList {...props} />,
+            <CaseActivityList controlsNode={pageControls} {...props} />,
             node
         );
     }

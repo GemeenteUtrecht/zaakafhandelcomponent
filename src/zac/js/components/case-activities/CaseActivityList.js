@@ -6,6 +6,7 @@ import { apiCall } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
 import { TabList, TabContent } from '../Tabs';
 import { Activity, CaseActivity } from './CaseActivity';
+import { AddActivityButton } from './AddActivityButton';
 
 const ActivityList = ({ children }) => {
     return (
@@ -22,7 +23,7 @@ ActivityList.propTypes = {
 };
 
 
-const CaseActivityList = ({ zaak, endpoint }) => {
+const CaseActivityList = ({ zaak, endpoint, controlsNode }) => {
     const state = useAsync(async () => {
         const response = await apiCall(endpoint);
         const activities = await response.json();
@@ -41,21 +42,25 @@ const CaseActivityList = ({ zaak, endpoint }) => {
     const finished = state.value.filter(activity => activity.status === 'finished');
 
     return (
-        <TabList>
-            <TabContent title="Lopend">
-                <ActivityList>{onGoing}</ActivityList>
-            </TabContent>
+        <React.Fragment>
+            <AddActivityButton portalNode={controlsNode} />
+            <TabList>
+                <TabContent title="Lopend">
+                    <ActivityList>{onGoing}</ActivityList>
+                </TabContent>
 
-            <TabContent title="Afgesloten">
-                <ActivityList>{finished}</ActivityList>
-            </TabContent>
-        </TabList>
+                <TabContent title="Afgesloten">
+                    <ActivityList>{finished}</ActivityList>
+                </TabContent>
+            </TabList>
+        </React.Fragment>
     );
 };
 
 CaseActivityList.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
-}
+    controlsNode: PropTypes.object.isRequired,
+};
 
 export { CaseActivityList };
