@@ -1,31 +1,28 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
 
 
-const Input = ({
-    type='text',
+const RawTextArea = ({
     id='',
     name='',
     initial='',
     value='',
     classes=null,
-    checked=false,
     onBlur,
     onChange,
     required=false,
     disabled=false
 }) => {
-
-    const classNames = classes ??`input__control input__control--${type}`;
+    const classNames = classes ?? 'input__control input__control--text';
 
     let extraProps = {};
     if (id) {
         extraProps.id = id;
     }
-
     // not-controlled vs. controlled
     if (initial) {
         extraProps.defaultValue = initial;
@@ -34,10 +31,8 @@ const Input = ({
     }
 
     return (
-        <input
+        <textarea
             name={name}
-            type={type}
-            checked={checked}
             className={classNames}
             onBlur={ (event) => {
                 if (onBlur) {
@@ -52,40 +47,30 @@ const Input = ({
             required={required}
             disabled={disabled}
             {...extraProps}
-        ></input>
+        ></textarea>
     );
 };
 
 
-const TextInput = (props) => {
-    const { label, helpText, id, required, errors=[] } = props;
-
+const TextArea = (props) => {
+    const { label, helpText, id, required } = props;
     return (
-        <Wrapper errors={errors}>
+        <Wrapper>
             <Label label={label} required={required} idForLabel={id} />
             <Help helpText={helpText} idForLabel={id} />
-            <ErrorList errors={errors} />
-            <Input type="text" {...props} />
+            <ErrorList />
+            <RawTextArea {...props} />
         </Wrapper>
     );
 };
 
-
-const DateInput = (props) => {
-    return <Input type="date" {...props} />;
+TextArea.propTypes = {
+    name: PropTypes.string.isRequired,
+    label: PropTypes.string,
+    required: PropTypes.bool,
+    id: PropTypes.string,
+    helpText: PropTypes.string,
 };
 
-const CheckboxInput = (props) => {
-    return <Input type="checkbox" {...props} />;
-};
 
-const RadioInput = (props) => {
-    return <Input type="radio" {...props} />;
-};
-
-const HiddenInput = ({name, value}) => {
-    return <input type="hidden" name={name} defaultValue={value} />
-}
-
-
-export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput};
+export { TextArea };

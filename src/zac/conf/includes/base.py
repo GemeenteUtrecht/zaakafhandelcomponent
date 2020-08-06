@@ -112,6 +112,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "rules.apps.AutodiscoverRulesConfig",
+    "django_filters",
     # Project applications.
     "zac.accounts",
     "zac.camunda",
@@ -123,6 +124,7 @@ INSTALLED_APPS = [
     "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
+    "zac.activities",
 ]
 
 MIDDLEWARE = [
@@ -368,7 +370,11 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ),
+    "DEFAULT_RENDERER_CLASSES": (
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+    ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 

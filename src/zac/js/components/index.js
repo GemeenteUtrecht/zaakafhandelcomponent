@@ -4,3 +4,4 @@ import './checkbox-select-dynamic';
 import './tabs';
 import './openUrl';
 import './processes';
+import './case-activities';

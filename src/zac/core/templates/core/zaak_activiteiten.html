@@ -1,0 +1,42 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates rules %}
+
+
+{% block content %}
+{% load_widgets form='sniplates/forms.html' %}
+
+{% has_perm 'zaken:inzien' user zaak as can_read_zaak %}
+{% has_perm 'zaken:afsluiten' user zaak as can_close_zaak %}
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
+
+<header class="zaak-detail-page__header">
+
+    <h1 class="page-title" title="Zaaktype">
+        Activiteiten voor "{{ zaak.omschrijving }}"
+        <br>
+        <small class="page-title__extra" title="Zaaktype">
+            {{ zaak.zaaktype.omschrijving }}
+        </small>
+    </h1>
+
+    <nav class="page-controls page-controls--align-right">
+        <!-- react portal -->
+    </nav>
+
+</header>
+
+<article class="zaak-detail">
+    <div
+        class="case-activities"
+        data-zaak="{{ zaak.url }}"
+        data-endpoint="{% url 'activities:activity-list' %}"
+        data-csrftoken="{{ csrf_token }}"
+        style="width: 100%;"
+    >
+        <!-- react managed -->
+    </div>
+</article>
+
+{% endblock content %}

@@ -35,6 +35,7 @@ django-camunda==0.9.3     # via -r requirements/ci.txt
 django-choices==1.7.0     # via -r requirements/ci.txt, zgw-consumers
 django-debug-toolbar==1.11  # via -r requirements/dev.in
 django-extensions==2.1.6  # via -r requirements/dev.in
+django-filter==2.3.0      # via -r requirements/ci.txt
 django-import-export==1.2.0  # via -r requirements/ci.txt
 django-ipware==2.1.0      # via -r requirements/ci.txt, django-axes
 django-redis==4.10.0      # via -r requirements/ci.txt
@@ -42,7 +43,7 @@ django-relativedelta==1.1.1  # via -r requirements/ci.txt, zgw-consumers
 django-sniplates==0.6.0   # via -r requirements/ci.txt
 django-solo==1.1.3        # via -r requirements/ci.txt, django-auth-adfs-db, django-camunda, zgw-consumers
 django-webtest==1.9.7     # via -r requirements/ci.txt
-django==2.2.12            # via -r requirements/ci.txt, ddt-api-calls, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-debug-toolbar, django-import-export, django-redis, django-relativedelta, django-sniplates, djangorestframework, zgw-consumers
+django==2.2.12            # via -r requirements/ci.txt, ddt-api-calls, django-appconf, django-auth-adfs, django-auth-adfs-db, django-axes, django-camunda, django-choices, django-debug-toolbar, django-filter, django-import-export, django-redis, django-relativedelta, django-sniplates, djangorestframework, zgw-consumers
 djangorestframework-camel-case==1.2.0  # via -r requirements/ci.txt
 djangorestframework==3.11.0  # via -r requirements/ci.txt
 docutils==0.16            # via sphinx

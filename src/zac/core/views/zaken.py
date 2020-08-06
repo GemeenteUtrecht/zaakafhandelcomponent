@@ -10,12 +10,14 @@ from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.permissions import UserPermissions
+from zac.activities.constants import ActivityStatuses
+from zac.activities.models import Activity
 from zac.contrib.kownsl.api import (
     get_review_requests,
     retrieve_advices,
     retrieve_approvals,
 )
-from zac.contrib.kownsl.data import Advice, ReviewRequest
+from zac.contrib.kownsl.data import ReviewRequest
 from zac.utils.api_models import convert_model_to_json
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
@@ -135,6 +137,15 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "review_requests_json": review_requests_json,
                 }
             )
+
+        context.update(
+            {
+                "activity_count": Activity.objects.filter(
+                    zaak=self.object.url, status=ActivityStatuses.on_going
+                ).count()
+            }
+        )
+
         return context
 
     @staticmethod
@@ -277,3 +288,14 @@ class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
 
     def get_success_url(self):
         return reverse("core:zaak-detail", kwargs=self.kwargs)
+
+
+class ZaakActiviteitenView(PermissionRequiredMixin, BaseDetailView):
+    template_name = "core/zaak_activiteiten.html"
+    context_object_name = "zaak"
+    permission_required = zaken_inzien.name
+
+    def get_object(self):
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak

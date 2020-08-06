@@ -1,0 +1,37 @@
+@import "../lib/bem";
+@import "../lib/colors";
+@import "../lib/typography";
+
+.case-activity {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  @include element("id") {
+
+  }
+
+  @include element("name") {
+    display: block;
+    font-weight: 600;
+  }
+
+  @include element("timestamp") {
+    @include mute;
+  }
+
+  @include element("assignee") {
+  }
+
+  @include element("content") {
+    justify-self: center;
+    max-width: 50%;
+  }
+
+  @include element("document") {
+  }
+
+  @include element("timeline") {
+    justify-self: flex-end;
+  }
+}

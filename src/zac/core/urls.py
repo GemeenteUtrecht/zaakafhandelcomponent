@@ -10,7 +10,13 @@ from .views.processes import (
     SendMessage,
 )
 from .views.search import SearchIndexView, SearchView
-from .views.zaken import FetchZaakObjecten, Index, ZaakAfhandelView, ZaakDetail
+from .views.zaken import (
+    FetchZaakObjecten,
+    Index,
+    ZaakActiviteitenView,
+    ZaakAfhandelView,
+    ZaakDetail,
+)
 
 app_name = "core"
 
@@ -24,6 +30,11 @@ urlpatterns = [
                     "<bronorganisatie>/<identificatie>/",
                     ZaakDetail.as_view(),
                     name="zaak-detail",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/activiteiten/",
+                    ZaakActiviteitenView.as_view(),
+                    name="zaak-activiteiten",
                 ),
                 path(
                     "<bronorganisatie>/<identificatie>/afhandelen/",
