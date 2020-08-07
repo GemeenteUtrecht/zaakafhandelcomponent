@@ -12,7 +12,9 @@ const ActivityList = ({ children }) => {
     return (
         <React.Fragment>
             {
-                children.map( (activity) => (<CaseActivity key={activity.id} activity={activity} />) )
+                children.map( (activity) => (
+                    <CaseActivity key={activity.id} activity={activity} />
+                ) )
             }
         </React.Fragment>
     );
@@ -23,12 +25,13 @@ ActivityList.propTypes = {
 };
 
 
-const CaseActivityList = ({ zaak, endpoint, lastActivityId=null }) => {
-    // lastActivityId is included so that data is reloaded on creation of a new activity
+const CaseActivityList = ({ zaak, endpoint, lastActivityId=null, lastEventId=null }) => {
+    // lastActivityId and lastEventId are included so that data is reloaded on creation
+    // of a new activity or event within an activity
     const state = useAsync(async () => {
         const activities = await get(endpoint, {zaak});
         return activities;
-    }, [endpoint, lastActivityId]);
+    }, [endpoint, lastActivityId, lastEventId]);
 
     if (state.error) {
         console.error(state.error);
@@ -65,6 +68,7 @@ CaseActivityList.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
     lastActivityId: PropTypes.number,
+    lastEventId: PropTypes.number,
 };
 
 export { CaseActivityList };

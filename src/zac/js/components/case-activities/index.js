@@ -25,6 +25,7 @@ const init = () => {
         const props = {
             zaak: node.dataset.zaak,
             endpoint: node.dataset.endpoint,
+            eventsEndpoint: node.dataset.eventsEndpoint,
         };
 
         ReactDOM.render(

@@ -4,11 +4,18 @@ import PropTypes from 'prop-types';
 import { AddActivityButton } from './AddActivityButton';
 import { AddActvityModal } from './AddActivityModal';
 import { CaseActivityList } from './CaseActivityList';
+import { EventsContext } from './context';
 
 
-const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
+const CaseActivityApp = ({ zaak, endpoint, eventsEndpoint, controlsNode }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [lastActivityId, setLastActivityId] = useState(null);
+    const [lastEventId, setLastEventId] = useState(null);
+
+    const eventsContext = {
+        endpoint: eventsEndpoint,
+        onCreate: (event) => setLastEventId(event.id)
+    };
 
     return (
         <React.Fragment>
@@ -20,7 +27,16 @@ const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
                 closeModal={ () => setIsAdding(false) }
                 setLastActivityId={setLastActivityId}
             />
-            <CaseActivityList zaak={zaak} endpoint={endpoint} lastActivityId={lastActivityId} />
+
+            <EventsContext.Provider value={eventsContext}>
+                <CaseActivityList
+                    zaak={zaak}
+                    endpoint={endpoint}
+                    eventsEndpoint={eventsEndpoint}
+                    lastActivityId={lastActivityId}
+                    lastEventId={lastEventId}
+                />
+            </EventsContext.Provider>
         </React.Fragment>
     );
 };
@@ -28,6 +44,7 @@ const CaseActivityApp = ({ zaak, endpoint, controlsNode }) => {
 CaseActivityApp.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
+    eventsEndpoint: PropTypes.string.isRequired,
     controlsNode: PropTypes.object.isRequired,
 };
 

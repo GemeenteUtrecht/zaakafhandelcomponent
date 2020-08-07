@@ -57,7 +57,9 @@ const CaseActivity = ({ activity }) => {
             </section>
 
             <section className="case-activity__timeline">
-                <EventTimeline onGoing={activity.status === 'on_going'}>{activity.events}</EventTimeline>
+                <EventTimeline activityId={activity.id} onGoing={activity.status === 'on_going'}>
+                    {activity.events}
+                </EventTimeline>
             </section>
 
         </article>
@@ -66,7 +68,7 @@ const CaseActivity = ({ activity }) => {
 
 
 CaseActivity.propTypes = {
-    activity: Activity,
+    activity: Activity.isRequired,
 };
 
 

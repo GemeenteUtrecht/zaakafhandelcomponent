@@ -4,7 +4,7 @@ from rest_framework import mixins, viewsets
 
 from ..models import Activity, Event
 from .filters import ActivityFilter
-from .serializers import ActivitySerializer
+from .serializers import ActivitySerializer, EventSerializer
 
 
 class ActivityViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
@@ -16,3 +16,8 @@ class ActivityViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
     )
     serializer_class = ActivitySerializer
     filterset_class = ActivityFilter
+
+
+class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Event.objects.none()
+    serializer_class = EventSerializer
