@@ -120,12 +120,12 @@ AddActvityForm.propTypes = {
 };
 
 
-const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, setLastActivityId }) => {
+const AddActvityModal = ({ zaak, endpoint, isOpen, closeModal, refresh }) => {
     const [state, dispatch] = useImmerReducer(reducer, initialState);
     const csrftoken = useContext(CsrfTokenContext);
 
     const onCreated = (data) => {
-        setLastActivityId(data.id);
+        refresh();
         closeModal();
     };
 
@@ -147,7 +147,7 @@ AddActvityModal.propTypes = {
     endpoint: PropTypes.string.isRequired,
     isOpen: PropTypes.bool.isRequired,
     closeModal: PropTypes.func.isRequired,
-    setLastActivityId: PropTypes.func.isRequired,
+    refresh: PropTypes.func.isRequired,
 };
 
 

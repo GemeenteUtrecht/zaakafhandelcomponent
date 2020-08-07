@@ -12,12 +12,16 @@
   @include element("meta") {
     display: flex;
     justify-content: flex-start;
-    align-items: flex-end;
+    align-items: flex-start;
     width: 100%;
   }
 
   @include element("id") {
     width: 33%;
+  }
+
+  @include element("actions") {
+    order: 4;
   }
 
   @include element("name") {
@@ -79,11 +83,7 @@
 
     transition: height 0.2s ease;
 
-    &:not(:focus) {
-      @include ellipsis;
-    }
-
-    &:focus {
+    @include modifier("active") {
       outline: 2px solid $color-secondary;
       height: 10em;
       overflow: auto;

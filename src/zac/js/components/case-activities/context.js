@@ -7,4 +7,9 @@ const EventsContext = React.createContext({
 });
 
 
-export { EventsContext };
+const ActivitiesContext = React.createContext({
+    refresh: () => { console.log('refresh requested') },
+});
+
+
+export { EventsContext, ActivitiesContext };

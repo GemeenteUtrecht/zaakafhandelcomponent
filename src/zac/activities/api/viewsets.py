@@ -7,7 +7,7 @@ from .filters import ActivityFilter
 from .serializers import ActivitySerializer, EventSerializer
 
 
-class ActivityViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
+class ActivityViewSet(viewsets.ModelViewSet):
     # TODO: add/check permissions!
     #   - can create activities
     #   - can create activities for given zaak(type)

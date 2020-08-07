@@ -3,11 +3,17 @@
 
 $content-panel-border-color: #ddd !default;
 
+.ReactModal__Overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
 .modal {
-  position: absolute;
-  top: 15%;
-  left: 15%;
-  right: 15%;
+  min-width: 50vw;
+  min-height: 200px;
+
   border: 1px solid $content-panel-border-color;
   box-shadow: 1px 1px 2px 0 rgba(black, 0.2);
   background: rgb(255, 255, 255);

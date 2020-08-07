@@ -1,41 +1,82 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
+import { useImmerReducer } from "use-immer";
+
 import { AddActivityButton } from './AddActivityButton';
 import { AddActvityModal } from './AddActivityModal';
 import { CaseActivityList } from './CaseActivityList';
-import { EventsContext } from './context';
+import { EventsContext, ActivitiesContext } from './context';
+
+
+const getRandomId = () => {
+    return Math.random().toString(36).substr(2, 5);
+};
+
+const initialState = {
+    refreshId: getRandomId(),
+    isAdding: false,
+};
+
+const reducer = (draft, action) => {
+    switch(action.type) {
+        case 'REFRESH': {
+            let newId = getRandomId();
+            let count = 0;
+            while (newId === draft.refreshId && count < 10) {
+                newId = getRandomId();
+                count++;
+            }
+            draft.refreshId = newId;
+            break;
+        }
+        case 'TOGGLE_ADD_ACTIVITY': {
+            draft.isAdding = action.payload;
+            break;
+        }
+        default:
+            console.error(`Unknown action type ${action.type}`);
+            break;
+    }
+};
 
 
 const CaseActivityApp = ({ zaak, endpoint, eventsEndpoint, controlsNode }) => {
-    const [isAdding, setIsAdding] = useState(false);
-    const [lastActivityId, setLastActivityId] = useState(null);
-    const [lastEventId, setLastEventId] = useState(null);
+    const [
+        { isAdding, refreshId },
+        dispatch
+    ] = useImmerReducer(reducer, initialState);
+
+    const refresh = () => dispatch({ type: 'REFRESH' });
 
     const eventsContext = {
         endpoint: eventsEndpoint,
-        onCreate: (event) => setLastEventId(event.id)
+        onCreate: refresh,
     };
+    const activitiesContext = {refresh: refresh};
 
     return (
         <React.Fragment>
-            <AddActivityButton portalNode={controlsNode} onClick={ () => setIsAdding(true) } />
+            <AddActivityButton
+                portalNode={controlsNode}
+                onClick={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: true}) }
+            />
             <AddActvityModal
                 endpoint={endpoint}
                 zaak={zaak}
                 isOpen={isAdding}
-                closeModal={ () => setIsAdding(false) }
-                setLastActivityId={setLastActivityId}
+                closeModal={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: false}) }
+                refresh={ refresh }
             />
 
             <EventsContext.Provider value={eventsContext}>
-                <CaseActivityList
-                    zaak={zaak}
-                    endpoint={endpoint}
-                    eventsEndpoint={eventsEndpoint}
-                    lastActivityId={lastActivityId}
-                    lastEventId={lastEventId}
-                />
+                <ActivitiesContext.Provider value={activitiesContext}>
+                    <CaseActivityList
+                        zaak={zaak}
+                        endpoint={endpoint}
+                        refreshId={refreshId}
+                    />
+                </ActivitiesContext.Provider>
             </EventsContext.Provider>
         </React.Fragment>
     );

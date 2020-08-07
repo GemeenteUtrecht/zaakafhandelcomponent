@@ -25,20 +25,18 @@ ActivityList.propTypes = {
 };
 
 
-const CaseActivityList = ({ zaak, endpoint, lastActivityId=null, lastEventId=null }) => {
-    // lastActivityId and lastEventId are included so that data is reloaded on creation
-    // of a new activity or event within an activity
+const CaseActivityList = ({ zaak, endpoint, refreshId }) => {
     const state = useAsync(async () => {
         const activities = await get(endpoint, {zaak});
         return activities;
-    }, [endpoint, lastActivityId, lastEventId]);
+    }, [endpoint, refreshId]);
 
     if (state.error) {
         console.error(state.error);
         return null;
     }
 
-    if (state.loading) {
+    if (state.loading && ( !state.value || !state.value.length )) {
         return (<span className="loader"></span>);
     }
 
@@ -67,8 +65,7 @@ const CaseActivityList = ({ zaak, endpoint, lastActivityId=null, lastEventId=nul
 CaseActivityList.propTypes = {
     zaak: PropTypes.string.isRequired,
     endpoint: PropTypes.string.isRequired,
-    lastActivityId: PropTypes.number,
-    lastEventId: PropTypes.number,
+    refreshId: PropTypes.string.isRequired,
 };
 
 export { CaseActivityList };

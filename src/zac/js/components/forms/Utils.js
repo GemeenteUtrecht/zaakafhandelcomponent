@@ -25,17 +25,23 @@ const Wrapper = ({ errors=[], children }) => {
 };
 
 
-const SubmitRow = ({ text='Bevestigen', btnModifier='primary' }) => {
+const SubmitRow = ({ text='Bevestigen', btnModifier='primary', onClick=null }) => {
     const btnClassName = `btn btn--${btnModifier}`;
     return (
         <div className="input">
-            <button type="submit" className={btnClassName}>{text}</button>
+            <button
+                type="submit"
+                className={btnClassName}
+                onClick={ event => onClick ? onClick(event) : null }
+            >{text}</button>
         </div>
     );
 };
 
 SubmitRow.propTypes = {
     text: PropTypes.string,
+    btnModifier: PropTypes.string,
+    onClick: PropTypes.func,
 };
 
 
