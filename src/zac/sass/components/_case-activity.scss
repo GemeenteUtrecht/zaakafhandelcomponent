@@ -4,34 +4,54 @@
 
 .case-activity {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 1em 0;
+
+  @include element("meta") {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    width: 100%;
+  }
 
   @include element("id") {
-
+    width: 33%;
   }
 
   @include element("name") {
     display: block;
     font-weight: 600;
+    font-size: 1.1em;
+  }
+
+  @include element("assignee") {
+    width: 33%;
+  }
+
+  @include element("document") {
+    width: 34%;
   }
 
   @include element("timestamp") {
     @include mute;
   }
 
-  @include element("assignee") {
-  }
-
   @include element("content") {
     justify-self: center;
-    max-width: 50%;
-  }
-
-  @include element("document") {
+    width: 33%;
+    margin-top: 0.5em;
   }
 
   @include element("timeline") {
-    justify-self: flex-end;
+    width: 67%;
+    margin-top: 0.5em;
+  }
+
+
+  & + & {
+    border-top: solid 1px #efefef;
+    margin-top: 1em;
   }
 }

@@ -23,23 +23,21 @@ const CaseActivity = ({ activity }) => {
     return (
         <article className="case-activity">
 
-            <header className="case-activity__id">
-                <span className="case-activity__name">
-                    {activity.name}
-                </span>
+            <header className="case-activity__meta">
+                <div className="case-activity__id">
+                    <span className="case-activity__name">
+                        {activity.name}
+                    </span>
 
-                <span className="case-activity__timestamp">
-                    {timeSince(activity.created)}
-                </span>
+                    <span className="case-activity__timestamp">
+                        {timeSince(activity.created)}
+                    </span>
+                </div>
 
                 <div className="case-activity__assignee">
                     {'Verantwoordelijke: '}
-                    {activity.assignee ?? <span className="soft-info">-</span>}
+                    {activity.assignee ?? <span className="soft-info soft-info--normal-size">-</span>}
                 </div>
-            </header>
-
-            <section className="case-activity__content">
-                {activity.remarks}
 
                 <div className="case-activity__document">
                     {
@@ -48,9 +46,14 @@ const CaseActivity = ({ activity }) => {
                                 Toon documentinformatie
                             </a>
                         )
-                        : <span className="soft-info">Document ontbreekt.</span>
+                        : <span className="soft-info soft-info--normal-size">Document ontbreekt.</span>
                     }
                 </div>
+
+            </header>
+
+            <section className="case-activity__content">
+                {activity.remarks}
             </section>
 
             <section className="case-activity__timeline">
