@@ -57,7 +57,7 @@ const CaseActivity = ({ activity }) => {
             </section>
 
             <section className="case-activity__timeline">
-                <EventTimeline>{activity.events}</EventTimeline>
+                <EventTimeline onGoing={activity.status === 'on_going'}>{activity.events}</EventTimeline>
             </section>
 
         </article>

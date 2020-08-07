@@ -25,10 +25,11 @@ const Wrapper = ({ errors=[], children }) => {
 };
 
 
-const SubmitRow = ({ text="Bevestigen" }) => {
+const SubmitRow = ({ text='Bevestigen', btnModifier='primary' }) => {
+    const btnClassName = `btn btn--${btnModifier}`;
     return (
         <div className="input">
-            <button type="submit" className="btn btn--primary">{text}</button>
+            <button type="submit" className={btnClassName}>{text}</button>
         </div>
     );
 };
