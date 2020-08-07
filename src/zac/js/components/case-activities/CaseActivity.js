@@ -29,9 +29,9 @@ const CaseActivity = ({ activity }) => {
                         {activity.name}
                     </span>
 
-                    <span className="case-activity__timestamp">
+                    <time className="case-activity__timestamp" title={activity.created}>
                         {timeSince(activity.created)}
-                    </span>
+                    </time>
                 </div>
 
                 <div className="case-activity__assignee">
