@@ -13,6 +13,7 @@ CACHES = {
     # https://github.com/jazzband/django-axes/blob/master/docs/configuration.rst#cache-problems
     "axes": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     "oas": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "sessions": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
 }
 
 LOGGING = None  # Quiet is nice

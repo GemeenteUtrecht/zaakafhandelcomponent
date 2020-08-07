@@ -82,6 +82,7 @@ if not config("USE_REDIS_CACHE", default=False):
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
         "axes": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
         "oas": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "sessions": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     }
 
 # THOU SHALT NOT USE NAIVE DATETIMES

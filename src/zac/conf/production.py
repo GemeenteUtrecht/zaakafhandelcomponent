@@ -8,7 +8,7 @@ from .includes.base import *  # noqa
 
 # Caching sessions.
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+SESSION_CACHE_ALIAS = "sessions"
 
 # Caching templates.
 TEMPLATES[0]["OPTIONS"]["loaders"] = [
