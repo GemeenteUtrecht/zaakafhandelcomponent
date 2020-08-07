@@ -56,4 +56,19 @@ const put = async (url, csrftoken, data={}) => {
     return resp;
 };
 
-export { apiCall, get, post, put, patch };
+const destroy = async (url, csrftoken) => {
+    const opts = {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrftoken,
+        }
+    };
+    const response = await fetch(url, opts);
+    if (!response.ok) {
+        const responseData = await response.json();
+        console.error('Delete failed', responseData);
+        throw new Exception('Delete failed');
+    }
+};
+
+export { apiCall, get, post, put, patch, destroy };

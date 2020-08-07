@@ -1,29 +1,16 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
-import { patch } from '../../utils/fetch';
-import { CsrfTokenContext } from '../forms/context';
+
 
 import { EventType, EventTimeline } from './Event';
 import { CaseActivityActions } from './CaseActivityActions';
 import { Activity } from './types';
-import { ActivitiesContext } from './context';
+
 
 
 const CaseActivity = ({ activity }) => {
-    const csrftoken = useContext(CsrfTokenContext);
-    const activitiesContext = useContext(ActivitiesContext);
-
-    const closeActivity = async () => {
-        const response = await patch(activity.url, csrftoken, {status: 'finished'});
-        if (!response.ok) {
-            console.error(response.data);
-        } else {
-            activitiesContext.refresh();
-        }
-    };
-
     return (
         <article className="case-activity">
 
@@ -38,10 +25,7 @@ const CaseActivity = ({ activity }) => {
                     </time>
                 </div>
 
-                <CaseActivityActions
-                    activity={activity}
-                    closeActivity={closeActivity}
-                />
+                <CaseActivityActions activity={activity} />
 
                 <div className="case-activity__assignee">
                     {'Verantwoordelijke: '}

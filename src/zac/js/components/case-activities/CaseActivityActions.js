@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import Modal from 'react-modal';
 import { useImmerReducer } from "use-immer";
 
+import { patch, destroy } from '../../utils/fetch';
+import { CsrfTokenContext } from '../forms/context';
 import { SubmitRow } from '../forms/Utils';
+import { ActivitiesContext } from './context';
 import { Activity } from './types';
 
 
@@ -45,11 +48,28 @@ const modalReducer = (draft, action) => {
 };
 
 
-const CaseActivityActions = ({ activity, closeActivity }) => {
+const CaseActivityActions = ({ activity }) => {
     if (activity.status !== 'on_going') {
         return null;
     }
     const [{ openModal }, dispatch] = useImmerReducer(modalReducer, initialModalState);
+
+    const csrftoken = useContext(CsrfTokenContext);
+    const activitiesContext = useContext(ActivitiesContext);
+
+    const closeActivity = async () => {
+        const response = await patch(activity.url, csrftoken, {status: 'finished'});
+        if (!response.ok) {
+            console.error(response.data);
+        } else {
+            activitiesContext.refresh();
+        }
+    };
+
+    const deleteActivity = async () => {
+        await destroy(activity.url, csrftoken);
+        activitiesContext.refresh();
+    };
 
     return (
         <div className="btn-group btn-group--slim case-activity__actions">
@@ -81,7 +101,7 @@ const CaseActivityActions = ({ activity, closeActivity }) => {
             <ConfirmModal
                 isOpen={ openModal === 'deleteActivity' }
                 text="Weet je zeker dat je deze activiteit PERMANENT wil verwijderen?"
-                onConfirm={ () => alert('TODO') }
+                onConfirm={ deleteActivity }
                 closeModal={ () => dispatch({type: 'CLOSE_MODAL'}) }
             />
 
@@ -91,7 +111,6 @@ const CaseActivityActions = ({ activity, closeActivity }) => {
 
 CaseActivityActions.propTypes = {
     activity: Activity.isRequired,
-    closeActivity: PropTypes.func.isRequired,
 };
 
 
