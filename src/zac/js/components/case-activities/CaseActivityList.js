@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useAsync } from 'react-use';
 
-import { apiCall } from '../../utils/fetch';
+import { get } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
 import { TabList, TabContent } from '../Tabs';
 import { Activity, CaseActivity } from './CaseActivity';
@@ -26,10 +26,14 @@ ActivityList.propTypes = {
 const CaseActivityList = ({ zaak, endpoint, lastActivityId=null }) => {
     // lastActivityId is included so that data is reloaded on creation of a new activity
     const state = useAsync(async () => {
-        const response = await apiCall(endpoint);
-        const activities = await response.json();
+        const activities = await get(endpoint, {zaak});
         return activities;
     }, [endpoint, lastActivityId]);
+
+    if (state.error) {
+        console.error(state.error);
+        return null;
+    }
 
     if (state.loading) {
         return (<span className="loader"></span>);

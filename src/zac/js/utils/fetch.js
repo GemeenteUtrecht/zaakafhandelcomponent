@@ -8,6 +8,17 @@ const apiCall = (url, opts) => {
 };
 
 
+const get = async (url, params={}) => {
+    if (Object.keys(params).length) {
+        const searchparams = new URLSearchParams(params);
+        url += `?${searchparams}`;
+    }
+    const response = await apiCall(url);
+    const data = await response.json();
+    return data;
+};
+
+
 const post = async (url, csrftoken, data={}) => {
     const opts = {
         method: 'POST',
@@ -27,4 +38,4 @@ const post = async (url, csrftoken, data={}) => {
 };
 
 
-export { apiCall, post };
+export { apiCall, get, post };
