@@ -17,10 +17,12 @@
   }
 
   @include element("id") {
-    width: 33%;
+    width: calc(33% + 1em);
   }
 
   @include element("actions") {
+    width: 20%;
+    justify-content: flex-end;
     order: 4;
   }
 
@@ -31,11 +33,11 @@
   }
 
   @include element("assignee") {
-    width: 33%;
+    width: calc(23% - 1em);
   }
 
   @include element("document") {
-    width: 34%;
+    width: 24%;
   }
 
   @include element("timestamp") {
@@ -46,10 +48,11 @@
     justify-self: center;
     width: 33%;
     margin-top: 0.5em;
+    margin-right: 1em;
   }
 
   @include element("timeline") {
-    width: 67%;
+    width: calc(67% - 1em);
     margin-top: 0.5em;
 
     .list:empty + .case-activity__note-form {
