@@ -69,7 +69,16 @@ const CaseActivityAssignee = ({ activityUrl, canSet, userId=null }) => {
     return (
         <React.Fragment>
             {'Verantwoordelijke: '}
-            <strong>{getUserName(value)}</strong>
+            <strong>
+                {getUserName(value)}
+            </strong>
+            {
+                canSet ? (
+                    <div>
+                        <UserSelection btnLabel="wijzig" onSelection={ onUserSelection } asLink />
+                    </div>
+                ) : null
+            }
         </React.Fragment>
     );
 };

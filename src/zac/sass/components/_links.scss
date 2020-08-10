@@ -1,3 +1,4 @@
+@import "../lib/bem";
 @import "../lib/colors";
 
 $link-color: #005ea5 !default;
@@ -18,16 +19,16 @@ $backlink-padding: 0.5em !default;
     color: darken($link-color, 10%);
   }
 
-  &--plain {
+  @include modifier('plain') {
     text-decoration: none;
     color: $color-text;
   }
 
-  &--disabled {
+  @include modifier('disabled') {
     opacity: 0.3;
   }
 
-  &--backlink {
+  @include modifier('backlink') {
     display: block;
     text-decoration: none;
 
@@ -53,5 +54,9 @@ $backlink-padding: 0.5em !default;
         padding-right: $backlink-travel + $backlink-padding;
       }
     }
+  }
+
+  @include modifier('inline-action') {
+    color: $color-primary;
   }
 }

@@ -24,7 +24,7 @@ const getUsers = async (inputValue) => {
 };
 
 
-const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker' }) => {
+const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker', asLink=false }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
@@ -35,13 +35,22 @@ const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker' }) => {
         onSelection(selectedUser);
     };
 
-    return (
-        <React.Fragment>
-
+    const trigger = asLink ?
+        (
+            <a href="#" className="link link--inline-action" onClick={ () => setModalOpen(true) }>
+                {btnLabel}
+            </a>
+        )
+        :
+        (
             <button type="button" className="btn btn--small" onClick={ () => setModalOpen(true) }>
                 {btnLabel}
             </button>
+        );
 
+    return (
+        <React.Fragment>
+            {trigger}
             <Modal
               isOpen={modalOpen}
               className="modal"
@@ -73,6 +82,7 @@ const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker' }) => {
 UserSelection.propTypes = {
     onSelection: PropTypes.func.isRequired,
     btnLabel: PropTypes.string,
+    asLink: PropTypes.bool,
 };
 
 
