@@ -2,15 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
-
-
 import { EventType, EventTimeline } from './Event';
 import { CaseActivityActions } from './CaseActivityActions';
+import { CaseActivityAssignee } from './CaseActivityAssignee';
 import { Activity } from './types';
 
 
-
 const CaseActivity = ({ activity }) => {
+    const isOnGoing = activity.status === 'on_going';
     return (
         <article className="case-activity">
 
@@ -28,8 +27,11 @@ const CaseActivity = ({ activity }) => {
                 <CaseActivityActions activity={activity} />
 
                 <div className="case-activity__assignee">
-                    {'Verantwoordelijke: '}
-                    {activity.assignee ?? <span className="soft-info soft-info--normal-size">-</span>}
+                    <CaseActivityAssignee
+                        activityUrl={ activity.url }
+                        canSet={ isOnGoing }
+                        userId={activity.assignee}
+                    />
                 </div>
 
                 <div className="case-activity__document">
@@ -50,7 +52,7 @@ const CaseActivity = ({ activity }) => {
             </section>
 
             <section className="case-activity__timeline">
-                <EventTimeline activityId={activity.id} onGoing={activity.status === 'on_going'}>
+                <EventTimeline activityId={activity.id} onGoing={isOnGoing}>
                     {activity.events}
                 </EventTimeline>
             </section>

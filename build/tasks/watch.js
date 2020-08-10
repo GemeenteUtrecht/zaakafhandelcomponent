@@ -19,7 +19,7 @@ const watch = gulp.parallel(watchJS, watchSCSS);
  */
 function watchJS() {
     js();
-    gulp.watch([paths.jsSrc], gulp.parallel(js, lint));
+    gulp.watch([paths.jsSrc], js);
 }
 
 /**

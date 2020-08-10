@@ -25,4 +25,12 @@ $content-panel-border-color: #ddd !default;
     float: right;
     padding: 0.25em  0.5em;
   }
+
+  @include element("submitrow") {
+    padding-top: 1em;
+
+    .input {
+      text-align: right;
+    }
+  }
 }
