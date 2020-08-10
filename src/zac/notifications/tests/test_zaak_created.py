@@ -93,3 +93,29 @@ class ZaakCreatedTests(APITestCase):
                     # second call should not hit the cache
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
+
+    def test_max_va_cache_key(self, rm):
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        zrc_client = self.zrc.build_client()
+        path = reverse("notifications:callback")
+
+        matrix = [
+            {"zaaktype": ZAAKTYPE, "max_va": "geheim"},
+            {"zaaktype": ZAAKTYPE, "max_va": "zeer_geheim"},
+        ]
+
+        for kwargs in matrix:
+            with self.subTest(kwargs=kwargs):
+                with patch(
+                    "zac.core.services.get_paginated_results", return_value=[]
+                ) as m:
+                    # call to populate cache
+                    _find_zaken(zrc_client, **kwargs)
+
+                    response = self.client.post(path, NOTIFICATION)
+                    self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+                    # second call should not hit the cache
+                    _find_zaken(zrc_client, **kwargs)
+                    self.assertEqual(m.call_count, 2)
