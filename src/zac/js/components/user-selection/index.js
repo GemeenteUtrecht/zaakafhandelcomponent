@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 import AsyncSelect from 'react-select/async';
 
 import { get } from '../../utils/fetch';
-import { getAuthorName as getUserName } from '../../views/zaak-detail/utils';
+import { getUserName } from '../../utils/users';
 import { SubmitRow } from '../../components/forms/Utils';
 
 

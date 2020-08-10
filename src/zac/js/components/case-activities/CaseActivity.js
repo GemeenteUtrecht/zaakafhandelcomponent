@@ -1,8 +1,11 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { patch } from '../../utils/fetch';
+import { useAsync } from 'react-use';
+
+import { get, patch } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
+import { getUserName } from '../../utils/users';
 import { CsrfTokenContext } from '../forms/context';
 import { UserSelection } from '../user-selection';
 
@@ -11,6 +14,20 @@ import { EventType, EventTimeline } from './Event';
 import { CaseActivityActions } from './CaseActivityActions';
 import { Activity } from './types';
 
+const USER_CACHE = {};
+
+const getAssignee = async (userId) => {
+    if (userId == null) {
+        return null;
+    }
+
+    if (USER_CACHE[userId]) {
+        return USER_CACHE[userId];
+    }
+
+    const user = await get(`/accounts/api/users/${userId}`);
+    return user;
+};
 
 const setAssignee = async (activity, csrftoken, user) => {
     const userId = (user == null) ? null : user.id;
@@ -20,9 +37,14 @@ const setAssignee = async (activity, csrftoken, user) => {
     }
 };
 
-
 const CaseActivity = ({ activity }) => {
     const isOnGoing = activity.status === 'on_going';
+
+    const assigneeState = useAsync(
+        async () => getAssignee(activity.assignee),
+        [activity.assignee]
+    );
+
     const activitiesContext = useContext(ActivitiesContext);
     const csrftoken = useContext(CsrfTokenContext);
 
@@ -30,6 +52,10 @@ const CaseActivity = ({ activity }) => {
         await setAssignee(activity, csrftoken, user);
         activitiesContext.refresh();
     }
+
+    const assigneeName = (!assigneeState.loading && assigneeState.value )
+        ? (<strong>{ getUserName(assigneeState.value) }</strong>)
+        : null;
 
     return (
         <article className="case-activity">
@@ -50,8 +76,8 @@ const CaseActivity = ({ activity }) => {
                 <div className="case-activity__assignee">
                     {'Verantwoordelijke: '}
                     {
-                        activity.assignee ?? (
-                            isOnGoing ?
+                        assigneeName ?? (
+                            (isOnGoing && !assigneeState.loading) ?
                                 <UserSelection btnLabel="Selecteer" onSelection={ onUserSelection } />
                                 : <span className="soft-info soft-info--normal-size">-</span>
                         )
