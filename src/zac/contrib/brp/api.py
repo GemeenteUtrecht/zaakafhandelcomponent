@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+import requests
 from zds_client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
@@ -59,6 +60,11 @@ def fetch_natuurlijkpersoon(url: str) -> IngeschrevenNatuurlijkPersoon:
     except ClientError as exc:
         if exc.args[0]["status"] == 404:
             logger.warning("Invalid BRP reference submitted: %s", url, exc_info=True)
+            return None
+        raise
+    except requests.RequestException as exc:
+        if exc.response.status_code == 500:
+            logger.warning("BRP API is broken", exc_info=True)
             return None
         raise
     return factory(IngeschrevenNatuurlijkPersoon, result)
