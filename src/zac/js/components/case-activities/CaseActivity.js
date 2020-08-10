@@ -1,62 +1,15 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
-import { useAsync } from 'react-use';
-
-import { get, patch } from '../../utils/fetch';
 import { timeSince } from '../../utils/time-since';
-import { getUserName } from '../../utils/users';
-import { CsrfTokenContext } from '../forms/context';
-import { UserSelection } from '../user-selection';
-
-import { ActivitiesContext } from './context';
 import { EventType, EventTimeline } from './Event';
 import { CaseActivityActions } from './CaseActivityActions';
+import { CaseActivityAssignee } from './CaseActivityAssignee';
 import { Activity } from './types';
 
-const USER_CACHE = {};
-
-const getAssignee = async (userId) => {
-    if (userId == null) {
-        return null;
-    }
-
-    if (USER_CACHE[userId]) {
-        return USER_CACHE[userId];
-    }
-
-    const user = await get(`/accounts/api/users/${userId}`);
-    return user;
-};
-
-const setAssignee = async (activity, csrftoken, user) => {
-    const userId = (user == null) ? null : user.id;
-    const response = await patch(activity.url, csrftoken, {assignee: userId});
-    if (!response.ok) {
-        console.error(response.data);
-    }
-};
 
 const CaseActivity = ({ activity }) => {
     const isOnGoing = activity.status === 'on_going';
-
-    const assigneeState = useAsync(
-        async () => getAssignee(activity.assignee),
-        [activity.assignee]
-    );
-
-    const activitiesContext = useContext(ActivitiesContext);
-    const csrftoken = useContext(CsrfTokenContext);
-
-    const onUserSelection = async (user) => {
-        await setAssignee(activity, csrftoken, user);
-        activitiesContext.refresh();
-    }
-
-    const assigneeName = (!assigneeState.loading && assigneeState.value )
-        ? (<strong>{ getUserName(assigneeState.value) }</strong>)
-        : null;
-
     return (
         <article className="case-activity">
 
@@ -74,14 +27,11 @@ const CaseActivity = ({ activity }) => {
                 <CaseActivityActions activity={activity} />
 
                 <div className="case-activity__assignee">
-                    {'Verantwoordelijke: '}
-                    {
-                        assigneeName ?? (
-                            (isOnGoing && !assigneeState.loading) ?
-                                <UserSelection btnLabel="Selecteer" onSelection={ onUserSelection } />
-                                : <span className="soft-info soft-info--normal-size">-</span>
-                        )
-                    }
+                    <CaseActivityAssignee
+                        activityUrl={ activity.url }
+                        canSet={ isOnGoing }
+                        userId={activity.assignee}
+                    />
                 </div>
 
                 <div className="case-activity__document">
