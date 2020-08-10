@@ -32,7 +32,7 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
     identificaties = ("", zaak.identificatie)
     bronorganisaties = ("", zaak.bronorganisatie)
     relevant_vas = [""] + ALL_VAS_SORTED[
-        : ALL_VAS_SORTED.index(zaak.vertrouwelijkheidaanduiding) + 1
+        ALL_VAS_SORTED.index(zaak.vertrouwelijkheidaanduiding) :
     ]
 
     template = (
