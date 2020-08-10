@@ -112,8 +112,8 @@
                         <tr>
                             <td>{{ rol.get_betrokkene_type_display }}</td>
                             <td>{{ rol.get_omschrijving_generiek_display }}</td>
-                            <td>{{ rol.get_name }}</td>
-                            <td>{{ rol.get_bsn }}</td>
+                            <td>{{ rol.get_name|default:'' }}</td>
+                            <td>{{ rol.get_bsn|default:'' }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

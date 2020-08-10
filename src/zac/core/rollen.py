@@ -20,20 +20,11 @@ class Rol(_Rol):
         return self._natuurlijkpersoon
 
     def get_name(self) -> Optional[str]:
-        if self.betrokkene_type != RolTypes.natuurlijk_persoon:
+        get_name = GET_NAME.get(self.betrokkene_type)
+        if get_name is None:
             return None
 
-        if self.betrokkene:
-            if not self.natuurlijkpersoon:
-                return _("(invalid BRP reference!)")
-            return self.natuurlijkpersoon.get_full_name()
-
-        bits = [
-            self.betrokkene_identificatie["voornamen"],
-            self.betrokkene_identificatie["voorvoegsel_geslachtsnaam"],
-            self.betrokkene_identificatie["geslachtsnaam"],
-        ]
-        return " ".join(bits).strip() or _("(not set)")
+        return get_name(self)
 
     def get_bsn(self) -> Optional[str]:
         if self.betrokkene_type != RolTypes.natuurlijk_persoon:
@@ -45,3 +36,35 @@ class Rol(_Rol):
             return self.natuurlijkpersoon.burgerservicenummer
 
         return self.betrokkene_identificatie["inp_bsn"]
+
+
+def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
+    if rol.betrokkene:
+        if not rol.natuurlijkpersoon:
+            return _("(invalid BRP reference!)")
+        return rol.natuurlijkpersoon.get_full_name()
+
+    bits = [
+        rol.betrokkene_identificatie["voornamen"],
+        rol.betrokkene_identificatie["voorvoegsel_geslachtsnaam"],
+        rol.betrokkene_identificatie["geslachtsnaam"],
+    ]
+    return " ".join(bits).strip() or _("(not set)")
+
+
+def get_naam_medewerker(rol: Rol) -> Optional[str]:
+    if rol.betrokkene:
+        raise NotImplementedError("Don't know how to handle medewerker URLs")
+
+    bits = [
+        rol.betrokkene_identificatie["voorletters"],
+        rol.betrokkene_identificatie["voorvoegsel_achternaam"],
+        rol.betrokkene_identificatie["achternaam"],
+    ]
+    return " ".join(bits).strip() or rol.betrokkene_identificatie["identificatie"]
+
+
+GET_NAME = {
+    RolTypes.natuurlijk_persoon: get_naam_natuurlijkpersoon,
+    RolTypes.medewerker: get_naam_medewerker,
+}
