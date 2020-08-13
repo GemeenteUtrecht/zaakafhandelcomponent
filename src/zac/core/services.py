@@ -179,6 +179,33 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
     return roltypen
 
 
+@cache_result("ziot:{zaaktype.url}", timeout=A_DAY)
+def get_informatieobjecttypen_for_zaaktype(
+    zaaktype: ZaakType,
+) -> List[InformatieObjectType]:
+    """
+    Retrieve all informatieobjecttypen relevant for a given zaaktype.
+    """
+    client = _client_from_object(zaaktype)
+    results = get_paginated_results(
+        client, "zaakinformatieobjecttype", query_params={"zaaktype": zaaktype.url}
+    )
+    with parallel() as executor:
+        urls = [
+            iot["informatieobjecttype"]
+            for iot in sorted(results, key=lambda iot: iot["volgnummer"])
+        ]
+        results = executor.map(get_informatieobjecttype, urls)
+    return list(results)
+
+
+@cache_result("informatieobjecttype:{url}", timeout=A_DAY)
+def get_informatieobjecttype(url: str) -> InformatieObjectType:
+    client = _client_from_url(url)
+    data = client.retrieve("informatieobjecttype", url=url)
+    return factory(InformatieObjectType, data)
+
+
 ###################################################
 #                       ZRC                       #
 ###################################################

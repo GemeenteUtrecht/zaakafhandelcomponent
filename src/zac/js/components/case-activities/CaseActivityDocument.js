@@ -4,17 +4,24 @@ import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import { useAsync } from 'react-use';
 
-import { apiCall } from '../../utils/fetch';
+import { apiCall, get } from '../../utils/fetch';
 import { CsrfTokenContext } from '../forms/context';
 import { SubmitRow } from '../forms/Utils';
 import { IconedText } from '../IconedText';
 import { Activity } from './types';
 
 
-const ENDPOINT = '/api/documents/upload';
+const ENDPOINT_GET_ZIO = '/core/api/documents/get-informatieobjecttypen';
 
 
-const AddDocument = ({ zaakUrl }) => {
+const getInformatieObjectTypen = async (zaakUrl) => {
+    const url = `${ENDPOINT_GET_ZIO}?zaak=${encodeURI(zaakUrl)}`;
+    const ioTypen = await get(url);
+    return ioTypen;
+};
+
+
+const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
     const csrftoken = useContext(CsrfTokenContext);
     const fileInput = useRef(null);
 
@@ -42,10 +49,30 @@ const AddDocument = ({ zaakUrl }) => {
         console.log(responseData);
     };
 
+    const { loading, value } = useAsync(
+        async () => await getInformatieObjectTypen(zaakUrl),
+        [zaakUrl]
+    );
+
+    if (loading) {
+        return (<span className="loader" />);
+    }
+
     return (
         <form onSubmit={ onSubmit }>
 
-            {/* IOT choice */}
+            <label>
+                Documenttype:
+                <select name="informatieobjecttype">
+                    {
+                        value.map( choice => (
+                            <option key={choice.url} value={choice.url}>
+                                {choice.omschrijving}
+                            </option>
+                        ) )
+                    }
+                </select>
+            </label>
 
             <label>
                 Document:
@@ -61,6 +88,7 @@ const AddDocument = ({ zaakUrl }) => {
 
 AddDocument.propTypes = {
     zaakUrl: PropTypes.string.isRequired,
+    endpoint: PropTypes.string,
 };
 
 

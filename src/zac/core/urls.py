@@ -21,6 +21,7 @@ from .views.zaken import (
 app_name = "core"
 
 urlpatterns = [
+    path("api/", include("zac.core.api.urls")),
     path(
         "zaken/",
         include(
