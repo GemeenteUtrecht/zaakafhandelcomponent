@@ -18,7 +18,7 @@ from zac.contrib.kownsl.api import (
     retrieve_approvals,
 )
 from zac.contrib.kownsl.data import ReviewRequest
-from zac.utils.api_models import convert_model_to_json
+from zac.utils.api_models import serialize
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import ZaakAfhandelForm, ZakenFilterForm
@@ -123,7 +123,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             documenten, gone = _documenten.result()
 
-            review_requests_json = convert_model_to_json(review_requests)
+            review_requests = serialize(review_requests)
 
             context.update(
                 {
@@ -134,7 +134,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
                     "resultaat": resultaat.result(),
                     "related_zaken": related_zaken,
                     "rollen": rollen.result(),
-                    "review_requests_json": review_requests_json,
+                    "review_requests": review_requests,
                 }
             )
 

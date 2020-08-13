@@ -14,7 +14,7 @@ const init = () => {
         return;
     }
 
-    Modal.setAppElement('#review-requests-react');
+    Modal.setAppElement(node);
 
     const reviewRequests = jsonScriptToVar('reviewRequests');
     const { downloadUrl } = node.dataset;

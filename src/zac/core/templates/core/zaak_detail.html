@@ -209,7 +209,7 @@
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Adviseren en accorderen</div>
 
-        {{ review_requests_json|json_script:"reviewRequests" }}
+        {{ review_requests|json_script:"reviewRequests" }}
         <div
             id="review-requests-react"
             data-download-url="{% url 'core:download-document' '_bronorganisatie_' '_identificatie_'%}?versie=_versie_"
