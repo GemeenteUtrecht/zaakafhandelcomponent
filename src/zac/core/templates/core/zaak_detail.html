@@ -206,6 +206,7 @@
         {% endif %}
     </section>
 
+    {% if review_requests %}
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Adviseren en accorderen</div>
 
@@ -215,6 +216,7 @@
             data-download-url="{% url 'core:download-document' '_bronorganisatie_' '_identificatie_'%}?versie=_versie_"
         > {# React managed #} </div>
     </section>
+    {% endif %}
 
     {% if related_zaken %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
