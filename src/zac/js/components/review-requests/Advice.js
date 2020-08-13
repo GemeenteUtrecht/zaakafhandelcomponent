@@ -98,10 +98,10 @@ const AdviceRow = ({ advice }) => {
     return (
         <React.Fragment>
             <tr>
-                <td>{advice.advice}</td>
-                <td>{getUserName(advice.author)}</td>
-                <td>{timeSince(advice.created)}</td>
-                <td>{advice.documents.length}</td>
+                <td className="table__column table__column--6cols">{advice.advice}</td>
+                <td className="table__column table__column--2cols">{getUserName(advice.author)}</td>
+                <td className="table__column table__column--2cols">{timeSince(advice.created)}</td>
+                <td className="table__column table__column--2cols">{advice.documents.length}</td>
             </tr>
             {advice.documents ?
                 <tr>
@@ -124,32 +124,32 @@ AdviceRow.propTypes = {
  * @return  {JSX}
  */
 const AdviceTable = ({ advices }) => {
+    if (!advices.length) {
+        return (
+            <p className="soft-info soft-info--normal-size">
+                Er zijn (nog) geen adviezen gegeven.
+            </p>
+        );
+    }
+
     const rows = advices.map((advice, index) =>
         <AdviceRow key={index} advice={advice}/>
     );
 
     return (
-        <section className="zaak-detail__panel zaak-detail__panel--full content-panel">
-            <div className="section-title">Adviezen</div>
-            {!(advices.length) ?
-                <p className="content-panel__content content-panel__content--blurred">
-                    (geen adviezen)
-                </p>
-                : <table className="table">
-                    <thead>
-                    <tr>
-                        <th className="table__header">Advies</th>
-                        <th className="table__header">Van</th>
-                        <th className="table__header">Gegeven op</th>
-                        <th className="table__header">Documentadviezen</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {rows}
-                    </tbody>
-                </table>
-            }
-        </section>
+        <table className="table table--comfortable">
+            <thead>
+                <tr>
+                    <th className="table__header">Advies</th>
+                    <th className="table__header">Van</th>
+                    <th className="table__header">Gegeven op</th>
+                    <th className="table__header">Documentadviezen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows}
+            </tbody>
+        </table>
     );
 };
 

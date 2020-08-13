@@ -52,6 +52,14 @@ $table-head-border-color: $color-secondary !default;
         text-decoration: underline;
       }
     }
+
+    @include modifier('2cols') {
+      width: 100% / 12 * 2;
+    }
+
+    @include modifier('6cols') {
+      width: 100% / 12 * 6;
+    }
   }
 
   @include element('nested-table') {

@@ -1,0 +1,15 @@
+@import "../lib/bem";
+@import "../lib/bem";
+@import "../lib/colors";
+@import "../lib/typography";
+
+.iconed-text {
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  @include element("icon") {
+    font-size: inherit;
+    margin-right: 0.5em;
+  }
+}

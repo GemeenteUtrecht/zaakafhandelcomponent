@@ -11,6 +11,11 @@ const kownslTypes = {
     approval: 'Accordering'
 };
 
+const kownslTypesPlural = {
+    advice: 'Adviezen',
+    approval: 'Accorderingen',
+};
+
 
 const modalStyles = {
   overlay : {zIndex: '100'}
@@ -23,15 +28,21 @@ const modalStyles = {
  */
 const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
-
     return (
-        <Modal isOpen={isOpen} className="modal" style={modalStyles}>
-            <button onClick={closeModal} className="modal__close btn">&times;</button>
-            <h1 className="page-title">{`Review request for ${reviewRequest.review_type}`}</h1>
+        <Modal
+            isOpen={ isOpen }
+            onRequestClose={ closeModal }
+            className="modal"
+            style={ modalStyles }
+        >
+            <button onClick={ closeModal } className="modal__close btn">&times;</button>
+            <h1 className="page-title">
+                {kownslTypesPlural[reviewRequest.review_type]}
+            </h1>
 
             {reviewRequest.review_type === 'advice'
-                ? <AdviceTable advices={reviewRequest.advices}/>
-                : <ApprovalTable approvals={reviewRequest.approvals}/>
+                ? <AdviceTable advices={reviewRequest.advices} />
+                : <ApprovalTable approvals={reviewRequest.approvals} />
             }
         </Modal>
     );
