@@ -23,7 +23,10 @@ class NotificationCallbackView(APIView):
 
         if data["resource"] == "zaak" and data["actie"] == "create":
             self._handle_zaak_creation(data["hoofd_object"])
-        elif data["resource"] == "zaak" and data["actie"] == "update":
+        elif data["resource"] == "zaak" and data["actie"] in (
+            "update",
+            "partial_update",
+        ):
             self._handle_zaak_update(data["hoofd_object"])
         elif (
             data["resource"] in ["resultaat", "status", "zaakeigenschap"]

@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.core.cache import cache, caches
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
@@ -12,14 +12,7 @@ from zgw_consumers.models import APITypes, Service
 from zac.accounts.models import User
 from zac.core.services import get_zaak
 
-from .utils import (
-    BRONORGANISATIE,
-    IDENTIFICATIE,
-    ZAAK,
-    ZAAK_RESPONSE,
-    ZAAKTYPE,
-    mock_service_oas_get,
-)
+from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, mock_service_oas_get
 
 NOTIFICATION = {
     "kanaal": "zaken",
