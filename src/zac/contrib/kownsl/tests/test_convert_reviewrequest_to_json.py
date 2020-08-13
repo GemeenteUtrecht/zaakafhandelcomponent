@@ -7,7 +7,7 @@ from django.utils import timezone
 from zgw_consumers.api_models.base import factory
 
 from zac.contrib.kownsl.data import Advice, Approval, ReviewRequest
-from zac.utils.api_models import convert_model_to_json
+from zac.utils.api_models import serialize
 
 
 class ConvertToJsonTests(TestCase):
@@ -33,7 +33,7 @@ class ConvertToJsonTests(TestCase):
         review_request.advices = [advice]
         review_requests = [review_request]
 
-        result = convert_model_to_json(review_requests)
+        result = serialize(review_requests)
 
         self.assertEqual(
             result,
@@ -86,7 +86,7 @@ class ConvertToJsonTests(TestCase):
         review_request.approvals = [approval]
         review_requests = [review_request]
 
-        result = convert_model_to_json(review_requests)
+        result = serialize(review_requests)
 
         self.assertEqual(
             result,

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import fileSize from "filesize";
 
 import { timeSince } from '../../utils/time-since';
-import {getAuthorName} from "./utils";
-import {DownloadUrlContext} from "./context";
+import { getUserName } from '../../utils/users';
+import { DownloadUrlContext } from "./context";
 
 
 const getDownloadUrl = (template, doc) => {
@@ -96,10 +96,10 @@ AdviceDocumentsTable.propTypes = {
  */
 const AdviceRow = ({ advice }) => {
     return (
-        <>
+        <React.Fragment>
             <tr>
                 <td>{advice.advice}</td>
-                <td>{getAuthorName(advice.author)}</td>
+                <td>{getUserName(advice.author)}</td>
                 <td>{timeSince(advice.created)}</td>
                 <td>{advice.documents.length}</td>
             </tr>
@@ -110,7 +110,7 @@ const AdviceRow = ({ advice }) => {
                     </td>
                 </tr>
             : null }
-        </>
+        </React.Fragment>
     );
 };
 AdviceRow.propTypes = {

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
-import {getAuthorName} from "./utils";
+import { getUserName } from '../../utils/users';
 
 /**
  * A table row, containing information about single approval
@@ -12,7 +12,7 @@ import {getAuthorName} from "./utils";
 const ApprovalRow = ({approval}) =>
     <tr>
         <td>{approval.approved ? 'Approved' : 'Not approved'}</td>
-        <td>{getAuthorName(approval.author)}</td>
+        <td>{getUserName(approval.author)}</td>
         <td>{timeSince(approval.created)}</td>
     </tr>
 ;
