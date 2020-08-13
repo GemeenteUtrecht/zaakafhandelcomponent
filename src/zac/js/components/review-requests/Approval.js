@@ -3,16 +3,7 @@ import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
 import { getUserName } from '../../utils/users';
-
-
-const ApprovalText = ({ icon, children }) => {
-    return (
-        <span className="iconed-text">
-            <i className="material-icons iconed-text__icon">{icon}</i>
-            {children}
-        </span>
-    );
-};
+import { IconedText } from '../IconedText';
 
 
 /**
@@ -25,8 +16,8 @@ const ApprovalRow = ({approval}) =>
         <td>
             {
                 approval.approved
-                ? <ApprovalText icon="done">Akkoord</ApprovalText>
-                : <ApprovalText icon="block">Niet akkoord</ApprovalText>
+                ? <IconedText icon="done">Akkoord</IconedText>
+                : <IconedText icon="block">Niet akkoord</IconedText>
             }
         </td>
         <td>{getUserName(approval.author)}</td>

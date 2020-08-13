@@ -5,6 +5,7 @@ import { timeSince } from '../../utils/time-since';
 import { EventType, EventTimeline } from './Event';
 import { CaseActivityActions } from './CaseActivityActions';
 import { CaseActivityAssignee } from './CaseActivityAssignee';
+import { CaseActivityDocument } from './CaseActivityDocument';
 import { Activity } from './types';
 
 
@@ -35,14 +36,7 @@ const CaseActivity = ({ activity }) => {
                 </div>
 
                 <div className="case-activity__document">
-                    {
-                        activity.document ? (
-                            <a className="btn btn--small" onClick={() => alert('todo')}>
-                                Toon documentinformatie
-                            </a>
-                        )
-                        : <span className="soft-info soft-info--normal-size">Document ontbreekt.</span>
-                    }
+                    <CaseActivityDocument canMutate={ isOnGoing } activity={activity} />
                 </div>
 
             </header>
