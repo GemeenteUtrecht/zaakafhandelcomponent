@@ -45,7 +45,7 @@
                 class="link link--plain"
             >
                 <button type="button" class="btn btn--control btn btn--control-focus">
-                    Ad-hoc activiteiten {% if activity_count %}({{ activity_count }}){% endif %}
+                    Activiteiten {% if activity_count %}({{ activity_count }}){% endif %}
                 </button>
             </a>
 
@@ -206,15 +206,17 @@
         {% endif %}
     </section>
 
+    {% if review_requests %}
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Adviseren en accorderen</div>
 
-        {{ review_requests_json|json_script:"reviewRequests" }}
+        {{ review_requests|json_script:"reviewRequests" }}
         <div
             id="review-requests-react"
             data-download-url="{% url 'core:download-document' '_bronorganisatie_' '_identificatie_'%}?versie=_versie_"
         > {# React managed #} </div>
     </section>
+    {% endif %}
 
     {% if related_zaken %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">

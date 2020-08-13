@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import Modal from 'react-modal';
 import PropTypes from 'prop-types';
 
-import {AdviceTable} from "./Advice";
-import {ApprovalTable} from "./Approval";
+import { AdviceTable } from "./Advice";
+import { ApprovalTable } from "./Approval";
 
 
 const kownslTypes = {
     advice: 'Advies',
     approval: 'Accordering'
+};
+
+const kownslTypesPlural = {
+    advice: 'Adviezen',
+    approval: 'Accorderingen',
 };
 
 
@@ -23,15 +28,21 @@ const modalStyles = {
  */
 const ReviewRequestModal = ({ isOpen, setIsOpen, reviewRequest }) => {
     const closeModal = () => setIsOpen(false);
-
     return (
-        <Modal isOpen={isOpen} className="modal" style={modalStyles}>
-            <button onClick={closeModal} className="modal__close btn">&times;</button>
-            <h1 className="page-title">{`Review request for ${reviewRequest.review_type}`}</h1>
+        <Modal
+            isOpen={ isOpen }
+            onRequestClose={ closeModal }
+            className="modal"
+            style={ modalStyles }
+        >
+            <button onClick={ closeModal } className="modal__close btn">&times;</button>
+            <h1 className="page-title">
+                {kownslTypesPlural[reviewRequest.review_type]}
+            </h1>
 
             {reviewRequest.review_type === 'advice'
-                ? <AdviceTable advices={reviewRequest.advices}/>
-                : <ApprovalTable approvals={reviewRequest.approvals}/>
+                ? <AdviceTable advices={reviewRequest.advices} />
+                : <ApprovalTable approvals={reviewRequest.approvals} />
             }
         </Modal>
     );
@@ -56,7 +67,7 @@ const ReviewRequestRow = ({ reviewRequest }) => {
     const openModal = () => setIsOpen(true);
 
     return (
-        <>
+        <React.Fragment>
             <tr onClick={openModal} className="table__column table__column--clickable" title="Toon details">
                 <td>{kownslTypes[reviewRequest.review_type]}</td>
                 <td>{`${numReviews} / ${reviewRequest.num_assigned_users}`}</td>
@@ -66,7 +77,7 @@ const ReviewRequestRow = ({ reviewRequest }) => {
                 setIsOpen={setIsOpen}
                 reviewRequest={reviewRequest}
             />
-        </>
+        </React.Fragment>
     );
 };
 

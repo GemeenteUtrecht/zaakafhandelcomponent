@@ -33,7 +33,7 @@ const ProcessMessages = ({ messages=[] }) => {
 
     return (
         <div className="process-messages">
-            <label className="process-messages__intro">Ad-Hoc acties:</label>
+            <label className="process-messages__intro">Acties:</label>
             { messages.map( (message) => <MessageForm key={message} name={message} /> ) }
         </div>
     );

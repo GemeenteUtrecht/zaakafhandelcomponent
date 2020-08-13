@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom';
 import Modal from "react-modal";
 
 import './fetch-zaakobjecten';
-import { ReviewRequestTable } from "./ReviewRequest";
+import { ReviewRequestTable } from "../../components/review-requests";
+import { DownloadUrlContext } from "../../components/review-requests/context";
 import { jsonScriptToVar } from '../../utils/json-script';
-import { DownloadUrlContext } from "./context";
 
 
 const init = () => {
@@ -14,7 +14,7 @@ const init = () => {
         return;
     }
 
-    Modal.setAppElement('#review-requests-react');
+    Modal.setAppElement(node);
 
     const reviewRequests = jsonScriptToVar('reviewRequests');
     const { downloadUrl } = node.dataset;
