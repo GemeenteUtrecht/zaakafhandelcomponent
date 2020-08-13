@@ -12,6 +12,7 @@ $content-panel-border-color: #ddd !default;
 
 .modal {
   min-width: 50vw;
+  max-width: 90vw;
   min-height: 200px;
 
   border: 1px solid $content-panel-border-color;
