@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from ..services import get_zaak
+from ..services import get_document, get_informatieobjecttype, get_zaak
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
+    DocumentInfoSerializer,
     InformatieObjectTypeSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
@@ -82,3 +83,20 @@ class AddDocumentView(views.APIView):
 
         response_serializer = AddDocumentResponseSerializer(document)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class GetDocumentInfoView(views.APIView):
+    def get(self, request: Request) -> Response:
+        document_url = request.query_params.get("document")
+        if not document_url:
+            raise exceptions.ValidationError("'document' query parameter is required.")
+
+        document = get_document(url=document_url)
+        document.informatieobjecttype = get_informatieobjecttype(
+            document.informatieobjecttype
+        )
+
+        serializer = DocumentInfoSerializer(
+            instance=document, context={"request": request}
+        )
+        return Response(serializer.data)
