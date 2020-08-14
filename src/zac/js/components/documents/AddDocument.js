@@ -17,6 +17,7 @@ const ENDPOINT_GET_ZIO = '/core/api/documents/get-informatieobjecttypen';
 
 
 const initialState = {
+    uploading: false,
     informatieobjecttype: {
         value: '',
         errors: [],
@@ -45,6 +46,16 @@ function reducer(draft, action) {
             draft.file.errors = [];
             break;
         }
+
+        case 'UPLOAD_STARTED': {
+            draft.uploading = true;
+            break;
+        };
+
+        case 'UPLOAD_COMPLETED': {
+            draft.uploading = false;
+            break;
+        };
 
         case 'VALIDATION_ERRORS': {
             const errors = action.payload;
@@ -114,6 +125,7 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false,
 
     const onSubmit = async (event) => {
         event.preventDefault();
+        dispatch({type: 'UPLOAD_STARTED'});
         const uploadResult = await uploadFile(
             csrftoken,
             state.informatieobjecttype.value,
@@ -121,7 +133,7 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false,
             zaakUrl,
             extraDocumentFields
         );
-
+        dispatch({type: 'UPLOAD_COMPLETED'});
         if (!uploadResult.ok) {
             if (uploadResult.status === 400) {
                 dispatch({
@@ -137,27 +149,17 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false,
         }
     };
 
-    const { loading, value } = useAsync(
-        async () => await getInformatieObjectTypen(zaakUrl),
-        [zaakUrl]
-    );
-
-    if (loading) {
-        return (<span className="loader" />);
+    if (state.uploading) {
+        return (<span className="loader"></span>);
     }
 
     return (
         <form onSubmit={ onSubmit } className={ inModal ? 'form form--modal' : 'form' }>
-            <Select
-                name="informatieobjecttype"
-                label="Documenttype"
-                choices={ [['', '-------'], ...value.map( iot => [iot.url, iot.omschrijving] )] }
-                id="id_informatieobjecttype"
-                helpText="Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen."
+            <InformatieObjectTypeSelect
+                zaakUrl={ zaakUrl }
                 onChange={ onFieldChange }
                 value={ state.informatieobjecttype.value }
                 errors={ state.informatieobjecttype.errors }
-                required
             />
 
             <FileInput
@@ -189,6 +191,40 @@ AddDocument.propTypes = {
     extraDocumentFields: PropTypes.object,
 };
 
+
+const InformatieObjectTypeSelect = ({ zaakUrl, value='', errors=[], onChange }) => {
+    const asyncState = useAsync(
+        async () => await getInformatieObjectTypen(zaakUrl),
+        [zaakUrl]
+    );
+
+    if (asyncState.loading) {
+        return (<span className="loader" />);
+    }
+
+    return (
+        <Select
+            name="informatieobjecttype"
+            label="Documenttype"
+            choices={ [['', '-------'], ...asyncState.value.map( iot => [iot.url, iot.omschrijving] )] }
+            id="id_informatieobjecttype"
+            helpText="Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen."
+            onChange={ onChange }
+            value={ value }
+            errors={ errors }
+            required
+        />
+    );
+
+
+};
+
+InformatieObjectTypeSelect.propTypes = {
+    zaakUrl: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    errors: PropTypes.arrayOf(PropTypes.string),
+    onChange: PropTypes.func.isRequired,
+};
 
 const getInformatieObjectTypen = async (zaakUrl) => {
     const url = `${ENDPOINT_GET_ZIO}?zaak=${encodeURI(zaakUrl)}`;
