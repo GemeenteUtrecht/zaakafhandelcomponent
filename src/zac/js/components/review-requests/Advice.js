@@ -2,18 +2,10 @@ import React, { useContext } from "react";
 import PropTypes from 'prop-types';
 import fileSize from "filesize";
 
+import { DownloadUrlContext } from "../documents/context";
+import { getDownloadUrl } from "../documents/utils";
 import { timeSince } from '../../utils/time-since';
 import { getUserName } from '../../utils/users';
-import { DownloadUrlContext } from "./context";
-
-
-const getDownloadUrl = (template, doc) => {
-    let url = template;
-    for (const attr of ['bronorganisatie', 'identificatie', 'versie']) {
-        url = url.replace(`_${attr}_`, doc[attr]);
-    }
-    return url;
-};
 
 
 /**

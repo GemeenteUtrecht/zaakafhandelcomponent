@@ -4,7 +4,7 @@ import Modal from "react-modal";
 
 import './fetch-zaakobjecten';
 import { ReviewRequestTable } from "../../components/review-requests";
-import { DownloadUrlContext } from "../../components/review-requests/context";
+import { DownloadUrlContext } from "../../components/documents/context";
 import { jsonScriptToVar } from '../../utils/json-script';
 
 
