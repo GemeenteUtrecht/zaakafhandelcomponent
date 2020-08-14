@@ -10,6 +10,7 @@ class ActivityFilter(filters.FilterSet):
 
     def filter_queryset(self, queryset):
         # for permission reasons, don't allow data retrieval without 'zaak' filter
-        if not self.form.cleaned_data.get("zaak"):
+        zaak = self.form.cleaned_data.get("zaak")
+        if not zaak:
             return queryset.none()
         return super().filter_queryset(queryset)
