@@ -3,9 +3,11 @@ import PropTypes from 'prop-types';
 
 import Modal from 'react-modal';
 import { useAsync } from 'react-use';
+import { useImmerReducer } from "use-immer";
 
 import { apiCall, get } from '../../utils/fetch';
 import { CsrfTokenContext } from '../forms/context';
+import { Select } from '../forms/Select';
 import { SubmitRow } from '../forms/Utils';
 import { IconedText } from '../IconedText';
 import { Activity } from './types';
@@ -21,9 +23,55 @@ const getInformatieObjectTypen = async (zaakUrl) => {
 };
 
 
+const initialState = {
+    informatieobjecttype: {
+        value: '',
+        errors: [],
+    },
+};
+
+
+function reducer(draft, action) {
+    switch (action.type) {
+        case 'RESET':
+            return initialState;
+
+        case 'FIELD_CHANGED': {
+            const { name, value } = action.payload;
+            draft[name].value = value;
+            draft[name].errors = [];
+            break;
+        }
+
+        case 'VALIDATION_ERRORS': {
+            const errors = action.payload;
+            for (const [field, errors] of Object.entries(errors)) {
+                draft[field].errors = errors;
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
+
 const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
     const csrftoken = useContext(CsrfTokenContext);
     const fileInput = useRef(null);
+    const [state, dispatch] = useImmerReducer(reducer, initialState);
+
+    const onFieldChange = (event) => {
+        const { name, value } = event.target;
+        dispatch({
+            type: 'FIELD_CHANGED',
+            payload: {
+                name,
+                value
+            }
+        });
+    };
 
     const onSubmit = async (event) => {
         event.preventDefault();
@@ -59,20 +107,19 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
     }
 
     return (
-        <form onSubmit={ onSubmit }>
+        <form onSubmit={ onSubmit } className="form form--modal">
 
-            <label>
-                Documenttype:
-                <select name="informatieobjecttype">
-                    {
-                        value.map( choice => (
-                            <option key={choice.url} value={choice.url}>
-                                {choice.omschrijving}
-                            </option>
-                        ) )
-                    }
-                </select>
-            </label>
+            <Select
+                name="informatieobjecttype"
+                label="Documenttype"
+                choices={ value.map( iot => [iot.url, iot.omschrijving] ) }
+                id="id_informatieobjecttype"
+                helpText="Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen."
+                onChange={ onFieldChange }
+                value={ state.informatieobjecttype.value }
+                errors={ state.informatieobjecttype.errors }
+                required
+            />
 
             <label>
                 Document:
