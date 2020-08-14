@@ -52,13 +52,14 @@ class AddDocumentView(views.APIView):
             "bronorganisatie": zaak.bronorganisatie,  # TODO: what if it's different?
             "creatiedatum": date.today().isoformat(),  # TODO: what if it's created on another date
             "titel": uploaded_file.name,
-            "auteur": request.user.get_full_name()
-            or request.user.username,  # TODO: take user input
+            # TODO: take user input
+            "auteur": request.user.get_full_name() or request.user.username,
             "taal": "nld",
             "inhoud": str(inhoud),  # it's base64, so ascii compatible
             "formaat": uploaded_file.content_type,
             "bestandsnaam": uploaded_file.name,
             "ontvangstdatum": date.today().isoformat(),
+            # "beschrijving": serializer.validated_data.get("beschrijving", ""),
         }
 
         services = Service.objects.filter(api_type=APITypes.drc)

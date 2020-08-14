@@ -60,13 +60,17 @@ function reducer(draft, action) {
 }
 
 
-const uploadFile = async (csrftoken, informatieobjecttype, file, zaak) => {
+const uploadFile = async (csrftoken, informatieobjecttype, file, zaak, extraDocumentFields={}) => {
     // prepare multipart file upload
     const data = new FormData();
     data.append('csrfmiddlewaretoken', csrftoken);
     data.append('informatieobjecttype', informatieobjecttype);
     data.append('zaak', zaak);
     data.append('file', file);
+
+    for (const [property, value] of Object.entries(extraDocumentFields)) {
+        data.append(property, value);
+    }
 
     // send the API call
     const response = await apiCall(
@@ -79,13 +83,21 @@ const uploadFile = async (csrftoken, informatieobjecttype, file, zaak) => {
             body: data,
         }
     );
-    console.log(response.ok);
+
+    if (response.status >= 500) {
+        throw new Error("Server error.");
+    }
+
     const responseData = await response.json();
-    console.log(responseData);
+    return {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+    };
 };
 
 
-const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false }) => {
+const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false, onUploadComplete, extraDocumentFields={} }) => {
     const csrftoken = useContext(CsrfTokenContext);
     const [state, dispatch] = useImmerReducer(reducer, initialState);
 
@@ -107,8 +119,22 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false 
             state.informatieobjecttype.value,
             state.file.value,
             zaakUrl,
+            extraDocumentFields
         );
-        console.log(uploadResult);
+
+        if (!uploadResult.ok) {
+            if (uploadResult.status === 400) {
+                dispatch({
+                    type: 'VALIDATION_ERRORS',
+                    payload: uploadResult.data,
+                });
+            }
+        } else {
+            const documentUrl = uploadResult.data.document;
+            if (onUploadComplete) {
+                onUploadComplete(documentUrl);
+            }
+        }
     };
 
     const { loading, value } = useAsync(
@@ -125,7 +151,7 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false 
             <Select
                 name="informatieobjecttype"
                 label="Documenttype"
-                choices={ value.map( iot => [iot.url, iot.omschrijving] ) }
+                choices={ [['', '-------'], ...value.map( iot => [iot.url, iot.omschrijving] )] }
                 id="id_informatieobjecttype"
                 helpText="Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen."
                 onChange={ onFieldChange }
@@ -159,6 +185,8 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false 
 AddDocument.propTypes = {
     zaakUrl: PropTypes.string.isRequired,
     endpoint: PropTypes.string,
+    onUploadComplete: PropTypes.func,
+    extraDocumentFields: PropTypes.object,
 };
 
 

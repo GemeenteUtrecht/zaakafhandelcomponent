@@ -13,6 +13,8 @@ class AddDocumentSerializer(serializers.Serializer):
     zaak = serializers.URLField(required=True)
     file = serializers.FileField(required=True, use_url=False)
 
+    beschrijving = serializers.CharField(required=False)
+
     def validate(self, data):
         zaak_url = data.get("zaak")
         informatieobjecttype_url = data.get("informatieobjecttype")
