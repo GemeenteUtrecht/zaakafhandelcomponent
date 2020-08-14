@@ -37,13 +37,19 @@ const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker', asLink=fal
 
     const trigger = asLink ?
         (
-            <a href="#" className="link link--inline-action" onClick={ () => setModalOpen(true) }>
+            <a href="#" className="link link--inline-action" onClick={ (e) => {
+                event.preventDefault();
+                setModalOpen(true);
+            } }>
                 {btnLabel}
             </a>
         )
         :
         (
-            <button type="button" className="btn btn--small" onClick={ () => setModalOpen(true) }>
+            <button type="button" className="btn btn--small" onClick={ (e) => {
+                event.preventDefault();
+                setModalOpen(true);
+            } }>
                 {btnLabel}
             </button>
         );

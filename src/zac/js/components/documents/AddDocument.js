@@ -164,7 +164,7 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload', inModal=false,
 
             <FileInput
                 name="document"
-                label="Bladeren"
+                label="Document"
                 id="id_document"
                 helpText="Selecteer het document."
                 onChange={ files => dispatch({

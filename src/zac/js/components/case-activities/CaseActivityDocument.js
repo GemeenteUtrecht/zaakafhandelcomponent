@@ -84,14 +84,15 @@ const CaseActivityDocument = ({ activity, canMutate=false }) => {
 
     return (
         <React.Fragment>
-            {'Document: '}
-            <button
-                type="button"
-                className="btn btn--small"
-                onClick={ () => setIsAdding(true) }
-            >
-                <IconedText icon="attach_file">Toevoegen</IconedText>
-            </button>
+            <a
+                href="#"
+                role="button"
+                className="link link--inline-action"
+                onClick={ (e) => {
+                    e.preventDefault();
+                    setIsAdding(true);
+                } }
+            > Document toevoegen </a>
 
             <Modal
               isOpen={ isAdding }
@@ -106,6 +107,7 @@ const CaseActivityDocument = ({ activity, canMutate=false }) => {
                     extraDocumentFields={{
                         beschrijving: `Document voor activiteit '${activity.name}'`,
                     }}
+                    inModal
                 />
             </Modal>
 

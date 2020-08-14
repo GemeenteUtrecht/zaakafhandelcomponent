@@ -52,12 +52,14 @@ const CaseActivityAssignee = ({ activityUrl, canSet, userId=null }) => {
     if (loading || value == null) {
         return (
             <React.Fragment>
-                {'Verantwoordelijke: '}
-
                 {
                     (!loading && canSet) ?
-                        <UserSelection btnLabel="Selecteer" onSelection={ onUserSelection } />
-                        : <span className="soft-info soft-info--normal-size">-</span>
+                        <UserSelection
+                            btnLabel="Selecteer verantwoordelijke"
+                            onSelection={ onUserSelection }
+                            asLink
+                        />
+                        : <span className="soft-info soft-info--normal-size">Geen verantwoordelijke bepaald.</span>
 
                 }
             </React.Fragment>

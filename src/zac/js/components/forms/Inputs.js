@@ -111,7 +111,7 @@ const FileInput = ({name, label, helpText, id, required=false, errors=[], multip
                     ref={ fileInput }
                     onChange={ onInputChange }
                 />
-                <span className="btn" role="button">{ label }</span>
+                <span className="btn" role="button">Bladeren...</span>
             </label>
 
             { children ? (<div>{ children }</div>) : null }
