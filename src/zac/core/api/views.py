@@ -4,9 +4,9 @@ from datetime import date
 from rest_framework import exceptions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
-from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from ..models import CoreConfig
 from ..services import get_document, get_informatieobjecttype, get_zaak
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -63,8 +63,8 @@ class AddDocumentView(views.APIView):
             # "beschrijving": serializer.validated_data.get("beschrijving", ""),
         }
 
-        services = Service.objects.filter(api_type=APITypes.drc)
-        service = services.first()  # TODO: config option to select the default?
+        core_config = CoreConfig.get_solo()
+        service = core_config.primary_drc
         if not service:
             raise RuntimeError("No DRC configured!")
 
