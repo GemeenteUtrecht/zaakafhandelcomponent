@@ -15,6 +15,14 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 class ReadPermissionTests(APITestCase):
+    """
+    Test the activity list endpoint permissions.
+
+    These tests build up from top-to-bottom in increased permissions, starting with
+    a user who's not logged in at all. Every test adds a little extra that satisfies
+    the previous test, until eventually permissions are effectively set and a succesful,
+    auth controlled read is performed.
+    """
 
     endpoint = reverse_lazy("activities:activity-list")
 
