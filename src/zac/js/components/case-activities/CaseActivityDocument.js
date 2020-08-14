@@ -7,6 +7,7 @@ import { useImmerReducer } from "use-immer";
 
 import { apiCall, get } from '../../utils/fetch';
 import { CsrfTokenContext } from '../forms/context';
+import { FileInput } from '../forms/Inputs';
 import { Select } from '../forms/Select';
 import { SubmitRow } from '../forms/Utils';
 import { IconedText } from '../IconedText';
@@ -28,6 +29,7 @@ const initialState = {
         value: '',
         errors: [],
     },
+    file: null,
 };
 
 
@@ -40,6 +42,11 @@ function reducer(draft, action) {
             const { name, value } = action.payload;
             draft[name].value = value;
             draft[name].errors = [];
+            break;
+        }
+
+        case 'FILE_SELECTED': {
+            draft.file = action.payload || null;
             break;
         }
 
@@ -59,7 +66,6 @@ function reducer(draft, action) {
 
 const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
     const csrftoken = useContext(CsrfTokenContext);
-    const fileInput = useRef(null);
     const [state, dispatch] = useImmerReducer(reducer, initialState);
 
     const onFieldChange = (event) => {
@@ -79,7 +85,7 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
         // prepare multipart file upload
         const data = new FormData();
         data.append('csrfmiddlewaretoken', csrftoken);
-        data.append('file', fileInput.current.files[0]);
+        data.append('file', state.file);
 
         // send the API call
         const response = await apiCall(
@@ -106,6 +112,8 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
         return (<span className="loader" />);
     }
 
+    console.log(state);
+
     return (
         <form onSubmit={ onSubmit } className="form form--modal">
 
@@ -121,10 +129,18 @@ const AddDocument = ({ zaakUrl, endpoint='/api/documents/upload' }) => {
                 required
             />
 
-            <label>
-                Document:
-                <input type="file" ref={ fileInput } name="document" />
-            </label>
+            <FileInput
+                name="document"
+                label="Document"
+                id="id_document"
+                helpText="Selecteer het document."
+                onChange={ files => dispatch({
+                    type: 'FILE_SELECTED',
+                    payload: files[0],
+                }) }
+                errors={ [] }
+                required
+            > { state.file ? <em>{state.file.name}</em> : null } </FileInput>
 
             <div className="modal__submitrow">
                 <SubmitRow text="Toevoegen" />

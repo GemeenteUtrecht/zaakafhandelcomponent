@@ -57,6 +57,11 @@
         outline: 2px solid $color-secondary;
       }
     }
+
+    @include modifier('file') {
+      position: fixed;
+      top: -1000px;
+    }
   }
 
   @include element('error') {

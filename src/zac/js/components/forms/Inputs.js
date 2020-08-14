@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Help } from './Help';
 import { Label } from './Label';
@@ -88,4 +88,37 @@ const HiddenInput = ({name, value}) => {
 }
 
 
-export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput};
+const FileInput = ({name, label, helpText, id, required=false, errors=[], multiple=false, onChange, children }) => {
+    const fileInput = useRef(null);
+
+    const onInputChange = () => {
+        onChange(fileInput.current.files);
+    };
+
+    return (
+        <Wrapper errors={errors}>
+            <Label label={label} required={required} idForLabel={id} />
+            <Help helpText={helpText} idForLabel={id} />
+            <ErrorList errors={errors} />
+
+            <label>
+                <input
+                    type="file"
+                    id={ id }
+                    name={ name }
+                    className="input__control input__control--file"
+                    multiple={ multiple }
+                    ref={ fileInput }
+                    onChange={ onInputChange }
+                />
+                <span className="btn" role="button">{ label }</span>
+            </label>
+
+            { children ? (<div>{ children }</div>) : null }
+
+        </Wrapper>
+    );
+};
+
+
+export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput, FileInput};
