@@ -1,0 +1,13 @@
+@import "../lib/bem";
+@import "../lib/colors";
+
+.document-preview {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  @include element("icon") {
+    width: 48px;
+    font-size: 32px;
+  }
+}
