@@ -7,6 +7,7 @@ from zds_client import ClientError
 
 from zac.core.services import get_zaak
 
+from ..models import Activity, Event
 from ..permissions import activiteiten_schrijven
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,15 @@ class CanWritePermission(permissions.BasePermission):
         if not serializer.is_valid():
             return True
 
-        zaak_url = serializer.validated_data["zaak"]
+        # determine the relevant zaak
+        if view.queryset.model is Activity:
+            zaak_url = serializer.validated_data["zaak"]
+        elif view.queryset.model is Event:
+            zaak_url = serializer.validated_data["activity"].zaak
+        else:
+            raise ValueError("Unknown model/queryset")
+
+        # retrieve the zaak to check permissions for
         try:
             zaak = get_zaak(zaak_url=zaak_url)
         except ClientError:

@@ -46,3 +46,4 @@ class ActivityViewSet(viewsets.ModelViewSet):
 class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Event.objects.none()
     serializer_class = EventSerializer
+    permission_classes = (permissions.IsAuthenticated, CanWritePermission)
