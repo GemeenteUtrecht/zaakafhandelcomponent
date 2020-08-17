@@ -385,3 +385,104 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.post(endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class UpdatePermissionTests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        Service.objects.create(
+            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
+        )
+        Service.objects.create(
+            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+        )
+
+        cls.catalogus = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=cls.catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=cls.zaaktype["url"],
+        )
+        cls.activity = ActivityFactory.create(zaak=cls.zaak["url"])
+
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+
+    def test_update_activity_not_logged_in(self):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+
+        response = self.client.patch(endpoint, {})
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_no_permission(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_permissions(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        PermissionSetFactory.create(
+            permissions=[activiteiten_schrijven.name],
+            for_user=self.user,
+            catalogus=self.catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

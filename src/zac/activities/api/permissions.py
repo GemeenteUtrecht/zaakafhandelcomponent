@@ -23,6 +23,16 @@ class CanReadZaakPermission(permissions.BasePermission):
 
 
 class CanWritePermission(permissions.BasePermission):
+    def _has_zaak_permission(self, request: Request, zaak_url: str):
+        # retrieve the zaak to check permissions for
+        try:
+            zaak = get_zaak(zaak_url=zaak_url)
+        except ClientError:
+            logger.info("Invalid Zaak specified", exc_info=True)
+            return False
+
+        return request.user.has_perm(activiteiten_schrijven.name, zaak)
+
     def has_permission(self, request: Request, view: ModelViewSet):
         if view.action not in ("create", "update", "partial_update"):
             return False
@@ -40,14 +50,16 @@ class CanWritePermission(permissions.BasePermission):
         else:
             raise ValueError("Unknown model/queryset")
 
-        # retrieve the zaak to check permissions for
-        try:
-            zaak = get_zaak(zaak_url=zaak_url)
-        except ClientError:
-            logger.info("Invalid Zaak specified", exc_info=True)
-            return False
-
-        return request.user.has_perm(activiteiten_schrijven.name, zaak)
+        return self._has_zaak_permission(request, zaak_url)
 
     def has_object_permission(self, request: Request, view: ModelViewSet, obj):
-        return False
+        if view.action not in ("update", "partial_update"):
+            return False
+
+        # determine the relevant zaak
+        if view.queryset.model is Activity:
+            zaak_url = obj.zaak
+        else:
+            raise ValueError("Unknown model/queryset")
+
+        return self._has_zaak_permission(request, zaak_url)

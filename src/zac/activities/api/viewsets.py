@@ -11,9 +11,6 @@ from .serializers import ActivitySerializer, EventSerializer
 
 
 class ActivityViewSet(viewsets.ModelViewSet):
-    # TODO: add/check permissions!
-    #   - can create activities
-    #   - can create activities for given zaak(type)
     queryset = Activity.objects.order_by("created").prefetch_related(
         Prefetch("events", queryset=Event.objects.order_by("created"))
     )
