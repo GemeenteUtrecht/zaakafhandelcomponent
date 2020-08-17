@@ -318,3 +318,36 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_event_not_logged_in(self):
+        endpoint = reverse_lazy("activities:event-list")
+
+        response = self.client.post(endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_create_event_logged_in_no_permissions(self, m):
+        endpoint = reverse_lazy("activities:event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
