@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { timeSince } from '../../utils/time-since';
 import { Timeline, ListItem } from '../timeline';
 import { AddNotes } from './AddNotes';
+import { ActivitiesContext } from './context';
 import { EventType } from './types';
 
 
 const EventTimeline = ({ activityId, onGoing, children }) => {
+    const activitiesContext = useContext(ActivitiesContext);
+
     return (
         <React.Fragment>
             <Timeline>
@@ -24,7 +27,7 @@ const EventTimeline = ({ activityId, onGoing, children }) => {
 
             </Timeline>
 
-            { onGoing ? <AddNotes activityId={activityId} /> : null }
+            { onGoing && activitiesContext.canMutate ? <AddNotes activityId={activityId} /> : null }
         </React.Fragment>
     );
 };

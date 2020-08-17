@@ -9,6 +9,7 @@ const EventsContext = React.createContext({
 
 const ActivitiesContext = React.createContext({
     refresh: () => { console.log('refresh requested') },
+    canMutate: false,
 });
 
 
