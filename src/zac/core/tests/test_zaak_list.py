@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs
 
 from django.conf import settings
 from django.urls import reverse_lazy

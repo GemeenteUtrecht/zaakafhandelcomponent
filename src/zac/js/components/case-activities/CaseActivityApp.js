@@ -41,7 +41,7 @@ const reducer = (draft, action) => {
 };
 
 
-const CaseActivityApp = ({ zaak, endpoint, eventsEndpoint, controlsNode }) => {
+const CaseActivityApp = ({ zaak, endpoint, eventsEndpoint, controlsNode, canMutate }) => {
     const [
         { isAdding, refreshId },
         dispatch
@@ -53,21 +53,31 @@ const CaseActivityApp = ({ zaak, endpoint, eventsEndpoint, controlsNode }) => {
         endpoint: eventsEndpoint,
         onCreate: refresh,
     };
-    const activitiesContext = {refresh: refresh};
+    const activitiesContext = {refresh, canMutate};
 
     return (
         <React.Fragment>
-            <AddActivityButton
-                portalNode={controlsNode}
-                onClick={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: true}) }
-            />
-            <AddActvityModal
-                endpoint={endpoint}
-                zaak={zaak}
-                isOpen={isAdding}
-                closeModal={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: false}) }
-                refresh={ refresh }
-            />
+            {
+                canMutate ? (
+                    <React.Fragment>
+                        <AddActivityButton
+                            portalNode={controlsNode}
+                            onClick={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: true}) }
+                        />
+                        <AddActvityModal
+                            endpoint={endpoint}
+                            zaak={zaak}
+                            isOpen={isAdding}
+                            closeModal={ () => dispatch({type: 'TOGGLE_ADD_ACTIVITY', payload: false}) }
+                            refresh={ refresh }
+                        />
+                    </React.Fragment>
+                ) : (
+                    <p className="permission-check permission-check--failed">
+                        Je hebt geen rechten om activiteiten aan te maken of wijzigen.
+                    </p>
+                )
+            }
 
             <EventsContext.Provider value={eventsContext}>
                 <ActivitiesContext.Provider value={activitiesContext}>
@@ -87,6 +97,7 @@ CaseActivityApp.propTypes = {
     endpoint: PropTypes.string.isRequired,
     eventsEndpoint: PropTypes.string.isRequired,
     controlsNode: PropTypes.object.isRequired,
+    canMutate: PropTypes.bool.isRequired,
 };
 
 

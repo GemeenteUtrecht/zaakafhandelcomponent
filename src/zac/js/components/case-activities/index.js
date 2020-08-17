@@ -26,6 +26,7 @@ const init = () => {
             zaak: node.dataset.zaak,
             endpoint: node.dataset.endpoint,
             eventsEndpoint: node.dataset.eventsEndpoint,
+            canMutate: JSON.parse(node.dataset.canMutate),
         };
 
         ReactDOM.render(
