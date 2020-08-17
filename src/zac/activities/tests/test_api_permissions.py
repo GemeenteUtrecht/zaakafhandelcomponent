@@ -1,4 +1,4 @@
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from rest_framework import status
@@ -116,3 +116,103 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(len(response.data), 1)
 
         self.assertEqual(response.data[0]["id"], activity.id)
+
+
+class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
+    """
+    Test the activity detail endpoint permissions.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        Service.objects.create(
+            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
+        )
+        Service.objects.create(
+            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+        )
+
+        cls.user = UserFactory.create()
+
+        cls.catalogus = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=cls.catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=cls.zaaktype["url"],
+        )
+        cls.activity = ActivityFactory.create(zaak=cls.zaak["url"])
+
+    def test_read_not_logged_in(self):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+
+        response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_read_logged_in_no_permissions(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_login(self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+
+        response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_read_logged_in_with_permissions(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_login(self.user)
+        # set up user permissions
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [self.zaaktype],
+            },
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+
+        response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
