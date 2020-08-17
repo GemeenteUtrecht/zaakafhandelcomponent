@@ -6,7 +6,7 @@ from zac.core.services import get_zaak
 
 from ..models import Activity, Event
 from .filters import ActivityFilter
-from .permissions import CanReadZaakPermission
+from .permissions import CanReadZaakPermission, CanWritePermission
 from .serializers import ActivitySerializer, EventSerializer
 
 
@@ -19,7 +19,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     )
     permission_classes = (
         permissions.IsAuthenticated,
-        CanReadZaakPermission,
+        CanReadZaakPermission | CanWritePermission,
     )
     serializer_class = ActivitySerializer
     filterset_class = ActivityFilter

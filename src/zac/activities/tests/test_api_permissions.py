@@ -135,8 +135,6 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
             label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
         )
 
-        cls.user = UserFactory.create()
-
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -154,6 +152,11 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=cls.zaaktype["url"],
         )
         cls.activity = ActivityFactory.create(zaak=cls.zaak["url"])
+
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
 
     def test_read_not_logged_in(self):
         endpoint = reverse(
