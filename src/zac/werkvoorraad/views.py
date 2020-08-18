@@ -1,10 +1,35 @@
+from typing import List
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
 from zgw_consumers.concurrent import parallel
 
+from zac.accounts.models import User
+from zac.accounts.permissions import UserPermissions
 from zac.activities.models import Activity
-from zac.core.services import get_zaak
+from zac.core.services import get_zaak, get_zaken
+from zgw.models.zrc import Zaak
+
+
+def get_behandelaar_zaken(user: User) -> List[Zaak]:
+    """
+    Retrieve the un-finished zaken where `user` is a medewerker in the role of behandelaar.
+    """
+    medewerker_id = user.username
+    user_perms = UserPermissions(user)
+    behandelaar_zaken = get_zaken(
+        user_perms,
+        skip_cache=True,
+        find_all=True,
+        **{
+            "rol__betrokkeneIdentificatie__medewerker__identificatie": medewerker_id,
+            "rol__omschrijvingGeneriek": "behandelaar",
+            "rol__betrokkeneType": "medewerker",
+        }
+    )
+    unfinished_zaken = [zaak for zaak in behandelaar_zaken if not zaak.einddatum]
+    return sorted(unfinished_zaken, key=lambda zaak: zaak.deadline)
 
 
 class SummaryView(LoginRequiredMixin, TemplateView):
@@ -13,7 +38,6 @@ class SummaryView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # TODO: zaken that current user is behandelaar in
         # TODO: Camunda user tasks
 
         activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
@@ -26,7 +50,10 @@ class SummaryView(LoginRequiredMixin, TemplateView):
                 executor.submit(set_zaak, activity_group)
 
         context.update(
-            {"adhoc_activities": activity_groups,}
+            {
+                "zaken": get_behandelaar_zaken(self.request.user),
+                "adhoc_activities": activity_groups,
+            }
         )
 
         return context

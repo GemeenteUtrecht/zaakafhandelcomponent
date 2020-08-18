@@ -9,8 +9,8 @@
     <ul class="tab tab--inline" role="tablist">
         <li role="tab" id="work-tab-zaken"
             aria-controls="work-zaken"
-            class="tab__tab">
-            <a href="#work-zaken">Zaken (behandelaar)</a>
+            class="tab__tab tab__tab--active">
+            <a href="#work-zaken">Zaken (behandelaar) ({{ zaken|length }})</a>
         </li>
 
         <li role="tab" id="work-tab-usertasks"
@@ -21,18 +21,20 @@
 
         <li role="tab" id="work-tab-ad-hoc"
             aria-controls="work-ad-hoc"
-            class="tab__tab tab__tab--active">
+            class="tab__tab">
             <a href="#work-ad-hoc">Ad-hoc activiteiten ({{ adhoc_activities|length }})</a>
         </li>
     </ul>
 
     <div class="tab__content tab__content--inline">
         <section
-            class="tab__pane"
+            class="tab__pane tab__pane--active"
             id="work-zaken"
             aria-labelledby="work-tab-zaken"
             role="tabpanel"
-        > TODO </section>
+        >
+            {% include "core/includes/zaken_table.html" with zaken=zaken %}
+        </section>
 
         <section
             class="tab__pane"
@@ -42,7 +44,7 @@
         > TODO </section>
 
         <section
-            class="tab__pane tab__pane--active"
+            class="tab__pane"
             id="work-ad-hoc"
             aria-labelledby="work-tab-ad-hoc"
             role="tabpanel"

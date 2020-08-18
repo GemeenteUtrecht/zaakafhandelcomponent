@@ -222,6 +222,8 @@ def _find_zaken(
     bronorganisatie: str = "",
     max_va: str = "",
     test_func: Optional[callable] = None,
+    find_all=False,
+    **extra_query,
 ) -> List[Dict]:
     """
     Retrieve zaken for a particular client with filter parameters.
@@ -231,10 +233,12 @@ def _find_zaken(
         "identificatie": identificatie,
         "bronorganisatie": bronorganisatie,
         "maximaleVertrouwelijkheidaanduiding": max_va,
+        **extra_query,
     }
     logger.debug("Querying zaken with %r", query)
+    minimum = None if find_all else 25
     _zaken = get_paginated_results(
-        client, "zaak", query_params=query, minimum=25, test_func=test_func,
+        client, "zaak", query_params=query, minimum=minimum, test_func=test_func,
     )
     return _zaken
 
@@ -244,6 +248,8 @@ def get_zaken(
     zaaktypen: List[str] = None,
     identificatie: str = "",
     bronorganisatie: str = "",
+    find_all=False,
+    **query_params,
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
@@ -288,6 +294,8 @@ def get_zaken(
                     "bronorganisatie": bronorganisatie,
                     "zaaktype": zaaktype_url,
                     "max_va": max_va,
+                    "find_all": find_all,
+                    **query_params,
                 }
             )
 
