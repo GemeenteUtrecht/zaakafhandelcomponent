@@ -104,6 +104,10 @@ class TaskClaimTests(WebTest):
         # mock zrc
         m.get(ZAAK, json=zaak)
         rollen_url = f"{ZRC_URL}rollen"
+        m.get(
+            f"{rollen_url}?zaak={ZAAK}&betrokkeneIdentificatie__medewerker__identificatie={self.user.username}",
+            json={"count": 0, "next": None, "previous": None, "results": []},
+        )
         m.post(rollen_url, status_code=201)
         # mock camunda
         task_claim_url = f"{CAMUNDA}task/{task['id']}/claim"

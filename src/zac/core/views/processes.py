@@ -363,6 +363,18 @@ class ClaimTaskView(PermissionRequiredMixin, FormView):
         voorletters = " ".join(
             [part[0] for part in self.request.user.first_name.split()]
         )
+
+        # check if the betrokkene already exists
+        existing = zrc_client.list(
+            "rol",
+            query_params={
+                "zaak": zaak.url,
+                "betrokkeneIdentificatie__medewerker__identificatie": self.request.user.username,
+            },
+        )
+        if existing["count"]:
+            return
+
         data = {
             "zaak": zaak.url,
             "betrokkeneType": "medewerker",
