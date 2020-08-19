@@ -16,7 +16,7 @@
         <li role="tab" id="work-tab-usertasks"
             aria-controls="work-usertasks"
             class="tab__tab">
-            <a href="#work-usertasks">Taken (proces)</a>
+            <a href="#work-usertasks">Taken (proces) ({{ user_tasks|length }})</a>
         </li>
 
         <li role="tab" id="work-tab-ad-hoc"
@@ -41,7 +41,17 @@
             id="work-usertasks"
             aria-labelledby="work-tab-usertasks"
             role="tabpanel"
-        > TODO </section>
+        >
+            <ul class="list">
+                {% for task in user_tasks %}
+                    <li>
+                        <a href="{% url 'core:zaak-task' task_id=task.id %}">
+                            {{ task.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
 
         <section
             class="tab__pane"

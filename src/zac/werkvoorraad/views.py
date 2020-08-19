@@ -3,6 +3,8 @@ from typing import List
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
+from django_camunda.camunda_models import Task, factory
+from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import User
@@ -32,6 +34,17 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     return sorted(unfinished_zaken, key=lambda zaak: zaak.deadline)
 
 
+def get_camunda_user_tasks(user: User):
+    client = get_client()
+    tasks = client.get("task", {"assignee": user.username})
+
+    tasks = factory(Task, tasks)
+    for task in tasks:
+        task.assignee = user
+
+    return tasks
+
+
 class SummaryView(LoginRequiredMixin, TemplateView):
     template_name = "index.html"
 
@@ -53,6 +66,7 @@ class SummaryView(LoginRequiredMixin, TemplateView):
             {
                 "zaken": get_behandelaar_zaken(self.request.user),
                 "adhoc_activities": activity_groups,
+                "user_tasks": get_camunda_user_tasks(self.request.user),
             }
         )
 
