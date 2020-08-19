@@ -4,6 +4,7 @@ from django.template.defaultfilters import truncatewords
 from django.utils.translation import gettext_lazy as _
 
 from .constants import ActivityStatuses
+from .query import ActivityQuerySet
 
 
 class Activity(models.Model):
@@ -40,6 +41,8 @@ class Activity(models.Model):
     )
 
     created = models.DateTimeField(_("created"), auto_now_add=True)
+
+    objects = ActivityQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("activity")

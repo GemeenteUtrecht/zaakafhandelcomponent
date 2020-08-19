@@ -21,6 +21,10 @@ def cache(key: str, alias: str = "default", **set_options):
 
         @wraps(func)
         def wrapped(*args, **kwargs):
+            skip_cache = kwargs.pop("skip_cache", False)
+            if skip_cache:
+                return func(*args, **kwargs)
+
             key_kwargs = defaults.copy()
             named_args = dict(zip(argspec.args, args), **kwargs)
             key_kwargs.update(**named_args)

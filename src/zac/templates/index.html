@@ -1,42 +1,78 @@
 {% extends "master.html" %}
-{% load sniplates %}
-
-{% block page-class %}landing{% endblock %}
-
-{% block breadcrumbs %}
-{% load_widgets crumbs='utrechtstijl/snippets/breadcrumbs.html' %}
-{% nested_widget 'crumbs:crumbs' %}
-    {% url 'index' as index_url %}
-    {% widget 'crumbs:crumb' label=_("Zaakafhandeling") url=index_url %}
-{% endnested %}
-{% endblock breadcrumbs %}
+{% load sniplates i18n %}
 
 {% block content %}
+<h1 class="page-title" title="Zaaktype">{% trans "Werkvoorraad" %}</h1>
 
-<div class="page-heading">
+<article class="open-work">
 
-    <!-- START grid wrap -->
-    <div class="grid-wrap">
-        <h1>Zaakafhandeling</h1>
-    </div>
-    <!-- END grid wrap -->
-</div>
-
-<div class="toptaken">
-    <ul>
-        <li>
-            <a href="{% url 'core:index' %}" class="topTasksButton">
-                <i class="fa fa-building fa-2x"></i>
-                <span>Bekijk alle zaken</span>
-            </a>
+    <ul class="tab tab--inline" role="tablist">
+        <li role="tab" id="work-tab-zaken"
+            aria-controls="work-zaken"
+            class="tab__tab tab__tab--active">
+            <a href="#work-zaken">Zaken (behandelaar) ({{ zaken|length }})</a>
         </li>
-        <li>
-            <a href="{% url 'regiezaken:index' %}" class="topTasksButton">
-                <i class="fa fa-folder-open fa-2x"></i>
-                <span>Bekijk regiezaken</span>
-            </a>
+
+        <li role="tab" id="work-tab-usertasks"
+            aria-controls="work-usertasks"
+            class="tab__tab">
+            <a href="#work-usertasks">Taken (proces) ({{ user_tasks|length }})</a>
+        </li>
+
+        <li role="tab" id="work-tab-ad-hoc"
+            aria-controls="work-ad-hoc"
+            class="tab__tab">
+            <a href="#work-ad-hoc">Ad-hoc activiteiten ({{ adhoc_activities|length }})</a>
         </li>
     </ul>
-</div>
 
+    <div class="tab__content tab__content--inline">
+        <section
+            class="tab__pane tab__pane--active"
+            id="work-zaken"
+            aria-labelledby="work-tab-zaken"
+            role="tabpanel"
+        >
+            {% include "core/includes/zaken_table.html" with zaken=zaken %}
+        </section>
+
+        <section
+            class="tab__pane"
+            id="work-usertasks"
+            aria-labelledby="work-tab-usertasks"
+            role="tabpanel"
+        >
+            <ul class="list">
+                {% for task in user_tasks %}
+                    <li>
+                        <a href="{% url 'core:zaak-task' task_id=task.id %}">
+                            {{ task.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section
+            class="tab__pane"
+            id="work-ad-hoc"
+            aria-labelledby="work-tab-ad-hoc"
+            role="tabpanel"
+        >
+            <ul class="list">
+                {% for activity_group in adhoc_activities %}
+                    <li>
+                        <a href="{% url 'core:zaak-activiteiten' bronorganisatie=activity_group.zaak.bronorganisatie identificatie=activity_group.zaak.identificatie %}"
+                        >{{ activity_group.zaak.identificatie }}</a>
+                        <ul>
+                            {% for activity in activity_group.activities %}
+                                <li>{{ activity }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+</article>
 {% endblock %}
