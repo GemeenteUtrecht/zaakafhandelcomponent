@@ -200,6 +200,8 @@ class SelectDocumentsForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
 
+    template_name = "core/select_documents.html"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

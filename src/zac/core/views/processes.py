@@ -163,6 +163,12 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
             del self.request.session["open_url"]
         return response
 
+    def get_template_names(self):
+        form_cls = self.get_form_class()
+        if hasattr(form_cls, "template_name"):
+            return [form_cls.template_name]
+        return super().get_template_names()
+
     def get_form_class(self):
         task = self._get_task()
         return task.form["form"] if task.form else DummyForm
