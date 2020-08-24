@@ -186,6 +186,41 @@ def _repr(doc):
     )
 
 
+class DocWrapper:
+    def __init__(self, doc):
+        self.doc = doc
+
+    @property
+    def download_url(self):
+        download_path = reverse(
+            "core:download-document",
+            kwargs={
+                "bronorganisatie": self.doc.bronorganisatie,
+                "identificatie": self.doc.identificatie,
+            },
+        )
+        return download_path
+
+    @property
+    def icon(self) -> str:
+        DEFAULT = "attachment"
+        mimetype = self.doc.formaat
+
+        if not mimetype:
+            return DEFAULT
+
+        if mimetype.startswith("image/"):
+            return "image"
+
+        if mimetype.startswith("video/"):
+            return "ondemand_video"
+
+        if mimetype.startswith("audio/"):
+            return "audiotrack"
+
+        return DEFAULT
+
+
 class SelectDocumentsForm(TaskFormMixin, forms.Form):
     """
     Select (a subset) of documents belonging to a Zaak.
@@ -213,7 +248,7 @@ class SelectDocumentsForm(TaskFormMixin, forms.Form):
         documenten, _ = get_documenten(zaak)
 
         self.fields["documenten"].choices = [
-            (doc.url, _repr(doc)) for doc in documenten
+            (doc.url, DocWrapper(doc)) for doc in documenten
         ]
 
 

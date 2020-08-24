@@ -3,17 +3,47 @@
 
 
 {% block form_body %}
-<article class="zaak-detail">
-    <section class="zaak-detail__panel content-panel content-panel--flat">
-        {% widget 'form:non_field_errors' %}
 
-        <div class="form__group-title">Gegevens</div>
-        <div class="form__field-group">
-            {% for field in form %}
-                {% form_field field %}
-            {% endfor %}
+<div class="section-title">Selecteer documenten</div>
+
+<article class="document-selection">
+
+    {% for value, document in form.documenten.field.choices %}
+
+        <div class="document-preview">
+            <input
+                type="checkbox"
+                name="{{ form.documenten.name }}"
+                value="{{ value }}"
+                class="document-preview__toggle"
+                id="document_{{ forloop.counter0 }}"
+            >
+
+            <label class="document-preview__preview" for="document_{{ forloop.counter0 }}">
+
+                <div>
+                    <a href="{{ document.download_url }}" class="link">
+                        {% firstof document.doc.titel document.doc.bestandsnaam %}
+                        <i class="material-icons">cloud_download</i>
+                    </a>
+                </div>
+
+                <i class="material-icons document-preview__icon">{{ document.icon }}</i>
+
+                <div class="document-preview__iot">{{ document.doc.informatieobjecttype.omschrijving }}</div>
+
+                <div class="document-preview__meta">
+                    {{ document.doc.bestandsomvang|filesizeformat }}, {{ document.doc.get_vertrouwelijkheidaanduiding_display }}
+                </div>
+
+                <div class="document-preview__version">
+                    versie {{ document.doc.versie }}
+                </div>
+            </label>
+
         </div>
 
-    </section>
+    {% endfor %}
+
 </article>
 {% endblock %}
