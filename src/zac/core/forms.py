@@ -203,7 +203,7 @@ class DocWrapper:
 
     @property
     def icon(self) -> str:
-        DEFAULT = "attachment"
+        DEFAULT = "insert_drive_file"
         mimetype = self.doc.formaat
 
         if not mimetype:

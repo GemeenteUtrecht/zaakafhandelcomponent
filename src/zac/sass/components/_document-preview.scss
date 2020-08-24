@@ -9,5 +9,10 @@
   @include element("icon") {
     width: 48px;
     font-size: 32px;
+
+    @include modifier("large") {
+      width: 80px;
+      font-size: 64px;
+    }
   }
 }

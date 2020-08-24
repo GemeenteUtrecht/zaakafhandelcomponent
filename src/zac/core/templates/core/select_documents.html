@@ -6,39 +6,36 @@
 
 <div class="section-title">Selecteer documenten</div>
 
-<article class="document-selection">
+<article class="document-selection-container">
 
     {% for value, document in form.documenten.field.choices %}
 
-        <div class="document-preview">
+        <div class="document-selection">
             <input
                 type="checkbox"
                 name="{{ form.documenten.name }}"
                 value="{{ value }}"
-                class="document-preview__toggle"
+                class="document-selection__toggle"
                 id="document_{{ forloop.counter0 }}"
             >
 
-            <label class="document-preview__preview" for="document_{{ forloop.counter0 }}">
+            <label class="document-preview document-selection__preview" for="document_{{ forloop.counter0 }}">
+                <i class="document-preview__icon document-preview__icon--large material-icons">
+                    {{ document.icon }}
+                </i>
 
-                <div>
-                    <a href="{{ document.download_url }}" class="link">
-                        {% firstof document.doc.titel document.doc.bestandsnaam %}
-                        <i class="material-icons">cloud_download</i>
-                    </a>
-                </div>
-
-                <i class="material-icons document-preview__icon">{{ document.icon }}</i>
-
-                <div class="document-preview__iot">{{ document.doc.informatieobjecttype.omschrijving }}</div>
-
-                <div class="document-preview__meta">
-                    {{ document.doc.bestandsomvang|filesizeformat }}, {{ document.doc.get_vertrouwelijkheidaanduiding_display }}
-                </div>
-
-                <div class="document-preview__version">
+                <span class="document-preview__meta">
+                    <a href="{{ document.download_url }}"
+                       class="link"
+                       target="_blank"
+                       rel="noopener nofollower">{% firstof document.doc.titel document.doc.bestandsnaam %}</a>
+                    {{ document.doc.bestandsomvang|filesizeformat }}
+                    <br/>
+                    {{ document.doc.informatieobjecttype.omschrijving }}
+                    ({{ document.doc.get_vertrouwelijkheidaanduiding_display }})
+                    <br>
                     versie {{ document.doc.versie }}
-                </div>
+                </span>
             </label>
 
         </div>
