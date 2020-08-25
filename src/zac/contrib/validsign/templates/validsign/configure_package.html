@@ -1,0 +1,13 @@
+{% extends "core/zaak_task.html" %}
+{% load i18n sniplates %}
+
+
+{% block form_body %}
+
+{% load_widgets form='sniplates/forms.html' %}
+
+<div class="section-title">Digitale ondertekening</div>
+
+{% form_field form.documenten %}
+
+{% endblock %}
