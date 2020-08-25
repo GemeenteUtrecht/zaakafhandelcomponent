@@ -5,3 +5,4 @@ import './tabs';
 import './openUrl';
 import './processes';
 import './case-activities';
+import './validSign';

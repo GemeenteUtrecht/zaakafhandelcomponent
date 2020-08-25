@@ -8,10 +8,22 @@
 
 <div class="section-title">Digitale ondertekening</div>
 
-{% form_field form.documenten %}
+{# {% form_field form.documenten %} #}
 
+<!--
+    TODO: output this in JSON format
+    {{ formset.errors }}
+-->
 
-{{ formset }}
-
+<div
+    class="react-validsign-signers"
+    data-extra="{{ formset.extra }}"
+    data-prefix="{{ formset.prefix }}"
+    data-min-num="{{ formset.min_num }}"
+    data-max-num="{{ formset.min_num }}"
+    data-initial="{{ formset.initial_form_count }}"
+>
+    {# React managed #}
+</div>
 
 {% endblock %}
