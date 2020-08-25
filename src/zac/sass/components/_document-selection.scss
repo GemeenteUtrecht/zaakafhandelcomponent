@@ -1,6 +1,8 @@
 @import "../lib/bem";
 @import "../lib/colors";
 
+$document-selection--spacing: 0.5em !default;
+
 .document-selection-container {
   display: flex;
   justify-content: flex-start;
@@ -8,6 +10,9 @@
   flex-wrap: wrap;
 
   padding-top: 1em;
+
+  margin-left: -$document-selection--spacing;
+  margin-right: -$document-selection--spacing;
 }
 
 .document-selection {
@@ -20,7 +25,7 @@
   @include element("preview") {
     border: solid 2px transparent;
     padding: 1em;
-    margin: 0.5em;
+    margin: $document-selection--spacing;
 
     &:hover {
       background: rgba($color-secondary, 0.2);

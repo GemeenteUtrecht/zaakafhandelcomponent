@@ -26,7 +26,6 @@ from .services import (
     zet_resultaat,
     zet_status,
 )
-from .widgets import DocumentSelectMultiple
 
 
 def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
@@ -208,7 +207,6 @@ class SelectDocumentsForm(TaskFormMixin, forms.Form):
             "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
             "documenten voor het vervolg van het proces."
         ),
-        widget=DocumentSelectMultiple,
     )
 
     template_name = "core/select_documents.html"

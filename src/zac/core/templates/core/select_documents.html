@@ -4,8 +4,8 @@
 
 {% block form_body %}
 
-<div class="section-title">Selecteer documenten</div>
+{% load_widgets form='sniplates/forms.html' %}
 
-{{ form.documenten }}
+{% form_field form.documenten %}
 
 {% endblock %}

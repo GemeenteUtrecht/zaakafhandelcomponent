@@ -235,6 +235,17 @@ Actual input types
 {% endblock BagObjectSelectieField %}
 
 
+{% block DocumentSelectMultiple %}
+{% nested_widget ':_wrapper' %}
+    {% reuse '_label' %}
+    {% reuse '_help' %}
+    {% reuse '_errors' %}
+
+    {{ form_field }}
+{% endnested %}
+{% endblock DocumentSelectMultiple %}
+
+
 Button interactions
 {% block submit %}
 <div class="input">
