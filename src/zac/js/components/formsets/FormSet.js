@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { ManagementForm } from './ManagementForm';
+import { PrefixContext } from './context';
 
 
 const DummyForm = ({ index, data={} }) => {
@@ -24,11 +25,24 @@ DummyForm.propTypes = {
 const FormSet = ({ configuration, renderForm=DummyForm, formData=[] }) => {
     const existingCount = formData.length;
     const [extra, setExtra] = useState(configuration.extra);
+
+    const getPrefix = (index) => {
+        return `${configuration.prefix}-${index}`;
+    };
+
     const forms = formData.map(
-        (data, index) => <React.Fragment key={index}>{ renderForm({ index, data: data }) }</React.Fragment>
+        (data, index) => (
+            <PrefixContext.Provider key={index} value={ getPrefix(index) }>
+                { renderForm({ index, data: data }) }
+            </PrefixContext.Provider>
+        )
     );
     const extraForms = Array(extra).fill().map(
-        (_, index) => <React.Fragment key={existingCount + index}>{ renderForm({ index: existingCount + index, data: {} }) }</React.Fragment>
+        (_, index) => (
+            <PrefixContext.Provider key={existingCount + index} value={ getPrefix(existingCount + index) }>
+                { renderForm({ index: existingCount + index, data: {} }) }
+            </PrefixContext.Provider>
+        )
     );
     return (
         <React.Fragment>

@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 
+import { PrefixContext } from '../formsets/context';
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
+
 
 
 const Input = ({
@@ -18,6 +20,7 @@ const Input = ({
     required=false,
     disabled=false
 }) => {
+    const prefix = useContext(PrefixContext);
 
     const classNames = classes ??`input__control input__control--${type}`;
 
@@ -27,15 +30,17 @@ const Input = ({
     }
 
     // not-controlled vs. controlled
-    if (initial) {
+    if (initial != null) {
         extraProps.defaultValue = initial;
     } else {
         extraProps.value = value;
     }
 
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+
     return (
         <input
-            name={name}
+            name={prefixedName}
             type={type}
             checked={checked}
             className={classNames}

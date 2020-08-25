@@ -33,6 +33,22 @@
       }
     }
 
+    @include modifier('email') {
+      background: #fff;
+      border: solid 1px #eee;
+      border-radius: 0;
+      color: $color-text;
+      font: inherit;
+      font-size: 1.4rem;
+      overflow: visible;
+      padding: 0.5rem 1rem;
+
+      &:focus {
+        box-shadow: none;
+        outline: 2px solid $color-secondary;
+      }
+    }
+
     @include modifier('textarea') {
       border: solid 1px #eee;
       padding: 0.3rem 0.4rem;

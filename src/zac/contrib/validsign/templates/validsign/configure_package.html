@@ -4,16 +4,18 @@
 
 {% block form_body %}
 
+<div class="page-title">Digitale ondertekening</div>
+
 {% load_widgets form='sniplates/forms.html' %}
 
-<div class="section-title">Digitale ondertekening</div>
-
-{# {% form_field form.documenten %} #}
+{% form_field form.documenten %}
 
 <!--
     TODO: output this in JSON format
     {{ formset.errors }}
 -->
+
+<div class="section-title">Ondertekenaars</div>
 
 <div
     class="react-validsign-signers"

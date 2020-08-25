@@ -32,6 +32,7 @@ const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker', asLink=fal
 
     const onSubmit = (event) => {
         event.preventDefault();
+        closeModal();
         onSelection(selectedUser);
     };
 

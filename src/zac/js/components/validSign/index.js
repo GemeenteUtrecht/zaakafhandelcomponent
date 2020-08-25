@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import Modal from 'react-modal';
+
 import { FormSet } from '../formsets/FormSet';
 import { SignerForm } from './SignerForm';
 
@@ -12,6 +14,8 @@ const init = () => {
     const nodes = document.querySelectorAll(`.${CLASS_NAME}`);
 
     if (!nodes.length) return;
+
+    Modal.setAppElement(nodes[0]);
 
     for (const node of nodes) {
         const props = {
