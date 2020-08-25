@@ -28,6 +28,7 @@ $document-selection--spacing: 0.5em !default;
     margin: $document-selection--spacing;
 
     &:hover {
+      cursor: pointer;
       background: rgba($color-secondary, 0.2);
       box-shadow: 2px 2px 3px 0px rgba(black, 0.2);
     }
