@@ -1,0 +1,7 @@
+<div class="document-selection-container {{ widget.attrs.class }}"{% if id %} id="{{ id }}"{% endif %}>
+{% for group, options, index in widget.optgroups %}
+    {% for widget in options %}
+        {% include widget.template_name %}</li>
+    {% endfor %}
+{% endfor %}
+</div>
