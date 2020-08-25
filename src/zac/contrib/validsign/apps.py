@@ -7,8 +7,13 @@ class ValidSignConfig(AppConfig):
     def ready(self):
         from zac.core.camunda import FORM_KEYS
 
-        from .forms import ConfigurePackageForm
+        from .forms import ConfigurePackageForm, SignerFormSet
 
         FORM_KEYS.update(
-            {"zac:validsign:configurePackage": {"form": ConfigurePackageForm},}
+            {
+                "zac:validSign:configurePackage": {
+                    "form": ConfigurePackageForm,
+                    "formset": SignerFormSet,
+                },
+            }
         )
