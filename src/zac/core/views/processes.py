@@ -108,11 +108,14 @@ class FormSetMixin:
         return super().get_context_data(**kwargs)
 
     def get_formset_kwargs(self):
-        kwargs = {"task": self._get_task(), "user": self.request.user}
-
-        if self.request.method == "POST":
+        kwargs = {
+            "prefix": self.get_prefix(),
+            "task": self._get_task(),
+            "user": self.request.user,
+        }
+        if self.request.method in ("POST", "PUT"):
             kwargs.update(
-                {"data": self.request.POST.copy(), "files": self.request.FILES}
+                {"data": self.request.POST, "files": self.request.FILES,}
             )
         return kwargs
 
@@ -187,25 +190,6 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
         form.set_context({"request": self.request, "view": self})
         return form
 
-    def get_formset_kwargs(self):
-        kwargs = {
-            "prefix": self.get_prefix(),
-        }
-        if self.request.method in ("POST", "PUT"):
-            kwargs.update(
-                {"data": self.request.POST, "files": self.request.FILES,}
-            )
-        return kwargs
-
-    def get_formset(self, *args, **kwargs):
-        task = self._get_task()
-        formset_cls = task.form.get("formset")
-        if formset_cls is None:
-            return None
-
-        formset_kwargs = self.get_formset_kwargs()
-        return formset_cls(**formset_kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
@@ -214,7 +198,6 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
                 "task": self._get_task(),
                 "open_url": self.request.session.get("open_url"),
                 "return_url": self.request.GET.get("returnUrl"),
-                "formset": self.get_formset(),
             }
         )
         return context
@@ -266,6 +249,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
         variables = {
             "services": services,
             **form.get_process_variables(),
+            **formset.get_process_variables(),
         }
 
         complete_task(task.id, variables)

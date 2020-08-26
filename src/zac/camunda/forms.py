@@ -49,6 +49,30 @@ class TaskFormMixin:
         return self.cleaned_data
 
 
+class TaskFormSetMixin:
+    """
+    Define a base class for formsets driven by a particular form key in Camunda.
+    """
+
+    def __init__(self, task: Task, *args, **kwargs):
+        self.task = task
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+    def on_submission(self, form=None):
+        """
+        Hook for forms that do need to persist data.
+        """
+        pass
+
+    def get_process_variables(self) -> Dict[str, Any]:
+        raise NotImplementedError
+
+
+class BaseTaskFormSet(TaskFormSetMixin, forms.BaseFormSet):
+    pass
+
+
 class DummyForm(TaskFormMixin, forms.Form):
     pass
 

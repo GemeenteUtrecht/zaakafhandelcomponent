@@ -89,7 +89,9 @@ const RadioInput = (props) => {
 };
 
 const HiddenInput = ({name, value}) => {
-    return <input type="hidden" name={name} defaultValue={value} />
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+    return <input type="hidden" name={prefixedName} defaultValue={value} />
 }
 
 

@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.api import get_process_instance_variable
 
 from zac.accounts.models import User
-from zac.camunda.forms import TaskFormMixin
+from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.core.fields import DocumentsMultipleChoiceField
 
 
@@ -97,4 +97,24 @@ class SignerForm(forms.Form):
             self.cleaned_data["last_name"] = last_name or user.last_name
 
 
-SignerFormSet = forms.formset_factory(SignerForm, extra=1)
+class BaseSignerFormSet(BaseTaskFormSet):
+    def get_process_variables(self) -> dict:
+        signers = []
+        for signer_data in self.cleaned_data:
+            if not signer_data:  # empty form
+                continue
+
+            signers.append(
+                {
+                    "email": signer_data["email"],
+                    "firstName": signer_data["first_name"],
+                    "lastName": signer_data["last_name"],
+                }
+            )
+
+        return {
+            "signers": signers,
+        }
+
+
+SignerFormSet = forms.formset_factory(SignerForm, formset=BaseSignerFormSet, extra=1)
