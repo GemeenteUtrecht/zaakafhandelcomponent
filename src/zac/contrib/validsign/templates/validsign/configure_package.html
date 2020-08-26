@@ -1,5 +1,5 @@
 {% extends "core/zaak_task.html" %}
-{% load i18n sniplates %}
+{% load i18n l10n sniplates %}
 
 
 {% block form_body %}
@@ -19,11 +19,11 @@
 
 <div
     class="react-validsign-signers"
-    data-extra="{{ formset.extra }}"
+    data-extra="{{ formset.extra|unlocalize }}"
     data-prefix="{{ formset.prefix }}"
-    data-min-num="{{ formset.min_num }}"
-    data-max-num="{{ formset.min_num }}"
-    data-initial="{{ formset.initial_form_count }}"
+    data-min-num="{{ formset.min_num|unlocalize }}"
+    data-max-num="{{ formset.max_num|unlocalize }}"
+    data-initial="{{ formset.initial_form_count|unlocalize }}"
 >
     {# React managed #}
 </div>

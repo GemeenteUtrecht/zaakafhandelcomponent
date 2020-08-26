@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { ManagementForm } from './ManagementForm';
+import { AddForm } from './AddForm';
 import { PrefixContext } from './context';
 
 
@@ -22,9 +23,11 @@ DummyForm.propTypes = {
 };
 
 
-const FormSet = ({ configuration, renderForm=DummyForm, formData=[] }) => {
+const FormSet = ({ configuration, renderForm=DummyForm, renderAdd=AddForm, formData=[] }) => {
     const existingCount = formData.length;
     const [extra, setExtra] = useState(configuration.extra);
+
+    const RenderForm = renderForm;
 
     const getPrefix = (index) => {
         return `${configuration.prefix}-${index}`;
@@ -33,17 +36,23 @@ const FormSet = ({ configuration, renderForm=DummyForm, formData=[] }) => {
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={ getPrefix(index) }>
-                { renderForm({ index, data: data }) }
+                <RenderForm index={index} data={data} />
             </PrefixContext.Provider>
         )
     );
     const extraForms = Array(extra).fill().map(
         (_, index) => (
             <PrefixContext.Provider key={existingCount + index} value={ getPrefix(existingCount + index) }>
-                { renderForm({ index: existingCount + index, data: {} }) }
+                <RenderForm index={existingCount + index} data={ {} } />
             </PrefixContext.Provider>
         )
     );
+
+    const onAdd = (event) => {
+        event.preventDefault();
+        setExtra(extra + 1);
+    };
+
     return (
         <React.Fragment>
             <ManagementForm
@@ -55,6 +64,8 @@ const FormSet = ({ configuration, renderForm=DummyForm, formData=[] }) => {
             />
 
             { forms.concat(extraForms) }
+
+            { renderAdd({ onAdd }) }
 
         </React.Fragment>
     );
@@ -68,6 +79,7 @@ FormSet.propTypes = {
         maxNum: PropTypes.number.isRequired,
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
+    renderAdd: PropTypes.func, // a render prop
     formData: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
