@@ -246,10 +246,12 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
             "ztc": {"jwt": ztc_jwt},
         }
 
+        formset_vars = formset.get_process_variables() if formset else {}
+
         variables = {
             "services": services,
             **form.get_process_variables(),
-            **formset.get_process_variables(),
+            **formset_vars,
         }
 
         complete_task(task.id, variables)
