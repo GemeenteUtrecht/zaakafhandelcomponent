@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 
 import { FormSet } from '../formsets/FormSet';
 import { SignerForm } from './SignerForm';
+import { AddRow } from './AddRow';
 
 
 const CLASS_NAME = 'react-validsign-signers';
@@ -27,6 +28,7 @@ const init = () => {
                 maxNum: window.parseInt(node.dataset.maxNum, 10),
             },
             renderForm: SignerForm,
+            renderAdd: AddRow,
             formData: [],
         };
         ReactDOM.render(<FormSet {...props} />, node);
