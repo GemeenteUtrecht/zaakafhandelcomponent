@@ -6,6 +6,7 @@ from django_camunda.api import get_process_instance_variable
 from zac.accounts.models import User
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.core.fields import DocumentsMultipleChoiceField
+from zac.core.services import _client_from_url, get_zaak
 
 
 class ConfigurePackageForm(TaskFormMixin, forms.Form):
@@ -23,10 +24,37 @@ class ConfigurePackageForm(TaskFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
 
         # retrieve process instance variables
-        zaak_url = get_process_instance_variable(
+        self.zaak_url = get_process_instance_variable(
             self.task.process_instance_id, "zaakUrl"
         )
-        self.fields["documenten"].zaak = zaak_url
+        self.fields["documenten"].zaak = self.zaak_url
+
+    def get_process_variables(self):
+        variables = super().get_process_variables()
+
+        # FIXME: pending the BPTL auth rework, we need to build the ``services`` var
+        # ourselves to make sure that the relevant drc is included. This _assumes_
+        # that only one DRC is used for all the documents here (which does not _have_ to
+        # be the case)
+        zaak = get_zaak(zaak_url=self.zaak_url)
+
+        zrc_client = _client_from_url(zaak.url)
+        ztc_client = _client_from_url(zaak.zaaktype)
+        assert len(self.cleaned_data["documenten"]) > 0, "Expected selected documenten"
+        drc_client = _client_from_url(self.cleaned_data["documenten"][0])
+
+        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
+        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
+        drc_jwt = drc_client.auth.credentials()["Authorization"]
+
+        services = {
+            "zrc": {"jwt": zrc_jwt},
+            "ztc": {"jwt": ztc_jwt},
+            "drc": {"jwt": drc_jwt},
+        }
+
+        variables["services"] = services
+        return variables
 
 
 class SignerForm(forms.Form):
