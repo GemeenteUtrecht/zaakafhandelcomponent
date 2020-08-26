@@ -8,20 +8,23 @@ import { UserSelection } from '../user-selection';
 
 const SignerForm = ({ index, data }) => {
     const [selectedUser, setSelectedUser] = useState(null);
+    const hasUser = Boolean(selectedUser && Object.keys(selectedUser).length);
 
     return (
         <div className="validsign-signer">
 
+            <div className="validsign-signer__index"># {index + 1}</div>
+
             <div className="form__field-group">
                 <div className="validsign-signer__select-user">
-                    <HiddenInput name="user" initial={ selectedUser ? selectedUser.id : '' } />
+                    <HiddenInput name="user" initial={ hasUser ? selectedUser.id : '' } />
 
-                    { selectedUser ? <div>{ getUserName(selectedUser) }</div> : null }
+                    { hasUser ? <div>{ getUserName(selectedUser) }</div> : null }
 
                     <UserSelection
                         onSelection={ setSelectedUser }
-                        asLink={ Boolean(selectedUser) }
-                        btnLabel={ selectedUser ? 'Wijzig' : 'Selecteer gebruiker' }
+                        asLink={ hasUser }
+                        btnLabel={ hasUser ? 'Wijzig' : 'Selecteer gebruiker' }
                     />
                 </div>
 

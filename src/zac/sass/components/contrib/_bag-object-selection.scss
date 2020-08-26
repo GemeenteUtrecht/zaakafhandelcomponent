@@ -1,20 +1,22 @@
+@import '../../lib/bem';
+
 $bag-object-selection__min-width: 400px !default;
 $bag-object-selection__map-min-height: 400px !default;
 
 .bag-object-selection {
   min-width: $bag-object-selection__min-width;
 
-  & &__map-container {
+  @include element("map-container") {
     display: block;
     position: relative;
   }
 
-  & &__map {
+  @include element("map") {
     display: block;
     min-height: $bag-object-selection__map-min-height;
   }
 
-  & &__autocomplete {
+  @include element("autocomplete") {
     position: absolute;
     top: 10px;
     left: 10px + 26px + 10px;
@@ -28,7 +30,7 @@ $bag-object-selection__map-min-height: 400px !default;
     margin-top: 0;
   }
 
-  & &__reset {
+  @include element("reset") {
     position: absolute;
     top: 9px;
     left: 10px + 26px + 10px + 182px;
@@ -47,7 +49,7 @@ $bag-object-selection__map-min-height: 400px !default;
     }
   }
 
-  & &__autocomplete-results {
+  @include element("autocomplete-results") {
     display: none;
     position: absolute;
     top: 10px + 25px;
@@ -60,12 +62,12 @@ $bag-object-selection__map-min-height: 400px !default;
     border-bottom-right-radius: 4px;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 
-    &--active {
+    @include modifier("active") {
       display: block;
     }
   }
 
-  & &__result {
+  @include element("result") {
     display: block;
     padding: 2px 3px;
     text-decoration: none;

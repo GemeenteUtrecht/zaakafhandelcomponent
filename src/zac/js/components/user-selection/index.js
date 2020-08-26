@@ -34,6 +34,7 @@ const UserSelection = ({ onSelection, btnLabel='Selecteer gebruiker', asLink=fal
         event.preventDefault();
         closeModal();
         onSelection(selectedUser);
+        setSelectedUser(null);
     };
 
     const trigger = asLink ?
