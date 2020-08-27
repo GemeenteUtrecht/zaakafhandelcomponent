@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import Modal from 'react-modal';
 
+import { jsonScriptToVar } from '../../utils/json-script';
 import { FormSet } from '../formsets/FormSet';
 import { SignerForm } from './SignerForm';
 import { AddRow } from './AddRow';
@@ -23,13 +24,13 @@ const init = () => {
             configuration: {
                 prefix: node.dataset.prefix,
                 initial: window.parseInt(node.dataset.initial, 10),
-                extra: window.parseInt(node.dataset.extra, 10),
+                extra: 0,
                 minNum: window.parseInt(node.dataset.minNum, 10),
                 maxNum: window.parseInt(node.dataset.maxNum, 10),
             },
             renderForm: SignerForm,
             renderAdd: AddRow,
-            formData: [],
+            formData: jsonScriptToVar(node.dataset.formdataElement),
         };
         ReactDOM.render(<FormSet {...props} />, node);
     }

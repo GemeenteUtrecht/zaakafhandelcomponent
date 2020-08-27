@@ -49,6 +49,26 @@ class TaskFormMixin:
         return self.cleaned_data
 
 
+def get_form_data(form: forms.Form) -> Dict[str, Dict]:
+    """
+    Serialize the form data and errors for the frontend.
+    """
+    errors = (
+        {
+            field: [{"msg": next(iter(error)), "code": error.code} for error in _errors]
+            for field, _errors in form.errors.as_data().items()
+        }
+        if form.is_bound
+        else {}
+    )
+
+    values = {field.name: field.value() for field in form}
+    return {
+        "errors": errors,
+        "values": values,
+    }
+
+
 class TaskFormSetMixin:
     """
     Define a base class for formsets driven by a particular form key in Camunda.
@@ -67,6 +87,10 @@ class TaskFormSetMixin:
 
     def get_process_variables(self) -> Dict[str, Any]:
         raise NotImplementedError
+
+    @property
+    def form_data(self) -> List[Dict[str, Any]]:
+        return [get_form_data(form) for form in self]
 
 
 class BaseTaskFormSet(TaskFormSetMixin, forms.BaseFormSet):

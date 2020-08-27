@@ -26,7 +26,8 @@ const Input = ({
 
     let extraProps = {};
     if (id) {
-        extraProps.id = id;
+        const prefixedId = prefix ? `${prefix}-${id}` : id;
+        extraProps.id = prefixedId;
     }
 
     // not-controlled vs. controlled
@@ -65,10 +66,13 @@ const Input = ({
 const TextInput = (props) => {
     const { label, helpText, id, required, errors=[] } = props;
 
+    const prefix = useContext(PrefixContext);
+    const prefixedId = (id && prefix) ? `${prefix}-${id}` : id;
+
     return (
         <Wrapper errors={errors}>
-            <Label label={label} required={required} idForLabel={id} />
-            <Help helpText={helpText} idForLabel={id} />
+            <Label label={label} required={required} idForLabel={prefixedId} />
+            <Help helpText={helpText} idForLabel={prefixedId} />
             <ErrorList errors={errors} />
             <Input type="text" {...props} />
         </Wrapper>
