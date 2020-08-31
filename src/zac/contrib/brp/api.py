@@ -1,11 +1,11 @@
 import logging
 import uuid
-import requests
-
-from urllib.parse import urljoin
 from typing import Optional
+from urllib.parse import urljoin
+
 from django.http.request import QueryDict
 
+import requests
 from zds_client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
@@ -13,7 +13,10 @@ from zgw_consumers.constants import AuthTypes
 
 from zac.utils.decorators import cache as cache_result
 
-from .data import IngeschrevenNatuurlijkPersoon, ExtraInformatieIngeschrevenNatuurlijkPersoon
+from .data import (
+    ExtraInformatieIngeschrevenNatuurlijkPersoon,
+    IngeschrevenNatuurlijkPersoon,
+)
 from .models import BRPConfig
 
 logger = logging.getLogger(__name__)
@@ -28,7 +31,7 @@ class HalClient(ZGWClient):
         """
 
         result = super().pre_request(method, url, **kwargs)
-        
+
         headers = kwargs.get("headers", {})
         headers["Accept"] = "application/hal+json"
         headers["Content-Type"] = "application/hal+json"
@@ -56,14 +59,18 @@ def get_client() -> HalClient:
     return client
 
 
-def call_client(url: str, doelbinding: Optional[str]=None):
+def call_client(url: str, doelbinding: Optional[str] = None):
     client = get_client()
     try:
         request_kwargs = {}
         if doelbinding:
-            request_kwargs['headers'] = {'X-NLX-Request-Subject-Identifier': doelbinding}
+            request_kwargs["headers"] = {
+                "X-NLX-Request-Subject-Identifier": doelbinding
+            }
 
-        result = client.retrieve("ingeschrevenNatuurlijkPersoon", url, request_kwargs=request_kwargs)
+        result = client.retrieve(
+            "ingeschrevenNatuurlijkPersoon", url, request_kwargs=request_kwargs
+        )
         return result
 
     except ClientError as exc:
@@ -84,7 +91,9 @@ def fetch_natuurlijkpersoon(url: str) -> IngeschrevenNatuurlijkPersoon:
     return factory(IngeschrevenNatuurlijkPersoon, result)
 
 
-def fetch_extrainfo_np(bsn: str, query_params: QueryDict) -> ExtraInformatieIngeschrevenNatuurlijkPersoon:
+def fetch_extrainfo_np(
+    bsn: str, query_params: QueryDict
+) -> ExtraInformatieIngeschrevenNatuurlijkPersoon:
     # Get base url for brp query
     config = BRPConfig.get_solo()
     service = config.service
@@ -96,7 +105,7 @@ def fetch_extrainfo_np(bsn: str, query_params: QueryDict) -> ExtraInformatieInge
 
     # Add query params
     params = dict(query_params)
-    doelbinding = " ".join(params.pop('doelbinding'))
+    doelbinding = " ".join(params.pop("doelbinding"))
 
     # Prepare final url with requests package
     req = requests.PreparedRequest()

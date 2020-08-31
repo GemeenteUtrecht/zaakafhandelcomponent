@@ -6,16 +6,16 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.models import Service
 
+from zac.contrib.brp.api import fetch_extrainfo_np
+
 from ..models import CoreConfig
 from ..services import get_document, get_informatieobjecttype, get_zaak
-
-from zac.contrib.brp.api import fetch_extrainfo_np
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
     DocumentInfoSerializer,
-    InformatieObjectTypeSerializer,
     ExtraInfoSubjectSerializer,
+    InformatieObjectTypeSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
 
@@ -110,24 +110,27 @@ class GetExtraInfoSubjectView(views.APIView):
         error_messages = []
 
         # Check if doelbinding is given and valid
-        doelbinding = request.query_params.get('doelbinding')
+        doelbinding = request.query_params.get("doelbinding")
         if not doelbinding or len(doelbinding) == 0:
-            error_messages.append('Doelbinding is vereist.')
+            error_messages.append("Doelbinding is vereist.")
 
-        # Check if fields query parameter is given... 
-        fields = request.query_params.get('fields')
+        # Check if fields query parameter is given...
+        fields = request.query_params.get("fields")
         if not fields or len(fields) == 0:
-            error_messages.append('Een extra-informatie veld is vereist.')
+            error_messages.append("Een extra-informatie veld is vereist.")
 
         # ... and if they are valid.
         elif fields:
-            fields_set = set([_.lower() for _ in fields.split(',')])
-            valid_choices = set([
-                'geboorte.datum',
-                'geboorte.land',
-                'verblijfplaats',
-                'kinderen',
-                'partners', ])
+            fields_set = set([_.lower() for _ in fields.split(",")])
+            valid_choices = set(
+                [
+                    "geboorte.datum",
+                    "geboorte.land",
+                    "verblijfplaats",
+                    "kinderen",
+                    "partners",
+                ]
+            )
 
             # Feedback why they're not valid
             if not fields_set.issubset(valid_choices):
@@ -139,10 +142,12 @@ class GetExtraInfoSubjectView(views.APIView):
                 )
         # Feedback errors
         if len(error_messages) > 0:
-            return Response({'Errors': ' '.join(error_messages)},status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"Errors": " ".join(error_messages)}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Get bsn kwarg
-        bsn = kwargs.get('bsn')
+        bsn = kwargs.get("bsn")
 
         # Get extra info
         extra_info_inp = fetch_extrainfo_np(bsn, request.query_params)

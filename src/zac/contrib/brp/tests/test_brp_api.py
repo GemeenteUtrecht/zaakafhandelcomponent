@@ -1,19 +1,17 @@
 from django.test import TestCase
 from django.urls import reverse
 
+import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-import requests_mock
-
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 
+from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_service_oas_get
-from zac.accounts.models import User
 
-from ..api import fetch_natuurlijkpersoon, get_client, call_client, fetch_extrainfo_np
+from ..api import call_client, fetch_extrainfo_np, fetch_natuurlijkpersoon, get_client
 from ..models import BRPConfig
 
 BRP_API_ROOT = "https://brp.nl/api/v1/"
@@ -46,7 +44,10 @@ class BrpApiTests(ClearCachesMixin, TestCase):
             "leeftijd": 34,
             "kiesrecht": {},
             "naam": {},
-            "geboorte": {'datum':{'datum':'31-03-1989'},'land':{'omschrijving':'Nederland'}},
+            "geboorte": {
+                "datum": {"datum": "31-03-1989"},
+                "land": {"omschrijving": "Nederland"},
+            },
             "_links": {},
         }
         mock_service_oas_get(m, self.service.api_root, "brp", oas_url=self.service.oas)
@@ -81,49 +82,50 @@ class BrpApiTests(ClearCachesMixin, TestCase):
     def test_fetch_extrainfo_np_doelbinding(self, m):
         self._setUpMock(m)
 
-        doelbinding = 'test'
-        query_params = {'doelbinding': [doelbinding]}
-        fetch_extrainfo_np('123456782', query_params)
+        doelbinding = "test"
+        query_params = {"doelbinding": [doelbinding]}
+        fetch_extrainfo_np("123456782", query_params)
         headers = m.last_request.headers
-        self.assertEqual(headers['X-NLX-Request-Subject-Identifier'], doelbinding)
+        self.assertEqual(headers["X-NLX-Request-Subject-Identifier"], doelbinding)
 
     @requests_mock.Mocker()
     def test_fetch_extrainfo_np_fields(self, m):
         self._setUpMock(m)
 
-        doelbinding = 'test'
-        query_params = {'doelbinding': [doelbinding], 'fields': ['geboorte.land', 'geboorte.datum']}
-        result = fetch_extrainfo_np('123456782', query_params)
-        self.assertEqual(result.geboortedatum, '31-03-1989')
-        self.assertEqual(result.geboorteland, 'Nederland')
+        doelbinding = "test"
+        query_params = {
+            "doelbinding": [doelbinding],
+            "fields": ["geboorte.land", "geboorte.datum"],
+        }
+        result = fetch_extrainfo_np("123456782", query_params)
+        self.assertEqual(result.geboortedatum, "31-03-1989")
+        self.assertEqual(result.geboorteland, "Nederland")
 
 
 class BrpApiViewTests(APITestCase):
     def setUp(self):
         self.superuser = User.objects.create_superuser(
-            username='john',
-            email='john.doe@johndoe.nl',
-            password='secret')
+            username="john", email="john.doe@johndoe.nl", password="secret"
+        )
 
         self.client.force_authenticate(user=self.superuser)
-        self.base_url = reverse('core:get-betrokkene-info', args=['123456782'])
+        self.base_url = reverse("core:get-betrokkene-info", args=["123456782"])
 
     def test_betrokkene_api_no_query_parameters(self):
         response = self.client.get(self.base_url)
         self.assertEqual(response.status_code, 400)
 
     def test_betrokkene_api_no_valid_doelbinding(self):
-        url_no_value_doelbinding = self.base_url + '?doelbinding='
+        url_no_value_doelbinding = self.base_url + "?doelbinding="
         response = self.client.get(url_no_value_doelbinding)
         self.assertEqual(response.status_code, 400)
 
     def test_betrokkene_api_no_fields(self):
-        url_no_fields = self.base_url + '?doelbinding=test'
+        url_no_fields = self.base_url + "?doelbinding=test"
         response = self.client.get(url_no_fields)
         self.assertEqual(response.status_code, 400)
 
     def test_betrokkene_api_no_valid_fields(self):
-        url_no_fields = self.base_url + '?doelbinding=test&fields=test,hello'
+        url_no_fields = self.base_url + "?doelbinding=test&fields=test,hello"
         response = self.client.get(url_no_fields)
         self.assertEqual(response.status_code, 400)
-

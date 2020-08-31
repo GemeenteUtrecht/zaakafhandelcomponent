@@ -31,20 +31,20 @@ class ExtraInformatieIngeschrevenNatuurlijkPersoon(Model):
 
     @property
     def partners(self) -> Optional[list]:
-        return self._links.get('partners')
+        return self._links.get("partners")
 
     @property
     def kinderen(self) -> Optional[list]:
-        return self._links.get('kinderen')
+        return self._links.get("kinderen")
 
     @property
     def geboortedatum(self) -> Optional[str]:
-        if self.geboorte and 'datum' in self.geboorte:
-            return self.geboorte['datum']['datum']
+        if self.geboorte and "datum" in self.geboorte:
+            return self.geboorte["datum"]["datum"]
         return None
 
     @property
     def geboorteland(self) -> Optional[str]:
-        if self.geboorte and 'land' in self.geboorte:
-            return self.geboorte['land']['omschrijving']
+        if self.geboorte and "land" in self.geboorte:
+            return self.geboorte["land"]["omschrijving"]
         return None
