@@ -62,3 +62,11 @@ class DocumentInfoSerializer(serializers.Serializer):
             },
         )
         return self.context["request"].build_absolute_uri(path)
+
+
+class ExtraInfoSubjectSerializer(serializers.Serializer):
+    geboortedatum = serializers.CharField()
+    geboorteland = serializers.CharField()
+    kinderen = serializers.ListField()
+    verblijfplaats = serializers.DictField()
+    partners = serializers.ListField()
