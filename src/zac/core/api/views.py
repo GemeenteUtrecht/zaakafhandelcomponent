@@ -81,7 +81,10 @@ class AddDocumentView(views.APIView):
         )  # resolves, otherwise the get_zaak would've failed
         zrc_client.create(
             "zaakinformatieobject",
-            {"informatieobject": document["url"], "zaak": zaak.url,},
+            {
+                "informatieobject": document["url"],
+                "zaak": zaak.url,
+            },
         )
 
         response_serializer = AddDocumentResponseSerializer(document)

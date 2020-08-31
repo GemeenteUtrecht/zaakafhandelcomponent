@@ -34,6 +34,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"verbose_name": "Kownsl configuration",},
+            options={
+                "verbose_name": "Kownsl configuration",
+            },
         ),
     ]

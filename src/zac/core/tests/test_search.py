@@ -127,13 +127,17 @@ class SearchResultWebTest(ClearCachesMixin, TestCase):
             "url": f"{ZAKEN_ROOT}rollen/52ed815d-7b3e-45a9-bf47-233baec2198f",
             "zaak": zaak2["url"],
             "betrokkene": None,
-            "betrokkeneIdentificatie": {"inpBsn": BSN1,},
+            "betrokkeneIdentificatie": {
+                "inpBsn": BSN1,
+            },
         }
         rol4 = {
             "url": f"{ZAKEN_ROOT}rollen/2d04238d-2b74-41bd-a556-2a15e646ef6b",
             "zaak": zaak3["url"],
             "betrokkene": None,
-            "betrokkeneIdentificatie": {"inpBsn": BSN2,},
+            "betrokkeneIdentificatie": {
+                "inpBsn": BSN2,
+            },
         }
 
         m.get(

@@ -73,7 +73,10 @@ class BPMNMessageSendTests(TestCase):
 
         response = self.client.post(
             self.url,
-            {"process_instance_id": PROCESS_INSTANCE_ID, "message": "dummy",},
+            {
+                "process_instance_id": PROCESS_INSTANCE_ID,
+                "message": "dummy",
+            },
             HTTP_REFERER="http://testserver/",
         )
 
@@ -96,7 +99,10 @@ class BPMNMessageSendTests(TestCase):
 
         response = self.client.post(
             self.url,
-            {"process_instance_id": PROCESS_INSTANCE_ID, "message": "dummy",},
+            {
+                "process_instance_id": PROCESS_INSTANCE_ID,
+                "message": "dummy",
+            },
             HTTP_REFERER="http://testserver/",
         )
 
@@ -157,7 +163,10 @@ class BPMNMessageSendTests(TestCase):
 
         response = self.client.post(
             self.url,
-            {"process_instance_id": PROCESS_INSTANCE_ID, "message": "dummy",},
+            {
+                "process_instance_id": PROCESS_INSTANCE_ID,
+                "message": "dummy",
+            },
             HTTP_REFERER="http://testserver/",
         )
 
@@ -173,7 +182,10 @@ class BPMNMessageSendTests(TestCase):
 
         response = self.client.post(
             self.url,
-            {"process_instance_id": PROCESS_INSTANCE_ID, "message": "dummy",},
+            {
+                "process_instance_id": PROCESS_INSTANCE_ID,
+                "message": "dummy",
+            },
             HTTP_REFERER="http://testserver/",
         )
 

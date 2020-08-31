@@ -18,7 +18,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 class ActivitySerializer(serializers.HyperlinkedModelSerializer):
     assignee = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.filter(is_active=True), required=False, allow_null=True,
+        queryset=User.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
     )
     events = EventSerializer(many=True, read_only=True)
 
@@ -37,5 +39,7 @@ class ActivitySerializer(serializers.HyperlinkedModelSerializer):
             "events",
         )
         extra_kwargs = {
-            "url": {"view_name": "activities:activity-detail",},
+            "url": {
+                "view_name": "activities:activity-detail",
+            },
         }

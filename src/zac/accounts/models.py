@@ -46,7 +46,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # custom permissions
     auth_profiles = models.ManyToManyField(
-        "AuthorizationProfile", blank=True, through="UserAuthorizationProfile",
+        "AuthorizationProfile",
+        blank=True,
+        through="UserAuthorizationProfile",
     )
 
     objects = UserManager()

@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="permissionset", name="zaaktype",),
+        migrations.RemoveField(
+            model_name="permissionset",
+            name="zaaktype",
+        ),
         migrations.AddField(
             model_name="permissionset",
             name="catalogus",

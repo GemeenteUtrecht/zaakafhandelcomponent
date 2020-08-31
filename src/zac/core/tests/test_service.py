@@ -113,10 +113,12 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
         }
 
         m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={zaak1['url']}", json=paginated_response([rol1]),
+            f"{ZAKEN_ROOT}rollen?zaak={zaak1['url']}",
+            json=paginated_response([rol1]),
         )
         m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={zaak2['url']}", json=paginated_response([rol2]),
+            f"{ZAKEN_ROOT}rollen?zaak={zaak2['url']}",
+            json=paginated_response([rol2]),
         )
         m.get(f"{BRP_API_ROOT}ingeschrevenpersonen/{BSN1}", json=naturlijk_persoon)
 

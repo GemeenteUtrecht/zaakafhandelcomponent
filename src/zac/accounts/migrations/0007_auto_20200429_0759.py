@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameModel(
-            old_name="UserEntitlement", new_name="UserAuthorizationProfile",
+            old_name="UserEntitlement",
+            new_name="UserAuthorizationProfile",
         ),
     ]

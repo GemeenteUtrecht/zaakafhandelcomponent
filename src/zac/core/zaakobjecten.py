@@ -41,7 +41,8 @@ GROUPS = {
     ),
     # Roxit Squit 20/20 POC
     "adres": ZaakObjectGroup(
-        label="Adressen", template="core/includes/zaakobjecten/adres.html",
+        label="Adressen",
+        template="core/includes/zaakobjecten/adres.html",
     ),
     "omgevingsdossier": ZaakObjectGroup(
         label="Omgevingsdossiers",

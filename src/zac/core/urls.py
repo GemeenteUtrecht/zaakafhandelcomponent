@@ -49,7 +49,11 @@ urlpatterns = [
         "user-tasks/",
         include(
             [
-                path("<uuid:task_id>/", RouteTaskView.as_view(), name="zaak-task",),
+                path(
+                    "<uuid:task_id>/",
+                    RouteTaskView.as_view(),
+                    name="zaak-task",
+                ),
                 # task handlers
                 path(
                     "<uuid:task_id>/perform/",

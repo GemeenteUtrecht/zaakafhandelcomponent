@@ -30,6 +30,8 @@ class RenderFormView(LoginRequiredMixin, FormView):
         form_definition = client.get(f"forms/{self.kwargs['form_id']}")
 
         context.update(
-            {"form_name": form_definition["name"],}
+            {
+                "form_name": form_definition["name"],
+            }
         )
         return context

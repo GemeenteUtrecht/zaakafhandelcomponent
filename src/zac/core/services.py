@@ -134,7 +134,9 @@ def get_statustype(url: str) -> StatusType:
 def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
     client = _client_from_object(zaaktype)
     resultaattypen = get_paginated_results(
-        client, "resultaattype", query_params={"zaaktype": zaaktype.url},
+        client,
+        "resultaattype",
+        query_params={"zaaktype": zaaktype.url},
     )
 
     resultaattypen = factory(ResultaatType, resultaattypen)
@@ -150,7 +152,9 @@ def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
 def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
     client = _client_from_object(zaaktype)
     eigenschappen = get_paginated_results(
-        client, "eigenschap", query_params={"zaaktype": zaaktype.url},
+        client,
+        "eigenschap",
+        query_params={"zaaktype": zaaktype.url},
     )
 
     eigenschappen = factory(Eigenschap, eigenschappen)
@@ -238,7 +242,11 @@ def _find_zaken(
     logger.debug("Querying zaken with %r", query)
     minimum = None if find_all else 25
     _zaken = get_paginated_results(
-        client, "zaak", query_params=query, minimum=minimum, test_func=test_func,
+        client,
+        "zaak",
+        query_params=query,
+        minimum=minimum,
+        test_func=test_func,
     )
     return _zaken
 
@@ -530,7 +538,9 @@ def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
     client = _client_from_url(zaak_url)
 
     zaakobjecten = get_paginated_results(
-        client, "zaakobject", query_params={"zaak": zaak_url},
+        client,
+        "zaakobject",
+        query_params={"zaak": zaak_url},
     )
 
     return factory(ZaakObject, zaakobjecten)
@@ -647,7 +657,10 @@ def get_documenten(
 
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
     documenten = fetch_async(
-        cache_key, fetch_documents, zaak_informatieobjecten, doc_versions=doc_versions,
+        cache_key,
+        fetch_documents,
+        zaak_informatieobjecten,
+        doc_versions=doc_versions,
     )
 
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")

@@ -46,7 +46,11 @@ def mock_zaak_detail_context():
     }
     approval_data = {
         "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
-        "author": {"username": "test_reviewer", "first_name": "", "last_name": "",},
+        "author": {
+            "username": "test_reviewer",
+            "first_name": "",
+            "last_name": "",
+        },
         "approved": False,
     }
     review_request = factory(ReviewRequest, review_request_data)
@@ -97,7 +101,10 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
 
     url = reverse_lazy(
         "core:zaak-detail",
-        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE,},
+        kwargs={
+            "bronorganisatie": BRONORGANISATIE,
+            "identificatie": IDENTIFICATIE,
+        },
     )
 
     def setUp(self):
@@ -393,7 +400,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
             },
         )
         m.get(
-            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[],
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}",
+            json=[],
         )
         m.get(
             f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
@@ -404,7 +412,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
             json=paginated_response([]),
         )
         m.get(
-            f"{ZAKEN_ROOT}statussen?zaak={zaak['url']}", json=paginated_response([]),
+            f"{ZAKEN_ROOT}statussen?zaak={zaak['url']}",
+            json=paginated_response([]),
         )
         m.get(f"{zaak['url']}/zaakeigenschappen", json=[])
 
@@ -476,7 +485,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
         self.mocker.get(
-            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
+            f"https://camunda.example.com/engine-rest/task/{task['id']}",
+            json=task,
         )
         self.mocker.get(
             f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
@@ -494,11 +504,17 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
                 f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
                 "/variables/zaakUrl?deserializeValues=false"
             ),
-            json={"value": zaak["url"], "type": "String",},
+            json={
+                "value": zaak["url"],
+                "type": "String",
+            },
         )
         self.mocker.get(zaak["url"], json=zaak)
         PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaakproces_usertasks.name,],
+            permissions=[
+                zaken_inzien.name,
+                zaakproces_usertasks.name,
+            ],
             for_user=self.user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -509,7 +525,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         with patch("zac.core.camunda.extract_task_form", return_value=None):
             self.client.force_login(self.user)
             response = self.client.post(
-                url, {"task_id": task["id"], "zaak": zaak["url"]},
+                url,
+                {"task_id": task["id"], "zaak": zaak["url"]},
             )
         self.assertEqual(response.status_code, 403)
 
@@ -517,7 +534,10 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         task = get_camunda_task_mock()
         zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
         PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaakproces_usertasks.name,],
+            permissions=[
+                zaken_inzien.name,
+                zaakproces_usertasks.name,
+            ],
             for_user=self.user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -527,7 +547,8 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
         url = reverse("core:claim-task")
 
         self.mocker.get(
-            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
+            f"https://camunda.example.com/engine-rest/task/{task['id']}",
+            json=task,
         )
         self.mocker.get(
             f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
@@ -545,17 +566,23 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
                 f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
                 "/variables/zaakUrl?deserializeValues=false"
             ),
-            json={"value": zaak_url, "type": "String",},
+            json={
+                "value": zaak_url,
+                "type": "String",
+            },
         )
 
         with patch("zac.core.views.processes.get_client") as m_client, patch(
-            "zac.core.camunda.extract_task_form", return_value=None,
+            "zac.core.camunda.extract_task_form",
+            return_value=None,
         ), patch(
-            "zac.core.views.processes.get_roltypen", return_value=[],
+            "zac.core.views.processes.get_roltypen",
+            return_value=[],
         ):
             self.client.force_login(self.user)
             response = self.client.post(
-                url, {"task_id": task["id"], "zaak": zaak_url, "next": "/"},
+                url,
+                {"task_id": task["id"], "zaak": zaak_url, "next": "/"},
             )
 
         self.assertEqual(response.status_code, 302)

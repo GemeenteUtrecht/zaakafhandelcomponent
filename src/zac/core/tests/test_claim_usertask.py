@@ -86,7 +86,9 @@ class BPMNMessageSendTests(TestCase):
 
         # ACTUAL HTTP calls
         response = self.client.post(
-            self.url, {"task_id": TASK_ID}, HTTP_REFERER="http://testserver/",
+            self.url,
+            {"task_id": TASK_ID},
+            HTTP_REFERER="http://testserver/",
         )
 
         # ASSERTIONS
@@ -95,11 +97,14 @@ class BPMNMessageSendTests(TestCase):
     def test_task_does_not_exist(self, m):
         TASK_ID = str(uuid.uuid4())
         m.get(
-            f"https://camunda.example.com/engine-rest/task/{TASK_ID}", status_code=404,
+            f"https://camunda.example.com/engine-rest/task/{TASK_ID}",
+            status_code=404,
         )
 
         response = self.client.post(
-            self.url, {"task_id": TASK_ID}, HTTP_REFERER="http://testserver/",
+            self.url,
+            {"task_id": TASK_ID},
+            HTTP_REFERER="http://testserver/",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -161,7 +166,9 @@ class BPMNMessageSendTests(TestCase):
         )
 
         response = self.client.post(
-            self.url, {"task_id": TASK_ID}, HTTP_REFERER="http://testserver/",
+            self.url,
+            {"task_id": TASK_ID},
+            HTTP_REFERER="http://testserver/",
         )
 
         self.assertEqual(response.status_code, 403)

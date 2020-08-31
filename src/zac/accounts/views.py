@@ -82,7 +82,9 @@ class UserAuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
-            {"auth_profile": self._get_auth_profile(),}
+            {
+                "auth_profile": self._get_auth_profile(),
+            }
         )
         return context
 

@@ -42,7 +42,10 @@ class Author(Model):
         if not hasattr(self, "_user"):
             self._user, _ = User.objects.get_or_create(
                 username=self.username,
-                defaults={"first_name": self.first_name, "last_name": self.last_name,},
+                defaults={
+                    "first_name": self.first_name,
+                    "last_name": self.last_name,
+                },
             )
         return self._user
 

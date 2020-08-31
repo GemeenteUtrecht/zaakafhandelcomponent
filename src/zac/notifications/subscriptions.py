@@ -37,7 +37,12 @@ def subscribe(service: Service, token: str, domain: str) -> Subscription:
         {
             "callbackUrl": url,
             "auth": auth_value,
-            "kanalen": [{"naam": "zaken", "filters": {},}],
+            "kanalen": [
+                {
+                    "naam": "zaken",
+                    "filters": {},
+                }
+            ],
         },
     )
 

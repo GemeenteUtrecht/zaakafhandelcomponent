@@ -59,7 +59,9 @@ class Event(models.Model):
     """
 
     activity = models.ForeignKey(
-        "Activity", on_delete=models.CASCADE, related_name="events",
+        "Activity",
+        on_delete=models.CASCADE,
+        related_name="events",
     )
     notes = models.TextField(_("notes"))
     created = models.DateTimeField(_("created"), auto_now_add=True)

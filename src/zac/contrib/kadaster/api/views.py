@@ -15,7 +15,12 @@ class AdresSearchView(APIView):
         if not query:
             return Response(
                 {
-                    "response": {"numFound": 0, "start": 0, "maxScore": 0, "docs": [],},
+                    "response": {
+                        "numFound": 0,
+                        "start": 0,
+                        "maxScore": 0,
+                        "docs": [],
+                    },
                     "highlighting": {},
                     "spellcheck": {},
                 }

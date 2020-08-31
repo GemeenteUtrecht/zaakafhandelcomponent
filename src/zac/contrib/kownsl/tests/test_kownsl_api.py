@@ -77,7 +77,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         )
 
         review_request = create_review_request(
-            "https://zaken.nl/api/v1/zaak/123", documents=["https://doc.nl/123"],
+            "https://zaken.nl/api/v1/zaak/123",
+            documents=["https://doc.nl/123"],
         )
 
         self.assertEqual(review_request.id, _uuid)
@@ -100,7 +101,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         response = [
             {
                 "created": "2020-06-17T10:21:16Z",
-                "author": {"username": "foo", "first_name": "", "last_name": "",},
+                "author": {
+                    "username": "foo",
+                    "first_name": "",
+                    "last_name": "",
+                },
                 "advice": "dummy",
                 "documents": [],
             }
@@ -142,7 +147,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         response = [
             {
                 "created": "2020-06-17T10:21:16Z",
-                "author": {"username": "foo", "first_name": "", "last_name": "",},
+                "author": {
+                    "username": "foo",
+                    "first_name": "",
+                    "last_name": "",
+                },
                 "approved": True,
             }
         ]

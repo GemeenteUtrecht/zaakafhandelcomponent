@@ -15,7 +15,10 @@ class KadasterConfig(SingletonModel):
         default="https://bag.basisregistraties.overheid.nl/api/v1/",
     )
     api_key = models.CharField(
-        _("API key"), max_length=255, blank=True, help_text=_("API key used for BAG."),
+        _("API key"),
+        max_length=255,
+        blank=True,
+        help_text=_("API key used for BAG."),
     )
 
     class Meta:

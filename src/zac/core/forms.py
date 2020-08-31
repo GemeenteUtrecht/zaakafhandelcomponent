@@ -41,7 +41,10 @@ def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
 
 
 class ZakenFilterForm(forms.Form):
-    identificatie = forms.CharField(label=_("identificatie"), required=False,)
+    identificatie = forms.CharField(
+        label=_("identificatie"),
+        required=False,
+    )
     zaaktypen = forms.MultipleChoiceField(
         label=_("zaaktypen (huidige versies)"),
         required=False,
@@ -97,10 +100,14 @@ class ClaimTaskForm(forms.Form):
 
 class ZaakAfhandelForm(forms.Form):
     resultaattype = forms.TypedChoiceField(
-        required=False, label="Resultaat", widget=forms.RadioSelect,
+        required=False,
+        label="Resultaat",
+        widget=forms.RadioSelect,
     )
     result_remarks = forms.CharField(
-        required=False, label="Toelichting", widget=forms.Textarea,
+        required=False,
+        label="Toelichting",
+        widget=forms.Textarea,
     )
     close_zaak = forms.BooleanField(
         required=False,
@@ -108,7 +115,9 @@ class ZaakAfhandelForm(forms.Form):
         help_text="Sluit de zaak af als er een resultaat gezet is.",
     )
     close_zaak_remarks = forms.CharField(
-        required=False, label="Toelichting bij afsluiten zaak", widget=forms.Textarea,
+        required=False,
+        label="Toelichting bij afsluiten zaak",
+        widget=forms.Textarea,
     )
 
     def __init__(self, *args, **kwargs):
