@@ -14,7 +14,7 @@ attrs==19.1.0             # via -r requirements/ci.txt, aiohttp, black
 babel==2.8.0              # via sphinx
 beautifulsoup4==4.8.2     # via -r requirements/ci.txt, webtest
 billiard==3.6.1.0         # via -r requirements/ci.txt, celery
-black==19.10b0            # via -r requirements/dev.in
+black==20.8b1             # via -r requirements/dev.in
 bumpversion==0.5.3        # via -r requirements/dev.in
 celery==4.3.0             # via -r requirements/ci.txt, django-camunda
 certifi==2019.9.11        # via -r requirements/ci.txt, requests
