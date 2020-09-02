@@ -113,46 +113,52 @@ class GetExtraInfoSubjectView(views.APIView):
         error_messages = []
 
         # Check if doelbinding is given and valid
-        doelbinding = request.query_params.get("doelbinding")
-        if not doelbinding or len(doelbinding) == 0:
+        doelbinding = request.query_params.get("doelbinding", "")
+        if not doelbinding:
             error_messages.append("Doelbinding is vereist.")
 
         # Check if fields query parameter is given...
-        fields = request.query_params.get("fields")
-        if not fields or len(fields) == 0:
+        fields = request.query_params.get("fields", "")
+        if not fields:
             error_messages.append("Een extra-informatie veld is vereist.")
 
         # ... and if they are valid.
         elif fields:
-            fields_set = set([_.lower() for _ in fields.split(",")])
-            valid_choices = set(
-                [
-                    "geboorte.datum",
-                    "geboorte.land",
-                    "verblijfplaats",
-                    "kinderen",
-                    "partners",
-                ]
-            )
+            fields = fields.split(",")
+            valid_choices = [
+                "geboorte.datum",
+                "geboorte.land",
+                "kinderen",
+                "partners",
+                "verblijfplaats",
+            ]
+
+            is_subset = [field in valid_choices for field in fields]
 
             # Feedback why they're not valid
-            if not fields_set.issubset(valid_choices):
-                not_valid_fields = list(fields_set - valid_choices)
+            if not all(is_subset):
+                not_valid_fields = [
+                    field for valid, field in zip(is_subset, fields) if not valid
+                ]
                 error_messages.append(
                     "Veld(en): {}, zijn niet geldig.".format(
                         ", ".join(not_valid_fields)
                     )
                 )
+
         # Feedback errors
-        if len(error_messages) > 0:
+        if error_messages:
             return Response(
                 {"Errors": " ".join(error_messages)}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get bsn kwarg
-        bsn = kwargs.get("bsn")
+        # Make request_kwargs
+        request_kwargs = {
+            "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
+            "params": {"fields": ",".join(fields)},
+        }
 
         # Get extra info
-        extra_info_inp = fetch_extrainfo_np(bsn, request.query_params)
+        extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)
         serializer = ExtraInfoSubjectSerializer(extra_info_inp)
         return Response(serializer.data)

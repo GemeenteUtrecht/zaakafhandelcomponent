@@ -20,7 +20,7 @@ urlpatterns = [
     ),
     path("documents/info", GetDocumentInfoView.as_view(), name="get-document-info"),
     re_path(
-        r"^betrokkene/(?P<bsn>[0-9]{9})/info",
+        r"^betrokkene/(?P<burgerservicenummer>[0-9]{9})/info",
         GetExtraInfoSubjectView.as_view(),
         name="get-betrokkene-info",
     ),

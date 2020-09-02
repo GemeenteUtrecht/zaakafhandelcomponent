@@ -7,6 +7,7 @@ from django.http.request import QueryDict
 
 import requests
 from zds_client import ClientError
+from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
 from zgw_consumers.constants import AuthTypes
@@ -59,19 +60,35 @@ def get_client() -> HalClient:
     return client
 
 
-def call_client(url: str, doelbinding: Optional[str] = None):
-    client = get_client()
-    try:
-        request_kwargs = {}
-        if doelbinding:
-            request_kwargs["headers"] = {
-                "X-NLX-Request-Subject-Identifier": doelbinding
-            }
+def call_halclient_retrieve(
+    client: HalClient,
+    resource: str,
+    url: Optional[str] = None,
+    request_kwargs: Optional[dict] = None,
+    **path_kwargs,
+) -> dict:
+    """Function that calls HalClient.retrieve (GET) and handles client exceptions
+    when the response status equals 404 or 500.
 
-        result = client.retrieve(
-            "ingeschrevenNatuurlijkPersoon", url, request_kwargs=request_kwargs
+    Args:
+        client: HalClient
+        resource: The resource that will be called
+        url: Kwarg that specifies the url where the resource will be pulled from.
+        request_kwargs: Dict that can include headers or request parameters.
+        path_kwargs: Dict that includes the path kwargs according to the schema.
+
+    Returns:
+        JSON response from requests.request with information
+        on the specified resource.
+    """
+
+    try:
+        return client.retrieve(
+            resource,
+            url=url,
+            request_kwargs=request_kwargs,
+            **path_kwargs,
         )
-        return result
 
     except ClientError as exc:
         if exc.args[0]["status"] == 404:
@@ -87,30 +104,42 @@ def call_client(url: str, doelbinding: Optional[str] = None):
 
 @cache_result("natuurlijkpersoon:{url}", timeout=A_DAY)
 def fetch_natuurlijkpersoon(url: str) -> IngeschrevenNatuurlijkPersoon:
-    result = call_client(url)
+    client = get_client()
+    result = call_halclient_retrieve(client, "ingeschrevenNatuurlijkPersoon", url=url)
     return factory(IngeschrevenNatuurlijkPersoon, result)
 
 
 def fetch_extrainfo_np(
-    bsn: str, query_params: QueryDict
+    request_kwargs: Optional[dict] = None,
+    **path_kwargs,
 ) -> ExtraInformatieIngeschrevenNatuurlijkPersoon:
-    # Get base url for brp query
-    config = BRPConfig.get_solo()
-    service = config.service
-    base_url = service.api_root
+    """Function that calls:
+         get_client(),
+         zds_client.schema.get_operation_url(),
+         call_halclient_retrieve().
 
-    # add BSN
-    rel_url = "ingeschrevenpersonen/{}".format(bsn)
-    url = urljoin(base_url, rel_url)
+    Args:
+        request_kwargs: Dict that can include headers or request parameters.
+        path_kwargs: Dict that includes the path kwargs according to the schema.
 
-    # Add query params
-    params = dict(query_params)
-    doelbinding = " ".join(params.pop("doelbinding"))
+    Returns:
+        ExtraInformatieIngeschrevenNatuurlijkPersoon class filled in with
+        result from call_halclient_retrieve function.
+    """
+    client = get_client()
+    resource = "ingeschrevenNatuurlijkPersoon"
+    url = get_operation_url(
+        client.schema,
+        resource,
+        base_url=client.base_url,
+        **path_kwargs,
+    )
 
-    # Prepare final url with requests package
-    req = requests.PreparedRequest()
-    req.prepare_url(url, params)
-
-    # Call client to do the heavy lifting
-    result = call_client(req.url, doelbinding=doelbinding)
+    result = call_halclient_retrieve(
+        client,
+        resource,
+        url=url,
+        request_kwargs=request_kwargs,
+        **path_kwargs,
+    )
     return factory(ExtraInformatieIngeschrevenNatuurlijkPersoon, result)
