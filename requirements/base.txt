@@ -35,7 +35,7 @@ djangorestframework-camel-case==1.2.0  # via -r requirements/base.in
 djangorestframework==3.11.0  # via -r requirements/base.in
 et-xmlfile==1.0.1         # via openpyxl
 furl==2.1.0               # via -r requirements/base.in
-gemma-zds-client==0.13.0  # via -r requirements/base.in, zgw-consumers
+gemma-zds-client==0.13.3  # via -r requirements/base.in, zgw-consumers
 idna==2.8                 # via requests, yarl
 importlib-metadata==0.23  # via kombu
 inflection==0.3.1         # via django-camunda

@@ -14,7 +14,7 @@ attrs==19.1.0             # via -r requirements/ci.txt, aiohttp, black
 babel==2.8.0              # via sphinx
 beautifulsoup4==4.8.2     # via -r requirements/ci.txt, webtest
 billiard==3.6.1.0         # via -r requirements/ci.txt, celery
-black==19.10b0            # via -r requirements/dev.in
+black==20.8b1             # via -r requirements/dev.in
 bumpversion==0.5.3        # via -r requirements/dev.in
 celery==4.3.0             # via -r requirements/ci.txt, django-camunda
 certifi==2019.9.11        # via -r requirements/ci.txt, requests
@@ -52,7 +52,7 @@ factory-boy==2.12.0       # via -r requirements/ci.txt
 faker==4.0.2              # via -r requirements/ci.txt, factory-boy
 freezegun==0.3.15         # via -r requirements/ci.txt
 furl==2.1.0               # via -r requirements/ci.txt
-gemma-zds-client==0.13.0  # via -r requirements/ci.txt, zgw-consumers
+gemma-zds-client==0.13.3  # via -r requirements/ci.txt, zgw-consumers
 idna==2.8                 # via -r requirements/ci.txt, requests, yarl
 imagesize==1.2.0          # via sphinx
 importlib-metadata==0.23  # via -r requirements/ci.txt, kombu

@@ -75,7 +75,8 @@ class TaskClaimTests(WebTest):
         zaak = get_zaak_response(ZAAK, ZAAKTYPE)
         task = get_camunda_task_mock()
         m.get(
-            f"https://camunda.example.com/engine-rest/task/{task['id']}", json=task,
+            f"https://camunda.example.com/engine-rest/task/{task['id']}",
+            json=task,
         )
         m.get(
             f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}",
@@ -93,7 +94,10 @@ class TaskClaimTests(WebTest):
                 f"https://camunda.example.com/engine-rest/process-instance/{task['process_instance_id']}"
                 "/variables/zaakUrl?deserializeValues=false"
             ),
-            json={"value": zaak["url"], "type": "String",},
+            json={
+                "value": zaak["url"],
+                "type": "String",
+            },
         )
         m.get(ZAAKTYPE, json=get_zaaktype_response(CATALOGUS, ZAAKTYPE))
         roltypen_url = (

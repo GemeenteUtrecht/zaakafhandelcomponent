@@ -38,7 +38,9 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
         Service.objects.create(
-            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+            label="Catalogi API",
+            api_type=APITypes.ztc,
+            api_root=CATALOGI_ROOT,
         )
 
     def test_read_not_logged_in(self):
@@ -89,7 +91,12 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
-            json={"count": 1, "previous": None, "next": None, "results": [zaaktype],},
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
         )
         zaak = generate_oas_component(
             "zrc",
@@ -132,7 +139,9 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
         Service.objects.create(
-            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+            label="Catalogi API",
+            api_type=APITypes.ztc,
+            api_root=CATALOGI_ROOT,
         )
 
         cls.catalogus = (
@@ -233,7 +242,9 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
         Service.objects.create(
-            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+            label="Catalogi API",
+            api_type=APITypes.ztc,
+            api_root=CATALOGI_ROOT,
         )
 
         cls.catalogus = (
@@ -396,7 +407,9 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
         Service.objects.create(
-            label="Catalogi API", api_type=APITypes.ztc, api_root=CATALOGI_ROOT,
+            label="Catalogi API",
+            api_type=APITypes.ztc,
+            api_root=CATALOGI_ROOT,
         )
 
         cls.catalogus = (

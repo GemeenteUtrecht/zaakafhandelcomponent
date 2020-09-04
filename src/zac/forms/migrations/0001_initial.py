@@ -37,6 +37,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"verbose_name": "formulierenconfiguratie",},
+            options={
+                "verbose_name": "formulierenconfiguratie",
+            },
         ),
     ]

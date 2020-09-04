@@ -133,7 +133,11 @@ class ZaakPermissionCollection:
                 identificatie=identificatie,
                 max_va=max_va,
             )
-            for (perm_key, catalogus_url, identificatie,), max_va in _zt_perms.items()
+            for (
+                perm_key,
+                catalogus_url,
+                identificatie,
+            ), max_va in _zt_perms.items()
         ]
 
         for zt_perm in zt_perms:

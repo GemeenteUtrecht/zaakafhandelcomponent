@@ -21,3 +21,32 @@ class IngeschrevenNatuurlijkPersoon(Model):
             self.naam["geslachtsnaam"],
         ]
         return " ".join(bits)
+
+
+@dataclass
+class ExtraInformatieIngeschrevenNatuurlijkPersoon(Model):
+    geboorte: Optional[dict] = None
+    verblijfplaats: Optional[dict] = None
+    _links: Optional[dict] = None
+
+    @property
+    def partners(self) -> Optional[list]:
+        if self._links:
+            return self._links.get("partners", None)
+
+    @property
+    def kinderen(self) -> Optional[list]:
+        if self._links:
+            return self._links.get("kinderen", None)
+
+    @property
+    def geboortedatum(self) -> Optional[str]:
+        if self.geboorte and "datum" in self.geboorte:
+            return self.geboorte["datum"]["datum"]
+        return None
+
+    @property
+    def geboorteland(self) -> Optional[str]:
+        if self.geboorte and "land" in self.geboorte:
+            return self.geboorte["land"]["omschrijving"]
+        return None

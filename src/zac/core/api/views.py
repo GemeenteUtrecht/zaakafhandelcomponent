@@ -6,12 +6,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.models import Service
 
+from zac.contrib.brp.api import fetch_extrainfo_np
+
 from ..models import CoreConfig
 from ..services import get_document, get_informatieobjecttype, get_zaak
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
     DocumentInfoSerializer,
+    ExtraInfoSubjectSerializer,
     InformatieObjectTypeSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
@@ -78,7 +81,10 @@ class AddDocumentView(views.APIView):
         )  # resolves, otherwise the get_zaak would've failed
         zrc_client.create(
             "zaakinformatieobject",
-            {"informatieobject": document["url"], "zaak": zaak.url,},
+            {
+                "informatieobject": document["url"],
+                "zaak": zaak.url,
+            },
         )
 
         response_serializer = AddDocumentResponseSerializer(document)
@@ -99,4 +105,60 @@ class GetDocumentInfoView(views.APIView):
         serializer = DocumentInfoSerializer(
             instance=document, context={"request": request}
         )
+        return Response(serializer.data)
+
+
+class GetExtraInfoSubjectView(views.APIView):
+    def get(self, request: Request, **kwargs) -> Response:
+        error_messages = []
+
+        # Check if doelbinding is given and valid
+        doelbinding = request.query_params.get("doelbinding", "")
+        if not doelbinding:
+            error_messages.append("Doelbinding is vereist.")
+
+        # Check if fields query parameter is given...
+        fields = request.query_params.get("fields", "")
+        if not fields:
+            error_messages.append("Een extra-informatie veld is vereist.")
+
+        # ... and if they are valid.
+        elif fields:
+            fields = fields.split(",")
+            valid_choices = [
+                "geboorte.datum",
+                "geboorte.land",
+                "kinderen",
+                "partners",
+                "verblijfplaats",
+            ]
+
+            is_subset = [field in valid_choices for field in fields]
+
+            # Feedback why they're not valid
+            if not all(is_subset):
+                not_valid_fields = [
+                    field for valid, field in zip(is_subset, fields) if not valid
+                ]
+                error_messages.append(
+                    "Veld(en): {}, zijn niet geldig.".format(
+                        ", ".join(not_valid_fields)
+                    )
+                )
+
+        # Feedback errors
+        if error_messages:
+            return Response(
+                {"Errors": " ".join(error_messages)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Make request_kwargs
+        request_kwargs = {
+            "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
+            "params": {"fields": ",".join(fields)},
+        }
+
+        # Get extra info
+        extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)
+        serializer = ExtraInfoSubjectSerializer(extra_info_inp)
         return Response(serializer.data)

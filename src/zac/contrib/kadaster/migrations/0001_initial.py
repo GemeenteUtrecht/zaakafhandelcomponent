@@ -46,6 +46,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"verbose_name": "kadasterconfiguratie",},
+            options={
+                "verbose_name": "kadasterconfiguratie",
+            },
         ),
     ]

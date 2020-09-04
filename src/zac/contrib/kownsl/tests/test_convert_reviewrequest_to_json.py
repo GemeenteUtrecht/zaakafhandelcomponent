@@ -24,7 +24,11 @@ class ConvertToJsonTests(TestCase):
         }
         advice_data = {
             "created": "2020-06-17T10:21:16Z",
-            "author": {"username": "foo", "first_name": "", "last_name": "",},
+            "author": {
+                "username": "foo",
+                "first_name": "",
+                "last_name": "",
+            },
             "advice": "dummy",
             "documents": [],
         }
@@ -78,7 +82,11 @@ class ConvertToJsonTests(TestCase):
         }
         approval_data = {
             "created": "2020-06-17T10:21:16Z",
-            "author": {"username": "foo", "first_name": "", "last_name": "",},
+            "author": {
+                "username": "foo",
+                "first_name": "",
+                "last_name": "",
+            },
             "approved": True,
         }
         review_request = factory(ReviewRequest, review_request_data)

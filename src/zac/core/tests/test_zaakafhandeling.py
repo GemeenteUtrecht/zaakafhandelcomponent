@@ -221,7 +221,10 @@ class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
 
     url = reverse_lazy(
         "core:zaak-afhandeling",
-        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE,},
+        kwargs={
+            "bronorganisatie": BRONORGANISATIE,
+            "identificatie": IDENTIFICATIE,
+        },
     )
 
     def setUp(self):
@@ -328,7 +331,8 @@ class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
         post_requests = [req for req in m.request_history if req.method == "POST"]
         self.assertEqual(len(post_requests), 1)
         self.assertEqual(
-            post_requests[0].url, f"{ZAKEN_ROOT}resultaten",
+            post_requests[0].url,
+            f"{ZAKEN_ROOT}resultaten",
         )
 
     def test_close_set_result_blocked(self, m):
@@ -355,5 +359,6 @@ class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
         post_requests = [req for req in m.request_history if req.method == "POST"]
         self.assertEqual(len(post_requests), 1)
         self.assertEqual(
-            post_requests[0].url, f"{ZAKEN_ROOT}statussen",
+            post_requests[0].url,
+            f"{ZAKEN_ROOT}statussen",
         )

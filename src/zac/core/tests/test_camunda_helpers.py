@@ -36,7 +36,10 @@ class GetProcessZaakUrlTests(TestCase):
         m.get(
             f"{PI_URL}?subProcessInstance=aProcessInstanceId",
             json=[
-                {"id": "parentProcessInstanceId", "definitionId": "parent-process:1",}
+                {
+                    "id": "parentProcessInstanceId",
+                    "definitionId": "parent-process:1",
+                }
             ],
         )
         m.get(

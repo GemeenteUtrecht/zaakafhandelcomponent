@@ -42,7 +42,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         zaaktype = generate_oas_component("ztc", "schemas/ZaakType")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
-            json={"count": 1, "previous": None, "next": None, "results": [zaaktype],},
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
         )
         # gives them access to the page, but no zaaktypen specified -> nothing visible
         PermissionSetFactory.create(
@@ -57,7 +62,8 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.context["filter_form"].fields["zaaktypen"].choices, [],
+            response.context["filter_form"].fields["zaaktypen"].choices,
+            [],
         )
         self.assertEqual(response.context["zaken"], [])
         # verify amount of API calls - 1 to fetch the schema, 1 to get the zaaktypen
@@ -85,7 +91,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
-            json={"count": 2, "previous": None, "next": None, "results": [zt1, zt2],},
+            json={
+                "count": 2,
+                "previous": None,
+                "next": None,
+                "results": [zt1, zt2],
+            },
         )
         # set up user permissions
         PermissionSetFactory.create(
@@ -122,7 +133,8 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
 
         # verify API calls
         self.assertEqual(
-            len(m.request_history), 5,
+            len(m.request_history),
+            5,
         )
         (
             req_ztc_schema,
@@ -150,7 +162,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
-            json={"count": 1, "previous": None, "next": None, "results": [zaaktype],},
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
         )
         # set up user permissions
         PermissionSetFactory.create(
@@ -170,7 +187,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         m.get(
             f"{ZAKEN_ROOT}zaken?maximaleVertrouwelijkheidaanduiding=openbaar",
-            json={"count": 2, "previous": None, "next": None, "results": [zaak1],},
+            json={
+                "count": 2,
+                "previous": None,
+                "next": None,
+                "results": [zaak1],
+            },
         )
 
         response = self.app.get(self.url, user=self.user)
@@ -214,11 +236,21 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
-            json={"count": 2, "previous": None, "next": None, "results": [zt1, zt2],},
+            json={
+                "count": 2,
+                "previous": None,
+                "next": None,
+                "results": [zt1, zt2],
+            },
         )
         m.get(
             f"{ZAKEN_ROOT}zaken?zaaktype={zt1['url']}",
-            json={"count": 2, "previous": None, "next": None, "results": [zaak1],},
+            json={
+                "count": 2,
+                "previous": None,
+                "next": None,
+                "results": [zaak1],
+            },
         )
 
         response = self.app.get(self.url, {"zaaktypen": zt1["url"]}, user=superuser)

@@ -74,7 +74,10 @@ class SendMessage(PermissionRequiredMixin, FormView):
         ztc_jwt = ztc_client.auth.credentials()["Authorization"]
 
         variables = {
-            "services": {"zrc": {"jwt": zrc_jwt}, "ztc": {"jwt": ztc_jwt},},
+            "services": {
+                "zrc": {"jwt": zrc_jwt},
+                "ztc": {"jwt": ztc_jwt},
+            },
         }
 
         send_message(form.cleaned_data["message"], [process_instance.id], variables)
@@ -316,7 +319,10 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
         if user.id != state.get("user_id"):
             logger.warning(
                 "Invalid user in state",
-                extra={"expected": user.id, "received": state.get("user_id"),},
+                extra={
+                    "expected": user.id,
+                    "received": state.get("user_id"),
+                },
             )
             raise PermissionDenied("State is for a different user")
 
@@ -325,7 +331,10 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
         if str(task.id) != state.get("task_id"):
             logger.warning(
                 "Invalid Task ID in state",
-                extra={"expected": str(task.id), "received": state.get("task_id"),},
+                extra={
+                    "expected": str(task.id),
+                    "received": state.get("task_id"),
+                },
             )
             raise PermissionDenied("Invalid task ID in state")
 
@@ -421,6 +430,7 @@ class ClaimTaskView(PermissionRequiredMixin, FormView):
     def form_invalid(self, form):
         errors = form.errors.as_json()
         response = HttpResponseBadRequest(
-            content=errors.encode("utf-8"), content_type="application/json",
+            content=errors.encode("utf-8"),
+            content_type="application/json",
         )
         return response

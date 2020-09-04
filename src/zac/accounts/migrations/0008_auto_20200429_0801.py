@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="user", old_name="entitlements", new_name="auth_profiles",
+            model_name="user",
+            old_name="entitlements",
+            new_name="auth_profiles",
         ),
         migrations.RenameField(
             model_name="userauthorizationprofile",
