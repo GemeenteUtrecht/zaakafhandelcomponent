@@ -17,6 +17,7 @@ from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
 
+from .fields import DocumentsMultipleChoiceField
 from .services import (
     get_documenten,
     get_resultaattypen,
@@ -195,53 +196,17 @@ def _repr(doc):
     )
 
 
-class DocWrapper:
-    def __init__(self, doc):
-        self.doc = doc
-
-    @property
-    def download_url(self):
-        download_path = reverse(
-            "core:download-document",
-            kwargs={
-                "bronorganisatie": self.doc.bronorganisatie,
-                "identificatie": self.doc.identificatie,
-            },
-        )
-        return download_path
-
-    @property
-    def icon(self) -> str:
-        DEFAULT = "insert_drive_file"
-        mimetype = self.doc.formaat
-
-        if not mimetype:
-            return DEFAULT
-
-        if mimetype.startswith("image/"):
-            return "image"
-
-        if mimetype.startswith("video/"):
-            return "ondemand_video"
-
-        if mimetype.startswith("audio/"):
-            return "audiotrack"
-
-        return DEFAULT
-
-
 class SelectDocumentsForm(TaskFormMixin, forms.Form):
     """
     Select (a subset) of documents belonging to a Zaak.
     """
 
-    documenten = forms.MultipleChoiceField(
+    documenten = DocumentsMultipleChoiceField(
         label=_("Selecteer de relevante documenten"),
         help_text=_(
             "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
             "documenten voor het vervolg van het proces."
         ),
-        widget=forms.CheckboxSelectMultiple,
     )
 
     template_name = "core/select_documents.html"
@@ -253,12 +218,7 @@ class SelectDocumentsForm(TaskFormMixin, forms.Form):
         zaak_url = get_process_instance_variable(
             self.task.process_instance_id, "zaakUrl"
         )
-        zaak = get_zaak(zaak_url=zaak_url)
-        documenten, _ = get_documenten(zaak)
-
-        self.fields["documenten"].choices = [
-            (doc.url, DocWrapper(doc)) for doc in documenten
-        ]
+        self.fields["documenten"].zaak = zaak_url
 
 
 class SelectUsersForm(TaskFormMixin, forms.Form):

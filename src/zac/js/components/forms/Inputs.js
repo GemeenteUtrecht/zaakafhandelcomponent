@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 
+import { PrefixContext } from '../formsets/context';
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
+
 
 
 const Input = ({
@@ -18,24 +20,28 @@ const Input = ({
     required=false,
     disabled=false
 }) => {
+    const prefix = useContext(PrefixContext);
 
     const classNames = classes ??`input__control input__control--${type}`;
 
     let extraProps = {};
     if (id) {
-        extraProps.id = id;
+        const prefixedId = prefix ? `${prefix}-${id}` : id;
+        extraProps.id = prefixedId;
     }
 
     // not-controlled vs. controlled
-    if (initial) {
+    if (initial != null) {
         extraProps.defaultValue = initial;
     } else {
         extraProps.value = value;
     }
 
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+
     return (
         <input
-            name={name}
+            name={prefixedName}
             type={type}
             checked={checked}
             className={classNames}
@@ -60,10 +66,13 @@ const Input = ({
 const TextInput = (props) => {
     const { label, helpText, id, required, errors=[] } = props;
 
+    const prefix = useContext(PrefixContext);
+    const prefixedId = (id && prefix) ? `${prefix}-${id}` : id;
+
     return (
         <Wrapper errors={errors}>
-            <Label label={label} required={required} idForLabel={id} />
-            <Help helpText={helpText} idForLabel={id} />
+            <Label label={label} required={required} idForLabel={prefixedId} />
+            <Help helpText={helpText} idForLabel={prefixedId} />
             <ErrorList errors={errors} />
             <Input type="text" {...props} />
         </Wrapper>
@@ -84,7 +93,9 @@ const RadioInput = (props) => {
 };
 
 const HiddenInput = ({name, value}) => {
-    return <input type="hidden" name={name} defaultValue={value} />
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+    return <input type="hidden" name={prefixedName} defaultValue={value} />
 }
 
 

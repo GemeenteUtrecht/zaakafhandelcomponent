@@ -108,11 +108,17 @@ class FormSetMixin:
         return super().get_context_data(**kwargs)
 
     def get_formset_kwargs(self):
-        kwargs = {"task": self._get_task(), "user": self.request.user}
-
-        if self.request.method == "POST":
+        kwargs = {
+            "prefix": self.get_prefix(),
+            "task": self._get_task(),
+            "user": self.request.user,
+        }
+        if self.request.method in ("POST", "PUT"):
             kwargs.update(
-                {"data": self.request.POST.copy(), "files": self.request.FILES}
+                {
+                    "data": self.request.POST,
+                    "files": self.request.FILES,
+                }
             )
         return kwargs
 
@@ -243,9 +249,12 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
             "ztc": {"jwt": ztc_jwt},
         }
 
+        formset_vars = formset.get_process_variables() if formset else {}
+
         variables = {
             "services": services,
             **form.get_process_variables(),
+            **formset_vars,
         }
 
         complete_task(task.id, variables)

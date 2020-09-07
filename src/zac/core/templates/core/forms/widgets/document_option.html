@@ -1,0 +1,31 @@
+{% with wrapper=widget.label %}
+<div class="document-selection">
+    <input
+        type="checkbox"
+        name="{{ widget.name }}"
+        value="{{ widget.value|stringformat:'s' }}"
+        class="document-selection__toggle"
+        id="{{ widget.attrs.id }}"
+    >
+
+    <label class="document-preview document-selection__preview" for="{{ widget.attrs.id }}">
+        <i class="document-preview__icon document-preview__icon--large material-icons">
+            {{ wrapper.icon }}
+        </i>
+
+        <span class="document-preview__meta">
+            <a href="{{ wrapper.download_url }}"
+               class="link"
+               target="_blank"
+               rel="noopener nofollower">{% firstof wrapper.doc.titel wrapper.doc.bestandsnaam %}</a>
+            &nbsp;{{ wrapper.doc.bestandsomvang|filesizeformat }}
+            <br/>
+            {{ wrapper.doc.informatieobjecttype.omschrijving }}
+            ({{ wrapper.doc.get_vertrouwelijkheidaanduiding_display }})
+            <br>
+            versie {{ wrapper.doc.versie }}
+        </span>
+    </label>
+
+</div>
+{% endwith %}

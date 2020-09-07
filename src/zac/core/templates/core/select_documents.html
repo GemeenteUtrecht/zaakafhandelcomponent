@@ -4,43 +4,8 @@
 
 {% block form_body %}
 
-<div class="section-title">Selecteer documenten</div>
+{% load_widgets form='sniplates/forms.html' %}
 
-<article class="document-selection-container">
+{% form_field form.documenten %}
 
-    {% for value, document in form.documenten.field.choices %}
-
-        <div class="document-selection">
-            <input
-                type="checkbox"
-                name="{{ form.documenten.name }}"
-                value="{{ value }}"
-                class="document-selection__toggle"
-                id="document_{{ forloop.counter0 }}"
-            >
-
-            <label class="document-preview document-selection__preview" for="document_{{ forloop.counter0 }}">
-                <i class="document-preview__icon document-preview__icon--large material-icons">
-                    {{ document.icon }}
-                </i>
-
-                <span class="document-preview__meta">
-                    <a href="{{ document.download_url }}"
-                       class="link"
-                       target="_blank"
-                       rel="noopener nofollower">{% firstof document.doc.titel document.doc.bestandsnaam %}</a>
-                    {{ document.doc.bestandsomvang|filesizeformat }}
-                    <br/>
-                    {{ document.doc.informatieobjecttype.omschrijving }}
-                    ({{ document.doc.get_vertrouwelijkheidaanduiding_display }})
-                    <br>
-                    versie {{ document.doc.versie }}
-                </span>
-            </label>
-
-        </div>
-
-    {% endfor %}
-
-</article>
 {% endblock %}
