@@ -1,13 +1,9 @@
 from django import http
 from django.template import TemplateDoesNotExist, loader
 from django.views.decorators.csrf import requires_csrf_token
-from django.views.defaults import (
-    ERROR_403_TEMPLATE_NAME,
-    ERROR_500_TEMPLATE_NAME,
-)
+from django.views.defaults import ERROR_403_TEMPLATE_NAME, ERROR_500_TEMPLATE_NAME
 
-from zac.accounts.models import User
-from zac.core.services import find_zaak, get_rollen
+from zac.core.services import find_zaak
 
 
 @requires_csrf_token
@@ -48,19 +44,12 @@ def permission_denied(request, exception, template_name=ERROR_403_TEMPLATE_NAME)
             "<h1>403 Forbidden</h1>", content_type="text/html"
         )
 
-    context = {"exception": str(exception)}
+    context = {"exception": str(exception), "can_request_access": False}
 
-    if request.resolver_match.url_name == "zaak-detail":
+    if request.resolver_match.url_name == "zaak-detail" and request.user:
         kwargs = request.resolver_match.kwargs
+        # todo check if user has already requested access for this zaak
         zaak = find_zaak(**kwargs)
-        rollen = get_rollen(zaak)
-        behandelaar_usernames = [
-            rol.betrokkene_identificatie.get("identificatie")
-            for rol in rollen
-            if rol.betrokkene_type == "medewerker"
-            and rol.omschrijving_generiek == "behandelaar"
-        ]
-        behandelaars = User.objects.filter(username__in=behandelaar_usernames)
-        context.update({"behandelaars": behandelaars})
+        context.update({"can_request_access": True, "zaak_kwargs": kwargs})
 
     return http.HttpResponseForbidden(template.render(request=request, context=context))

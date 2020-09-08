@@ -10,6 +10,7 @@ from .views import (
     PermissionSetDetailView,
     PermissionSetsView,
     PermissionSetUpdateView,
+    RequestAccessCreateView,
     UserAuthorizationProfileCreateView,
 )
 
@@ -53,5 +54,10 @@ urlpatterns = [
         "permission-sets/<pk>/change/",
         PermissionSetUpdateView.as_view(),
         name="permission-set-change",
+    ),
+    path(
+        "request-accesses/zaken/<bronorganisatie>/<identificatie>/add",
+        RequestAccessCreateView.as_view(),
+        name="request-access-create",
     ),
 ]

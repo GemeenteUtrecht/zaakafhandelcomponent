@@ -6,8 +6,11 @@
 
  <h1>Sorry, you don't have access to this page (403)</h1>
 
-{% if behandelaars and behandelaars.count %}
-    You can request access for this page
+{% if can_request_access %}
+    <p>
+        You can <a href="{% url 'accounts:request-access-create' bronorganisatie=zaak_kwargs.bronorganisatie identificatie=zaak_kwargs.identificatie %}">request access</a> for this page
+    </p>
+
 {% endif %}
 
 {% endblock content %}
