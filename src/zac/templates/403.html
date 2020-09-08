@@ -6,5 +6,8 @@
 
  <h1>Sorry, you don't have access to this page (403)</h1>
 
+{% if behandelaars and behandelaars.count %}
+    You can request access for this page
+{% endif %}
 
 {% endblock content %}
