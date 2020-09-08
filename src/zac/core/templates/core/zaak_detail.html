@@ -266,7 +266,6 @@
         </div>
     </section>
 
-    {% if documenten %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Documenten</div>
 
@@ -303,8 +302,11 @@
             </tbody>
         </table>
 
+        <div id="add-document-react" data-zaak="{{ zaak.url }}" data-csrftoken="{{ csrf_token }}">
+            {# React managed #}
+        </div>
+
     </section>
-    {% endif %}
 
 </article>
 
