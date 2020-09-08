@@ -44,4 +44,4 @@ class AuthorizationProfileAdmin(admin.ModelAdmin):
 class UserAuthorizationProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "auth_profile", "start", "end")
     list_filter = ("user", "auth_profile", "start", "end")
-    search_fields = ("user__usernamae", "auth_profile__name", "auth_profile__uuid")
+    search_fields = ("user__username", "auth_profile__name", "auth_profile__uuid")
