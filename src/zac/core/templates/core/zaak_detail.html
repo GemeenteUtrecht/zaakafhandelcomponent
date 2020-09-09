@@ -20,6 +20,16 @@
         <strong>{{ zaak.get_vertrouwelijkheidaanduiding_display }}</strong>
     </p>
 </article>
+
+{% block nav-main-id-subnav %}
+<nav class="object-id-nav">
+    <ul class="nav-menu nav-menu--object-id">
+        {% nav_menu_item 'core:zaak-activiteiten' _("Activiteiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
+        {% nav_menu_item 'core:zaak-besluiten' _("Besluiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
+    </ul>
+</nav>
+{% endblock %}
+
 {% endblock %}
 
 

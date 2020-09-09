@@ -13,7 +13,9 @@ import aiohttp
 import requests
 from furl import furl
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.besluiten import Besluit
 from zgw_consumers.api_models.catalogi import (
+    BesluitType,
     Eigenschap,
     ResultaatType,
     RolType,
@@ -103,6 +105,13 @@ def get_zaaktypen(
         # filter out zaaktypen from permissions
         zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
     return zaaktypen
+
+
+@cache_result("besluittype:{url}", timeout=A_DAY)
+def fetch_besluittype(url: str) -> BesluitType:
+    client = _client_from_url(url)
+    result = client.retrieve("besluittype", url=url)
+    return factory(BesluitType, result)
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -841,3 +850,33 @@ def update_document(url: str, file: UploadedFile, data: dict):
     # refresh new state
     document = get_document(document.url)
     return document
+
+
+###################################################
+#                       BRC                       #
+###################################################
+
+
+def get_besluiten(zaak: Zaak) -> List[Besluit]:
+    query = {"zaak": zaak.url}
+    brcs = Service.objects.filter(api_type=APITypes.brc)
+
+    results = []
+    for brc in brcs:
+        client = brc.build_client()
+        results += get_paginated_results(client, "besluit", query_params=query)
+
+    besluiten = factory(Besluit, results)
+
+    # resolve besluittypen
+    _besluittypen = {besluit.besluittype for besluit in besluiten}
+    with parallel() as executor:
+        _resolved_besluittypen = executor.map(fetch_besluittype, _besluittypen)
+    besluittypen = {bt.url: bt for bt in _resolved_besluittypen}
+
+    # resolve all relations
+    for besluit in besluiten:
+        besluit.zaak = zaak
+        besluit.besluittype = besluittypen[besluit.besluittype]
+
+    return besluiten
