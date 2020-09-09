@@ -273,6 +273,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th class="table__header">Op slot</th>
                     <th class="table__header">Type</th>
                     <th class="table__header">Titel</th>
                     <th class="table__header">Vertrouwelijkheidaanduiding</th>
@@ -284,6 +285,13 @@
             <tbody>
                 {% for document in documenten %}
                     <tr>
+                        <td> 
+                            {% if document.locked %}
+                            <span class="material-icons">lock</span>
+                            {% else %}
+                            <span class="material-icons">lock_open</span>
+                            {% endif %}
+                        </td>
                         <td> {{ document.informatieobjecttype.omschrijving }} </td>
                         <td> {{ document.titel }}</td>
                         <td> {{ document.get_vertrouwelijkheidaanduiding_display }} </td>
