@@ -12,7 +12,7 @@ const Tab = ({ index, title, onClick, active=false }) => {
     }
 
     return (
-        <li role="tab"aria-controls={target} className={className}>
+        <li role="tab" aria-controls={target} className={className}>
             <a href={`#${target}`} onClick={onClick}>{title}</a>
         </li>
     );
