@@ -7,15 +7,15 @@ from django.views.generic import CreateView, DetailView, FormView, ListView, Upd
 from zac.core.services import find_zaak
 
 from .forms import (
+    AccessRequestForm,
     AuthorizationProfileForm,
     PermissionSetForm,
-    RequestAccessForm,
     UserAuthorizationProfileForm,
 )
 from .models import (
+    AccessRequest,
     AuthorizationProfile,
     PermissionSet,
-    RequestAccess,
     UserAuthorizationProfile,
 )
 
@@ -103,9 +103,9 @@ class UserAuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):
         )
 
 
-class RequestAccessCreateView(LoginRequiredMixin, FormView):
-    form_class = RequestAccessForm
-    template_name = "accounts/requestaccess_form.html"
+class AccessRequestCreateView(LoginRequiredMixin, FormView):
+    form_class = AccessRequestForm
+    template_name = "accounts/accessrequest_form.html"
     #  todo add thanks page?
     success_url = reverse_lazy("core:index")
 

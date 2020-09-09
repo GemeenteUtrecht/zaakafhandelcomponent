@@ -15,9 +15,9 @@ from zgw_consumers.service import get_paginated_results
 from zac.core.services import get_rollen, get_zaaktypen
 
 from .models import (
+    AccessRequest,
     AuthorizationProfile,
     PermissionSet,
-    RequestAccess,
     User,
     UserAuthorizationProfile,
 )
@@ -180,9 +180,9 @@ class UserAuthorizationProfileForm(forms.ModelForm):
         return super().save(*args, **kwargs)
 
 
-class RequestAccessForm(forms.ModelForm):
+class AccessRequestForm(forms.ModelForm):
     class Meta:
-        model = RequestAccess
+        model = AccessRequest
         fields = ("comment",)
 
     def __init__(self, *args, **kwargs):
@@ -220,7 +220,7 @@ class RequestAccessForm(forms.ModelForm):
         behandelaars = self.cleaned_data.pop("behandelaars")
         request_accesses = []
         for handler in behandelaars:
-            request_access = RequestAccess.objects.create(
+            request_access = AccessRequest.objects.create(
                 handler=handler,
                 requester=self.requester,
                 zaak=self.zaak.url,

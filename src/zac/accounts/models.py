@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from .constants import RequestAccessResult
+from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
 
@@ -165,7 +165,7 @@ class UserAuthorizationProfile(models.Model):
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
-class RequestAccess(models.Model):
+class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
     )
@@ -175,5 +175,5 @@ class RequestAccess(models.Model):
     zaak = models.URLField(_("zaak"), max_length=255)
     comment = models.CharField(_("comment"), max_length=1000, blank=True)
     result = models.CharField(
-        _("result"), max_length=50, choices=RequestAccessResult.choices, blank=True
+        _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
     )

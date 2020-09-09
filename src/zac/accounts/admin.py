@@ -3,9 +3,9 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
+    AccessRequest,
     AuthorizationProfile,
     PermissionSet,
-    RequestAccess,
     User,
     UserAuthorizationProfile,
 )
@@ -53,8 +53,8 @@ class UserAuthorizationProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "auth_profile__name", "auth_profile__uuid")
 
 
-@admin.register(RequestAccess)
-class RequestAccessAdmin(admin.ModelAdmin):
+@admin.register(AccessRequest)
+class AccessRequestAdmin(admin.ModelAdmin):
     list_display = ("requester", "handler", "result")
     list_filter = ("requester", "handler", "result")
     search_fields = ("requester__username", "zaak")

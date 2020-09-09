@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="RequestAccess",
+            name="AccessRequest",
             fields=[
                 (
                     "id",
@@ -35,7 +35,11 @@ class Migration(migrations.Migration):
                     "result",
                     models.CharField(
                         blank=True,
-                        choices=[("approve", "Approve"), ("reject", "Reject")],
+                        choices=[
+                            ("approve", "Approve"),
+                            ("reject", "Reject"),
+                            ("close", "Close"),
+                        ],
                         max_length=50,
                         verbose_name="result",
                     ),

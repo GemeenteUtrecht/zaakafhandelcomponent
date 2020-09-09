@@ -8,7 +8,7 @@
 
 {% if can_request_access %}
     <p>
-        You can <a href="{% url 'accounts:request-access-create' bronorganisatie=zaak_kwargs.bronorganisatie identificatie=zaak_kwargs.identificatie %}">request access</a> for this page
+        You can <a href="{% url 'accounts:access-request-create' bronorganisatie=zaak_kwargs.bronorganisatie identificatie=zaak_kwargs.identificatie %}">request access</a> for this page
     </p>
 
 {% endif %}
