@@ -24,6 +24,7 @@ django-auth-adfs-db
 django-axes
 django-camunda
 django-choices
+django-extra-views
 django-filter
 django-import-export
 django-redis
