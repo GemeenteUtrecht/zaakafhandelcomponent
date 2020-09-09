@@ -123,3 +123,7 @@ class AccessRequestCreateView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context.update({"zaak": self.get_zaak()})
         return context
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
