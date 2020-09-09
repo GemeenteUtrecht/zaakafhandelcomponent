@@ -1,5 +1,5 @@
 import { apiCall } from '../../utils/fetch';
-import { initTab } from '../../components/tabs';
+import { initTab } from '../../components/tab';
 
 
 const initTabs = (parentNode) => {
