@@ -1,0 +1,50 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates rules %}
+
+
+{% block content %}
+
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
+
+<header class="zaak-detail-page__header">
+
+    <h1 class="page-title" title="Zaaktype">
+        Besluiten voor "{{ zaak.zaaktype.omschrijving }}"-zaak
+        <br>
+        <small class="page-title__extra" title="Zaaktype">
+            {{ zaak.omschrijving }}
+        </small>
+    </h1>
+
+</header>
+
+<article class="zaak-detail">
+    <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="table__header">Identificatie</th>
+                    <th class="table__header">Type</th>
+                    <th class="table__header">Beslisdatum</th>
+                    <th class="table__header">Ingangsdatum</th>
+                    <th class="table__header">Toelichting</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for besluit in besluiten %}
+                    <tr>
+                        <th class="table__id-column">{{ besluit.identificatie }}</th>
+                        <td>{{ besluit.besluittype.omschrijving }}</td>
+                        <td>{{ besluit.datum|date:"j F, Y" }}</td>
+                        <td>{{ besluit.ingangsdatum|date:"j F, Y" }}</td>
+                        <td>{{ besluit.toelichting|default:"-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</article>
+
+{% endblock content %}

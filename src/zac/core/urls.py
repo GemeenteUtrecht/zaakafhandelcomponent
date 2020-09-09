@@ -1,5 +1,6 @@
 from django.urls import include, path
 
+from .views.besluiten import ZaakBesluitenView
 from .views.cache import FlushCacheView
 from .views.documents import DownloadDocumentView
 from .views.processes import (
@@ -36,6 +37,11 @@ urlpatterns = [
                     "<bronorganisatie>/<identificatie>/activiteiten/",
                     ZaakActiviteitenView.as_view(),
                     name="zaak-activiteiten",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/besluiten/",
+                    ZaakBesluitenView.as_view(),
+                    name="zaak-besluiten",
                 ),
                 path(
                     "<bronorganisatie>/<identificatie>/afhandelen/",
