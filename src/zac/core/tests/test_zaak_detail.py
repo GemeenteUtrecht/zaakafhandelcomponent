@@ -121,6 +121,30 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         self.assertRedirects(response, f"{settings.LOGIN_URL}?next={self.url}")
 
     def test_user_auth_no_perms(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+
         response = self.app.get(self.url, user=self.user, status=403)
 
         self.assertEqual(response.status_code, 403)
