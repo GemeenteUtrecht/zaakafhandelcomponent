@@ -29,6 +29,7 @@
 {% has_perm 'zaakproces:usertasks-uitvoeren' user zaak as can_do_usertasks %}
 {% has_perm 'zaak:afhandelen' user zaak as can_do_zaakafhandeling %}
 {% has_perm 'zaken:create-status' user zaak as can_create_status %}
+{% has_perm 'zaken:add-documents' user zaak as can_add_documents %}
 
 {% load_widgets kv='sniplates/key-value.html' %}
 
@@ -266,7 +267,6 @@
         </div>
     </section>
 
-    {% if documenten %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Documenten</div>
 
@@ -311,8 +311,17 @@
             </tbody>
         </table>
 
+        {% if can_add_documents %}
+            <div id="add-document-react" data-zaak="{{ zaak.url }}" data-csrftoken="{{ csrf_token }}">
+                {# React managed #}
+            </div>
+        {% else %}
+            <p class="permission-check permission-check--failed">
+                Je hebt onvoldoende rechten om documenten toe te voegen.
+            </p>
+        {% endif %}
+
     </section>
-    {% endif %}
 
 </article>
 
