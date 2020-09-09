@@ -24,6 +24,12 @@
             class="tab__tab">
             <a href="#work-ad-hoc">Ad-hoc activiteiten ({{ adhoc_activities|length }})</a>
         </li>
+
+        <li role="tab" id="work-tab-access-requests"
+            aria-controls="work-access-requests"
+            class="tab__tab">
+            <a href="#work-access-requests">Access requests ({{ access_requests|length }})</a>
+        </li>
     </ul>
 
     <div class="tab__content tab__content--inline">
@@ -67,6 +73,27 @@
                         <ul>
                             {% for activity in activity_group.activities %}
                                 <li>{{ activity }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section
+             class="tab__pane"
+             id="work-access-requests"
+             aria-labelledby="work-tab-access-requests"
+             role="tabpanel"
+        >
+            <ul>
+                {% for access_request_group in access_requests %}
+                    <li>
+                        <a href="#"
+                        >{{ access_request_group.zaak.identificatie }}</a>
+                        <ul>
+                            {% for access_request in access_request_group.requesters %}
+                                <li>{{ access_request.requester.username }}</li>
                             {% endfor %}
                         </ul>
                     </li>

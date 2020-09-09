@@ -13,6 +13,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
+from .query import AccessRequestQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -177,3 +178,5 @@ class AccessRequest(models.Model):
     result = models.CharField(
         _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
     )
+
+    objects = AccessRequestQuerySet.as_manager()

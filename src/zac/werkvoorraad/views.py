@@ -7,7 +7,7 @@ from django_camunda.camunda_models import Task, factory
 from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
-from zac.accounts.models import User
+from zac.accounts.models import AccessRequest, User
 from zac.accounts.permissions import UserPermissions
 from zac.activities.models import Activity
 from zac.core.services import get_zaak, get_zaken
@@ -54,19 +54,25 @@ class SummaryView(LoginRequiredMixin, TemplateView):
         # TODO: Camunda user tasks
 
         activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
+        access_request_groups = AccessRequest.objects.as_werkvoorraad(
+            user=self.request.user
+        )
 
-        def set_zaak(activity_group):
-            activity_group["zaak"] = get_zaak(zaak_url=activity_group["zaak_url"])
+        def set_zaak(group):
+            group["zaak"] = get_zaak(zaak_url=group["zaak_url"])
 
         with parallel() as executor:
             for activity_group in activity_groups:
                 executor.submit(set_zaak, activity_group)
+            for access_request_group in access_request_groups:
+                executor.submit(set_zaak, access_request_group)
 
         context.update(
             {
                 "zaken": get_behandelaar_zaken(self.request.user),
                 "adhoc_activities": activity_groups,
                 "user_tasks": get_camunda_user_tasks(self.request.user),
+                "access_requests": access_request_groups,
             }
         )
 
