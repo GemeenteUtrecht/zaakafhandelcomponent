@@ -10,6 +10,7 @@ from zac.accounts.permissions import Permission, register
 from .permissions import (
     zaakproces_send_message,
     zaakproces_usertasks,
+    zaken_add_documents,
     zaken_close,
     zaken_inzien,
     zaken_set_result,
@@ -41,6 +42,7 @@ class dictwrapper:
     zaakproces_usertasks,
     zaken_set_result,
     zaken_close,
+    zaken_add_documents,
 )
 def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
     logger.debug("Checking permission %r for user %r", permission, user)

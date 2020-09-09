@@ -32,3 +32,8 @@ zaken_download_documents = Permission(
     name="zaken:download-documents",
     description="Inzien documenten bij zaken, inclusief de (binaire) inhoud.",
 )
+
+zaken_add_documents = Permission(
+    name="zaken:add-documents",
+    description="Nieuwe/extra documenten toevoegen bij zaken.",
+)

@@ -1,7 +1,7 @@
 import base64
 from datetime import date
 
-from rest_framework import exceptions, status, views
+from rest_framework import exceptions, permissions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.models import Service
@@ -10,6 +10,7 @@ from zac.contrib.brp.api import fetch_extrainfo_np
 
 from ..models import CoreConfig
 from ..services import get_document, get_informatieobjecttype, get_zaak
+from .permissions import CanAddDocuments
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
@@ -36,11 +37,13 @@ class GetInformatieObjectTypenView(views.APIView):
 
 
 class AddDocumentView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, CanAddDocuments)
 
-    # TODO: permissions checks on zaak - can this user add documents to the zaak?
+    def get_serializer(self, *args, **kwargs):
+        return AddDocumentSerializer(data=self.request.data)
 
     def post(self, request: Request) -> Response:
-        serializer = AddDocumentSerializer(data=request.data)
+        serializer = self.get_serializer()
         serializer.is_valid(raise_exception=True)
 
         # create the document
