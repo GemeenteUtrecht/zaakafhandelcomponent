@@ -12,7 +12,7 @@ from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import ZaakType
 
-from zac.accounts.models import User
+from zac.accounts.models import AccessRequest, User
 from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
@@ -315,3 +315,14 @@ class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
     """
 
     _review_type = "approval"
+
+
+class AccessRequestHandleForm(forms.ModelForm):
+    """
+    Reject or approve access requests for a particular zaak
+    """
+    checked = forms.BooleanField(required=False)
+
+    class Meta:
+        model = AccessRequest
+        fields = ("checked",)

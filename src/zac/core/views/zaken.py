@@ -1,14 +1,18 @@
 from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
+from extra_views import ModelFormSetView
 from furl import furl
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
+from zac.accounts.models import AccessRequest
 from zac.accounts.permissions import UserPermissions
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
@@ -21,7 +25,7 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.utils.api_models import serialize
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
-from ..forms import ZaakAfhandelForm, ZakenFilterForm
+from ..forms import AccessRequestHandleForm, ZaakAfhandelForm, ZakenFilterForm
 from ..permissions import zaken_close, zaken_inzien, zaken_set_result
 from ..services import (
     find_zaak,
@@ -299,3 +303,42 @@ class ZaakActiviteitenView(PermissionRequiredMixin, BaseDetailView):
         zaak = find_zaak(**self.kwargs)
         self.check_object_permissions(zaak)
         return zaak
+
+
+class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
+    form_class = AccessRequestHandleForm
+    template_name = "core/zaak_access_requests.html"
+    context_object_name = "zaak"
+    model = AccessRequest
+    factory_kwargs = {"extra": 0, "can_delete": False}
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        zaak = self.get_zaak()
+        queryset = queryset.filter(result="", handler=self.request.user, zaak=zaak.url)
+        return queryset
+
+    def get_zaak(self):
+        zaak = find_zaak(**self.kwargs)
+        return zaak
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"zaak": self.get_zaak()})
+        return context
+
+    # @transaction.atomic
+    def formset_valid(self, formset):
+        response = super().formset_valid(formset)
+
+        result = self.request.POST["submit"]
+
+        for form in formset:
+            access_request = form.instance
+            checked = form.cleaned_data["checked"]
+            if checked:
+                access_request.result = result
+                access_request.save(update_fields=["result"])
+
+        return response

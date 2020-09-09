@@ -1,0 +1,55 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n rules %}
+
+
+{% block content %}
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
+
+<header class="zaak-detail-page__header">
+    <h1 class="page-title" title="Zaaktype">
+        Access requests for "{{ zaak.zaaktype.omschrijving }}"-zaak
+        <br>
+        <small class="page-title__extra" title="Zaaktype">
+            {{ zaak.zaaktype.omschrijving }}
+        </small>
+    </h1>
+</header>
+
+<form action="." method="post">
+    {% csrf_token %}
+
+    {{ formset.management_form }}
+    {{ formset.non_form_errors }}
+    {{ formset.errors }}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="table__header">#</th>
+                <th class="table__header">User</th>
+                <th class="table__header">Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+                <tr>
+                    {{  form.non_field_errors }}
+                    {{ form.id }}
+                    <td>{{ form.checked }}</td>
+                    <td>{{ form.instance.requester }}</td>
+                    <td>{{ form.instance.comment }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="btn-group">
+        <button type="submit" name="submit" value="approve" class="btn btn--choice">{% trans "Approve" %}</button>
+        <button type="submit" name="submit" value="reject" class="btn btn--choice">{% trans "Reject" %}</button>
+    </div>
+</form>
+
+
+{% endblock content %}

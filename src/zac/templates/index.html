@@ -87,12 +87,12 @@
              role="tabpanel"
         >
             <ul>
-                {% for access_request_group in access_requests %}
+                {% for request_group in access_requests %}
                     <li>
-                        <a href="#"
-                        >{{ access_request_group.zaak.identificatie }}</a>
+                        <a href="{% url 'core:zaak-access-requests' bronorganisatie=request_group.zaak.bronorganisatie identificatie=request_group.zaak.identificatie %}"
+                        >{{ request_group.zaak.identificatie }}</a>
                         <ul>
-                            {% for access_request in access_request_group.requesters %}
+                            {% for access_request in request_group.requesters %}
                                 <li>{{ access_request.requester.username }}</li>
                             {% endfor %}
                         </ul>
