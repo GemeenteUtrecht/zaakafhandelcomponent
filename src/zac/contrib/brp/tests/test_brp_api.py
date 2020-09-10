@@ -120,7 +120,10 @@ class BrpApiViewTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"Errors": "Doelbinding is vereist. Een extra-informatie veld is vereist."},
+            {
+                "doelbinding": ["Dit veld is vereist."],
+                "fields": ["Dit veld is vereist."],
+            },
         )
 
     def test_betrokkene_api_no_valid_doelbinding(self):
@@ -129,7 +132,10 @@ class BrpApiViewTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"Errors": "Doelbinding is vereist. Een extra-informatie veld is vereist."},
+            {
+                "doelbinding": ["Dit veld mag niet leeg zijn."],
+                "fields": ["Dit veld is vereist."],
+            },
         )
 
     def test_betrokkene_api_no_fields(self):
@@ -137,7 +143,8 @@ class BrpApiViewTests(APITestCase):
         response = self.client.get(url_no_fields)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(), {"Errors": "Een extra-informatie veld is vereist."}
+            response.json(),
+            {"fields": ["Dit veld is vereist."]},
         )
 
     def test_betrokkene_api_no_valid_fields(self):
@@ -149,7 +156,11 @@ class BrpApiViewTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"Errors": "Veld(en): test, hello, geboorte, zijn niet geldig."},
+            {
+                "fields": [
+                    "Error: Dit veld bevatte: test,hello,geboorte, maar mag alleen een (sub)set zijn van: geboorte.datum, geboorte.land, kinderen, partners, verblijfplaats."
+                ]
+            },
         )
 
     @requests_mock.Mocker()

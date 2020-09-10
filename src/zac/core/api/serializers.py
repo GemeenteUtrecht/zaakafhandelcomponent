@@ -1,9 +1,14 @@
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 
+
 from rest_framework import serializers
 
-from .utils import get_informatieobjecttypen_for_zaak
+from .utils import (
+    CSMultipleChoiceField,
+    ValidFieldChoices,
+    get_informatieobjecttypen_for_zaak,
+)
 
 
 class InformatieObjectTypeSerializer(serializers.Serializer):
@@ -62,6 +67,17 @@ class DocumentInfoSerializer(serializers.Serializer):
             },
         )
         return self.context["request"].build_absolute_uri(path)
+
+
+class ExtraInfoUpSerializer(serializers.Serializer):
+    doelbinding = serializers.CharField(
+        allow_blank=False,
+        required=True,
+    )
+    fields = CSMultipleChoiceField(
+        choices=ValidFieldChoices.choices,
+        required=True,
+    )
 
 
 class ExtraInfoSubjectSerializer(serializers.Serializer):
