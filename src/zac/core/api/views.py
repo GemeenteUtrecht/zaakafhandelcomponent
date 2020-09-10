@@ -15,8 +15,8 @@ from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
     DocumentInfoSerializer,
-    ExtraInfoUpSerializer,
     ExtraInfoSubjectSerializer,
+    ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
@@ -126,7 +126,7 @@ class GetExtraInfoSubjectView(views.APIView):
             "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
             "params": {"fields": fields},
         }
-        
+
         # Get extra info
         extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)
         serializer = ExtraInfoSubjectSerializer(extra_info_inp)

@@ -1,7 +1,8 @@
 from typing import List, Optional, Tuple
 
 from django.utils.translation import ugettext_lazy as _
-from djchoices import DjangoChoices, ChoiceItem
+
+from djchoices import ChoiceItem, DjangoChoices
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 

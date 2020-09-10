@@ -1,7 +1,6 @@
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 
-
 from rest_framework import serializers
 
 from .utils import (
