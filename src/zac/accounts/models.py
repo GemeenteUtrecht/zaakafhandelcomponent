@@ -190,3 +190,10 @@ class AccessRequest(models.Model):
     )
 
     objects = AccessRequestQuerySet.as_manager()
+
+    @classmethod
+    def close_other_requests(cls, access_request):
+        other_open_requests = cls.objects.filter(
+            requester=access_request.requester, zaak=access_request.zaak, result=""
+        ).exclude(id=access_request.id)
+        other_open_requests.update(result=AccessRequestResult.close)

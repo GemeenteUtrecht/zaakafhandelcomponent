@@ -435,7 +435,8 @@ ZAC Team
         instance = super().save(**kwargs)
 
         if instance.result in [AccessRequestResult.approve, AccessRequestResult.reject]:
-            # todo close other access requests
+            # close other access requests of this user for a particular zaak
+            AccessRequest.close_other_requests(instance)
 
             # send email
             self.send_email()
