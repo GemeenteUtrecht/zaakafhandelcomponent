@@ -48,8 +48,8 @@ def permission_denied(request, exception, template_name=ERROR_403_TEMPLATE_NAME)
 
     if request.resolver_match.url_name == "zaak-detail" and request.user:
         kwargs = request.resolver_match.kwargs
-        # todo check if user has already requested access for this zaak
         zaak = find_zaak(**kwargs)
-        context.update({"can_request_access": True, "zaak_kwargs": kwargs})
+        if not request.user.initiated_requests.filter(zaak=zaak.url).exists():
+            context.update({"can_request_access": True, "zaak_kwargs": kwargs})
 
     return http.HttpResponseForbidden(template.render(request=request, context=context))
