@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Zaak
 
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
@@ -72,6 +73,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+    def has_access_to_zaak(self, zaak: Zaak):
+        return self.initiated_requests.filter(
+            zaak=zaak.url, result=AccessRequestResult.approve
+        ).exists()
 
 
 # Permissions
@@ -173,7 +179,11 @@ class AccessRequest(models.Model):
     handler = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="assigned_requests"
     )
-    zaak = models.URLField(_("zaak"), max_length=255)
+    zaak = models.URLField(
+        _("zaak"),
+        max_length=1000,
+        help_text=_("URL reference to the zaak in its API"),
+    )
     comment = models.CharField(_("comment"), max_length=1000, blank=True)
     result = models.CharField(
         _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True

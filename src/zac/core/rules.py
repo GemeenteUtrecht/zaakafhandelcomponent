@@ -37,7 +37,6 @@ class dictwrapper:
 
 
 @register(
-    zaken_inzien,
     zaakproces_send_message,
     zaakproces_usertasks,
     zaken_set_result,
@@ -83,4 +82,19 @@ def can_set_results(user: User, zaak: Optional[Zaak]):
     return _generic_zaakpermission(user, zaak, zaken_set_result)
 
 
+@rules.predicate
+def can_read_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
+    if zaak is None:
+        return _has_permission_key(zaken_set_result.name, user)
+    return _generic_zaakpermission(user, zaak, zaken_inzien)
+
+
+@rules.predicate
+def has_temporary_access(user: User, zaak: Optional[Zaak]):
+    if zaak is None:
+        return False
+    return user.has_access_to_zaak(zaak)
+
+
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
+rules.add_rule(zaken_inzien.name, can_read_zaak_by_zaaktype | has_temporary_access)
