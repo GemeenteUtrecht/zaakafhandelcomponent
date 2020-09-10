@@ -2,7 +2,6 @@ from django.urls import include, path
 
 from . import api
 from .views import (
-    AccessRequestCreateView,
     AuthorizationProfileCreateView,
     AuthorizationProfileDetailView,
     AuthorizationProfileListView,
@@ -54,10 +53,5 @@ urlpatterns = [
         "permission-sets/<pk>/change/",
         PermissionSetUpdateView.as_view(),
         name="permission-set-change",
-    ),
-    path(
-        "access-requests/zaken/<bronorganisatie>/<identificatie>/add",
-        AccessRequestCreateView.as_view(),
-        name="access-request-create",
     ),
 ]

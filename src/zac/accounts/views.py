@@ -2,22 +2,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.auth.views import LoginView as _LoginView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
-
-from zac.core.services import find_zaak
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import (
-    AccessRequestForm,
     AuthorizationProfileForm,
     PermissionSetForm,
     UserAuthorizationProfileForm,
 )
-from .models import (
-    AccessRequest,
-    AuthorizationProfile,
-    PermissionSet,
-    UserAuthorizationProfile,
-)
+from .models import AuthorizationProfile, PermissionSet, UserAuthorizationProfile
 
 
 class LoginView(_LoginView):
@@ -101,29 +93,3 @@ class UserAuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):
             "accounts:authprofile-detail",
             kwargs={"uuid": self.object.auth_profile.uuid},
         )
-
-
-class AccessRequestCreateView(LoginRequiredMixin, FormView):
-    form_class = AccessRequestForm
-    template_name = "accounts/accessrequest_form.html"
-    #  todo add thanks page?
-    success_url = reverse_lazy("core:index")
-
-    def get_zaak(self):
-        return find_zaak(**self.request.resolver_match.kwargs)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        kwargs["requester"] = self.request.user
-        kwargs["zaak"] = self.get_zaak()
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({"zaak": self.get_zaak()})
-        return context
-
-    def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)

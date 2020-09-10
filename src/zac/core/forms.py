@@ -21,6 +21,7 @@ from .fields import DocumentsMultipleChoiceField
 from .services import (
     get_documenten,
     get_resultaattypen,
+    get_rollen,
     get_statustypen,
     get_zaak,
     zet_resultaat,
@@ -317,10 +318,66 @@ class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
     _review_type = "approval"
 
 
+class AccessRequestCreateForm(forms.ModelForm):
+    """
+    Create access request for a particular zaak
+    """
+
+    class Meta:
+        model = AccessRequest
+        fields = ("comment",)
+
+    def __init__(self, *args, **kwargs):
+        self.requester = kwargs.pop("requester")
+        self.zaak = kwargs.pop("zaak")
+
+        super().__init__(*args, **kwargs)
+
+    def get_behandelaars(self):
+        rollen = get_rollen(self.zaak)
+        behandelaar_usernames = [
+            rol.betrokkene_identificatie.get("identificatie")
+            for rol in rollen
+            if rol.betrokkene_type == "medewerker"
+            and rol.omschrijving_generiek == "behandelaar"
+        ]
+        return User.objects.filter(username__in=behandelaar_usernames)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.requester.initiated_requests.filter(zaak=self.zaak.url).exists():
+            raise forms.ValidationError(
+                _("You've already requested access for this zaak")
+            )
+
+        # check that zaak has behandelaars
+        behandelaars = self.get_behandelaars()
+        if not behandelaars:
+            raise forms.ValidationError(_("The zaak doesn't have behandelaars"))
+
+        cleaned_data["behandelaars"] = behandelaars
+        return cleaned_data
+
+    def save(self, *args, **kwargs):
+        behandelaars = self.cleaned_data.pop("behandelaars")
+        request_accesses = []
+        for handler in behandelaars:
+            request_access = AccessRequest.objects.create(
+                handler=handler,
+                requester=self.requester,
+                zaak=self.zaak.url,
+                comment=self.cleaned_data["comment"],
+            )
+            request_accesses.append(request_access)
+
+        return request_accesses
+
+
 class AccessRequestHandleForm(forms.ModelForm):
     """
     Reject or approve access requests for a particular zaak
     """
+
     checked = forms.BooleanField(required=False)
 
     class Meta:

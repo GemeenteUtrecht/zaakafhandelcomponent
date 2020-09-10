@@ -7,8 +7,8 @@
     Request access for {{ zaak.identificatie }}
 </h1>
 
-
-<form action="{% url 'accounts:access-request-create' zaak.bronorganisatie zaak.identificatie %}" method="post" class="form">
+{{ form.non_field_errors }}
+<form action="{% url 'core:access-request-create' zaak.bronorganisatie zaak.identificatie %}" method="post" class="form">
     {% csrf_token %}
 
     {% load_widgets form='sniplates/forms.html' %}

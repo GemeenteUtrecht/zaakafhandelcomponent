@@ -12,15 +12,9 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.core.services import get_rollen, get_zaaktypen
+from zac.core.services import get_zaaktypen
 
-from .models import (
-    AccessRequest,
-    AuthorizationProfile,
-    PermissionSet,
-    User,
-    UserAuthorizationProfile,
-)
+from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
 from .permissions import registry
 
 
@@ -178,54 +172,3 @@ class UserAuthorizationProfileForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         self.instance.auth_profile = self.auth_profile
         return super().save(*args, **kwargs)
-
-
-class AccessRequestForm(forms.ModelForm):
-    class Meta:
-        model = AccessRequest
-        fields = ("comment",)
-
-    def __init__(self, *args, **kwargs):
-        self.requester = kwargs.pop("requester")
-        self.zaak = kwargs.pop("zaak")
-
-        super().__init__(*args, **kwargs)
-
-    def get_behandelaars(self):
-        rollen = get_rollen(self.zaak)
-        behandelaar_usernames = [
-            rol.betrokkene_identificatie.get("identificatie")
-            for rol in rollen
-            if rol.betrokkene_type == "medewerker"
-            and rol.omschrijving_generiek == "behandelaar"
-        ]
-        return User.objects.filter(username__in=behandelaar_usernames)
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if self.requester.initiated_requests.filter(zaak=self.zaak.url).exists():
-            raise forms.ValidationError(
-                _("You've already requested access for this zaak")
-            )
-
-        # check that zaak has behandelaars
-        behandelaars = self.get_behandelaars()
-        if not behandelaars:
-            raise forms.ValidationError(_("The zaak doesn't have behandelaars"))
-
-        cleaned_data["behandelaars"] = behandelaars
-        return cleaned_data
-
-    def save(self, *args, **kwargs):
-        behandelaars = self.cleaned_data.pop("behandelaars")
-        request_accesses = []
-        for handler in behandelaars:
-            request_access = AccessRequest.objects.create(
-                handler=handler,
-                requester=self.requester,
-                zaak=self.zaak.url,
-                comment=self.cleaned_data["comment"],
-            )
-            request_accesses.append(request_access)
-
-        return request_accesses
