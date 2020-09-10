@@ -1,8 +1,10 @@
 import itertools
+import logging
 from typing import Dict, List, Tuple
 
 from django import forms
 from django.conf import settings
+from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
@@ -12,6 +14,7 @@ from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import ZaakType
 
+from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, User
 from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
@@ -27,6 +30,8 @@ from .services import (
     zet_resultaat,
     zet_status,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
@@ -383,3 +388,56 @@ class AccessRequestHandleForm(forms.ModelForm):
     class Meta:
         model = AccessRequest
         fields = ("checked",)
+
+    def __init__(self, **kwargs):
+        self.request = kwargs.pop("request")
+
+        super().__init__(**kwargs)
+
+    def send_email(self):
+        user = self.instance.requester
+
+        if not user.email:
+            logger.warning(f"Email to {user} can't be sent")
+            return
+
+        action = (
+            "approved"
+            if self.instance.result == AccessRequestResult.approve
+            else "rejected"
+        )
+        zaak = get_zaak(zaak_url=self.instance.zaak)
+        zaak_url = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": zaak.bronorganisatie,
+                "identificatie": zaak.identificatie,
+            },
+        )
+        zaak_absolute_url = self.request.build_absolute_uri(zaak_url)
+        message = f"""Dear {user.get_short_name() or user.username}
+
+The access to zaak {zaak.identificatie} is {action}.
+
+{"you can see it here: " + zaak_absolute_url if action == 'approved' else ''}
+
+Best regards,
+ZAC Team
+"""
+        send_mail(
+            subject=f"Access Request to {zaak.identificatie}",
+            message=message,
+            from_email=None,
+            recipient_list=[self.instance.requester.email],
+        )
+
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+
+        if instance.result in [AccessRequestResult.approve, AccessRequestResult.reject]:
+            # todo close other access requests
+
+            # send email
+            self.send_email()
+
+        return instance

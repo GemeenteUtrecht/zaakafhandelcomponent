@@ -2,7 +2,6 @@ from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -350,6 +349,15 @@ class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
         queryset = queryset.filter(result="", handler=self.request.user, zaak=zaak.url)
         return queryset
 
+    def get_formset_kwargs(self):
+        kwargs = super().get_formset_kwargs()
+
+        form_kwargs = kwargs.pop("form_kwargs", {})
+        form_kwargs["request"] = self.request
+        kwargs["form_kwargs"] = form_kwargs
+
+        return kwargs
+
     def get_zaak(self):
         zaak = find_zaak(**self.kwargs)
         return zaak
@@ -359,17 +367,13 @@ class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
         context.update({"zaak": self.get_zaak()})
         return context
 
-    @transaction.atomic
     def formset_valid(self, formset):
-        response = super().formset_valid(formset)
-
         result = self.request.POST["submit"]
 
         for form in formset:
-            access_request = form.instance
             checked = form.cleaned_data["checked"]
-            if checked:
-                access_request.result = result
-                access_request.save(update_fields=["result"])
+            form.instance.result = result if checked else ""
+
+        response = super().formset_valid(formset)
 
         return response
