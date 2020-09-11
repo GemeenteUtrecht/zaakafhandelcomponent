@@ -16,6 +16,7 @@ from .serializers import (
     AddDocumentSerializer,
     DocumentInfoSerializer,
     ExtraInfoSubjectSerializer,
+    ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
@@ -113,52 +114,17 @@ class GetDocumentInfoView(views.APIView):
 
 class GetExtraInfoSubjectView(views.APIView):
     def get(self, request: Request, **kwargs) -> Response:
-        error_messages = []
+        # Serialize data from request.query_params
+        serializer = ExtraInfoUpSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
 
-        # Check if doelbinding is given and valid
-        doelbinding = request.query_params.get("doelbinding", "")
-        if not doelbinding:
-            error_messages.append("Doelbinding is vereist.")
-
-        # Check if fields query parameter is given...
-        fields = request.query_params.get("fields", "")
-        if not fields:
-            error_messages.append("Een extra-informatie veld is vereist.")
-
-        # ... and if they are valid.
-        elif fields:
-            fields = fields.split(",")
-            valid_choices = [
-                "geboorte.datum",
-                "geboorte.land",
-                "kinderen",
-                "partners",
-                "verblijfplaats",
-            ]
-
-            is_subset = [field in valid_choices for field in fields]
-
-            # Feedback why they're not valid
-            if not all(is_subset):
-                not_valid_fields = [
-                    field for valid, field in zip(is_subset, fields) if not valid
-                ]
-                error_messages.append(
-                    "Veld(en): {}, zijn niet geldig.".format(
-                        ", ".join(not_valid_fields)
-                    )
-                )
-
-        # Feedback errors
-        if error_messages:
-            return Response(
-                {"Errors": " ".join(error_messages)}, status=status.HTTP_400_BAD_REQUEST
-            )
+        doelbinding = serializer.data["doelbinding"]
+        fields = serializer.data["fields"]
 
         # Make request_kwargs
         request_kwargs = {
             "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
-            "params": {"fields": ",".join(fields)},
+            "params": {"fields": fields},
         }
 
         # Get extra info
