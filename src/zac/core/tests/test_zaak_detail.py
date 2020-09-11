@@ -13,7 +13,12 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.constants import AccessRequestResult
+from zac.accounts.tests.factories import (
+    AccessRequestFactory,
+    PermissionSetFactory,
+    UserFactory,
+)
 from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.tests.utils import (
     generate_oas_component,
@@ -148,6 +153,9 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         response = self.app.get(self.url, user=self.user, status=403)
 
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.html.find("p").text.strip(), "You can request access for this page"
+        )
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -367,6 +375,47 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_has_temp_auth(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        AccessRequestFactory.create(
+            requester=self.user, zaak=zaak["url"], result=AccessRequestResult.approve
+        )
+
         with mock_zaak_detail_context():
             response = self.app.get(self.url, user=self.user)
 
