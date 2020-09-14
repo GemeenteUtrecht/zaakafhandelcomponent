@@ -252,6 +252,28 @@ Actual input types
 {% endblock DocumentSelectMultiple %}
 
 
+{% block AlfrescoDocument %}
+{% nested_widget ':_wrapper' %}
+    {% reuse '_label' %}
+    {% reuse '_help' %}
+    {% reuse '_errors' %}
+
+    <div
+        class="alfresco-document-selection"
+        data-name="{{ html_name }}"
+        data-id="{{ id_for_label }}"
+        data-username="{{ settings.ALFRESCO_USERNAME }}"
+        data-password="{{ settings.ALFRESCO_PASSWORD }}"
+        data-zaaktype="{{ form_field.field.zaak.zaaktype.url }}"
+        data-bronorganisatie="{{ form_field.field.zaak.bronorganisatie }}"
+    >
+    </div>
+
+{% endnested %}
+{% endblock %}
+
+
+
 Button interactions
 {% block submit %}
 <div class="input">

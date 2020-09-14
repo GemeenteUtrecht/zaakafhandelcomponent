@@ -24,7 +24,7 @@ from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
 
-from .fields import DocumentsMultipleChoiceField
+from .fields import AlfrescoDocumentField, DocumentsMultipleChoiceField
 from .services import (
     get_besluittypen_for_zaaktype,
     get_documenten,
@@ -490,15 +490,22 @@ class BesluitForm(forms.Form):
         help_text=_("Ingangsdatum van de werkingsperiode van het besluit."),
     )
 
+    document = AlfrescoDocumentField(
+        required=False,
+        label=_("Document"),
+        help_text=_("Document waarin het besluit is vastgelegd."),
+    )
+
     def __init__(self, *args, **kwargs):
         self.zaak: Zaak = kwargs.pop("zaak")
         super().__init__(*args, **kwargs)
+
+        self.fields["document"].zaak = self.zaak
 
         besluittypen = {
             besluittype.url: besluittype
             for besluittype in get_besluittypen_for_zaaktype(self.zaak.zaaktype)
         }
-
         self.fields["besluittype"].choices = dict_to_choices(besluittypen)
         self.fields["besluittype"].coerce = besluittypen.get
 
