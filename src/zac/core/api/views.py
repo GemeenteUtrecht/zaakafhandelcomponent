@@ -15,6 +15,7 @@ from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
     DocumentInfoSerializer,
+    ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
@@ -115,19 +116,28 @@ class GetDocumentInfoView(views.APIView):
 class GetExtraInfoSubjectView(views.APIView):
     def get(self, request: Request, **kwargs) -> Response:
         # Serialize data from request.query_params
-        serializer = ExtraInfoUpSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
+        fields_serializer = ExtraInfoUpSerializer(data=request.query_params)
+        fields_serializer.is_valid(raise_exception=True)
 
-        doelbinding = serializer.data["doelbinding"]
-        fields = serializer.data["fields"]
+        doelbinding = fields_serializer.data["doelbinding"]
+        fields = fields_serializer.data["fields"]
+
+        expand_serializer = ExpandParamSerializer(data={"fields": fields})
+        expand_serializer.is_valid(raise_exception=True)
+        expand = expand_serializer.data["fields"]
 
         # Make request_kwargs
         request_kwargs = {
             "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
-            "params": {"fields": fields},
+            "params": {
+                "fields": fields,
+                "expand": expand,
+            },
         }
 
         # Get extra info
         extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)
+        extra_info_inp.clean_verblijfplaats()
+
         serializer = ExtraInfoSubjectSerializer(extra_info_inp)
         return Response(serializer.data)

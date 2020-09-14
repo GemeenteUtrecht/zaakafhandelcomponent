@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from .utils import (
     CSMultipleChoiceField,
+    ValidExpandChoices,
     ValidFieldChoices,
     get_informatieobjecttypen_for_zaak,
 )
@@ -68,14 +69,23 @@ class DocumentInfoSerializer(serializers.Serializer):
         return self.context["request"].build_absolute_uri(path)
 
 
+class ExpandParamSerializer(serializers.Serializer):
+    fields = CSMultipleChoiceField(
+        choices=ValidExpandChoices.choices,
+        required=False,
+    )
+
+
 class ExtraInfoUpSerializer(serializers.Serializer):
     doelbinding = serializers.CharField(
         allow_blank=False,
         required=True,
     )
+
     fields = CSMultipleChoiceField(
         choices=ValidFieldChoices.choices,
         required=True,
+        strict=True,
     )
 
 
