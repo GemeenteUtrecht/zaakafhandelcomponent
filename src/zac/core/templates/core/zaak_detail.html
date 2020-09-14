@@ -109,13 +109,13 @@
         </div>
 
         <div class="section-title">Betrokkenen</div>
-            <table class="table">
+            <table class="table table--fit">
                 <thead>
                     <tr>
-                        <th class="table__header">Type</th>
-                        <th class="table__header">Rol</th>
-                        <th class="table__header">Naam</th>
-                        <th class="table__header">BSN</th>
+                        <th class="table__header table__column table__column--2cols">Type</th>
+                        <th class="table__header table__column table__column--2cols">Rol</th>
+                        <th class="table__header table__column table__column--6cols">Naam</th>
+                        <th class="table__header table__column table__column--2cols">Identificatie</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,7 +123,9 @@
                         <tr>
                             <td>{{ rol.get_betrokkene_type_display }}</td>
                             <td>{{ rol.get_omschrijving_generiek_display }}</td>
-                            <td>{{ rol.get_name|default:'' }}</td>
+                            {% with rol.get_name|default:'' as name %}
+                                <td class="table__column table__column--truncate" title="{{ name }}">{{ name }}</td>
+                            {% endwith %}
                             <td>{{ rol.get_bsn|default:'' }}</td>
                         </tr>
                     {% endfor %}
@@ -295,7 +297,7 @@
             <tbody>
                 {% for document in documenten %}
                     <tr>
-                        <td> 
+                        <td>
                             {% if document.locked %}
                             <span class="material-icons">lock</span>
                             {% else %}
