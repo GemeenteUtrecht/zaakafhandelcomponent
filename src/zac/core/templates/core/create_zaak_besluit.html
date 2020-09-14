@@ -1,6 +1,13 @@
 {% extends "core/zaak_detail.html" %}
-{% load i18n sniplates %}
+{% load i18n sniplates static %}
 
+{% block extra_css %}
+<base href="{% static 'js/vendor/contezza/' %}" />
+{% endblock %}
+
+{% block post-body %}
+<script src="{% static 'js/vendor/contezza/documentlist.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 
@@ -37,6 +44,16 @@
                 {% form_field form.beslisdatum %}
                 {% form_field form.ingangsdatum %}
             </div>
+
+            <contezza-documentlist
+                id="doclist"
+                username="{{ settings.ALFRESCO_USERNAME }}"
+                password="{{ settings.ALFRESCO_PASSWORD }}"
+                mode="browse"
+                rootfolder="-root-"
+                zaaktypeurl="{{ zaak.zaaktype.url }}"
+                bronorganisatie="002220647"
+            />
 
         </section>
 
