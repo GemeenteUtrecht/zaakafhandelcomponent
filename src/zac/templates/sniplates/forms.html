@@ -89,7 +89,7 @@ Actual input types
     {% reuse "_label" %}
     {% reuse "_help" %}
     {% reuse "_errors" %}
-    {% reuse "input" input_type="text" css_classes=css_classes|add:" input__control--text" %}
+    {% reuse "input" input_type="text" raw_value=value css_classes=css_classes|add:" input__control--text" %}
 {% endnested %}
 {% endblock %}
 

@@ -1,0 +1,51 @@
+{% extends "core/zaak_detail.html" %}
+{% load i18n sniplates %}
+
+
+{% block content %}
+
+<a href="{% url 'core:zaak-detail' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}" class="link link--backlink">
+    Terug naar de zaakgegevens
+</a>
+
+<header class="zaak-detail-page__header">
+
+    <h1 class="page-title" title="Zaaktype">
+        Besluit toevoegen
+        <br>
+        <small class="page-title__extra" title="Zaaktype">
+            {{ zaak.zaaktype.omschrijving }}
+        </small>
+    </h1>
+
+</header>
+
+<article class="zaak-detail">
+
+    {% load_widgets form='sniplates/forms.html' %}
+
+    {% widget 'form:non_field_errors' %}
+
+    <form action="." method="post" class="form form--wide">
+        {% csrf_token %}
+
+        <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
+
+            {% form_field form.besluittype %}
+
+            <div class="form__field-group" role="group">
+                {% form_field form.beslisdatum %}
+                {% form_field form.ingangsdatum %}
+            </div>
+
+        </section>
+
+        <div class="btn-row">
+            {% widget 'form:submit' label=_("Toevoegen") %}
+        </div>
+
+    </form>
+
+</article>
+
+{% endblock content %}

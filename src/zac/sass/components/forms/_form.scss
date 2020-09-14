@@ -28,6 +28,10 @@ $form-centered-width--normal: 40vw !default;
     padding-right: 2rem;
   }
 
+  @include modifier("wide") {
+    width: calc(100% - 2rem);
+  }
+
   & &__group-title {
     font-size: 1.2rem;
 

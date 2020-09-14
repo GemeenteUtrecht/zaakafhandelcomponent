@@ -81,6 +81,13 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 ###################################################
 
 
+@cache_result("besluittype:{url}", timeout=A_DAY)
+def fetch_besluittype(url: str) -> BesluitType:
+    client = _client_from_url(url)
+    result = client.retrieve("besluittype", url=url)
+    return factory(BesluitType, result)
+
+
 def _get_from_catalogus(resource: str, catalogus: str = "") -> List:
     """
     Retrieve informatieobjecttype or zaaktypen from all catalogi in the configured APIs.
@@ -126,13 +133,6 @@ def get_zaaktypen(
         # filter out zaaktypen from permissions
         zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
     return zaaktypen
-
-
-@cache_result("besluittype:{url}", timeout=A_DAY)
-def fetch_besluittype(url: str) -> BesluitType:
-    client = _client_from_url(url)
-    result = client.retrieve("besluittype", url=url)
-    return factory(BesluitType, result)
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -238,6 +238,13 @@ def get_informatieobjecttype(url: str) -> InformatieObjectType:
     client = _client_from_url(url)
     data = client.retrieve("informatieobjecttype", url=url)
     return factory(InformatieObjectType, data)
+
+
+@cache_result("zt:besluittypen:{zaaktype.url}")
+def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
+    with parallel() as executor:
+        results = executor.map(fetch_besluittype, zaaktype.besluittypen)
+    return list(results)
 
 
 ###################################################

@@ -18,6 +18,17 @@
         </small>
     </h1>
 
+    <nav class="page-controls page-controls--align-right">
+        <a
+            href="{% url 'core:add-besluit' bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}"
+            class="link link--plain"
+        >
+            <button type="button" class="btn btn--control btn btn--control-focus">
+                <i class="material-icons">add</i> Nieuw besluit
+            </button>
+        </a>
+    </nav>
+
 </header>
 
 <article class="zaak-detail">
