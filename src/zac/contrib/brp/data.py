@@ -33,7 +33,7 @@ class ExtraInformatieIngeschrevenNatuurlijkPersoon(Model):
     def clear_whitespaces(self, string: str) -> str:
         return " ".join(string.split())
 
-    def clean_verblijfplaats(self) -> dict:
+    def clean_verblijfplaats(self) -> Optional[dict]:
         if not self.verblijfplaats:
             return None
 
@@ -49,7 +49,7 @@ class ExtraInformatieIngeschrevenNatuurlijkPersoon(Model):
             "postcode": postcode,
         }
 
-    def get_basic_info_person(self, persons: list) -> list:
+    def get_basic_info_person(self, persons: list) -> Optional[list]:
         if not persons:
             return None
 
