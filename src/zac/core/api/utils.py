@@ -24,17 +24,24 @@ class ValidFieldChoices(DjangoChoices):
     verblijfplaats = ChoiceItem("verblijfplaats")
 
 
+class ValidExpandChoices(DjangoChoices):
+    kinderen = ChoiceItem("kinderen")
+    partners = ChoiceItem("partners")
+
+
 class CSMultipleChoiceField(serializers.Field):
     def __init__(
         self,
         *args,
         choices: Optional[Tuple] = (),
         required: Optional[bool] = False,
+        strict: Optional[bool] = False,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.choices = choices
         self.required = required
+        self.strict = strict
 
     def to_representation(self, data):
         if not isinstance(data, list):
@@ -62,7 +69,7 @@ class CSMultipleChoiceField(serializers.Field):
                 any(value in choice_tuple for choice_tuple in self.choices)
                 for value in values
             ]
-            if not all(is_subset):
+            if self.strict and not all(is_subset):
                 invalid_choices_string = ",".join(
                     [value for value, valid in zip(values, is_subset) if not valid]
                 )
@@ -72,5 +79,8 @@ class CSMultipleChoiceField(serializers.Field):
                         f"Error: Dit veld bevatte: {invalid_choices_string}, maar mag alleen een (sub)set zijn van: {valid_choices_string}."
                     )
                 )
+            else:
+                subset = [value for value, valid in zip(values, is_subset) if valid]
+                values = subset.copy()
 
         return values

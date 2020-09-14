@@ -168,20 +168,33 @@ class BrpApiViewTests(APITestCase):
         service, config = setup_BRP_service()
         headers = {"X-NLX-Request-Subject-Identifier": "test"}
         extra_info = {
-            "_links": {"kinderen": [{"href": "testkind"}]},
+            "_embedded": {
+                "kinderen": [
+                    {
+                        "naam": {
+                            "voorletters": "A.",
+                            "geslachtsnaam": "Einstein",
+                        },
+                        "burgerservicenummer": "99999EMC2",
+                        "geboorte": {"datum": {"datum": "14-03-1879"}},
+                    }
+                ]
+            },
             "geboorte": {
                 "datum": {"datum": "31-03-1989"},
             },
         }
         mock_service_oas_get(m, BRP_API_ROOT, "brp", oas_url=f"{BRP_API_ROOT}schema")
         m.get(
-            PERSOON_URL + "?fields=geboorte.datum,kinderen",
+            PERSOON_URL
+            + "?fields=geboorte.datum,kinderen,verblijfplaats&expand=kinderen",
             headers=headers,
             json=extra_info,
         )
 
         response = self.client.get(
-            self.base_url + "?doelbinding=test&fields=geboorte.datum,kinderen",
+            self.base_url
+            + "?doelbinding=test&fields=geboorte.datum,kinderen,verblijfplaats",
             headers=headers,
         )
         self.assertEqual(response.status_code, 200)
@@ -190,7 +203,13 @@ class BrpApiViewTests(APITestCase):
             {
                 "geboortedatum": "31-03-1989",
                 "geboorteland": None,
-                "kinderen": [{"href": "testkind"}],
+                "kinderen": [
+                    {
+                        "naam": "A. Einstein",
+                        "burgerservicenummer": "99999EMC2",
+                        "geboortedatum": "14-03-1879",
+                    }
+                ],
                 "verblijfplaats": None,
                 "partners": None,
             },

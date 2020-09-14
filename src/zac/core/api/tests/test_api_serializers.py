@@ -14,8 +14,16 @@ class TestCSMultipleChoiceField(TestCase):
         self.string = "1,2"
         self.choices = tuple((_, _) for _ in self.list)
 
+        self.strict_field_with_choices = CSMultipleChoiceField(
+            choices=self.choices,
+            required=True,
+            strict=True,
+        )
+
         self.field_with_choices = CSMultipleChoiceField(
-            choices=self.choices, required=True
+            choices=self.choices,
+            required=True,
+            strict=False,
         )
 
     def test_field_to_representation_expects_list(self):
@@ -42,14 +50,20 @@ class TestCSMultipleChoiceField(TestCase):
         )
         self.assertEqual(exception_details["code"], "invalid")
 
-    def test_field_values_part_of_choices(self):
+    def test_strict_field_values_part_of_choices(self):
         self.invalid_string = "2,3"
 
         with self.assertRaises(serializers.ValidationError) as cm:
-            self.field_with_choices.to_internal_value(self.invalid_string)
+            self.strict_field_with_choices.to_internal_value(self.invalid_string)
 
         exception_details = cm.exception.get_full_details()[0]
         self.assertEqual(
             exception_details["message"],
             "Error: Dit veld bevatte: 3, maar mag alleen een (sub)set zijn van: 1, 2.",
         )
+
+    def test_field_values_part_of_choices(self):
+        self.invalid_string = "2,3"
+        result = self.field_with_choices.to_internal_value(self.invalid_string)
+
+        self.assertEqual(result, ["2"])
