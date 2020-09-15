@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from django.utils.translation import gettext_lazy as _
@@ -7,6 +8,8 @@ from zgw_consumers.api_models.zaken import Rol as _Rol
 
 from zac.contrib.brp.api import fetch_natuurlijkpersoon
 from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
+
+logger = logging.getLogger(__name__)
 
 
 class Rol(_Rol):
@@ -54,7 +57,10 @@ def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
 
 def get_naam_medewerker(rol: Rol) -> Optional[str]:
     if rol.betrokkene:
-        raise NotImplementedError("Don't know how to handle medewerker URLs")
+        logger.warning(
+            "Don't know how to handle medewerker URLs (got %s)", rol.betrokkene
+        )
+        return f"NotImplementedError: {rol.betrokkene}"
 
     bits = [
         rol.betrokkene_identificatie["voorletters"],

@@ -61,13 +61,13 @@ const BetrokkenenTable = ({ betrokkeneNodes }) => {
     });
 
     return (
-        <table className="table">
+        <table className="table table--fit">
             <thead>
                 <tr>
-                    <th className="table__header">Type</th>
-                    <th className="table__header">Rol</th>
-                    <th className="table__header">Naam</th>
-                    <th className="table__header">BSN</th>
+                    <th className="table__header table__column table__column--2cols">Type</th>
+                    <th className="table__header table__column table__column--2cols">Rol</th>
+                    <th className="table__header table__column table__column--6cols">Naam</th>
+                    <th className="table__header table__column table__column--2cols">Identificatie</th>
                 </tr>
             </thead>
             <tbody>

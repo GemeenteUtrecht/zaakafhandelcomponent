@@ -113,14 +113,16 @@
             {# React managed #}
         </div>
         {% for rol in rollen %}
-            <div class="betrokkene-data"
-                data-type="{{ rol.get_betrokkene_type_display }}"
-                data-role="{{ rol.get_omschrijving_generiek_display }}"
-                data-name="{{ rol.get_name|default:'' }}"
-                data-bsn="{{ rol.get_bsn|default:'' }}"
-            >
-                {# React managed #}
-            </div>
+            {% with rol.get_name|default:'' as name %}
+                <div class="betrokkene-data"
+                    data-type="{{ rol.get_betrokkene_type_display }}"
+                    data-role="{{ rol.get_omschrijving_generiek_display }}"
+                    data-name="{{ name }}"
+                    data-bsn="{{ rol.get_bsn|default:'' }}"
+                >
+                    {# React managed #}
+                </div>
+            {% endwith %}
         {% endfor %}
     </section>
 
