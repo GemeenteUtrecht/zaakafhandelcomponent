@@ -109,27 +109,19 @@
         </div>
 
         <div class="section-title">Betrokkenen</div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th class="table__header">Type</th>
-                        <th class="table__header">Rol</th>
-                        <th class="table__header">Naam</th>
-                        <th class="table__header">BSN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rol in rollen %}
-                        <tr>
-                            <td>{{ rol.get_betrokkene_type_display }}</td>
-                            <td>{{ rol.get_omschrijving_generiek_display }}</td>
-                            <td>{{ rol.get_name|default:'' }}</td>
-                            <td>{{ rol.get_bsn|default:'' }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
+        <div id="betrokkenen-react">
+            {# React managed #}
+        </div>
+        {% for rol in rollen %}
+            <div class="betrokkene-data"
+                data-type="{{ rol.get_betrokkene_type_display }}"
+                data-role="{{ rol.get_omschrijving_generiek_display }}"
+                data-name="{{ rol.get_name|default:'' }}"
+                data-bsn="{{ rol.get_bsn|default:'' }}"
+            >
+                {# React managed #}
+            </div>
+        {% endfor %}
     </section>
 
     <section class="zaak-detail__panel content-panel">
@@ -295,7 +287,7 @@
             <tbody>
                 {% for document in documenten %}
                     <tr>
-                        <td> 
+                        <td>
                             {% if document.locked %}
                             <span class="material-icons">lock</span>
                             {% else %}

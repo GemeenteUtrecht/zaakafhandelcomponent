@@ -22,3 +22,10 @@ $loader-duration: 1s !default;
 
   animation: spin $loader-duration linear infinite;
 }
+
+.loader-wrapper {
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
