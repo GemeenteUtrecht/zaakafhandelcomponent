@@ -1,3 +1,4 @@
+from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 
@@ -77,6 +78,19 @@ class ExpandParamSerializer(serializers.Serializer):
 
 
 class ExtraInfoUpSerializer(serializers.Serializer):
+    burgerservicenummer = serializers.CharField(
+        allow_blank=False,
+        required=True,
+        max_length=9,
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{9}$",
+                message="Een BSN heeft 9 cijfers.",
+                code="invalid",
+            )
+        ],
+    )
+
     doelbinding = serializers.CharField(
         allow_blank=False,
         required=True,

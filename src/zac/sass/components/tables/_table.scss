@@ -1,5 +1,6 @@
-@import "../../lib/colors";
 @import "../../lib/bem";
+@import "../../lib/colors";
+@import "../../lib/typography";
 
 $table-head-border-color: $color-secondary !default;
 
@@ -17,6 +18,10 @@ $table-head-border-color: $color-secondary !default;
       padding-top: 6px;
       padding-bottom: 6px;
     }
+  }
+
+  @include modifier('fit') {
+    table-layout: fixed;
   }
 
   @include element('header') {
@@ -59,6 +64,10 @@ $table-head-border-color: $color-secondary !default;
 
     @include modifier('6cols') {
       width: 100% / 12 * 6;
+    }
+
+    @include modifier('truncate') {
+      @include ellipsis;
     }
   }
 
