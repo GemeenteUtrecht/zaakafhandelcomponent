@@ -46,7 +46,7 @@ def permission_denied(request, exception, template_name=ERROR_403_TEMPLATE_NAME)
 
     context = {"exception": str(exception), "can_request_access": False}
 
-    if request.resolver_match.url_name == "zaak-detail" and request.user:
+    if request.resolver_match.url_name == "zaak-detail" and request.user.is_authenticated:
         kwargs = request.resolver_match.kwargs
         zaak = find_zaak(**kwargs)
         if not request.user.initiated_requests.filter(zaak=zaak.url).exists():

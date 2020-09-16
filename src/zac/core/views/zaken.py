@@ -316,7 +316,7 @@ class AccessRequestCreateView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy("core:index")
 
     def get_zaak(self):
-        return find_zaak(**self.request.resolver_match.kwargs)
+        return find_zaak(**self.kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

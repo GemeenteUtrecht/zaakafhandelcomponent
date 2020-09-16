@@ -398,7 +398,7 @@ class AccessRequestHandleForm(forms.ModelForm):
         user = self.instance.requester
 
         if not user.email:
-            logger.warning(f"Email to {user} can't be sent")
+            logger.warning("Email to %s can't be sent - no known e-mail", user)
             return
 
         action = (
@@ -427,7 +427,7 @@ ZAC Team
         send_mail(
             subject=f"Access Request to {zaak.identificatie}",
             message=message,
-            from_email=None,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[self.instance.requester.email],
         )
 
