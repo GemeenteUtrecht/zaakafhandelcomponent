@@ -55,19 +55,19 @@ const BetrokkenenTable = ({ betrokkeneNodes }) => {
                 role={role}
                 name={name}
                 bsn={bsn}
-                key={node.id}
+                key={name}
             />
         );
     });
 
     return (
-        <table className="table">
+        <table className="table table--fit">
             <thead>
                 <tr>
-                    <th className="table__header">Type</th>
-                    <th className="table__header">Rol</th>
-                    <th className="table__header">Naam</th>
-                    <th className="table__header">BSN</th>
+                    <th className="table__header table__column table__column--4cols">Type</th>
+                    <th className="table__header table__column table__column--2cols">Rol</th>
+                    <th className="table__header table__column table__column--4cols">Naam</th>
+                    <th className="table__header table__column table__column--2cols">Identificatie</th>
                 </tr>
             </thead>
             <tbody>

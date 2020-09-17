@@ -1,39 +1,41 @@
 import React, { useState } from 'react';
-import classnames from 'classnames';
 import PropTypes from 'prop-types';
 
-const Checkbox = ({
-    onChange,
-    value,
-    id,
-    name,
-}) => {
+const Checkbox = ({ option, onChange }) => {
     const [checked, updateChecked] = useState(false);
+
     return (
         <div
-            className={classnames('checkbox-select__checkbox', {
-                'checkbox-select__checkbox--checked': checked,
-            })}
+            className="checkbox-select__checkbox"
             onClick={() => updateChecked(!checked)}
         >
             <input
-                id={id}
-                name={name}
-                className="checkbox-select__inner"
-                onClick={() => updateChecked(!checked)}
+                id={option.id}
+                name={option.name}
                 onChange={(e) => onChange(e)}
                 type="checkbox"
-                value={value}
+                value={option.value}
             />
+            <label
+                className="checkbox-select__label"
+                htmlFor={option.id}
+            >
+                {option.label}
+            </label>
         </div>
     );
 };
 
 Checkbox.propTypes = {
     onChange: PropTypes.func,
-    value: PropTypes.string,
-    id: PropTypes.string,
-    name: PropTypes.string,
+    option: PropTypes.shape(
+        {
+            value: PropTypes.string,
+            id: PropTypes.string,
+            name: PropTypes.string,
+            label: PropTypes.string,
+        },
+    ),
 };
 
 export default Checkbox;

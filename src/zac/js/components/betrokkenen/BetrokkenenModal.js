@@ -11,7 +11,7 @@ const modalStyles = {
     },
 };
 
-const ModalChild = ({ bsn }) => {
+const ModalChild = ({ bsn, closeModal }) => {
     const [showFormState, setShowForm] = useState(true);
     const [resultData, setResultData] = useState({});
 
@@ -21,7 +21,9 @@ const ModalChild = ({ bsn }) => {
     }
 
     if (!showFormState) {
-        return <BetrokkenenResult data={resultData} />;
+        return (
+            <BetrokkenenResult data={resultData} closeModal={closeModal} />
+        );
     }
     return (
         <BetrokkenenForm
@@ -33,10 +35,13 @@ const ModalChild = ({ bsn }) => {
 
 ModalChild.propTypes = {
     bsn: PropTypes.string,
+    closeModal: PropTypes.func,
 };
 
 const BetrokkenenModal = ({ isOpen, setIsOpen, bsn }) => {
-    const closeModal = () => setIsOpen(false);
+    const closeModal = () => {
+        setIsOpen(false);
+    };
 
     return (
         <Modal
@@ -46,7 +51,7 @@ const BetrokkenenModal = ({ isOpen, setIsOpen, bsn }) => {
             style={modalStyles}
         >
             <button type="button" onClick={closeModal} className="modal__close btn">&times;</button>
-            <ModalChild bsn={bsn} />
+            <ModalChild bsn={bsn} closeModal={closeModal} />
         </Modal>
     );
 };

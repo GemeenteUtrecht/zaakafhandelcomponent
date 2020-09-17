@@ -1,26 +1,8 @@
-.textarea {
-  font: inherit;
-  font-size: 1rem;
-  background: #fff;
-  border: solid 1px #eee;
-  border-radius: 0;
-  color: #1d1d1c;
-  overflow: visible;
-  padding: 0.5rem 1rem;
-  box-shadow: none;
-  display: inline-block;
-  margin-right: 2rem;
-  min-width: 0;
-  width: 100%;
-
-  &:focus {
-    outline: 2px solid $color-secondary;
-  }
-
-  &__label {
-    display: block;
-    margin-bottom: 0.4em;
-    font-size: 1rem;
-    font-weight: normal;
+@import "../../lib/bem";
+.input {
+  @include element("control") {
+    @include modifier("text") {
+      font-size: 1rem;
+    }
   }
 }
