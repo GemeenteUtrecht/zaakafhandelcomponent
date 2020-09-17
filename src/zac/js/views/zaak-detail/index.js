@@ -52,10 +52,15 @@ const initBetrokkenenTable = () => {
     if (!node) {
         return;
     }
+
+    const { csrftoken } = node.dataset;
+
     const dataNodes = document.querySelectorAll('.betrokkene-data');
 
     ReactDOM.render(
-        <BetrokkenenTable betrokkeneNodes={dataNodes} />,
+        <CsrfTokenContext.Provider value={csrftoken}>
+            <BetrokkenenTable betrokkeneNodes={dataNodes} />
+        </CsrfTokenContext.Provider>,
         node,
     );
 };

@@ -15,9 +15,8 @@ const RawTextArea = ({
     onChange,
     required = false,
     disabled = false,
-    ref,
 }) => {
-    const classNames = classes || 'input__control input__control--text';
+    const classNames = classes || 'input__control input__control--textarea';
 
     const extraProps = {};
     if (id) {

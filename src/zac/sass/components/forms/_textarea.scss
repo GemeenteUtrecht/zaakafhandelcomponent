@@ -1,8 +1,0 @@
-@import "../../lib/bem";
-.input {
-  @include element("control") {
-    @include modifier("text") {
-      font-size: 1rem;
-    }
-  }
-}

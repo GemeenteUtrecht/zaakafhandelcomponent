@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { useImmerReducer } from 'use-immer';
-import { apiCall } from '../../utils/fetch';
+import { apiCall, post } from '../../utils/fetch';
 import { TextArea } from '../forms/TextArea';
 import { ErrorList, SubmitRow } from '../forms/Utils';
 import Options from '../forms/Options';
+import { CsrfTokenContext } from '../forms/context';
 
 const betrokkeneFields = [
     {
@@ -101,39 +102,25 @@ function reducer(draft, action) {
     }
 }
 
-const getBetrokkeneData = async (endpoint, formData) => {
-    const params = new URLSearchParams();
-    params.set('doelbinding', formData.doelbinding);
-    params.set('fields', formData.betrokkeneFields);
-
-    const url = `${endpoint}?${params.toString()}`;
-
+const postBetrokkeneData = async (endpoint, csrftoken, formData) => {
     // send the API call
-    const response = await apiCall(
-        url,
-        {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-            },
-        },
-    );
+    const response = await post(endpoint, csrftoken, formData);
 
     if (response.status >= 500) {
         throw new Error('Server error.');
     }
 
-    const responseData = await response.json();
     return {
         ok: response.ok,
         status: response.status,
-        data: responseData,
+        data: response.data,
     };
 };
 
 const BetrokkenenForm = ({ bsn, onFetchBetrokkeneComplete }) => {
-    const endpoint = `/core/api/betrokkene/${bsn}/info`;
+    const endpoint = '/core/api/betrokkene/info';
     const [state, dispatch] = useImmerReducer(reducer, initialState);
+    const csrftoken = useContext(CsrfTokenContext);
 
     const handleChange = (event) => {
         const { name, value, checked } = event.target;
@@ -159,14 +146,15 @@ const BetrokkenenForm = ({ bsn, onFetchBetrokkeneComplete }) => {
 
     const onSubmit = async (event) => {
         const formData = {
-            betrokkeneFields: state.fields.value,
+            burgerservicenummer: bsn,
             doelbinding: state.doelbinding.value,
+            fields: state.fields.value.join(),
         };
         event.preventDefault();
 
         dispatch({ type: 'FETCH_STARTED' });
 
-        const fetchBetrokkeneResult = await getBetrokkeneData(endpoint, formData);
+        const fetchBetrokkeneResult = await postBetrokkeneData(endpoint, csrftoken, formData);
 
         dispatch({ type: 'FETCH_COMPLETED' });
 
