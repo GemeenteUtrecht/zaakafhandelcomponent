@@ -346,7 +346,9 @@ class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
         queryset = super().get_queryset()
 
         zaak = self.get_zaak()
-        queryset = queryset.filter(result="", handler=self.request.user, zaak=zaak.url)
+        queryset = queryset.filter(
+            result="", handlers__in=[self.request.user], zaak=zaak.url
+        )
         return queryset
 
     def get_formset_kwargs(self):

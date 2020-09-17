@@ -355,27 +355,18 @@ class AccessRequestCreateForm(forms.ModelForm):
                 _("You've already requested access for this zaak")
             )
 
-        # check that zaak has behandelaars
-        behandelaars = self.get_behandelaars()
-        if not behandelaars:
-            raise forms.ValidationError(_("The zaak doesn't have behandelaars"))
-
-        cleaned_data["behandelaars"] = behandelaars
         return cleaned_data
 
     def save(self, *args, **kwargs):
-        behandelaars = self.cleaned_data.pop("behandelaars")
-        request_accesses = []
-        for handler in behandelaars:
-            request_access = AccessRequest.objects.create(
-                handler=handler,
-                requester=self.requester,
-                zaak=self.zaak.url,
-                comment=self.cleaned_data["comment"],
-            )
-            request_accesses.append(request_access)
+        self.instance.requester = self.requester
+        self.instance.zaak = self.zaak.url
+        request_access = super().save()
 
-        return request_accesses
+        behandelaars = self.get_behandelaars()
+        if behandelaars:
+            request_access.handlers.add(*behandelaars)
+
+        return request_access
 
 
 class AccessRequestHandleForm(forms.ModelForm):
@@ -434,11 +425,7 @@ ZAC Team
     def save(self, **kwargs):
         instance = super().save(**kwargs)
 
-        if instance.result in [AccessRequestResult.approve, AccessRequestResult.reject]:
-            # close other access requests of this user for a particular zaak
-            AccessRequest.close_other_requests(instance)
-
-            # send email
-            self.send_email()
+        # send email
+        self.send_email()
 
         return instance

@@ -176,8 +176,8 @@ class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
     )
-    handler = models.ForeignKey(
-        "User", on_delete=models.CASCADE, related_name="assigned_requests"
+    handlers = models.ManyToManyField(
+        "User", blank=True, help_text=_("users who can provide access to the zaak")
     )
     zaak = models.URLField(
         _("zaak"),
@@ -190,10 +190,3 @@ class AccessRequest(models.Model):
     )
 
     objects = AccessRequestQuerySet.as_manager()
-
-    @classmethod
-    def close_other_requests(cls, access_request):
-        other_open_requests = cls.objects.filter(
-            requester=access_request.requester, zaak=access_request.zaak, result=""
-        ).exclude(id=access_request.id)
-        other_open_requests.update(result=AccessRequestResult.close)

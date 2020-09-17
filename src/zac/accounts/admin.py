@@ -55,6 +55,6 @@ class UserAuthorizationProfileAdmin(admin.ModelAdmin):
 
 @admin.register(AccessRequest)
 class AccessRequestAdmin(admin.ModelAdmin):
-    list_display = ("requester", "handler", "result")
-    list_filter = ("requester", "handler", "result")
+    list_display = ("requester", "result")
+    list_filter = ("requester", "result")
     search_fields = ("requester__username", "zaak")

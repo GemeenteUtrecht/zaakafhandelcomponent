@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from django.urls import reverse, reverse_lazy
 
 import requests_mock
@@ -109,11 +110,11 @@ class CreateAccessRequestTests(TransactionWebTest):
         access_request = AccessRequest.objects.get()
 
         self.assertEqual(access_request.requester, self.user)
-        self.assertEqual(access_request.handler, handler)
+        self.assertEqual(list(access_request.handlers.all()), [handler])
         self.assertEqual(access_request.zaak, self.zaak["url"])
         self.assertEqual(access_request.comment, "some comment")
 
-    def test_create_fail_no_zaak_behandelaars(self, m):
+    def test_create_no_zaak_behandelaars(self, m):
         self._setUpMocks(m)
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
@@ -126,13 +127,13 @@ class CreateAccessRequestTests(TransactionWebTest):
 
         response = form.submit()
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.html.find(class_="errorlist").text,
-            "The zaak doesn't have behandelaars",
-        )
+        self.assertEqual(response.status_code, 302)
 
-        self.assertEqual(AccessRequest.objects.count(), 0)
+        access_request = AccessRequest.objects.get()
+
+        self.assertEqual(access_request.requester, self.user)
+        self.assertEqual(access_request.zaak, self.zaak["url"])
+        self.assertEqual(access_request.handlers.count(), 0)
 
     def test_create_fail_other_access_request(self, m):
         self._setUpMocks(m)
@@ -216,10 +217,22 @@ class HandleAccessRequestsTests(TransactionWebTest):
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json=paginated_response([self.zaak]),
         )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
 
     def test_approve_access_requests(self, mock_send, mock_request):
         self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(2, handler=self.user, zaak=self.zaak["url"])
+        AccessRequestFactory.create_batch(
+            2, handlers=[self.user], zaak=self.zaak["url"]
+        )
 
         get_response = self.app.get(self.url)
 
@@ -238,7 +251,7 @@ class HandleAccessRequestsTests(TransactionWebTest):
 
         mock_send.assert_called_once_with(
             recipient_list=[approved_request.requester.email],
-            from_email=None,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             subject=f"Access Request to {IDENTIFICATIE}",
             message=f"""Dear {approved_request.requester.username}
 
@@ -253,7 +266,9 @@ ZAC Team
 
     def test_reject_access_requests(self, mock_send, mock_request):
         self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(2, handler=self.user, zaak=self.zaak["url"])
+        AccessRequestFactory.create_batch(
+            2, handlers=[self.user], zaak=self.zaak["url"]
+        )
 
         get_response = self.app.get(self.url)
 
@@ -272,7 +287,7 @@ ZAC Team
 
         mock_send.assert_called_once_with(
             recipient_list=[rejected_request.requester.email],
-            from_email=None,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             subject=f"Access Request to {IDENTIFICATIE}",
             message=f"""Dear {rejected_request.requester.username}
 
@@ -284,26 +299,3 @@ Best regards,
 ZAC Team
 """,
         )
-
-    def test_close_other_access_request(self, mock_send, mock_request):
-        self._setUpMocks(mock_request)
-        access_request = AccessRequestFactory.create(
-            handler=self.user, zaak=self.zaak["url"]
-        )
-        other_request = AccessRequestFactory.create(
-            requester=access_request.requester, zaak=self.zaak["url"]
-        )
-
-        get_response = self.app.get(self.url)
-
-        form = get_response.forms[1]
-        form["form-0-checked"].checked = True
-
-        response = form.submit("submit", value="approve")
-
-        self.assertEqual(response.status_code, 302)
-
-        access_request.refresh_from_db()
-        self.assertEqual(access_request.result, AccessRequestResult.approve)
-        other_request.refresh_from_db()
-        self.assertEqual(other_request.result, AccessRequestResult.close)
