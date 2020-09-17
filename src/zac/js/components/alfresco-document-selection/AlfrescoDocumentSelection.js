@@ -9,20 +9,27 @@ const AlfrescoDocumentSelection = ({ name, zaaktype, bronorganisatie, id }) => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(false);
 
+    const [documentUrl, setDocumentUrl] = useState('');
+
+    const onEIOCreated = (url) => {
+        setDocumentUrl(url);
+        closeModal();
+    };
+
     return (
         <div>
-            <button type="button" onClick={ () => setIsOpen(true) } className="btn btn--small">
-                <i className="material-icons">search</i>
-                Zoek in Alfresco
-            </button>
-
             <input
-                type="text"
+                type="hidden"
                 name={name}
                 id={id}
-                defaultValue=""
+                defaultValue={documentUrl}
                 placeholder="Document API url"
             />
+
+            <button type="button" onClick={ () => setIsOpen(true) } className="btn btn--small">
+                <i className="material-icons">search</i>
+                { documentUrl ? "Wijzig" : "Zoek in Alfresco" }
+            </button>
 
             <Modal
               isOpen={isOpen}
@@ -34,6 +41,7 @@ const AlfrescoDocumentSelection = ({ name, zaaktype, bronorganisatie, id }) => {
                 <AlfrescoBrowser
                     zaaktype={zaaktype}
                     bronorganisatie={bronorganisatie}
+                    onEIOCreated={onEIOCreated}
                 />
             </Modal>
         </div>

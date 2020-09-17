@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import { useImmerReducer } from "use-immer";
@@ -53,7 +53,9 @@ const ModeSelection = ({ onChange, selectedMode="browse" }) => {
 };
 
 
-const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
+const AlfrescoBrowser = ({ zaaktype, bronorganisatie, onEIOCreated }) => {
+    const docList = useRef(null);
+
     const [state, dispatch] = useImmerReducer(reducer, initialState);
     const { mode, username, password, loadDocumentList } = state;
 
@@ -74,6 +76,23 @@ const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
         });
         event.preventDefault();
     };
+
+    const callbackUrlHandler = (event) => {
+        onEIOCreated(event.detail);
+    };
+
+    // note that the docList.current can't be included in the conditionals - at the time
+    // of first-time render of the webcomponent, the value is still null, which means that
+    // there will be no subscription to the callbackurl event.
+    useEffect(
+        () => {
+            if (!docList.current) return;
+            docList.current.addEventListener("callbackurl", callbackUrlHandler);
+            return () => {
+                docList.current.removeEventListener("callbackurl", callbackUrlHandler);
+            };
+        }
+    );
 
     return (
         <>
@@ -101,7 +120,6 @@ const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
                 </div>
                 <ModeSelection selectedMode={mode} onChange={onFieldChange} />
             </form>
-
             {
                 !loadDocumentList ? (
                     <div className="permission-check permission-check--failed">
@@ -109,6 +127,7 @@ const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
                     </div>
                 ) : (
                     <contezza-documentlist
+                        ref={docList}
                         username={username}
                         password={password}
                         mode={mode}
@@ -118,7 +137,6 @@ const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
                     />
                 )
             }
-
         </>
     );
 };
@@ -126,6 +144,7 @@ const AlfrescoBrowser = ({ zaaktype, bronorganisatie }) => {
 AlfrescoBrowser.propTypes = {
     zaaktype: PropTypes.string.isRequired,  // URL of the zaaktype
     bronorganisatie: PropTypes.string.isRequired,  // RSIN of the bronorganisatie to use for EIO in the API
+    onEIOCreated: PropTypes.func.isRequired,  // callback receiving the EIO url
 };
 
 
