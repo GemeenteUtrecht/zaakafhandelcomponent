@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classnames from 'classnames';
 
 const ErrorList = ({ errors = [] }) => (
     <>
@@ -9,12 +10,13 @@ const ErrorList = ({ errors = [] }) => (
 
 const Wrapper = ({ errors = [], children }) => {
     const hasErrors = errors && errors.length > 0;
-    let className = 'input';
-    if (hasErrors) {
-        className += ' input--invalid';
-    }
     return (
-        <div className={className}>
+        <div
+            className={classnames(
+                'input',
+                { 'input--invalid': hasErrors },
+            )}
+        >
             {children}
         </div>
     );

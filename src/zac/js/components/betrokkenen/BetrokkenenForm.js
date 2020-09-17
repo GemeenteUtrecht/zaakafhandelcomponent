@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { useImmerReducer } from 'use-immer';
 import { apiCall } from '../../utils/fetch';
 import { TextArea } from '../forms/TextArea';
-import { SubmitRow } from '../forms/Utils';
+import { ErrorList, SubmitRow } from '../forms/Utils';
 import Options from '../forms/Options';
 
 const betrokkeneFields = [
@@ -195,10 +195,10 @@ const BetrokkenenForm = ({ bsn, onFetchBetrokkeneComplete }) => {
 
     if (state.hasError) {
         return (
-            <div>
-                {state.fields.errors.map((error) => <p>{error}</p>)}
-                {state.doelbinding.errors.map((error) => <p>{error}</p>)}
-            </div>
+            <>
+                <ErrorList errors={state.fields.errors} />
+                <ErrorList errors={state.doelbinding.errors} />
+            </>
         );
     }
 
@@ -209,13 +209,13 @@ const BetrokkenenForm = ({ bsn, onFetchBetrokkeneComplete }) => {
                 <Options
                     onChange={handleChange}
                     options={betrokkeneFields}
+                    required
                 />
             </ul>
-            <h3 className="textarea__label">Specificeer de doelbinding voor het opvragen van deze gegevens:</h3>
             <TextArea
-                classes="textarea"
                 id="id_doelbinding"
                 name="doelbinding"
+                label="Specificeer de doelbinding voor het opvragen van deze gegevens:"
                 onChange={handleChange}
                 value={state.doelbinding.value}
                 errors={state.doelbinding.errors}

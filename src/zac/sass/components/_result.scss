@@ -1,18 +1,17 @@
+@import "../lib/bem";
+
 .result {
   margin-bottom: 1rem;
-
-  &__title {
+  @include element("title") {
     margin: 0 0 3px 0;
     font-size: 1rem;
   }
-
-  &__value {
+  @include element("value") {
     margin: 0;
   }
 }
-
 .subresult {
-  &__title {
+  @include element("title") {
     font-weight: bold;
     display: inline-block;
     margin: 0 0.4rem 0 0;
@@ -20,13 +19,11 @@
       content: ':'
     }
   }
-
-  &__value {
+  @include element("value") {
     margin: 0;
     display: inline-block;
   }
-
-  &__row {
+  @include element("row") {
     margin-left: 2rem;
     margin-bottom: 2rem;
   }

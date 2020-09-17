@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 const StringResult = ({ title, value }) => (
@@ -34,7 +34,7 @@ const ArrayResult = ({ title, data }) => (
                         </div>
 
                         <div className="subresult__group">
-                            {/* Geboortedatum */}
+                            {/* Burgerservicenummer */}
                             <p className="subresult__title">BSN</p>
                             <p className="subresult__value">{item.burgerservicenummer}</p>
                         </div>
@@ -75,37 +75,42 @@ AddressResult.propTypes = {
     data: PropTypes.objectOf(PropTypes.string),
 };
 
-const BetrokkenenResult = ({ data }) => (
-    <div className="form form--modal">
-        <h2 className="section-title">Resultaten bijkomende gegevens:</h2>
+const BetrokkenenResult = ({ data, closeModal }) => {
+    // When escape is pressed
+    const escFunction = (event) => {
+        if (event.keyCode === 27) {
+            closeModal();
+        }
+    };
 
-        {/* Geboortedatum */}
-        {data.geboortedatum
-            ? <StringResult title="Geboortedatum" value={data.geboortedatum} />
-            : null}
+    useEffect(() => {
+        document.addEventListener('keydown', escFunction, false);
+        return () => {
+            document.removeEventListener('keydown', escFunction, false);
+        };
+    }, []);
 
-        {/* Geboorteland */}
-        {data.geboorteland
-            ? <StringResult title="Geboorteland" value={data.geboorteland} />
-            : null}
+    return (
+        <div className="form form--modal">
+            <h2 className="section-title">Resultaten bijkomende gegevens:</h2>
 
-        {/* NAW */}
-        {data.verblijfplaats
-            ? <AddressResult title="NAW" data={data.verblijfplaats} />
-            : null}
+            {/* Geboortedatum */}
+            {data.geboortedatum && <StringResult title="Geboortedatum" value={data.geboortedatum} />}
 
-        {/* Kinderen */}
-        {data.kinderen
-            ? <ArrayResult title="Kinderen" data={data.kinderen} />
-            : null}
+            {/* Geboorteland */}
+            {data.geboorteland && <StringResult title="Geboorteland" value={data.geboorteland} />}
 
-        {/* Partners */}
-        {data.partners
-            ? <ArrayResult title="Partners" data={data.partners} />
-            : null}
+            {/* NAW */}
+            {data.verblijfplaats && <AddressResult title="NAW" data={data.verblijfplaats} />}
 
-    </div>
-);
+            {/* Kinderen */}
+            {data.kinderen && <ArrayResult title="Kinderen" data={data.kinderen} />}
+
+            {/* Partners */}
+            {data.partners && <ArrayResult title="Partners" data={data.partners} />}
+        </div>
+    );
+};
 
 BetrokkenenResult.propTypes = {
     data: PropTypes.shape({
@@ -115,6 +120,7 @@ BetrokkenenResult.propTypes = {
         partners: PropTypes.arrayOf(PropTypes.object),
         verblijfplaats: PropTypes.objectOf(PropTypes.string),
     }),
+    closeModal: PropTypes.func,
 };
 
 export default BetrokkenenResult;

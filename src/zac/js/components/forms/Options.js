@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Option from './Option';
+import Option from './Checkbox';
 
-const Options = ({ options, onChange }) => (
+const Options = ({ options, onChange, required }) => (
     <div className="checkbox-select__options">
         {options.map((option) => (
             <Option
@@ -11,6 +11,14 @@ const Options = ({ options, onChange }) => (
                 key={option.id}
             />
         ))}
+        {required
+        && (
+            <div className="input">
+                <div className="input__label">
+                    <span className="label label--optional">verplicht</span>
+                </div>
+            </div>
+        )}
     </div>
 );
 
@@ -24,6 +32,7 @@ Options.propTypes = {
         }),
     ),
     onChange: PropTypes.func,
+    required: PropTypes.bool,
 };
 
 export default Options;

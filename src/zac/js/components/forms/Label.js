@@ -1,12 +1,11 @@
 import React from 'react';
 
-
-const Label = ({label='', required=false, idForLabel=''}) => {
+const Label = ({ label = '', required = false, idForLabel = '' }) => {
     if (!label) {
         return null;
     }
 
-    let extraProps = {};
+    const extraProps = {};
     if (idForLabel) {
         extraProps.htmlFor = idForLabel;
     }
@@ -15,11 +14,12 @@ const Label = ({label='', required=false, idForLabel=''}) => {
     return (
         <label className="input__label" {...extraProps}>
             { label }
-            { required ? null : <span className="label label--optional">&nbsp;optioneel</span> }
+            { required
+                ? <span className="label label--optional">&nbsp;verplicht</span>
+                : <span className="label label--optional">&nbsp;optioneel</span>}
         </label>
     );
     /* jshint ignore:end */
 };
-
 
 export { Label };
