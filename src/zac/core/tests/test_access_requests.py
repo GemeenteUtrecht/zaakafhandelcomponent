@@ -1,10 +1,9 @@
-from unittest.mock import patch
-
-from django.conf import settings
+from django.core import mail
 from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
@@ -20,6 +19,8 @@ from zac.tests.utils import (
     mock_service_oas_get,
     paginated_response,
 )
+
+from ..permissions import zaken_handle_access
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
@@ -171,7 +172,7 @@ class CreateAccessRequestTests(TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.html.find(class_="errorlist").text,
+            response.html.find(class_="input__error").text,
             "You've already requested access for this zaak",
         )
 
@@ -180,7 +181,6 @@ class CreateAccessRequestTests(TransactionWebTest):
         )
 
 
-@patch("zac.core.forms.send_mail")
 @requests_mock.Mocker()
 class HandleAccessRequestsTests(TransactionWebTest):
     url = reverse_lazy(
@@ -217,21 +217,60 @@ class HandleAccessRequestsTests(TransactionWebTest):
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json=paginated_response([self.zaak]),
         )
-        zaaktype = generate_oas_component(
+        self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
             identificatie="ZT1",
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            json=zaaktype,
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
         )
 
-    def test_approve_access_requests(self, mock_send, mock_request):
+    def test_read_access_requests_no_perms(self, mock_request):
         self._setUpMocks(mock_request)
         AccessRequestFactory.create_batch(
             2, handlers=[self.user], zaak=self.zaak["url"]
+        )
+
+        response = self.app.get(self.url, status=403)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_read_access_requests_have_perms(self, mock_request):
+        self._setUpMocks(mock_request)
+        AccessRequestFactory.create_batch(
+            2, handlers=[self.user], zaak=self.zaak["url"]
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        response = self.app.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_approve_access_requests(self, mock_request):
+        self._setUpMocks(mock_request)
+        AccessRequestFactory.create_batch(
+            2, handlers=[self.user], zaak=self.zaak["url"]
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
         get_response = self.app.get(self.url)
@@ -249,25 +288,33 @@ class HandleAccessRequestsTests(TransactionWebTest):
         other_request = AccessRequest.objects.get(id=int(form["form-1-id"].value))
         self.assertEqual(other_request.result, "")
 
-        mock_send.assert_called_once_with(
-            recipient_list=[approved_request.requester.email],
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            subject=f"Access Request to {IDENTIFICATIE}",
-            message=f"""Dear {approved_request.requester.username}
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, f"Access Request to {IDENTIFICATIE}")
+        self.assertEqual(email.to, [approved_request.requester.email])
+        self.assertEqual(
+            email.body,
+            f"""Dear {approved_request.requester.username}
 
 The access to zaak {IDENTIFICATIE} is approved.
-
-you can see it here: http://testserver{reverse("core:zaak-detail", kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE,})}
+You can see it here: http://testserver{reverse("core:zaak-detail", kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE, })}
 
 Best regards,
 ZAC Team
 """,
         )
 
-    def test_reject_access_requests(self, mock_send, mock_request):
+    def test_reject_access_requests(self, mock_request):
         self._setUpMocks(mock_request)
         AccessRequestFactory.create_batch(
             2, handlers=[self.user], zaak=self.zaak["url"]
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
         get_response = self.app.get(self.url)
@@ -285,14 +332,15 @@ ZAC Team
         other_request = AccessRequest.objects.get(id=int(form["form-1-id"].value))
         self.assertEqual(other_request.result, "")
 
-        mock_send.assert_called_once_with(
-            recipient_list=[rejected_request.requester.email],
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            subject=f"Access Request to {IDENTIFICATIE}",
-            message=f"""Dear {rejected_request.requester.username}
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, f"Access Request to {IDENTIFICATIE}")
+        self.assertEqual(email.to, [rejected_request.requester.email])
+        self.assertEqual(
+            email.body,
+            f"""Dear {rejected_request.requester.username}
 
 The access to zaak {IDENTIFICATIE} is rejected.
-
 
 
 Best regards,

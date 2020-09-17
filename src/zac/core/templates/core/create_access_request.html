@@ -12,7 +12,7 @@
 
     {% load_widgets form='sniplates/forms.html' %}
 
-    {{ form.non_field_errors }}
+    {% widget 'form:non_field_errors' %}
 
     <div class="form__field-group">
         {% form_field form.comment %}

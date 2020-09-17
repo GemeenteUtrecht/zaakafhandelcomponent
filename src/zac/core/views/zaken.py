@@ -27,10 +27,16 @@ from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
 from ..forms import (
     AccessRequestCreateForm,
     AccessRequestHandleForm,
+    BaseAccessRequestFormSet,
     ZaakAfhandelForm,
     ZakenFilterForm,
 )
-from ..permissions import zaken_close, zaken_inzien, zaken_set_result
+from ..permissions import (
+    zaken_close,
+    zaken_handle_access,
+    zaken_inzien,
+    zaken_set_result,
+)
 from ..services import (
     find_zaak,
     get_document,
@@ -335,12 +341,14 @@ class AccessRequestCreateView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
 
 
-class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
+class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
     form_class = AccessRequestHandleForm
+    formset_class = BaseAccessRequestFormSet
     template_name = "core/zaak_access_requests.html"
     context_object_name = "zaak"
     model = AccessRequest
     factory_kwargs = {"extra": 0, "can_delete": False}
+    permission_required = zaken_handle_access.name
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -362,6 +370,7 @@ class ZaakAccessRequestsView(LoginRequiredMixin, ModelFormSetView):
 
     def get_zaak(self):
         zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
         return zaak
 
     def get_context_data(self, **kwargs):

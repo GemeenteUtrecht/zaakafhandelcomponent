@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             name="result",
             field=models.CharField(
                 blank=True,
-                choices=[("approve", "Approve"), ("reject", "Reject")],
+                choices=[("approve", "approved"), ("reject", "rejected")],
                 max_length=50,
                 verbose_name="result",
             ),

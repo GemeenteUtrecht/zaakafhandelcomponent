@@ -4,6 +4,7 @@ from typing import Optional, Union
 import rules
 from zgw_consumers.api_models.zaken import Zaak
 
+from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import User
 from zac.accounts.permissions import Permission, register
 
@@ -12,6 +13,7 @@ from .permissions import (
     zaakproces_usertasks,
     zaken_add_documents,
     zaken_close,
+    zaken_handle_access,
     zaken_inzien,
     zaken_set_result,
 )
@@ -42,6 +44,7 @@ class dictwrapper:
     zaken_set_result,
     zaken_close,
     zaken_add_documents,
+    zaken_handle_access,
 )
 def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
     logger.debug("Checking permission %r for user %r", permission, user)
@@ -93,7 +96,9 @@ def can_read_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
 def has_temporary_access(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return False
-    return user.has_access_to_zaak(zaak)
+    return user.initiated_requests.filter(
+        zaak=zaak.url, result=AccessRequestResult.approve
+    ).exists()
 
 
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)

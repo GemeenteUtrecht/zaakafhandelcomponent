@@ -58,3 +58,4 @@ class AccessRequestAdmin(admin.ModelAdmin):
     list_display = ("requester", "result")
     list_filter = ("requester", "result")
     search_fields = ("requester__username", "zaak")
+    raw_id_fields = ("requester", "handlers")

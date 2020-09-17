@@ -11,7 +11,7 @@ class AccessRequestQuerySet(models.QuerySet):
 
         Requests are grouped by the zaak
         """
-        qs = self.filter(result="", handler=user).order_by(
+        qs = self.filter(result="", handlers__in=[user]).order_by(
             "zaak", "requester__username"
         )
 

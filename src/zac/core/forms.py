@@ -5,6 +5,8 @@ from typing import Dict, List, Tuple
 from django import forms
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
@@ -392,11 +394,6 @@ class AccessRequestHandleForm(forms.ModelForm):
             logger.warning("Email to %s can't be sent - no known e-mail", user)
             return
 
-        action = (
-            "approved"
-            if self.instance.result == AccessRequestResult.approve
-            else "rejected"
-        )
         zaak = get_zaak(zaak_url=self.instance.zaak)
         zaak_url = reverse(
             "core:zaak-detail",
@@ -405,27 +402,37 @@ class AccessRequestHandleForm(forms.ModelForm):
                 "identificatie": zaak.identificatie,
             },
         )
-        zaak_absolute_url = self.request.build_absolute_uri(zaak_url)
-        message = f"""Dear {user.get_short_name() or user.username}
+        zaak.absolute_url = self.request.build_absolute_uri(zaak_url)
 
-The access to zaak {zaak.identificatie} is {action}.
+        email_template = get_template("core/emails/access_request_result.txt")
+        email_context = {
+            "zaak": zaak,
+            "access_request": self.instance,
+            "user": user,
+        }
 
-{"you can see it here: " + zaak_absolute_url if action == 'approved' else ''}
-
-Best regards,
-ZAC Team
-"""
+        message = email_template.render(email_context)
         send_mail(
-            subject=f"Access Request to {zaak.identificatie}",
+            subject=_("Access Request to %(zaak)s") % {"zaak": zaak.identificatie},
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[self.instance.requester.email],
+            recipient_list=[user.email],
         )
 
+    @transaction.atomic
     def save(self, **kwargs):
         instance = super().save(**kwargs)
 
         # send email
-        self.send_email()
+        transaction.on_commit(self.send_email)
 
         return instance
+
+
+class BaseAccessRequestFormSet(forms.BaseModelFormSet):
+    def clean(self):
+        super().clean()
+
+        submit = self.data.get("submit")
+        if submit not in dict(AccessRequestResult.choices):
+            raise forms.ValidationError(_("Use correct 'submit' button"))

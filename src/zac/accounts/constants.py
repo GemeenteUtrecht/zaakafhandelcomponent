@@ -4,5 +4,5 @@ from djchoices import ChoiceItem, DjangoChoices
 
 
 class AccessRequestResult(DjangoChoices):
-    approve = ChoiceItem("approve", _("Approve"))
-    reject = ChoiceItem("reject", _("Reject"))
+    approve = ChoiceItem("approve", _("approved"))
+    reject = ChoiceItem("reject", _("rejected"))

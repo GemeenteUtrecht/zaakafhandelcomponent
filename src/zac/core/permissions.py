@@ -37,3 +37,7 @@ zaken_add_documents = Permission(
     name="zaken:add-documents",
     description="Nieuwe/extra documenten toevoegen bij zaken.",
 )
+
+zaken_handle_access = Permission(
+    name="zaken:behandelen", description="Beheer toegangsverzoeken voor zaken"
+)

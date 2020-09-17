@@ -74,11 +74,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         "Returns the short name for the user."
         return self.first_name
 
-    def has_access_to_zaak(self, zaak: Zaak):
-        return self.initiated_requests.filter(
-            zaak=zaak.url, result=AccessRequestResult.approve
-        ).exists()
-
 
 # Permissions
 
