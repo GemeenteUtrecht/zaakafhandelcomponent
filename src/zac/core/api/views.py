@@ -1,6 +1,9 @@
 import base64
 from datetime import date
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
+
 from rest_framework import exceptions, permissions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -113,12 +116,14 @@ class GetDocumentInfoView(views.APIView):
         return Response(serializer.data)
 
 
-class GetExtraInfoSubjectView(views.APIView):
-    def get(self, request: Request, **kwargs) -> Response:
+class PostExtraInfoSubjectView(views.APIView):
+    @method_decorator(csrf_protect)
+    def post(self, request: Request, **kwargs) -> Response:
         # Serialize data from request.query_params
-        fields_serializer = ExtraInfoUpSerializer(data=request.query_params)
+        fields_serializer = ExtraInfoUpSerializer(data=request.data)
         fields_serializer.is_valid(raise_exception=True)
 
+        burgerservicenummer = fields_serializer.data["burgerservicenummer"]
         doelbinding = fields_serializer.data["doelbinding"]
         fields = fields_serializer.data["fields"]
 
@@ -134,6 +139,9 @@ class GetExtraInfoSubjectView(views.APIView):
                 "expand": expand,
             },
         }
+
+        # Set burgerservicenummer in kwargs
+        kwargs["burgerservicenummer"] = burgerservicenummer
 
         # Get extra info
         extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)

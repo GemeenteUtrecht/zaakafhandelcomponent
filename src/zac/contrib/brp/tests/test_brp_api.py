@@ -1,9 +1,11 @@
+import json
+
 from django.test import TestCase
 from django.urls import reverse
 
 import requests_mock
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 
@@ -15,7 +17,8 @@ from ..api import fetch_extrainfo_np, fetch_natuurlijkpersoon, get_client
 from ..models import BRPConfig
 
 BRP_API_ROOT = "https://brp.nl/api/v1/"
-PERSOON_URL = f"{BRP_API_ROOT}ingeschrevenpersonen/123456782"
+BSN = "123456782"
+PERSOON_URL = f"{BRP_API_ROOT}ingeschrevenpersonen/{BSN}"
 
 
 def setup_BRP_service():
@@ -43,7 +46,7 @@ class BrpApiTests(ClearCachesMixin, TestCase):
     def _setUpMock(self, m):
         # generate_oas_component doesn't support allOf objects
         naturlijk_persoon = {
-            "burgerservicenummer": "123456782",
+            "burgerservicenummer": BSN,
             "geslachtsaanduiding": "man",
             "leeftijd": 34,
             "kiesrecht": {},
@@ -75,7 +78,7 @@ class BrpApiTests(ClearCachesMixin, TestCase):
 
         result = fetch_natuurlijkpersoon(PERSOON_URL)
 
-        self.assertEqual(result.burgerservicenummer, "123456782")
+        self.assertEqual(result.burgerservicenummer, BSN)
 
         headers = m.last_request.headers
         self.assertEqual(headers["Authorization"], "Token foobarbaz")
@@ -93,7 +96,7 @@ class BrpApiTests(ClearCachesMixin, TestCase):
             "headers": {"X-NLX-Request-Subject-Identifier": doelbinding},
             "params": {"fields": "geboorte.datum,geboorte.land"},
         }
-        path_kwargs = {"burgerservicenummer": "123456782"}
+        path_kwargs = {"burgerservicenummer": BSN}
 
         result = fetch_extrainfo_np(
             request_kwargs=request_kwargs,
@@ -113,22 +116,66 @@ class BrpApiViewTests(APITestCase):
         )
 
         self.client.force_authenticate(user=self.superuser)
-        self.base_url = reverse("core:get-betrokkene-info", args=["123456782"])
+        self.base_url = reverse("core:post-betrokkene-info")
+
+    def test_csrf_protect_api_view(self):
+        self.client_csrf = APIClient(enforce_csrf_checks=True)
+        self.client_csrf.force_authenticate(user=self.superuser)
+        response = self.client_csrf.post(
+            self.base_url,
+            data=json.dumps({}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
 
     def test_betrokkene_api_no_query_parameters(self):
-        response = self.client.get(self.base_url)
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps({}),
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
             {
+                "burgerservicenummer": ["Dit veld is vereist."],
+                "doelbinding": ["Dit veld is vereist."],
+                "fields": ["Dit veld is vereist."],
+            },
+        )
+
+    def test_betrokkene_api_invalid_burgerservicenummer(self):
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": "912939",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "burgerservicenummer": ["Een BSN heeft 9 cijfers."],
                 "doelbinding": ["Dit veld is vereist."],
                 "fields": ["Dit veld is vereist."],
             },
         )
 
     def test_betrokkene_api_no_valid_doelbinding(self):
-        url_no_value_doelbinding = self.base_url + "?doelbinding="
-        response = self.client.get(url_no_value_doelbinding)
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "",
+                }
+            ),
+            content_type="application/json",
+        )
+
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -139,8 +186,16 @@ class BrpApiViewTests(APITestCase):
         )
 
     def test_betrokkene_api_no_fields(self):
-        url_no_fields = self.base_url + "?doelbinding=test"
-        response = self.client.get(url_no_fields)
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                }
+            ),
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -148,11 +203,17 @@ class BrpApiViewTests(APITestCase):
         )
 
     def test_betrokkene_api_no_valid_fields(self):
-        url_no_fields = (
-            self.base_url
-            + "?doelbinding=test&fields=test,hello,geboorte,geboorte.datum"
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                    "fields": "test,hello,geboorte,geboorte.datum",
+                }
+            ),
+            content_type="application/json",
         )
-        response = self.client.get(url_no_fields)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -175,7 +236,7 @@ class BrpApiViewTests(APITestCase):
                             "voorletters": "A.",
                             "geslachtsnaam": "Einstein",
                         },
-                        "burgerservicenummer": "99999EMC2",
+                        "burgerservicenummer": "999993112",
                         "geboorte": {"datum": {"datum": "14-03-1879"}},
                     }
                 ]
@@ -192,9 +253,16 @@ class BrpApiViewTests(APITestCase):
             json=extra_info,
         )
 
-        response = self.client.get(
-            self.base_url
-            + "?doelbinding=test&fields=geboorte.datum,kinderen,verblijfplaats",
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                    "fields": "geboorte.datum,kinderen,verblijfplaats",
+                }
+            ),
+            content_type="application/json",
             headers=headers,
         )
         self.assertEqual(response.status_code, 200)
@@ -206,7 +274,7 @@ class BrpApiViewTests(APITestCase):
                 "kinderen": [
                     {
                         "naam": "A. Einstein",
-                        "burgerservicenummer": "99999EMC2",
+                        "burgerservicenummer": "999993112",
                         "geboortedatum": "14-03-1879",
                     }
                 ],
