@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 import { AlfrescoBrowser } from './AlfrescoBrowser';
 
 
-const AlfrescoDocumentSelection = ({ username, password, name, zaaktype, bronorganisatie, id }) => {
+const AlfrescoDocumentSelection = ({ name, zaaktype, bronorganisatie, id }) => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(false);
 
@@ -16,7 +16,6 @@ const AlfrescoDocumentSelection = ({ username, password, name, zaaktype, bronorg
                 Zoek in Alfresco
             </button>
 
-            {/*
             <input
                 type="text"
                 name={name}
@@ -24,7 +23,6 @@ const AlfrescoDocumentSelection = ({ username, password, name, zaaktype, bronorg
                 defaultValue=""
                 placeholder="Document API url"
             />
-            */}
 
             <Modal
               isOpen={isOpen}
@@ -34,8 +32,6 @@ const AlfrescoDocumentSelection = ({ username, password, name, zaaktype, bronorg
             >
                 <button onClick={ closeModal } className="modal__close btn">&times;</button>
                 <AlfrescoBrowser
-                    username={username}
-                    password={password}
                     zaaktype={zaaktype}
                     bronorganisatie={bronorganisatie}
                 />
@@ -45,8 +41,6 @@ const AlfrescoDocumentSelection = ({ username, password, name, zaaktype, bronorg
 };
 
 AlfrescoDocumentSelection.propTypes = {
-    username: PropTypes.string.isRequired,  // username of the Alfresco API # TODO - use different auth
-    password: PropTypes.string.isRequired,  // username of the Alfresco API # TODO - use different auth
     name: PropTypes.string.isRequired,  // HTML name of the input
     zaaktype: PropTypes.string.isRequired,  // URL of the zaaktype
     bronorganisatie: PropTypes.string.isRequired,  // RSIN of the bronorganisatie to use for EIO in the API

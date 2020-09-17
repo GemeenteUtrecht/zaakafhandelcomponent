@@ -9,8 +9,6 @@ def settings(request) -> Dict[str, Any]:
         "ENVIRONMENT",
         "SHOW_ALERT",
         "PROJECT_NAME",
-        "ALFRESCO_USERNAME",
-        "ALFRESCO_PASSWORD",
     )
 
     return {
