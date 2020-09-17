@@ -84,11 +84,11 @@ class ExtraInfoUpSerializer(serializers.Serializer):
         max_length=9,
         validators=[
             RegexValidator(
-                regex='^[0-9]{9}$',
-                message='Een BSN heeft 9 cijfers.',
-                code='invalid',
+                regex="^[0-9]{9}$",
+                message="Een BSN heeft 9 cijfers.",
+                code="invalid",
             )
-        ]
+        ],
     )
 
     doelbinding = serializers.CharField(

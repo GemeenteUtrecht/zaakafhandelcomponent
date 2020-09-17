@@ -3,8 +3,8 @@ from django.urls import path, re_path
 from .views import (
     AddDocumentView,
     GetDocumentInfoView,
-    PostExtraInfoSubjectView,
     GetInformatieObjectTypenView,
+    PostExtraInfoSubjectView,
 )
 
 urlpatterns = [
@@ -19,5 +19,9 @@ urlpatterns = [
         name="add-document",
     ),
     path("documents/info", GetDocumentInfoView.as_view(), name="get-document-info"),
-    path("betrokkene/info", PostExtraInfoSubjectView.as_view(), name="post-betrokkene-info"),
+    path(
+        "betrokkene/info",
+        PostExtraInfoSubjectView.as_view(),
+        name="post-betrokkene-info",
+    ),
 ]

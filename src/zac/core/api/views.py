@@ -3,6 +3,7 @@ from datetime import date
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+
 from rest_framework import exceptions, permissions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -122,7 +123,7 @@ class PostExtraInfoSubjectView(views.APIView):
         fields_serializer = ExtraInfoUpSerializer(data=request.data)
         fields_serializer.is_valid(raise_exception=True)
 
-        burgerservicenummer = fields_serializer.data['burgerservicenummer']
+        burgerservicenummer = fields_serializer.data["burgerservicenummer"]
         doelbinding = fields_serializer.data["doelbinding"]
         fields = fields_serializer.data["fields"]
 
@@ -140,7 +141,7 @@ class PostExtraInfoSubjectView(views.APIView):
         }
 
         # Set burgerservicenummer in kwargs
-        kwargs['burgerservicenummer'] = burgerservicenummer
+        kwargs["burgerservicenummer"] = burgerservicenummer
 
         # Get extra info
         extra_info_inp = fetch_extrainfo_np(request_kwargs=request_kwargs, **kwargs)

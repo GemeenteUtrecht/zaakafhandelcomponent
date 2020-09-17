@@ -1,10 +1,11 @@
+import json
+
 from django.test import TestCase
 from django.urls import reverse
-import json
 
 import requests_mock
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient, APITestCase
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 
@@ -123,7 +124,7 @@ class BrpApiViewTests(APITestCase):
         response = self.client_csrf.post(
             self.base_url,
             data=json.dumps({}),
-            content_type='application/json',
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 403)
 
@@ -131,44 +132,48 @@ class BrpApiViewTests(APITestCase):
         response = self.client.post(
             self.base_url,
             data=json.dumps({}),
-            content_type='application/json',
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {   
-                'burgerservicenummer': ['Dit veld is vereist.'],
-                'doelbinding': ['Dit veld is vereist.'],
-                'fields': ['Dit veld is vereist.'],
-            }
+            {
+                "burgerservicenummer": ["Dit veld is vereist."],
+                "doelbinding": ["Dit veld is vereist."],
+                "fields": ["Dit veld is vereist."],
+            },
         )
 
     def test_betrokkene_api_invalid_burgerservicenummer(self):
-            response = self.client.post(
-                self.base_url,
-                data=json.dumps({
-                    'burgerservicenummer': '912939',
-                }),
-                content_type='application/json',
-            )
-            self.assertEqual(response.status_code, 400)
-            self.assertEqual(
-                response.json(),
-                {   
-                    'burgerservicenummer': ['Een BSN heeft 9 cijfers.'],
-                    'doelbinding': ['Dit veld is vereist.'],
-                    'fields': ['Dit veld is vereist.'],
+        response = self.client.post(
+            self.base_url,
+            data=json.dumps(
+                {
+                    "burgerservicenummer": "912939",
                 }
-            )
-            
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "burgerservicenummer": ["Een BSN heeft 9 cijfers."],
+                "doelbinding": ["Dit veld is vereist."],
+                "fields": ["Dit veld is vereist."],
+            },
+        )
+
     def test_betrokkene_api_no_valid_doelbinding(self):
         response = self.client.post(
             self.base_url,
-            data=json.dumps({
-                'burgerservicenummer': BSN,
-                'doelbinding': '',
-            }),
-            content_type='application/json',
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "",
+                }
+            ),
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -183,27 +188,31 @@ class BrpApiViewTests(APITestCase):
     def test_betrokkene_api_no_fields(self):
         response = self.client.post(
             self.base_url,
-            data=json.dumps({
-                'burgerservicenummer': BSN,
-                'doelbinding': 'test',
-            }),
-            content_type='application/json',
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                }
+            ),
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
             {"fields": ["Dit veld is vereist."]},
-     )
+        )
 
     def test_betrokkene_api_no_valid_fields(self):
         response = self.client.post(
             self.base_url,
-            data=json.dumps({
-                'burgerservicenummer': BSN,
-                'doelbinding': 'test',
-                'fields': 'test,hello,geboorte,geboorte.datum',
-            }),
-            content_type='application/json',
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                    "fields": "test,hello,geboorte,geboorte.datum",
+                }
+            ),
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -246,12 +255,14 @@ class BrpApiViewTests(APITestCase):
 
         response = self.client.post(
             self.base_url,
-            data=json.dumps({
-                'burgerservicenummer': BSN,
-                'doelbinding': 'test',
-                'fields': 'geboorte.datum,kinderen,verblijfplaats'
-            }),
-            content_type='application/json',
+            data=json.dumps(
+                {
+                    "burgerservicenummer": BSN,
+                    "doelbinding": "test",
+                    "fields": "geboorte.datum,kinderen,verblijfplaats",
+                }
+            ),
+            content_type="application/json",
             headers=headers,
         )
         self.assertEqual(response.status_code, 200)
