@@ -1,14 +1,17 @@
 from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
-from django.urls import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
+from extra_views import ModelFormSetView
 from furl import furl
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
+from zac.accounts.models import AccessRequest
 from zac.accounts.permissions import UserPermissions
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
@@ -21,8 +24,19 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.utils.api_models import serialize
 
 from ..base_views import BaseDetailView, BaseListView, SingleObjectMixin
-from ..forms import ZaakAfhandelForm, ZakenFilterForm
-from ..permissions import zaken_close, zaken_inzien, zaken_set_result
+from ..forms import (
+    AccessRequestCreateForm,
+    AccessRequestHandleForm,
+    BaseAccessRequestFormSet,
+    ZaakAfhandelForm,
+    ZakenFilterForm,
+)
+from ..permissions import (
+    zaken_close,
+    zaken_handle_access,
+    zaken_inzien,
+    zaken_set_result,
+)
 from ..services import (
     find_zaak,
     get_document,
@@ -299,3 +313,78 @@ class ZaakActiviteitenView(PermissionRequiredMixin, BaseDetailView):
         zaak = find_zaak(**self.kwargs)
         self.check_object_permissions(zaak)
         return zaak
+
+
+class AccessRequestCreateView(LoginRequiredMixin, FormView):
+    form_class = AccessRequestCreateForm
+    template_name = "core/create_access_request.html"
+    #  todo add thanks page?
+    success_url = reverse_lazy("core:index")
+
+    def get_zaak(self):
+        return find_zaak(**self.kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        kwargs["requester"] = self.request.user
+        kwargs["zaak"] = self.get_zaak()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"zaak": self.get_zaak()})
+        return context
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+
+class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
+    form_class = AccessRequestHandleForm
+    formset_class = BaseAccessRequestFormSet
+    template_name = "core/zaak_access_requests.html"
+    context_object_name = "zaak"
+    model = AccessRequest
+    factory_kwargs = {"extra": 0, "can_delete": False}
+    permission_required = zaken_handle_access.name
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        zaak = self.get_zaak()
+        queryset = queryset.filter(
+            result="", handlers__in=[self.request.user], zaak=zaak.url
+        )
+        return queryset
+
+    def get_formset_kwargs(self):
+        kwargs = super().get_formset_kwargs()
+
+        form_kwargs = kwargs.pop("form_kwargs", {})
+        form_kwargs["request"] = self.request
+        kwargs["form_kwargs"] = form_kwargs
+
+        return kwargs
+
+    def get_zaak(self):
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"zaak": self.get_zaak()})
+        return context
+
+    def formset_valid(self, formset):
+        result = self.request.POST["submit"]
+
+        for form in formset:
+            checked = form.cleaned_data["checked"]
+            form.instance.result = result if checked else ""
+
+        response = super().formset_valid(formset)
+
+        return response

@@ -1,8 +1,12 @@
 import itertools
+import logging
 from typing import Dict, List, Tuple
 
 from django import forms
 from django.conf import settings
+from django.core.mail import send_mail
+from django.db import transaction
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
@@ -12,7 +16,8 @@ from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import ZaakType
 
-from zac.accounts.models import User
+from zac.accounts.constants import AccessRequestResult
+from zac.accounts.models import AccessRequest, User
 from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
@@ -21,11 +26,14 @@ from .fields import DocumentsMultipleChoiceField
 from .services import (
     get_documenten,
     get_resultaattypen,
+    get_rollen,
     get_statustypen,
     get_zaak,
     zet_resultaat,
     zet_status,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
@@ -315,3 +323,116 @@ class ConfigureApprovalRequestForm(ConfigureReviewRequestForm):
     """
 
     _review_type = "approval"
+
+
+class AccessRequestCreateForm(forms.ModelForm):
+    """
+    Create access request for a particular zaak
+    """
+
+    class Meta:
+        model = AccessRequest
+        fields = ("comment",)
+
+    def __init__(self, *args, **kwargs):
+        self.requester = kwargs.pop("requester")
+        self.zaak = kwargs.pop("zaak")
+
+        super().__init__(*args, **kwargs)
+
+    def get_behandelaars(self):
+        rollen = get_rollen(self.zaak)
+        behandelaar_usernames = [
+            rol.betrokkene_identificatie.get("identificatie")
+            for rol in rollen
+            if rol.betrokkene_type == "medewerker"
+            and rol.omschrijving_generiek == "behandelaar"
+        ]
+        return User.objects.filter(username__in=behandelaar_usernames)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.requester.initiated_requests.filter(zaak=self.zaak.url).exists():
+            raise forms.ValidationError(
+                _("You've already requested access for this zaak")
+            )
+
+        return cleaned_data
+
+    def save(self, *args, **kwargs):
+        self.instance.requester = self.requester
+        self.instance.zaak = self.zaak.url
+        request_access = super().save()
+
+        behandelaars = self.get_behandelaars()
+        if behandelaars:
+            request_access.handlers.add(*behandelaars)
+
+        return request_access
+
+
+class AccessRequestHandleForm(forms.ModelForm):
+    """
+    Reject or approve access requests for a particular zaak
+    """
+
+    checked = forms.BooleanField(required=False)
+
+    class Meta:
+        model = AccessRequest
+        fields = ("checked",)
+
+    def __init__(self, **kwargs):
+        self.request = kwargs.pop("request")
+
+        super().__init__(**kwargs)
+
+    def send_email(self):
+        user = self.instance.requester
+
+        if not user.email:
+            logger.warning("Email to %s can't be sent - no known e-mail", user)
+            return
+
+        zaak = get_zaak(zaak_url=self.instance.zaak)
+        zaak_url = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": zaak.bronorganisatie,
+                "identificatie": zaak.identificatie,
+            },
+        )
+        zaak.absolute_url = self.request.build_absolute_uri(zaak_url)
+
+        email_template = get_template("core/emails/access_request_result.txt")
+        email_context = {
+            "zaak": zaak,
+            "access_request": self.instance,
+            "user": user,
+        }
+
+        message = email_template.render(email_context)
+        send_mail(
+            subject=_("Access Request to %(zaak)s") % {"zaak": zaak.identificatie},
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+
+        # send email
+        transaction.on_commit(self.send_email)
+
+        return instance
+
+
+class BaseAccessRequestFormSet(forms.BaseModelFormSet):
+    def clean(self):
+        super().clean()
+
+        submit = self.data.get("submit")
+        if submit not in dict(AccessRequestResult.choices):
+            raise forms.ValidationError(_("Use correct 'submit' button"))

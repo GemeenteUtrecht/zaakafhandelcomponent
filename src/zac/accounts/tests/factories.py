@@ -1,4 +1,5 @@
 import factory
+import factory.fuzzy
 
 from ..models import UserAuthorizationProfile
 
@@ -42,3 +43,19 @@ class AuthorizationProfileFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.AuthorizationProfile"
+
+
+class AccessRequestFactory(factory.django.DjangoModelFactory):
+    requester = factory.SubFactory(UserFactory)
+    zaak = factory.Faker("url")
+
+    class Meta:
+        model = "accounts.AccessRequest"
+
+    @factory.post_generation
+    def handlers(self, create, extracted, **kwargs):
+        if not extracted:
+            extracted = [UserFactory.create()]
+
+        for handler in extracted:
+            self.handlers.add(handler)

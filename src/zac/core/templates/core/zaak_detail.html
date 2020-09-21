@@ -26,6 +26,7 @@
     <ul class="nav-menu nav-menu--object-id">
         {% nav_menu_item 'core:zaak-activiteiten' _("Activiteiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
         {% nav_menu_item 'core:zaak-besluiten' _("Besluiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
+        {% nav_menu_item 'core:zaak-access-requests' _("Access requests") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
     </ul>
 </nav>
 {% endblock %}

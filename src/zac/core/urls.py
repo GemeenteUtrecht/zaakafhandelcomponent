@@ -12,8 +12,10 @@ from .views.processes import (
 )
 from .views.search import SearchIndexView, SearchView
 from .views.zaken import (
+    AccessRequestCreateView,
     FetchZaakObjecten,
     Index,
+    ZaakAccessRequestsView,
     ZaakActiviteitenView,
     ZaakAfhandelView,
     ZaakDetail,
@@ -47,6 +49,16 @@ urlpatterns = [
                     "<bronorganisatie>/<identificatie>/afhandelen/",
                     ZaakAfhandelView.as_view(),
                     name="zaak-afhandeling",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/access-requests/add/",
+                    AccessRequestCreateView.as_view(),
+                    name="access-request-create",
+                ),
+                path(
+                    "<bronorganisatie>/<identificatie>/access-requests/",
+                    ZaakAccessRequestsView.as_view(),
+                    name="zaak-access-requests",
                 ),
             ]
         ),

@@ -2,7 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
+from .models import (
+    AccessRequest,
+    AuthorizationProfile,
+    PermissionSet,
+    User,
+    UserAuthorizationProfile,
+)
 
 
 class UserAuthorizationProfileInline(admin.TabularInline):
@@ -44,4 +50,12 @@ class AuthorizationProfileAdmin(admin.ModelAdmin):
 class UserAuthorizationProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "auth_profile", "start", "end")
     list_filter = ("user", "auth_profile", "start", "end")
-    search_fields = ("user__usernamae", "auth_profile__name", "auth_profile__uuid")
+    search_fields = ("user__username", "auth_profile__name", "auth_profile__uuid")
+
+
+@admin.register(AccessRequest)
+class AccessRequestAdmin(admin.ModelAdmin):
+    list_display = ("requester", "result")
+    list_filter = ("requester", "result")
+    search_fields = ("requester__username", "zaak")
+    raw_id_fields = ("requester", "handlers")

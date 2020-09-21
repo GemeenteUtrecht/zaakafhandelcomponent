@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "rules.apps.AutodiscoverRulesConfig",
     "django_filters",
+    "extra_views",
     # Project applications.
     "zac.accounts",
     "zac.camunda",

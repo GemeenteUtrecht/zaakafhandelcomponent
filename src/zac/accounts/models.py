@@ -9,9 +9,12 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Zaak
 
+from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
+from .query import AccessRequestQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -162,3 +165,23 @@ class UserAuthorizationProfile(models.Model):
 
     start = models.DateTimeField(_("start"), blank=True, null=True)
     end = models.DateTimeField(_("end"), blank=True, null=True)
+
+
+class AccessRequest(models.Model):
+    requester = models.ForeignKey(
+        "User", on_delete=models.CASCADE, related_name="initiated_requests"
+    )
+    handlers = models.ManyToManyField(
+        "User", blank=True, help_text=_("users who can provide access to the zaak")
+    )
+    zaak = models.URLField(
+        _("zaak"),
+        max_length=1000,
+        help_text=_("URL reference to the zaak in its API"),
+    )
+    comment = models.CharField(_("comment"), max_length=1000, blank=True)
+    result = models.CharField(
+        _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
+    )
+
+    objects = AccessRequestQuerySet.as_manager()

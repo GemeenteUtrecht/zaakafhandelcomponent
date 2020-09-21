@@ -7,6 +7,7 @@ from django.urls import include, path
 from zac.werkvoorraad.views import SummaryView
 
 handler500 = "zac.utils.views.server_error"
+handler403 = "zac.utils.views.permission_denied"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
