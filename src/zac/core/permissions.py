@@ -39,5 +39,5 @@ zaken_add_documents = Permission(
 )
 
 zaken_handle_access = Permission(
-    name="zaken:behandelen", description="Beheer toegangsverzoeken voor zaken"
+    name="zaken:toegang-verlenen", description="Beheer toegangsverzoeken voor zaken"
 )
