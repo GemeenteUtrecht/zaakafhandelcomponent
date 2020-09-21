@@ -88,7 +88,7 @@ def can_set_results(user: User, zaak: Optional[Zaak]):
 @rules.predicate
 def can_read_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
     if zaak is None:
-        return _has_permission_key(zaken_set_result.name, user)
+        return _has_permission_key(zaken_inzien.name, user)
     return _generic_zaakpermission(user, zaak, zaken_inzien)
 
 
