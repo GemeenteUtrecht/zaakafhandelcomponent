@@ -5,21 +5,20 @@ import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
 
-
 const RawTextArea = ({
-    id='',
-    name='',
-    initial='',
-    value='',
-    classes=null,
+    id = '',
+    name = '',
+    initial = '',
+    value = '',
+    classes = null,
     onBlur,
     onChange,
-    required=false,
-    disabled=false
+    required = false,
+    disabled = false,
 }) => {
-    const classNames = classes ?? 'input__control input__control--text';
+    const classNames = classes || 'input__control input__control--textarea';
 
-    let extraProps = {};
+    const extraProps = {};
     if (id) {
         extraProps.id = id;
     }
@@ -34,12 +33,12 @@ const RawTextArea = ({
         <textarea
             name={name}
             className={classNames}
-            onBlur={ (event) => {
+            onBlur={(event) => {
                 if (onBlur) {
                     onBlur(event);
                 }
             }}
-            onChange={ (event) => {
+            onChange={(event) => {
                 if (onChange) {
                     onChange(event);
                 }
@@ -47,13 +46,14 @@ const RawTextArea = ({
             required={required}
             disabled={disabled}
             {...extraProps}
-        ></textarea>
+        />
     );
 };
 
-
 const TextArea = (props) => {
-    const { label, helpText, id, required } = props;
+    const {
+        label, helpText, id, required,
+    } = props;
     return (
         <Wrapper>
             <Label label={label} required={required} idForLabel={id} />
@@ -71,6 +71,5 @@ TextArea.propTypes = {
     id: PropTypes.string,
     helpText: PropTypes.string,
 };
-
 
 export { TextArea };

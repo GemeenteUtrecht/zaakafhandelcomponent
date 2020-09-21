@@ -40,6 +40,9 @@ $table-head-border-color: $color-secondary !default;
   }
 
   @include element('column') {
+    td {
+      padding: 0.2em 0.5em;
+    }
 
     @include modifier('hidden') {
       display: none;
@@ -47,10 +50,6 @@ $table-head-border-color: $color-secondary !default;
 
     @include modifier('clickable') {
       cursor: pointer;
-
-      td {
-        padding: 0.2em 0.5em;
-      }
 
       &:hover {
         background: $color-secondary;
@@ -60,6 +59,10 @@ $table-head-border-color: $color-secondary !default;
 
     @include modifier('2cols') {
       width: 100% / 12 * 2;
+    }
+
+    @include modifier('4cols') {
+      width: 100% / 12 * 4;
     }
 
     @include modifier('6cols') {

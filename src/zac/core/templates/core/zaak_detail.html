@@ -109,29 +109,21 @@
         </div>
 
         <div class="section-title">Betrokkenen</div>
-            <table class="table table--fit">
-                <thead>
-                    <tr>
-                        <th class="table__header table__column table__column--2cols">Type</th>
-                        <th class="table__header table__column table__column--2cols">Rol</th>
-                        <th class="table__header table__column table__column--6cols">Naam</th>
-                        <th class="table__header table__column table__column--2cols">Identificatie</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rol in rollen %}
-                        <tr>
-                            <td>{{ rol.get_betrokkene_type_display }}</td>
-                            <td>{{ rol.get_omschrijving_generiek_display }}</td>
-                            {% with rol.get_name|default:'' as name %}
-                                <td class="table__column table__column--truncate" title="{{ name }}">{{ name }}</td>
-                            {% endwith %}
-                            <td>{{ rol.get_bsn|default:'' }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
+        <div id="betrokkenen-react" data-csrftoken="{{ csrf_token }}">
+            {# React managed #}
+        </div>
+        {% for rol in rollen %}
+            {% with rol.get_name|default:'' as name %}
+                <div class="betrokkene-data"
+                    data-type="{{ rol.get_betrokkene_type_display }}"
+                    data-role="{{ rol.get_omschrijving_generiek_display }}"
+                    data-name="{{ name }}"
+                    data-bsn="{{ rol.get_bsn|default:'' }}"
+                >
+                    {# React managed #}
+                </div>
+            {% endwith %}
+        {% endfor %}
     </section>
 
     <section class="zaak-detail__panel content-panel">
