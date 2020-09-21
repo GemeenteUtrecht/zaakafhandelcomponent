@@ -1,4 +1,6 @@
-# Inspired by https://docs.docker.com/compose/django/
+# Minimal docker-compose to get the service up.
+# Note that this is NOT meant for real "production" deployments, but only to get up
+# and running quickly in a dev environment.
 version: '3.4'
 
 services:
