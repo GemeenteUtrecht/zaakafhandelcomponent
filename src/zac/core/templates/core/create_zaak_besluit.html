@@ -33,7 +33,7 @@
 
     {% widget 'form:non_field_errors' %}
 
-    <form action="." method="post" class="form form--wide">
+    <form action="{{ request.path }}" method="post" class="form form--wide">
         {% csrf_token %}
 
         <section class="zaak-detail__panel zaak-detail__panel--full content-panel">

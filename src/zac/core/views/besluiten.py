@@ -8,7 +8,12 @@ from zac.accounts.mixins import PermissionRequiredMixin
 from ..base_views import BaseDetailView, SingleObjectMixin
 from ..forms import BesluitForm
 from ..permissions import zaken_inzien
-from ..services import find_zaak, get_besluiten
+from ..services import (
+    create_besluit_document,
+    create_zaakbesluit,
+    find_zaak,
+    get_besluiten,
+)
 
 
 class ZaakBesluitenView(PermissionRequiredMixin, BaseDetailView):
@@ -60,6 +65,12 @@ class BesluitCreateView(PermissionRequiredMixin, SingleObjectMixin, FormView):
             **base,
             "zaak": self.object,
         }
+
+    def form_valid(self, form: BesluitForm):
+        besluit = create_zaakbesluit(zaak=self.object, data=form.as_api_body())
+        if form.cleaned_data["document"]:
+            create_besluit_document(besluit, form.cleaned_data["document"])
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse("core:zaak-besluiten", kwargs=self.kwargs)
