@@ -53,6 +53,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         through="UserAuthorizationProfile",
     )
 
+    oos = models.ManyToManyField(
+        "organisatieonderdelen.OrganisatieOnderdeel",
+        blank=True,
+        verbose_name=_("organisatieonderdelen"),
+        help_text=_(
+            "The (one or multiple) OOs this user belongs to. Usually this should only "
+            "be a single OO, but exceptions are possible. User OOs are used in access "
+            "control checks to zaken."
+        ),
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = "username"
@@ -87,13 +98,27 @@ class AuthorizationProfile(models.Model):
     """
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(_("naam"), max_length=255)
+    name = models.CharField(
+        _("naam"),
+        max_length=255,
+        help_text=_(
+            "Use an easily recognizable name that maps to the function of users."
+        ),
+    )
     permission_sets = models.ManyToManyField(
         "PermissionSet",
         verbose_name=_("permission sets"),
         help_text=_(
             "Selecting multiple sets makes them add/merge all the permissions together."
         ),
+    )
+    oo = models.ForeignKey(
+        "organisatieonderdelen.OrganisatieOnderdeel",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_("organisatieonderdeel"),
+        help_text=_("Limit access to data belonging to this OO."),
     )
 
     class Meta:

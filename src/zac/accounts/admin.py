@@ -21,6 +21,25 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 @admin.register(User)
 class _UserAdmin(HijackUserAdminMixin, UserAdmin):
     list_display = UserAdmin.list_display + ("hijack_field",)
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                    "oos",
+                ),
+            },
+        ),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+    filter_horizontal = UserAdmin.filter_horizontal + ("oos",)
     inlines = [UserAuthorizationProfileInline]
 
 
@@ -33,10 +52,11 @@ class PermissionSetAdmin(admin.ModelAdmin):
 
 @admin.register(AuthorizationProfile)
 class AuthorizationProfileAdmin(admin.ModelAdmin):
-    list_display = ("name", "display_permission_sets")
-    list_filter = ("permission_sets",)
+    list_display = ("name", "display_permission_sets", "oo")
+    list_filter = ("permission_sets", "oo")
     search_fields = ("name", "uuid")
     filter_horizontal = ("permission_sets",)
+    autocomplete_fields = ("oo",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

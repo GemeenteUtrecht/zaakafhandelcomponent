@@ -178,7 +178,7 @@ def get_permission_sets_choices():
 class AuthorizationProfileForm(forms.ModelForm):
     class Meta:
         model = AuthorizationProfile
-        fields = ("name", "permission_sets")
+        fields = ("name", "permission_sets", "oo")
         widgets = {"permission_sets": forms.CheckboxSelectMultiple()}
 
     def __init__(self, *args, **kwargs):

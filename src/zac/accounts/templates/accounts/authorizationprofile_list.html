@@ -27,6 +27,11 @@
                     <a href="{% url 'accounts:authprofile-detail' entitlement.uuid %}" class="link">
                         {{ entitlement.name }}
                     </a>
+                    {% if entitlement.oo %}
+                    <p title="Organisatieonderdeel">
+                        {{ entitlement.oo.name }}
+                    </p>
+                    {% endif %}
                 </th>
                 <td>
                     {% for permission_set in entitlement.permission_sets.all %}
