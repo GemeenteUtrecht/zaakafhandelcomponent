@@ -208,5 +208,7 @@ class AccessRequest(models.Model):
     result = models.CharField(
         _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
     )
+    start_date = models.DateField(_("start date"), blank=True, null=True)
+    end_date = models.DateField(_("end date"), blank=True, null=True)
 
     objects = AccessRequestQuerySet.as_manager()

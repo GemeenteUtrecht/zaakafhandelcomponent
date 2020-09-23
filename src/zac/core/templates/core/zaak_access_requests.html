@@ -31,8 +31,9 @@
         <thead>
             <tr>
                 <th class="table__header">#</th>
-                <th class="table__header">User</th>
-                <th class="table__header">Comments</th>
+                <th class="table__header">{% trans 'User' %}</th>
+                <th class="table__header">{% trans 'Comments' %}</th>
+                <th class="table__header">{% trans 'End date' %}</th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +48,10 @@
                     <td>{{ form.checked }}</td>
                     <td>{{ form.instance.requester }}</td>
                     <td>{{ form.instance.comment }}</td>
+                    <td>
+                        {% widget "form:_errors" errors=form.end_date.errors %}
+                        {{ form.end_date }}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

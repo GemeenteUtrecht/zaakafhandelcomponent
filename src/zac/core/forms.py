@@ -1,5 +1,6 @@
 import itertools
 import logging
+from datetime import date
 from typing import Dict, List, Tuple
 
 from django import forms
@@ -378,6 +379,10 @@ class AccessRequestCreateForm(forms.ModelForm):
         return request_access
 
 
+class DateInputWidget(forms.DateInput):
+    input_type = "date"
+
+
 class AccessRequestHandleForm(forms.ModelForm):
     """
     Reject or approve access requests for a particular zaak
@@ -387,12 +392,30 @@ class AccessRequestHandleForm(forms.ModelForm):
 
     class Meta:
         model = AccessRequest
-        fields = ("checked",)
+        fields = ("checked", "end_date")
+        widgets = {"end_date": forms.DateInput(attrs={"type": "date"})}
 
     def __init__(self, **kwargs):
         self.request = kwargs.pop("request")
 
         super().__init__(**kwargs)
+
+    def clean_end_date(self):
+        checked = self.cleaned_data["checked"]
+        end_date = self.cleaned_data["end_date"]
+        submit = self.data.get("submit")
+
+        #  save end date only if the result == approve
+        if not checked:
+            return None
+
+        if submit != AccessRequestResult.approve:
+            return None
+
+        if not end_date:
+            raise forms.ValidationError(_("End date of the access must be specified"))
+
+        return end_date
 
     def send_email(self):
         user = self.instance.requester
@@ -428,6 +451,8 @@ class AccessRequestHandleForm(forms.ModelForm):
 
     @transaction.atomic
     def save(self, **kwargs):
+        if self.instance.result == AccessRequestResult.approve:
+            self.instance.start_date = date.today()
         instance = super().save(**kwargs)
 
         # send email

@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 from typing import Optional, Union
 
 import rules
@@ -97,7 +98,7 @@ def has_temporary_access(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return False
     return user.initiated_requests.filter(
-        zaak=zaak.url, result=AccessRequestResult.approve
+        zaak=zaak.url, result=AccessRequestResult.approve, end_date__gte=date.today()
     ).exists()
 
 
