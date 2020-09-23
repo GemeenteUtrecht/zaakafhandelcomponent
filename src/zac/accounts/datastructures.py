@@ -52,6 +52,7 @@ class ZaaktypePermission:
     catalogus: str
     identificatie: str
     max_va: str
+    oo: str = ""
 
     @property
     def zaaktypen(self) -> List[ZaakType]:
@@ -75,6 +76,9 @@ class ZaaktypePermission:
         va_nr = VA_ORDER[self.max_va]
         other_va_nr = VA_ORDER[other_va]
         return va_nr >= other_va_nr
+
+
+from django.db.models import F
 
 
 class ZaakPermissionCollection:
@@ -107,8 +111,11 @@ class ZaakPermissionCollection:
 
         _zt_perms = {}
         _zt_objects = {}
+        _oos = {}
 
-        perm_sets = PermissionSet.objects.filter(authorizationprofile__user=user)
+        perm_sets = PermissionSet.objects.filter(
+            authorizationprofile__user=user
+        ).annotate(oo=F("authorizationprofile__oo__slug"))
         for perm_set in perm_sets:
             for perm_key in perm_set.permissions:
                 # group by identificatie
@@ -118,6 +125,10 @@ class ZaakPermissionCollection:
                 ):
                     _zt_objects[(perm_set.catalogus, identificatie)] = list(_zaaktypen)
                     unique_id = (perm_key, perm_set.catalogus, identificatie)
+
+                    # store the relevant OO
+                    _oos[unique_id] = perm_set.oo
+
                     if unique_id not in _zt_perms:
                         _zt_perms[unique_id] = perm_set.max_va
                     else:
@@ -132,6 +143,7 @@ class ZaakPermissionCollection:
                 catalogus=catalogus_url,
                 identificatie=identificatie,
                 max_va=max_va,
+                oo=_oos.get((perm_key, catalogus_url, identificatie), ""),
             )
             for (
                 perm_key,
