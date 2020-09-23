@@ -1,8 +1,11 @@
+from datetime import date
+
 from django.core import mail
 from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
+from freezegun import freeze_time
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -181,6 +184,7 @@ class CreateAccessRequestTests(TransactionWebTest):
         )
 
 
+@freeze_time("2020-01-01")
 @requests_mock.Mocker()
 class HandleAccessRequestsTests(TransactionWebTest):
     url = reverse_lazy(
@@ -277,6 +281,8 @@ class HandleAccessRequestsTests(TransactionWebTest):
 
         form = get_response.forms[1]
         form["form-0-checked"].checked = True
+        form["form-0-end_date"] = "2020-12-12"
+        form["form-1-end_date"] = "2020-11-11"
 
         response = form.submit("submit", value="approve")
 
@@ -284,9 +290,13 @@ class HandleAccessRequestsTests(TransactionWebTest):
 
         approved_request = AccessRequest.objects.get(id=int(form["form-0-id"].value))
         self.assertEqual(approved_request.result, AccessRequestResult.approve)
+        self.assertEqual(approved_request.end_date, date(2020, 12, 12))
+        self.assertEqual(approved_request.start_date, date(2020, 1, 1))
 
         other_request = AccessRequest.objects.get(id=int(form["form-1-id"].value))
         self.assertEqual(other_request.result, "")
+        self.assertIsNone(other_request.start_date)
+        self.assertIsNone(other_request.end_date)
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
@@ -302,6 +312,32 @@ You can see it here: http://testserver{reverse("core:zaak-detail", kwargs={"bron
 Best regards,
 ZAC Team
 """,
+        )
+
+    def test_approve_access_requests_without_end_date_fail(self, mock_request):
+        self._setUpMocks(mock_request)
+        AccessRequestFactory.create_batch(
+            2, handlers=[self.user], zaak=self.zaak["url"]
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        get_response = self.app.get(self.url)
+
+        form = get_response.forms[1]
+        form["form-0-checked"].checked = True
+
+        response = form.submit("submit", value="approve")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.html.find(class_="input__error").text,
+            "End date of the access must be specified",
         )
 
     def test_reject_access_requests(self, mock_request):

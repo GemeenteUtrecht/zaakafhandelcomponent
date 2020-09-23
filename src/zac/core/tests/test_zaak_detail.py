@@ -422,13 +422,60 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         AccessRequestFactory.create(
-            requester=self.user, zaak=zaak["url"], result=AccessRequestResult.approve
+            requester=self.user,
+            zaak=zaak["url"],
+            result=AccessRequestResult.approve,
+            end_date=datetime.date.today(),
         )
 
         with mock_zaak_detail_context():
             response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_user_has_temp_auth_expired(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        AccessRequestFactory.create(
+            requester=self.user,
+            zaak=zaak["url"],
+            result=AccessRequestResult.approve,
+            end_date=datetime.date.today() - datetime.timedelta(days=1),
+        )
+
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)
 
 
 @requests_mock.Mocker()
