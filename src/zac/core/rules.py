@@ -1,4 +1,5 @@
 import logging
+import operator
 from datetime import date
 from typing import Optional, Union
 
@@ -9,7 +10,6 @@ from zgw_consumers.api_models.zaken import Zaak
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import User
 from zac.accounts.permissions import Permission, register
-from zac.core.services import get_rollen
 
 from .permissions import (
     zaakproces_send_message,
@@ -69,20 +69,27 @@ def _has_permission_key(permission_name: str, user: User):
 def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     """
     Test if the user and the zaak have an Organisatieonderdeel in common.
+
+    Note that you should validate the actual permission for the zaak.zaaktype and VA
+    before doing the OO check.
     """
     zaaktype_url = zaak.zaaktype
     if not isinstance(zaaktype_url, str):
         zaaktype_url = zaaktype_url.url
 
-    relevant_perms = [
-        perm for perm in user._zaaktype_perms if perm.contains(zaaktype_url)
-    ]
-
-    # OOs that must intersect with the user OOs
-    perm_oos = {perm.oo for perm in relevant_perms}
-
-    # if there are no OO-based permissions at all, access is granted
-    if not perm_oos:
+    # OO is specced on the Authorization Profile level, and we grab the permissions
+    # that are relevant to this zaaktype. We can therefore union the OO-sets on each
+    # permission. OO filtering on Authorization profile level is additive - if one AP
+    # gives access to OO1 zaken, and another AP gives access to OO2 zaken from the
+    # same zaaktype, then the user can see the zaak as soon as it belongs to any of
+    # OO1 or OO2 (provided that user is member of both APs).
+    relevant_oos: set = operator.or_(
+        *[perm.oos for perm in user._zaaktype_perms if perm.contains(zaaktype_url)]
+    )
+    # shortcut - as soon as there is a single AP that is NOT OO bound/scoped, it means
+    # no filtering on OO should take place. This effectively means that there is an AP
+    # granting permission to all zaken of the zaak.zaaktype (within the max_va).
+    if None in relevant_oos:
         return True
 
     # finally, check that the zaak belongs to the allowed OOs
@@ -91,7 +98,7 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
         rol
         for rol in rollen
         if rol.betrokkene_type == "organisatorische_eenheid"
-        and rol.betrokkene_identificatie.get("identificatie") in perm_oos
+        and rol.betrokkene_identificatie.get("identificatie") in relevant_oos
     ]
     return any(relevant_roles)
 

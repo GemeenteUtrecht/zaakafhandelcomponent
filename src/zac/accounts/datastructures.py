@@ -1,7 +1,8 @@
 import itertools
-from dataclasses import dataclass
-from typing import List, Set
+from dataclasses import dataclass, field
+from typing import List, Optional, Set
 
+from django.db.models import F
 from django.utils.functional import cached_property
 
 from zgw_consumers.api_models.catalogi import ZaakType
@@ -52,7 +53,7 @@ class ZaaktypePermission:
     catalogus: str
     identificatie: str
     max_va: str
-    oo: str = ""
+    oos: Set[Optional[str]] = field(default_factory=set)
 
     @property
     def zaaktypen(self) -> List[ZaakType]:
@@ -76,9 +77,6 @@ class ZaaktypePermission:
         va_nr = VA_ORDER[self.max_va]
         other_va_nr = VA_ORDER[other_va]
         return va_nr >= other_va_nr
-
-
-from django.db.models import F
 
 
 class ZaakPermissionCollection:
@@ -111,7 +109,6 @@ class ZaakPermissionCollection:
 
         _zt_perms = {}
         _zt_objects = {}
-        _oos = {}
 
         perm_sets = PermissionSet.objects.filter(
             authorizationprofile__user=user
@@ -123,34 +120,38 @@ class ZaakPermissionCollection:
                 for identificatie, _zaaktypen in itertools.groupby(
                     zaaktypen, key=group_key
                 ):
-                    _zt_objects[(perm_set.catalogus, identificatie)] = list(_zaaktypen)
-                    unique_id = (perm_key, perm_set.catalogus, identificatie)
+                    zt_perm_key = (perm_key, perm_set.catalogus, identificatie)
 
-                    # store the relevant OO
-                    _oos[unique_id] = perm_set.oo
-
-                    if unique_id not in _zt_perms:
-                        _zt_perms[unique_id] = perm_set.max_va
+                    # if permission not set yet -> store it in mapping
+                    if zt_perm_key not in _zt_perms:
+                        zaaktype_permission = ZaaktypePermission(
+                            permission=perm_key,
+                            catalogus=perm_set.catalogus,
+                            identificatie=identificatie,
+                            max_va=perm_set.max_va,
+                            oos={perm_set.oo},  # None or slug
+                        )
+                        _zt_perms[zt_perm_key] = zaaktype_permission
+                    # otherwise, retrieve it so we can update it in subsequent checks
+                    # _if_ needed
                     else:
-                        current_order = VA_ORDER[_zt_perms[unique_id]]
-                        perm_order = VA_ORDER[perm_set.max_va]
-                        if perm_order > current_order:
-                            _zt_perms[unique_id] = perm_set.max_va
+                        zaaktype_permission = _zt_perms[zt_perm_key]
 
-        zt_perms = [
-            ZaaktypePermission(
-                permission=perm_key,
-                catalogus=catalogus_url,
-                identificatie=identificatie,
-                max_va=max_va,
-                oo=_oos.get((perm_key, catalogus_url, identificatie), ""),
-            )
-            for (
-                perm_key,
-                catalogus_url,
-                identificatie,
-            ), max_va in _zt_perms.items()
-        ]
+                    # track the actual zaaktype objects
+                    # TOOD: this can probably be lifted up in the loops
+                    _zt_objects[(perm_set.catalogus, identificatie)] = list(_zaaktypen)
+
+                    # ensure other OOs that grant access to this zaaktype are tracked
+                    zaaktype_permission.oos.add(perm_set.oo)
+
+                    # check if the max_va of this perm_set grants more access than what
+                    # is currently known
+                    current_order = VA_ORDER[zaaktype_permission.max_va]
+                    perm_order = VA_ORDER[perm_set.max_va]
+                    if perm_order > current_order:
+                        zaaktype_permission.max_va = perm_set.max_va
+
+        zt_perms = list(_zt_perms.values())
 
         for zt_perm in zt_perms:
             _zaaktypen = _zt_objects.get((zt_perm.catalogus, zt_perm.identificatie))
