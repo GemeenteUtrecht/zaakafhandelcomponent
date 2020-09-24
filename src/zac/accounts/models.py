@@ -53,17 +53,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         through="UserAuthorizationProfile",
     )
 
-    oos = models.ManyToManyField(
-        "organisatieonderdelen.OrganisatieOnderdeel",
-        blank=True,
-        verbose_name=_("organisatieonderdelen"),
-        help_text=_(
-            "The (one or multiple) OOs this user belongs to. Usually this should only "
-            "be a single OO, but exceptions are possible. User OOs are used in access "
-            "control checks to zaken."
-        ),
-    )
-
     objects = UserManager()
 
     USERNAME_FIELD = "username"
@@ -118,7 +107,10 @@ class AuthorizationProfile(models.Model):
         blank=True,
         on_delete=models.PROTECT,
         verbose_name=_("organisatieonderdeel"),
-        help_text=_("Limit access to data belonging to this OO."),
+        help_text=_(
+            "Limit access to data belonging to this OO. Leaving this blank means that "
+            "there is no restriction on OO in place."
+        ),
     )
 
     class Meta:

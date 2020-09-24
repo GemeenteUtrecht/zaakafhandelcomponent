@@ -85,10 +85,6 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     if not perm_oos:
         return True
 
-    # check that the user has any of the OOs imposed by the permissions
-    if not user.oos.filter(slug__in=perm_oos).exists():
-        return False
-
     # finally, check that the zaak belongs to the allowed OOs
     rollen = get_rollen(zaak)
     relevant_roles = [
