@@ -91,6 +91,11 @@ CACHES = {
             "IGNORE_EXCEPTIONS": True,
         },
     },
+    # cache that resets itself after every request
+    "request": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "request",
+    },
 }
 
 # Application definition

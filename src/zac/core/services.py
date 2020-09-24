@@ -605,6 +605,7 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     return resultaat
 
 
+@cache_result("rollen:{zaak.url}", alias="request", timeout=10)
 def get_rollen(zaak: Zaak) -> List[Rol]:
     # fetch the rollen
     client = _client_from_object(zaak)
