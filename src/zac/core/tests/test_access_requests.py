@@ -114,30 +114,8 @@ class CreateAccessRequestTests(TransactionWebTest):
         access_request = AccessRequest.objects.get()
 
         self.assertEqual(access_request.requester, self.user)
-        self.assertEqual(list(access_request.handlers.all()), [handler])
         self.assertEqual(access_request.zaak, self.zaak["url"])
         self.assertEqual(access_request.comment, "some comment")
-
-    def test_create_no_zaak_behandelaars(self, m):
-        self._setUpMocks(m)
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
-        )
-
-        get_response = self.app.get(self.url)
-
-        form = get_response.forms[1]
-        form["comment"] = "some comment"
-
-        response = form.submit()
-
-        self.assertEqual(response.status_code, 302)
-
-        access_request = AccessRequest.objects.get()
-
-        self.assertEqual(access_request.requester, self.user)
-        self.assertEqual(access_request.zaak, self.zaak["url"])
-        self.assertEqual(access_request.handlers.count(), 0)
 
     def test_create_fail_other_access_request(self, m):
         self._setUpMocks(m)
@@ -236,22 +214,59 @@ class HandleAccessRequestsTests(TransactionWebTest):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        # can't use generate_oas_component because of polymorphism
+        self.rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+            },
+        }
 
-    def test_read_access_requests_no_perms(self, mock_request):
-        self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(
-            2, handlers=[self.user], zaak=self.zaak["url"]
+    def test_read_access_requests_no_perms(self, m):
+        self._setUpMocks(m)
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
+
+        response = self.app.get(self.url, status=403)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_read_access_request_not_behandelaar(self, m):
+        self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
         response = self.app.get(self.url, status=403)
 
         self.assertEqual(response.status_code, 403)
 
-    def test_read_access_requests_have_perms(self, mock_request):
-        self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(
-            2, handlers=[self.user], zaak=self.zaak["url"]
+    def test_read_access_requests_have_perms(self, m):
+        self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([self.rol]),
         )
+
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
         PermissionSetFactory.create(
             permissions=[zaken_handle_access.name],
             for_user=self.user,
@@ -264,11 +279,14 @@ class HandleAccessRequestsTests(TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_approve_access_requests(self, mock_request):
-        self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(
-            2, handlers=[self.user], zaak=self.zaak["url"]
+    def test_approve_access_requests(self, m):
+        self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([self.rol]),
         )
+
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
         PermissionSetFactory.create(
             permissions=[zaken_handle_access.name],
             for_user=self.user,
@@ -314,11 +332,14 @@ ZAC Team
 """,
         )
 
-    def test_approve_access_requests_without_end_date_fail(self, mock_request):
-        self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(
-            2, handlers=[self.user], zaak=self.zaak["url"]
+    def test_approve_access_requests_without_end_date_fail(self, m):
+        self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([self.rol]),
         )
+
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
         PermissionSetFactory.create(
             permissions=[zaken_handle_access.name],
             for_user=self.user,
@@ -340,11 +361,14 @@ ZAC Team
             "End date of the access must be specified",
         )
 
-    def test_reject_access_requests(self, mock_request):
-        self._setUpMocks(mock_request)
-        AccessRequestFactory.create_batch(
-            2, handlers=[self.user], zaak=self.zaak["url"]
+    def test_reject_access_requests(self, m):
+        self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([self.rol]),
         )
+
+        AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
         PermissionSetFactory.create(
             permissions=[zaken_handle_access.name],
             for_user=self.user,

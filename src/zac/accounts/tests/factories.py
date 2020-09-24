@@ -51,11 +51,3 @@ class AccessRequestFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.AccessRequest"
-
-    @factory.post_generation
-    def handlers(self, create, extracted, **kwargs):
-        if not extracted:
-            extracted = [UserFactory.create()]
-
-        for handler in extracted:
-            self.handlers.add(handler)
