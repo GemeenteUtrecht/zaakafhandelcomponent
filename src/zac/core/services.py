@@ -42,6 +42,7 @@ from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaa
 from .models import CoreConfig
 from .permissions import zaken_inzien
 from .rollen import Rol
+from .rules import _get_oos_from_zt_perms
 
 logger = logging.getLogger(__name__)
 
@@ -253,23 +254,24 @@ def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
 ###################################################
 
 
-@cache_result(
-    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
-    timeout=AN_HOUR,
-)
+# @cache_result(
+#     "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}:{extra_query}",
+#     timeout=AN_HOUR,
+# )
 def _find_zaken(
     client,
     zaaktype: str = "",
     identificatie: str = "",
     bronorganisatie: str = "",
     max_va: str = "",
-    test_func: Optional[callable] = None,
     find_all=False,
     **extra_query,
 ) -> List[Dict]:
     """
     Retrieve zaken for a particular client with filter parameters.
     """
+    extra_query.pop("skip_cache", None)
+
     query = {
         "zaaktype": zaaktype,
         "identificatie": identificatie,
@@ -284,7 +286,6 @@ def _find_zaken(
         "zaak",
         query_params=query,
         minimum=minimum,
-        test_func=test_func,
     )
     return _zaken
 
@@ -309,10 +310,16 @@ def get_zaken(
         query_zaaktypen = zaaktypen or [""]
     else:
         query_zaaktypen = (
-            allowed_zaaktypen
+            allowed_zaaktypen.keys()
             if not zaaktypen
             else set(zaaktypen).intersection(set(allowed_zaaktypen))
         )
+
+    relevant_oos_for_zaaktype = {
+        zaaktype_url: _get_oos_from_zt_perms(user_perms, zaaktype_url)
+        for zaaktype_url in query_zaaktypen
+        if zaaktype_url
+    }
 
     # build keyword arguments for retrieval jobs - running network calls in parallel
     # if possible
@@ -320,6 +327,7 @@ def get_zaken(
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     for zrc in zrcs:
         client = zrc.build_client()
+
         for zaaktype_url in query_zaaktypen:
             # figure out the max va
             relevant_perms = [
@@ -336,17 +344,38 @@ def get_zaken(
                 relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
             )
             max_va = relevant_perms[0].max_va if relevant_perms else ""
-            find_kwargs.append(
-                {
-                    "client": client,
-                    "identificatie": identificatie,
-                    "bronorganisatie": bronorganisatie,
-                    "zaaktype": zaaktype_url,
-                    "max_va": max_va,
-                    "find_all": find_all,
-                    **query_params,
-                }
-            )
+
+            base_find_kwargs = {
+                "client": client,
+                "identificatie": identificatie,
+                "bronorganisatie": bronorganisatie,
+                "zaaktype": zaaktype_url,
+                "max_va": max_va,
+                "find_all": find_all,
+            }
+
+            # check if we need to filter on OO
+            relevant_oos = relevant_oos_for_zaaktype.get(zaaktype_url, {None})
+            if (
+                None in relevant_oos
+            ):  # no limitation on OO because of some AP at some point
+                find_kwargs.append(
+                    {
+                        **base_find_kwargs,
+                        **query_params,
+                    }
+                )
+            else:
+                for oo_slug in relevant_oos:
+                    #  The API does not actually specify defining the OO in the query (yet),
+                    #  but we can filter on the betrokkenetype
+                    find_kwargs.append(
+                        {
+                            **base_find_kwargs,
+                            "rol__betrokkeneType": "organisatorische_eenheid",
+                            **query_params,
+                        }
+                    )
 
     with parallel() as executor:
         results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
@@ -357,6 +386,54 @@ def get_zaken(
     # resolve zaaktype reference
     for zaak in zaken:
         zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
+
+    # filter out the results that don't match in terms of OO restriction
+
+    # bug in the standard, see https://github.com/VNG-Realisatie/gemma-zaken/issues/1685
+    # and Open Zaak downstream issue: https://github.com/open-zaak/open-zaak/issues/726
+    # param = "betrokkeneIdentificatie__organisatorischeEenheid__identificatie"
+    oo_param = "betrokkeneIdentificatie__vestiging__identificatie"
+    rol_queries = []
+
+    for zaak in zaken:
+        oos = relevant_oos_for_zaaktype.get(zaak.zaaktype.url, {None})
+        if None in oos:
+            continue
+        for oo_slug in oos:
+            rol_queries.append(
+                {
+                    "client": _client_from_object(zaak),
+                    "zaak": zaak.url,
+                    "betrokkeneType": "organisatorische_eenheid",
+                    oo_param: oo_slug,
+                }
+            )
+
+    def _has_betrokken_oo(client, **query) -> bool:
+        rol_response = client.list("rol", query_params=query)
+        return rol_response["count"] > 0
+
+    with parallel() as executor:
+        rol_results = executor.map(
+            lambda kwargs: _has_betrokken_oo(**kwargs), rol_queries
+        )
+
+    # track if we saw any of the required OOs
+    zaak_oo_ok = {}
+
+    for rol_query, has_betrokken_oo in zip(rol_queries, rol_results):
+        zaak_url = rol_query["zaak"]
+        zaak_oo_ok.setdefault(zaak_url, has_betrokken_oo)
+        if zaak_oo_ok[zaak_url] is True:
+            continue
+
+    # filter down the list of zaken. if the URL is _not_ in zaak_oo_ok, it means that there
+    # was no relevant OO check needed -> it's okay to display
+    zaken = [
+        zaak
+        for zaak in zaken
+        if zaak.url not in zaak_oo_ok or zaak_oo_ok[zaak.url] is True
+    ]
 
     # sort results by startdatum / registratiedatum / identificatie
 

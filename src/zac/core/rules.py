@@ -1,5 +1,4 @@
 import logging
-import operator
 from datetime import date
 from typing import Optional, Union
 
@@ -9,7 +8,8 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import User
-from zac.accounts.permissions import Permission, register
+
+from zac.accounts.permissions import Permission, UserPermissions, register
 
 from .permissions import (
     zaakproces_send_message,
@@ -65,6 +65,17 @@ def _has_permission_key(permission_name: str, user: User):
     return permission_name in available_perms
 
 
+def _get_oos_from_zt_perms(user_perms: UserPermissions, zaaktype: str) -> set:
+    perm_oos = [
+        zt_perm.oos
+        for zt_perm in user_perms.zaaktype_permissions
+        if zt_perm.contains(zaaktype) and zt_perm.permission == zaken_inzien.name
+    ]
+    if not perm_oos:
+        return set()
+    return set.union(*perm_oos)
+
+
 # TODO: extensive unit testing :-)
 def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     """
@@ -73,6 +84,8 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     Note that you should validate the actual permission for the zaak.zaaktype and VA
     before doing the OO check.
     """
+    from zac.core.services import get_rollen
+
     zaaktype_url = zaak.zaaktype
     if not isinstance(zaaktype_url, str):
         zaaktype_url = zaaktype_url.url
@@ -83,9 +96,8 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     # gives access to OO1 zaken, and another AP gives access to OO2 zaken from the
     # same zaaktype, then the user can see the zaak as soon as it belongs to any of
     # OO1 or OO2 (provided that user is member of both APs).
-    relevant_oos: set = operator.or_(
-        *[perm.oos for perm in user._zaaktype_perms if perm.contains(zaaktype_url)]
-    )
+    relevant_oos: set = _get_oos_from_zt_perms(UserPermissions(user), zaaktype_url)
+
     # shortcut - as soon as there is a single AP that is NOT OO bound/scoped, it means
     # no filtering on OO should take place. This effectively means that there is an AP
     # granting permission to all zaken of the zaak.zaaktype (within the max_va).
