@@ -348,16 +348,6 @@ class AccessRequestCreateForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-    def get_behandelaars(self):
-        rollen = get_rollen(self.zaak)
-        behandelaar_usernames = [
-            rol.betrokkene_identificatie.get("identificatie")
-            for rol in rollen
-            if rol.betrokkene_type == "medewerker"
-            and rol.omschrijving_generiek == "behandelaar"
-        ]
-        return User.objects.filter(username__in=behandelaar_usernames)
-
     def clean(self):
         cleaned_data = super().clean()
         if self.requester.initiated_requests.filter(zaak=self.zaak.url).exists():
@@ -370,13 +360,8 @@ class AccessRequestCreateForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         self.instance.requester = self.requester
         self.instance.zaak = self.zaak.url
-        request_access = super().save()
 
-        behandelaars = self.get_behandelaars()
-        if behandelaars:
-            request_access.handlers.add(*behandelaars)
-
-        return request_access
+        return super().save()
 
 
 class DateInputWidget(forms.DateInput):
@@ -409,10 +394,7 @@ class AccessRequestHandleForm(forms.ModelForm):
         if not checked:
             return None
 
-        if submit != AccessRequestResult.approve:
-            return None
-
-        if not end_date:
+        if submit == AccessRequestResult.approve and not end_date:
             raise forms.ValidationError(_("End date of the access must be specified"))
 
         return end_date
@@ -451,8 +433,15 @@ class AccessRequestHandleForm(forms.ModelForm):
 
     @transaction.atomic
     def save(self, **kwargs):
-        if self.instance.result == AccessRequestResult.approve:
-            self.instance.start_date = date.today()
+        checked = self.cleaned_data["checked"]
+
+        if not checked:
+            return self.instance
+
+        self.instance.result = self.data.get("submit")
+        self.instance.handler = self.request.user
+        self.instance.start_date = date.today()
+
         instance = super().save(**kwargs)
 
         # send email

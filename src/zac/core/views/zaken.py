@@ -359,9 +359,7 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
         queryset = super().get_queryset()
 
         zaak = self.get_zaak()
-        queryset = queryset.filter(
-            result="", handlers__in=[self.request.user], zaak=zaak.url
-        )
+        queryset = queryset.filter(result="", zaak=zaak.url)
         return queryset
 
     def get_formset_kwargs(self):
@@ -382,14 +380,3 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
         context = super().get_context_data(**kwargs)
         context.update({"zaak": self.get_zaak()})
         return context
-
-    def formset_valid(self, formset):
-        result = self.request.POST["submit"]
-
-        for form in formset:
-            checked = form.cleaned_data["checked"]
-            form.instance.result = result if checked else ""
-
-        response = super().formset_valid(formset)
-
-        return response

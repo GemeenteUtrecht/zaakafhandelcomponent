@@ -1,3 +1,4 @@
+from itertools import groupby
 from typing import List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,29 +9,18 @@ from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
-from zac.accounts.permissions import UserPermissions
 from zac.activities.models import Activity
-from zac.core.services import get_zaak, get_zaken
+from zac.core.permissions import zaken_handle_access
+from zac.core.services import get_behandelaar_zaken, get_zaak
 from zgw.models.zrc import Zaak
 
 
-def get_behandelaar_zaken(user: User) -> List[Zaak]:
+def get_behandelaar_zaken_unfinished(user: User) -> List[Zaak]:
     """
     Retrieve the un-finished zaken where `user` is a medewerker in the role of behandelaar.
     """
-    medewerker_id = user.username
-    user_perms = UserPermissions(user)
-    behandelaar_zaken = get_zaken(
-        user_perms,
-        skip_cache=True,
-        find_all=True,
-        **{
-            "rol__betrokkeneIdentificatie__medewerker__identificatie": medewerker_id,
-            "rol__omschrijvingGeneriek": "behandelaar",
-            "rol__betrokkeneType": "medewerker",
-        }
-    )
-    unfinished_zaken = [zaak for zaak in behandelaar_zaken if not zaak.einddatum]
+    zaken = get_behandelaar_zaken(user)
+    unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
     return sorted(unfinished_zaken, key=lambda zaak: zaak.deadline)
 
 
@@ -45,6 +35,28 @@ def get_camunda_user_tasks(user: User):
     return tasks
 
 
+def get_access_requests_groups(user: User):
+    # if user doesn't have a permission to handle access requests - don't show them
+    if not user.has_perm(zaken_handle_access.name):
+        return []
+
+    behandelaar_zaken = {zaak.url: zaak for zaak in get_behandelaar_zaken(user)}
+    access_requests = AccessRequest.objects.filter(
+        result="", zaak__in=list(behandelaar_zaken.keys())
+    ).order_by("zaak", "requester__username")
+
+    requested_zaken = []
+    for zaak_url, group in groupby(access_requests, key=lambda a: a.zaak):
+        requested_zaken.append(
+            {
+                "zaak_url": zaak_url,
+                "requesters": list(group),
+                "zaak": behandelaar_zaken[zaak_url],
+            }
+        )
+    return requested_zaken
+
+
 class SummaryView(LoginRequiredMixin, TemplateView):
     template_name = "index.html"
 
@@ -54,9 +66,6 @@ class SummaryView(LoginRequiredMixin, TemplateView):
         # TODO: Camunda user tasks
 
         activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
-        access_request_groups = AccessRequest.objects.as_werkvoorraad(
-            user=self.request.user
-        )
 
         def set_zaak(group):
             group["zaak"] = get_zaak(zaak_url=group["zaak_url"])
@@ -64,15 +73,13 @@ class SummaryView(LoginRequiredMixin, TemplateView):
         with parallel() as executor:
             for activity_group in activity_groups:
                 executor.submit(set_zaak, activity_group)
-            for access_request_group in access_request_groups:
-                executor.submit(set_zaak, access_request_group)
 
         context.update(
             {
-                "zaken": get_behandelaar_zaken(self.request.user),
+                "zaken": get_behandelaar_zaken_unfinished(self.request.user),
                 "adhoc_activities": activity_groups,
                 "user_tasks": get_camunda_user_tasks(self.request.user),
-                "access_requests": access_request_groups,
+                "access_requests": get_access_requests_groups(self.request.user),
             }
         )
 
