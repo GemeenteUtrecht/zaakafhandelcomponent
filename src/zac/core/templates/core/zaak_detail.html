@@ -22,11 +22,16 @@
 </article>
 
 {% block nav-main-id-subnav %}
+{% has_perm 'zaken:zaken:toegang-verlenen' user zaak as can_handle_requests %}
+{% count_access_requests bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie as access_requests_count %}
+
 <nav class="object-id-nav">
     <ul class="nav-menu nav-menu--object-id">
         {% nav_menu_item 'core:zaak-activiteiten' _("Activiteiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
         {% nav_menu_item 'core:zaak-besluiten' _("Besluiten") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
-        {% nav_menu_item 'core:zaak-access-requests' _("Access requests") bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
+        {% if can_handle_requests %}
+            {% nav_menu_item 'core:zaak-access-requests' _("Access requests") count=access_requests_count bronorganisatie=zaak.bronorganisatie identificatie=zaak.identificatie %}
+        {% endif %}
     </ul>
 </nav>
 {% endblock %}
