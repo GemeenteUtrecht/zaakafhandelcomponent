@@ -24,7 +24,7 @@ click==7.1.2              # via black, pip-tools
 coverage==5.0.3           # via -r requirements/ci.txt
 cryptography==2.8         # via -r requirements/ci.txt, django-auth-adfs
 cssselect==1.1.0          # via -r requirements/ci.txt, pyquery
-ddt-api-calls==0.1.0      # via -r requirements/dev.in
+ddt-api-calls==0.3.0      # via -r requirements/dev.in
 defusedxml==0.6.0         # via -r requirements/ci.txt, django-camunda, odfpy
 diff-match-patch==20181111  # via -r requirements/ci.txt, django-import-export
 django-appconf==1.0.3     # via -r requirements/ci.txt, django-axes
