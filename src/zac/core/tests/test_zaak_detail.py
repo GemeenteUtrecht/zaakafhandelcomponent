@@ -28,7 +28,12 @@ from zac.tests.utils import (
     paginated_response,
 )
 
-from ..permissions import zaakproces_send_message, zaakproces_usertasks, zaken_inzien
+from ..permissions import (
+    zaakproces_send_message,
+    zaakproces_usertasks,
+    zaken_inzien,
+    zaken_request_access,
+)
 from .mocks import get_camunda_task_mock
 from .utils import ClearCachesMixin
 
@@ -162,8 +167,53 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         response = self.app.get(self.url, user=self.user, status=403)
 
         self.assertEqual(response.status_code, 403)
+        # no url to request access
+        self.assertIsNone(response.html.find(class_="main__content").find("p"))
+
+    def test_user_auth_no_perms_can_request(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
+            json=paginated_response([zaaktype]),
+        )
+        PermissionSetFactory.create(
+            permissions=[zaken_request_access.name],
+            for_user=self.user,
+            catalogus=zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)
+        # show url to request access
         self.assertEqual(
-            response.html.find("p").text.strip(), "You can request access for this page"
+            response.html.find(class_="main__content").find("p").text.strip(),
+            "You can request access for this page",
         )
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):

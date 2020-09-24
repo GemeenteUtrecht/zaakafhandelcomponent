@@ -23,7 +23,8 @@ from zac.tests.utils import (
     paginated_response,
 )
 
-from ..permissions import zaken_handle_access
+from ..permissions import zaken_handle_access, zaken_request_access
+from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
@@ -33,7 +34,7 @@ IDENTIFICATIE = "ZAAK-001"
 
 
 @requests_mock.Mocker()
-class CreateAccessRequestTests(TransactionWebTest):
+class CreateAccessRequestTests(ClearCachesMixin, TransactionWebTest):
     url = reverse_lazy(
         "core:access-request-create",
         kwargs={
@@ -63,11 +64,12 @@ class CreateAccessRequestTests(TransactionWebTest):
             identificatie=IDENTIFICATIE,
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
         )
-        zaaktype = generate_oas_component(
+        self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
         )
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
@@ -75,12 +77,31 @@ class CreateAccessRequestTests(TransactionWebTest):
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            json=zaaktype,
+            json=self.zaaktype,
         )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+
+    def test_display_form_no_perms(self, m):
+        self._setUpMocks(m)
+
+        response = self.app.get(self.url, status=403)
+
+        self.assertEqual(response.status_code, 403)
 
     def test_create_success(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_request_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
         # can't use generate_oas_component because of polymorphism
         rol = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -120,6 +141,14 @@ class CreateAccessRequestTests(TransactionWebTest):
     def test_create_fail_other_access_request(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_request_access.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
         # can't use generate_oas_component because of polymorphism
         rol = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
