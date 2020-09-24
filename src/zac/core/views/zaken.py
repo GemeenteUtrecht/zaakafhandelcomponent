@@ -1,7 +1,6 @@
 from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -35,6 +34,7 @@ from ..permissions import (
     zaken_close,
     zaken_handle_access,
     zaken_inzien,
+    zaken_request_access,
     zaken_set_result,
 )
 from ..services import (
@@ -320,14 +320,17 @@ class ZaakActiviteitenView(PermissionRequiredMixin, BaseDetailView):
         return zaak
 
 
-class AccessRequestCreateView(LoginRequiredMixin, FormView):
+class AccessRequestCreateView(PermissionRequiredMixin, FormView):
     form_class = AccessRequestCreateForm
     template_name = "core/create_access_request.html"
     #  todo add thanks page?
     success_url = reverse_lazy("core:index")
+    permission_required = zaken_request_access.name
 
     def get_zaak(self):
-        return find_zaak(**self.kwargs)
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

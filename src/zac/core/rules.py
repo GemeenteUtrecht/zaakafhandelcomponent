@@ -16,6 +16,7 @@ from .permissions import (
     zaken_close,
     zaken_handle_access,
     zaken_inzien,
+    zaken_request_access,
     zaken_set_result,
 )
 from .services import get_rollen
@@ -46,6 +47,7 @@ class dictwrapper:
     zaken_set_result,
     zaken_close,
     zaken_add_documents,
+    zaken_request_access,
 )
 def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
     logger.debug("Checking permission %r for user %r", permission, user)
