@@ -77,10 +77,9 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 ###################################################
 
 
-@cache_result("zaaktypen:{catalogus}", timeout=AN_HOUR)
-def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
+def _get_from_catalogus(resource: str, catalogus: str = "") -> List:
     """
-    Retrieve all the zaaktypen from all catalogi in the configured APIs.
+    Retrieve informatieobjecttype or zaaktypen from all catalogi in the configured APIs.
     """
     query_params = {"catalogus": catalogus} if catalogus else None
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
@@ -92,9 +91,27 @@ def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
 
     result = []
     for client in clients:
-        result += get_paginated_results(client, "zaaktype", query_params=query_params)
+        result += get_paginated_results(client, resource, query_params=query_params)
 
-    return factory(ZaakType, result)
+    return result
+
+
+@cache_result("zaaktypen:{catalogus}", timeout=AN_HOUR)
+def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
+    """
+    Retrieve all the zaaktypen from all catalogi in the configured APIs.
+    """
+    results = _get_from_catalogus(resource="zaaktype", catalogus=catalogus)
+    return factory(ZaakType, results)
+
+
+@cache_result("informatieobjecttype:{catalogus}", timeout=AN_HOUR)
+def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]:
+    """
+    Retrieve all the specified informatieobjecttypen from all catalogi in the configured APIs.
+    """
+    results = _get_from_catalogus(resource="informatieobjecttype", catalogus=catalogus)
+    return factory(InformatieObjectType, results)
 
 
 def get_zaaktypen(

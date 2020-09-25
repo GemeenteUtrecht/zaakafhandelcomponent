@@ -141,6 +141,32 @@ class PermissionSet(models.Model):
             "Spans Zaken until and including this vertrouwelijkheidaanduiding."
         ),
     )
+    informatieobjecttype_catalogus = models.URLField(
+        verbose_name=_("informatieobjecttype catalogus"),
+        help_text=_(
+            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
+        ),
+        blank=True,
+    )
+    informatieobjecttype_omschrijving = ArrayField(
+        models.CharField(max_length=100),
+        blank=True,
+        default=list,
+        help_text=_(
+            "Specifies which document types within the case can be viewed. "
+            "If left empty, all documents in the case can be viewed."
+        ),
+        verbose_name=_("informatieobjecttype omschrijving"),
+    )
+    informatieobjecttype_va = models.CharField(
+        verbose_name=_("informatieobjecttype vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_(
+            "Maximum level of confidentiality for the document types in the case."
+        ),
+    )
 
     class Meta:
         verbose_name = _("permission set")
