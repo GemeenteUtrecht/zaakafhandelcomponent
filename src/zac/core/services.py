@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
+from django.db.models import Q
 from django.utils import timezone
 
 import aiohttp
@@ -21,6 +22,7 @@ from zgw_consumers.api_models.catalogi import (
     RolType,
     ZaakType,
 )
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -34,6 +36,7 @@ from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
+from ..accounts.models import PermissionSet, User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .permissions import zaken_inzien
 from .rollen import Rol
@@ -427,6 +430,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
 
     # not in cache -> check it in all known ZRCs
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    zaak = None
     for zrc in zrcs:
         client = zrc.build_client()
         results = get_paginated_results(client, "zaak", query_params=query)
@@ -741,6 +745,55 @@ def get_documenten(
         cache.set(cache_key, document, timeout=AN_HOUR / 2)
 
     return documenten, gone
+
+
+def filter_documenten_for_permissions(
+    documenten: List[Document],
+    user: User,
+) -> List[Document]:
+    """Filter the retrieved document on user permissions.
+
+    This does the following:
+    1. Checks that the user has permissions for the catalogus in which the informatieobjecttype is located.
+        If no informatieobjecttype_catalogus are specified, then the user has no access.
+    2.  Checks that the user has permission for the specified informatieobjecttype of the document.
+        If the PermissionSet has a catalog specified but no informatieobjecttypes, then all informatieobjecttypes in
+        the catalog are allowed.
+        If the PermissionSet has a catalog specified _and_ a set of informatieobjecttypes, only the specified
+        informatieobjecttypes are allowed.
+    3. Checks that the user has level of confidentiality greater or equal to that specified in the informatieobjecttype.
+    """
+    filtered_documenten = []
+    for document in documenten:
+        document_va = VertrouwelijkheidsAanduidingen.get_choice(
+            document.informatieobjecttype.vertrouwelijkheidaanduiding
+        ).order
+
+        order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
+            "informatieobjecttype_va"
+        )
+
+        required_permissions = (
+            PermissionSet.objects.filter(
+                Q(
+                    informatieobjecttype_omschrijving__contains=[
+                        document.informatieobjecttype.omschrijving
+                    ]
+                )
+                | Q(informatieobjecttype_omschrijving=[]),
+                informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
+            )
+            .annotate(iot_va_order=order_case)
+            .filter(iot_va_order__gte=document_va)
+        )
+
+        user_authorisation_profiles = user.auth_profiles.filter(
+            permission_sets__in=required_permissions
+        )
+        if user_authorisation_profiles.exists():
+            filtered_documenten.append(document)
+
+    return filtered_documenten
 
 
 @cache_result(
