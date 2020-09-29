@@ -22,6 +22,7 @@ def create_review_request(
     documents: List[str],
     review_type: str = "advice",
     num_assigned_users: int = 0,
+    toelichting: str = "",
 ) -> ReviewRequest:
     client = get_client()
     data = {
@@ -29,6 +30,7 @@ def create_review_request(
         "review_type": review_type,
         "num_assigned_users": num_assigned_users,
         "documents": documents,
+        "toelichting": toelichting,
     }
     resp = client.create("reviewrequest", data=data)
     return factory(ReviewRequest, resp)

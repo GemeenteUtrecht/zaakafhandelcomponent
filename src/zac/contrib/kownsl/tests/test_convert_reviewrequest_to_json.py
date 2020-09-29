@@ -21,6 +21,7 @@ class ConvertToJsonTests(TestCase):
             "num_advices": 1,
             "num_approvals": 0,
             "num_assigned_users": 1,
+            "toelichting": "Like a flash of light in an endless night.",
         }
         advice_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -51,6 +52,7 @@ class ConvertToJsonTests(TestCase):
                     "num_advices": 1,
                     "num_approvals": 0,
                     "num_assigned_users": 1,
+                    "toelichting": "Like a flash of light in an endless night.",
                     "advices": [
                         {
                             "created": timezone.make_aware(
@@ -79,6 +81,7 @@ class ConvertToJsonTests(TestCase):
             "num_advices": 0,
             "num_approvals": 1,
             "num_assigned_users": 1,
+            "toelichting": "I pity the living, envy for the dead",
         }
         approval_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -88,6 +91,7 @@ class ConvertToJsonTests(TestCase):
                 "last_name": "",
             },
             "approved": True,
+            "toelichting": "I don't feel anything.",
         }
         review_request = factory(ReviewRequest, review_request_data)
         approval = factory(Approval, approval_data)
@@ -108,6 +112,7 @@ class ConvertToJsonTests(TestCase):
                     "num_advices": 0,
                     "num_approvals": 1,
                     "num_assigned_users": 1,
+                    "toelichting": "I pity the living, envy for the dead",
                     "approvals": [
                         {
                             "created": timezone.make_aware(
@@ -119,6 +124,7 @@ class ConvertToJsonTests(TestCase):
                                 "last_name": "",
                             },
                             "approved": True,
+                            "toelichting": "I don't feel anything.",
                         }
                     ],
                 }

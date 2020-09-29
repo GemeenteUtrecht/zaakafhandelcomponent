@@ -71,6 +71,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "num_advices": 0,
             "num_approvals": 0,
             "num_assigned_users": 0,
+            "toelichting": "",
         }
         m.post(
             "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
@@ -96,6 +97,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "num_advices": 1,
             "num_approvals": 0,
             "num_assigned_users": 1,
+            "toelichting": "Longing for the past but dreading the future",
         }
         review_request = factory(ReviewRequest, _review_request)
         response = [
@@ -142,6 +144,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "num_advices": 0,
             "num_approvals": 1,
             "num_assigned_users": 1,
+            "toelichting": "Are a thousand tears worth a single smile?",
         }
         review_request = factory(ReviewRequest, _review_request)
         response = [
@@ -153,6 +156,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "last_name": "",
                 },
                 "approved": True,
+                "toelichting": "When you give an inch, will they take a mile?",
             }
         ]
         mock_service_oas_get(
@@ -171,6 +175,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         self.assertEqual(approval.approved, True)
         self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(
+            approval.toelichting, "When you give an inch, will they take a mile?"
+        )
 
         # side effect: user created
         approval.author.user
@@ -195,6 +202,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "num_advices": 0,
             "num_approvals": 0,
             "num_assigned_users": 0,
+            "toelichting": "",
         }
         m.get(
             f"https://kownsl.nl/api/v1/review-requests?for_zaak={zaak.url}",
