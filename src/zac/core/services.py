@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
 from django.utils import timezone
@@ -751,7 +751,21 @@ def filter_documenten_for_permissions(
     documenten: List[Document],
     user: User,
 ) -> List[Document]:
-    """Filter the retrieved document on user permissions.
+    """Filter documents on the user permissions. """
+
+    filtered_documenten = []
+    for document in documenten:
+        try:
+            check_document_permissions(document, user)
+            filtered_documenten.append(document)
+        except PermissionDenied:
+            continue
+
+    return filtered_documenten
+
+
+def check_document_permissions(document: Document, user: User):
+    """Check if a user has the permission to see a document
 
     This does the following:
     1. Checks that the user has permissions for the catalogus in which the informatieobjecttype is located.
@@ -763,37 +777,34 @@ def filter_documenten_for_permissions(
         informatieobjecttypes are allowed.
     3. Checks that the user has level of confidentiality greater or equal to that specified in the informatieobjecttype.
     """
-    filtered_documenten = []
-    for document in documenten:
-        document_va = VertrouwelijkheidsAanduidingen.get_choice(
-            document.informatieobjecttype.vertrouwelijkheidaanduiding
-        ).order
+    document_va = VertrouwelijkheidsAanduidingen.get_choice(
+        document.informatieobjecttype.vertrouwelijkheidaanduiding
+    ).order
 
-        order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
-            "informatieobjecttype_va"
-        )
+    order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
+        "informatieobjecttype_va"
+    )
 
-        required_permissions = (
-            PermissionSet.objects.filter(
-                Q(
-                    informatieobjecttype_omschrijving__contains=[
-                        document.informatieobjecttype.omschrijving
-                    ]
-                )
-                | Q(informatieobjecttype_omschrijving=[]),
-                informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
+    required_permissions = (
+        PermissionSet.objects.filter(
+            Q(
+                informatieobjecttype_omschrijving__contains=[
+                    document.informatieobjecttype.omschrijving
+                ]
             )
-            .annotate(iot_va_order=order_case)
-            .filter(iot_va_order__gte=document_va)
+            | Q(informatieobjecttype_omschrijving=[]),
+            informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
         )
+        .annotate(iot_va_order=order_case)
+        .filter(iot_va_order__gte=document_va)
+    )
 
-        user_authorisation_profiles = user.auth_profiles.filter(
-            permission_sets__in=required_permissions
-        )
-        if user_authorisation_profiles.exists():
-            filtered_documenten.append(document)
-
-    return filtered_documenten
+    user_authorisation_profiles = user.auth_profiles.filter(
+        permission_sets__in=required_permissions
+    )
+    if not user_authorisation_profiles.exists():
+        error_msg = "The user has insufficient permissions to access this document."
+        raise PermissionDenied(error_msg)
 
 
 @cache_result(
@@ -862,9 +873,12 @@ def get_document(url: str) -> Document:
 
 
 def download_document(
-    bronorganisatie: str, identificatie: str, versie: Optional[int] = None
+    bronorganisatie: str, identificatie: str, user: User, versie: Optional[int] = None
 ) -> Tuple[Document, bytes]:
     document = find_document(bronorganisatie, identificatie, versie=versie)
+    informatieobjecttype = get_informatieobjecttype(document.informatieobjecttype)
+    document.informatieobjecttype = informatieobjecttype
+    check_document_permissions(document, user)
     client = _client_from_object(document)
     response = requests.get(document.inhoud, headers=client.auth.credentials())
     response.raise_for_status()
