@@ -38,9 +38,13 @@
 
             <div class="form__group-title">Gegevens</div>
             <div class="form__field-group">
-                {% for field in form %}
-                    {% form_field field %}
-                {% endfor %}
+                <div class="grid">
+                    {% for field in form %}
+                        <div class="grid__column grid__column--col6">
+                            {% form_field field %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
 
         </section>
