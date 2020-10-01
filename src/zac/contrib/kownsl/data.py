@@ -26,7 +26,7 @@ class ReviewRequest(Model):
     num_advices: int
     num_approvals: int
     num_assigned_users: int
-    toelichting: str
+    toelichting: str = ""
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
@@ -74,4 +74,4 @@ class Approval(Model):
     created: datetime
     author: Author
     approved: bool
-    toelichting: str
+    toelichting: str = ""
