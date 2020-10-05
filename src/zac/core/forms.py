@@ -271,6 +271,11 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
         help_text=_("Selecteer de gewenste adviseurs."),
     )
 
+    toelichting = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+    )
+
     _review_type = None
 
     def __init__(self, *args, **kwargs):
@@ -304,7 +309,9 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             documents=self.cleaned_data["documenten"],
             review_type=self._review_type,
             num_assigned_users=len(self.cleaned_data["users"]),
+            toelichting=self.cleaned_data["toelichting"],
         )
+
         self.cleaned_data["review_request"] = str(review_request.id)
         self.cleaned_data["kownslFrontendUrl"] = review_request.frontend_url
 

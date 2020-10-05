@@ -48,6 +48,7 @@ def mock_zaak_detail_context():
         "num_advices": 0,
         "num_approvals": 1,
         "num_assigned_users": 1,
+        "toelichting": "",
     }
     approval_data = {
         "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
@@ -57,6 +58,7 @@ def mock_zaak_detail_context():
             "last_name": "",
         },
         "approved": False,
+        "toelichting": "",
     }
     review_request = factory(ReviewRequest, review_request_data)
     approval = factory(Approval, approval_data)

@@ -215,7 +215,6 @@
     {% if review_requests %}
     <section class="zaak-detail__panel content-panel">
         <div class="section-title">Adviseren en accorderen</div>
-
         {{ review_requests|json_script:"reviewRequests" }}
         <div
             id="review-requests-react"
