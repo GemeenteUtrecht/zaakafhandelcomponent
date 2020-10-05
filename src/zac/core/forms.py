@@ -299,7 +299,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             "kownslUsers": user_names,
             "kownslReviewRequestId": self.cleaned_data["review_request"],
             "kownslFrontendUrl": self.cleaned_data["kownslFrontendUrl"],
-            'kownslDocuments': self.cleaned_data['documenten'],
+            "kownslDocuments": self.cleaned_data["documenten"],
         }
 
     def on_submission(self):
