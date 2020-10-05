@@ -37,6 +37,15 @@
 
     {% form_field form.max_va %}
 
+    <div class="form__field-group">
+        {% form_field form.informatieobjecttype_catalogus %}
+        {{ form.get_informatieobjecttypen|json_script:"catalogus-informatieobjecttypen" }}
+        {{ form.get_initial_informatieobjecttype|json_script:"initial-informatieobjecttypen" }}
+        {% form_field form.informatieobjecttype_omschrijving "form:CheckboxSelectDynamic" listen="id_informatieobjecttype_catalogus" values="catalogus-informatieobjecttypen" initial="initial-informatieobjecttypen"%}
+    </div>
+
+    {% form_field form.informatieobjecttype_va %}
+
     {% widget 'form:submit' label=_("Toevoegen") %}
 </form>
 

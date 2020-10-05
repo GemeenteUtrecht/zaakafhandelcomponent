@@ -38,6 +38,7 @@ from ..permissions import (
     zaken_set_result,
 )
 from ..services import (
+    filter_documenten_for_permissions,
     find_zaak,
     get_document,
     get_documenten,
@@ -137,12 +138,16 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             documenten, gone = _documenten.result()
 
+            filtered_documenten = filter_documenten_for_permissions(
+                documenten, self.request.user
+            )
+
             review_requests = serialize(review_requests)
 
             context.update(
                 {
                     "statussen": statussen.result(),
-                    "documenten": documenten,
+                    "documenten": filtered_documenten,
                     "documenten_gone": gone,
                     "eigenschappen": eigenschappen.result(),
                     "resultaat": resultaat.result(),

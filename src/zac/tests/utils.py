@@ -7,6 +7,10 @@ from django.utils import timezone
 import yaml
 from faker import Faker
 from requests_mock import Mocker
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.documenten import Document
+
+from zgw.models import InformatieObjectType
 
 fake = Faker()
 MOCK_FILES_DIR = os.path.join(
@@ -126,3 +130,22 @@ def paginated_response(results: List[dict]) -> Dict[str, Any]:
         "results": results,
     }
     return body
+
+
+def make_document_objects(
+    documents: List[Dict], informatieobjecttypen: List[Dict]
+) -> List[Document]:
+    documenten_obj = factory(Document, documents)
+
+    # Make objects for all informatieobjecttypen
+    informatieobjecttypen = {
+        iot["url"]: InformatieObjectType.from_raw(iot) for iot in informatieobjecttypen
+    }
+
+    # resolve relations
+    for document in documenten_obj:
+        document.informatieobjecttype = informatieobjecttypen[
+            document.informatieobjecttype
+        ]
+
+    return documenten_obj

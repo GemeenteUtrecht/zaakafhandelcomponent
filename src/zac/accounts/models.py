@@ -9,7 +9,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Zaak
 
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
@@ -139,6 +138,32 @@ class PermissionSet(models.Model):
         default=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_(
             "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+        ),
+    )
+    informatieobjecttype_catalogus = models.URLField(
+        verbose_name=_("informatieobjecttype catalogus"),
+        help_text=_(
+            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
+        ),
+        blank=True,
+    )
+    informatieobjecttype_omschrijvingen = ArrayField(
+        models.CharField(max_length=100),
+        blank=True,
+        default=list,
+        help_text=_(
+            "Specifies which document types within the case can be viewed. "
+            "If left empty, all documents in the case can be viewed."
+        ),
+        verbose_name=_("informatieobjecttype omschrijvingen"),
+    )
+    informatieobjecttype_max_va = models.CharField(
+        verbose_name=_("informatieobjecttype maximum vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_(
+            "Maximum level of confidentiality for the document types in the case."
         ),
     )
 

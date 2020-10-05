@@ -12,7 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.core.services import get_zaaktypen
+from zac.core.services import get_informatieobjecttypen, get_zaaktypen
 
 from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
 from .permissions import registry
@@ -59,13 +59,19 @@ class PermissionSetForm(forms.ModelForm):
             "catalogus",
             "zaaktype_identificaties",
             "max_va",
+            "informatieobjecttype_catalogus",
+            "informatieobjecttype_omschrijvingen",
+            "informatieobjecttype_max_va",
         )
         field_classes = {
             "catalogus": SelectCatalogusField,
+            "informatieobjecttype_catalogus": SelectCatalogusField,
         }
         widgets = {
             "max_va": forms.RadioSelect,
             "zaaktype_identificaties": forms.CheckboxSelectMultiple,
+            "informatieobjecttype_max_va": forms.RadioSelect,
+            "informatieobjecttype_omschrijvingen": forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
@@ -106,11 +112,45 @@ class PermissionSetForm(forms.ModelForm):
 
         return _zaaktypen
 
+    @staticmethod
+    def get_informatieobjecttypen() -> Dict[str, List[Tuple[str, str]]]:
+        def group_by(informatieobjecttype):
+            return informatieobjecttype.catalogus
+
+        informatieobjecttypen_in_catalogi = sorted(
+            get_informatieobjecttypen(), key=group_by, reverse=True
+        )
+
+        _informatieobjecttypen = {}
+        for catalogus_url, informatieobjecttypen in groupby(
+            informatieobjecttypen_in_catalogi, key=group_by
+        ):
+            # Within a catalog, the omschrijving is unique
+            representations = []
+            for informatieobjecttype in informatieobjecttypen:
+                # The form_field in the template expects a list of tuples (value, label) for each informatieobjecttype
+                representations.append(
+                    (
+                        informatieobjecttype.omschrijving,
+                        informatieobjecttype.omschrijving,
+                    )
+                )
+            _informatieobjecttypen[catalogus_url] = representations
+
+        return _informatieobjecttypen
+
     def get_initial_zaaktypen(self) -> list:
         if not self.instance:
             return []
 
         return self.instance.zaaktype_identificaties
+
+    @property
+    def initial_informatieobjecttypen(self) -> list:
+        if not self.instance:
+            return []
+
+        return self.instance.informatieobjecttype_omschrijvingen
 
 
 def get_permission_sets_choices():

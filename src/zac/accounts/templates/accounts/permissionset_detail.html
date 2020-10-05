@@ -51,15 +51,27 @@
     </section>
 
     <section class="permission-set-detail__panel content-panel">
-        <div class="permission-set-detail__title section-title">Vertrouwelijkheidaanduiding</div>
-        <p class="content-panel__content">{{ permission_set.get_max_va_display }}</p>
-
-        <div class="permission-set-detail__title section-title">Zaaktypen</div>
+         <div class="permission-set-detail__title section-title">Zaaktypen</div>
         <ul>
         {% for zaaktype in permission_set.zaaktypen.get_for_presentation %}
             <li>{{ zaaktype.omschrijving }}</li>
         {% endfor %}
         </ul>
+
+        <div class="permission-set-detail__title section-title">Vertrouwelijkheidaanduiding</div>
+        <p class="content-panel__content">{{ permission_set.get_max_va_display }}</p>
+
+    </section>
+
+        <section class="permission-set-detail__panel content-panel">
+        <div class="permission-set-detail__title section-title">Informatieobjecttypen</div>
+        <ul>
+        {% for omschrijving in permission_set.informatieobjecttype_omschrijvingen %}
+            <li>{{ omschrijving }}</li>
+        {% endfor %}
+        </ul>
+        <div class="permission-set-detail__title section-title">Vertrouwelijkheidaanduiding</div>
+        <p class="content-panel__content">{{ permission_set.get_informatieobjecttype_max_va_display }}</p>
     </section>
 
 </article>

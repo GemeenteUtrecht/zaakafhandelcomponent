@@ -8,6 +8,7 @@ from django.urls import reverse, reverse_lazy
 import requests_mock
 from django_webtest import TransactionWebTest
 from freezegun import freeze_time
+from rest_framework import status
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
@@ -22,6 +23,7 @@ from zac.accounts.tests.factories import (
 from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.tests.utils import (
     generate_oas_component,
+    make_document_objects,
     mock_service_oas_get,
     paginated_response,
 )
@@ -32,13 +34,14 @@ from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+DOCUMENTEN_ROOT = "https://api.documenten.nl/api/v1/"
 
 BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-001"
 
 
 @contextlib.contextmanager
-def mock_zaak_detail_context():
+def mock_zaak_detail_context(documents=None):
     review_request_data = {
         "id": "45638aa6-e177-46cc-b580-43339795d5b5",
         "for_zaak": f"{ZAKEN_ROOT}zaak/123",
@@ -65,8 +68,12 @@ def mock_zaak_detail_context():
 
     m_get_statussen = patch("zac.core.views.zaken.get_statussen", return_value=[])
     m_get_statussen.start()
+    if documents is None:
+        returned_documents = []
+    else:
+        returned_documents = documents
     m_get_documenten = patch(
-        "zac.core.views.zaken.get_documenten", return_value=([], [])
+        "zac.core.views.zaken.get_documenten", return_value=(returned_documents, [])
     )
     m_get_documenten.start()
     m_get_zaak_eigenschappen = patch(
@@ -422,6 +429,242 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
+
+
+@requests_mock.Mocker()
+class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
+
+    zaak_detail_url = reverse_lazy(
+        "core:zaak-detail",
+        kwargs={
+            "bronorganisatie": BRONORGANISATIE,
+            "identificatie": IDENTIFICATIE,
+        },
+    )
+
+    zaak_data = {
+        "bronorganisatie": "123456782",
+        "identificatie": "ZAAK-001",
+        "zaaktype": f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        "url": f"{ZAKEN_ROOT}zaken/2fc7a200-3262-483e-8235-a5f3d551f547",
+        "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.openbaar,
+    }
+    zaaktype_data = {
+        "url": f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        "identificatie": "ZT1",
+        "omschrijving": "QpCMmqhZBUGXliSZSgbhxKfEQYOGGLnkGdtokEJXhOC",
+        "vertrouwelijkheidaanduiding": "openbaar",
+        "catalogus": f"{CATALOGI_ROOT}catalogussen/4bf4d9e1-65f6-45a9-a008-f402de922b33",
+    }
+
+    document_1 = {
+        "url": f"{DOCUMENTEN_ROOT}enkelvoudiginformatieobjecten/efd772a2-782d-48a6-bbb4-970c8aecc78d",
+        "titel": "Test Document 1",
+        "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/c055908a-242b-469d-aead-8b838dc4ac7a",
+    }
+
+    document_2 = {
+        "url": f"{DOCUMENTEN_ROOT}enkelvoudiginformatieobjecten/9510addc-e396-442e-b76b-02705e45bb16",
+        "titel": "Test Document 2",
+        "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/10481de9-fdfd-4ce5-9d4b-10e844460d7d",
+    }
+
+    zio_1 = {
+        "url": f"{ZAKEN_ROOT}zaakinformatieobjecten/e33e6b35-4b36-4619-9234-490459383a19",
+        "zaak": zaak_data["url"],
+        "informatieobject": document_1["url"],
+    }
+
+    zio_2 = {
+        "url": f"{ZAKEN_ROOT}zaakinformatieobjecten/e33e6b35-4b36-4619-9234-490459383a19",
+        "zaak": zaak_data["url"],
+        "informatieobject": document_2["url"],
+    }
+
+    iot_1 = {
+        "url": document_1["informatieobjecttype"],
+        "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
+        "omschrijving": "Test Omschrijving 1",
+        "vertrouwelijkheidaanduiding": "openbaar",
+    }
+
+    iot_2 = {
+        "url": document_2["informatieobjecttype"],
+        "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
+        "omschrijving": "Test Omschrijving 2",
+        "vertrouwelijkheidaanduiding": "geheim",
+    }
+
+    def setUp(self):
+        super().setUp()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTEN_ROOT)
+
+        self.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+        )
+
+        self.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+        )
+        document_data = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+        )
+
+        self.zaak.update(self.zaak_data)
+        self.zaaktype.update(self.zaaktype_data)
+        self.document_1 = {**document_data, **self.document_1}
+        self.document_2 = {**document_data, **self.document_2}
+
+    def _set_up_mocks(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(self.zaaktype["catalogus"])
+        m.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}",
+            json=[self.zio_1, self.zio_2],
+        )
+        m.get(self.iot_1["catalogus"])
+
+    def test_no_catalogus_no_documents_shown(self, m):
+        self._set_up_mocks(m)
+
+        user = UserFactory.create()
+
+        # No informatieobjecttype_catalogus in the permission
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+
+        with mock_zaak_detail_context(
+            documents=make_document_objects(
+                [self.document_1, self.document_2], [self.iot_1, self.iot_2]
+            )
+        ):
+            response = self.app.get(self.zaak_detail_url, user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn("Test Document 1", response.html.text)
+        self.assertNotIn("Test Document 2", response.html.text)
+
+    def test_catalogus_but_no_informatieobjecttype(self, m):
+        """Test that all the informatieobjecttypes within the catalogus are allowed"""
+        self._set_up_mocks(m)
+
+        user = UserFactory.create()
+        self.app.set_user(user)
+
+        # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            informatieobjecttype_catalogus=self.iot_1[
+                "catalogus"
+            ],  # Same catalogus as iot_2
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+        )
+
+        with mock_zaak_detail_context(
+            documents=make_document_objects(
+                [self.document_1, self.document_2], [self.iot_1, self.iot_2]
+            )
+        ):
+            response = self.app.get(self.zaak_detail_url, user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Test Document 1", response.html.text)
+        self.assertIn("Test Document 2", response.html.text)
+
+    def test_catalogus_with_va_but_no_informatieobjecttype(self, m):
+        """
+        Test that all the informatieobjecttypes within the catalogus are allowed, but the
+        document with VA higher than that given in the permission set is not shown.
+        """
+        self._set_up_mocks(m)
+
+        user = UserFactory.create()
+        self.app.set_user(user)
+
+        # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            informatieobjecttype_catalogus=self.iot_1[
+                "catalogus"
+            ],  # Same catalogus as iot_2
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        with mock_zaak_detail_context(
+            documents=make_document_objects(
+                [self.document_1, self.document_2], [self.iot_1, self.iot_2]
+            )
+        ):
+            response = self.app.get(self.zaak_detail_url, user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Test Document 1", response.html.text)
+        self.assertNotIn("Test Document 2", response.html.text)
+
+    def test_catalogus_and_informatieobjecttype_selected(self, m):
+        """Test that the user sees only the allowed informatieobjecttypen"""
+        self._set_up_mocks(m)
+
+        user = UserFactory.create()
+        self.app.set_user(user)
+
+        # informatieobjecttype_omschriving is specified
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            informatieobjecttype_catalogus=self.iot_1[
+                "catalogus"
+            ],  # Same catalogus as iot_2
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
+        )
+
+        with mock_zaak_detail_context(
+            documents=make_document_objects(
+                [self.document_1, self.document_2], [self.iot_1, self.iot_2]
+            )
+        ):
+            response = self.app.get(self.zaak_detail_url, user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Test Document 1", response.html.text)
+        self.assertNotIn("Test Document 2", response.html.text)
 
 
 class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):

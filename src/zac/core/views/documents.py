@@ -17,7 +17,9 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         versie = _cast(request.GET.get("versie", None), int)
-        document, content = download_document(versie=versie, **kwargs)
+        document, content = download_document(
+            user=self.request.user, versie=versie, **kwargs
+        )
         content_type = (
             document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
         )
