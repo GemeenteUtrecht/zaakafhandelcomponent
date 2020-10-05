@@ -782,17 +782,17 @@ def check_document_permissions(document: Document, user: User):
     ).order
 
     order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
-        "informatieobjecttype_va"
+        "informatieobjecttype_max_va"
     )
 
     required_permissions = (
         PermissionSet.objects.filter(
             Q(
-                informatieobjecttype_omschrijving__contains=[
+                informatieobjecttype_omschrijvingen__contains=[
                     document.informatieobjecttype.omschrijving
                 ]
             )
-            | Q(informatieobjecttype_omschrijving=[]),
+            | Q(informatieobjecttype_omschrijvingen=[]),
             informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
         )
         .annotate(iot_va_order=order_case)

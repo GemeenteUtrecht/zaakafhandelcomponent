@@ -9,7 +9,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Zaak
 
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
@@ -148,7 +147,7 @@ class PermissionSet(models.Model):
         ),
         blank=True,
     )
-    informatieobjecttype_omschrijving = ArrayField(
+    informatieobjecttype_omschrijvingen = ArrayField(
         models.CharField(max_length=100),
         blank=True,
         default=list,
@@ -156,10 +155,10 @@ class PermissionSet(models.Model):
             "Specifies which document types within the case can be viewed. "
             "If left empty, all documents in the case can be viewed."
         ),
-        verbose_name=_("informatieobjecttype omschrijving"),
+        verbose_name=_("informatieobjecttype omschrijvingen"),
     )
-    informatieobjecttype_va = models.CharField(
-        verbose_name=_("informatieobjecttype vertrouwelijkheidaanduiding"),
+    informatieobjecttype_max_va = models.CharField(
+        verbose_name=_("informatieobjecttype maximum vertrouwelijkheidaanduiding"),
         max_length=100,
         choices=VertrouwelijkheidsAanduidingen.choices,
         default=VertrouwelijkheidsAanduidingen.openbaar,

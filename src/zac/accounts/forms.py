@@ -60,8 +60,8 @@ class PermissionSetForm(forms.ModelForm):
             "zaaktype_identificaties",
             "max_va",
             "informatieobjecttype_catalogus",
-            "informatieobjecttype_omschrijving",
-            "informatieobjecttype_va",
+            "informatieobjecttype_omschrijvingen",
+            "informatieobjecttype_max_va",
         )
         field_classes = {
             "catalogus": SelectCatalogusField,
@@ -70,8 +70,8 @@ class PermissionSetForm(forms.ModelForm):
         widgets = {
             "max_va": forms.RadioSelect,
             "zaaktype_identificaties": forms.CheckboxSelectMultiple,
-            "informatieobjecttype_va": forms.RadioSelect,
-            "informatieobjecttype_omschrijving": forms.CheckboxSelectMultiple,
+            "informatieobjecttype_max_va": forms.RadioSelect,
+            "informatieobjecttype_omschrijvingen": forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
@@ -150,7 +150,7 @@ class PermissionSetForm(forms.ModelForm):
         if not self.instance:
             return []
 
-        return self.instance.informatieobjecttype_omschrijving
+        return self.instance.informatieobjecttype_omschrijvingen
 
 
 def get_permission_sets_choices():

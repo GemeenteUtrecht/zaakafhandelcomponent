@@ -584,7 +584,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
             informatieobjecttype_catalogus=self.iot_1[
                 "catalogus"
             ],  # Same catalogus as iot_2
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.geheim,
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
         )
 
         with mock_zaak_detail_context(
@@ -618,7 +618,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
             informatieobjecttype_catalogus=self.iot_1[
                 "catalogus"
             ],  # Same catalogus as iot_2
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.openbaar,
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
         with mock_zaak_detail_context(
@@ -649,8 +649,8 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
             informatieobjecttype_catalogus=self.iot_1[
                 "catalogus"
             ],  # Same catalogus as iot_2
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.geheim,
-            informatieobjecttype_omschrijving=["Test Omschrijving 1"],
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
         )
 
         with mock_zaak_detail_context(

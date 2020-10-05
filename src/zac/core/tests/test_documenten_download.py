@@ -119,7 +119,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
             informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.geheim,
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
         )
 
         response = self.app.get(self.download_url, user=user)
@@ -136,8 +136,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
             informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijving=["Test Omschrijving 1"],
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.openbaar,
+            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
         response = self.app.get(self.download_url, user=user, status=403)
@@ -153,8 +153,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
             informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijving=["Test Omschrijving 1"],
-            informatieobjecttype_va=VertrouwelijkheidsAanduidingen.geheim,
+            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
+            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
         )
 
         response = self.app.get(self.download_url, user=user)
