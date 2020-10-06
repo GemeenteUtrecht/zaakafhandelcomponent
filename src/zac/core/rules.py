@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 from typing import Optional, Union
 
 import rules
@@ -15,8 +16,10 @@ from .permissions import (
     zaken_close,
     zaken_handle_access,
     zaken_inzien,
+    zaken_request_access,
     zaken_set_result,
 )
+from .services import get_rollen
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class dictwrapper:
     zaken_set_result,
     zaken_close,
     zaken_add_documents,
-    zaken_handle_access,
+    zaken_request_access,
 )
 def _generic_zaakpermission(user, zaak: Union[dict, Zaak], permission: Permission):
     logger.debug("Checking permission %r for user %r", permission, user)
@@ -97,9 +100,33 @@ def has_temporary_access(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return False
     return user.initiated_requests.filter(
-        zaak=zaak.url, result=AccessRequestResult.approve
+        zaak=zaak.url, result=AccessRequestResult.approve, end_date__gte=date.today()
     ).exists()
+
+
+@rules.predicate
+def can_handle_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
+    if zaak is None:
+        return _has_permission_key(zaken_handle_access.name, user)
+    return _generic_zaakpermission(user, zaak, zaken_handle_access)
+
+
+@rules.predicate
+def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
+    if zaak is None:
+        return True
+    user_rollen = [
+        rol
+        for rol in get_rollen(zaak)
+        if rol.omschrijving_generiek == "behandelaar"
+        and rol.betrokkene_type == "medewerker"
+        and rol.betrokkene_identificatie.get("identificatie") == user.username
+    ]
+    return bool(user_rollen)
 
 
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
 rules.add_rule(zaken_inzien.name, can_read_zaak_by_zaaktype | has_temporary_access)
+rules.add_rule(
+    zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
+)

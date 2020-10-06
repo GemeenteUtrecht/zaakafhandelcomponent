@@ -1,7 +1,6 @@
 from itertools import chain, groupby
 from typing import Any, Dict, List, Optional
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -35,6 +34,7 @@ from ..permissions import (
     zaken_close,
     zaken_handle_access,
     zaken_inzien,
+    zaken_request_access,
     zaken_set_result,
 )
 from ..services import (
@@ -320,14 +320,17 @@ class ZaakActiviteitenView(PermissionRequiredMixin, BaseDetailView):
         return zaak
 
 
-class AccessRequestCreateView(LoginRequiredMixin, FormView):
+class AccessRequestCreateView(PermissionRequiredMixin, FormView):
     form_class = AccessRequestCreateForm
     template_name = "core/create_access_request.html"
     #  todo add thanks page?
     success_url = reverse_lazy("core:index")
+    permission_required = zaken_request_access.name
 
     def get_zaak(self):
-        return find_zaak(**self.kwargs)
+        zaak = find_zaak(**self.kwargs)
+        self.check_object_permissions(zaak)
+        return zaak
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -357,11 +360,7 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        zaak = self.get_zaak()
-        queryset = queryset.filter(
-            result="", handlers__in=[self.request.user], zaak=zaak.url
-        )
+        queryset = queryset.filter(result="", zaak=self.zaak.url)
         return queryset
 
     def get_formset_kwargs(self):
@@ -378,18 +377,22 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
         self.check_object_permissions(zaak)
         return zaak
 
+    @property
+    def zaak(self):
+        if not hasattr(self, "_zaak"):
+            self._zaak = self.get_zaak()
+        return self._zaak
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({"zaak": self.get_zaak()})
+        context.update(
+            {
+                "zaak": self.zaak,
+                "access_requests": (
+                    AccessRequest.objects.select_related("requester", "handler")
+                    .filter(zaak=self.zaak.url)
+                    .exclude(result="")
+                ),
+            }
+        )
         return context
-
-    def formset_valid(self, formset):
-        result = self.request.POST["submit"]
-
-        for form in formset:
-            checked = form.cleaned_data["checked"]
-            form.instance.result = result if checked else ""
-
-        response = super().formset_valid(formset)
-
-        return response

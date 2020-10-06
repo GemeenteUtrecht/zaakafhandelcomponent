@@ -31,6 +31,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.models import User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
@@ -666,6 +667,26 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
 
     invalidate_zaak_cache(zaak)
     return status
+
+
+@cache_result("get_behandelaar_zaken:{user.username}", timeout=AN_HOUR)
+def get_behandelaar_zaken(user: User) -> List[Zaak]:
+    """
+    Retrieve zaken where `user` is a medewerker in the role of behandelaar.
+    """
+    medewerker_id = user.username
+    user_perms = UserPermissions(user)
+    behandelaar_zaken = get_zaken(
+        user_perms,
+        skip_cache=True,
+        find_all=True,
+        **{
+            "rol__betrokkeneIdentificatie__medewerker__identificatie": medewerker_id,
+            "rol__omschrijvingGeneriek": "behandelaar",
+            "rol__betrokkeneType": "medewerker",
+        },
+    )
+    return behandelaar_zaken
 
 
 ###################################################

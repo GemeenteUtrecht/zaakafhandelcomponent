@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +14,6 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
-from .query import AccessRequestQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -196,8 +196,13 @@ class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
     )
-    handlers = models.ManyToManyField(
-        "User", blank=True, help_text=_("users who can provide access to the zaak")
+    handler = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="handled_requests",
+        help_text=_("user who has handled the request"),
     )
     zaak = models.URLField(
         _("zaak"),
@@ -208,5 +213,13 @@ class AccessRequest(models.Model):
     result = models.CharField(
         _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
     )
+    start_date = models.DateField(_("start date"), blank=True, null=True)
+    end_date = models.DateField(_("end date"), blank=True, null=True)
 
-    objects = AccessRequestQuerySet.as_manager()
+    def clean(self):
+        super().clean()
+
+        if self.result and not self.handler:
+            raise ValidationError(
+                _("The result can't be specified without its handler")
+            )

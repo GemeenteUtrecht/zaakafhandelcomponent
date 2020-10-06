@@ -1,5 +1,6 @@
 import itertools
 import logging
+from datetime import date
 from typing import Dict, List, Tuple
 
 from django import forms
@@ -26,7 +27,6 @@ from .fields import DocumentsMultipleChoiceField
 from .services import (
     get_documenten,
     get_resultaattypen,
-    get_rollen,
     get_statustypen,
     get_zaak,
     zet_resultaat,
@@ -348,16 +348,6 @@ class AccessRequestCreateForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-    def get_behandelaars(self):
-        rollen = get_rollen(self.zaak)
-        behandelaar_usernames = [
-            rol.betrokkene_identificatie.get("identificatie")
-            for rol in rollen
-            if rol.betrokkene_type == "medewerker"
-            and rol.omschrijving_generiek == "behandelaar"
-        ]
-        return User.objects.filter(username__in=behandelaar_usernames)
-
     def clean(self):
         cleaned_data = super().clean()
         if self.requester.initiated_requests.filter(zaak=self.zaak.url).exists():
@@ -370,13 +360,8 @@ class AccessRequestCreateForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         self.instance.requester = self.requester
         self.instance.zaak = self.zaak.url
-        request_access = super().save()
 
-        behandelaars = self.get_behandelaars()
-        if behandelaars:
-            request_access.handlers.add(*behandelaars)
-
-        return request_access
+        return super().save()
 
 
 class AccessRequestHandleForm(forms.ModelForm):
@@ -388,12 +373,28 @@ class AccessRequestHandleForm(forms.ModelForm):
 
     class Meta:
         model = AccessRequest
-        fields = ("checked",)
+        fields = ("checked", "end_date")
+        widgets = {"end_date": forms.DateInput(attrs={"type": "date"})}
 
     def __init__(self, **kwargs):
         self.request = kwargs.pop("request")
 
         super().__init__(**kwargs)
+
+    def clean(self):
+        super().clean()
+        checked = self.cleaned_data["checked"]
+        end_date = self.cleaned_data["end_date"]
+        submit = self.data.get("submit")
+
+        #  save end date only if the result == approve
+        if not checked:
+            return None
+
+        if submit == AccessRequestResult.approve and not end_date:
+            self.add_error("end_date", _("End date of the access must be specified"))
+
+        return self.cleaned_data
 
     def send_email(self):
         user = self.instance.requester
@@ -429,6 +430,15 @@ class AccessRequestHandleForm(forms.ModelForm):
 
     @transaction.atomic
     def save(self, **kwargs):
+        checked = self.cleaned_data["checked"]
+
+        if not checked:
+            return self.instance
+
+        self.instance.result = self.data.get("submit")
+        self.instance.handler = self.request.user
+        self.instance.start_date = date.today()
+
         instance = super().save(**kwargs)
 
         # send email
