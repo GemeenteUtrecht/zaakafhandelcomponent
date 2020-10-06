@@ -221,5 +221,5 @@ class AccessRequest(models.Model):
 
         if self.result and not self.handler:
             raise ValidationError(
-                _("The result can't be specified without it's handler")
+                _("The result can't be specified without its handler")
             )

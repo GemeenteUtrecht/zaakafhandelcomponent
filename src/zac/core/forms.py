@@ -27,7 +27,6 @@ from .fields import DocumentsMultipleChoiceField
 from .services import (
     get_documenten,
     get_resultaattypen,
-    get_rollen,
     get_statustypen,
     get_zaak,
     zet_resultaat,
@@ -364,10 +363,6 @@ class AccessRequestCreateForm(forms.ModelForm):
         return super().save()
 
 
-class DateInputWidget(forms.DateInput):
-    input_type = "date"
-
-
 class AccessRequestHandleForm(forms.ModelForm):
     """
     Reject or approve access requests for a particular zaak
@@ -385,7 +380,8 @@ class AccessRequestHandleForm(forms.ModelForm):
 
         super().__init__(**kwargs)
 
-    def clean_end_date(self):
+    def clean(self):
+        super().clean()
         checked = self.cleaned_data["checked"]
         end_date = self.cleaned_data["end_date"]
         submit = self.data.get("submit")
@@ -395,9 +391,9 @@ class AccessRequestHandleForm(forms.ModelForm):
             return None
 
         if submit == AccessRequestResult.approve and not end_date:
-            raise forms.ValidationError(_("End date of the access must be specified"))
+            self.add_error("end_date", _("End date of the access must be specified"))
 
-        return end_date
+        return self.cleaned_data
 
     def send_email(self):
         user = self.instance.requester
