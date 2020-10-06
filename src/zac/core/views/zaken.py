@@ -360,9 +360,7 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        zaak = self.get_zaak()
-        queryset = queryset.filter(result="", zaak=zaak.url)
+        queryset = queryset.filter(result="", zaak=self.zaak.url)
         return queryset
 
     def get_formset_kwargs(self):
@@ -379,7 +377,22 @@ class ZaakAccessRequestsView(PermissionRequiredMixin, ModelFormSetView):
         self.check_object_permissions(zaak)
         return zaak
 
+    @property
+    def zaak(self):
+        if not hasattr(self, "_zaak"):
+            self._zaak = self.get_zaak()
+        return self._zaak
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({"zaak": self.get_zaak()})
+        context.update(
+            {
+                "zaak": self.zaak,
+                "access_requests": (
+                    AccessRequest.objects.select_related("requester", "handler")
+                    .filter(zaak=self.zaak.url)
+                    .exclude(result="")
+                ),
+            }
+        )
         return context
