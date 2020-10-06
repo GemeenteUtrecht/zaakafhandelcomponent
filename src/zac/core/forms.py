@@ -263,7 +263,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
 
-    users = forms.ModelMultipleChoiceField(
+    kownsl_users = forms.ModelMultipleChoiceField(
         required=True,
         label=_("Users"),
         queryset=User.objects.filter(is_active=True),
@@ -294,11 +294,12 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
 
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
-        user_names = [user.username for user in self.cleaned_data["users"]]
+        user_names = [user.username for user in self.cleaned_data["kownsl_users"]]
         return {
-            "users": user_names,
+            "kownslUsers": user_names,
             "kownslReviewRequestId": self.cleaned_data["review_request"],
             "kownslFrontendUrl": self.cleaned_data["kownslFrontendUrl"],
+            "kownslDocuments": self.cleaned_data["documenten"],
         }
 
     def on_submission(self):
@@ -308,7 +309,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             self.zaak_url,
             documents=self.cleaned_data["documenten"],
             review_type=self._review_type,
-            num_assigned_users=len(self.cleaned_data["users"]),
+            num_assigned_users=len(self.cleaned_data["kownsl_users"]),
             toelichting=self.cleaned_data["toelichting"],
         )
 
