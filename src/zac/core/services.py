@@ -366,12 +366,11 @@ def get_zaken(
                 )
             else:
                 for oo_slug in relevant_oos:
-                    #  The API does not actually specify defining the OO in the query (yet),
-                    #  but we can filter on the betrokkenetype
                     find_kwargs.append(
                         {
                             **base_find_kwargs,
                             "rol__betrokkeneType": "organisatorische_eenheid",
+                            "rol__betrokkeneIdentificatie__organisatorischeEenheid__identificatie": oo_slug,
                             **query_params,
                         }
                     )
@@ -385,54 +384,6 @@ def get_zaken(
     # resolve zaaktype reference
     for zaak in zaken:
         zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
-
-    # filter out the results that don't match in terms of OO restriction
-
-    # bug in the standard, see https://github.com/VNG-Realisatie/gemma-zaken/issues/1685
-    # and Open Zaak downstream issue: https://github.com/open-zaak/open-zaak/issues/726
-    # param = "betrokkeneIdentificatie__organisatorischeEenheid__identificatie"
-    oo_param = "betrokkeneIdentificatie__vestiging__identificatie"
-    rol_queries = []
-
-    for zaak in zaken:
-        oos = relevant_oos_for_zaaktype.get(zaak.zaaktype.url, {None})
-        if None in oos:
-            continue
-        for oo_slug in oos:
-            rol_queries.append(
-                {
-                    "client": _client_from_object(zaak),
-                    "zaak": zaak.url,
-                    "betrokkeneType": "organisatorische_eenheid",
-                    oo_param: oo_slug,
-                }
-            )
-
-    def _has_betrokken_oo(client, **query) -> bool:
-        rol_response = client.list("rol", query_params=query)
-        return rol_response["count"] > 0
-
-    with parallel() as executor:
-        rol_results = executor.map(
-            lambda kwargs: _has_betrokken_oo(**kwargs), rol_queries
-        )
-
-    # track if we saw any of the required OOs
-    zaak_oo_ok = {}
-
-    for rol_query, has_betrokken_oo in zip(rol_queries, rol_results):
-        zaak_url = rol_query["zaak"]
-        zaak_oo_ok.setdefault(zaak_url, has_betrokken_oo)
-        if zaak_oo_ok[zaak_url] is True:
-            continue
-
-    # filter down the list of zaken. if the URL is _not_ in zaak_oo_ok, it means that there
-    # was no relevant OO check needed -> it's okay to display
-    zaken = [
-        zaak
-        for zaak in zaken
-        if zaak.url not in zaak_oo_ok or zaak_oo_ok[zaak.url] is True
-    ]
 
     # sort results by startdatum / registratiedatum / identificatie
 
