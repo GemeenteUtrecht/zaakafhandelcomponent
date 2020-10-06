@@ -31,13 +31,12 @@ from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.datastructures import VA_ORDER
-from zac.accounts.models import User
+from zac.accounts.models import PermissionSet, User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
-from ..accounts.models import PermissionSet, User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .permissions import zaken_inzien

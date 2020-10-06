@@ -8,7 +8,6 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import User
-
 from zac.accounts.permissions import Permission, UserPermissions, register
 
 from .permissions import (
@@ -21,7 +20,6 @@ from .permissions import (
     zaken_request_access,
     zaken_set_result,
 )
-from .services import get_rollen
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +156,8 @@ def can_handle_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
 
 @rules.predicate
 def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
+    from .services import get_rollen
+
     if zaak is None:
         return True
     user_rollen = [
