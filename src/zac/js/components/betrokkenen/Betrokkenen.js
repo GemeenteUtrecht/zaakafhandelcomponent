@@ -4,57 +4,62 @@ import classnames from 'classnames';
 import BetrokkenenModal from './BetrokkenenModal';
 
 const BetrokkenenRow = ({
+    systemType,
     type,
     role,
     name,
-    bsn,
+    identification,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const openModal = () => setIsOpen(true);
 
+    // Row is only clickable if there is a bsn available
+    const clickable = systemType === 'natuurlijk_persoon' && identification;
+
     return (
         <>
             <tr
-                // Row is only clickable if there is a bsn available
-                onClick={bsn ? openModal : null}
+                onClick={clickable ? openModal : null}
                 className={classnames(
                     'table__column',
-                    { 'table__column--clickable': bsn },
+                    { 'table__column--clickable': clickable },
                 )}
                 title="Toon formulier"
             >
                 <td>{type}</td>
                 <td>{role}</td>
                 <td>{name}</td>
-                <td>{bsn}</td>
+                <td>{identification}</td>
             </tr>
             <BetrokkenenModal
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
-                bsn={bsn}
+                bsn={identification}
             />
         </>
     );
 };
 
 BetrokkenenRow.propTypes = {
+    systemType: PropTypes.string,
     type: PropTypes.string,
     role: PropTypes.string,
     name: PropTypes.string,
-    bsn: PropTypes.string,
+    identification: PropTypes.string,
 };
 
 const BetrokkenenTable = ({ betrokkeneNodes }) => {
     const rows = [...betrokkeneNodes].map((node) => {
         const {
-            type, role, name, bsn,
+            systemType, type, role, name, identification,
         } = node.dataset;
         return (
             <BetrokkenenRow
+                systemType={systemType}
                 type={type}
                 role={role}
                 name={name}
-                bsn={bsn}
+                identification={identification}
                 key={name}
             />
         );
