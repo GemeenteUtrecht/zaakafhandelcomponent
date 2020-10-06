@@ -124,7 +124,7 @@
                     data-type="{{ rol.get_betrokkene_type_display }}"
                     data-role="{{ rol.get_omschrijving_generiek_display }}"
                     data-name="{{ name }}"
-                    data-bsn="{{ rol.get_bsn|default:'' }}"
+                    data-bsn="{{ rol.get_identificatie|default:'' }}"
                 >
                     {# React managed #}
                 </div>

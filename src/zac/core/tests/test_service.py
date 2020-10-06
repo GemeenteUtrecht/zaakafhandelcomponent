@@ -134,7 +134,7 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
 
         rol = rollen[0]
         self.assertEqual(rol.get_name(), "Jip de Boer")
-        self.assertEqual(rol.get_bsn(), BSN1)
+        self.assertEqual(rol.get_identificatie(), BSN1)
 
     def test_get_rollen_no_brp_request(self, m):
         self._setUpMocks(m)
@@ -145,4 +145,4 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
 
         rol = rollen[0]
         self.assertEqual(rol.get_name(), "Janneke de Vries")
-        self.assertEqual(rol.get_bsn(), BSN2)
+        self.assertEqual(rol.get_identificatie(), BSN2)

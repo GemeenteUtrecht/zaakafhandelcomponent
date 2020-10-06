@@ -29,16 +29,24 @@ class Rol(_Rol):
 
         return get_name(self)
 
-    def get_bsn(self) -> Optional[str]:
-        if self.betrokkene_type != RolTypes.natuurlijk_persoon:
+    def get_identificatie(self) -> Optional[str]:
+        get_identificatie = GET_IDENTIFICATIE.get(self.betrokkene_type)
+        if get_identificatie is None:
             return None
 
-        if self.betrokkene:
-            if not self.natuurlijkpersoon:
-                return _("(invalid BRP reference!)")
-            return self.natuurlijkpersoon.burgerservicenummer
+        return get_identificatie(self)
 
-        return self.betrokkene_identificatie["inp_bsn"]
+
+def get_bsn(rol: Rol) -> str:
+    if rol.betrokkene:
+        if not rol.natuurlijkpersoon:
+            return _("(invalid BRP reference!)")
+        return rol.natuurlijkpersoon.burgerservicenummer
+    return rol.betrokkene_identificatie["inp_bsn"]
+
+
+def get_medewerker_username(rol: Rol) -> str:
+    return rol.betrokkene_identificatie["identificatie"]
 
 
 def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
@@ -70,7 +78,22 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
     return " ".join(bits).strip() or rol.betrokkene_identificatie["identificatie"]
 
 
+def get_naam_organisatorische_eenheid(rol: Rol) -> str:
+    return rol.betrokkene_identificatie["naam"]
+
+
+def get_identificatie_organisatorische_eenheid(rol: Rol) -> str:
+    return rol.betrokkene_identificatie["identificatie"]
+
+
 GET_NAME = {
     RolTypes.natuurlijk_persoon: get_naam_natuurlijkpersoon,
     RolTypes.medewerker: get_naam_medewerker,
+    RolTypes.organisatorische_eenheid: get_naam_organisatorische_eenheid,
+}
+
+GET_IDENTIFICATIE = {
+    RolTypes.natuurlijk_persoon: get_bsn,
+    RolTypes.medewerker: get_medewerker_username,
+    RolTypes.organisatorische_eenheid: get_identificatie_organisatorische_eenheid,
 }
