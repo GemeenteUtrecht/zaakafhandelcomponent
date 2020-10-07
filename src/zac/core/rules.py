@@ -64,6 +64,8 @@ def _has_permission_key(permission_name: str, user: User):
 
 
 def _get_oos_from_zt_perms(user_perms: UserPermissions, zaaktype: str) -> set:
+    if user_perms.user.is_superuser:
+        return {None}
     perm_oos = [
         zt_perm.oos
         for zt_perm in user_perms.zaaktype_permissions

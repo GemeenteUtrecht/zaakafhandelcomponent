@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.core import mail
 from django.urls import reverse, reverse_lazy
@@ -52,6 +53,10 @@ class CreateAccessRequestTests(ClearCachesMixin, TransactionWebTest):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         self.app.set_user(self.user)
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -211,6 +216,10 @@ class HandleAccessRequestsTests(TransactionWebTest):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         self.app.set_user(self.user)
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

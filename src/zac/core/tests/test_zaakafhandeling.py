@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.db import transaction
 from django.urls import reverse_lazy
@@ -43,6 +45,10 @@ class ZaakAfhandelingGETTests(ClearCachesMixin, WebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -234,6 +240,10 @@ class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

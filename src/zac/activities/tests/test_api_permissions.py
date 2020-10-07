@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse, reverse_lazy
 
 import requests_mock
@@ -42,6 +44,12 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
+
+    def setUp(self):
+        super().setUp()
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def test_read_not_logged_in(self):
         response = self.client.get(self.endpoint)
@@ -167,6 +175,10 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
 
         self.user = UserFactory.create()
 
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
+
     def test_read_not_logged_in(self):
         endpoint = reverse(
             "activities:activity-detail", kwargs={"pk": self.activity.pk}
@@ -268,6 +280,10 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         super().setUp()
 
         self.user = UserFactory.create()
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def test_create_activity_not_logged_in(self):
         response = self.client.post(self.endpoint)
@@ -434,6 +450,10 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         super().setUp()
 
         self.user = UserFactory.create()
+
+        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
+        mock_allowlist.start()
+        self.addCleanup(mock_allowlist.stop)
 
     def test_update_activity_not_logged_in(self):
         endpoint = reverse(
