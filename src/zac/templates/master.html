@@ -1,4 +1,4 @@
-{% load static i18n %}<!DOCTYPE html>
+{% load static i18n hijack_tags %}<!DOCTYPE html>
 <html lang="nl">
     <head>
         <meta charset="utf-8">
@@ -11,12 +11,13 @@
 
         <link href="{% static 'css/font-awesome.min.css' %}" media="screen" rel="stylesheet" />
         <link href="{% static 'css/screen.css' %}" media="screen" rel="stylesheet" type="text/css" />
+        <link href="{% static 'hijack/hijack-styles.css' %}" rel="stylesheet" type="text/css" />
         {% block extra_css %}{% endblock %}
         <link href="{% static 'ico/favicon.png' %}" rel="shortcut icon">
     </head>
 
     <body class="{% block body-class %}{% endblock %}">
-
+        {% hijack_notification %}
         <header>
             <div class="logo">
                 <img src="{% static "img/wapen-utrecht-rood.svg" %}">

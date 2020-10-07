@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
+from hijack_admin.admin import HijackUserAdminMixin
+
 from .models import (
     AccessRequest,
     AuthorizationProfile,
@@ -17,7 +19,8 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(User)
-class _UserAdmin(UserAdmin):
+class _UserAdmin(HijackUserAdminMixin, UserAdmin):
+    list_display = UserAdmin.list_display + ("hijack_field",)
     inlines = [UserAuthorizationProfileInline]
 
 

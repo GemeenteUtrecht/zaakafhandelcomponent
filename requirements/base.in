@@ -26,6 +26,8 @@ django-camunda
 django-choices
 django-extra-views
 django-filter
+django-hijack
+django-hijack-admin
 django-import-export
 django-redis
 django-sniplates
