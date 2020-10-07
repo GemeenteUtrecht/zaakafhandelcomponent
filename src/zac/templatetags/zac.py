@@ -14,10 +14,13 @@ register = Library()
 def nav_menu_item(
     context: dict, target: str, label: str, count: int = None, *args, **kwargs
 ) -> Dict[str, Any]:
+    exact = kwargs.pop("exact", False)
     target_url = resolve_url(target, *args, **kwargs)
 
     request: HttpRequest = context.get("request")
-    is_active = request and request.path.startswith(target_url)
+    is_active = request and (
+        request.path.startswith(target_url) if not exact else request.path == target_url
+    )
 
     return {
         "label": label,
