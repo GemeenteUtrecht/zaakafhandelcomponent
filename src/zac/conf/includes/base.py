@@ -122,6 +122,9 @@ INSTALLED_APPS = [
     "rules.apps.AutodiscoverRulesConfig",
     "django_filters",
     "extra_views",
+    "hijack",
+    "compat",  # Part of hijack
+    "hijack_admin",
     # Project applications.
     "zac.accounts",
     "zac.camunda",
@@ -411,3 +414,12 @@ if SENTRY_DSN:
 # ZGW-CONSUMERS
 #
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
+
+# Django-Hijack
+HIJACK_LOGIN_REDIRECT_URL = "/"
+HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")
+# The Admin mixin is used because we use a custom User-model.
+HIJACK_REGISTER_ADMIN = False
+# This is a CSRF-security risk.
+# See: http://django-hijack.readthedocs.io/en/latest/configuration/#allowing-get-method-for-hijack-views
+HIJACK_ALLOW_GET_REQUESTS = True
