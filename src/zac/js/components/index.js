@@ -7,3 +7,4 @@ import './processes';
 import './case-activities';
 import './validSign';
 import './alfresco-document-selection';
+import './permission-forms';

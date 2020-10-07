@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load sniplates %}
+{% load sniplates l10n %}
 
 
 {% block content %}
@@ -37,14 +37,24 @@
 
     {% form_field form.max_va %}
 
-    <div class="form__field-group">
-        {% form_field form.informatieobjecttype_catalogus %}
-        {{ form.get_informatieobjecttypen|json_script:"catalogus-informatieobjecttypen" }}
-        {{ form.get_initial_informatieobjecttype|json_script:"initial-informatieobjecttypen" }}
-        {% form_field form.informatieobjecttype_omschrijvingen "form:CheckboxSelectDynamic" listen="id_informatieobjecttype_catalogus" values="catalogus-informatieobjecttypen" initial="initial-informatieobjecttypen"%}
-    </div>
+    <h3>Adjust informatieobjecttype permissions</h3>
 
-    {% form_field form.informatieobjecttype_max_va %}
+
+    <div class="informatieobjecttype-permissions"
+        data-extra="{{ informatieobjecttype_formset.extra|unlocalize }}"
+        data-prefix="{{ informatieobjecttype_formset.prefix }}"
+        data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
+        data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
+        data-initial="{{ informatieobjecttype_formset.initial_form_count|unlocalize }}"
+        data-formdata-element="initial-data"
+        data-informatieobjecttype-data="informatieobjecttype-data"
+        data-catalog-data="catalog-data"
+    >
+        {{ informatieobjecttype_formset.initial_data|json_script:"initial-data" }}
+        {{ informatieobjecttype_formset.get_informatieobjecttype_choices|json_script:"informatieobjecttype-data" }}
+        {{ informatieobjecttype_formset.get_catalogs_choices|json_script:"catalog-data" }}
+        {# Managed by react #}
+    </div>
 
     {% widget 'form:submit' label=_("Toevoegen") %}
 </form>

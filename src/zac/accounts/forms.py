@@ -1,20 +1,28 @@
 from itertools import groupby
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from django import forms
 from django.core import validators
+from django.forms import inlineformset_factory
 from django.utils.html import format_html, format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import Catalogus
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.core.services import get_informatieobjecttypen, get_zaaktypen
 
-from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
+from .models import (
+    AuthorizationProfile,
+    InformatieobjecttypePermission,
+    PermissionSet,
+    User,
+    UserAuthorizationProfile,
+)
 from .permissions import registry
 
 
@@ -43,6 +51,67 @@ class SelectCatalogusField(forms.ChoiceField):
         self.validators.append(validators.MaxLengthValidator(int(max_length)))
 
 
+class InformatieobjecttypeForm(forms.ModelForm):
+    class Meta:
+        model = InformatieobjecttypePermission
+        fields = (
+            "id",
+            "permission_set",
+            "catalogus",
+            "omschrijving",
+            "max_va",
+        )
+
+
+class SerializableFormSet(forms.BaseInlineFormSet):
+    @staticmethod
+    def get_catalogs_choices() -> List[Tuple[str, str]]:
+        """Return the catalogs URL and their label"""
+        return list(get_catalogus_choices())
+
+    @staticmethod
+    def get_informatieobjecttype_choices() -> Dict[str, List]:
+        """Return the informatieobjecttype omschrijvingen in each catalog"""
+        catalog_choices = get_catalogus_choices()
+
+        catalog_with_informatieobjects = {}
+        for (catalog_url, catalog_label) in catalog_choices:
+            informatieobjecttypen = get_informatieobjecttypen(catalogus=catalog_url)
+
+            informatieobjecttypen_choices = []
+            for informatieobjecttype in informatieobjecttypen:
+                informatieobjecttypen_choices.append(informatieobjecttype.omschrijving)
+
+            catalog_with_informatieobjects[catalog_url] = informatieobjecttypen_choices
+
+        return catalog_with_informatieobjects
+
+    @property
+    def initial_data(self) -> Dict:
+        initial_data = {
+            "catalogus": "",
+        }
+        for form in self:
+            if initial_data["catalogus"] == "":
+                initial_data["catalogus"] = form.initial["catalogus"]
+            initial_data[form.initial["omschrijving"]] = [
+                form.initial["max_va"],
+                form.initial["id"],
+            ]
+
+        return initial_data
+
+
+InformatieobjecttypeFormSet = inlineformset_factory(
+    PermissionSet,
+    InformatieobjecttypePermission,
+    form=InformatieobjecttypeForm,
+    extra=0,
+    can_delete=True,
+    formset=SerializableFormSet,
+)
+
+
 class PermissionSetForm(forms.ModelForm):
     permissions = forms.MultipleChoiceField(
         label=_("Permissions"),
@@ -59,19 +128,13 @@ class PermissionSetForm(forms.ModelForm):
             "catalogus",
             "zaaktype_identificaties",
             "max_va",
-            "informatieobjecttype_catalogus",
-            "informatieobjecttype_omschrijvingen",
-            "informatieobjecttype_max_va",
         )
         field_classes = {
             "catalogus": SelectCatalogusField,
-            "informatieobjecttype_catalogus": SelectCatalogusField,
         }
         widgets = {
             "max_va": forms.RadioSelect,
             "zaaktype_identificaties": forms.CheckboxSelectMultiple,
-            "informatieobjecttype_max_va": forms.RadioSelect,
-            "informatieobjecttype_omschrijvingen": forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
@@ -112,45 +175,11 @@ class PermissionSetForm(forms.ModelForm):
 
         return _zaaktypen
 
-    @staticmethod
-    def get_informatieobjecttypen() -> Dict[str, List[Tuple[str, str]]]:
-        def group_by(informatieobjecttype):
-            return informatieobjecttype.catalogus
-
-        informatieobjecttypen_in_catalogi = sorted(
-            get_informatieobjecttypen(), key=group_by, reverse=True
-        )
-
-        _informatieobjecttypen = {}
-        for catalogus_url, informatieobjecttypen in groupby(
-            informatieobjecttypen_in_catalogi, key=group_by
-        ):
-            # Within a catalog, the omschrijving is unique
-            representations = []
-            for informatieobjecttype in informatieobjecttypen:
-                # The form_field in the template expects a list of tuples (value, label) for each informatieobjecttype
-                representations.append(
-                    (
-                        informatieobjecttype.omschrijving,
-                        informatieobjecttype.omschrijving,
-                    )
-                )
-            _informatieobjecttypen[catalogus_url] = representations
-
-        return _informatieobjecttypen
-
     def get_initial_zaaktypen(self) -> list:
         if not self.instance:
             return []
 
         return self.instance.zaaktype_identificaties
-
-    @property
-    def initial_informatieobjecttypen(self) -> list:
-        if not self.instance:
-            return []
-
-        return self.instance.informatieobjecttype_omschrijvingen
 
 
 def get_permission_sets_choices():

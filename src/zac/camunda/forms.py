@@ -7,6 +7,7 @@ from django_camunda.bpmn import CAMUNDA_NS
 from django_camunda.camunda_models import Task
 from django_camunda.forms import formfield_from_xml
 
+from ..utils.frontend import get_form_data
 from .bpmn import get_bpmn
 
 
@@ -47,26 +48,6 @@ class TaskFormMixin:
     def get_process_variables(self) -> Dict[str, Any]:
         assert self.is_valid(), "Form does not pass validation"
         return self.cleaned_data
-
-
-def get_form_data(form: forms.Form) -> Dict[str, Dict]:
-    """
-    Serialize the form data and errors for the frontend.
-    """
-    errors = (
-        {
-            field: [{"msg": next(iter(error)), "code": error.code} for error in _errors]
-            for field, _errors in form.errors.as_data().items()
-        }
-        if form.is_bound
-        else {}
-    )
-
-    values = {field.name: field.value() for field in form}
-    return {
-        "errors": errors,
-        "values": values,
-    }
 
 
 class TaskFormSetMixin:

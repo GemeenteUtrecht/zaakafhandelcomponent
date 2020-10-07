@@ -5,9 +5,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
-from django.db.models import Q
 from django.utils import timezone
 
 import aiohttp
@@ -22,7 +21,6 @@ from zgw_consumers.api_models.catalogi import (
     RolType,
     ZaakType,
 )
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -31,13 +29,12 @@ from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.datastructures import VA_ORDER
-from zac.accounts.models import User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
-from ..accounts.models import PermissionSet, User
+from ..accounts.models import User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .permissions import zaken_inzien
@@ -779,66 +776,6 @@ def get_documenten(
     return documenten, gone
 
 
-def filter_documenten_for_permissions(
-    documenten: List[Document],
-    user: User,
-) -> List[Document]:
-    """Filter documents on the user permissions. """
-
-    filtered_documenten = []
-    for document in documenten:
-        try:
-            check_document_permissions(document, user)
-            filtered_documenten.append(document)
-        except PermissionDenied:
-            continue
-
-    return filtered_documenten
-
-
-def check_document_permissions(document: Document, user: User):
-    """Check if a user has the permission to see a document
-
-    This does the following:
-    1. Checks that the user has permissions for the catalogus in which the informatieobjecttype is located.
-        If no informatieobjecttype_catalogus are specified, then the user has no access.
-    2.  Checks that the user has permission for the specified informatieobjecttype of the document.
-        If the PermissionSet has a catalog specified but no informatieobjecttypes, then all informatieobjecttypes in
-        the catalog are allowed.
-        If the PermissionSet has a catalog specified _and_ a set of informatieobjecttypes, only the specified
-        informatieobjecttypes are allowed.
-    3. Checks that the user has level of confidentiality greater or equal to that specified in the informatieobjecttype.
-    """
-    document_va = VertrouwelijkheidsAanduidingen.get_choice(
-        document.informatieobjecttype.vertrouwelijkheidaanduiding
-    ).order
-
-    order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
-        "informatieobjecttype_max_va"
-    )
-
-    required_permissions = (
-        PermissionSet.objects.filter(
-            Q(
-                informatieobjecttype_omschrijvingen__contains=[
-                    document.informatieobjecttype.omschrijving
-                ]
-            )
-            | Q(informatieobjecttype_omschrijvingen=[]),
-            informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
-        )
-        .annotate(iot_va_order=order_case)
-        .filter(iot_va_order__gte=document_va)
-    )
-
-    user_authorisation_profiles = user.auth_profiles.filter(
-        permission_sets__in=required_permissions
-    )
-    if not user_authorisation_profiles.exists():
-        error_msg = "The user has insufficient permissions to access this document."
-        raise PermissionDenied(error_msg)
-
-
 @cache_result(
     "document:{bronorganisatie}:{identificatie}:{versie}", timeout=AN_HOUR / 2
 )
@@ -904,13 +841,7 @@ def get_document(url: str) -> Document:
     return factory(Document, result)
 
 
-def download_document(
-    bronorganisatie: str, identificatie: str, user: User, versie: Optional[int] = None
-) -> Tuple[Document, bytes]:
-    document = find_document(bronorganisatie, identificatie, versie=versie)
-    informatieobjecttype = get_informatieobjecttype(document.informatieobjecttype)
-    document.informatieobjecttype = informatieobjecttype
-    check_document_permissions(document, user)
+def download_document(document: Document) -> Tuple[Document, bytes]:
     client = _client_from_object(document)
     response = requests.get(document.inhoud, headers=client.auth.credentials())
     response.raise_for_status()

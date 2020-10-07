@@ -5,7 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import View
 
-from ..services import download_document
+from ..services import download_document, find_document, get_informatieobjecttype
+from .mixins import DocumentPermissionMixin
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -14,12 +15,16 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     return type_(value)
 
 
-class DownloadDocumentView(LoginRequiredMixin, View):
+class DownloadDocumentView(LoginRequiredMixin, DocumentPermissionMixin, View):
     def get(self, request, *args, **kwargs):
         versie = _cast(request.GET.get("versie", None), int)
-        document, content = download_document(
-            user=self.request.user, versie=versie, **kwargs
-        )
+        document = find_document(versie=versie, **kwargs)
+
+        informatieobjecttype = get_informatieobjecttype(document.informatieobjecttype)
+        document.informatieobjecttype = informatieobjecttype
+        self.check_document_permissions(document, self.request.user)
+
+        document, content = download_document(document)
         content_type = (
             document.formaat or mimetypes.guess_type(document.bestandsnaam)[0]
         )

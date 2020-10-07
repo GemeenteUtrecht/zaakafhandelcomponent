@@ -4,38 +4,15 @@ import camelCaseKeys from 'camelcase-keys';
 
 import { getUserName } from '../../utils/users';
 import { TextInput, HiddenInput } from '../forms/Inputs';
-import { ErrorList, Wrapper } from '../forms/Utils';
+import {ErrorList, extractErrors, getAttr, Wrapper, isEmpty} from '../forms/Utils';
 import { UserSelection } from '../user-selection';
 
 
-const isEmpty = (obj) => {
-    if (!obj) {
-        return true;
-    }
-    return Object.keys(obj).length === 0;
-};
 
 
-/**
- * Get the first non-falsy attribute from an array of objects.
- */
-const getAttr = (attr='', objects=[], defaultVal='') => {
-    for (let obj of objects) {
-        if (!obj) {
-            continue;
-        }
-        if (!obj[attr]) {
-            continue;
-        }
-        return obj[attr];
-    }
-    return defaultVal;
-};
 
 
-const extractErrors = (errList) => {
-    return errList.map( err => err.msg );
-};
+
 
 
 const SignerForm = ({ index, data: { values, errors } }) => {

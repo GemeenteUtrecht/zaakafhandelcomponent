@@ -43,6 +43,34 @@ const SubmitRow = ({
     );
 };
 
+/**
+ * Get the first non-falsy attribute from an array of objects.
+ */
+const getAttr = (attr='', objects=[], defaultVal='') => {
+    for (let obj of objects) {
+        if (!obj) {
+            continue;
+        }
+        if (!obj[attr]) {
+            continue;
+        }
+        return obj[attr];
+    }
+    return defaultVal;
+};
+
+const extractErrors = (errList) => {
+    return errList.map( err => err.msg );
+};
+
+const isEmpty = (obj) => {
+    if (!obj) {
+        return true;
+    }
+    return Object.keys(obj).length === 0;
+};
+
+
 SubmitRow.propTypes = {
     text: PropTypes.string,
     btnModifier: PropTypes.string,
@@ -50,4 +78,4 @@ SubmitRow.propTypes = {
     isDisabled: PropTypes.bool,
 };
 
-export { ErrorList, Wrapper, SubmitRow };
+export { ErrorList, Wrapper, SubmitRow, getAttr, extractErrors, isEmpty };
