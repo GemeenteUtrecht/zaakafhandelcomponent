@@ -19,7 +19,7 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(User)
-class _UserAdmin(UserAdmin, HijackUserAdminMixin):
+class _UserAdmin(HijackUserAdminMixin, UserAdmin):
     list_display = UserAdmin.list_display + ("hijack_field",)
     inlines = [UserAuthorizationProfileInline]
 
