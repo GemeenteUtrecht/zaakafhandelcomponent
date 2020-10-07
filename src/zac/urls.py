@@ -10,6 +10,7 @@ handler500 = "zac.utils.views.server_error"
 handler403 = "zac.utils.views.permission_denied"
 
 urlpatterns = [
+    path("admin/hijack/", include("hijack.urls")),
     path("admin/", admin.site.urls),
     path("adfs/", include("django_auth_adfs.urls")),
     path("api/", include("zac.notifications.urls")),
