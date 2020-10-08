@@ -321,8 +321,11 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             user_names = [user.username for user in users_data["kownsl_users"]]
             users.append(user_names)
 
+        if not users: # camunda is expecting a list of lists
+            users = [[]]
+            
         return {
-            "kownslUsers": users,
+            "kownslUsersList": users,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.frontend_url,
         }
