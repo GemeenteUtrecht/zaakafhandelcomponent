@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 
 from django_camunda.camunda_models import Task, factory
 from django_camunda.client import get_client
+from zds_client import ClientError
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
@@ -68,7 +69,12 @@ class SummaryView(LoginRequiredMixin, TemplateView):
         activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
 
         def set_zaak(group):
-            group["zaak"] = get_zaak(zaak_url=group["zaak_url"])
+            try:
+                group["zaak"] = get_zaak(zaak_url=group["zaak_url"])
+            except ClientError as exc:
+                if exc.args[0]["status"] == 404:  # zaak deleted / no longer exists
+                    return
+                raise
 
         with parallel() as executor:
             for activity_group in activity_groups:
@@ -77,7 +83,9 @@ class SummaryView(LoginRequiredMixin, TemplateView):
         context.update(
             {
                 "zaken": get_behandelaar_zaken_unfinished(self.request.user),
-                "adhoc_activities": activity_groups,
+                "adhoc_activities": [
+                    group for group in activity_groups if "zaak" in group
+                ],
                 "user_tasks": get_camunda_user_tasks(self.request.user),
                 "access_requests": get_access_requests_groups(self.request.user),
             }

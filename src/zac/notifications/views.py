@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 
+from zac.activities.models import Activity
 from zac.core.cache import invalidate_zaak_cache, invalidate_zaak_list_cache
 from zac.core.services import _client_from_url
 
@@ -21,13 +22,13 @@ class NotificationCallbackView(APIView):
         if not data["kanaal"] == "zaken":
             return
 
-        if data["resource"] == "zaak" and data["actie"] == "create":
-            self._handle_zaak_creation(data["hoofd_object"])
-        elif data["resource"] == "zaak" and data["actie"] in (
-            "update",
-            "partial_update",
-        ):
-            self._handle_zaak_update(data["hoofd_object"])
+        if data["resource"] == "zaak":
+            if data["actie"] == "create":
+                self._handle_zaak_creation(data["hoofd_object"])
+            elif data["actie"] in ["update", "partial_update"]:
+                self._handle_zaak_update(data["hoofd_object"])
+            elif data["actie"] == "destroy":
+                self._handle_zaak_destroy(data["hoofd_object"])
         elif (
             data["resource"] in ["resultaat", "status", "zaakeigenschap"]
             and data["actie"] == "create"
@@ -48,6 +49,9 @@ class NotificationCallbackView(APIView):
         client = _client_from_url(zaak_url)
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
+
+    def _handle_zaak_destroy(self, zaak_url: str):
+        Activity.objects.filter(zaak=zaak_url).delete()
 
     def _handle_related_creation(self, zaak_url):
         zaak = self._retrieve_zaak(zaak_url)
