@@ -320,6 +320,9 @@ def get_zaken(
                 if perm.permission == zaken_inzien.name and perm.contains(zaaktype_url)
             ]
 
+            if not relevant_perms and not user_perms.user.is_superuser:
+                continue
+
             # sort them by max va
             relevant_perms = sorted(
                 relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
