@@ -8,10 +8,10 @@ class RolDocument(InnerDoc):
 
 
 class ZaakDocument(Document):
-    url = field.Text()
-    zaaktype = field.Text()
-    identificatie = field.Text()
-    bronorganisatie = field.Text()
+    url = field.Keyword()
+    zaaktype = field.Keyword()
+    identificatie = field.Keyword()
+    bronorganisatie = field.Keyword()
     vertrouwelijkheidaanduiding = field.Text()
     va_order = field.Integer()
     rollen = Nested(RolDocument)
