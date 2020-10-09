@@ -19,6 +19,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, User
+from zac.accounts.serializers import UserSerializer
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
@@ -305,11 +306,17 @@ class SelectUsersReviewRequestForm(forms.Form):
         label=_("Users"),
         queryset=User.objects.filter(is_active=True),
         widget=forms.CheckboxSelectMultiple,
-        help_text=_("Selecteer de gewenste adviseurs."),
+        help_text=_("Select the advisors."),
     )
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
+    @property
+    def active_users(self) -> List[dict]:
+        return [
+            UserSerializer(user).data for user in User.objects.filter(is_active=True)
+        ]
+
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
@@ -321,9 +328,9 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             user_names = [user.username for user in users_data["kownsl_users"]]
             users.append(user_names)
 
-        if not users: # camunda is expecting a list of lists
+        if not users:  # camunda is expecting a list of lists
             users = [[]]
-            
+
         return {
             "kownslUsersList": users,
             "kownslReviewRequestId": str(self.review_request.id),
