@@ -1,6 +1,6 @@
 {% extends "core/zaak_detail.html" %}
 {% load i18n sniplates %}
-
+{% load l10n %}
 
 {% block content %}
 {% load_widgets form='sniplates/forms.html' %}
@@ -65,6 +65,16 @@
             <section class="content-panel formset">
             {{ formset.management_form }}
             {{ formset.non_form_errors }}
+            <div
+                data-extra="{{ formset.extra|unlocalize }}"
+                data-prefix="{{ formset.prefix }}"
+                data-min-num="{{ formset.min_num|unlocalize }}"
+                data-max-num="{{ formset.max_num|unlocalize }}"
+                data-initial="{{ formset.initial_form_count|unlocalize }}"
+                data-formdata-element="form-users"
+            >
+                {{ formset.active_users|json_script:"form-users" }}
+            </div>
 
             <table class="table table--comfortable">
                 <thead>
