@@ -8,6 +8,7 @@ from zgw_consumers.api_models.zaken import Rol as _Rol
 
 from zac.contrib.brp.api import fetch_natuurlijkpersoon
 from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
+from zac.contrib.organisatieonderdelen.models import OrganisatieOnderdeel
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,12 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
 
 
 def get_naam_organisatorische_eenheid(rol: Rol) -> str:
+    identificatie = rol.betrokkene_identificatie.get("identificatie")
+    organisatie_onderdeel = OrganisatieOnderdeel.objects.filter(
+        slug=identificatie
+    ).first()
+    if organisatie_onderdeel:
+        return organisatie_onderdeel.name
     return rol.betrokkene_identificatie["naam"]
 
 

@@ -813,6 +813,9 @@ def filter_documenten_for_permissions(
 ) -> List[Document]:
     """Filter documents on the user permissions. """
 
+    if user.is_superuser:
+        return documenten
+
     filtered_documenten = []
     for document in documenten:
         try:
