@@ -9,3 +9,4 @@ local.py
 
 src/zac/static/css/
 src/zac/static/js/
+!src/zac/static/js/vendor/
