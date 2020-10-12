@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load i18n %}
 
 {% block nav-main-id %}
 <article class="object-id">
@@ -16,6 +17,16 @@
             {{ auth_profile.uuid }}
         </small>
     </h1>
+
+    <p>
+    {% if auth_profile.oo %}
+        {% blocktrans with oo=auth_profile.oo.name trimmed %}
+            Data access is limited to "{{ oo }}".
+        {% endblocktrans %}
+    {% else %}
+        {% trans "Data access is not limited to any OO." %}
+    {% endif %}
+    </p>
 </header>
 
 <article class="auth-profile-detail">

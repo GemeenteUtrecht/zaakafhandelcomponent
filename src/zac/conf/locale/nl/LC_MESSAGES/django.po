@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-12 08:19+0000\n"
+"POT-Creation-Date: 2020-10-12 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Sergei Maertens <sergei@maykinmedia.nl>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -100,13 +100,13 @@ msgstr "naam"
 
 #: src/zac/accounts/models.py:94
 msgid "Use an easily recognizable name that maps to the function of users."
-msgstr "Gebruik een herkenbare naam die overeenkomt met de functie van gebruikers."
+msgstr ""
+"Gebruik een herkenbare naam die overeenkomt met de functie van gebruikers."
 
 #: src/zac/accounts/models.py:101
 msgid ""
 "Selecting multiple sets makes them add/merge all the permissions together."
-msgstr ""
-"Bij selectie van meerdere collecties worden de rechten samengevoegd."
+msgstr "Bij selectie van meerdere collecties worden de rechten samengevoegd."
 
 #: src/zac/accounts/models.py:109
 msgid "organisatieonderdeel"
@@ -170,8 +170,8 @@ msgid ""
 "Specifies which document types within the case can be viewed. If left empty, "
 "all documents in the case can be viewed."
 msgstr ""
-"Bepaalt welke documenttypes binnen de zaak zichtbaar zijn. Indien dit leeggelaten "
-"wordt, dan zijn alle documenten in de zaak zichtbaar."
+"Bepaalt welke documenttypes binnen de zaak zichtbaar zijn. Indien dit "
+"leeggelaten wordt, dan zijn alle documenten in de zaak zichtbaar."
 
 #: src/zac/accounts/models.py:175
 msgid "informatieobjecttype omschrijvingen"
@@ -228,6 +228,15 @@ msgstr "verloopdatum"
 #: src/zac/accounts/models.py:241
 msgid "The result can't be specified without its handler"
 msgstr "Je kan geen resultaat zetten zonder beoordelaar"
+
+#: src/zac/accounts/templates/accounts/authorizationprofile_detail.html:23
+#, python-format
+msgid "Data access is limited to \"%(oo)s\"."
+msgstr "Gegevenstoegang is beperkt tot \"%(oo)s\""
+
+#: src/zac/accounts/templates/accounts/authorizationprofile_detail.html:27
+msgid "Data access is not limited to any OO."
+msgstr "Gegevenstoegang is niet gelimiteerd tot een OO."
 
 #: src/zac/accounts/templates/accounts/authorizationprofile_form.html:28
 #: src/zac/accounts/templates/accounts/permissionset_form.html:49
@@ -529,8 +538,7 @@ msgstr "Je kan de zaak hier inzien:"
 msgid ""
 "Best regards,\n"
 "ZAC Team"
-msgstr ""
-"Dit is een automatisch bericht van het Zaakafhandelcomponent"
+msgstr "Dit is een automatisch bericht van het Zaakafhandelcomponent"
 
 #: src/zac/core/templates/core/includes/zaakobjecten/pand.html:9
 msgid "Bouwjaar"
