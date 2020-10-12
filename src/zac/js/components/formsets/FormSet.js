@@ -5,47 +5,46 @@ import { ManagementForm } from './ManagementForm';
 import { AddForm } from './AddForm';
 import { PrefixContext } from './context';
 
-
-const DummyForm = ({ index, data={} }) => {
-    return (
-        <div>
-            Index: {index}
-            <br/>
-            Data: <pre><code>{JSON.stringify(data)}</code></pre>
-        </div>
-    );
-};
-
+const DummyForm = ({ index, data = {} }) => (
+    <div>
+        Index:
+        {' '}
+        {index}
+        <br />
+        Data:
+        {' '}
+        <pre><code>{JSON.stringify(data)}</code></pre>
+    </div>
+);
 
 DummyForm.propTypes = {
     index: PropTypes.number.isRequired,
     data: PropTypes.object,
 };
 
-
-const FormSet = ({ configuration, renderForm=DummyForm, renderAdd=AddForm, formData=[] }) => {
+const FormSet = ({
+    configuration, renderForm = DummyForm, renderAdd = AddForm, formData = [],
+}) => {
     const existingCount = formData.length;
     const [extra, setExtra] = useState(configuration.extra);
 
     const RenderForm = renderForm;
 
-    const getPrefix = (index) => {
-        return `${configuration.prefix}-${index}`;
-    };
+    const getPrefix = (index) => `${configuration.prefix}-${index}`;
 
     const forms = formData.map(
         (data, index) => (
-            <PrefixContext.Provider key={index} value={ getPrefix(index) }>
-                <RenderForm index={index} data={data} />
+            <PrefixContext.Provider key={index} value={getPrefix(index)}>
+                <RenderForm index={index} data={data} users={configuration.users} />
             </PrefixContext.Provider>
-        )
+        ),
     );
     const extraForms = Array(extra).fill().map(
         (_, index) => (
-            <PrefixContext.Provider key={existingCount + index} value={ getPrefix(existingCount + index) }>
-                <RenderForm index={existingCount + index} data={ {} } />
+            <PrefixContext.Provider key={existingCount + index} value={getPrefix(existingCount + index)}>
+                <RenderForm index={existingCount + index} data={{}} users={configuration.users} />
             </PrefixContext.Provider>
-        )
+        ),
     );
 
     const onAdd = (event) => {
@@ -54,34 +53,36 @@ const FormSet = ({ configuration, renderForm=DummyForm, renderAdd=AddForm, formD
     };
 
     return (
-        <React.Fragment>
+        <>
             <ManagementForm
-                prefix={ configuration.prefix }
-                initial={ configuration.initial }
-                total={ existingCount + extra }
-                minNum={ configuration.minNum }
-                maxNum={ configuration.maxNum }
+                prefix={configuration.prefix}
+                initial={configuration.initial}
+                total={existingCount + extra}
+                minNum={configuration.minNum}
+                maxNum={configuration.maxNum}
             />
 
             { forms.concat(extraForms) }
 
             { renderAdd({ onAdd }) }
 
-        </React.Fragment>
+        </>
     );
 };
 
 FormSet.propTypes = {
     configuration: PropTypes.shape({
         prefix: PropTypes.string.isRequired,
+        suffix: PropTypes.string,
         initial: PropTypes.number.isRequired,
+        extra: PropTypes.number.isRequired,
         minNum: PropTypes.number.isRequired,
         maxNum: PropTypes.number.isRequired,
+        users: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
     renderAdd: PropTypes.func, // a render prop
     formData: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
-
 
 export { FormSet };

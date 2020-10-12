@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Option from './Checkbox';
+import Checkbox from './Checkbox';
 
 const Options = ({ options, onChange, required }) => (
     <div className="checkbox-select__options">
         {options.map((option) => (
-            <Option
+            <Checkbox
                 onChange={onChange}
                 option={option}
                 key={option.id}

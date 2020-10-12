@@ -10,6 +10,7 @@ $btn-background-color: #efefef !default;
   background: $btn-background-color;
 
   font-size: 1.2rem;
+  line-height: 1.6rem;
   border: solid 1px transparent;
   box-shadow: 2px 1px 3px 0px rgba(#000, 0.2);
   cursor: pointer;
@@ -17,6 +18,10 @@ $btn-background-color: #efefef !default;
 
   color: $color-text;
   text-decoration: none;
+
+  & i {
+    margin-right: 14px;
+  }
 
   &:hover {
     background: $color-secondary;
