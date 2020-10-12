@@ -1089,3 +1089,85 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
             response = self.app.get(self.url, user=user)
 
         self.assertEqual(response.status_code, 200)
+
+    def test_multiple_oos_different_va(self, m):
+        """
+        Test that multiple auth profiles with different OOs don't give unintended access.
+
+        See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/pull/82#discussion_r501603971
+
+            Should filtering also take into account zaak.va ? For example, let's imagine
+            two auth profiles for user Bob:
+
+            profile A with oo = "oo1" and 1 permission set for "zaaktype1" with va = "openbare"
+            profile B with oo = "oo2" and 1 permission set for the same "zaaktype1" with va= "zeer_geheim"
+            And now we are checking permissions for the zaak with zaaktype = zaaktype1 and va = "zeer_geheim"
+
+            In current implementation both "oo1" and "oo2" would be selected here as relevant oos,
+            but is it correct?
+        """
+
+        # set up the mocks
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol1 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo1-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol1]),
+        )
+
+        # set up the permissions
+        oo1 = OrganisatieOnderdeelFactory.create(slug="oo1-test")
+        oo2 = OrganisatieOnderdeelFactory.create(slug="oo2-test")
+
+        # zaak is beperkt openbaar, and related to oo1-test. This AP gives no access,
+        # even though the AP.oo matches, the VA does not.
+        perm_set1 = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        auth_profile = perm_set1.authorizationprofile_set.get()
+        auth_profile.oo = oo1
+        auth_profile.save()
+
+        # zaak is beperkt openbaar, and related to oo1-test. This AP gives no access,
+        # even though the VA matches, the AP.oo does not.
+        perm_set2 = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        auth_profile = perm_set2.authorizationprofile_set.get()
+        auth_profile.oo = oo2
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)
