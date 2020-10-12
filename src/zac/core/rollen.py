@@ -24,18 +24,18 @@ class Rol(_Rol):
         return self._natuurlijkpersoon
 
     def get_name(self) -> Optional[str]:
-        get_name = GET_NAME.get(self.betrokkene_type)
-        if get_name is None:
+        getter = GET_NAME.get(self.betrokkene_type)
+        if getter is None:
             return None
 
-        return get_name(self)
+        return getter(self)
 
     def get_identificatie(self) -> Optional[str]:
-        get_identificatie = GET_IDENTIFICATIE.get(self.betrokkene_type)
-        if get_identificatie is None:
+        getter = GET_IDENTIFICATIE.get(self.betrokkene_type)
+        if getter is None:
             return None
 
-        return get_identificatie(self)
+        return getter(self)
 
 
 def get_bsn(rol: Rol) -> str:
