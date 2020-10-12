@@ -88,7 +88,7 @@ class AuthorizationProfile(models.Model):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(
-        _("naam"),
+        _("name"),
         max_length=255,
         help_text=_(
             "Use an easily recognizable name that maps to the function of users."
