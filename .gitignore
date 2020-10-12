@@ -35,4 +35,6 @@ src/zac/static/css/**/*.css.map
 src/zac/static/css/images/
 
 src/zac/static/fonts/
-src/zac/static/js/
+
+src/zac/static/js/*
+!/src/zac/static/js/vendor/

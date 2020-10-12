@@ -1,0 +1,44 @@
+{
+  "APP": {
+    "DOCUMENT_LIST": {
+      "COLUMNS": {
+        "NAME": "Naam",
+        "SIZE": "Grootte",
+        "MODIFIED_ON": "Aangepast",
+        "MODIFIED_BY": "Aangepast door"
+      }
+    },
+    "ACTIONS": {
+      "MORE": "Meer acties",
+      "CREATE_EIO_INTERN": "Maak EIO Intern",
+      "CREATE_EIO_EXTERN": "Maak EIO Extern",
+      "DOWNLOAD": "Downloaden",
+      "DELETE": "Verwijderen"
+    },
+    "MESSAGES": {
+      "ERRORS": {
+        "MISSING_CONTENT": "Dit item bestaat niet meer of u hebt geen rechten om het weer te geven.",
+        "GENERIC": "De actie is mislukt. Probeer het opnieuw of neem contact op met het IT-team.",
+        "CONFLICT": "Deze naam wordt al gebruikt, probeer een andere naam."
+      }
+    },
+    "DIALOGS": {
+      "EIO_CREATE": {
+        "TITLE": "Wijzig type",
+        "INTERN_TITLE": "Maak EIO Intern",
+        "EXTERN_TITLE": "Maak EIO Extern",
+        "INFO": "Om het type van het informatieobject te wijzigen selecteer uw een nieuw type uit de dropdownlijst. Vervolgens geeft u het informatieobject een nieuwe titel en selecteert u een taal.",
+        "LABELS": {
+          "CURRENT_VALUE": "Huidige waarde",
+          "IO_TYPE": "Informatieobjecttype",
+          "TITLE": "Title",
+          "LANGUAGE": "Taal"
+        }
+      },
+      "BUTTONS": {
+        "OK": "Ok",
+        "CLOSE": "Annuleren"
+      }
+    }
+  }
+}

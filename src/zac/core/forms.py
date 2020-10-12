@@ -1,7 +1,7 @@
 import itertools
 import logging
 from datetime import date
-from typing import Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
@@ -15,7 +15,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
+from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, User
@@ -23,8 +24,9 @@ from zac.camunda.forms import TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
 
-from .fields import DocumentsMultipleChoiceField
+from .fields import AlfrescoDocumentField, DocumentsMultipleChoiceField
 from .services import (
+    get_besluittypen_for_zaaktype,
     get_documenten,
     get_resultaattypen,
     get_statustypen,
@@ -34,6 +36,17 @@ from .services import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def dict_to_choices(
+    mapping: Dict[str, Any], attr="omschrijving"
+) -> Iterator[Tuple[str, str]]:
+    def choices():
+        for key, value in mapping.items():
+            display = getattr(value, attr)
+            yield (key, display)
+
+    return choices
 
 
 def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
@@ -454,3 +467,54 @@ class BaseAccessRequestFormSet(forms.BaseModelFormSet):
         submit = self.data.get("submit")
         if submit not in dict(AccessRequestResult.choices):
             raise forms.ValidationError(_("Use correct 'submit' button"))
+
+
+class BesluitForm(forms.Form):
+    besluittype = forms.TypedChoiceField(
+        required=True,
+        label=_("Type"),
+        help_text=_(
+            "Selecteer een besluittype. Deze besluittypen horen bij het zaaktype van de zaak."
+        ),
+    )
+    beslisdatum = forms.DateField(
+        label=_("Beslisdatum"),
+        required=True,
+        initial=date.today,
+        help_text=_("De beslisdatum (AWB) van het besluit."),
+    )
+    ingangsdatum = forms.DateField(
+        label=_("Ingangsdatum"),
+        required=True,
+        initial=date.today,
+        help_text=_("Ingangsdatum van de werkingsperiode van het besluit."),
+    )
+
+    document = AlfrescoDocumentField(
+        required=False,
+        label=_("Document"),
+        help_text=_("Document waarin het besluit is vastgelegd."),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.zaak: Zaak = kwargs.pop("zaak")
+        super().__init__(*args, **kwargs)
+
+        self.fields["document"].zaak = self.zaak
+
+        besluittypen = {
+            besluittype.url: besluittype
+            for besluittype in get_besluittypen_for_zaaktype(self.zaak.zaaktype)
+        }
+        self.fields["besluittype"].choices = dict_to_choices(besluittypen)
+        self.fields["besluittype"].coerce = besluittypen.get
+
+    def as_api_body(self) -> Dict[str, Any]:
+        besluittype: BesluitType = self.cleaned_data["besluittype"]
+        return {
+            "verantwoordelijkeOrganisatie": self.zaak.bronorganisatie,
+            "besluittype": besluittype.url,
+            "zaak": self.zaak.url,
+            "datum": self.cleaned_data["beslisdatum"].isoformat(),
+            "ingangsdatum": self.cleaned_data["ingangsdatum"].isoformat(),
+        }

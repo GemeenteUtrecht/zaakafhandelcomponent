@@ -8,6 +8,7 @@
         <meta name="author" content="">
 
         <link href="https://fonts.googleapis.com/css?family=Fira+Sans:300,400,600|Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
 
         <link href="{% static 'css/font-awesome.min.css' %}" media="screen" rel="stylesheet" />
         <link href="{% static 'css/screen.css' %}" media="screen" rel="stylesheet" type="text/css" />
@@ -18,6 +19,8 @@
 
     <body class="{% block body-class %}{% endblock %}">
         {% hijack_notification %}
+        {% block post-body %}{% endblock %}
+
         <header>
             <div class="logo">
                 <img src="{% static "img/wapen-utrecht-rood.svg" %}">

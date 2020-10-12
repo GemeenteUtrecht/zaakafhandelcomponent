@@ -25,3 +25,7 @@ class DocumentSelectMultiple(widgets.ChoiceWidget):
         if index is None:
             return ""
         return super().id_for_label(id_, index)
+
+
+class AlfrescoDocument(widgets.URLInput):  # mostly exists to have a Sniplates ref
+    pass

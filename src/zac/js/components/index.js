@@ -6,3 +6,4 @@ import './openUrl';
 import './processes';
 import './case-activities';
 import './validSign';
+import './alfresco-document-selection';

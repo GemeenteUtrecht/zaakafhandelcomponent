@@ -11,20 +11,20 @@ const Input = ({
     type='text',
     id='',
     name='',
-    initial='',
+    initial=null,
     value='',
     classes=null,
     checked=false,
     onBlur,
     onChange,
     required=false,
-    disabled=false
+    disabled=false,
+    ...extraProps
 }) => {
     const prefix = useContext(PrefixContext);
 
     const classNames = classes ??`input__control input__control--${type}`;
 
-    let extraProps = {};
     if (id) {
         const prefixedId = prefix ? `${prefix}-${id}` : id;
         extraProps.id = prefixedId;
@@ -63,9 +63,8 @@ const Input = ({
 };
 
 
-const TextInput = (props) => {
-    const { label, helpText, id, required, errors=[] } = props;
-
+const WrappedInput = ({ type="text", helpText, label, errors=[], ...props }) => {
+    const { id, required } = props;
     const prefix = useContext(PrefixContext);
     const prefixedId = (id && prefix) ? `${prefix}-${id}` : id;
 
@@ -74,9 +73,19 @@ const TextInput = (props) => {
             <Label label={label} required={required} idForLabel={prefixedId} />
             <Help helpText={helpText} idForLabel={prefixedId} />
             <ErrorList errors={errors} />
-            <Input type="text" {...props} />
+            <Input type={type} {...props} />
         </Wrapper>
     );
+};
+
+
+const TextInput = (props) => {
+    return <WrappedInput type="text" {...props} />
+};
+
+
+const PasswordInput = (props) => {
+    return <WrappedInput type="password" {...props} />
 };
 
 
@@ -132,4 +141,13 @@ const FileInput = ({name, label, helpText, id, required=false, errors=[], multip
 };
 
 
-export {Input, TextInput, DateInput, CheckboxInput, RadioInput, HiddenInput, FileInput};
+export {
+    Input,
+    TextInput,
+    DateInput,
+    CheckboxInput,
+    RadioInput,
+    HiddenInput,
+    FileInput,
+    PasswordInput,
+};

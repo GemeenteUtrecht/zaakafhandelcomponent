@@ -28,7 +28,11 @@ $form-centered-width--normal: 40vw !default;
     padding-right: 2rem;
   }
 
-  & &__group-title {
+  @include modifier("wide") {
+    width: calc(100% - 2rem);
+  }
+
+  @include element("group-title") {
     font-size: 1.2rem;
 
     &:after {
@@ -39,7 +43,7 @@ $form-centered-width--normal: 40vw !default;
     }
   }
 
-  & &__field-group {
+  @include element("field-group") {
     display: flex;
     flex-wrap: wrap;
 

@@ -89,7 +89,7 @@ Actual input types
     {% reuse "_label" %}
     {% reuse "_help" %}
     {% reuse "_errors" %}
-    {% reuse "input" input_type="text" css_classes=css_classes|add:" input__control--text" %}
+    {% reuse "input" input_type="text" raw_value=value css_classes=css_classes|add:" input__control--text" %}
 {% endnested %}
 {% endblock %}
 
@@ -250,6 +250,26 @@ Actual input types
     {{ form_field }}
 {% endnested %}
 {% endblock DocumentSelectMultiple %}
+
+
+{% block AlfrescoDocument %}
+{% nested_widget ':_wrapper' %}
+    {% reuse '_label' %}
+    {% reuse '_help' %}
+    {% reuse '_errors' %}
+
+    <div
+        class="alfresco-document-selection"
+        data-name="{{ html_name }}"
+        data-id="{{ id_for_label }}"
+        data-zaaktype="{{ form_field.field.zaak.zaaktype.url }}"
+        data-bronorganisatie="{{ form_field.field.zaak.bronorganisatie }}"
+    >
+    </div>
+
+{% endnested %}
+{% endblock %}
+
 
 
 Button interactions

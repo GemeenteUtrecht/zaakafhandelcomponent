@@ -16,6 +16,7 @@ module.exports = {
     // Path to the js entry point (source).
     entry: {
         main: __dirname + '/' + paths.jsEntry,
+        // webcomponents: __dirname + '/' + paths.jsSrcDir + 'webcomponents.js',
     },
 
     // Path to the (transpiled) js
@@ -39,7 +40,10 @@ module.exports = {
                 ],
             },
             {
-                exclude: /node_modules/,
+                exclude: [
+                    /node_modules/,
+                    /static\/vendor/,
+                ],
                 loader: 'babel-loader',
                 test: /.js?$/
             }

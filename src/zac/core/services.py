@@ -1,7 +1,7 @@
 import asyncio
 import base64
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
 from django.core.cache import cache
@@ -14,7 +14,7 @@ import aiohttp
 import requests
 from furl import furl
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.besluiten import Besluit
+from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
     BesluitType,
     Eigenschap,
@@ -39,6 +39,7 @@ from zgw.models import InformatieObjectType, StatusType, Zaak
 
 from ..accounts.models import PermissionSet, User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
+from .models import CoreConfig
 from .permissions import zaken_inzien
 from .rollen import Rol
 
@@ -79,6 +80,13 @@ def fetch_async(cache_key: str, job, *args, **kwargs):
 ###################################################
 #                       ZTC                       #
 ###################################################
+
+
+@cache_result("besluittype:{url}", timeout=A_DAY)
+def fetch_besluittype(url: str) -> BesluitType:
+    client = _client_from_url(url)
+    result = client.retrieve("besluittype", url=url)
+    return factory(BesluitType, result)
 
 
 def _get_from_catalogus(resource: str, catalogus: str = "") -> List:
@@ -126,13 +134,6 @@ def get_zaaktypen(
         # filter out zaaktypen from permissions
         zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
     return zaaktypen
-
-
-@cache_result("besluittype:{url}", timeout=A_DAY)
-def fetch_besluittype(url: str) -> BesluitType:
-    client = _client_from_url(url)
-    result = client.retrieve("besluittype", url=url)
-    return factory(BesluitType, result)
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -238,6 +239,13 @@ def get_informatieobjecttype(url: str) -> InformatieObjectType:
     client = _client_from_url(url)
     data = client.retrieve("informatieobjecttype", url=url)
     return factory(InformatieObjectType, data)
+
+
+@cache_result("zt:besluittypen:{zaaktype.url}")
+def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
+    with parallel() as executor:
+        results = executor.map(fetch_besluittype, zaaktype.besluittypen)
+    return list(results)
 
 
 ###################################################
@@ -988,3 +996,29 @@ def get_besluiten(zaak: Zaak) -> List[Besluit]:
         besluit.besluittype = besluittypen[besluit.besluittype]
 
     return besluiten
+
+
+def create_zaakbesluit(zaak: Zaak, data: Dict[str, Any]) -> Besluit:
+    if not data.get("zaak"):
+        data["zaak"] = zaak.url
+
+    config = CoreConfig.get_solo()
+    brc = config.primary_brc or Service.objects.filter(api_type=APITypes.brc).first()
+    if not brc:
+        raise RuntimeError("No BRC service configured")
+
+    client = brc.build_client()
+    besluit_data = client.create("besluit", data=data)
+    return factory(Besluit, besluit_data)
+
+
+def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocument:
+    client = _client_from_object(besluit)
+    bio_data = client.create(
+        "besluitinformatieobject",
+        {
+            "besluit": besluit.url,
+            "informatieobject": document_url,
+        },
+    )
+    return factory(BesluitDocument, bio_data)

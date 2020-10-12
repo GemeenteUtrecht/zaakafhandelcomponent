@@ -2,7 +2,7 @@ from django import forms
 from django.urls import reverse
 
 from .services import get_documenten, get_zaak
-from .widgets import DocumentSelectMultiple
+from .widgets import AlfrescoDocument, DocumentSelectMultiple
 
 
 class DocWrapper:
@@ -61,5 +61,21 @@ class DocumentsMultipleChoiceField(forms.MultipleChoiceField):
         self._zaak = value
         if self._zaak:
             self.choices = lambda: get_zaak_documents(self._zaak)
+
+    zaak = property(_get_zaak, _set_zaak)
+
+
+class AlfrescoDocumentField(forms.URLField):
+    widget = AlfrescoDocument
+
+    def __init__(self, *, zaak=None, **kwargs):
+        super().__init__(**kwargs)
+        self.zaak = zaak
+
+    def _get_zaak(self):
+        return self._zaak
+
+    def _set_zaak(self, value: str):
+        self._zaak = value
 
     zaak = property(_get_zaak, _set_zaak)

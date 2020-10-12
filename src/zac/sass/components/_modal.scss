@@ -22,6 +22,12 @@ $content-panel-border-color: #ddd !default;
   outline: none;
   padding: 20px;
 
+  @include modifier("large") {
+    height: 80vh;
+    width: 80vw;
+    overflow-y: scroll;
+  }
+
   @include element("close") {
     float: right;
     padding: 0.25em  0.5em;
