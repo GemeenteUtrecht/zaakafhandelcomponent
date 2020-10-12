@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
 
 import requests_mock
 
@@ -109,7 +110,7 @@ class BPMNMessageSendTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json()["task_id"][0]["message"], "Invalid task referenced."
+            response.json()["task_id"][0]["message"], _("Invalid task referenced.")
         )
 
     @patch("zac.core.camunda.extract_task_form", return_value=None)

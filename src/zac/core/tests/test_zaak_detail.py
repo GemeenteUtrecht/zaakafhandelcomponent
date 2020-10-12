@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -200,7 +201,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
         # show url to request access
         self.assertEqual(
             response.html.find(class_="main__content").find("p").text.strip(),
-            "You can request access for this page",
+            _("You can request access for this page"),
         )
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -188,7 +189,7 @@ class CreateAccessRequestTests(ClearCachesMixin, TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.html.find(class_="input__error").text,
-            "You've already requested access for this zaak",
+            _("You've already requested access for this zaak"),
         )
 
         self.assertEqual(
@@ -356,19 +357,19 @@ class HandleAccessRequestsTests(TransactionWebTest):
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        self.assertEqual(email.subject, f"Access Request to {IDENTIFICATIE}")
+        subject = _("Access Request to %(zaak)s") % {"zaak": IDENTIFICATIE}
+        self.assertEqual(email.subject, subject)
         self.assertEqual(email.to, [approved_request.requester.email])
-        self.assertEqual(
-            email.body,
-            f"""Dear {approved_request.requester.username}
 
-The access to zaak {IDENTIFICATIE} is approved.
-You can see it here: http://testserver{reverse("core:zaak-detail", kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE, })}
-
-Best regards,
-ZAC Team
-""",
+        zaak_detail_path = reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": BRONORGANISATIE,
+                "identificatie": IDENTIFICATIE,
+            },
         )
+        url = f"http://testserver{zaak_detail_path}"
+        self.assertIn(url, email.body)
 
     def test_approve_access_requests_without_end_date_fail(self, m):
         self._setUpMocks(m)
@@ -396,7 +397,7 @@ ZAC Team
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.html.find(class_="input__error").text,
-            "End date of the access must be specified",
+            _("End date of the access must be specified"),
         )
 
     def test_reject_access_requests(self, m):
@@ -432,16 +433,6 @@ ZAC Team
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        self.assertEqual(email.subject, f"Access Request to {IDENTIFICATIE}")
+        subject = _("Access Request to %(zaak)s") % {"zaak": IDENTIFICATIE}
+        self.assertEqual(email.subject, subject)
         self.assertEqual(email.to, [rejected_request.requester.email])
-        self.assertEqual(
-            email.body,
-            f"""Dear {rejected_request.requester.username}
-
-The access to zaak {IDENTIFICATIE} is rejected.
-
-
-Best regards,
-ZAC Team
-""",
-        )
