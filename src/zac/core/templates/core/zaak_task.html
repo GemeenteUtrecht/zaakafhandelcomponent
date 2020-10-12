@@ -64,43 +64,18 @@
         {% if formset %}
             <section class="zaak-detail__panel content-panel content-panel--flat">
                 <div class="form__group-title">Adviseur(s)</div>
-                    <div id="react-review-users"
-                        data-extra="{{ formset.extra|unlocalize }}"
-                        data-prefix="{{ formset.prefix }}"
-                        data-min-num="{{ formset.min_num|unlocalize }}"
-                        data-max-num="{{ formset.max_num|unlocalize }}"
-                        data-initial="{{ formset.initial_form_count|unlocalize }}"
-                        data-users="kownslUsers"
-                        data-formdata-element="form-data"
-                    >
-                        {{ formset.active_users|json_script:"kownslUsers" }}
-                        {{ formset.form_data|json_script:"form-data" }}
-                    </div>
-
-<!--            <table class="table table&#45;&#45;comfortable">-->
-<!--                <thead>-->
-<!--                    <tr>-->
-<!--                    {% for inline_form in formset.forms %}-->
-<!--                        {% if forloop.first %}-->
-<!--                            {% for field in inline_form %}-->
-<!--                                <th class="table__header {% if field in inline_form.hidden_fields %}table__column&#45;&#45;hidden{% endif %}">{{ field.label }}</th>-->
-<!--                            {% endfor %}-->
-<!--                        {% endif %}-->
-<!--                    {% endfor %}-->
-<!--                    </tr>-->
-<!--                </thead>-->
-
-<!--                <tbody>-->
-<!--                {% for inline_form in formset %}-->
-<!--                    {{  inline_form.non_field_errors }}-->
-<!--                    <tr>-->
-<!--                        {% for field in inline_form %}-->
-<!--                            <td class="{% if field in inline_form.hidden_fields %}table__column&#45;&#45;hidden{% endif %}">{{ field }}</td>-->
-<!--                        {% endfor %}-->
-<!--                    </tr>-->
-<!--                {% endfor %}-->
-<!--                </tbody>-->
-<!--            </table>-->
+                <div id="react-review-users"
+                    data-extra="{{ formset.extra|unlocalize }}"
+                    data-prefix="{{ formset.prefix }}"
+                    data-min-num="{{ formset.min_num|unlocalize }}"
+                    data-max-num="{{ formset.max_num|unlocalize }}"
+                    data-initial="{{ formset.initial_form_count|unlocalize }}"
+                    data-users="kownslUsers"
+                    data-formdata-element="form-data"
+                >
+                    {{ formset.active_users|json_script:"kownslUsers" }}
+                    {{ formset.form_data|json_script:"form-data" }}
+                </div>
             </section>
 
         {% endif %}
