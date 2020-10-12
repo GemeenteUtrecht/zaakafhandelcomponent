@@ -200,9 +200,13 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 403)
         # show url to request access
+        request_access_url = reverse(
+            "core:access-request-create",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         self.assertEqual(
-            response.html.find(class_="main__content").find("p").text.strip(),
-            _("You can request access for this page"),
+            response.html.find(class_="main__content").find("p").find("a")["href"],
+            request_access_url,
         )
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):
