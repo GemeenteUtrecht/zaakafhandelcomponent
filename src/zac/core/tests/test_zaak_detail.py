@@ -990,6 +990,53 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_no_oo_set(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        OrganisatieOnderdeelFactory.create(slug="oo-test")
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        assert auth_profile.oo is None
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
     def test_access_as_superuser(self, m):
         user = SuperUserFactory.create()
         oo = OrganisatieOnderdeelFactory.create(slug="oo-test")
