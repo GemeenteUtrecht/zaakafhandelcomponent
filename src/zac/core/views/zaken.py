@@ -38,7 +38,6 @@ from ..permissions import (
     zaken_set_result,
 )
 from ..services import (
-    filter_documenten_for_permissions,
     find_zaak,
     get_document,
     get_documenten,
@@ -52,6 +51,7 @@ from ..services import (
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .mixins import DocumentPermissionMixin
 from .utils import get_zaak_from_query
 
 
@@ -87,7 +87,7 @@ class Index(PermissionRequiredMixin, BaseListView):
         return zaken
 
 
-class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
+class ZaakDetail(PermissionRequiredMixin, DocumentPermissionMixin, BaseDetailView):
     template_name = "core/zaak_detail.html"
     context_object_name = "zaak"
     permission_required = zaken_inzien.name
@@ -138,7 +138,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
             documenten, gone = _documenten.result()
 
-            filtered_documenten = filter_documenten_for_permissions(
+            filtered_documenten = self.filter_documenten_for_permissions(
                 documenten, self.request.user
             )
 
