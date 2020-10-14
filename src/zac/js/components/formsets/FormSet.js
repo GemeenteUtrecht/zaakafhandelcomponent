@@ -35,7 +35,7 @@ const FormSet = ({
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={getPrefix(index)}>
-                <RenderForm index={index} data={data} users={configuration.users} />
+                <RenderForm index={index} totalStepsIndex={extra} data={data} users={configuration.users} />
             </PrefixContext.Provider>
         ),
     );
