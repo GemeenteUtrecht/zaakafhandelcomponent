@@ -6,51 +6,58 @@ from django.db.models import Q
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 
-from zac.accounts.models import PermissionSet, User
+from zac.accounts.models import InformatieobjecttypePermission, PermissionSet, User
 
 
 class DocumentPermissionMixin:
     @staticmethod
     def check_document_permissions(document: Document, user: User):
-        """Check if a user has the permission to see a document
+        """Check if a user has the permission to see a document"""
+        error_msg = "The user has insufficient permissions to access this document."
 
-        This does the following:
-        1. Checks that the user has permissions for the catalogus in which the informatieobjecttype is located.
-            If no informatieobjecttype_catalogus are specified, then the user has no access.
-        2.  Checks that the user has permission for the specified informatieobjecttype of the document.
-            If the PermissionSet has a catalog specified but no informatieobjecttypes, then all informatieobjecttypes in
-            the catalog are allowed.
-            If the PermissionSet has a catalog specified _and_ a set of informatieobjecttypes, only the specified
-            informatieobjecttypes are allowed.
-        3. Checks that the user has level of confidentiality greater or equal to that specified in the informatieobjecttype.
-        """
+        user_permissions = PermissionSet.objects.filter(
+            authorizationprofile__in=user.auth_profiles.all()
+        )
+
+        if not user_permissions.exists():
+            raise PermissionDenied(error_msg)
+
+        relevant_iot_permissions = InformatieobjecttypePermission.objects.filter(
+            catalogus=document.informatieobjecttype.catalogus
+        )
+
+        user_iot_permissions = relevant_iot_permissions.filter(
+            permission_set__in=user_permissions
+        )
+
+        if not user_iot_permissions.exists():
+            raise PermissionDenied(error_msg)
+
+        # The user has permissions to the catalog in question.
+        # Now need to check whether they have the right confidentiality level
+
         document_va = VertrouwelijkheidsAanduidingen.get_choice(
             document.informatieobjecttype.vertrouwelijkheidaanduiding
         ).order
 
-        order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
-            "informatieobjecttype_max_va"
+        order_case = VertrouwelijkheidsAanduidingen.get_order_expression("max_va")
+
+        confidentiality_permissions = user_iot_permissions.annotate(
+            max_va_order=order_case
+        ).filter(max_va_order__gte=document_va)
+
+        if not confidentiality_permissions.exists():
+            raise PermissionDenied(error_msg)
+
+        # If there is no omschrijving specified in the remaining permissions, then the user has access.
+        # Otherwise need to check that the user has permissions for the specific omschrijving.
+
+        required_permission = confidentiality_permissions.filter(
+            Q(omschrijving=document.informatieobjecttype.omschrijving)
+            | Q(omschrijving="")
         )
 
-        required_permissions = (
-            PermissionSet.objects.filter(
-                Q(
-                    informatieobjecttype_omschrijvingen__contains=[
-                        document.informatieobjecttype.omschrijving
-                    ]
-                )
-                | Q(informatieobjecttype_omschrijvingen=[]),
-                informatieobjecttype_catalogus=document.informatieobjecttype.catalogus,
-            )
-            .annotate(iot_va_order=order_case)
-            .filter(iot_va_order__gte=document_va)
-        )
-
-        user_authorisation_profiles = user.auth_profiles.filter(
-            permission_sets__in=required_permissions
-        )
-        if not user_authorisation_profiles.exists():
-            error_msg = "The user has insufficient permissions to access this document."
+        if not required_permission.exists():
             raise PermissionDenied(error_msg)
 
     def filter_documenten_for_permissions(
