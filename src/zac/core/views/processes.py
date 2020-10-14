@@ -25,7 +25,7 @@ from ..camunda import get_process_zaak_url, get_task
 from ..forms import ClaimTaskForm
 from ..permissions import zaakproces_send_message, zaakproces_usertasks
 from ..services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
-from ..task_handlers import HANDLERS
+from ..task_handlers import HANDLERS, REVERSE_HANDLERS
 
 logger = logging.getLogger(__name__)
 
@@ -195,14 +195,18 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        task = self._get_task()
         context.update(
             {
                 "zaak": self.zaak,
-                "task": self._get_task(),
-                "open_url": self.request.session.get("open_url"),
+                "task": task,
                 "return_url": self.request.GET.get("returnUrl"),
             }
         )
+        # check if we need to inject the external URL to open
+        redirect_form_key = REVERSE_HANDLERS["core:redirect-task"]
+        if task.form_key == redirect_form_key:
+            context.update({"open_url": self.request.session.get("open_url")})
         return context
 
     def get_success_url(self):
