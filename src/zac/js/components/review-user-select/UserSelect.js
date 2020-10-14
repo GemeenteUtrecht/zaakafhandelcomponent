@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { getUserName } from '../../utils/users';
-import { HiddenInput } from '../forms/Inputs';
+import { HiddenCheckbox } from '../forms/Inputs';
 import { ErrorList, Wrapper } from '../forms/Utils';
 
 const setUsers = (users) => (users ? users.map((user) => ({
@@ -26,13 +26,15 @@ const UserSelect = ({
     const [hiddenInputs, setHiddenInputs] = useState(null);
 
     // Default hidden input for the form
-    const DefaultHiddenInput = () => (
-        <input type="hidden" name={`kownsl_users${-index}`} required="required" />
+    const DefaultHiddenCheckbox = () => (
+        <input type="checkbox" className="input input--hidden" name={`form-${index}-kownsl_users`} required />
     );
 
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
-        const inputs = selectedUsers ? selectedUsers.map((user) => <HiddenInput name="kownsl_users" value={user.value} />) : DefaultHiddenInput;
+        const inputs = selectedUsers
+            ? selectedUsers.map((user) => <HiddenCheckbox name="kownsl_users" value={user.value} key={user.value} required />)
+            : DefaultHiddenCheckbox;
         setHiddenInputs(inputs);
     };
 
@@ -47,7 +49,7 @@ const UserSelect = ({
     const StepTitle = totalStepsIndex !== 0 ? <h3>{`Stap ${index + 1}`}</h3> : <h3> </h3>;
 
     return (
-        <>
+        <div className="user-select" style={{ position: 'relative' }}>
             { (errors && !isEmpty(errors.__all__))
                 ? (
                     <Wrapper errors={errors.__all__}>
@@ -67,7 +69,7 @@ const UserSelect = ({
                 classNamePrefix="select"
                 onChange={(value) => handleSelectChange(value)}
             />
-        </>
+        </div>
     );
 };
 

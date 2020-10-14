@@ -25,7 +25,7 @@ const init = () => {
         },
         renderForm: UserSelect,
         renderAdd: AddStep,
-        formData: jsonScriptToVar(node.dataset.formdataElement),
+        formData: [{}],
     };
     ReactDOM.render(<FormSet {...props} />, node);
 };

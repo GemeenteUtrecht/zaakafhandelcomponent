@@ -8,6 +8,12 @@
   padding: 0;
   position: relative;
 
+  @include modifier('hidden') {
+    opacity: 0;
+    position: absolute;
+    bottom: 0;
+  }
+
   @include element('control') {
     border: 0;
     box-shadow: none;
