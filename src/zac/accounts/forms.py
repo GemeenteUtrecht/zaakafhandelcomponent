@@ -59,19 +59,13 @@ class PermissionSetForm(forms.ModelForm):
             "catalogus",
             "zaaktype_identificaties",
             "max_va",
-            "informatieobjecttype_catalogus",
-            "informatieobjecttype_omschrijvingen",
-            "informatieobjecttype_max_va",
         )
         field_classes = {
             "catalogus": SelectCatalogusField,
-            "informatieobjecttype_catalogus": SelectCatalogusField,
         }
         widgets = {
             "max_va": forms.RadioSelect,
             "zaaktype_identificaties": forms.CheckboxSelectMultiple,
-            "informatieobjecttype_max_va": forms.RadioSelect,
-            "informatieobjecttype_omschrijvingen": forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
