@@ -8,8 +8,14 @@ from .forms import (
     AuthorizationProfileForm,
     PermissionSetForm,
     UserAuthorizationProfileForm,
+    get_catalogus_choices,
 )
-from .models import AuthorizationProfile, PermissionSet, UserAuthorizationProfile
+from .models import (
+    AuthorizationProfile,
+    InformatieobjecttypePermission,
+    PermissionSet,
+    UserAuthorizationProfile,
+)
 
 
 class LoginView(_LoginView):
@@ -52,6 +58,31 @@ class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
 class PermissionSetDetailView(LoginRequiredMixin, DetailView):
     queryset = PermissionSet.objects.prefetch_related("authorizationprofile_set")
     context_object_name = "permission_set"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        informatieobjecttype_permissions = (
+            InformatieobjecttypePermission.objects.filter(
+                permission_set=context["object"]
+            )
+        )
+
+        if informatieobjecttype_permissions.exists():
+            catalog_choices = get_catalogus_choices()
+            chosen_catalog_url = informatieobjecttype_permissions.first().catalogus
+            for catalog_url, catalog_label in catalog_choices:
+                if catalog_url == chosen_catalog_url:
+                    context["informatieobjecttype_catalogus"] = catalog_label
+                    break
+            context["informatieobjecttype_permissions"] = [
+                {
+                    "omschrijving": permission.omschrijving,
+                    "max_va": permission.max_va.replace("_", " "),
+                }
+                for permission in informatieobjecttype_permissions
+                if permission.omschrijving != ""
+            ]
+        return context
 
 
 class PermissionSetUpdateView(PermissionRequiredMixin, UpdateView):

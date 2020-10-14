@@ -63,6 +63,26 @@
 
     </section>
 
+        <section class="permission-set-detail__panel content-panel">
+        <div class="permission-set-detail__title section-title">Informatieobjecttypen</div>
+        {% if informatieobjecttype_catalogus %}
+            <b>Toegestane catalogus</b>: {{ informatieobjecttype_catalogus }}
+            <br/>
+            {% if informatieobjecttype_permissions %}
+                <ul>
+                    {% for permission in informatieobjecttype_permissions %}
+                        <li>{{ permission.omschrijving }} ({{ permission.max_va }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Alle openbare informatieobjecttypen in de catalogus zijn toegestaan.
+            {% endif %}
+        {% else %}
+            Geen toegestane informatieobjecttypen.
+        {% endif %}
+
+    </section>
+
 </article>
 
 {% endblock %}
