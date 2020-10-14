@@ -7,6 +7,7 @@ from hijack_admin.admin import HijackUserAdminMixin
 from .models import (
     AccessRequest,
     AuthorizationProfile,
+    InformatieobjecttypePermission,
     PermissionSet,
     User,
     UserAuthorizationProfile,
@@ -29,6 +30,14 @@ class PermissionSetAdmin(admin.ModelAdmin):
     list_display = ("name", "permissions", "zaaktype_identificaties", "max_va")
     list_filter = ("max_va",)
     search_fields = ("name",)
+
+
+@admin.register(InformatieobjecttypePermission)
+class InformatieobjecttypePermissionAdmin(admin.ModelAdmin):
+    list_display = ("omschrijving", "catalogus", "max_va")
+    list_filter = ("omschrijving", "catalogus", "max_va", "permission_set")
+    search_fields = ("omschrijving", "catalogus", "max_va")
+    raw_id_fields = ("permission_set",)
 
 
 @admin.register(AuthorizationProfile)
