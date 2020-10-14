@@ -7,7 +7,8 @@ from zac.accounts.models import User
 from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_rollen_all, get_zaken
 
-from ...documents import RolDocument, ZaakDocument
+from ...api import append_rol_to_document, create_zaak_document
+from ...documents import ZaakDocument
 
 
 class Command(BaseCommand):
@@ -32,38 +33,11 @@ class Command(BaseCommand):
 
         # TODO replace with bulk API
         for zaak in zaken:
-            zaak_document = ZaakDocument(
-                meta={"id": zaak.uuid},
-                url=zaak.url,
-                zaaktype=zaak.zaaktype.url,
-                identificatie=zaak.identificatie,
-                bronorganisatie=zaak.bronorganisatie,
-                vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
-                va_order=VertrouwelijkheidsAanduidingen.get_choice(
-                    zaak.vertrouwelijkheidaanduiding
-                ).order,
-            )
-            zaak_document.save()
+            create_zaak_document(zaak)
 
     def index_rollen(self):
         rollen = get_rollen_all()
         self.stdout.write(f"{len(rollen)} rollen are received from Zaken API")
 
         for rol in rollen:
-            rol_document = RolDocument(
-                url=rol.url,
-                betrokkene_type=rol.betrokkene_type,
-                # TODO replace with get_identificatie after rebase on oo branch
-                betrokkene_identificatie=rol.betrokkene_identificatie,
-            )
-
-            # add rol document to zaak
-            zaak_uuid = rol.zaak.strip("/").split("/")[-1]
-            try:
-                zaak_document = ZaakDocument.get(id=zaak_uuid)
-            except exceptions.NotFoundError as exc:
-                self.stdout.write(f"Warning: {exc}")
-                continue
-
-            zaak_document.rollen.append(rol_document)
-            zaak_document.save()
+            append_rol_to_document(rol)
