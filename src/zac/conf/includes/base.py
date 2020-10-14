@@ -432,3 +432,4 @@ HIJACK_AUTHORIZE_STAFF_TO_HIJACK_STAFF = True
 ELASTICSEARCH_DSL = {
     "default": {"hosts": config("ES_HOST", "localhost:9200")},
 }
+ES_INDEX_ZAKEN = "zaken"

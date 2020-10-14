@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from elasticsearch_dsl import Document, InnerDoc, Nested, field
 
 
@@ -17,5 +19,4 @@ class ZaakDocument(Document):
     rollen = Nested(RolDocument)
 
     class Index:
-        # TODO put index name into settings and env vars
         name = "zaken"

@@ -1,7 +1,7 @@
+from django.conf import settings
 from django.core.management import BaseCommand
 
-from elasticsearch import exceptions
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from elasticsearch_dsl import Index
 
 from zac.accounts.models import User
 from zac.accounts.permissions import UserPermissions
@@ -15,11 +15,15 @@ class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
 
     def handle(self, **options):
-        # todo remove zaken which were deleted in the API
+        self.clear_zaken()
         self.index_zaken()
         self.index_rollen()
 
         self.stdout.write("Zaken have been indexed")
+
+    def clear_zaken(self):
+        zaken = Index(settings.ES_INDEX_ZAKEN)
+        zaken.delete()
 
     def index_zaken(self):
         # create/refresh mapping in the ES
