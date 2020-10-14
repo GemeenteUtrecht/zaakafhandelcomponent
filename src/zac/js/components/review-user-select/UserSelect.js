@@ -19,7 +19,9 @@ const isEmpty = (obj) => {
 
 const extractErrors = (errList) => errList.map((err) => err.msg);
 
-const UserSelectForm = ({ index, data: { values, errors }, users }) => {
+const UserSelect = ({
+    index, totalStepsIndex, data: { values, errors }, users,
+}) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
 
@@ -34,13 +36,15 @@ const UserSelectForm = ({ index, data: { values, errors }, users }) => {
         setHiddenInputs(inputs);
     };
 
+    const handleSelectChange = (value) => {
+        setSelectedData(value);
+    };
+
     useEffect(() => {
         getHiddenInputs(selectedData);
     }, [selectedData]);
 
-    const handleSelectChange = (value) => {
-        setSelectedData(value);
-    };
+    const StepTitle = totalStepsIndex !== 0 ? <h3>{`Stap ${index + 1}`}</h3> : <h3> </h3>;
 
     return (
         <>
@@ -51,7 +55,7 @@ const UserSelectForm = ({ index, data: { values, errors }, users }) => {
                     </Wrapper>
                 ) : null}
 
-            <h1>{`Stap ${index + 1}`}</h1>
+            {StepTitle}
             {hiddenInputs}
             <Select
                 isMulti
@@ -67,10 +71,11 @@ const UserSelectForm = ({ index, data: { values, errors }, users }) => {
     );
 };
 
-UserSelectForm.propTypes = {
+UserSelect.propTypes = {
     index: PropTypes.number.isRequired,
+    totalStepsIndex: PropTypes.number,
     data: PropTypes.objectOf(PropTypes.object).isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
-export default UserSelectForm;
+export default UserSelect;
