@@ -311,6 +311,15 @@ class SelectUsersReviewRequestForm(forms.Form):
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
+    def is_valid(self):
+        super().is_valid()
+        for idx, form in enumerate(self.forms):
+            if not form.has_changed():
+                form.add_error(None, _("Please select at least 1 advisor."))
+                return False
+
+        return True
+
     @property
     def active_users(self) -> List[dict]:
         return [
@@ -339,7 +348,11 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
 
     def on_submission(self, form=None):
         count_users = sum(
-            [len(users_data["kownsl_users"]) for users_data in self.cleaned_data]
+            [
+                len(users_data["kownsl_users"])
+                for users_data in self.cleaned_data
+                if users_data
+            ]
         )
 
         self.review_request = create_review_request(
@@ -352,7 +365,9 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
 
 
 UsersReviewRequestFormSet = forms.formset_factory(
-    SelectUsersReviewRequestForm, formset=BaseReviewRequestFormSet, extra=1
+    SelectUsersReviewRequestForm,
+    formset=BaseReviewRequestFormSet,
+    extra=1,
 )
 
 
