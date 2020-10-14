@@ -201,6 +201,43 @@ class PermissionSet(models.Model):
         )
 
 
+class InformatieobjecttypePermission(models.Model):
+    permission_set = models.ForeignKey(
+        PermissionSet,
+        on_delete=models.CASCADE,
+        verbose_name=_("permission set"),
+        help_text=_("Associated set of permissions for a zaaktype."),
+    )
+    catalogus = models.URLField(
+        verbose_name=_("catalogus"),
+        max_length=1000,
+        help_text=_(
+            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
+        ),
+    )
+    omschrijving = models.CharField(
+        max_length=100,
+        verbose_name=_("omschrijving"),
+        help_text=_("Informatieobjecttype omschrijving."),
+        blank=True,
+    )
+    max_va = models.CharField(
+        verbose_name=_("maximaal vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_("Maximaal vertrouwelijkheidaanduiding."),
+    )
+
+    class Meta:
+        verbose_name = _("informatieobjecttype permission")
+        verbose_name_plural = _("informatieobjecttype permissions")
+        unique_together = ("catalogus", "omschrijving")
+
+    def __str__(self):
+        return f"{self.catalogus} - {self.omschrijving} ({self.max_va})"
+
+
 class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
