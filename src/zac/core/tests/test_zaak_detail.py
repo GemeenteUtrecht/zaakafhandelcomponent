@@ -33,6 +33,7 @@ from zac.tests.utils import (
     paginated_response,
 )
 
+from ...accounts.models import InformatieobjecttypePermission
 from ..permissions import (
     zaakproces_send_message,
     zaakproces_usertasks,
@@ -487,16 +488,17 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
         self.app.set_user(user)
 
         # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            informatieobjecttype_catalogus=self.iot_1[
-                "catalogus"
-            ],  # Same catalogus as iot_2
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            permission_set=permission,
         )
 
         with mock_zaak_detail_context(
@@ -521,16 +523,17 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
         self.app.set_user(user)
 
         # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            informatieobjecttype_catalogus=self.iot_1[
-                "catalogus"
-            ],  # Same catalogus as iot_2
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            permission_set=permission,
         )
 
         with mock_zaak_detail_context(
@@ -545,24 +548,25 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
         self.assertNotIn("Test Document 2", response.html.text)
 
     def test_catalogus_and_informatieobjecttype_selected(self, m):
-        """Test that the user sees only the allowed informatieobjecttypen"""
+        """Test that the user sees only the informatieobjecttype with allowed omschrijving"""
         self._set_up_mocks(m)
 
         user = UserFactory.create()
         self.app.set_user(user)
 
         # informatieobjecttype_omschriving is specified
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            informatieobjecttype_catalogus=self.iot_1[
-                "catalogus"
-            ],  # Same catalogus as iot_2
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
-            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            omschrijving="Test Omschrijving 1",
+            permission_set=permission,
         )
 
         with mock_zaak_detail_context(

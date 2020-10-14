@@ -8,6 +8,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.accounts.models import InformatieobjecttypePermission
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
@@ -115,11 +116,14 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         # informatieobjecttype_catalogus in the permission and enough confidentiality
         # All informatieobjecttypes allowed as they are not specified
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            permission_set=permission,
         )
 
         response = self.app.get(self.download_url, user=user)
@@ -132,12 +136,15 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
 
         # Correct catalogus and iot omschrijving specified, but insufficient VA
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],
+            omschrijving="Test Omschrijving 1",
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            permission_set=permission,
         )
 
         response = self.app.get(self.download_url, user=user, status=403)
@@ -149,12 +156,15 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
 
         # All required permissions available
-        PermissionSetFactory.create(
+        permission = PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+        )
+        InformatieobjecttypePermission.objects.create(
+            catalogus=self.iot_1["catalogus"],
+            omschrijving="Test Omschrijving 1",
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            permission_set=permission,
         )
 
         response = self.app.get(self.download_url, user=user)
