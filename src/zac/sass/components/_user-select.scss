@@ -1,0 +1,24 @@
+@import "../lib/bem";
+@import "../lib/colors";
+@import "../lib/typography";
+
+
+.user-select {
+  position: relative;
+  margin-bottom: 2rem;
+
+  &:first-of-type {
+    margin-top: 1rem;
+  }
+
+  @include element("title") {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+
+    & h3 {
+      font-size: 18px;
+      margin: 0 0.3rem 0 0;
+    }
+  }
+}
