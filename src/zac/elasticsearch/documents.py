@@ -19,4 +19,4 @@ class ZaakDocument(Document):
     rollen = Nested(RolDocument)
 
     class Index:
-        name = "zaken"
+        name = settings.ES_INDEX_ZAKEN

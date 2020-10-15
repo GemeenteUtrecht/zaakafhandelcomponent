@@ -1,4 +1,5 @@
 import os
+import sys
 import warnings
 
 from .includes.environ import config
@@ -97,6 +98,10 @@ warnings.filterwarnings(
 # Custom settings
 #
 ENVIRONMENT = "development"
+
+if "test" in sys.argv:
+    ES_INDEX_ZAKEN = "zaken_test"
+
 
 # Override settings with local settings.
 try:

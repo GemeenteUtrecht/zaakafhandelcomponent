@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
     def clear_zaken(self):
         zaken = Index(settings.ES_INDEX_ZAKEN)
-        zaken.delete()
+        zaken.delete(ignore=404)
 
     def index_zaken(self):
         # create/refresh mapping in the ES
