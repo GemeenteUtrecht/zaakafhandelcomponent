@@ -73,4 +73,15 @@ $btn-background-color: #efefef !default;
     background: $color-primary;
     color: #fff;
   }
+
+  @include modifier("delete") {
+    padding: 0.2rem;
+    background: transparent;
+    color: $color-primary;
+    box-shadow: none;
+
+    & i {
+      margin-right: 0;
+    }
+  }
 }

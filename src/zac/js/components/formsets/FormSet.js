@@ -28,6 +28,11 @@ const FormSet = ({
     const existingCount = formData.length;
     const [extra, setExtra] = useState(configuration.extra);
 
+    const onDelete = (event) => {
+        event.preventDefault();
+        setExtra(extra - 1);
+    };
+
     const RenderForm = renderForm;
 
     const getPrefix = (index) => `${configuration.prefix}-${index}`;
@@ -35,14 +40,14 @@ const FormSet = ({
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={getPrefix(index)}>
-                <RenderForm index={index} totalStepsIndex={extra} data={data} users={configuration.users} />
+                <RenderForm index={index} totalStepsIndex={extra} data={data} users={configuration.users} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );
     const extraForms = Array(extra).fill().map(
         (_, index) => (
             <PrefixContext.Provider key={existingCount + index} value={getPrefix(existingCount + index)}>
-                <RenderForm index={existingCount + index} data={{}} users={configuration.users} />
+                <RenderForm index={existingCount + index} totalStepsIndex={extra} data={{}} users={configuration.users} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );
