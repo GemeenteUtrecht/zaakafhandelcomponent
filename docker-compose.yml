@@ -13,6 +13,15 @@ services:
   redis:
     image: redis:5-alpine
 
+  elasticsearch:
+     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+     environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+     ports:
+       - 9200:9200
+       - 9300:9300
+
   web:
     image: scrumteamzgw/zaakafhandelcomponent
     build: .
@@ -20,6 +29,7 @@ services:
       - DJANGO_SETTINGS_MODULE=zac.conf.docker
       - SECRET_KEY=${SECRET_KEY:-kvilzgj7=*hi*1$$nf2p-%&r*(@83q^wkdkb^^y#!(yaw=8_o!-}
       - REDIS_HOST=redis
+      - ES_HOST=elasticsearch
       # - DB_HOST=/var/run/postgresql
     # volumes:
     #   - /var/run/postgresql:/var/run/postgresql
@@ -28,3 +38,4 @@ services:
     depends_on:
       - db
       - redis
+      - elasticsearch
