@@ -6,6 +6,7 @@ services:
   - postgresql
   - redis-server
   - docker
+  - elasticsearch
 
 addons:
   postgresql: "10"
@@ -17,6 +18,10 @@ env:
   - DB_PASSWORD=
   - DB_USER=postgres
   - IS_HTTPS=no
+
+# ElasticSearch takes few seconds to start
+before_script:
+  - sleep 10
 
 jobs:
   include:
