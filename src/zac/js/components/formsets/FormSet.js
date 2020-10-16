@@ -40,14 +40,14 @@ const FormSet = ({
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={getPrefix(index)}>
-                <RenderForm index={index} totalStepsIndex={extra} data={data} users={configuration.users} onDelete={onDelete} />
+                <RenderForm index={index} totalStepsIndex={extra} data={data} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );
     const extraForms = Array(extra).fill().map(
         (_, index) => (
             <PrefixContext.Provider key={existingCount + index} value={getPrefix(existingCount + index)}>
-                <RenderForm index={existingCount + index} totalStepsIndex={extra} data={{}} users={configuration.users} onDelete={onDelete} />
+                <RenderForm index={existingCount + index} totalStepsIndex={extra} data={{}} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );
@@ -78,12 +78,10 @@ const FormSet = ({
 FormSet.propTypes = {
     configuration: PropTypes.shape({
         prefix: PropTypes.string.isRequired,
-        suffix: PropTypes.string,
         initial: PropTypes.number.isRequired,
         extra: PropTypes.number.isRequired,
         minNum: PropTypes.number.isRequired,
         maxNum: PropTypes.number.isRequired,
-        users: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
     renderAdd: PropTypes.func, // a render prop

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import Select from 'react-select';
-import { getUserName } from '../../utils/users';
+
+import AsyncSelect from 'react-select/async';
+
+import { fetchUsers } from '../../utils/users';
 import { HiddenCheckbox } from '../forms/Inputs';
 import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
 
-const setUsers = (users) => (users ? users.map((user) => ({
-    value: user.id,
-    label: getUserName(user),
-})) : null);
+const ENDPOINT = '/accounts/api/users';
+
+const getUsers = (inputValue) => fetchUsers(inputValue, ENDPOINT);
 
 const isEmpty = (obj) => {
     if (!obj) {
@@ -21,26 +22,17 @@ const isEmpty = (obj) => {
 const extractErrors = (errList) => errList.map((err) => err.msg);
 
 const UserSelect = ({
-    index, totalStepsIndex, data: { values, errors }, users, onDelete,
+    index, totalStepsIndex, data: { errors }, onDelete,
 }) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
 
-    // Default hidden input for the form
-    const DefaultHiddenCheckbox = () => (
-        <input type="checkbox" className="input input--hidden" name={`form-${index}-kownsl_users`} required />
-    );
-
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
         const inputs = selectedUsers
-            ? selectedUsers.map((user) => <HiddenCheckbox name="kownsl_users" value={user.value} key={user.value} required />)
-            : DefaultHiddenCheckbox;
+            ? selectedUsers.map((user) => <HiddenCheckbox name="kownsl_users" value={user.value} key={user.value} checked required />)
+            : <HiddenCheckbox name="kownsl_users" checked={false} required />;
         setHiddenInputs(inputs);
-    };
-
-    const handleSelectChange = (value) => {
-        setSelectedData(value);
     };
 
     useEffect(() => {
@@ -65,15 +57,14 @@ const UserSelect = ({
             </div>
             {hiddenInputs}
             <div className="user-select__selector">
-                <Select
+                <AsyncSelect
                     isMulti
                     cacheOptions
                     placeholder="Selecteer adviseur(s)"
                     name={`kownsl_users${-index}`}
-                    options={setUsers(users)}
-                    className="basic-multi-select"
-                    classNamePrefix="select"
-                    onChange={(value) => handleSelectChange(value)}
+                    defaultOptions={false}
+                    loadOptions={getUsers}
+                    onChange={(value) => setSelectedData(value)}
                 />
             </div>
         </div>
@@ -84,7 +75,6 @@ UserSelect.propTypes = {
     index: PropTypes.number.isRequired,
     totalStepsIndex: PropTypes.number,
     data: PropTypes.objectOf(PropTypes.object).isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     onDelete: PropTypes.func,
 };
 
