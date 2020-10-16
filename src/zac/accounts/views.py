@@ -6,10 +6,12 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import (
     AuthorizationProfileForm,
+    InformatieobjecttypeFormSet,
     PermissionSetForm,
     UserAuthorizationProfileForm,
     get_catalogus_choices,
 )
+from .mixins import InformatieobjecttypeFormsetMixin
 from .models import (
     AuthorizationProfile,
     InformatieobjecttypePermission,
@@ -48,11 +50,37 @@ class PermissionSetsView(LoginRequiredMixin, ListView):
     queryset = PermissionSet.objects.all()
 
 
-class PermissionSetCreateView(PermissionRequiredMixin, CreateView):
+class PermissionSetCreateView(
+    PermissionRequiredMixin, InformatieobjecttypeFormsetMixin, CreateView
+):
     model = PermissionSet
     form_class = PermissionSetForm
     permission_required = "accounts.add_permissionset"
     success_url = reverse_lazy("accounts:authprofile-list")
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        informatieobjecttype_formset = InformatieobjecttypeFormSet()
+        permissionset_form = self.get_form(self.form_class)
+        return self.render_to_response(
+            self.get_context_data(
+                form=permissionset_form,
+                informatieobjecttype_formset=informatieobjecttype_formset,
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        permissionset_form = self.get_form(self.form_class)
+        informatieobjecttype_formset = InformatieobjecttypeFormSet(self.request.POST)
+
+        if (
+            not permissionset_form.is_valid()
+            or not informatieobjecttype_formset.is_valid()
+        ):
+            return self.form_invalid(permissionset_form, informatieobjecttype_formset)
+
+        return self.form_valid(permissionset_form, informatieobjecttype_formset)
 
 
 class PermissionSetDetailView(LoginRequiredMixin, DetailView):
@@ -85,10 +113,36 @@ class PermissionSetDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class PermissionSetUpdateView(PermissionRequiredMixin, UpdateView):
+class PermissionSetUpdateView(
+    PermissionRequiredMixin, InformatieobjecttypeFormsetMixin, UpdateView
+):
     model = PermissionSet
     form_class = PermissionSetForm
     permission_required = "accounts.change_permissionset"
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        informatieobjecttype_formset = InformatieobjecttypeFormSet(instance=self.object)
+        permissionset_form = self.get_form(self.form_class)
+        return self.render_to_response(
+            self.get_context_data(
+                form=permissionset_form,
+                informatieobjecttype_formset=informatieobjecttype_formset,
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        permissionset_form = self.get_form(self.form_class)
+        informatieobjecttype_formset = InformatieobjecttypeFormSet(self.request.POST)
+
+        if (
+            not permissionset_form.is_valid()
+            or not informatieobjecttype_formset.is_valid()
+        ):
+            return self.form_invalid(permissionset_form, informatieobjecttype_formset)
+
+        return self.form_valid(permissionset_form, informatieobjecttype_formset)
 
 
 class UserAuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):

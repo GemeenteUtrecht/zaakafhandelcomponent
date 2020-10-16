@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 
 from django import forms
 from django.core import validators
+from django.forms import inlineformset_factory
 from django.utils.html import format_html, format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -14,7 +15,13 @@ from zgw_consumers.service import get_paginated_results
 
 from zac.core.services import get_informatieobjecttypen, get_zaaktypen
 
-from .models import AuthorizationProfile, PermissionSet, User, UserAuthorizationProfile
+from .models import (
+    AuthorizationProfile,
+    InformatieobjecttypePermission,
+    PermissionSet,
+    User,
+    UserAuthorizationProfile,
+)
 from .permissions import registry
 
 
@@ -145,6 +152,36 @@ class PermissionSetForm(forms.ModelForm):
             return []
 
         return self.instance.informatieobjecttype_omschrijvingen
+
+
+class InformatieobjecttypeForm(forms.ModelForm):
+    class Meta:
+        model = InformatieobjecttypePermission
+        fields = (
+            "id",
+            "permission_set",
+            "catalogus",
+            "omschrijving",
+            "max_va",
+        )
+
+
+class SerializableFormSet(forms.BaseInlineFormSet):
+    @staticmethod
+    def catalog_choices() -> List[Tuple[str, str]]:
+        """Return the catalogs URL and their label"""
+        catalog_choices = list(get_catalogus_choices())
+        catalog_choices.insert(0, ("", "------"))
+        return catalog_choices
+
+
+InformatieobjecttypeFormSet = inlineformset_factory(
+    PermissionSet,
+    InformatieobjecttypePermission,
+    can_delete=True,
+    form=InformatieobjecttypeForm,
+    formset=SerializableFormSet,
+)
 
 
 def get_permission_sets_choices():
