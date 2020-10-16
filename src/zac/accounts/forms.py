@@ -155,6 +155,8 @@ class PermissionSetForm(forms.ModelForm):
 
 
 class InformatieobjecttypeForm(forms.ModelForm):
+    selected = forms.BooleanField(required=False)
+
     class Meta:
         model = InformatieobjecttypePermission
         fields = (
@@ -163,7 +165,17 @@ class InformatieobjecttypeForm(forms.ModelForm):
             "catalogus",
             "omschrijving",
             "max_va",
+            "selected",
         )
+
+    def _post_clean(self):
+        if (
+            not self.cleaned_data.get("selected")
+            and self.cleaned_data.get("id") is None
+        ):
+            return
+
+        return super()._post_clean()
 
 
 class SerializableFormSet(forms.BaseInlineFormSet):
