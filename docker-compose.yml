@@ -19,8 +19,8 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
      ports:
-       - 9200:9200
-       - 9300:9300
+       - 9201:9200
+       - 9301:9300
 
   web:
     image: scrumteamzgw/zaakafhandelcomponent
@@ -28,8 +28,15 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=zac.conf.docker
       - SECRET_KEY=${SECRET_KEY:-kvilzgj7=*hi*1$$nf2p-%&r*(@83q^wkdkb^^y#!(yaw=8_o!-}
+      - IS_HTTPS=0
+      - ALLOWED_HOSTS=localhost
       - REDIS_HOST=redis
       - ES_HOST=elasticsearch
+      - USE_REDIS_CACHE=True
+      - CACHE_DEFAULT=redis:6379/0
+      - CACHE_AXES=redis:6379/0
+      - CACHE_OAS=redis:6379/1
+      - CACHE_SESSIONS=redis:6379/1
       # - DB_HOST=/var/run/postgresql
     # volumes:
     #   - /var/run/postgresql:/var/run/postgresql
