@@ -37,6 +37,29 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
     return zaak_document
 
 
+def update_zaak_document(zaak: Zaak) -> ZaakDocument:
+    try:
+        zaak_document = ZaakDocument.get(id=zaak.uuid)
+    except exceptions.NotFoundError as exc:
+        logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
+        return create_zaak_document(zaak)
+
+    zaaktype_url = (
+        zaak.zaaktype if isinstance(zaak.zaaktype, str) else zaak.zaaktype.url
+    )
+    zaak_document.update(
+        refresh=True,
+        zaaktype=zaaktype_url,
+        identificatie=zaak.identificatie,
+        bronorganisatie=zaak.bronorganisatie,
+        vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
+        va_order=VertrouwelijkheidsAanduidingen.get_choice(
+            zaak.vertrouwelijkheidaanduiding
+        ).order,
+    )
+    return zaak_document
+
+
 def delete_zaak_document(zaak_url: str) -> None:
     zaak_uuid = _get_uuid_from_url(zaak_url)
     try:

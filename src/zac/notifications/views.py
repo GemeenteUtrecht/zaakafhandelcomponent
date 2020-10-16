@@ -11,6 +11,7 @@ from zac.elasticsearch.api import (
     create_zaak_document,
     delete_zaak_document,
     update_rollen_in_zaak_document,
+    update_zaak_document,
 )
 
 from .serializers import NotificatieSerializer
@@ -53,7 +54,7 @@ class NotificationCallbackView(APIView):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
         # index in ES
-        create_zaak_document(zaak)
+        update_zaak_document(zaak)
 
     def _handle_zaak_creation(self, zaak_url: str):
         client = _client_from_url(zaak_url)
