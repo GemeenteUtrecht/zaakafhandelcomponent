@@ -206,7 +206,6 @@ class InformatieobjecttypePermission(models.Model):
     class Meta:
         verbose_name = _("informatieobjecttype permission")
         verbose_name_plural = _("informatieobjecttype permissions")
-        unique_together = ("catalogus", "omschrijving")
 
     def __str__(self):
         return f"{self.catalogus} - {self.omschrijving} ({self.max_va})"
