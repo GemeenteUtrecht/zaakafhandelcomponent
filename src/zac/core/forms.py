@@ -328,7 +328,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
 
     def is_valid(self):
         super().is_valid()
-        for idx, form in enumerate(self.forms):
+        for form in self.forms:
             if not form.has_changed():
                 form.add_error(None, _("Please select at least 1 advisor."))
                 return False
