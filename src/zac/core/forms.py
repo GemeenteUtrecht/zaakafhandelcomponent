@@ -268,6 +268,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     This is essentially the combination of :class:`SelectDocumentsForm` and
     :class:`SelectUsersForm`, which deprecates these.
     """
+
     template_name = "core/zaak_review_request.html"
 
     documenten = forms.MultipleChoiceField(
@@ -325,7 +326,6 @@ class SelectUsersReviewRequestForm(forms.Form):
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
-
     def is_valid(self):
         super().is_valid()
         for form in self.forms:
