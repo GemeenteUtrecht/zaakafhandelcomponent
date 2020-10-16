@@ -3,12 +3,17 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.tests.factories import UserFactory
 from zac.activities.models import Activity, Event
 from zac.activities.tests.factories import ActivityFactory, EventFactory
+from zac.elasticsearch.api import create_zaak_document
+from zac.elasticsearch.documents import ZaakDocument
+from zac.elasticsearch.tests.utils import ESMixin
 
-from .utils import BRONORGANISATIE, ZAAKTYPE
+from .utils import BRONORGANISATIE, ZAAK_RESPONSE, ZAAKTYPE
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -25,7 +30,7 @@ NOTIFICATION = {
 }
 
 
-class ZaakDestroyedTests(APITestCase):
+class ZaakDestroyedTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-destroyed notifications.
     """
@@ -52,3 +57,17 @@ class ZaakDestroyedTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Activity.objects.exists())
         self.assertFalse(Event.objects.exists())
+
+    def test_remove_es_document(self):
+        path = reverse("notifications:callback")
+        # create zaak document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+        self.assertEqual(zaak_document.meta.id, "f3ff2713-2f53-42ff-a154-16842309ad60")
+
+        response = self.client.post(path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id, ignore=404)
+        self.assertIsNone(zaak_document)

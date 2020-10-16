@@ -7,10 +7,16 @@ from django.utils import timezone
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.models import User
 from zac.core.services import get_zaak
+from zac.elasticsearch.api import create_zaak_document
+from zac.elasticsearch.documents import RolDocument, ZaakDocument
+from zac.elasticsearch.tests.utils import ESMixin
 
 from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, mock_service_oas_get
 
@@ -30,7 +36,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class ZaakUpdateTests(APITestCase):
+class ZaakUpdateTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-creation notifications.
     """
@@ -78,3 +84,82 @@ class ZaakUpdateTests(APITestCase):
                 self.assertEqual(rm.last_request.url, ZAAK)
                 self.assertNotEqual(rm.last_request, first_retrieve)
                 self.assertEqual(len(rm.request_history), num_calls_before + 1)
+
+    def test_zaak_updated_indexed_in_es(self, rm):
+        path = reverse("notifications:callback")
+        #  create zaak_document in ES
+        old_response = ZAAK_RESPONSE.copy()
+        zaak = factory(Zaak, old_response)
+        zaak_document = create_zaak_document(zaak)
+
+        self.assertEqual(
+            zaak_document.vertrouwelijkheidaanduiding,
+            VertrouwelijkheidsAanduidingen.geheim,
+        )
+        self.assertEqual(zaak_document.meta.version, 1)
+
+        # set up mock
+        new_response = old_response.copy()
+        new_response[
+            "vertrouwelijkheidaanduiding"
+        ] = VertrouwelijkheidsAanduidingen.confidentieel
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(ZAAK, json=new_response)
+
+        response = self.client.post(path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
+
+        self.assertEqual(
+            zaak_document.vertrouwelijkheidaanduiding,
+            VertrouwelijkheidsAanduidingen.confidentieel,
+        )
+        self.assertEqual(zaak_document.meta.version, 2)
+
+    def test_zaak_with_rollen_updated_indexed_in_es(self, rm):
+        path = reverse("notifications:callback")
+        #  create zaak_document
+        old_response = ZAAK_RESPONSE.copy()
+        zaak = factory(Zaak, old_response)
+        zaak_document = create_zaak_document(zaak)
+        #  set rollen
+        zaak_document.rollen = [
+            RolDocument(
+                url="https://some.zrc.nl/api/v1/rollen/12345",
+                betrokkene_type="medewerker",
+            ),
+            RolDocument(
+                url="https://some.zrc.nl/api/v1/rollen/6789",
+                betrokkene_type="medewerker",
+            ),
+        ]
+        zaak_document.save()
+
+        self.assertEqual(
+            zaak_document.vertrouwelijkheidaanduiding,
+            VertrouwelijkheidsAanduidingen.geheim,
+        )
+        self.assertEqual(len(zaak_document.rollen), 2)
+
+        # set up mock
+        new_response = old_response.copy()
+        new_response[
+            "vertrouwelijkheidaanduiding"
+        ] = VertrouwelijkheidsAanduidingen.confidentieel
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(ZAAK, json=new_response)
+
+        response = self.client.post(path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
+
+        self.assertEqual(
+            zaak_document.vertrouwelijkheidaanduiding,
+            VertrouwelijkheidsAanduidingen.confidentieel,
+        )
+        # check that rollen were kept during update
+        self.assertEqual(len(zaak_document.rollen), 2)

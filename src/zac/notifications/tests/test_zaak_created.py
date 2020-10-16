@@ -11,6 +11,8 @@ from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.models import User
 from zac.core.services import _find_zaken
+from zac.elasticsearch.documents import ZaakDocument
+from zac.elasticsearch.tests.utils import ESMixin
 
 from .utils import (
     BRONORGANISATIE,
@@ -37,7 +39,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class ZaakCreatedTests(APITestCase):
+class ZaakCreatedTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-creation notifications.
     """
@@ -119,3 +121,21 @@ class ZaakCreatedTests(APITestCase):
                     # second call should not hit the cache
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
+
+    def test_zaak_created_indexed_in_es(self, rm):
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        path = reverse("notifications:callback")
+
+        zaak_document = ZaakDocument.get(
+            id="f3ff2713-2f53-42ff-a154-16842309ad60", ignore=404
+        )
+        self.assertIsNone(zaak_document)
+
+        response = self.client.post(path, NOTIFICATION)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        zaak_document = ZaakDocument.get(id="f3ff2713-2f53-42ff-a154-16842309ad60")
+        self.assertIsNotNone(zaak_document)
+        self.assertEqual(zaak_document.bronorganisatie, BRONORGANISATIE)
+        self.assertEqual(zaak_document.zaaktype, ZAAKTYPE)

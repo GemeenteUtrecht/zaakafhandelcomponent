@@ -84,7 +84,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            url=f"{ZAKEN_ROOT}zaken/69e98129-1f0d-497f-bbfb-84b88137edbc",
             zaaktype=zaaktype["url"],
             bronorganisatie="002220647",
             identificatie="ZAAK1",
@@ -143,7 +143,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         call_command("index_zaken")
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
 
         self.assertEqual(zaak_document.identificatie, "ZAAK1")
         self.assertEqual(zaak_document.bronorganisatie, "002220647")
