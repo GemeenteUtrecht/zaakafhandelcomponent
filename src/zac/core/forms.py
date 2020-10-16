@@ -268,6 +268,7 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     This is essentially the combination of :class:`SelectDocumentsForm` and
     :class:`SelectUsersForm`, which deprecates these.
     """
+    template_name = "core/zaak_review_request.html"
 
     documenten = forms.MultipleChoiceField(
         label=_("Selecteer de relevante documenten"),
@@ -324,6 +325,7 @@ class SelectUsersReviewRequestForm(forms.Form):
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
+
     def is_valid(self):
         super().is_valid()
         for idx, form in enumerate(self.forms):
@@ -332,12 +334,6 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                 return False
 
         return True
-
-    @property
-    def active_users(self) -> List[dict]:
-        return [
-            UserSerializer(user).data for user in User.objects.filter(is_active=True)
-        ]
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
