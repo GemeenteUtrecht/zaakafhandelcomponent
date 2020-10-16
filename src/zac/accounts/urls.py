@@ -5,6 +5,7 @@ from .views import (
     AuthorizationProfileCreateView,
     AuthorizationProfileDetailView,
     AuthorizationProfileListView,
+    InformatieobjecttypenJSONView,
     LoginView,
     PermissionSetCreateView,
     PermissionSetDetailView,
@@ -39,6 +40,11 @@ urlpatterns = [
         name="authprofile-add-user",
     ),
     path("permission-sets/", PermissionSetsView.as_view(), name="permission-set-list"),
+    path(
+        "permission-sets/informatieobjecttypes",
+        InformatieobjecttypenJSONView.as_view(),
+        name="informatieobjecttypes",
+    ),
     path(
         "permission-sets/add/",
         PermissionSetCreateView.as_view(),

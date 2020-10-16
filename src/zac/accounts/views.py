@@ -1,9 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView as _LoginView
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
+from ..core.services import get_informatieobjecttypen
 from .forms import (
     AuthorizationProfileForm,
     InformatieobjecttypeFormSet,
@@ -44,6 +47,25 @@ class AuthorizationProfileDetailView(LoginRequiredMixin, DetailView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     context_object_name = "auth_profile"
+
+
+class InformatieobjecttypenJSONView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        """Return the informatieobjecttypen for a catalogus"""
+        informatieobjecttypen = get_informatieobjecttypen(
+            catalogus=request.GET["catalogus"]
+        )
+
+        response_data = {"formData": [], "emptyFormData": []}
+        for informatieobjecttype in informatieobjecttypen:
+            response_data["emptyFormData"].append(
+                {
+                    "catalogus": request.GET["catalogus"],
+                    "omschrijving": informatieobjecttype.omschrijving,
+                    "selected": False,
+                }
+            )
+        return JsonResponse(response_data)
 
 
 class PermissionSetsView(LoginRequiredMixin, ListView):
