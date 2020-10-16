@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load i18n sniplates %}
+{% load i18n sniplates l10n %}
 
 
 {% block content %}
@@ -37,6 +37,20 @@
 
     {% form_field form.max_va %}
 
+    <h3>Informatieobjecttypen</h3>
+    <div class="informatieobjecttype-permissions"
+        data-prefix="{{ informatieobjecttype_formset.prefix }}"
+        data-initial="{{ informatieobjecttype_formset.initial_form_count|unlocalize }}"
+        data-extra="{{ informatieobjecttype_formset.extra|unlocalize }}"
+        data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
+        data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
+        data-formdata="form-data"
+        data-emptyform="empty-form-data"
+        data-catalog-choices="catalog-choices"
+    >
+        {{ informatieobjecttype_formset.catalog_choices|json_script:"catalog-choices" }}
+        {# Managed by react #}
+    </div>
 
     {% if form.instance.id %}
         {% trans "Change" as btn_label %}
