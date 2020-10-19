@@ -87,6 +87,8 @@ class InformatieobjecttypeForm extends React.Component {
 
     componentDidMount() {
         if (this.props.existingFormData.length > 0) {
+            this.fetchInformatieobjecttypen(this.props.existingFormData[0].catalogus);
+
             this.setState({
                 currentCatalog: this.props.existingFormData[0].catalogus,
                 displayFormset: true,
@@ -99,6 +101,7 @@ class InformatieobjecttypeForm extends React.Component {
         this.setState({
             currentCatalog: event.target.value,
             displayFormset: event.target.value !== '',
+            existingFormData: [],
         });
 
         // Fetch the informatieobjecttypen
@@ -113,7 +116,28 @@ class InformatieobjecttypeForm extends React.Component {
             response => response.json()
         ).then(
             result => {
-                this.setState({emptyFormData: result.emptyFormData});
+                if (this.state.existingFormData.length > 0) {
+                    //TODO Improve
+                    var additionalInformatieobjecttypen = [];
+                    for (var results_counter = 0; results_counter < result.emptyFormData.length; results_counter++) {
+                        var inExistingData = false;
+                        for (var existing_counter = 0; existing_counter < this.state.existingFormData.length; existing_counter++) {
+                            if (
+                                this.state.existingFormData[existing_counter].omschrijving === result.emptyFormData[results_counter].omschrijving &&
+                                this.state.existingFormData[existing_counter].catalogus === result.emptyFormData[results_counter].catalogus
+                            ) {
+                                inExistingData = true;
+                                break;
+                            }
+                        }
+                        if (!inExistingData) {
+                            additionalInformatieobjecttypen.push(result.emptyFormData[results_counter]);
+                        }
+                    }
+                    this.setState({emptyFormData: additionalInformatieobjecttypen});
+                } else {
+                    this.setState({emptyFormData: result.emptyFormData});
+                }
             },
             error => {
                 this.setState({errors: error});
