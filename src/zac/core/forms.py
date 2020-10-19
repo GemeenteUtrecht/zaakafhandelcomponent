@@ -368,7 +368,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                 continue
 
             data = [
-                (form.username, form.deadline) for form in form_data["kownsl_users"]
+                (user.username, deadline) for user,deadline in zip(form_data["kownsl_users"], form_data['deadline'])
             ]
             request_user_data.append(data)
 
