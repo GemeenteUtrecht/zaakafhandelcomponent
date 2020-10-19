@@ -331,13 +331,13 @@ class SelectUsersReviewRequestForm(forms.Form):
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
-    def form_has_changed(self) -> bool:
-        valid = True
+    def all_forms_changed(self) -> bool:
+        changed = True
         for form in self.forms:
             if not form.has_changed():
                 form.add_error(None, _("Please select at least 1 advisor."))
-                valid = False
-        return valid
+                changed = False
+        return changed
 
     def deadlines_validation(self) -> bool:
         valid = True
@@ -355,9 +355,9 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         return valid
 
     def is_valid(self) -> bool:
-        super().is_valid()
+        valid = super().is_valid()
         # make sure form has changed and deadlines are monotone increasing
-        return self.form_has_changed() and self.deadlines_validation()
+        return all([valid, self.all_forms_changed(), self.deadlines_validation()])
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
@@ -368,7 +368,10 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                 continue
 
             data = [
-                (user.username, deadline) for user,deadline in zip(form_data["kownsl_users"], form_data['deadline'])
+                (user.username, deadline)
+                for user, deadline in zip(
+                    form_data["kownsl_users"], form_data["deadline"]
+                )
             ]
             request_user_data.append(data)
 
