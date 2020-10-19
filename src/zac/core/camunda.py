@@ -15,6 +15,7 @@ from .forms import (
     ConfigureApprovalRequestForm,
     SelectDocumentsForm,
     SelectUsersForm,
+    UsersReviewRequestFormSet,
 )
 
 User = get_user_model()
@@ -23,8 +24,14 @@ User = get_user_model()
 FORM_KEYS = {
     "zac:documentSelectie": {"form": SelectDocumentsForm},
     "zac:gebruikerSelectie": {"form": SelectUsersForm},
-    "zac:configureAdviceRequest": {"form": ConfigureAdviceRequestForm},
-    "zac:configureApprovalRequest": {"form": ConfigureApprovalRequestForm},
+    "zac:configureAdviceRequest": {
+        "form": ConfigureAdviceRequestForm,
+        "formset": UsersReviewRequestFormSet,
+    },
+    "zac:configureApprovalRequest": {
+        "form": ConfigureApprovalRequestForm,
+        "formset": UsersReviewRequestFormSet,
+    },
 }
 
 

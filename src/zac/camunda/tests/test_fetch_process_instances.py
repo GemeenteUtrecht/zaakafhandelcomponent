@@ -166,6 +166,7 @@ class ProcessInstanceTests(TestCase):
                                     "username": self.user.username,
                                     "firstName": self.user.first_name,
                                     "lastName": self.user.last_name,
+                                    "id": self.user.id,
                                 },
                             }
                         ],

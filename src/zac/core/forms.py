@@ -20,7 +20,8 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, User
-from zac.camunda.forms import TaskFormMixin
+from zac.accounts.serializers import UserSerializer
+from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
 
@@ -263,9 +264,12 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     """
     Select the documents from a zaak and users that will perform the review.
 
+    #TODO Update this doc string
     This is essentially the combination of :class:`SelectDocumentsForm` and
     :class:`SelectUsersForm`, which deprecates these.
     """
+
+    template_name = "core/zaak_review_request.html"
 
     documenten = forms.MultipleChoiceField(
         label=_("Selecteer de relevante documenten"),
@@ -274,14 +278,6 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
             "documenten voor het vervolg van het proces."
         ),
         widget=forms.CheckboxSelectMultiple,
-    )
-
-    kownsl_users = forms.ModelMultipleChoiceField(
-        required=True,
-        label=_("Users"),
-        queryset=User.objects.filter(is_active=True),
-        widget=forms.CheckboxSelectMultiple,
-        help_text=_("Selecteer de gewenste adviseurs."),
     )
 
     toelichting = forms.CharField(
@@ -307,27 +303,81 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
 
     def get_process_variables(self) -> Dict[str, List[str]]:
         assert self.is_valid(), "Form must be valid"
-        user_names = [user.username for user in self.cleaned_data["kownsl_users"]]
         return {
-            "kownslUsers": user_names,
-            "kownslReviewRequestId": self.cleaned_data["review_request"],
-            "kownslFrontendUrl": self.cleaned_data["kownslFrontendUrl"],
             "kownslDocuments": self.cleaned_data["documenten"],
         }
 
     def on_submission(self):
         assert self._review_type, "Subclasses must define a '_review_type'"
 
-        review_request = create_review_request(
-            self.zaak_url,
-            documents=self.cleaned_data["documenten"],
-            review_type=self._review_type,
-            num_assigned_users=len(self.cleaned_data["kownsl_users"]),
-            toelichting=self.cleaned_data["toelichting"],
+
+class SelectUsersReviewRequestForm(forms.Form):
+    """
+    Select a (subset of) user(s) for the review request.
+    """
+
+    kownsl_users = forms.ModelMultipleChoiceField(
+        required=True,
+        label=_("Users"),
+        queryset=User.objects.filter(is_active=True),
+        widget=forms.CheckboxSelectMultiple,
+        help_text=_("Select the advisors."),
+    )
+
+
+class BaseReviewRequestFormSet(BaseTaskFormSet):
+    def is_valid(self):
+        super().is_valid()
+        for form in self.forms:
+            if not form.has_changed():
+                form.add_error(None, _("Please select at least 1 advisor."))
+                return False
+
+        return True
+
+    def get_process_variables(self) -> Dict[str, List]:
+        assert self.is_valid(), "Formset must be valid"
+
+        users = []
+        for users_data in self.cleaned_data:
+            if not users_data:  # empty form
+                continue
+
+            user_names = [user.username for user in users_data["kownsl_users"]]
+            users.append(user_names)
+
+        if not users:  # camunda is expecting a list of lists
+            users = [[]]
+
+        return {
+            "kownslUsersList": users,
+            "kownslReviewRequestId": str(self.review_request.id),
+            "kownslFrontendUrl": self.review_request.frontend_url,
+        }
+
+    def on_submission(self, form=None):
+        count_users = sum(
+            [
+                len(users_data["kownsl_users"])
+                for users_data in self.cleaned_data
+                if users_data
+            ]
         )
 
-        self.cleaned_data["review_request"] = str(review_request.id)
-        self.cleaned_data["kownslFrontendUrl"] = review_request.frontend_url
+        self.review_request = create_review_request(
+            form.zaak_url,
+            documents=form.cleaned_data["documenten"],
+            review_type=form._review_type,
+            num_assigned_users=count_users,
+            toelichting=form.cleaned_data["toelichting"],
+        )
+
+
+UsersReviewRequestFormSet = forms.formset_factory(
+    SelectUsersReviewRequestForm,
+    formset=BaseReviewRequestFormSet,
+    extra=1,
+)
 
 
 class ConfigureAdviceRequestForm(ConfigureReviewRequestForm):

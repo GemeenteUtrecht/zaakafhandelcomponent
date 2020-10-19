@@ -97,6 +97,19 @@ const CheckboxInput = (props) => {
     return <Input type="checkbox" {...props} />;
 };
 
+const HiddenCheckbox = ({name, value, checked, required}) => {
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+    return <input
+        type="checkbox"
+        className="input input--hidden"
+        name={prefixedName}
+        value={value}
+        defaultChecked={checked}
+        required={required}
+    />
+}
+
 const RadioInput = (props) => {
     return <Input type="radio" {...props} />;
 };
@@ -104,7 +117,7 @@ const RadioInput = (props) => {
 const HiddenInput = ({name, value}) => {
     const prefix = useContext(PrefixContext);
     const prefixedName = prefix ? `${prefix}-${name}` : name;
-    return <input type="hidden" name={prefixedName} defaultValue={value} />
+    return <input type="hidden" name={prefixedName} value={value}/>
 }
 
 
@@ -146,6 +159,7 @@ export {
     TextInput,
     DateInput,
     CheckboxInput,
+    HiddenCheckbox,
     RadioInput,
     HiddenInput,
     FileInput,

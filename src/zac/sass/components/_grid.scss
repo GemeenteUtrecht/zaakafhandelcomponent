@@ -10,6 +10,9 @@
     @include modifier("col12") {
       grid-column: span 12;
     }
+    @include modifier("col8") {
+      grid-column: span 8;
+    }
     @include modifier("col6") {
       grid-column: span 6;
     }
@@ -21,6 +24,9 @@
   @include screen-xs() {
     @include element("column") {
       @include modifier("col12") {
+        grid-column: span 12;
+      }
+      @include modifier("col8") {
         grid-column: span 12;
       }
       @include modifier("col6") {

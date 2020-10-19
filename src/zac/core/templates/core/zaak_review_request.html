@@ -1,0 +1,19 @@
+{% extends "core/zaak_task.html" %}
+{% load i18n l10n sniplates %}
+
+{% block formset_body %}
+<section class="zaak-detail__panel content-panel content-panel--flat">
+    <div class="form__group-title">Adviseur(s)</div>
+    <div
+        id="react-review-users"
+        data-extra="{{ formset.extra|unlocalize }}"
+        data-prefix="{{ formset.prefix }}"
+        data-min-num="{{ formset.min_num|unlocalize }}"
+        data-max-num="{{ formset.max_num|unlocalize }}"
+        data-initial="{{ formset.initial_form_count|unlocalize }}"
+        data-formdata-element="form-data"
+    >
+        {# React managed #}
+    </div>
+</section>
+{% endblock %}

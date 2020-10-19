@@ -1,6 +1,6 @@
 {% extends "core/zaak_detail.html" %}
 {% load i18n sniplates %}
-
+{% load l10n %}
 
 {% block content %}
 {% load_widgets form='sniplates/forms.html' %}
@@ -62,6 +62,7 @@
         </section>
 
         {% if formset %}
+            {% block formset_body %}
             <section class="content-panel formset">
             {{ formset.management_form }}
             {{ formset.non_form_errors }}
@@ -92,7 +93,7 @@
             </table>
 
             </section>
-
+            {% endblock formset_body %}
         {% endif %}
 
     </article>
