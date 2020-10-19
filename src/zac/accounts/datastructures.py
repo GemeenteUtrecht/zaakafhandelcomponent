@@ -53,7 +53,7 @@ class ZaaktypePermission:
     catalogus: str
     identificatie: str
     max_va: str
-    oos: Set[Optional[str]] = field(default_factory=set)
+    oo: Optional[str] = None
 
     @property
     def zaaktypen(self) -> List[ZaakType]:
@@ -120,7 +120,12 @@ class ZaakPermissionCollection:
                 for identificatie, _zaaktypen in itertools.groupby(
                     zaaktypen, key=group_key
                 ):
-                    zt_perm_key = (perm_key, perm_set.catalogus, identificatie)
+                    zt_perm_key = (
+                        perm_key,
+                        perm_set.catalogus,
+                        identificatie,
+                        perm_set.oo,
+                    )
 
                     # if permission not set yet -> store it in mapping
                     if zt_perm_key not in _zt_perms:
@@ -129,7 +134,7 @@ class ZaakPermissionCollection:
                             catalogus=perm_set.catalogus,
                             identificatie=identificatie,
                             max_va=perm_set.max_va,
-                            oos={perm_set.oo},  # None or slug
+                            oo=perm_set.oo,  # None or slug
                         )
                         _zt_perms[zt_perm_key] = zaaktype_permission
                     # otherwise, retrieve it so we can update it in subsequent checks
@@ -140,9 +145,6 @@ class ZaakPermissionCollection:
                     # track the actual zaaktype objects
                     # TOOD: this can probably be lifted up in the loops
                     _zt_objects[(perm_set.catalogus, identificatie)] = list(_zaaktypen)
-
-                    # ensure other OOs that grant access to this zaaktype are tracked
-                    zaaktype_permission.oos.add(perm_set.oo)
 
                     # check if the max_va of this perm_set grants more access than what
                     # is currently known

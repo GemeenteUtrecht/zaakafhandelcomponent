@@ -1,6 +1,6 @@
 import logging
 from datetime import date
-from typing import Optional, Union
+from typing import Optional, Set, Union
 
 import rules
 from zgw_consumers.api_models.base import factory
@@ -63,17 +63,22 @@ def _has_permission_key(permission_name: str, user: User):
     return permission_name in available_perms
 
 
-def _get_oos_from_zt_perms(user_perms: UserPermissions, zaaktype: str) -> set:
+def _get_oos_from_zt_perms(
+    user_perms: UserPermissions, zaaktype: str, va: str
+) -> Set[str]:
     if user_perms.user.is_superuser:
         return {None}
-    perm_oos = [
-        zt_perm.oos
+
+    perm_oos = {
+        zt_perm.oo
         for zt_perm in user_perms.zaaktype_permissions
-        if zt_perm.contains(zaaktype) and zt_perm.permission == zaken_inzien.name
-    ]
-    if not perm_oos:
-        return set()
-    return set.union(*perm_oos)
+        if (
+            zt_perm.contains(zaaktype)
+            and zt_perm.permission == zaken_inzien.name
+            and zt_perm.test_va(va)
+        )
+    }
+    return perm_oos
 
 
 # TODO: extensive unit testing :-)
@@ -96,7 +101,11 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
     # gives access to OO1 zaken, and another AP gives access to OO2 zaken from the
     # same zaaktype, then the user can see the zaak as soon as it belongs to any of
     # OO1 or OO2 (provided that user is member of both APs).
-    relevant_oos: set = _get_oos_from_zt_perms(UserPermissions(user), zaaktype_url)
+    relevant_oos: set = _get_oos_from_zt_perms(
+        UserPermissions(user),
+        zaaktype_url,
+        zaak.vertrouwelijkheidaanduiding,
+    )
 
     # shortcut - as soon as there is a single AP that is NOT OO bound/scoped, it means
     # no filtering on OO should take place. This effectively means that there is an AP

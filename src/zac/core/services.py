@@ -41,7 +41,6 @@ from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaa
 from .models import CoreConfig
 from .permissions import zaken_inzien
 from .rollen import Rol
-from .rules import _get_oos_from_zt_perms
 
 logger = logging.getLogger(__name__)
 
@@ -314,12 +313,6 @@ def get_zaken(
             else set(zaaktypen).intersection(set(allowed_zaaktypen))
         )
 
-    relevant_oos_for_zaaktype = {
-        zaaktype_url: _get_oos_from_zt_perms(user_perms, zaaktype_url)
-        for zaaktype_url in query_zaaktypen
-        if zaaktype_url
-    }
-
     # build keyword arguments for retrieval jobs - running network calls in parallel
     # if possible
     find_kwargs = []
@@ -343,6 +336,10 @@ def get_zaken(
                 relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
             )
             max_va = relevant_perms[0].max_va if relevant_perms else ""
+            if user_perms.user.is_superuser:
+                relevant_oos = {None}
+            else:
+                relevant_oos = {perm.oo for perm in relevant_perms}
 
             base_find_kwargs = {
                 "client": client,
@@ -354,7 +351,6 @@ def get_zaken(
             }
 
             # check if we need to filter on OO
-            relevant_oos = relevant_oos_for_zaaktype.get(zaaktype_url, {None})
             if (
                 None in relevant_oos
             ):  # no limitation on OO because of some AP at some point
