@@ -1,6 +1,6 @@
 import itertools
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
@@ -323,33 +323,60 @@ class SelectUsersReviewRequestForm(forms.Form):
         help_text=_("Select the advisors."),
     )
 
+    deadline = forms.DateTimeField(
+        required=True,
+        label=_("Deadline"),
+        help_text=_("Select a date and time"),
+    )
+
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
-    def is_valid(self):
-        super().is_valid()
+    def form_has_changed(self) -> bool:
+        valid = True
         for form in self.forms:
             if not form.has_changed():
                 form.add_error(None, _("Please select at least 1 advisor."))
-                return False
+                valid = False
+        return valid
 
-        return True
+    def deadlines_validation(self) -> bool:
+        valid = True
+        deadline_old = datetime(1, 1, 1, 0, 0)
+        for form in self.forms:
+            deadline_new = form.cleaned_data["deadline"]
+            if not deadline_new > deadline_old:
+                form.add_error(
+                    None,
+                    _(
+                        f"Please select a date and time greater than {deadline_old.strftime('%Y-%m-%d %H:%M')}"
+                    ),
+                )
+                valid = False
+        return valid
+
+    def is_valid(self) -> bool:
+        super().is_valid()
+        # make sure form has changed and deadlines are monotone increasing
+        return self.form_has_changed() and self.deadlines_validation()
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
-        users = []
-        for users_data in self.cleaned_data:
-            if not users_data:  # empty form
+        request_user_data = []
+        for form_data in self.cleaned_data:
+            if not form_data:  # empty form
                 continue
 
-            user_names = [user.username for user in users_data["kownsl_users"]]
-            users.append(user_names)
+            data = [
+                (form.username, form.deadline) for form in form_data["kownsl_users"]
+            ]
+            request_user_data.append(data)
 
-        if not users:  # camunda is expecting a list of lists
-            users = [[]]
+        if not request_user_data:  # camunda is expecting a list of lists
+            request_user_data = [[]]
 
         return {
-            "kownslUsersList": users,
+            "kownslUsersList": request_user_data,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.frontend_url,
         }
