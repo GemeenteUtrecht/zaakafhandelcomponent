@@ -31,13 +31,12 @@ from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.datastructures import VA_ORDER
-from zac.accounts.models import User
+from zac.accounts.models import PermissionSet, User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
-from ..accounts.models import PermissionSet, User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .permissions import zaken_inzien
@@ -253,23 +252,24 @@ def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
 ###################################################
 
 
-@cache_result(
-    "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}",
-    timeout=AN_HOUR,
-)
+# @cache_result(
+#     "zaken:{client.base_url}:{zaaktype}:{max_va}:{identificatie}:{bronorganisatie}:{extra_query}",
+#     timeout=AN_HOUR,
+# )
 def _find_zaken(
     client,
     zaaktype: str = "",
     identificatie: str = "",
     bronorganisatie: str = "",
     max_va: str = "",
-    test_func: Optional[callable] = None,
     find_all=False,
     **extra_query,
 ) -> List[Dict]:
     """
     Retrieve zaken for a particular client with filter parameters.
     """
+    extra_query.pop("skip_cache", None)
+
     query = {
         "zaaktype": zaaktype,
         "identificatie": identificatie,
@@ -284,7 +284,6 @@ def _find_zaken(
         "zaak",
         query_params=query,
         minimum=minimum,
-        test_func=test_func,
     )
     return _zaken
 
@@ -309,7 +308,7 @@ def get_zaken(
         query_zaaktypen = zaaktypen or [""]
     else:
         query_zaaktypen = (
-            allowed_zaaktypen
+            allowed_zaaktypen.keys()
             if not zaaktypen
             else set(zaaktypen).intersection(set(allowed_zaaktypen))
         )
@@ -320,6 +319,7 @@ def get_zaken(
     zrcs = Service.objects.filter(api_type=APITypes.zrc)
     for zrc in zrcs:
         client = zrc.build_client()
+
         for zaaktype_url in query_zaaktypen:
             # figure out the max va
             relevant_perms = [
@@ -336,17 +336,40 @@ def get_zaken(
                 relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
             )
             max_va = relevant_perms[0].max_va if relevant_perms else ""
-            find_kwargs.append(
-                {
-                    "client": client,
-                    "identificatie": identificatie,
-                    "bronorganisatie": bronorganisatie,
-                    "zaaktype": zaaktype_url,
-                    "max_va": max_va,
-                    "find_all": find_all,
-                    **query_params,
-                }
-            )
+            if user_perms.user.is_superuser:
+                relevant_oos = {None}
+            else:
+                relevant_oos = {perm.oo for perm in relevant_perms}
+
+            base_find_kwargs = {
+                "client": client,
+                "identificatie": identificatie,
+                "bronorganisatie": bronorganisatie,
+                "zaaktype": zaaktype_url,
+                "max_va": max_va,
+                "find_all": find_all,
+            }
+
+            # check if we need to filter on OO
+            if (
+                None in relevant_oos
+            ):  # no limitation on OO because of some AP at some point
+                find_kwargs.append(
+                    {
+                        **base_find_kwargs,
+                        **query_params,
+                    }
+                )
+            else:
+                for oo_slug in relevant_oos:
+                    find_kwargs.append(
+                        {
+                            **base_find_kwargs,
+                            "rol__betrokkeneType": "organisatorische_eenheid",
+                            "rol__betrokkeneIdentificatie__organisatorischeEenheid__identificatie": oo_slug,
+                            **query_params,
+                        }
+                    )
 
     with parallel() as executor:
         results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
@@ -605,6 +628,7 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     return resultaat
 
 
+@cache_result("rollen:{zaak.url}", alias="request", timeout=10)
 def get_rollen(zaak: Zaak) -> List[Rol]:
     # fetch the rollen
     client = _client_from_object(zaak)
@@ -784,6 +808,9 @@ def filter_documenten_for_permissions(
     user: User,
 ) -> List[Document]:
     """Filter documents on the user permissions. """
+
+    if user.is_superuser:
+        return documenten
 
     filtered_documenten = []
     for document in documenten:

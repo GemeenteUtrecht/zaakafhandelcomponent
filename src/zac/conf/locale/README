@@ -4,6 +4,5 @@ management, merging and translating.
 
 Usage::
 
-    cd src/zac
-    python ../manage.py makemessages --all
-    python ../manage.py compilemessages
+    python src/manage.py makemessages --all
+    python src/manage.py compilemessages

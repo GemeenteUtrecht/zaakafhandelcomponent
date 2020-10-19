@@ -19,7 +19,7 @@ class LoginView(_LoginView):
 class AuthorizationProfileListView(LoginRequiredMixin, ListView):
     queryset = AuthorizationProfile.objects.prefetch_related(
         "user_set", "permission_sets"
-    )
+    ).select_related("oo")
 
 
 class AuthorizationProfileCreateView(PermissionRequiredMixin, CreateView):

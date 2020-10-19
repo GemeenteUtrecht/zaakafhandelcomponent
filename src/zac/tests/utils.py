@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 from typing import Any, Dict, List
@@ -11,6 +12,8 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from zgw.models import InformatieObjectType
+
+logger = logging.getLogger(__name__)
 
 fake = Faker()
 MOCK_FILES_DIR = os.path.join(
@@ -66,7 +69,9 @@ def generate_object(schema: dict, definition: dict, **properties):
 
     if "discriminator" in definition:
         # Not implemented yet...
-        return {}
+        logger.debug("discriminator is not implemented yet")
+        if "properties" not in definition:
+            return {}
 
     for prop, prop_def in definition["properties"].items():
         if prop in obj:

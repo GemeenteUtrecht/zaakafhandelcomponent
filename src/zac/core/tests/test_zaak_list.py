@@ -10,6 +10,9 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.contrib.organisatieonderdelen.tests.factories import (
+    OrganisatieOnderdeelFactory,
+)
 from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..permissions import zaken_inzien
@@ -266,3 +269,257 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         query = parse_qs(req_zaken.query)
         self.assertEqual(len(query["zaaktype"]), 1)
         self.assertEqual(query["zaaktype"][0], zt1["url"])
+
+
+@requests_mock.Mocker()
+class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
+    """
+    Test cases for organisatorischeEenheid restrictions in the permission system.
+    """
+
+    url = reverse_lazy("core:index")
+
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        self.oo = OrganisatieOnderdeelFactory.create(slug="OO-test")
+
+    def test_no_oo_restriction(self, m):
+        """
+        Test getting a zaak list without OO restrictions.
+        """
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        # set up catalogi data
+        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        zt1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zt1],
+            },
+        )
+        # set up user permissions
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            catalogus=catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            for_user=self.user,
+        )
+        # set up zaken API data
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+
+        response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        # verify API calls
+        self.assertEqual(
+            len(m.request_history),
+            5,
+        )
+        (
+            req_ztc_schema,
+            req_zaaktypen,
+            req_zaaktypen_catalogus,
+            req_zrc_schema,
+            req_zaken,
+        ) = m.request_history
+        query = parse_qs(req_zaken.query)
+
+        self.assertEqual(
+            set(query.keys()), {"zaaktype", "maximalevertrouwelijkheidaanduiding"}
+        )
+
+    def test_oo_restriction(self, m):
+        """
+        Test getting a zaak list without OO restrictions.
+        """
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        # set up catalogi data
+        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        zt1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zt1],
+            },
+        )
+        # set up user permissions
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            catalogus=catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            for_user=self.user,
+        )
+        ap = perm_set.authorizationprofile_set.get()
+        ap.oo = self.oo
+        ap.save()
+
+        # set up zaken API data
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+
+        response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        # verify API calls
+        self.assertEqual(
+            len(m.request_history),
+            5,
+        )
+        (
+            req_ztc_schema,
+            req_zaaktypen,
+            req_zaaktypen_catalogus,
+            req_zrc_schema,
+            req_zaken,
+        ) = m.request_history
+        query = parse_qs(req_zaken.query)
+
+        self.assertEqual(
+            set(query.keys()),
+            {
+                "zaaktype",
+                "maximalevertrouwelijkheidaanduiding",
+                "rol__betrokkenetype",
+                "rol__betrokkeneidentificatie__organisatorischeeenheid__identificatie",
+            },
+        )
+        self.assertEqual(query["rol__betrokkenetype"][0], "organisatorische_eenheid")
+        self.assertEqual(
+            query[
+                "rol__betrokkeneidentificatie__organisatorischeeenheid__identificatie"
+            ][0],
+            "oo-test",
+        )
+
+    def test_same_perm_set_multiple_ap(self, m):
+        """
+        Test list data filtering where one AP has OO limitation and the other doesn't.
+
+        As soon as one AP has no OO-restriction, any OO-restrictions are discarded for
+        that zaaktype.
+        """
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        # set up catalogi data
+        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        zt1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus,
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zt1],
+            },
+        )
+        # set up user permissions
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            catalogus=catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            for_user=self.user,
+        )
+        ap = perm_set.authorizationprofile_set.get()
+        ap.oo = self.oo
+        ap.save()
+
+        ap2 = perm_set.authorizationprofile_set.create(name="second ap", oo=None)
+        ap2.userauthorizationprofile_set.create(user=self.user)
+
+        # set up zaken API data
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+
+        response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+        # verify API calls
+        self.assertEqual(
+            len(m.request_history),
+            5,
+        )
+        (
+            req_ztc_schema,
+            req_zaaktypen,
+            req_zaaktypen_catalogus,
+            req_zrc_schema,
+            req_zaken,
+        ) = m.request_history
+        query = parse_qs(req_zaken.query)
+
+        self.assertEqual(
+            set(query.keys()),
+            {
+                "zaaktype",
+                "maximalevertrouwelijkheidaanduiding",
+            },
+        )

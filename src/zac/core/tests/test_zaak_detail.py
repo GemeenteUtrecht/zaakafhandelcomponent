@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -18,9 +19,13 @@ from zac.accounts.constants import AccessRequestResult
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
     PermissionSetFactory,
+    SuperUserFactory,
     UserFactory,
 )
 from zac.contrib.kownsl.data import Approval, ReviewRequest
+from zac.contrib.organisatieonderdelen.tests.factories import (
+    OrganisatieOnderdeelFactory,
+)
 from zac.tests.utils import (
     generate_oas_component,
     make_document_objects,
@@ -190,13 +195,18 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
-        response = self.app.get(self.url, user=self.user, status=403)
+        with patch("zac.core.rules.test_oo_allowlist", return_value=True):
+            response = self.app.get(self.url, user=self.user, status=403)
 
         self.assertEqual(response.status_code, 403)
         # show url to request access
+        request_access_url = reverse(
+            "core:access-request-create",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         self.assertEqual(
-            response.html.find(class_="main__content").find("p").text.strip(),
-            "You can request access for this page",
+            response.html.find(class_="main__content").find("p").find("a")["href"],
+            request_access_url,
         )
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):
@@ -803,3 +813,361 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 302)
         m_client.return_value.post.assert_called_once()
+
+
+@requests_mock.Mocker()
+class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
+    url = reverse_lazy(
+        "core:zaak-detail",
+        kwargs={
+            "bronorganisatie": BRONORGANISATIE,
+            "identificatie": IDENTIFICATIE,
+        },
+    )
+
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        self.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+        )
+        self.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/1a32874b-5732-40b3-b8ae-9ecd90864a82",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=self.zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+
+    def test_oo_restriction_no_related_rol(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        oo = OrganisatieOnderdeelFactory.create(slug="oo-test")
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        auth_profile.oo = oo
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_oo_restriction_with_related_rol(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        oo = OrganisatieOnderdeelFactory.create(slug="oo-test")
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        auth_profile.oo = oo
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_oo_restriction_with_unrelated_rollen(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol1 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-other",
+            },
+        )
+        rol2 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="medewerker",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol1, rol2]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        oo = OrganisatieOnderdeelFactory.create(slug="oo-test")
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        auth_profile.oo = oo
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_no_oo_set(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        # gives them access to the page, zaaktype and VA specified -> visible
+        OrganisatieOnderdeelFactory.create(slug="oo-test")
+        perm_set = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        assert auth_profile.oo is None
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_as_superuser(self, m):
+        user = SuperUserFactory.create()
+        oo = OrganisatieOnderdeelFactory.create(slug="oo-test")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        # set up other permissions that do not match the user to test superuser checks
+        perm_set = PermissionSetFactory.create(
+            permissions=[],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        auth_profile = perm_set.authorizationprofile_set.get()
+        auth_profile.oo = oo
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=user)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_multiple_oos_different_va(self, m):
+        """
+        Test that multiple auth profiles with different OOs don't give unintended access.
+
+        See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/pull/82#discussion_r501603971
+
+            Should filtering also take into account zaak.va ? For example, let's imagine
+            two auth profiles for user Bob:
+
+            profile A with oo = "oo1" and 1 permission set for "zaaktype1" with va = "openbare"
+            profile B with oo = "oo2" and 1 permission set for the same "zaaktype1" with va= "zeer_geheim"
+            And now we are checking permissions for the zaak with zaaktype = zaaktype1 and va = "zeer_geheim"
+
+            In current implementation both "oo1" and "oo2" would be selected here as relevant oos,
+            but is it correct?
+        """
+
+        # set up the mocks
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            json=self.zaaktype,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        rol1 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkeneType="organisatorische_eenheid",
+            betrokkeneIdentificatie={
+                "identificatie": "oo1-test",
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol1]),
+        )
+
+        # set up the permissions
+        oo1 = OrganisatieOnderdeelFactory.create(slug="oo1-test")
+        oo2 = OrganisatieOnderdeelFactory.create(slug="oo2-test")
+
+        # zaak is beperkt openbaar, and related to oo1-test. This AP gives no access,
+        # even though the AP.oo matches, the VA does not.
+        perm_set1 = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        auth_profile = perm_set1.authorizationprofile_set.get()
+        auth_profile.oo = oo1
+        auth_profile.save()
+
+        # zaak is beperkt openbaar, and related to oo1-test. This AP gives no access,
+        # even though the VA matches, the AP.oo does not.
+        perm_set2 = PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        auth_profile = perm_set2.authorizationprofile_set.get()
+        auth_profile.oo = oo2
+        auth_profile.save()
+
+        # mock out all the other calls - we're testing auth here
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user, status=403)
+
+        self.assertEqual(response.status_code, 403)

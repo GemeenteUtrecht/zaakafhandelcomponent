@@ -91,6 +91,11 @@ CACHES = {
             "IGNORE_EXCEPTIONS": True,
         },
     },
+    # cache that resets itself after every request
+    "request": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "request",
+    },
 }
 
 # Application definition
@@ -136,6 +141,7 @@ INSTALLED_APPS = [
     "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
+    "zac.contrib.organisatieonderdelen",
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
 ]

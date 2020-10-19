@@ -87,12 +87,29 @@ class AuthorizationProfile(models.Model):
     """
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(_("naam"), max_length=255)
+    name = models.CharField(
+        _("name"),
+        max_length=255,
+        help_text=_(
+            "Use an easily recognizable name that maps to the function of users."
+        ),
+    )
     permission_sets = models.ManyToManyField(
         "PermissionSet",
         verbose_name=_("permission sets"),
         help_text=_(
             "Selecting multiple sets makes them add/merge all the permissions together."
+        ),
+    )
+    oo = models.ForeignKey(
+        "organisatieonderdelen.OrganisatieOnderdeel",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_("organisatieonderdeel"),
+        help_text=_(
+            "Limit access to data belonging to this OO. Leaving this blank means that "
+            "there is no restriction on OO in place."
         ),
     )
 

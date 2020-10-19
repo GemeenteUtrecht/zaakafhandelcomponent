@@ -8,6 +8,7 @@ from zgw_consumers.api_models.zaken import Rol as _Rol
 
 from zac.contrib.brp.api import fetch_natuurlijkpersoon
 from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
+from zac.contrib.organisatieonderdelen.models import OrganisatieOnderdeel
 
 logger = logging.getLogger(__name__)
 
@@ -23,22 +24,30 @@ class Rol(_Rol):
         return self._natuurlijkpersoon
 
     def get_name(self) -> Optional[str]:
-        get_name = GET_NAME.get(self.betrokkene_type)
-        if get_name is None:
+        getter = GET_NAME.get(self.betrokkene_type)
+        if getter is None:
             return None
 
-        return get_name(self)
+        return getter(self)
 
-    def get_bsn(self) -> Optional[str]:
-        if self.betrokkene_type != RolTypes.natuurlijk_persoon:
+    def get_identificatie(self) -> Optional[str]:
+        getter = GET_IDENTIFICATIE.get(self.betrokkene_type)
+        if getter is None:
             return None
 
-        if self.betrokkene:
-            if not self.natuurlijkpersoon:
-                return _("(invalid BRP reference!)")
-            return self.natuurlijkpersoon.burgerservicenummer
+        return getter(self)
 
-        return self.betrokkene_identificatie["inp_bsn"]
+
+def get_bsn(rol: Rol) -> str:
+    if rol.betrokkene:
+        if not rol.natuurlijkpersoon:
+            return _("(invalid BRP reference!)")
+        return rol.natuurlijkpersoon.burgerservicenummer
+    return rol.betrokkene_identificatie["inp_bsn"]
+
+
+def get_medewerker_username(rol: Rol) -> str:
+    return rol.betrokkene_identificatie["identificatie"]
 
 
 def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
@@ -70,7 +79,28 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
     return " ".join(bits).strip() or rol.betrokkene_identificatie["identificatie"]
 
 
+def get_naam_organisatorische_eenheid(rol: Rol) -> str:
+    identificatie = rol.betrokkene_identificatie.get("identificatie")
+    organisatie_onderdeel = OrganisatieOnderdeel.objects.filter(
+        slug=identificatie
+    ).first()
+    if organisatie_onderdeel:
+        return organisatie_onderdeel.name
+    return rol.betrokkene_identificatie["naam"]
+
+
+def get_identificatie_organisatorische_eenheid(rol: Rol) -> str:
+    return rol.betrokkene_identificatie["identificatie"]
+
+
 GET_NAME = {
     RolTypes.natuurlijk_persoon: get_naam_natuurlijkpersoon,
     RolTypes.medewerker: get_naam_medewerker,
+    RolTypes.organisatorische_eenheid: get_naam_organisatorische_eenheid,
+}
+
+GET_IDENTIFICATIE = {
+    RolTypes.natuurlijk_persoon: get_bsn,
+    RolTypes.medewerker: get_medewerker_username,
+    RolTypes.organisatorische_eenheid: get_identificatie_organisatorische_eenheid,
 }

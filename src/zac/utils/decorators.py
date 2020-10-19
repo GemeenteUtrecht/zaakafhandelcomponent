@@ -29,6 +29,14 @@ def cache(key: str, alias: str = "default", **set_options):
             named_args = dict(zip(argspec.args, args), **kwargs)
             key_kwargs.update(**named_args)
 
+            if argspec.varkw:
+                var_kwargs = {
+                    key: value
+                    for key, value in named_args.items()
+                    if key not in argspec.args
+                }
+                key_kwargs[argspec.varkw] = var_kwargs
+
             cache_key = key.format(**key_kwargs)
 
             _cache = caches[alias]
