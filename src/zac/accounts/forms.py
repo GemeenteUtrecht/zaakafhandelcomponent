@@ -168,15 +168,6 @@ class InformatieobjecttypeForm(forms.ModelForm):
             "selected",
         )
 
-    def _post_clean(self):
-        if (
-            not self.cleaned_data.get("selected")
-            and self.cleaned_data.get("id") is None
-        ):
-            return
-
-        return super()._post_clean()
-
 
 class SerializableFormSet(forms.BaseInlineFormSet):
     @staticmethod

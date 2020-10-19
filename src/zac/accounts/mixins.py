@@ -15,7 +15,11 @@ class InformatieobjecttypeFormsetMixin:
     def form_valid(self, permissionset_form, informatieobjecttype_formset):
         self.object = permissionset_form.save()
         informatieobjecttype_formset.instance = self.object
-        informatieobjecttype_formset.save()
+        new_informatieobjecttypen = informatieobjecttype_formset.save(commit=False)
+        for form_index, informatieobjecttype in enumerate(new_informatieobjecttypen):
+            form_clean_data = informatieobjecttype_formset.cleaned_data[form_index]
+            if form_clean_data.get("selected") or form_clean_data.get("id") is not None:
+                informatieobjecttype.save()
 
         return HttpResponseRedirect(self.get_success_url())
 

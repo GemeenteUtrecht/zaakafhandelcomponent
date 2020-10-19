@@ -44,8 +44,6 @@
         data-extra="{{ informatieobjecttype_formset.extra|unlocalize }}"
         data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
         data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
-        data-formdata="form-data"
-        data-emptyform="empty-form-data"
         data-catalog-choices="catalog-choices"
     >
         {{ informatieobjecttype_formset.catalog_choices|json_script:"catalog-choices" }}
