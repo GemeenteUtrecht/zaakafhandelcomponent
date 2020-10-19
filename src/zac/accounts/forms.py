@@ -185,6 +185,10 @@ class SerializableFormSet(forms.BaseInlineFormSet):
                     form_data.pop("permission_set")
                     form_data["selected"] = True
                     serialized_existing_data.append(form_data)
+        elif len(self.initial_forms) > 0:
+            for form in self.initial_forms:
+                form.initial["selected"] = True
+                serialized_existing_data.append(form.initial)
         return serialized_existing_data
 
 

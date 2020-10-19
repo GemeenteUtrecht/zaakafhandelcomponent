@@ -18,8 +18,16 @@ class InformatieobjecttypeFormsetMixin:
         new_informatieobjecttypen = informatieobjecttype_formset.save(commit=False)
         for form_index, informatieobjecttype in enumerate(new_informatieobjecttypen):
             form_clean_data = informatieobjecttype_formset.cleaned_data[form_index]
-            if form_clean_data.get("selected") or form_clean_data.get("id") is not None:
-                informatieobjecttype.save()
+            if form_clean_data.get("selected"):
+                if form_clean_data.get("id") is not None:
+                    iot_permission = form_clean_data.get("id")
+                    iot_permission.max_va = form_clean_data.get("max_va")
+                else:
+                    iot_permission = informatieobjecttype
+                iot_permission.save()
+            elif form_clean_data.get("id") is not None:
+                iot_permission = form_clean_data.get("id")
+                iot_permission.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 
