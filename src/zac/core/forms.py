@@ -20,7 +20,6 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, User
-from zac.accounts.serializers import UserSerializer
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
