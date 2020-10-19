@@ -45,8 +45,10 @@
         data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
         data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
         data-catalog-choices="catalog-choices"
+        data-existing-form-data="existing-form-data"
     >
         {{ informatieobjecttype_formset.catalog_choices|json_script:"catalog-choices" }}
+        {{ informatieobjecttype_formset.existing_form_data|json_script:"existing-form-data" }}
         {# Managed by react #}
     </div>
 

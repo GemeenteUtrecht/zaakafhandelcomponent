@@ -10,12 +10,14 @@ class InformatieobjecttypePermissionForm extends React.Component {
     constructor(props) {
         super(props);
 
+        const formData = this.props.data;
+
         this.state = {
-            selected: this.props.selected,
-            max_va: this.props.max_va,
-            catalogus: this.props.data.catalogus,
-            omschrijving: this.props.data.omschrijving,
-            id: this.props.data.id
+            selected: formData.selected,
+            max_va: formData.max_va,
+            catalogus: formData.catalogus,
+            omschrijving: formData.omschrijving,
+            id: formData.id
         };
 
         this.onCheckChange = this.onCheckChange.bind(this);
@@ -74,12 +76,23 @@ class InformatieobjecttypeForm extends React.Component {
         this.state = {
             currentCatalog: '',
             displayFormset: false,
-            formData: [],
+            existingFormData: [],
             emptyFormData: [],
             errors: "",
         };
 
         this.onCatalogChange = this.onCatalogChange.bind(this);
+        this.fetchInformatieobjecttypen = this.fetchInformatieobjecttypen.bind(this);
+    }
+
+    componentDidMount() {
+        if (this.props.existingFormData.length > 0) {
+            this.setState({
+                currentCatalog: this.props.existingFormData[0].catalogus,
+                displayFormset: true,
+                existingFormData: this.props.existingFormData,
+            })
+        }
     }
 
     onCatalogChange(event) {
@@ -90,18 +103,22 @@ class InformatieobjecttypeForm extends React.Component {
 
         // Fetch the informatieobjecttypen
         if (event.target.value !== '') {
-            const apiURL = "/accounts/permission-sets/informatieobjecttypes?catalogus=" + event.target.value;
-            window.fetch(apiURL).then(
-                response => response.json()
-            ).then(
-                result => {
-                    this.setState({formData:result.formData, emptyFormData: result.emptyFormData});
-                },
-                error => {
-                    this.setState({errors: error});
-                }
-            );
+            this.fetchInformatieobjecttypen(event.target.value);
         }
+    }
+
+    fetchInformatieobjecttypen (catalogUrl) {
+        const apiURL = "/accounts/permission-sets/informatieobjecttypes?catalogus=" + catalogUrl;
+        window.fetch(apiURL).then(
+            response => response.json()
+        ).then(
+            result => {
+                this.setState({emptyFormData: result.emptyFormData});
+            },
+            error => {
+                this.setState({errors: error});
+            }
+        );
     }
 
     render() {
@@ -119,7 +136,7 @@ class InformatieobjecttypeForm extends React.Component {
                 <FormSet
                     configuration={this.props.configuration}
                     renderForm={this.props.renderForm}
-                    formData={this.state.formData}
+                    formData={this.state.existingFormData}
                     emptyFormData={this.state.emptyFormData}
                 />
             </React.Fragment>
@@ -137,6 +154,24 @@ InformatieobjecttypeForm.propTypes = {
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
     catalogChoices: PropTypes.arrayOf(PropTypes.array).isRequired,
+    existingFormData: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        catalog: PropTypes.string,
+        omschrijving: PropTypes.string,
+        max_va: PropTypes.string,
+        selected: PropTypes.string,
+    }))
+};
+
+InformatieobjecttypePermissionForm.propTypes = {
+    index: PropTypes.number,
+    data: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        catalog: PropTypes.string,
+        omschrijving: PropTypes.string,
+        max_va: PropTypes.string,
+        selected: PropTypes.string,
+    }))
 };
 
 export { InformatieobjecttypeForm, InformatieobjecttypePermissionForm };

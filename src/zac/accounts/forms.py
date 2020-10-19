@@ -177,6 +177,16 @@ class SerializableFormSet(forms.BaseInlineFormSet):
         catalog_choices.insert(0, ("", "------"))
         return catalog_choices
 
+    def existing_form_data(self) -> List[Dict]:
+        serialized_existing_data = []
+        if hasattr(self, "cleaned_data"):
+            for form_data in self.cleaned_data:
+                if form_data.get("selected") or form_data.get("id") is not None:
+                    form_data.pop("permission_set")
+                    form_data["selected"] = True
+                    serialized_existing_data.append(form_data)
+        return serialized_existing_data
+
 
 InformatieobjecttypeFormSet = inlineformset_factory(
     PermissionSet,

@@ -19,6 +19,7 @@ const mount = () => {
             },
             renderForm: InformatieobjecttypePermissionForm,
             catalogChoices: jsonScriptToVar(informatieobjecttype_node.dataset.catalogChoices),
+            existingFormData: jsonScriptToVar(informatieobjecttype_node.dataset.existingFormData)
         };
 
         ReactDOM.render(<InformatieobjecttypeForm {...props} />, informatieobjecttype_node);
