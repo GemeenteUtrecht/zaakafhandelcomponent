@@ -324,7 +324,7 @@ class SelectUsersReviewRequestForm(forms.Form):
     )
 
     deadline = forms.DateTimeField(
-        required=True,
+        required=False,
         label=_("Deadline"),
         help_text=_("Select a date and time"),
     )
@@ -354,10 +354,28 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                 valid = False
         return valid
 
+    def unique_user_validation(self) -> bool:
+        valid = True
+        users_list = []
+        for form in self.forms:
+            users = form.cleaned_data["kownsl_users"]
+            if any([user in users_list for user in users]):
+                form.add_error(None, _("Please select unique advisors."))
+                valid = False
+            users_list.extend(users)
+        return valid
+
     def is_valid(self) -> bool:
         valid = super().is_valid()
-        # make sure form has changed and deadlines are monotone increasing
-        return all([valid, self.all_forms_changed(), self.deadlines_validation()])
+        # make sure form has changed, deadlines are monotone increasing and all users are unique
+        return all(
+            [
+                valid,
+                self.all_forms_changed(),
+                self.deadlines_validation(),
+                self.unique_user_validation(),
+            ]
+        )
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
@@ -373,6 +391,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                     form_data["kownsl_users"], form_data["deadline"]
                 )
             ]
+
             request_user_data.append(data)
 
         if not request_user_data:  # camunda is expecting a list of lists
