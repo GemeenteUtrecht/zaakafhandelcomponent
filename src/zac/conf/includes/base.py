@@ -135,6 +135,7 @@ INSTALLED_APPS = [
     "zac.camunda",
     "zac.regiezaken",
     "zac.core",
+    "zac.elasticsearch",
     "zac.notifications",
     "zac.forms",
     "zac.utils",
@@ -431,3 +432,10 @@ HIJACK_REGISTER_ADMIN = False
 HIJACK_ALLOW_GET_REQUESTS = True
 HIJACK_AUTHORIZE_STAFF = True
 HIJACK_AUTHORIZE_STAFF_TO_HIJACK_STAFF = True
+
+
+# ELASTICSEARCH CONFIG
+ELASTICSEARCH_DSL = {
+    "default": {"hosts": config("ES_HOST", "localhost:9200")},
+}
+ES_INDEX_ZAKEN = "zaken"

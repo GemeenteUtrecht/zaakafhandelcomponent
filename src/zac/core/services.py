@@ -724,6 +724,23 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     return behandelaar_zaken
 
 
+def get_rollen_all() -> List[Rol]:
+    """
+    Retrieve all available rollen for ES indexing
+    """
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+
+    all_rollen = []
+    for zrc in zrcs:
+        client = zrc.build_client()
+
+        _rollen = get_paginated_results(client, "rol")
+
+        all_rollen += factory(Rol, _rollen)
+
+    return all_rollen
+
+
 ###################################################
 #                       DRC                       #
 ###################################################
