@@ -23,6 +23,7 @@ You need the following libraries and/or programs:
 * `PostgreSQL`_ 9.6 or above
 * `Node.js`_
 * `npm`_
+* `Elasticsearch`_
 
 .. _Python: https://www.python.org/
 .. _Virtualenv: https://virtualenv.pypa.io/en/stable/
@@ -30,6 +31,7 @@ You need the following libraries and/or programs:
 .. _PostgreSQL: https://www.postgresql.org
 .. _Node.js: http://nodejs.org/
 .. _npm: https://www.npmjs.com/
+.. _Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/7.9/install-elasticsearch.html
 
 
 Getting started

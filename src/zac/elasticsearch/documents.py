@@ -4,8 +4,8 @@ from elasticsearch_dsl import Document, InnerDoc, Nested, field
 
 
 class RolDocument(InnerDoc):
-    url = field.Text()
-    betrokkene_type = field.Text
+    url = field.Keyword()
+    betrokkene_type = field.Keyword()
     betrokkene_identificatie = field.Object()
 
 

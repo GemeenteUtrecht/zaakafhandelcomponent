@@ -74,7 +74,6 @@ def append_rol_to_document(rol: Rol):
     rol_document = RolDocument(
         url=rol.url,
         betrokkene_type=rol.betrokkene_type,
-        # TODO replace with get_identificatie after rebase on oo branch
         betrokkene_identificatie=rol.betrokkene_identificatie,
     )
 
@@ -101,7 +100,6 @@ def update_rollen_in_zaak_document(zaak: Zaak):
         RolDocument(
             url=rol.url,
             betrokkene_type=rol.betrokkene_type,
-            # TODO replace with get_identificatie after rebase on oo branch
             betrokkene_identificatie=rol.betrokkene_identificatie,
         )
         for rol in get_rollen(zaak)
