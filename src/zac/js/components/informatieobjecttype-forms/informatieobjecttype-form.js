@@ -63,6 +63,12 @@ class InformatieobjecttypePermissionForm extends React.Component {
                     value={this.state.max_va}
                     onChange={this.onVAChange}
                 />
+                <CheckboxInput
+                    name="DELETE"
+                    checked={!this.state.selected}
+                    value="true"
+                    style={{display: 'none'}}
+                />
             </div>
         );
     }

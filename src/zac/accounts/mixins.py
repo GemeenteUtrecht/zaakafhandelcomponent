@@ -2,6 +2,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 
+from .forms import InformatieobjecttypeFormSet
+
 
 class PermissionRequiredMixin(LoginRequiredMixin, PermissionRequiredMixin):
     def check_object_permissions(self, obj):
@@ -12,23 +14,34 @@ class PermissionRequiredMixin(LoginRequiredMixin, PermissionRequiredMixin):
 
 
 class InformatieobjecttypeFormsetMixin:
+    def construct_formset(self):
+        formset_kwargs = self.get_formset_kwargs()
+        return InformatieobjecttypeFormSet(**formset_kwargs)
+
+    # taken from extra_views.formsets.BaseFormSetFactory
+    def get_formset_kwargs(self):
+        """
+        Returns the keyword arguments for instantiating the formset.
+        """
+        kwargs = {"initial": self.get_initial()}
+
+        if self.object:
+            kwargs["instance"] = self.object
+
+        if self.request.method in ("POST", "PUT"):
+            kwargs.update(
+                {"data": self.request.POST.copy(), "files": self.request.FILES}
+            )
+        return kwargs
+
+    def get_initial(self):
+        return []
+
     def form_valid(self, permissionset_form, informatieobjecttype_formset):
         self.object = permissionset_form.save()
         informatieobjecttype_formset.instance = self.object
-        new_informatieobjecttypen = informatieobjecttype_formset.save(commit=False)
-        for form_index, informatieobjecttype in enumerate(new_informatieobjecttypen):
-            form_clean_data = informatieobjecttype_formset.cleaned_data[form_index]
-            if form_clean_data.get("selected"):
-                if form_clean_data.get("id") is not None:
-                    iot_permission = form_clean_data.get("id")
-                    iot_permission.max_va = form_clean_data.get("max_va")
-                else:
-                    iot_permission = informatieobjecttype
-                iot_permission.save()
-            elif form_clean_data.get("id") is not None:
-                iot_permission = form_clean_data.get("id")
-                iot_permission.delete()
-
+        # takes care of creating, updating and deleting
+        informatieobjecttype_formset.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, permissionset_form, informatieobjecttype_formset):

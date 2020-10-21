@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView as _LoginView
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -82,7 +83,7 @@ class PermissionSetCreateView(
 
     def get(self, request, *args, **kwargs):
         self.object = None
-        informatieobjecttype_formset = InformatieobjecttypeFormSet()
+        informatieobjecttype_formset = self.construct_formset()
         permissionset_form = self.get_form(self.form_class)
         return self.render_to_response(
             self.get_context_data(
@@ -91,10 +92,11 @@ class PermissionSetCreateView(
             )
         )
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         self.object = None
         permissionset_form = self.get_form(self.form_class)
-        informatieobjecttype_formset = InformatieobjecttypeFormSet(self.request.POST)
+        informatieobjecttype_formset = self.construct_formset()
 
         if (
             not permissionset_form.is_valid()
@@ -144,7 +146,7 @@ class PermissionSetUpdateView(
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        informatieobjecttype_formset = InformatieobjecttypeFormSet(instance=self.object)
+        informatieobjecttype_formset = self.construct_formset()
         permissionset_form = self.get_form(self.form_class)
         return self.render_to_response(
             self.get_context_data(
@@ -156,7 +158,7 @@ class PermissionSetUpdateView(
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         permissionset_form = self.get_form(self.form_class)
-        informatieobjecttype_formset = InformatieobjecttypeFormSet(self.request.POST)
+        informatieobjecttype_formset = self.construct_formset()
 
         if (
             not permissionset_form.is_valid()
