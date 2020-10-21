@@ -324,22 +324,17 @@ class SelectUsersReviewRequestForm(forms.Form):
     )
 
     deadline = forms.DateField(
-        required=False,
+        required=True,
         label=_("Deadline"),
         help_text=_("Select a date"),
     )
 
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
-    def all_forms_changed(self) -> bool:
-        changed = True
-        for form in self.forms:
-            if not form.has_changed():
-                form.add_error(None, _("Please select at least 1 advisor."))
-                changed = False
-        return changed
-
     def deadlines_validation(self) -> bool:
+        """
+        Validate that deadlines per step are monotonic increasing
+        """
         valid = True
         deadline_old = date(1, 1, 1)
         for form in self.forms:
@@ -355,47 +350,59 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         return valid
 
     def unique_user_validation(self) -> bool:
+        """
+        Validate that users are unique and that at least 1 user is selected per step
+        """
         valid = True
         users_list = []
         for form in self.forms:
             users = form.cleaned_data["kownsl_users"]
+            if not users:
+                form_add_error(None, _("Please select at least 1 advisor."))
+                valid = False
+
             if any([user in users_list for user in users]):
                 form.add_error(None, _("Please select unique advisors."))
                 valid = False
+
             users_list.extend(users)
         return valid
 
     def is_valid(self) -> bool:
         valid = super().is_valid()
-        # make sure form has changed, deadlines are monotone increasing and all users are unique
+        # make sure deadlines are monotonic increasing and all users are unique
         return all(
             [
                 valid,
-                self.all_forms_changed(),
                 self.deadlines_validation(),
                 self.unique_user_validation(),
             ]
         )
+    
+    def get_request_kownsl_user_data(self) -> List:
+        request_kownsl_user_data = []
+        for form_data in self.cleaned_data:
+            if not form_data:  # empty form
+                continue
+            
+            # Cast date to string
+            deadline = str(form_data['deadline'])
+            data = [
+                (user.username, deadline)
+                for user in form_data["kownsl_users"]
+            ]
+
+            request_kownsl_user_data.append(data)
+
+        return request_kownsl_user_data
+
+    def get_email_info(self) -> Dict:
+        return
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
-        request_user_data = []
-        for form_data in self.cleaned_data:
-            if not form_data:  # empty form
-                continue
-
-            data = [
-                (user.username, deadline)
-                for user, deadline in zip(
-                    form_data["kownsl_users"], form_data["deadline"]
-                )
-            ]
-
-            request_user_data.append(data)
-
-        if not request_user_data:  # camunda is expecting a list of lists
-            request_user_data = [[]]
+        request_user_data = self.get_request_kownsl_user_data()
 
         return {
             "kownslUsersList": request_user_data,
