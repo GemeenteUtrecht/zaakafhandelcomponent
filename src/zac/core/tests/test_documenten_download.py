@@ -9,7 +9,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.accounts.models import InformatieobjecttypePermission
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import (
+    InformatieobjecttypePermissionFactory,
+    PermissionSetFactory,
+    UserFactory,
+)
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import (
@@ -120,7 +124,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
         )
-        InformatieobjecttypePermission.objects.create(
+        InformatieobjecttypePermissionFactory.create(
             catalogus=self.iot_1["catalogus"],
             max_va=VertrouwelijkheidsAanduidingen.geheim,
             permission_set=permission,
@@ -140,10 +144,9 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
         )
-        InformatieobjecttypePermission.objects.create(
+        InformatieobjecttypePermissionFactory.create(
             catalogus=self.iot_1["catalogus"],
             omschrijving="Test Omschrijving 1",
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
             permission_set=permission,
         )
 
@@ -160,7 +163,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
             permissions=[zaken_inzien.name],
             for_user=user,
         )
-        InformatieobjecttypePermission.objects.create(
+        InformatieobjecttypePermissionFactory.create(
             catalogus=self.iot_1["catalogus"],
             omschrijving="Test Omschrijving 1",
             max_va=VertrouwelijkheidsAanduidingen.geheim,
