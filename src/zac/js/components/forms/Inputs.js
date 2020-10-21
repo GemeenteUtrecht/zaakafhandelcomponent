@@ -92,7 +92,7 @@ const DateInput = (props) => {
     return <Input type="date" {...props} />;
 };
 
-const DatePickerInput = ({name, label, dateFormat = "yyyy-MM-dd"}) => {
+const DatePickerInput = ({name, label, dateFormat = "yyyy-MM-dd", minDate}) => {
     const [startDate, setStartDate] = useState(null);
 
     const prefix = useContext(PrefixContext);
@@ -105,6 +105,7 @@ const DatePickerInput = ({name, label, dateFormat = "yyyy-MM-dd"}) => {
                 dateFormat={dateFormat}
                 selected={startDate}
                 onChange={(date) => setStartDate(date)}
+                minDate={minDate}
                 name={prefixedName}
                 className="datepicker__input"
                 placeholderText="Selecteer een datum"

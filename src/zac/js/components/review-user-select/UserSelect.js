@@ -26,7 +26,6 @@ const UserSelect = ({
 }) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
-    const [startDate, setStartDate] = useState(new Date());
 
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
@@ -69,7 +68,12 @@ const UserSelect = ({
                     onChange={(value) => setSelectedData(value)}
                 />
             </div>
-            <DatePickerInput name="deadline" label="Uiterste datum:" required />
+            <DatePickerInput
+                name="deadline"
+                label="Uiterste datum:"
+                minDate={new Date()}
+                required
+            />
         </div>
     );
 };
