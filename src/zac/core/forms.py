@@ -378,33 +378,82 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
                 self.unique_user_validation(),
             ]
         )
-    
+
     def get_request_kownsl_user_data(self) -> List:
+        """
+        Gets kownsl user and deadline data for the BPMN variables.
+        """
         request_kownsl_user_data = []
         for form_data in self.cleaned_data:
-            if not form_data:  # empty form
-                continue
-            
-            # Cast date to string
-            deadline = str(form_data['deadline'])
-            data = [
-                (user.username, deadline)
-                for user in form_data["kownsl_users"]
-            ]
+            deadline = str(form_data["deadline"])
+            data = [(user.username, deadline) for user in form_data["kownsl_users"]]
 
             request_kownsl_user_data.append(data)
 
         return request_kownsl_user_data
 
+    def get_user_details(self, user) -> Dict:
+        """
+        Grabs email and name from user object
+        """
+        user = User.objects.get(username=user)
+        name = f"{user.first_name} {user.last_name}"
+        if not name.strip(" "):
+            name = "Gemeente Utrecht"
+
+        email = user.email
+        if not email.strip(" "):
+            email = "noreply@utrecht.nl"
+        return {
+            "name": name,
+            "email": email,
+        }
+
+    def get_email_receivers(self) -> List:
+        """
+        Creates a list of receivers with their email and name
+        """
+        receivers = []
+        for form in self.cleaned_data:
+            receivers.append(
+                [self.get_user_details(user) for user in form["kownsl_users"]]
+            )
+        return receivers
+
+    def get_email_template(self) -> str:
+        """
+        Returns email template based on review_request.review_type
+        """
+        return (
+            "accordering" if self.review_request.review_type == "approval" else "advies"
+        )
+
     def get_email_info(self) -> Dict:
-        return
+        """
+        Returns a dictionary with email information required by the camunda process model
+        """
+        sender = self.get_user_details(self.user)
+        receivers = self.get_email_receivers()
+        template = self.get_email_template()
+        email = {
+            "subject": f"Uw {template} wordt gevraagd.",
+            "content": "",
+        }
+        return {
+            "sender": sender,
+            "receivers": receivers,
+            "template": template,
+            "email": email,
+            "context": {},
+        }
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
         request_user_data = self.get_request_kownsl_user_data()
-
+        email_info = self.get_email_info()
         return {
+            "emailInfo": email_info,
             "kownslUsersList": request_user_data,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.frontend_url,
