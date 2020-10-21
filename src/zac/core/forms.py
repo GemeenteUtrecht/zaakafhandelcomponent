@@ -323,10 +323,10 @@ class SelectUsersReviewRequestForm(forms.Form):
         help_text=_("Select the advisors."),
     )
 
-    deadline = forms.DateTimeField(
+    deadline = forms.DateField(
         required=False,
         label=_("Deadline"),
-        help_text=_("Select a date and time"),
+        help_text=_("Select a date"),
     )
 
 
@@ -341,14 +341,14 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
 
     def deadlines_validation(self) -> bool:
         valid = True
-        deadline_old = datetime(1, 1, 1, 0, 0)
+        deadline_old = date(1, 1, 1)
         for form in self.forms:
             deadline_new = form.cleaned_data["deadline"]
-            if not deadline_new > deadline_old:
+            if deadline_new and not deadline_new > deadline_old:
                 form.add_error(
                     None,
                     _(
-                        f"Please select a date and time greater than {deadline_old.strftime('%Y-%m-%d %H:%M')}"
+                        f"Please select a date greater than {deadline_old.strftime('%Y-%m-%d')}"
                     ),
                 )
                 valid = False
