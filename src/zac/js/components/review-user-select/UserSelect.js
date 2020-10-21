@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import AsyncSelect from 'react-select/async';
@@ -10,7 +10,12 @@ import { ErrorList, Wrapper } from '../forms/Utils';
 
 const ENDPOINT = '/accounts/api/users';
 
-const getUsers = (inputValue) => fetchUsers(inputValue, ENDPOINT);
+const getUsers = (inputValue) => {
+    const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
+    const filteredUsers = selectedUserInputs.map((element) => element.value);
+
+    return fetchUsers({ inputValue, ENDPOINT, filteredUsers });
+};
 
 const isEmpty = (obj) => {
     if (!obj) {
@@ -30,7 +35,16 @@ const UserSelect = ({
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
         const inputs = selectedUsers
-            ? selectedUsers.map((user) => <HiddenCheckbox name="kownsl_users" value={user.value} key={user.value} checked required />)
+            ? selectedUsers.map((user) => (
+                <HiddenCheckbox
+                    name="kownsl_users"
+                    value={user.value}
+                    key={user.value}
+                    className="input input--hidden input--kownsl_user"
+                    checked
+                    required
+                />
+            ))
             : <HiddenCheckbox name="kownsl_users" checked={false} required />;
         setHiddenInputs(inputs);
     };
@@ -60,7 +74,6 @@ const UserSelect = ({
                 {hiddenInputs}
                 <AsyncSelect
                     isMulti
-                    cacheOptions
                     placeholder="Selecteer adviseur(s)"
                     name={`kownsl_users${-index}`}
                     defaultOptions={false}

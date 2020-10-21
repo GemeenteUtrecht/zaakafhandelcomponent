@@ -122,12 +122,12 @@ const CheckboxInput = (props) => {
     return <Input type="checkbox" {...props} />;
 };
 
-const HiddenCheckbox = ({name, value, checked, required}) => {
+const HiddenCheckbox = ({name, value, checked, required, className="input input--hidden"}) => {
     const prefix = useContext(PrefixContext);
     const prefixedName = prefix ? `${prefix}-${name}` : name;
     return <input
         type="checkbox"
-        className="input input--hidden"
+        className={className}
         name={prefixedName}
         value={value}
         defaultChecked={checked}

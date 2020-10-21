@@ -6,8 +6,11 @@ const getUserName = (user) => {
     return lastName ? `${firstName} ${lastName}` : user.username;
 };
 
-const fetchUsers = async (inputValue, ENDPOINT) => {
-    const response = await get(ENDPOINT, { search: inputValue });
+const fetchUsers = async ( {inputValue, filteredUsers = [], ENDPOINT}) => {
+    const response = await get(ENDPOINT, {
+        search: inputValue,
+        ...(filteredUsers.length > 0 && {filter_users: filteredUsers})
+    });
     const { results } = response;
     return results.map((user) => ({
         value: user.id,
