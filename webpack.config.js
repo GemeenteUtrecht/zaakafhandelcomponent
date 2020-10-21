@@ -1,8 +1,7 @@
-var paths = require('./build/paths');
-var argv = require('yargs').argv;
+const paths = require('./build/paths');
+const { argv } = require('yargs');
 
-
-var isProduction = process.env.NODE_ENV === 'production';
+let isProduction = process.env.NODE_ENV === 'production';
 if (argv.production) {
     isProduction = true;
 }
@@ -15,14 +14,14 @@ const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 module.exports = {
     // Path to the js entry point (source).
     entry: {
-        main: __dirname + '/' + paths.jsEntry,
+        main: `${__dirname}/${paths.jsEntry}`,
         // webcomponents: __dirname + '/' + paths.jsSrcDir + 'webcomponents.js',
     },
 
     // Path to the (transpiled) js
     output: {
-        path: __dirname + '/' + paths.jsDir, // directory
-        filename: '[name].js' // file
+        path: `${__dirname}/${paths.jsDir}`, // directory
+        filename: '[name].js', // file
     },
 
     // Use --production to optimize output.
@@ -35,9 +34,13 @@ module.exports = {
                 test: /\.(png)$/i,
                 use: [
                     {
-                       loader: 'base64-inline-loader',
+                        loader: 'base64-inline-loader',
                     },
                 ],
+            },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader'],
             },
             {
                 exclude: [
@@ -45,9 +48,9 @@ module.exports = {
                     /static\/vendor/,
                 ],
                 loader: 'babel-loader',
-                test: /.js?$/
-            }
-        ]
+                test: /.js?$/,
+            },
+        ],
     },
 
     // Use --sourcemap to generate sourcemap.
@@ -58,5 +61,5 @@ module.exports = {
         new MomentLocalesPlugin({
             localesToKeep: ['nl'],
         }),
-    ]
+    ],
 };

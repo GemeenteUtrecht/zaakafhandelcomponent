@@ -1,11 +1,8 @@
 @import "../lib/bem";
-@import "../lib/colors";
 @import "../lib/typography";
 
-
 .user-select {
-  position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 
   &:first-of-type {
     margin-top: 1rem;
@@ -14,11 +11,17 @@
   @include element("title") {
     display: flex;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 
     & h3 {
-      font-size: 18px;
+      font-size: 1.2rem;
       margin: 0 0.3rem 0 0;
+      text-transform: uppercase;
     }
+  }
+
+  @include element("selector") {
+    position: relative;
+    margin-bottom: 1rem;
   }
 }

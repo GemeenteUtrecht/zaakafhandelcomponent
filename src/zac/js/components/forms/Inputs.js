@@ -4,8 +4,7 @@ import { PrefixContext } from '../formsets/context';
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
-
-
+import DatePicker from 'react-datepicker';
 
 const Input = ({
     type='text',
@@ -93,6 +92,31 @@ const DateInput = (props) => {
     return <Input type="date" {...props} />;
 };
 
+const DatePickerInput = ({name, label, dateFormat = "yyyy-MM-dd"}) => {
+    const [startDate, setStartDate] = useState(null);
+
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+
+    return (
+        <div className="datepicker">
+            <label className="datepicker__label">{label}</label>
+            <DatePicker
+                dateFormat={dateFormat}
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                name={prefixedName}
+                className="datepicker__input"
+                placeholderText="Selecteer een datum"
+                closeOnScroll={e => e.target === document}
+                autoComplete="off"
+                isClearable
+                required
+            />
+        </div>
+    )
+}
+
 const CheckboxInput = (props) => {
     return <Input type="checkbox" {...props} />;
 };
@@ -158,6 +182,7 @@ export {
     Input,
     TextInput,
     DateInput,
+    DatePickerInput,
     CheckboxInput,
     HiddenCheckbox,
     RadioInput,

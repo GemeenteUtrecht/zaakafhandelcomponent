@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/async';
 
 import { fetchUsers } from '../../utils/users';
-import { HiddenCheckbox } from '../forms/Inputs';
+import { HiddenCheckbox, DatePickerInput } from '../forms/Inputs';
 import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
 
@@ -26,6 +26,7 @@ const UserSelect = ({
 }) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
+    const [startDate, setStartDate] = useState(new Date());
 
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
@@ -40,7 +41,7 @@ const UserSelect = ({
     }, [selectedData]);
 
     return (
-        <div className="user-select">
+        <div className="user-select detail-card">
             { (errors && !isEmpty(errors.__all__))
                 ? (
                     <Wrapper errors={errors.__all__}>
@@ -48,15 +49,16 @@ const UserSelect = ({
                     </Wrapper>
                 ) : null}
 
-            <div className="user-select__title">
-                { (totalStepsIndex !== 0)
-                && <h3>{`Stap ${index + 1}`}</h3> }
+            { (totalStepsIndex !== 0) && (
+                <div className="user-select__title">
+                    <h3>{`Stap ${index + 1}`}</h3>
 
-                { (index === totalStepsIndex && index !== 0)
-                && <DeleteButton onDelete={onDelete} /> }
-            </div>
-            {hiddenInputs}
+                    { (index === totalStepsIndex && index !== 0)
+                    && <DeleteButton onDelete={onDelete} /> }
+                </div>
+            )}
             <div className="user-select__selector">
+                {hiddenInputs}
                 <AsyncSelect
                     isMulti
                     cacheOptions
@@ -67,6 +69,7 @@ const UserSelect = ({
                     onChange={(value) => setSelectedData(value)}
                 />
             </div>
+            <DatePickerInput name="deadline" label="Uiterste datum:" required />
         </div>
     );
 };
