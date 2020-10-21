@@ -50,25 +50,6 @@ class AuthorizationProfileDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "auth_profile"
 
 
-class InformatieobjecttypenJSONView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        """Return the informatieobjecttypen for a catalogus"""
-        informatieobjecttypen = get_informatieobjecttypen(
-            catalogus=request.GET["catalogus"]
-        )
-
-        response_data = {"formData": [], "emptyFormData": []}
-        for informatieobjecttype in informatieobjecttypen:
-            response_data["emptyFormData"].append(
-                {
-                    "catalogus": request.GET["catalogus"],
-                    "omschrijving": informatieobjecttype.omschrijving,
-                    "selected": False,
-                }
-            )
-        return JsonResponse(response_data)
-
-
 class PermissionSetsView(LoginRequiredMixin, ListView):
     queryset = PermissionSet.objects.all()
 

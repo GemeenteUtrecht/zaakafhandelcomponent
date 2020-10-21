@@ -5,7 +5,6 @@ from .views import (
     AuthorizationProfileCreateView,
     AuthorizationProfileDetailView,
     AuthorizationProfileListView,
-    InformatieobjecttypenJSONView,
     LoginView,
     PermissionSetCreateView,
     PermissionSetDetailView,
@@ -17,7 +16,7 @@ from .views import (
 app_name = "accounts"
 
 urlpatterns = [
-    path("api/", include(api)),
+    path("api/", include("zac.accounts.api.urls")),
     path("login/", LoginView.as_view(), name="login"),
     path(
         "auth-profiles/",
@@ -40,11 +39,6 @@ urlpatterns = [
         name="authprofile-add-user",
     ),
     path("permission-sets/", PermissionSetsView.as_view(), name="permission-set-list"),
-    path(
-        "permission-sets/informatieobjecttypes",
-        InformatieobjecttypenJSONView.as_view(),
-        name="informatieobjecttypes",
-    ),
     path(
         "permission-sets/add/",
         PermissionSetCreateView.as_view(),

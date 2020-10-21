@@ -14,3 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "email",
         )
+
+
+class CatalogusURLSerializer(serializers.Serializer):
+    url = serializers.URLField(max_length=1000, required=True)
