@@ -110,7 +110,7 @@ class PermissionSetDetailView(LoginRequiredMixin, DetailView):
             context["informatieobjecttype_permissions"] = [
                 {
                     "omschrijving": permission.omschrijving,
-                    "max_va": permission.max_va.replace("_", " "),
+                    "max_va": permission.get_max_va_display(),
                 }
                 for permission in informatieobjecttype_permissions
                 if permission.omschrijving != ""
