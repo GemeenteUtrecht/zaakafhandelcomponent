@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load sniplates %}
+{% load i18n sniplates %}
 
 
 {% block content %}
@@ -46,7 +46,12 @@
 
     {% form_field form.informatieobjecttype_max_va %}
 
-    {% widget 'form:submit' label=_("Toevoegen") %}
+    {% if form.instance.id %}
+        {% trans "Change" as btn_label %}
+    {% else %}
+        {% trans "Add" as btn_label %}
+    {% endif %}
+    {% widget 'form:submit' label=btn_label %}
 </form>
 
 {% endblock %}
