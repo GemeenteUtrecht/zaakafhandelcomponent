@@ -385,10 +385,10 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         """
         kownsl_users_list = []
         for form in self.cleaned_data:
-            kownsl_users = [user.username for user in form['kownsl_users']]
+            kownsl_users = [user.username for user in form["kownsl_users"]]
             kownsl_users_list.append(kownsl_users)
 
-        return kownsl_users_list 
+        return kownsl_users_list
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
