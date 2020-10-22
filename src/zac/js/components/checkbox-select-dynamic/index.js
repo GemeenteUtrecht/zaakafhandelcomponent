@@ -25,7 +25,7 @@ const checkboxSelect = (node) => {
     const options = JSON.parse(document.getElementById(values).innerText);
     const initials = JSON.parse(document.getElementById(initial).innerText);
     const showOptions = (group, values) => {
-        const markUp = getOptionsHtml(name, options[group] || [], [values]);
+        const markUp = getOptionsHtml(name, options[group] || [], values);
         node.innerHTML = markUp;
     };
 
