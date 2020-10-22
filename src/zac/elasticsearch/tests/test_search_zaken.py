@@ -1,7 +1,7 @@
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
-from elasticsearch_dsl import Index, Search
+from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from ..documents import ZaakDocument
@@ -34,7 +34,7 @@ class SearchZakenTests(ESMixin, TestCase):
                 },
                 {
                     "url": f"{ZAKEN_ROOT}rollen/de7039d7-242a-4186-91c3-c3b49228211a",
-                    "betrokkeneType": "medewerker",
+                    "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {
                         "identificatie": "some_username",
                     },
