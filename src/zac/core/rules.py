@@ -2,7 +2,10 @@ import logging
 from datetime import date
 from typing import Optional, Set, Union
 
+from django.core.exceptions import PermissionDenied
+
 import rules
+from odf.office import Document
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 
@@ -20,6 +23,7 @@ from .permissions import (
     zaken_request_access,
     zaken_set_result,
 )
+from .views.utils import check_document_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -181,8 +185,20 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
     return bool(user_rollen)
 
 
+@rules.predicate
+def can_download_document(user: User, document: Document) -> bool:
+
+    try:
+        check_document_permissions(document, user)
+    except PermissionDenied:
+        return False
+
+    return True
+
+
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
 rules.add_rule(zaken_inzien.name, can_read_zaak_by_zaaktype | has_temporary_access)
 rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
 )
+rules.add_rule("core:download_document", can_download_document)
