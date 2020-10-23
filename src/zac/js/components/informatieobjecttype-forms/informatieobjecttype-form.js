@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {FormSet} from './formset';
 import {Select} from '../forms/Select';
@@ -75,62 +75,36 @@ class InformatieobjecttypePermissionForm extends React.Component {
 }
 
 
-class InformatieobjecttypeForm extends React.Component {
-    constructor(props) {
-        super(props);
+const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, existingFormData}) => {
 
-        this.state = {
-            currentCatalog: '',
-            displayFormset: false,
-            existingFormData: [],
-            emptyFormData: [],
-            errors: "",
-        };
+    var initialCatalogus = existingFormData.length > 0 ? existingFormData[0].catalogus : '';
 
-        this.onCatalogChange = this.onCatalogChange.bind(this);
-        this.fetchInformatieobjecttypen = this.fetchInformatieobjecttypen.bind(this);
-    }
+    const [currentCatalog, setCurrentCatalog] = useState(initialCatalogus);
+    const [emptyFormData, setEmptyFormData] = useState([]);
+    const [formData, setFormData] = useState(existingFormData);
+    const [informatieobjecttypeErrors, setInformatieobjecttypeErrors] = useState("");
 
-    componentDidMount() {
-        if (this.props.existingFormData.length > 0) {
-            this.fetchInformatieobjecttypen(this.props.existingFormData[0].catalogus);
+    const onCatalogChange = (event) => {
+        setFormData([]);
+        setCurrentCatalog(event.target.value);
+    };
 
-            this.setState({
-                currentCatalog: this.props.existingFormData[0].catalogus,
-                displayFormset: true,
-                existingFormData: this.props.existingFormData,
-            })
-        }
-    }
-
-    onCatalogChange(event) {
-        this.setState({
-            currentCatalog: event.target.value,
-            displayFormset: event.target.value !== '',
-            existingFormData: [],
-        });
-
-        // Fetch the informatieobjecttypen
-        if (event.target.value !== '') {
-            this.fetchInformatieobjecttypen(event.target.value);
-        }
-    }
-
-    fetchInformatieobjecttypen (catalogUrl) {
+    const fetchInformatieobjecttypen = () => {
         get(
             "/accounts/api/informatieobjecttypen",
-            {catalogus: catalogUrl}
+            {catalogus: currentCatalog}
         ).then(
             result => {
-                if (this.state.existingFormData.length > 0) {
+                console.log("In results!");
+                if (formData.length > 0) {
                     //TODO Improve
                     var additionalInformatieobjecttypen = [];
                     for (var results_counter = 0; results_counter < result.emptyFormData.length; results_counter++) {
                         var inExistingData = false;
-                        for (var existing_counter = 0; existing_counter < this.state.existingFormData.length; existing_counter++) {
+                        for (var existing_counter = 0; existing_counter < formData.length; existing_counter++) {
                             if (
-                                this.state.existingFormData[existing_counter].omschrijving === result.emptyFormData[results_counter].omschrijving &&
-                                this.state.existingFormData[existing_counter].catalogus === result.emptyFormData[results_counter].catalogus
+                                formData[existing_counter].omschrijving === result.emptyFormData[results_counter].omschrijving &&
+                                formData[existing_counter].catalogus === result.emptyFormData[results_counter].catalogus
                             ) {
                                 inExistingData = true;
                                 break;
@@ -140,39 +114,44 @@ class InformatieobjecttypeForm extends React.Component {
                             additionalInformatieobjecttypen.push(result.emptyFormData[results_counter]);
                         }
                     }
-                    this.setState({emptyFormData: additionalInformatieobjecttypen});
+                    setEmptyFormData(additionalInformatieobjecttypen);
                 } else {
-                    this.setState({emptyFormData: result.emptyFormData});
+                    setEmptyFormData(result.emptyFormData);
                 }
             },
             error => {
-                this.setState({errors: error});
+                setInformatieobjecttypeErrors(error);
             }
         );
-    }
+    };
 
-    render() {
-        return (
-            <React.Fragment>
-                 <Select
-                    name='informatieobjecttype_catalogus'
-                    id='id_informatieobjecttype_catalogus'
-                    label='Catalogus'
-                    helpText='Select the catalog containing the desired informatieobjecttype'
-                    choices={this.props.catalogChoices}
-                    value={this.state.currentCatalog}
-                    onChange={this.onCatalogChange}
-                />
-                <FormSet
-                    configuration={this.props.configuration}
-                    renderForm={this.props.renderForm}
-                    formData={this.state.existingFormData}
-                    emptyFormData={this.state.emptyFormData}
-                />
-            </React.Fragment>
-        );
-    }
-}
+    useEffect(() => {
+        if (currentCatalog !== '') {
+            fetchInformatieobjecttypen();
+        }
+    }, [currentCatalog]);
+
+    return (
+        <React.Fragment>
+             <Select
+                name='informatieobjecttype_catalogus'
+                id='id_informatieobjecttype_catalogus'
+                label='Catalogus'
+                helpText='Select the catalog containing the desired informatieobjecttype'
+                choices={catalogChoices}
+                value={currentCatalog}
+                onChange={onCatalogChange}
+            />
+            <FormSet
+                configuration={configuration}
+                renderForm={renderForm}
+                formData={formData}
+                emptyFormData={emptyFormData}
+            />
+        </React.Fragment>
+    );
+};
+
 
 InformatieobjecttypeForm.propTypes = {
     configuration: PropTypes.shape({
@@ -204,4 +183,4 @@ InformatieobjecttypePermissionForm.propTypes = {
     }))
 };
 
-export { InformatieobjecttypeForm, InformatieobjecttypePermissionForm };
+export { InformatieobjecttypePermissionForm, InformatieobjecttypeForm };
