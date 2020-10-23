@@ -42,7 +42,6 @@ class PermissionSetFactory(factory.django.DjangoModelFactory):
 class InformatieobjecttypePermissionFactory(factory.django.DjangoModelFactory):
     permission_set = factory.SubFactory(PermissionSetFactory)
     catalogus = factory.Faker("url")
-    omschrijving = factory.Faker("bs")
     max_va = VertrouwelijkheidsAanduidingen.openbaar
 
     class Meta:
