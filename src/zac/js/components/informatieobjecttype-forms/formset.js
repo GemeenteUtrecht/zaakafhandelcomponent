@@ -5,8 +5,7 @@ import { ManagementForm } from '../formsets/ManagementForm';
 import { PrefixContext } from '../formsets/context';
 
 
-const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[] }) => {
-    const existingCount = formData.length;
+const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[], dataToDelete=[] }) => {
 
     const RenderForm = renderForm;
 
@@ -14,6 +13,7 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[] }) =
         return `${configuration.prefix}-${index}`;
     };
 
+    // TODO: Concatenate these arrays and then make forms out of them
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={ getPrefix(index) }>
@@ -24,11 +24,33 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[] }) =
 
     const extraForms = emptyFormData.map(
         (data, index) => (
-            <PrefixContext.Provider key={existingCount + index} value={getPrefix(existingCount + index)}>
-                <RenderForm index={existingCount + index} data={data}/>
+            <PrefixContext.Provider key={formData.length + index} value={getPrefix(formData.length + index)}>
+                <RenderForm index={formData.length + index} data={data}/>
             </PrefixContext.Provider>
         )
     );
+
+    const renderDataToDelete = () => {
+        const formsForDeletingData = dataToDelete.map(
+            (data, index) => (
+                <PrefixContext.Provider
+                    key={formData.length + emptyFormData.length + index}
+                    value={getPrefix(formData.length + emptyFormData.length + index)}
+                >
+                    <RenderForm index={formData.length + emptyFormData.length + index} data={data}/>
+                </PrefixContext.Provider>
+            )
+        );
+
+        if (formsForDeletingData.length > 0) {
+            return (
+                <React.Fragment>
+                    <h4>The following permissions will be deleted</h4>
+                    {formsForDeletingData}
+                </React.Fragment>
+            );
+        }
+    };
 
     const totalForms = formData.length + emptyFormData.length;
 
@@ -43,7 +65,7 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[] }) =
             />
 
             { forms.concat(extraForms) }
-
+            {renderDataToDelete()}
         </React.Fragment>
     );
 };

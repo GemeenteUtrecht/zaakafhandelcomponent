@@ -82,10 +82,20 @@ const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, ex
     const [currentCatalog, setCurrentCatalog] = useState(initialCatalogus);
     const [emptyFormData, setEmptyFormData] = useState([]);
     const [formData, setFormData] = useState(existingFormData);
+    const [dataToDelete, setDataToDelete] = useState([]);
     const [informatieobjecttypeErrors, setInformatieobjecttypeErrors] = useState("");
 
     const onCatalogChange = (event) => {
-        setFormData([]);
+        if (formData.length > 0){
+            setDataToDelete(formData);
+            setFormData([]);
+        } else if (dataToDelete.length > 0) {
+            if (dataToDelete[0].catalogus === event.target.value){
+                setFormData(dataToDelete);
+                setDataToDelete([]);
+            }
+        }
+
         setCurrentCatalog(event.target.value);
     };
 
@@ -147,6 +157,7 @@ const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, ex
                 renderForm={renderForm}
                 formData={formData}
                 emptyFormData={emptyFormData}
+                dataToDelete={dataToDelete}
             />
         </React.Fragment>
     );
