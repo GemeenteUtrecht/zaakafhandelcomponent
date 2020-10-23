@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {FormSet} from './formset';
 import {Select} from '../forms/Select';
 import {CheckboxInput, HiddenInput} from "../forms/Inputs";
-
+import {get} from "../../utils/fetch";
 
 
 class InformatieobjecttypePermissionForm extends React.Component {
@@ -117,9 +117,9 @@ class InformatieobjecttypeForm extends React.Component {
     }
 
     fetchInformatieobjecttypen (catalogUrl) {
-        const apiURL = "/accounts/permission-sets/informatieobjecttypes?catalogus=" + catalogUrl;
-        window.fetch(apiURL).then(
-            response => response.json()
+        get(
+            "/accounts/api/informatieobjecttypen",
+            {catalogus: catalogUrl}
         ).then(
             result => {
                 if (this.state.existingFormData.length > 0) {
