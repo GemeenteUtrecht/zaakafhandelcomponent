@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {FormSet} from './formset';
-import {Select, FormSetSelect} from '../forms/Select';
+import {Select} from '../forms/Select';
 import {CheckboxInput, HiddenInput} from "../forms/Inputs";
 
 
@@ -47,7 +47,7 @@ class InformatieobjecttypePermissionForm extends React.Component {
                     onChange={this.onCheckChange}
                 />
                 <label>{this.state.omschrijving}</label>
-                <FormSetSelect
+                <Select
                     name={'max_va'}
                     id={'id_max_va'}
                     choices={[
