@@ -1,6 +1,6 @@
 import itertools
 import logging
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
