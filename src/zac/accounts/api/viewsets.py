@@ -20,6 +20,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             # Custom cleaning of query_parameter
             # TODO find better implementation
             filter_users = filter_users.split(",")
-            return queryset.exclude(id__in=filter_users)
+            include = self.request.query_params.get("include", False)
+            if include:
+                return queryset.filter(username__in=filter_users)
+            else:
+                return queryset.exclude(username__in=filter_users)
         else:
             return queryset
+

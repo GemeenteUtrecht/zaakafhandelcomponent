@@ -37,6 +37,11 @@ class UserViewsetTests(APITestCase):
         self.assertEqual(response.data["count"], 3)
 
     def test_view_search_users_filter(self):
-        search_url = self.url + "?search=h&filter_users=2,3"
+        search_url = self.url + "?search=h&filter_users=lol,hihi"
         response = self.client.get(search_url)
-        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_multiple_users(self):
+        search_url = self.url + "?filter_users=lol,hihi&include=True"
+        response = self.client.get(search_url)
+        self.assertEqual(response.data["count"], 2)
