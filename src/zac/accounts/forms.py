@@ -127,7 +127,6 @@ class InformatieobjecttypeForm(forms.ModelForm):
         model = InformatieobjecttypePermission
         fields = (
             "id",
-            "permission_set",
             "catalogus",
             "omschrijving",
             "max_va",

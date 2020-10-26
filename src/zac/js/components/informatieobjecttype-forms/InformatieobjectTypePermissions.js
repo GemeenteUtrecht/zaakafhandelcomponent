@@ -8,6 +8,7 @@ import {Select} from '../forms/Select';
 import {FormSet} from '../formsets/FormSet';
 
 import InformatieobjecttypePermissionForm from './InformatieobjecttypePermissionForm';
+import PermissionsToDelete from './PermissionsToDelete';
 
 
 const initialState = {
@@ -59,8 +60,15 @@ const InformatieobjectTypePermissions = ({ configuration, catalogChoices, existi
     );
 
     const getFormData = () => {
-        const existingOmschrijving = new Set(existingFormData.map(fd => fd.omschrijving));
-
+        const formData = existingFormData.map(fd => {
+            if (fd.catalogus === catalogus) {
+                return fd;
+            } else {
+                // different catalogue -> mark for delete by un-selecting
+                return {...fd, forceDelete: true};
+            }
+        });
+        const existingOmschrijving = new Set(formData.map(fd => fd.omschrijving));
         const extra = informatieobjecttypen
             .filter(omschrijving => !existingOmschrijving.has(omschrijving))
             .map(omschrijving => ({
@@ -71,7 +79,7 @@ const InformatieobjectTypePermissions = ({ configuration, catalogChoices, existi
                 selected: false,
             }));
 
-        return existingFormData.concat(extra);
+        return formData.concat(extra);
     };
 
     const formData = getFormData();
@@ -88,12 +96,18 @@ const InformatieobjectTypePermissions = ({ configuration, catalogChoices, existi
                 onChange={(event) => dispatch({type: 'CATALOGUE_SELECTED', payload: event.target.value})}
             />
 
+            <h4>Selecteer de relevante informatieobjecttypen</h4>
+            { formData.length ? null : 'Geen informatieobjecttypen gevonden in deze catalogus.' }
+
             <FormSet
                 configuration={configuration}
                 renderForm={InformatieobjecttypePermissionForm}
                 renderAdd={null}
                 formData={formData}
             />
+
+            {/* visualize the permissions to drop */}
+            <PermissionsToDelete catalogus={catalogus} existingFormData={existingFormData} />
         </>
     );
 };
@@ -113,7 +127,7 @@ InformatieobjectTypePermissions.propTypes = {
         omschrijving: PropTypes.string.isRequired,
         max_va: PropTypes.string.isRequired,
         selected: PropTypes.bool.isRequired,
-    }))
+    })),
 };
 
 
