@@ -6,73 +6,58 @@ import {CheckboxInput, HiddenInput} from "../forms/Inputs";
 import {get} from "../../utils/fetch";
 
 
-class InformatieobjecttypePermissionForm extends React.Component {
-    constructor(props) {
-        super(props);
+const InformatieobjecttypePermissionForm = ({index, data: {selected, max_va, catalogus, omschrijving, id}}) => {
 
-        const formData = this.props.data;
+    const [checked, setChecked] = useState(selected);
+    const [currentVA, setCurrentVA] = useState(max_va);
 
-        this.state = {
-            selected: formData.selected,
-            max_va: formData.max_va,
-            catalogus: formData.catalogus,
-            omschrijving: formData.omschrijving,
-            id: formData.id
-        };
+    const onCheckChange = () => {
+        setChecked(!selected);
+    };
 
-        this.onCheckChange = this.onCheckChange.bind(this);
-        this.onVAChange = this.onVAChange.bind(this);
-    }
+    const onVAChange = (event) => {
+        setCurrentVA(event.target.value);
+    };
 
-    onCheckChange(event) {
-        this.setState(state => ({selected: !state.selected}));
-    }
-
-    onVAChange(event) {
-        this.setState({max_va: event.target.value});
-    }
-
-    render() {
-        return (
-            <div className="form__field-group">
-                <HiddenInput name='omschrijving' id='id_omschrijving' value={ this.state.omschrijving } />
-                <HiddenInput name='id' id='id_id' value={ this.state.id } />
-                <HiddenInput name='catalogus' id='id_catalogus' value={ this.state.catalogus } />
-                <CheckboxInput
-                    name='selected'
-                    id={'id_selected'}
-                    checked={this.state.selected}
-                    initial={this.state.selected}
-                    value={this.state.selected}
-                    onChange={this.onCheckChange}
-                />
-                <label>{this.state.omschrijving}</label>
-                <Select
-                    name={'max_va'}
-                    id={'id_max_va'}
-                    choices={[
-                        ['openbaar', 'Openbaar'],
-                        ['beperkt_openbaar', 'Beperkt openbaar'],
-                        ['intern', 'Intern'],
-                        ['zaakvertrouwelijk', 'Zaakvertrouwelijk'],
-                        ['vertrouwelijk', 'Vertrouwelijk'],
-                        ['confidentieel', 'Confidentieel'],
-                        ['geheim', 'Geheim'],
-                        ['zeer_geheim', 'Zeer geheim'],
-                    ]}
-                    value={this.state.max_va}
-                    onChange={this.onVAChange}
-                />
-                <CheckboxInput
-                    name="DELETE"
-                    checked={!this.state.selected}
-                    value="true"
-                    style={{display: 'none'}}
-                />
-            </div>
-        );
-    }
-}
+    return (
+        <div className="form__field-group">
+            <HiddenInput name='omschrijving' id='id_omschrijving' value={ omschrijving } />
+            <HiddenInput name='id' id='id_id' value={ id } />
+            <HiddenInput name='catalogus' id='id_catalogus' value={ catalogus } />
+            <CheckboxInput
+                name='selected'
+                id={'id_selected'}
+                checked={checked}
+                initial={checked}
+                value={checked}
+                onChange={onCheckChange}
+            />
+            <label>{omschrijving}</label>
+            <Select
+                name={'max_va'}
+                id={'id_max_va'}
+                choices={[
+                    ['openbaar', 'Openbaar'],
+                    ['beperkt_openbaar', 'Beperkt openbaar'],
+                    ['intern', 'Intern'],
+                    ['zaakvertrouwelijk', 'Zaakvertrouwelijk'],
+                    ['vertrouwelijk', 'Vertrouwelijk'],
+                    ['confidentieel', 'Confidentieel'],
+                    ['geheim', 'Geheim'],
+                    ['zeer_geheim', 'Zeer geheim'],
+                ]}
+                value={currentVA}
+                onChange={onVAChange}
+            />
+            <CheckboxInput
+                name="DELETE"
+                checked={!checked}
+                value="true"
+                style={{display: 'none'}}
+            />
+        </div>
+    );
+};
 
 
 const InformatieobjecttypeDelete = ({index, data}) => {
@@ -204,7 +189,6 @@ InformatieobjecttypeForm.propTypes = {
         minNum: PropTypes.number.isRequired,
         maxNum: PropTypes.number.isRequired,
     }).isRequired,
-    renderForm: PropTypes.func.isRequired, // a render prop
     catalogChoices: PropTypes.arrayOf(PropTypes.array).isRequired,
     existingFormData: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,
@@ -216,6 +200,17 @@ InformatieobjecttypeForm.propTypes = {
 };
 
 InformatieobjecttypePermissionForm.propTypes = {
+    index: PropTypes.number,
+    data: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        catalog: PropTypes.string,
+        omschrijving: PropTypes.string,
+        max_va: PropTypes.string,
+        selected: PropTypes.string,
+    }))
+};
+
+InformatieobjecttypeDelete.propTypes = {
     index: PropTypes.number,
     data: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,
