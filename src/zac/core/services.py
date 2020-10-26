@@ -369,6 +369,26 @@ def get_zaken(
                         }
                     )
 
+    from zac.elasticsearch.searches import search
+
+    results = search(
+        size=25,
+        identificatie=identificatie,
+        bronorganisatie=bronorganisatie,
+        filters=[
+            {
+                "zaaktype": find_kwarg_dict["zaaktype"],
+                "max_va": find_kwarg_dict["max_va"],
+                "oo": find_kwarg_dict[
+                    "rol__betrokkeneIdentificatie__organisatorischeEenheid__identificatie"
+                ],
+            }
+            for find_kwarg_dict in find_kwargs
+        ],
+    )
+
+    # TODO: use result document URLs
+
     with parallel() as executor:
         results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
         flattened = sum(list(results), [])
