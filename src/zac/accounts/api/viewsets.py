@@ -27,4 +27,3 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 return queryset.exclude(username__in=filter_users)
         else:
             return queryset
-

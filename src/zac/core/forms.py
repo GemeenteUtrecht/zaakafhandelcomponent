@@ -327,6 +327,7 @@ class SelectUsersReviewRequestForm(forms.Form):
         required=True,
         label=_("Deadline"),
         help_text=_("Select a date"),
+        input_formats=["%Y-%m-%d"],
     )
 
 
@@ -400,6 +401,18 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             "sendEmails": True,
         }
 
+    def get_user_deadlines(self) -> Dict:
+        """
+        Grabs user emails and their deadlines from form.
+        This is used for sending (reminder) emails.
+        """
+        user_deadlines = {}
+        for form in self.cleaned_data:
+            deadline = form["deadline"]
+            for user in form["kownsl_users"]:
+                user_deadlines = {user.username: str(deadline)}
+        return user_deadlines
+
     def on_submission(self, form=None):
         count_users = sum(
             [
@@ -415,6 +428,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             review_type=form._review_type,
             num_assigned_users=count_users,
             toelichting=form.cleaned_data["toelichting"],
+            user_deadlines=self.get_user_deadlines(),
         )
 
 
