@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { InformatieobjecttypePermissionForm, InformatieobjecttypeForm } from "./informatieobjecttype-form";
+import { InformatieobjecttypeForm } from "./informatieobjecttype-form";
 import {jsonScriptToVar} from "../../utils/json-script";
 
 
@@ -17,7 +17,6 @@ const mount = () => {
                 minNum: window.parseInt(informatieobjecttype_node.dataset.minNum, 10),
                 maxNum: window.parseInt(informatieobjecttype_node.dataset.maxNum, 10),
             },
-            renderForm: InformatieobjecttypePermissionForm,
             catalogChoices: jsonScriptToVar(informatieobjecttype_node.dataset.catalogChoices),
             existingFormData: jsonScriptToVar(informatieobjecttype_node.dataset.existingFormData)
         };

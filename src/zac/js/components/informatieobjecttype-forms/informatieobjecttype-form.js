@@ -75,7 +75,21 @@ class InformatieobjecttypePermissionForm extends React.Component {
 }
 
 
-const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, existingFormData}) => {
+const InformatieobjecttypeDelete = ({index, data}) => {
+
+    return (
+        <div className="form__field-group">
+            <HiddenInput name='omschrijving' id='id_omschrijving' value={ data.omschrijving } />
+            <HiddenInput name='id' id='id_id' value={ data.id } />
+            <HiddenInput name='catalogus' id='id_catalogus' value={ data.catalogus } />
+            <HiddenInput name='DELETE' id='id_DELETE' value={ true } />
+            <li key={"permission_to_delete" + index}>{data.omschrijving} ({data.max_va})</li>
+        </div>
+    );
+};
+
+
+const InformatieobjecttypeForm = ({configuration, catalogChoices, existingFormData}) => {
 
     var initialCatalogus = existingFormData.length > 0 ? existingFormData[0].catalogus : '';
 
@@ -105,7 +119,6 @@ const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, ex
             {catalogus: currentCatalog}
         ).then(
             result => {
-                console.log("In results!");
                 if (formData.length > 0) {
                     //TODO Improve
                     var additionalInformatieobjecttypen = [];
@@ -154,7 +167,8 @@ const InformatieobjecttypeForm = ({configuration, renderForm, catalogChoices, ex
             />
             <FormSet
                 configuration={configuration}
-                renderForm={renderForm}
+                renderForm={InformatieobjecttypePermissionForm}
+                deleteForm={InformatieobjecttypeDelete}
                 formData={formData}
                 emptyFormData={emptyFormData}
                 dataToDelete={dataToDelete}
@@ -194,4 +208,4 @@ InformatieobjecttypePermissionForm.propTypes = {
     }))
 };
 
-export { InformatieobjecttypePermissionForm, InformatieobjecttypeForm };
+export { InformatieobjecttypePermissionForm, InformatieobjecttypeForm, InformatieobjecttypeDelete };

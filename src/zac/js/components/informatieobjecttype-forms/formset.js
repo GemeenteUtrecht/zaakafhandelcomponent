@@ -5,27 +5,21 @@ import { ManagementForm } from '../formsets/ManagementForm';
 import { PrefixContext } from '../formsets/context';
 
 
-const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[], dataToDelete=[] }) => {
+const FormSet = ({ configuration, renderForm, deleteForm, formData=[], emptyFormData=[], dataToDelete=[] }) => {
 
     const RenderForm = renderForm;
+    const DeleteForm = deleteForm;
 
     const getPrefix = (index) => {
         return `${configuration.prefix}-${index}`;
     };
 
-    // TODO: Concatenate these arrays and then make forms out of them
-    const forms = formData.map(
+    const formsAndEmptyForms = formData.concat(emptyFormData);
+
+    const forms = formsAndEmptyForms.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={ getPrefix(index) }>
                 <RenderForm index={index} data={data} />
-            </PrefixContext.Provider>
-        )
-    );
-
-    const extraForms = emptyFormData.map(
-        (data, index) => (
-            <PrefixContext.Provider key={formData.length + index} value={getPrefix(formData.length + index)}>
-                <RenderForm index={formData.length + index} data={data}/>
             </PrefixContext.Provider>
         )
     );
@@ -34,10 +28,10 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[], dat
         const formsForDeletingData = dataToDelete.map(
             (data, index) => (
                 <PrefixContext.Provider
-                    key={formData.length + emptyFormData.length + index}
-                    value={getPrefix(formData.length + emptyFormData.length + index)}
+                    key={formsAndEmptyForms.length + index}
+                    value={getPrefix(formsAndEmptyForms.length + index)}
                 >
-                    <RenderForm index={formData.length + emptyFormData.length + index} data={data}/>
+                    <DeleteForm index={formsAndEmptyForms.length + index} data={data}/>
                 </PrefixContext.Provider>
             )
         );
@@ -46,13 +40,15 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[], dat
             return (
                 <React.Fragment>
                     <h4>The following permissions will be deleted</h4>
-                    {formsForDeletingData}
+                    <ul>
+                        {formsForDeletingData}
+                    </ul>
                 </React.Fragment>
             );
         }
     };
 
-    const totalForms = formData.length + emptyFormData.length;
+    const totalForms = formsAndEmptyForms.length + dataToDelete.length;
 
     return (
         <React.Fragment>
@@ -64,7 +60,7 @@ const FormSet = ({ configuration, renderForm, formData=[], emptyFormData=[], dat
                 maxNum={ configuration.maxNum }
             />
 
-            { forms.concat(extraForms) }
+            { forms }
             {renderDataToDelete()}
         </React.Fragment>
     );
