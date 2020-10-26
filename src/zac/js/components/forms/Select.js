@@ -17,6 +17,7 @@ const Select = ({
     classes=null,
     onChange,
     disabled=false,
+    initial=null,
     value='',
     errors=[]
 }) => {
@@ -31,13 +32,15 @@ const Select = ({
     const prefixedName = prefix ? `${prefix}-${name}` : name;
     const prefixedId = (id && prefix) ? `${prefix}-${id}` : id;
 
+    const valueProp = initial == null ? {value: value} : {defaultValue: initial};
+
     const select = (
         <select
             name={prefixedName}
             id={prefixedId}
             className={classNames}
             disabled={!!disabled}
-            value={value}
+            {...valueProp}
             onChange={(event) => {
                 if (onChange) {
                     onChange(event);

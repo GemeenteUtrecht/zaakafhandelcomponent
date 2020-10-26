@@ -164,6 +164,7 @@ InformatieobjecttypeFormSet = inlineformset_factory(
     can_delete=True,
     form=InformatieobjecttypeForm,
     formset=SerializableFormSet,
+    extra=0,
 )
 
 

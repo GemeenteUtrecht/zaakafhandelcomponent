@@ -1,7 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { InformatieobjecttypeForm } from "./informatieobjecttype-form";
+
 import {jsonScriptToVar} from "../../utils/json-script";
+
+import InformatieobjectTypePermissions from './InformatieobjectTypePermissions';
 
 
 const mount = () => {
@@ -21,7 +23,7 @@ const mount = () => {
             existingFormData: jsonScriptToVar(informatieobjecttype_node.dataset.existingFormData)
         };
 
-        ReactDOM.render(<InformatieobjecttypeForm {...props} />, informatieobjecttype_node);
+        ReactDOM.render(<InformatieobjectTypePermissions {...props} />, informatieobjecttype_node);
     }
 };
 

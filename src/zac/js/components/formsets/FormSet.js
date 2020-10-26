@@ -69,7 +69,7 @@ const FormSet = ({
 
             { forms.concat(extraForms) }
 
-            { renderAdd({ onAdd }) }
+            { renderAdd ? renderAdd({ onAdd }) : null }
 
         </>
     );
