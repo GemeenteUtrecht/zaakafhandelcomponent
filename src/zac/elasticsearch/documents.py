@@ -4,9 +4,11 @@ from elasticsearch_dsl import Document, InnerDoc, Nested, field
 
 
 class RolDocument(InnerDoc):
-    url = field.Text()
-    betrokkene_type = field.Text
-    betrokkene_identificatie = field.Object()
+    url = field.Keyword()
+    betrokkene_type = field.Keyword()
+    betrokkene_identificatie = field.Object(
+        properties={"identificatie": field.Keyword()}
+    )
 
 
 class ZaakDocument(Document):

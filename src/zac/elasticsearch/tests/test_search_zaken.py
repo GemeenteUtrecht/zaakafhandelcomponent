@@ -24,7 +24,22 @@ class SearchZakenTests(ESMixin, TestCase):
             bronorganisatie="123456",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
             va_order=16,
-            rollen=[],
+            rollen=[
+                {
+                    "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+                    "betrokkene_type": "organisatorische_eenheid",
+                    "betrokkene_identificatie": {
+                        "identificatie": "123456",
+                    },
+                },
+                {
+                    "url": f"{ZAKEN_ROOT}rollen/de7039d7-242a-4186-91c3-c3b49228211a",
+                    "betrokkene_type": "medewerker",
+                    "betrokkene_identificatie": {
+                        "identificatie": "some_username",
+                    },
+                },
+            ],
         )
         self.zaak_document1.save()
 
@@ -71,6 +86,12 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
+    def test_search_oo(self):
+        result = search_zaken(oo="123456")
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
     def test_combined(self):
         result = search_zaken(
             zaaktypen=[
@@ -79,6 +100,7 @@ class SearchZakenTests(ESMixin, TestCase):
             bronorganisatie="123456",
             identificatie="ZAAK1",
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            oo="123456",
         )
 
         self.assertEqual(len(result), 1)
