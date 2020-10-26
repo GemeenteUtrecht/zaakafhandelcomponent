@@ -151,6 +151,9 @@ const InformatieobjecttypeForm = ({configuration, catalogChoices, existingFormDa
     useEffect(() => {
         if (currentCatalog !== '') {
             fetchInformatieobjecttypen();
+        } else {
+            setFormData([]);
+            setEmptyFormData([]);
         }
     }, [currentCatalog]);
 
