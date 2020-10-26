@@ -5,8 +5,8 @@ from typing import Optional, Set, Union
 from django.core.exceptions import PermissionDenied
 
 import rules
-from odf.office import Document
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult

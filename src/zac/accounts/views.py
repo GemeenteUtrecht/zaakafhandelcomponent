@@ -95,9 +95,7 @@ class PermissionSetDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         informatieobjecttype_permissions = (
-            InformatieobjecttypePermission.objects.filter(
-                permission_set=context["object"]
-            )
+            InformatieobjecttypePermission.objects.filter(permission_set=self.object)
         )
 
         if informatieobjecttype_permissions.exists():

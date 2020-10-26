@@ -48,7 +48,7 @@ def check_document_permissions(document: Document, user: User):
     # Now need to check whether they have the right confidentiality level
 
     document_va = VertrouwelijkheidsAanduidingen.get_choice(
-        document.informatieobjecttype.vertrouwelijkheidaanduiding
+        document.vertrouwelijkheidaanduiding
     ).order
 
     order_case = VertrouwelijkheidsAanduidingen.get_order_expression("max_va")

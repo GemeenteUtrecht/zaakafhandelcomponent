@@ -2,7 +2,6 @@ from django.http import JsonResponse
 
 from rest_framework import views
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from zac.accounts.api.serializers import CatalogusURLSerializer
@@ -18,8 +17,7 @@ class InformatieobjecttypenJSONView(views.APIView):
         catalogus_url_serializer = CatalogusURLSerializer(
             data={"url": request.GET.get("catalogus")}
         )
-        if not catalogus_url_serializer.is_valid():
-            raise ValidationError
+        catalogus_url_serializer.is_valid(raise_exception=True)
 
         informatieobjecttypen = get_informatieobjecttypen(
             catalogus=catalogus_url_serializer.validated_data["url"]
