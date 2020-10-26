@@ -134,6 +134,7 @@ class PermissionSetUpdateView(
             )
         )
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         permissionset_form = self.get_form(self.form_class)
