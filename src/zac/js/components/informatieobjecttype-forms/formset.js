@@ -39,7 +39,7 @@ const FormSet = ({ configuration, renderForm, deleteForm, formData=[], emptyForm
         if (formsForDeletingData.length > 0) {
             return (
                 <React.Fragment>
-                    <h4>The following permissions will be deleted</h4>
+                    <h4>De volgende toestemmingen worden verwijderd</h4>
                     <ul>
                         {formsForDeletingData}
                     </ul>
