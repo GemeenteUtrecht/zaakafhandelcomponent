@@ -398,7 +398,6 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             "kownslUsersList": self.get_request_kownsl_user_data(),
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.frontend_url,
-            "sendEmails": True,
         }
 
     def get_user_deadlines(self) -> Dict:
@@ -410,7 +409,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         for form in self.cleaned_data:
             deadline = form["deadline"]
             for user in form["kownsl_users"]:
-                user_deadlines = {user.username: str(deadline)}
+                user_deadlines[user.username] = str(deadline)
         return user_deadlines
 
     def on_submission(self, form=None):
