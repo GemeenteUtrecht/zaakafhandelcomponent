@@ -1,10 +1,12 @@
 import React, {useContext, useState, useEffect} from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 
 import {CheckboxInput, HiddenInput} from "../forms/Inputs";
 import { PrefixContext } from '../formsets/context';
 import {Select} from '../forms/Select';
 import { VERTROUWELIJKHEIDAANDUIDINGEN } from '../../constants';
+import IconedText from '../IconedText';
 
 
 const InformatieobjecttypePermissionForm = ({
@@ -33,25 +35,28 @@ const InformatieobjecttypePermissionForm = ({
     // hidden inputs as part of the formsets. This ensures the formset count is up to
     // date and all the prefixes are handled correctly.
     const style = forceDelete ? {display: 'none'} : {};
+    const className = classNames(
+        'iot-permission',
+        'grid__column grid__column--col4',
+        {
+            'iot-permission--enabled': checked,
+            'iot-permission--force-delete': forceDelete,
+        },
+    );
     return (
-        <div className="form__field-group" style={style}>
-            <HiddenInput name='omschrijving' id='id_omschrijving' value={ omschrijving } />
-            <HiddenInput name='id' id='id_id' value={ id } />
-            <HiddenInput name='catalogus' id='id_catalogus' value={ catalogus } />
+        <div className={className}>
+            <HiddenInput name="omschrijving" id="id_omschrijving" value={ omschrijving } />
+            <HiddenInput name="id" id="id_id" value={ id } />
+            <HiddenInput name="catalogus" id="id_catalogus" value={ catalogus } />
+
             <CheckboxInput
-                name='selected'
-                id={'id_selected'}
+                name="selected"
+                id="id_selected"
                 checked={checked}
                 initial={checked}
                 value={checked}
                 onChange={(event) => setChecked(event.target.checked)}
-            />
-            <label htmlFor={prefixedId}>{omschrijving}</label>
-            <Select
-                name={'max_va'}
-                id={'id_max_va'}
-                choices={VERTROUWELIJKHEIDAANDUIDINGEN}
-                initial={max_va || VERTROUWELIJKHEIDAANDUIDINGEN[0][0]}
+                style={{display: 'none'}}
             />
             <CheckboxInput
                 name="DELETE"
@@ -59,6 +64,26 @@ const InformatieobjecttypePermissionForm = ({
                 value="true"
                 style={{display: 'none'}}
             />
+
+            <div className="iot-permission__icon">
+                { checked ?
+                    <IconedText icon="check_circle" onClick={() => setChecked(false)} />
+                    : <IconedText icon="remove_circle" onClick={() => setChecked(true)} />
+                 }
+            </div>
+
+            <div className="iot-permission__label">
+                <label className="iot-permission__title" htmlFor={prefixedId}>
+                    {omschrijving}
+                </label>
+                <Select
+                    name="max_va"
+                    id="id_max_va"
+                    classes="input__control input__control--select iot-permission__va-select"
+                    choices={VERTROUWELIJKHEIDAANDUIDINGEN}
+                    initial={max_va || VERTROUWELIJKHEIDAANDUIDINGEN[0][0]}
+                />
+            </div>
         </div>
     );
 };

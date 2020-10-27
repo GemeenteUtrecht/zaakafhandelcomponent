@@ -22,6 +22,9 @@ class InformatieobjecttypenJSONView(views.APIView):
         informatieobjecttypen = get_informatieobjecttypen(
             catalogus=catalogus_url_serializer.validated_data["url"]
         )
+        informatieobjecttypen = sorted(
+            informatieobjecttypen, key=lambda iot: iot.omschrijving.lower()
+        )
 
         response_data = {"formData": [], "emptyFormData": []}
         for informatieobjecttype in informatieobjecttypen:

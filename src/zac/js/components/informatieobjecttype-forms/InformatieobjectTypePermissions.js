@@ -104,6 +104,7 @@ const InformatieobjectTypePermissions = ({ configuration, catalogChoices, existi
                 renderForm={InformatieobjecttypePermissionForm}
                 renderAdd={null}
                 formData={formData}
+                formsContainer={FormsContainer}
             />
 
             {/* visualize the permissions to drop */}
@@ -129,6 +130,11 @@ InformatieobjectTypePermissions.propTypes = {
         selected: PropTypes.bool.isRequired,
     })),
 };
+
+
+const FormsContainer = ({children}) => (
+    <section className="grid grid--space-rows">{children}</section>
+);
 
 
 export default InformatieobjectTypePermissions;
