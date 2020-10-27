@@ -20,36 +20,70 @@
     {% widget 'form:non_field_errors' %}
 
     <div class="form__field-group">
-        {% form_field form.name %}
-        {% form_field form.description %}
-    </div>
+        <div>
+            {% form_field form.name %}
+            {% form_field form.description %}
+        </div>
 
-    <div class="form__field-group">
         {% form_field form.permissions %}
     </div>
 
     <div class="form__field-group">
-        {% form_field form.catalogus %}
-        {{ form.get_zaaktypen|json_script:"catalogus-zaaktypen" }}
-        {{ form.get_initial_zaaktypen|json_script:"initial-zaaktypen" }}
-        {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" initial="initial-zaaktypen"%}
     </div>
 
-    {% form_field form.max_va %}
+    {# Tabs header #}
+    <ul class="tab tab--inline" role="tablist">
+        <li role="tab" id="perms-tab-zaaktypen"
+            aria-controls="perms-zaaktypen"
+            class="tab__tab tab__tab--active">
+            <a href="#perms-zaaktypen">{% trans "Case types" %}</a>
+        </li>
+        <li role="tab" id="perms-tab-iotypen"
+            aria-controls="perms-iotypen"
+            class="tab__tab">
+            <a href="#perms-iotypen">{% trans "Information object types" %}</a>
+        </li>
+    </ul>
 
-    <h3>Informatieobjecttypen</h3>
-    <div class="informatieobjecttype-permissions"
-        data-prefix="{{ informatieobjecttype_formset.prefix }}"
-        data-initial="{{ informatieobjecttype_formset.initial_form_count|unlocalize }}"
-        data-extra="{{ informatieobjecttype_formset.extra|unlocalize }}"
-        data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
-        data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
-        data-catalog-choices="catalog-choices"
-        data-existing-form-data="existing-form-data"
-    >
-        {{ informatieobjecttype_formset.catalog_choices|json_script:"catalog-choices" }}
-        {{ informatieobjecttype_formset.existing_form_data|json_script:"existing-form-data" }}
-        {# Managed by react #}
+    <div class="tab__content tab__content--inline">
+        <section
+            class="tab__pane tab__pane--active"
+            id="perms-zaaktypen"
+            aria-labelledby="perms-tab-zaaktypen"
+            role="tabpanel">
+
+            <div class="form__field-group">
+                {% form_field form.catalogus %}
+                {{ form.get_zaaktypen|json_script:"catalogus-zaaktypen" }}
+                {{ form.get_initial_zaaktypen|json_script:"initial-zaaktypen" }}
+                {% form_field form.zaaktype_identificaties "form:CheckboxSelectDynamic" listen="id_catalogus" values="catalogus-zaaktypen" initial="initial-zaaktypen"%}
+            </div>
+
+            {% form_field form.max_va %}
+
+        </section>
+
+        <section
+            class="tab__pane"
+            id="perms-iotypen"
+            aria-labelledby="perms-tab-iotypen"
+            role="tabpanel">
+
+            <div class="informatieobjecttype-permissions"
+                data-prefix="{{ informatieobjecttype_formset.prefix }}"
+                data-initial="{{ informatieobjecttype_formset.initial_form_count|unlocalize }}"
+                data-extra="{{ informatieobjecttype_formset.extra|unlocalize }}"
+                data-min-num="{{ informatieobjecttype_formset.min_num|unlocalize }}"
+                data-max-num="{{ informatieobjecttype_formset.max_num|unlocalize }}"
+                data-catalog-choices="catalog-choices"
+                data-existing-form-data="existing-form-data"
+            >
+                {{ informatieobjecttype_formset.catalog_choices|json_script:"catalog-choices" }}
+                {{ informatieobjecttype_formset.existing_form_data|json_script:"existing-form-data" }}
+                {# Managed by react #}
+            </div>
+
+        </section>
     </div>
 
     {% if form.instance.id %}
