@@ -428,6 +428,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             num_assigned_users=count_users,
             toelichting=form.cleaned_data["toelichting"],
             user_deadlines=self.get_user_deadlines(),
+            requester=self.user,
         )
 
 

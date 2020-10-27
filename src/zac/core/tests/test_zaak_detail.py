@@ -57,6 +57,8 @@ def mock_zaak_detail_context(documents=None):
         "num_approvals": 1,
         "num_assigned_users": 1,
         "toelichting": "",
+        "user_deadlines": {},
+        "requester": "Henkie",
     }
     approval_data = {
         "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
