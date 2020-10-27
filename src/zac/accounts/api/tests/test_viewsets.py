@@ -32,8 +32,7 @@ class UserViewsetTests(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_view_search_users(self):
-        search_url = self.url + "?search=h"
-        response = self.client.get(search_url)
+        response = self.client.get(self.url, {"search": "h"})
         self.assertEqual(response.data["count"], 3)
 
     def test_view_search_users_filter(self):

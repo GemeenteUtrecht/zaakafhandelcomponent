@@ -343,9 +343,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             if deadline_new and not deadline_new > deadline_old:
                 form.add_error(
                     None,
-                    _(
-                        f"Please select a date greater than {deadline_old.strftime('%Y-%m-%d')}"
-                    ),
+                    _("Please select a date greater than {minimum_date}").format(minimum_date=deadline_old.strftime('%Y-%m-%d'))
                 )
                 valid = False
         return valid
