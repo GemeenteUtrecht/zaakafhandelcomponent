@@ -372,12 +372,14 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
         "url": f"{DOCUMENTEN_ROOT}enkelvoudiginformatieobjecten/efd772a2-782d-48a6-bbb4-970c8aecc78d",
         "titel": "Test Document 1",
         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/c055908a-242b-469d-aead-8b838dc4ac7a",
+        "vertrouwelijkheidaanduiding": "openbaar",
     }
 
     document_2 = {
         "url": f"{DOCUMENTEN_ROOT}enkelvoudiginformatieobjecten/9510addc-e396-442e-b76b-02705e45bb16",
         "titel": "Test Document 2",
         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/10481de9-fdfd-4ce5-9d4b-10e844460d7d",
+        "vertrouwelijkheidaanduiding": "geheim",
     }
 
     zio_1 = {

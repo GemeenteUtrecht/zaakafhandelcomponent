@@ -47,6 +47,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         "titel": "Test Document 1",
         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/c055908a-242b-469d-aead-8b838dc4ac7a",
         "bronorganisatie": BRONORGANISATIE,
+        "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
     }
 
     iot_1 = {
