@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import gettext as _
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -37,6 +36,7 @@ from ...accounts.models import InformatieobjecttypePermission
 from ..permissions import (
     zaakproces_send_message,
     zaakproces_usertasks,
+    zaken_download_documents,
     zaken_inzien,
     zaken_request_access,
 )
@@ -464,7 +464,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
 
         # No informatieobjecttype_catalogus in the permission
         PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_inzien.name, zaken_download_documents.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -491,7 +491,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
 
         # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_inzien.name, zaken_download_documents.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -526,7 +526,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
 
         # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_inzien.name, zaken_download_documents.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -558,7 +558,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
 
         # informatieobjecttype_omschriving is specified
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_inzien.name, zaken_download_documents.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],

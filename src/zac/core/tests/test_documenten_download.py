@@ -2,19 +2,18 @@ from django.conf import settings
 from django.urls import reverse_lazy
 
 import requests_mock
-from django_webtest import TransactionWebTest
+from django_webtest import WebTest
 from rest_framework import status
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.accounts.models import InformatieobjecttypePermission
 from zac.accounts.tests.factories import (
     InformatieobjecttypePermissionFactory,
     PermissionSetFactory,
     UserFactory,
 )
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import (
     generate_oas_component,
@@ -30,7 +29,7 @@ IDENTIFICATIE = "DOC-001"
 
 
 @requests_mock.Mocker()
-class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
+class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
     download_url = reverse_lazy(
         "core:download-document",
         kwargs={
@@ -107,7 +106,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         # No informatieobjecttype permissions
         permission_set = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_download_documents.name],
             for_user=user,
             catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
         )
@@ -132,7 +131,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         # Permissions to an informatieobjecttype catalogus in the permission and enough confidentiality
         # All informatieobjecttypes allowed as they are not specified
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_download_documents.name],
             for_user=user,
             catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
         )
@@ -163,7 +162,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         # Correct catalogus and iot omschrijving specified, but insufficient VA
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_download_documents.name],
             for_user=user,
             catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
         )
@@ -193,7 +192,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         # All required permissions available
         permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+            permissions=[zaken_download_documents.name],
             for_user=user,
             catalogus=self.iot_1["catalogus"],
         )

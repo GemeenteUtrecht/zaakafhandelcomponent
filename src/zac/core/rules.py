@@ -2,15 +2,16 @@ import logging
 from datetime import date
 from typing import Optional, Set, Union
 
-from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 
 import rules
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
-from zac.accounts.models import User
+from zac.accounts.models import InformatieobjecttypePermission, User
 from zac.accounts.permissions import Permission, UserPermissions, register
 
 from .permissions import (
@@ -24,7 +25,6 @@ from .permissions import (
     zaken_request_access,
     zaken_set_result,
 )
-from .views.utils import check_document_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -190,12 +190,25 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
 def can_download_document(user: User, document: Optional[Document]) -> bool:
     if document is None:
         return _has_permission_key(zaken_download_documents.name)
-    try:
-        check_document_permissions(document, user)
-    except PermissionDenied:
-        return False
 
-    return True
+    # check if the user has sufficient permissions based on the document.informatieobjecttype
+    document_va = VertrouwelijkheidsAanduidingen.get_choice(
+        document.vertrouwelijkheidaanduiding
+    ).order
+    order_case = VertrouwelijkheidsAanduidingen.get_order_expression("max_va")
+
+    relevant_perms = (
+        InformatieobjecttypePermission.objects.filter(
+            catalogus=document.informatieobjecttype.catalogus,
+            # no omschrijving -> applies to all IOT of the catalogue
+            omschrijving__in=[document.informatieobjecttype.omschrijving, ""],
+            permission_set__permissions__contains=[zaken_download_documents.name],
+            permission_set__authorizationprofile__user=user,
+        )
+        .annotate(max_va_order=order_case)
+        .filter(max_va_order__gte=document_va)
+    )
+    return relevant_perms.exists()
 
 
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
