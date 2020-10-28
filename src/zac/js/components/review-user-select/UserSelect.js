@@ -12,9 +12,9 @@ const ENDPOINT = '/accounts/api/users';
 
 const getUsers = (inputValue) => {
     const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
-    const filteredUsers = selectedUserInputs.map((element) => element.value);
+    const includedUsers = selectedUserInputs.map((element) => ({ include: element.value }));
 
-    return fetchUsers({ inputValue, ENDPOINT, filteredUsers });
+    return fetchUsers({ inputValue, ENDPOINT, includedUsers });
 };
 
 const isEmpty = (obj) => {

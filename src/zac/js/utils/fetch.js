@@ -1,34 +1,38 @@
 const fetchDefaults = {
-    credentials: 'same-origin',  // required for Firefox 60, which is used in werkplekken
+    credentials: 'same-origin', // required for Firefox 60, which is used in werkplekken
 };
 
 const fetch = (url, opts) => {
-    const options = Object.assign({}, fetchDefaults, opts);
+    const options = { ...fetchDefaults, ...opts };
     return window.fetch(url, options);
 };
 
 const apiCall = fetch;
 
-
-const get = async (url, params={}) => {
+const get = async (url, params = {}, multiParams = []) => {
+    let searchParams;
     if (Object.keys(params).length) {
-        const searchparams = new URLSearchParams(params);
-        url += `?${searchparams}`;
+        searchParams = new URLSearchParams(params);
     }
+    if (multiParams.length > 0) {
+        multiParams.map((param) => searchParams.append(
+            Object.keys(param)[0], param[Object.keys(param)[0]],
+        ));
+    }
+    url += `?${searchParams}`;
     const response = await fetch(url);
     const data = await response.json();
     return data;
 };
 
-
-const _unsafe = async (method='POST', url, csrftoken, data={}) => {
+const _unsafe = async (method = 'POST', url, csrftoken, data = {}) => {
     const opts = {
-        method: method,
+        method,
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     };
     const response = await fetch(url, opts);
     const responseData = await response.json();
@@ -39,19 +43,17 @@ const _unsafe = async (method='POST', url, csrftoken, data={}) => {
     };
 };
 
-
-
-const post = async (url, csrftoken, data={}) => {
+const post = async (url, csrftoken, data = {}) => {
     const resp = await _unsafe('POST', url, csrftoken, data);
     return resp;
 };
 
-const patch = async (url, csrftoken, data={}) => {
+const patch = async (url, csrftoken, data = {}) => {
     const resp = await _unsafe('PATCH', url, csrftoken, data);
     return resp;
 };
 
-const put = async (url, csrftoken, data={}) => {
+const put = async (url, csrftoken, data = {}) => {
     const resp = await _unsafe('PUT', url, csrftoken, data);
     return resp;
 };
@@ -61,7 +63,7 @@ const destroy = async (url, csrftoken) => {
         method: 'DELETE',
         headers: {
             'X-CSRFToken': csrftoken,
-        }
+        },
     };
     const response = await fetch(url, opts);
     if (!response.ok) {
@@ -71,4 +73,6 @@ const destroy = async (url, csrftoken) => {
     }
 };
 
-export { apiCall, get, post, put, patch, destroy };
+export {
+    apiCall, get, post, put, patch, destroy,
+};
