@@ -3,7 +3,7 @@ from functools import reduce
 from typing import List
 
 from elasticsearch_dsl import Q
-from elasticsearch_dsl.query import Bool, Nested, Range, Term
+from elasticsearch_dsl.query import Bool, Nested, Range, Term, Terms
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .documents import ZaakDocument
@@ -49,7 +49,8 @@ def search(
     size=25,
     identificatie=None,
     bronorganisatie=None,
-    filters=(),
+    zaaktypen=None,
+    allowed=None,
 ):
     s = ZaakDocument.search()[:size]
 
@@ -57,13 +58,15 @@ def search(
         s = s.filter(Term(identificatie=identificatie))
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
+    if zaaktypen:
+        s = s.filter(Terms(zaaktype=zaaktypen))
 
     _filters = []
-    for filter in filters:
+    for filter in allowed:
         combined = Q("match_all")
 
-        if filter["zaaktype"]:
-            combined = combined & Term(zaaktype=filter["zaaktype"])
+        if filter["zaaktypen"]:
+            combined = combined & Terms(zaaktype=filter["zaaktype"])
 
         if filter["max_va"]:
             max_va_order = VertrouwelijkheidsAanduidingen.get_choice(
