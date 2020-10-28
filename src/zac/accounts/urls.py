@@ -1,6 +1,5 @@
 from django.urls import include, path
 
-from . import api
 from .views import (
     AuthorizationProfileCreateView,
     AuthorizationProfileDetailView,

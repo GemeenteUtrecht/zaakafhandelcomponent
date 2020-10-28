@@ -25,7 +25,7 @@ class UserViewsetTests(APITestCase):
 
     def setUp(self):
         self.client.force_authenticate(user=self.superuser)
-        self.url = reverse("accounts:users-list")
+        self.url = reverse("accounts:accounts:users-list")
 
     def test_view_url_exists(self):
         response = self.client.get(self.url)

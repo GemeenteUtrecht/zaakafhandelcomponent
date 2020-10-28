@@ -1,10 +1,16 @@
 from django.urls import path
 
-from zac.accounts.api.views import InformatieobjecttypenJSONView
+from rest_framework.routers import DefaultRouter
+
+from .views import InformatieobjecttypenJSONView
+from .viewsets import UserViewSet
+
+router = DefaultRouter(trailing_slash=False)
+router.register("users", UserViewSet, basename="users")
 
 app_name = "accounts"
 
-urlpatterns = [
+urlpatterns = router.urls + [
     path(
         "informatieobjecttypen",
         InformatieobjecttypenJSONView.as_view(),
