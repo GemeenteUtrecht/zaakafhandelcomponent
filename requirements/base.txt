@@ -14,7 +14,7 @@ celery==4.3.0             # via django-camunda
 certifi==2019.9.11        # via elasticsearch, requests
 cffi==1.12.3              # via cryptography, pycares
 chardet==3.0.4            # via aiohttp, requests
-cryptography==2.8         # via django-auth-adfs
+cryptography==3.2.1       # via django-auth-adfs
 defusedxml==0.6.0         # via django-camunda, odfpy
 diff-match-patch==20181111  # via django-import-export
 django-appconf==1.0.3     # via django-axes
