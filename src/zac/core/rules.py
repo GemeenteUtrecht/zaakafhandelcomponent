@@ -2,8 +2,6 @@ import logging
 from datetime import date
 from typing import Optional, Set, Union
 
-from django.db.models import Q
-
 import rules
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
