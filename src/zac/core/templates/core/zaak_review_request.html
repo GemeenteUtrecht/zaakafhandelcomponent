@@ -3,7 +3,7 @@
 
 {% block formset_body %}
 <section class="zaak-detail__panel content-panel content-panel--flat">
-    <div class="form__group-title">Adviseur(s)</div>
+    <div class="form__group-title">{{ form.get_review_type }}</div>
     <div
         id="react-review-users"
         data-extra="{{ formset.extra|unlocalize }}"
@@ -16,4 +16,5 @@
         {# React managed #}
     </div>
 </section>
+{% widget 'form:non_form_errors' %}
 {% endblock %}

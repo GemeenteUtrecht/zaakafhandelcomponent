@@ -309,6 +309,9 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     def on_submission(self):
         assert self._review_type, "Subclasses must define a '_review_type'"
 
+    def get_review_type(self):
+        return "Adviseur(s)" if self._review_type == "advice" else "Accordeur(s)"
+
 
 class SelectUsersReviewRequestForm(forms.Form):
     """
@@ -337,35 +340,56 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         Validate that deadlines per step are monotonic increasing
         """
         deadline_old = date.today()
+        errors = []
         for form in self.forms:
             deadline_new = form.cleaned_data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
-                form.add_error(
-                    "deadline",
-                    _("Please select a date greater than {minimum_date}").format(
-                        minimum_date=deadline_old.strftime("%Y-%m-%d")
-                    ),
+                errors.append(
+                    forms.ValidationError(
+                        _(
+                            "Deadlines are not allowed to be equal in a serial review request process but need to have at least 1 day in between them. Please select a date greater than {minimum_date}."
+                        ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
+                        code="date-not-valid",
+                    )
                 )
+            deadline_old = deadline_new
+        return errors
 
     def unique_user_validation(self) -> bool:
         """
         Validate that users are unique and that at least 1 user is selected per step
         """
         users_list = []
+        errors = []
         for form in self.forms:
             users = form.cleaned_data["kownsl_users"]
             if not users:
-                form_add_error("kownsl_users", _("Please select at least 1 advisor."))
+                errors.append(
+                    forms.ValidationError(
+                        _("Please select at least 1 user."),
+                        code="empty-user",
+                    )
+                )
 
             if any([user in users_list for user in users]):
-                form.add_error("kownsl_users", _("Please select unique advisors."))
+                errors.append(
+                    forms.ValidationError(
+                        _(
+                            "Users in a serial review request process need to be unique. Please select unique users."
+                        ),
+                        code="unique-user",
+                    )
+                )
 
             users_list.extend(users)
+        return errors
 
     def clean(self):
         super().clean()
-        self.deadlines_validation()
-        self.unique_user_validation()
+        errors = self.deadlines_validation()
+        errors.extend(self.unique_user_validation())
+        if errors:
+            raise forms.ValidationError(errors)
 
     def get_request_kownsl_user_data(self) -> List:
         """
