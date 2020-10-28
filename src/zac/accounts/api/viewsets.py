@@ -1,29 +1,53 @@
-from rest_framework import filters, viewsets
+from django.db.models import Q
+
+from rest_framework import viewsets
+from django_filters import rest_framework as filters
 
 from zac.utils import pagination
 
 from ..models import User
 from .serializers import UserSerializer
 
+from django.forms.fields import MultipleChoiceField, CharField
+
+class MultipleValueField(MultipleChoiceField):
+    def __init__(self, *args, field_class, **kwargs):
+        self.inner_field = field_class()
+        super().__init__(*args, **kwargs)
+
+    def valid_value(self, value):
+        return self.inner_field.validate(value)
+
+    def clean(self, values):
+        return values and [self.inner_field.clean(value) for value in values]
+
+class MultipleValueFilter(filters.Filter):
+    field_class = MultipleValueField
+
+    def __init__(self, *args, field_class , **kwargs):
+        kwargs.setdefault('lookup_expr', 'in')
+        super().__init__(*args, field_class=field_class, **kwargs)
+
+
+class UserFilter(filters.FilterSet):
+    search = filters.CharFilter(method='search_multiple_fields')
+    exclude = MultipleValueFilter(field_name='username', field_class=CharField, exclude=True)
+    include = MultipleValueFilter(field_name='username', field_class=CharField)
+
+    class Meta:
+        model = User
+        fields = ['search', 'exclude', 'include']
+    
+    def search_multiple_fields(self, qs, name, value):
+        return qs.filter(
+            Q(username__icontains=value) | Q(first_name__icontains=value) | Q(last_name__icontains=value)
+        )
+    
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = pagination.PageNumberPagination
     page_size = 100
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["username", "first_name", "last_name"]
-
-    def get_queryset(self):
-        filter_users = self.request.query_params.get("filter_users", "")
-        queryset = User.objects.filter(is_active=True)
-        if filter_users:
-            # Custom cleaning of query_parameter
-            # TODO find better implementation
-            filter_users = filter_users.split(",")
-            include = self.request.query_params.get("include", False)
-            if include:
-                return queryset.filter(username__in=filter_users)
-            else:
-                return queryset.exclude(username__in=filter_users)
-        else:
-            return queryset
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = UserFilter

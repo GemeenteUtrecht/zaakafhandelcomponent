@@ -336,47 +336,37 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         """
         Validate that deadlines per step are monotonic increasing
         """
-        valid = True
         deadline_old = date(1, 1, 1)
         for form in self.forms:
             deadline_new = form.cleaned_data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
                 form.add_error(
-                    None,
-                    _("Please select a date greater than {minimum_date}").format(minimum_date=deadline_old.strftime('%Y-%m-%d'))
+                    'deadline',
+                    _("Please select a date greater than {minimum_date}").format(
+                        minimum_date=deadline_old.strftime("%Y-%m-%d")
+                    ),
                 )
-                valid = False
-        return valid
 
     def unique_user_validation(self) -> bool:
         """
         Validate that users are unique and that at least 1 user is selected per step
         """
-        valid = True
         users_list = []
         for form in self.forms:
             users = form.cleaned_data["kownsl_users"]
             if not users:
-                form_add_error(None, _("Please select at least 1 advisor."))
-                valid = False
+                form_add_error('kownsl_users', _("Please select at least 1 advisor."))
 
             if any([user in users_list for user in users]):
-                form.add_error(None, _("Please select unique advisors."))
-                valid = False
+                form.add_error('kownsl_users', _("Please select unique advisors."))
 
             users_list.extend(users)
-        return valid
+        
 
-    def is_valid(self) -> bool:
-        valid = super().is_valid()
-        # make sure deadlines are monotonic increasing and all users are unique
-        return all(
-            [
-                valid,
-                self.deadlines_validation(),
-                self.unique_user_validation(),
-            ]
-        )
+    def clean(self):
+        super().clean()
+        self.deadlines_validation()
+        self.unique_user_validation()
 
     def get_request_kownsl_user_data(self) -> List:
         """
