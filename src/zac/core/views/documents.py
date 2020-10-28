@@ -8,6 +8,7 @@ from django.views import View
 from rules.contrib.views import PermissionRequiredMixin
 from zgw_consumers.api_models.documenten import Document
 
+from ..permissions import zaken_download_documents
 from ..services import download_document, find_document, get_informatieobjecttype
 
 
@@ -18,7 +19,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = "core:download_document"
+    permission_required = zaken_download_documents.name
 
     document = None
 

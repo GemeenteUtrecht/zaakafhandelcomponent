@@ -10,6 +10,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.models import InformatieobjecttypePermission, PermissionSet, User
 
+from ..permissions import zaken_download_documents
 from ..services import get_zaak
 
 
@@ -77,12 +78,8 @@ def filter_documenten_for_permissions(
 ) -> List[Document]:
     """Filter documents on the user permissions. """
 
-    filtered_documenten = []
+    filtered_documents = []
     for document in documenten:
-        try:
-            check_document_permissions(document, user)
-            filtered_documenten.append(document)
-        except PermissionDenied:
-            continue
-
-    return filtered_documenten
+        if user.has_perm(zaken_download_documents.name, document):
+            filtered_documents.append(document)
+    return filtered_documents

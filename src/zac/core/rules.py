@@ -18,6 +18,7 @@ from .permissions import (
     zaakproces_usertasks,
     zaken_add_documents,
     zaken_close,
+    zaken_download_documents,
     zaken_handle_access,
     zaken_inzien,
     zaken_request_access,
@@ -186,8 +187,9 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
 
 
 @rules.predicate
-def can_download_document(user: User, document: Document) -> bool:
-
+def can_download_document(user: User, document: Optional[Document]) -> bool:
+    if document is None:
+        return _has_permission_key(zaken_download_documents.name)
     try:
         check_document_permissions(document, user)
     except PermissionDenied:
@@ -201,4 +203,4 @@ rules.add_rule(zaken_inzien.name, can_read_zaak_by_zaaktype | has_temporary_acce
 rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
 )
-rules.add_rule("core:download_document", can_download_document)
+rules.add_rule(zaken_download_documents.name, can_download_document)
