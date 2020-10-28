@@ -8,3 +8,4 @@ import './case-activities';
 import './validSign';
 import './alfresco-document-selection';
 import './review-user-select';
+import './informatieobjecttype-forms';

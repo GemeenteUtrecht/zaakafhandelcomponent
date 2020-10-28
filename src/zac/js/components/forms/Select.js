@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import PropTypes from 'prop-types';
 
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
+import {PrefixContext} from "../formsets/context";
 
 
 const Select = ({
@@ -16,6 +17,7 @@ const Select = ({
     classes=null,
     onChange,
     disabled=false,
+    initial=null,
     value='',
     errors=[]
 }) => {
@@ -26,13 +28,19 @@ const Select = ({
         );
     });
 
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+    const prefixedId = (id && prefix) ? `${prefix}-${id}` : id;
+
+    const valueProp = initial == null ? {value: value} : {defaultValue: initial};
+
     const select = (
         <select
-            name={name}
-            id={id}
+            name={prefixedName}
+            id={prefixedId}
             className={classNames}
             disabled={!!disabled}
-            value={value}
+            {...valueProp}
             onChange={(event) => {
                 if (onChange) {
                     onChange(event);
@@ -52,6 +60,7 @@ const Select = ({
         </Wrapper>
     );
 };
+
 
 Select.propTypes = {
     name: PropTypes.string.isRequired,

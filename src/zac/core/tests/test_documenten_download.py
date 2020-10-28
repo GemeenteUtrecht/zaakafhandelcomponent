@@ -2,14 +2,18 @@ from django.conf import settings
 from django.urls import reverse_lazy
 
 import requests_mock
-from django_webtest import TransactionWebTest
+from django_webtest import WebTest
 from rest_framework import status
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
-from zac.core.permissions import zaken_inzien
+from zac.accounts.tests.factories import (
+    InformatieobjecttypePermissionFactory,
+    PermissionSetFactory,
+    UserFactory,
+)
+from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import (
     generate_oas_component,
@@ -25,7 +29,7 @@ IDENTIFICATIE = "DOC-001"
 
 
 @requests_mock.Mocker()
-class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
+class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
     download_url = reverse_lazy(
         "core:download-document",
         kwargs={
@@ -42,6 +46,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         "titel": "Test Document 1",
         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/c055908a-242b-469d-aead-8b838dc4ac7a",
         "bronorganisatie": BRONORGANISATIE,
+        "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
     }
 
     iot_1 = {
@@ -99,10 +104,20 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         user = UserFactory.create()
 
-        # No informatieobjecttype_catalogus in the permission
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        # No informatieobjecttype permissions
+        permission_set = PermissionSetFactory.create(
+            permissions=[zaken_download_documents.name],
             for_user=user,
+            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission_set.catalogus}",
+            json={
+                "count": 0,
+                "next": "",
+                "previous": "",
+                "results": [],
+            },
         )
 
         response = self.app.get(self.download_url, user=user, status=403)
@@ -113,13 +128,27 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
 
         user = UserFactory.create()
 
-        # informatieobjecttype_catalogus in the permission and enough confidentiality
+        # Permissions to an informatieobjecttype catalogus in the permission and enough confidentiality
         # All informatieobjecttypes allowed as they are not specified
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        permission = PermissionSetFactory.create(
+            permissions=[zaken_download_documents.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
+        )
+        InformatieobjecttypePermissionFactory.create(
+            catalogus=self.iot_1["catalogus"],
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            permission_set=permission,
+        )
+
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission.catalogus}",
+            json={
+                "count": 0,
+                "next": "",
+                "previous": "",
+                "results": [],
+            },
         )
 
         response = self.app.get(self.download_url, user=user)
@@ -132,12 +161,25 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
 
         # Correct catalogus and iot omschrijving specified, but insufficient VA
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        permission = PermissionSetFactory.create(
+            permissions=[zaken_download_documents.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
+        )
+        InformatieobjecttypePermissionFactory.create(
+            catalogus=self.iot_1["catalogus"],
+            omschrijving="Test Omschrijving 1",
+            permission_set=permission,
+        )
+
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission.catalogus}",
+            json={
+                "count": 0,
+                "next": "",
+                "previous": "",
+                "results": [],
+            },
         )
 
         response = self.app.get(self.download_url, user=user, status=403)
@@ -149,12 +191,26 @@ class DocumentenDownloadViewTests(ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
 
         # All required permissions available
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        permission = PermissionSetFactory.create(
+            permissions=[zaken_download_documents.name],
             for_user=user,
-            informatieobjecttype_catalogus=self.iot_1["catalogus"],
-            informatieobjecttype_omschrijvingen=["Test Omschrijving 1"],
-            informatieobjecttype_max_va=VertrouwelijkheidsAanduidingen.geheim,
+            catalogus=self.iot_1["catalogus"],
+        )
+        InformatieobjecttypePermissionFactory.create(
+            catalogus=self.iot_1["catalogus"],
+            omschrijving="Test Omschrijving 1",
+            max_va=VertrouwelijkheidsAanduidingen.geheim,
+            permission_set=permission,
+        )
+
+        m.get(
+            url=f"{CATALOGI_ROOT}zaaktypen?catalogus={self.iot_1['catalogus']}",
+            json={
+                "count": 0,
+                "next": "",
+                "previous": "",
+                "results": [],
+            },
         )
 
         response = self.app.get(self.download_url, user=user)

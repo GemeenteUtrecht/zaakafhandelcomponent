@@ -157,32 +157,6 @@ class PermissionSet(models.Model):
             "Spans Zaken until and including this vertrouwelijkheidaanduiding."
         ),
     )
-    informatieobjecttype_catalogus = models.URLField(
-        verbose_name=_("informatieobjecttype catalogus"),
-        help_text=_(
-            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
-        ),
-        blank=True,
-    )
-    informatieobjecttype_omschrijvingen = ArrayField(
-        models.CharField(max_length=100),
-        blank=True,
-        default=list,
-        help_text=_(
-            "Specifies which document types within the case can be viewed. "
-            "If left empty, all documents in the case can be viewed."
-        ),
-        verbose_name=_("informatieobjecttype omschrijvingen"),
-    )
-    informatieobjecttype_max_va = models.CharField(
-        verbose_name=_("informatieobjecttype maximum vertrouwelijkheidaanduiding"),
-        max_length=100,
-        choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
-        help_text=_(
-            "Maximum level of confidentiality for the document types in the case."
-        ),
-    )
 
     class Meta:
         verbose_name = _("permission set")
@@ -199,6 +173,42 @@ class PermissionSet(models.Model):
         return ZaaktypeCollection(
             catalogus=self.catalogus, identificaties=self.zaaktype_identificaties
         )
+
+
+class InformatieobjecttypePermission(models.Model):
+    permission_set = models.ForeignKey(
+        PermissionSet,
+        on_delete=models.CASCADE,
+        verbose_name=_("permission set"),
+        help_text=_("Associated set of permissions for a zaaktype."),
+    )
+    catalogus = models.URLField(
+        verbose_name=_("catalogus"),
+        max_length=1000,
+        help_text=_(
+            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
+        ),
+    )
+    omschrijving = models.CharField(
+        max_length=100,
+        verbose_name=_("omschrijving"),
+        help_text=_("Informatieobjecttype omschrijving."),
+        blank=True,
+    )
+    max_va = models.CharField(
+        verbose_name=_("maximaal vertrouwelijkheidaanduiding"),
+        max_length=100,
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        default=VertrouwelijkheidsAanduidingen.openbaar,
+        help_text=_("Maximaal vertrouwelijkheidaanduiding."),
+    )
+
+    class Meta:
+        verbose_name = _("informatieobjecttype permission")
+        verbose_name_plural = _("informatieobjecttype permissions")
+
+    def __str__(self):
+        return f"{self.catalogus} - {self.omschrijving} ({self.max_va})"
 
 
 class UserAuthorizationProfile(models.Model):

@@ -1,7 +1,8 @@
 import factory
 import factory.fuzzy
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from ..models import UserAuthorizationProfile
+from ..models import InformatieobjecttypePermission, UserAuthorizationProfile
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -36,6 +37,15 @@ class PermissionSetFactory(factory.django.DjangoModelFactory):
         UserAuthorizationProfile.objects.create(
             user=extracted, auth_profile=auth_profile
         )
+
+
+class InformatieobjecttypePermissionFactory(factory.django.DjangoModelFactory):
+    permission_set = factory.SubFactory(PermissionSetFactory)
+    catalogus = factory.Faker("url")
+    max_va = VertrouwelijkheidsAanduidingen.openbaar
+
+    class Meta:
+        model = InformatieobjecttypePermission
 
 
 class AuthorizationProfileFactory(factory.django.DjangoModelFactory):

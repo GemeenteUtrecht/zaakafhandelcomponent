@@ -38,7 +38,6 @@ from ..permissions import (
     zaken_set_result,
 )
 from ..services import (
-    filter_documenten_for_permissions,
     find_zaak,
     get_document,
     get_documenten,
@@ -52,7 +51,7 @@ from ..services import (
     get_zaken,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .utils import get_zaak_from_query
+from .utils import filter_documenten_for_permissions, get_zaak_from_query
 
 
 class Index(PermissionRequiredMixin, BaseListView):

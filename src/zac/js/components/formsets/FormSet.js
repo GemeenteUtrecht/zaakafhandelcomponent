@@ -23,7 +23,11 @@ DummyForm.propTypes = {
 };
 
 const FormSet = ({
-    configuration, renderForm = DummyForm, renderAdd = AddForm, formData = [],
+    configuration,
+    renderForm = DummyForm,
+    renderAdd = AddForm,
+    formData = [],
+    formsContainer=React.Fragment,
 }) => {
     const existingCount = formData.length;
     const [extra, setExtra] = useState(configuration.extra);
@@ -34,6 +38,7 @@ const FormSet = ({
     };
 
     const RenderForm = renderForm;
+    const Container = formsContainer;
 
     const getPrefix = (index) => `${configuration.prefix}-${index}`;
 
@@ -67,9 +72,9 @@ const FormSet = ({
                 maxNum={configuration.maxNum}
             />
 
-            { forms.concat(extraForms) }
+            <Container>{ forms.concat(extraForms) }</Container>
 
-            { renderAdd({ onAdd }) }
+            { renderAdd ? renderAdd({ onAdd }) : null }
 
         </>
     );

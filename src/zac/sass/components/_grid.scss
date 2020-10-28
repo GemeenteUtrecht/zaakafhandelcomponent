@@ -6,6 +6,10 @@
   grid-template-columns: repeat(12, 1fr);
   column-gap: 2rem;
 
+  @include modifier("space-rows") {
+    row-gap: 1rem;
+  }
+
   @include element("column") {
     @include modifier("col12") {
       grid-column: span 12;
