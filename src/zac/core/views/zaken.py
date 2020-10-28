@@ -49,6 +49,7 @@ from ..services import (
     get_zaakobjecten,
     get_zaaktypen,
     get_zaken,
+    get_zaken_es,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .utils import filter_documenten_for_permissions, get_zaak_from_query
@@ -81,7 +82,7 @@ class Index(PermissionRequiredMixin, BaseListView):
         else:
             filters = {}
         user_perms = UserPermissions(self.request.user)
-        zaken = get_zaken(user_perms, **filters)[:50]
+        zaken = get_zaken_es(user_perms, **filters)[:50]
 
         return zaken
 
