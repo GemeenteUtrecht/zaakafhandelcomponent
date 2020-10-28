@@ -1,6 +1,7 @@
+from unittest import expectedFailure
+
 from django.urls import reverse
 
-import requests_mock
 from rest_framework.test import APITestCase
 
 from zac.accounts.tests.factories import UserFactory
@@ -45,5 +46,25 @@ class UserViewsetTests(APITestCase):
     def test_multiple_users(self):
         usernames = [self.users[i].username for i in range(2)]
         params = {"include": usernames}
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.data["count"], 2)
+
+    @expectedFailure
+    def test_multiple_users_csv(self):
+        """
+        Test that ?include=foo,bar works too for filtering usernames.
+
+        Bug in django-filter, see
+        https://github.com/carltongibson/django-filter/issues/1090#issuecomment-506228492
+
+        We shouldn't rely on this anyway on the off-chance that the username contains a
+        comma, which would introduce a faulty split. The preffered way is using either one
+        of:
+
+            - ``?include=foo&include=bar``
+            - ``?include[]=foo&include[]=bar`` (PHP style)
+        """
+        usernames = [self.users[i].username for i in range(2)]
+        params = {"include": ",".join(usernames)}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 2)
