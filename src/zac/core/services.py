@@ -369,9 +369,10 @@ def get_zaken(
                         }
                     )
 
+    # ES search
     from zac.elasticsearch.searches import search
 
-    results = search(
+    zaak_urls = search(
         size=25,
         identificatie=identificatie,
         bronorganisatie=bronorganisatie,
@@ -379,21 +380,20 @@ def get_zaken(
             {
                 "zaaktype": find_kwarg_dict["zaaktype"],
                 "max_va": find_kwarg_dict["max_va"],
-                "oo": find_kwarg_dict[
+                "oo": find_kwarg_dict.get(
                     "rol__betrokkeneIdentificatie__organisatorischeEenheid__identificatie"
-                ],
+                ),
             }
             for find_kwarg_dict in find_kwargs
         ],
     )
 
-    # TODO: use result document URLs
+    def _get_zaak(zaak_url):
+        return get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
 
-    with parallel() as executor:
-        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
-        flattened = sum(list(results), [])
-
-    zaken = factory(Zaak, flattened)
+    with parallel(max_workers=10) as executor:
+        results = executor.map(_get_zaak, zaak_urls)
+        zaken = list(results)
 
     # resolve zaaktype reference
     for zaak in zaken:

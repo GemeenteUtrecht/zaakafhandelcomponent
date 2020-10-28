@@ -60,11 +60,19 @@ def search(
 
     _filters = []
     for filter in filters:
-        max_va_order = VertrouwelijkheidsAanduidingen.get_choice(filter["max_va"]).order
-        combined = (
-            Term(zaaktype=filter["zaaktype"])
-            & Range(va_order={"lte": max_va_order})
-            & Nested(
+        combined = Q("match_all")
+
+        if filter["zaaktype"]:
+            combined = combined & Term(zaaktype=filter["zaaktype"])
+
+        if filter["max_va"]:
+            max_va_order = VertrouwelijkheidsAanduidingen.get_choice(
+                filter["max_va"]
+            ).order
+            combined = combined & Range(va_order={"lte": max_va_order})
+
+        if filter["oo"]:
+            combined = combined & Nested(
                 path="rollen",
                 query=Bool(
                     filter=[
@@ -75,7 +83,7 @@ def search(
                     ]
                 ),
             )
-        )
+
         _filters.append(combined)
 
     if _filters:
