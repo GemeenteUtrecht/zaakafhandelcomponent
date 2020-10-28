@@ -22,6 +22,8 @@ class ConvertToJsonTests(TestCase):
             "num_approvals": 0,
             "num_assigned_users": 1,
             "toelichting": "Like a flash of light in an endless night.",
+            "user_deadlines": {},
+            "requester": "Henkie",
         }
         advice_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -67,6 +69,8 @@ class ConvertToJsonTests(TestCase):
                             "documents": [],
                         }
                     ],
+                    "user_deadlines": {},
+                    "requester": "Henkie",
                 }
             ],
         )
@@ -82,6 +86,8 @@ class ConvertToJsonTests(TestCase):
             "num_approvals": 1,
             "num_assigned_users": 1,
             "toelichting": "I pity the living, envy for the dead",
+            "user_deadlines": {},
+            "requester": "Henkie",
         }
         approval_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -127,6 +133,8 @@ class ConvertToJsonTests(TestCase):
                             "toelichting": "I don't feel anything.",
                         }
                     ],
+                    "user_deadlines": {},
+                    "requester": "Henkie",
                 }
             ],
         )

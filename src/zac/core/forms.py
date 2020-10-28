@@ -309,6 +309,9 @@ class ConfigureReviewRequestForm(TaskFormMixin, forms.Form):
     def on_submission(self):
         assert self._review_type, "Subclasses must define a '_review_type'"
 
+    def get_review_type(self):
+        return "Adviseur(s)" if self._review_type == "advice" else "Accordeur(s)"
+
 
 class SelectUsersReviewRequestForm(forms.Form):
     """
@@ -323,36 +326,102 @@ class SelectUsersReviewRequestForm(forms.Form):
         help_text=_("Select the advisors."),
     )
 
+    deadline = forms.DateField(
+        required=True,
+        label=_("Deadline"),
+        help_text=_("Select a date"),
+        input_formats=["%Y-%m-%d"],
+    )
+
 
 class BaseReviewRequestFormSet(BaseTaskFormSet):
-    def is_valid(self):
-        super().is_valid()
+    def deadlines_validation(self) -> bool:
+        """
+        Validate that deadlines per step are monotonic increasing
+        """
+        deadline_old = date.today()
+        errors = []
         for form in self.forms:
-            if not form.has_changed():
-                form.add_error(None, _("Please select at least 1 advisor."))
-                return False
+            deadline_new = form.cleaned_data["deadline"]
+            if deadline_new and not deadline_new > deadline_old:
+                errors.append(
+                    forms.ValidationError(
+                        _(
+                            "Deadlines are not allowed to be equal in a serial review request process but need to have at least 1 day in between them. Please select a date greater than {minimum_date}."
+                        ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
+                        code="date-not-valid",
+                    )
+                )
+            deadline_old = deadline_new
+        return errors
 
-        return True
+    def unique_user_validation(self) -> bool:
+        """
+        Validate that users are unique and that at least 1 user is selected per step
+        """
+        users_list = []
+        errors = []
+        for form in self.forms:
+            users = form.cleaned_data["kownsl_users"]
+            if not users:
+                errors.append(
+                    forms.ValidationError(
+                        _("Please select at least 1 user."),
+                        code="empty-user",
+                    )
+                )
+
+            if any([user in users_list for user in users]):
+                errors.append(
+                    forms.ValidationError(
+                        _(
+                            "Users in a serial review request process need to be unique. Please select unique users."
+                        ),
+                        code="unique-user",
+                    )
+                )
+
+            users_list.extend(users)
+        return errors
+
+    def clean(self):
+        super().clean()
+        errors = self.deadlines_validation()
+        errors.extend(self.unique_user_validation())
+        if errors:
+            raise forms.ValidationError(errors)
+
+    def get_request_kownsl_user_data(self) -> List:
+        """
+        Grabs usernames from form
+        """
+        kownsl_users_list = []
+        for form in self.cleaned_data:
+            kownsl_users = [user.username for user in form["kownsl_users"]]
+            kownsl_users_list.append(kownsl_users)
+
+        return kownsl_users_list
 
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
-        users = []
-        for users_data in self.cleaned_data:
-            if not users_data:  # empty form
-                continue
-
-            user_names = [user.username for user in users_data["kownsl_users"]]
-            users.append(user_names)
-
-        if not users:  # camunda is expecting a list of lists
-            users = [[]]
-
         return {
-            "kownslUsersList": users,
+            "kownslUsersList": self.get_request_kownsl_user_data(),
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.frontend_url,
         }
+
+    def get_user_deadlines(self) -> Dict:
+        """
+        Grabs user emails and their deadlines from form.
+        This is used for sending (reminder) emails.
+        """
+        user_deadlines = {}
+        for form in self.cleaned_data:
+            deadline = form["deadline"]
+            for user in form["kownsl_users"]:
+                user_deadlines[user.username] = str(deadline)
+        return user_deadlines
 
     def on_submission(self, form=None):
         count_users = sum(
@@ -369,6 +438,8 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             review_type=form._review_type,
             num_assigned_users=count_users,
             toelichting=form.cleaned_data["toelichting"],
+            user_deadlines=self.get_user_deadlines(),
+            requester=self.user,
         )
 
 

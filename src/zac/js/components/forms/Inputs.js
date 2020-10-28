@@ -4,8 +4,7 @@ import { PrefixContext } from '../formsets/context';
 import { Help } from './Help';
 import { Label } from './Label';
 import { ErrorList, Wrapper } from './Utils';
-
-
+import DatePicker from 'react-datepicker';
 
 const Input = ({
     type='text',
@@ -93,16 +92,42 @@ const DateInput = (props) => {
     return <Input type="date" {...props} />;
 };
 
+const DatePickerInput = ({name, label, dateFormat = "yyyy-MM-dd", minDate}) => {
+    const [startDate, setStartDate] = useState(null);
+
+    const prefix = useContext(PrefixContext);
+    const prefixedName = prefix ? `${prefix}-${name}` : name;
+
+    return (
+        <div className="datepicker">
+            <label className="datepicker__label">{label}</label>
+            <DatePicker
+                dateFormat={dateFormat}
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                minDate={minDate}
+                name={prefixedName}
+                className="datepicker__input"
+                placeholderText="Selecteer een datum"
+                closeOnScroll={e => e.target === document}
+                autoComplete="off"
+                isClearable
+                required
+            />
+        </div>
+    )
+}
+
 const CheckboxInput = (props) => {
     return <Input type="checkbox" {...props} />;
 };
 
-const HiddenCheckbox = ({name, value, checked, required}) => {
+const HiddenCheckbox = ({name, value, checked, required, className="input input--hidden"}) => {
     const prefix = useContext(PrefixContext);
     const prefixedName = prefix ? `${prefix}-${name}` : name;
     return <input
         type="checkbox"
-        className="input input--hidden"
+        className={className}
         name={prefixedName}
         value={value}
         defaultChecked={checked}
@@ -158,6 +183,7 @@ export {
     Input,
     TextInput,
     DateInput,
+    DatePickerInput,
     CheckboxInput,
     HiddenCheckbox,
     RadioInput,

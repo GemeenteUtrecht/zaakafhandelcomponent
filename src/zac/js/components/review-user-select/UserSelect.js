@@ -4,13 +4,18 @@ import PropTypes from 'prop-types';
 import AsyncSelect from 'react-select/async';
 
 import { fetchUsers } from '../../utils/users';
-import { HiddenCheckbox } from '../forms/Inputs';
+import { HiddenCheckbox, DatePickerInput } from '../forms/Inputs';
 import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
 
 const ENDPOINT = '/accounts/api/users';
 
-const getUsers = (inputValue) => fetchUsers(inputValue, ENDPOINT);
+const getUsers = (inputValue) => {
+    const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
+    const filteredUsers = selectedUserInputs.map((element) => element.value);
+
+    return fetchUsers({ inputValue, ENDPOINT, filteredUsers });
+};
 
 const isEmpty = (obj) => {
     if (!obj) {
@@ -30,7 +35,16 @@ const UserSelect = ({
     // Create hidden inputs of the selected users
     const getHiddenInputs = (selectedUsers) => {
         const inputs = selectedUsers
-            ? selectedUsers.map((user) => <HiddenCheckbox name="kownsl_users" value={user.value} key={user.value} checked required />)
+            ? selectedUsers.map((user) => (
+                <HiddenCheckbox
+                    name="kownsl_users"
+                    value={user.value}
+                    key={user.value}
+                    className="input input--hidden input--kownsl_user"
+                    checked
+                    required
+                />
+            ))
             : <HiddenCheckbox name="kownsl_users" checked={false} required />;
         setHiddenInputs(inputs);
     };
@@ -40,7 +54,7 @@ const UserSelect = ({
     }, [selectedData]);
 
     return (
-        <div className="user-select">
+        <div className="user-select detail-card">
             { (errors && !isEmpty(errors.__all__))
                 ? (
                     <Wrapper errors={errors.__all__}>
@@ -48,18 +62,18 @@ const UserSelect = ({
                     </Wrapper>
                 ) : null}
 
-            <div className="user-select__title">
-                { (totalStepsIndex !== 0)
-                && <h3>{`Stap ${index + 1}`}</h3> }
+            { (totalStepsIndex !== 0) && (
+                <div className="user-select__title">
+                    <h3>{`Stap ${index + 1}`}</h3>
 
-                { (index === totalStepsIndex && index !== 0)
-                && <DeleteButton onDelete={onDelete} /> }
-            </div>
-            {hiddenInputs}
+                    { (index === totalStepsIndex && index !== 0)
+                    && <DeleteButton onDelete={onDelete} /> }
+                </div>
+            )}
             <div className="user-select__selector">
+                {hiddenInputs}
                 <AsyncSelect
                     isMulti
-                    cacheOptions
                     placeholder="Selecteer adviseur(s)"
                     name={`kownsl_users${-index}`}
                     defaultOptions={false}
@@ -67,6 +81,12 @@ const UserSelect = ({
                     onChange={(value) => setSelectedData(value)}
                 />
             </div>
+            <DatePickerInput
+                name="deadline"
+                label="Uiterste datum:"
+                minDate={new Date()}
+                required
+            />
         </div>
     );
 };

@@ -25,6 +25,6 @@ def serialize(value):
     try:
         json.dumps(value, cls=DjangoJSONEncoder)
     except TypeError:
-        raise NotImplemented(f"{value} can't be converted to json")
+        raise NotImplementedError(f"{value} can't be converted to json")
     else:
         return value

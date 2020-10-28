@@ -23,6 +23,8 @@ def create_review_request(
     review_type: str = "advice",
     num_assigned_users: int = 0,
     toelichting: str = "",
+    user_deadlines: dict = {},
+    requester: str = "",
 ) -> ReviewRequest:
     client = get_client()
     data = {
@@ -31,6 +33,8 @@ def create_review_request(
         "num_assigned_users": num_assigned_users,
         "documents": documents,
         "toelichting": toelichting,
+        "user_deadlines": user_deadlines,
+        "requester": requester,
     }
     resp = client.create("reviewrequest", data=data)
     return factory(ReviewRequest, resp)

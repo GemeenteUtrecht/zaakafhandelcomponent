@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -27,6 +27,8 @@ class ReviewRequest(Model):
     num_approvals: int
     num_assigned_users: int
     toelichting: str = ""
+    user_deadlines: dict = dict
+    requester: str = ""
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
