@@ -21,6 +21,7 @@ const init = () => {
             extra: 0,
             minNum: window.parseInt(node.dataset.minNum, 10),
             maxNum: window.parseInt(node.dataset.maxNum, 10),
+            title: node.dataset.title,
         },
         renderForm: UserSelect,
         renderAdd: AddStep,

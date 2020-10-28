@@ -40,7 +40,7 @@ const FormSet = ({
     const forms = formData.map(
         (data, index) => (
             <PrefixContext.Provider key={index} value={getPrefix(index)}>
-                <RenderForm index={index} totalStepsIndex={extra} data={data} onDelete={onDelete} />
+                <RenderForm title={configuration.title} index={index} totalStepsIndex={extra} data={data} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );
@@ -82,6 +82,7 @@ FormSet.propTypes = {
         extra: PropTypes.number.isRequired,
         minNum: PropTypes.number.isRequired,
         maxNum: PropTypes.number.isRequired,
+        title: PropTypes.string,
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
     renderAdd: PropTypes.func, // a render prop

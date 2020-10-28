@@ -27,7 +27,7 @@ const isEmpty = (obj) => {
 const extractErrors = (errList) => errList.map((err) => err.msg);
 
 const UserSelect = ({
-    index, totalStepsIndex, data: { errors }, onDelete,
+    title, index, totalStepsIndex, data: { errors }, onDelete,
 }) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
@@ -53,6 +53,8 @@ const UserSelect = ({
         getHiddenInputs(selectedData);
     }, [selectedData]);
 
+    const placeholder = `Selecteer ${title.toLowerCase()}`;
+
     return (
         <div className="user-select detail-card">
             { (errors && !isEmpty(errors.__all__))
@@ -74,7 +76,7 @@ const UserSelect = ({
                 {hiddenInputs}
                 <AsyncSelect
                     isMulti
-                    placeholder="Selecteer adviseur(s)"
+                    placeholder={placeholder}
                     name={`kownsl_users${-index}`}
                     defaultOptions={false}
                     loadOptions={getUsers}
@@ -92,6 +94,7 @@ const UserSelect = ({
 };
 
 UserSelect.propTypes = {
+    title: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     totalStepsIndex: PropTypes.number,
     data: PropTypes.objectOf(PropTypes.object).isRequired,
