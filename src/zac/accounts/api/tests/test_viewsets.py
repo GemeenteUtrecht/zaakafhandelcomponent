@@ -38,7 +38,7 @@ class UserViewsetTests(APITestCase):
     def test_view_search_users_filter(self):
         usernames = [self.users[i].username for i in range(2)]
 
-        params = {"search":"u", "exclude": usernames}
+        params = {"search": "u", "exclude": usernames}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 1)
 

@@ -336,12 +336,12 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         """
         Validate that deadlines per step are monotonic increasing
         """
-        deadline_old = date(1, 1, 1)
+        deadline_old = date.today()
         for form in self.forms:
             deadline_new = form.cleaned_data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
                 form.add_error(
-                    'deadline',
+                    "deadline",
                     _("Please select a date greater than {minimum_date}").format(
                         minimum_date=deadline_old.strftime("%Y-%m-%d")
                     ),
@@ -355,13 +355,12 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
         for form in self.forms:
             users = form.cleaned_data["kownsl_users"]
             if not users:
-                form_add_error('kownsl_users', _("Please select at least 1 advisor."))
+                form_add_error("kownsl_users", _("Please select at least 1 advisor."))
 
             if any([user in users_list for user in users]):
-                form.add_error('kownsl_users', _("Please select unique advisors."))
+                form.add_error("kownsl_users", _("Please select unique advisors."))
 
             users_list.extend(users)
-        
 
     def clean(self):
         super().clean()
