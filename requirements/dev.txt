@@ -35,6 +35,7 @@ django-camunda==0.9.3     # via -r requirements/ci.txt
 django-choices==1.7.0     # via -r requirements/ci.txt, zgw-consumers
 django-compat==1.0.15     # via -r requirements/ci.txt, django-hijack, django-hijack-admin
 django-debug-toolbar==1.11  # via -r requirements/dev.in
+django-elasticsearch-debug-toolbar==2.0.0  # via -r requirements/dev.in
 django-extensions==2.1.6  # via -r requirements/dev.in
 django-extra-views==0.13.0  # via -r requirements/ci.txt
 django-filter==2.3.0      # via -r requirements/ci.txt
