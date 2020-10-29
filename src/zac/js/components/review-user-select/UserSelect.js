@@ -12,7 +12,7 @@ const ENDPOINT = '/accounts/api/users';
 
 const getUsers = (inputValue) => {
     const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
-    const excludedUsers = selectedUserInputs.map((element) => ({ exclude: element.value }));
+    const excludedUsers = selectedUserInputs.map((element) => ({ exclude: element.id }));
 
     return fetchUsers({ inputValue, ENDPOINT, excludedUsers });
 };
@@ -41,6 +41,7 @@ const UserSelect = ({
                     value={user.value}
                     key={user.value}
                     className="input input--hidden input--kownsl_user"
+                    id={user.userObject.username}
                     checked
                     required
                 />
