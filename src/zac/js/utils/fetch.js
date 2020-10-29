@@ -10,14 +10,16 @@ const fetch = (url, opts) => {
 const apiCall = fetch;
 
 const get = async (url, params = {}, multiParams = []) => {
-    let searchParams;
+    const searchParams = new URLSearchParams();
     if (Object.keys(params).length) {
-        searchParams = new URLSearchParams(params);
+        const paramName = Object.keys(params)[0];
+        searchParams.append(paramName, params[paramName]);
     }
     if (multiParams.length > 0) {
-        multiParams.map((param) => searchParams.append(
-            Object.keys(param)[0], param[Object.keys(param)[0]],
-        ));
+        multiParams.map((param) => {
+            const paramName = Object.keys(param)[0]; // param={foo: bar}
+            searchParams.append(paramName, param[paramName]);
+        });
     }
     url += `?${searchParams}`;
     const response = await fetch(url);

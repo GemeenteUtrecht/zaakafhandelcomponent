@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import AsyncSelect from 'react-select/async';
@@ -7,6 +7,7 @@ import { fetchUsers } from '../../utils/users';
 import { HiddenCheckbox, DatePickerInput } from '../forms/Inputs';
 import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
+import { TitleContext } from '../forms/context';
 
 const ENDPOINT = '/accounts/api/users';
 
@@ -27,7 +28,7 @@ const isEmpty = (obj) => {
 const extractErrors = (errList) => errList.map((err) => err.msg);
 
 const UserSelect = ({
-    title, index, totalStepsIndex, data: { errors }, onDelete,
+    index, totalStepsIndex, data: { errors }, onDelete,
 }) => {
     const [selectedData, setSelectedData] = useState(null);
     const [hiddenInputs, setHiddenInputs] = useState(null);
@@ -54,6 +55,7 @@ const UserSelect = ({
         getHiddenInputs(selectedData);
     }, [selectedData]);
 
+    const title = useContext(TitleContext);
     const placeholder = title ? `Selecteer ${title.toLowerCase()}` : null;
 
     return (
@@ -95,7 +97,6 @@ const UserSelect = ({
 };
 
 UserSelect.propTypes = {
-    title: PropTypes.string,
     index: PropTypes.number.isRequired,
     totalStepsIndex: PropTypes.number,
     data: PropTypes.objectOf(PropTypes.object).isRequired,
