@@ -401,7 +401,11 @@ def get_allowed_kwargs(user_perms: UserPermissions) -> list:
     ]
 
     find_kwargs = [
-        {"zaaktypen": perm.zaaktypen, "max_va": perm.max_va, "oo": perm.oo}
+        {
+            "zaaktypen": [zaaktype.url for zaaktype in perm.zaaktypen],
+            "max_va": perm.max_va,
+            "oo": perm.oo,
+        }
         for perm in relevant_perms
     ]
 

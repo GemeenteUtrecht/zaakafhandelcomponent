@@ -66,7 +66,7 @@ def search(
         combined = Q("match_all")
 
         if filter["zaaktypen"]:
-            combined = combined & Terms(zaaktype=filter["zaaktype"])
+            combined = combined & Terms(zaaktype=filter["zaaktypen"])
 
         if filter["max_va"]:
             max_va_order = VertrouwelijkheidsAanduidingen.get_choice(
