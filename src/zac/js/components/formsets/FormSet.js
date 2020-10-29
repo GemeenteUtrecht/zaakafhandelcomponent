@@ -47,7 +47,7 @@ const FormSet = ({
     const extraForms = Array(extra).fill().map(
         (_, index) => (
             <PrefixContext.Provider key={existingCount + index} value={getPrefix(existingCount + index)}>
-                <RenderForm index={existingCount + index} totalStepsIndex={extra} data={{}} onDelete={onDelete} />
+                <RenderForm title={configuration.title} index={existingCount + index} totalStepsIndex={extra} data={{}} onDelete={onDelete} />
             </PrefixContext.Provider>
         ),
     );

@@ -12,9 +12,9 @@ const ENDPOINT = '/accounts/api/users';
 
 const getUsers = (inputValue) => {
     const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
-    const includedUsers = selectedUserInputs.map((element) => ({ include: element.value }));
+    const excludedUsers = selectedUserInputs.map((element) => ({ exclude: element.value }));
 
-    return fetchUsers({ inputValue, ENDPOINT, includedUsers });
+    return fetchUsers({ inputValue, ENDPOINT, excludedUsers });
 };
 
 const isEmpty = (obj) => {
@@ -53,7 +53,7 @@ const UserSelect = ({
         getHiddenInputs(selectedData);
     }, [selectedData]);
 
-    const placeholder = `Selecteer ${title.toLowerCase()}`;
+    const placeholder = title ? `Selecteer ${title.toLowerCase()}` : null;
 
     return (
         <div className="user-select detail-card">
@@ -94,7 +94,7 @@ const UserSelect = ({
 };
 
 UserSelect.propTypes = {
-    title: PropTypes.string.isRequired,
+    title: PropTypes.string,
     index: PropTypes.number.isRequired,
     totalStepsIndex: PropTypes.number,
     data: PropTypes.objectOf(PropTypes.object).isRequired,
