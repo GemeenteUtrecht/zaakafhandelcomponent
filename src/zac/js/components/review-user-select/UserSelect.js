@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import AsyncSelect from 'react-select/async';
@@ -7,14 +7,15 @@ import { fetchUsers } from '../../utils/users';
 import { HiddenCheckbox, DatePickerInput } from '../forms/Inputs';
 import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
+import { TitleContext } from '../forms/context';
 
 const ENDPOINT = '/accounts/api/users';
 
 const getUsers = (inputValue) => {
     const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
-    const filteredUsers = selectedUserInputs.map((element) => element.value);
+    const excludedUsers = selectedUserInputs.map((element) => ({ exclude: element.id }));
 
-    return fetchUsers({ inputValue, ENDPOINT, filteredUsers });
+    return fetchUsers({ inputValue, ENDPOINT, excludedUsers });
 };
 
 const isEmpty = (obj) => {
@@ -41,6 +42,7 @@ const UserSelect = ({
                     value={user.value}
                     key={user.value}
                     className="input input--hidden input--kownsl_user"
+                    id={user.userObject.username}
                     checked
                     required
                 />
@@ -52,6 +54,9 @@ const UserSelect = ({
     useEffect(() => {
         getHiddenInputs(selectedData);
     }, [selectedData]);
+
+    const title = useContext(TitleContext);
+    const placeholder = title ? `Selecteer ${title.toLowerCase()}` : null;
 
     return (
         <div className="user-select detail-card">
@@ -74,7 +79,7 @@ const UserSelect = ({
                 {hiddenInputs}
                 <AsyncSelect
                     isMulti
-                    placeholder="Selecteer adviseur(s)"
+                    placeholder={placeholder}
                     name={`kownsl_users${-index}`}
                     defaultOptions={false}
                     loadOptions={getUsers}
