@@ -82,7 +82,6 @@ FormSet.propTypes = {
         extra: PropTypes.number.isRequired,
         minNum: PropTypes.number.isRequired,
         maxNum: PropTypes.number.isRequired,
-        title: PropTypes.string,
     }).isRequired,
     renderForm: PropTypes.func.isRequired, // a render prop
     renderAdd: PropTypes.func, // a render prop
