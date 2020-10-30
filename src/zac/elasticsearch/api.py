@@ -79,6 +79,7 @@ def append_rol_to_document(rol: Rol):
         url=rol.url,
         betrokkene_type=rol.betrokkene_type,
         betrokkene_identificatie=rol.betrokkene_identificatie,
+        omschrijving_generiek=rol.omschrijving_generiek,
     )
 
     # add rol document to zaak
@@ -105,6 +106,7 @@ def update_rollen_in_zaak_document(zaak: Zaak):
             url=rol.url,
             betrokkene_type=rol.betrokkene_type,
             betrokkene_identificatie=rol.betrokkene_identificatie,
+            omschrijving_generiek=rol.omschrijving_generiek,
         )
         for rol in get_rollen(zaak)
     ]

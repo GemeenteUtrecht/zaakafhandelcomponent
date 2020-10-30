@@ -6,6 +6,7 @@ from elasticsearch_dsl import Document, InnerDoc, Nested, field
 class RolDocument(InnerDoc):
     url = field.Keyword()
     betrokkene_type = field.Keyword()
+    omschrijving_generiek = field.Keyword()
     betrokkene_identificatie = field.Object(
         properties={"identificatie": field.Keyword()}
     )
