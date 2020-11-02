@@ -7,7 +7,7 @@ Zaakafhandelcomponent
 :Keywords: zaken, zaakgericht werken, GEMMA, Utrecht
 :PythonVersion: 3.7
 
-|build-status|
+|build-status| |docs|
 
 Generieke zaakafhandelcomponent.
 
@@ -38,11 +38,13 @@ Referenties
     :alt: Build status
     :target: https://travis-ci.org/GemeenteUtrecht/zaakafhandelcomponent
 
+.. |docs| image:: https://readthedocs.org/projects/zaakafhandelcomponent/badge/?version=latest
+    :target: https://zaakafhandelcomponent.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 .. |requirements| image:: https://requires.io/github/GemeenteUtrecht/zaakafhandelcomponent/requirements.svg?branch=master
      :target: https://requires.io/github/GemeenteUtrecht/zaakafhandelcomponent/requirements/?branch=master
      :alt: Requirements status
-
-.. _testomgeving: https://TODO
 
 Licentie
 ========
