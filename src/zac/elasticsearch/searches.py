@@ -50,7 +50,7 @@ def search(
     identificatie=None,
     bronorganisatie=None,
     zaaktypen=None,
-    allowed=None,
+    allowed=(),
 ):
     s = ZaakDocument.search()[:size]
 
