@@ -31,6 +31,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
+from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
@@ -432,9 +433,7 @@ def get_zaken_es(
     _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
 
     # ES search
-    from zac.elasticsearch.searches import search
-
-    zaak_urls = search(size=25, **find_kwargs)
+    zaak_urls = search(size=50, **find_kwargs)
 
     def _get_zaak(zaak_url):
         return get_zaak(zaak_url=zaak_url)
@@ -446,14 +445,6 @@ def get_zaken_es(
     # resolve zaaktype reference
     for zaak in zaken:
         zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
-
-    # sort results by startdatum / registratiedatum / identificatie
-
-    zaken = sorted(
-        zaken,
-        key=lambda zaak: (zaak.registratiedatum, zaak.startdatum, zaak.identificatie),
-        reverse=True,
-    )
 
     return zaken
 

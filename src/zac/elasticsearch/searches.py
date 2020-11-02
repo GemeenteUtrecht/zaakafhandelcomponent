@@ -51,6 +51,7 @@ def search(
     bronorganisatie=None,
     zaaktypen=None,
     allowed=(),
+    ordering=("-identificatie", "-startdatum", "-registratiedatum"),
 ):
     s = ZaakDocument.search()[:size]
 
@@ -92,6 +93,9 @@ def search(
     if _filters:
         combined_filter = reduce(operator.or_, _filters)
         s = s.filter(combined_filter)
+
+    if ordering:
+        s = s.sort(*ordering)
 
     response = s.execute()
     zaak_urls = [hit.url for hit in response]
