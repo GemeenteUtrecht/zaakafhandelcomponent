@@ -20,5 +20,8 @@ class ZaakDocument(Document):
     va_order = field.Integer()
     rollen = Nested(RolDocument)
 
+    startdatum = field.Date()
+    registratiedatum = field.Date()
+
     class Index:
         name = settings.ES_INDEX_ZAKEN

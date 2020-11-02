@@ -51,7 +51,7 @@ REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += (
 
 
 # Django debug toolbar
-INSTALLED_APPS += ["debug_toolbar", "ddt_api_calls"]
+INSTALLED_APPS += ["debug_toolbar", "ddt_api_calls", "elastic_panel"]
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 INTERNAL_IPS = ("127.0.0.1",)
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
@@ -70,6 +70,7 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
     "ddt_api_calls.panels.APICallsPanel",
+    "elastic_panel.panel.ElasticDebugPanel",
 ]
 
 AXES_BEHIND_REVERSE_PROXY = (

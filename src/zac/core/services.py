@@ -31,6 +31,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
+from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
@@ -386,6 +387,64 @@ def get_zaken(
         key=lambda zaak: (zaak.registratiedatum, zaak.startdatum, zaak.identificatie),
         reverse=True,
     )
+
+    return zaken
+
+
+def get_allowed_kwargs(user_perms: UserPermissions) -> list:
+    if user_perms.user.is_superuser:
+        return []
+
+    relevant_perms = [
+        perm
+        for perm in user_perms.zaaktype_permissions
+        if perm.permission == zaken_inzien.name
+    ]
+
+    find_kwargs = [
+        {
+            "zaaktypen": [zaaktype.url for zaaktype in perm.zaaktypen],
+            "max_va": perm.max_va,
+            "oo": perm.oo,
+        }
+        for perm in relevant_perms
+    ]
+
+    return find_kwargs
+
+
+def get_zaken_es(
+    user_perms: UserPermissions,
+    query_params=None,
+) -> List[Zaak]:
+    """
+    Fetch all zaken from the ZRCs.
+
+    Only retrieve what the user is allowed to see.
+    """
+    # todo validate query_params
+    find_kwargs = query_params or {}
+    allowed_kwargs = get_allowed_kwargs(user_perms)
+    if not user_perms.user.is_superuser and not allowed_kwargs:
+        return []
+
+    find_kwargs["allowed"] = allowed_kwargs
+
+    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+
+    # ES search
+    zaak_urls = search(size=50, **find_kwargs)
+
+    def _get_zaak(zaak_url):
+        return get_zaak(zaak_url=zaak_url)
+
+    with parallel(max_workers=10) as executor:
+        results = executor.map(_get_zaak, zaak_urls)
+        zaken = list(results)
+
+    # resolve zaaktype reference
+    for zaak in zaken:
+        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
 
     return zaken
 

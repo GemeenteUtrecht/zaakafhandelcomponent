@@ -13,6 +13,7 @@ from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
+from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..permissions import zaken_inzien
@@ -23,7 +24,7 @@ ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 
 
 @requests_mock.Mocker()
-class ZaakListTests(ClearCachesMixin, TransactionWebTest):
+class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     url = reverse_lazy("core:index")
 
@@ -110,17 +111,23 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
         # set up zaken API data
-        zaak = generate_oas_component(
+        zaak1 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             zaaktype=zt1["url"],
             vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/ce05e9c7-b9cd-42d1-ba0e-e0b3d2001be9",
+            zaaktype=zt2["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
         )
+        m.get(zaak1["url"], json=zaak1)
+        self.create_zaak_document(zaak1)
+        self.create_zaak_document(zaak2)
 
         response = self.app.get(self.url, user=self.user)
 
@@ -132,7 +139,7 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
 
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)
-        self.assertEqual(zaken[0].url, zaak["url"])
+        self.assertEqual(zaken[0].url, zaak1["url"])
 
         # verify API calls
         self.assertEqual(
@@ -141,15 +148,12 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         )
         (
             req_ztc_schema,
-            req_zaaktypen,
             req_zaaktypen_catalogus,
+            req_zaaktypen,
             req_zrc_schema,
-            req_zaken,
+            req_zaak,
         ) = m.request_history
-        query = parse_qs(req_zaken.query)
-
-        self.assertEqual(len(query["zaaktype"]), 1)
-        self.assertEqual(query["zaaktype"][0], zt1["url"])
+        self.assertEqual(req_zaak.url, zaak1["url"])
 
     def test_list_zaken_filter_out_max_va(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -188,23 +192,18 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken?maximaleVertrouwelijkheidaanduiding=openbaar",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zaak1],
-            },
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
+        m.get(zaak1["url"], json=zaak1)
+        self.create_zaak_document(zaak1)
+        self.create_zaak_document(zaak2)
 
         response = self.app.get(self.url, user=self.user)
-
-        # note that requests_mock defaults to case-insensitive
-        self.assertEqual(
-            m.last_request.qs["maximalevertrouwelijkheidaanduiding"],
-            [VertrouwelijkheidsAanduidingen.openbaar],
-        )
 
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)
@@ -255,6 +254,8 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
                 "results": [zaak1],
             },
         )
+        m.get(zaak1["url"], json=zaak1)
+        self.create_zaak_document(zaak1)
 
         response = self.app.get(self.url, {"zaaktypen": zt1["url"]}, user=superuser)
 
@@ -264,15 +265,9 @@ class ZaakListTests(ClearCachesMixin, TransactionWebTest):
         self.assertEqual(len(zaken), 1)
         self.assertEqual(zaken[0].url, zaak1["url"])
 
-        # verify API calls
-        req_zaken = m.last_request
-        query = parse_qs(req_zaken.query)
-        self.assertEqual(len(query["zaaktype"]), 1)
-        self.assertEqual(query["zaaktype"][0], zt1["url"])
-
 
 @requests_mock.Mocker()
-class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
+class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     """
     Test cases for organisatorischeEenheid restrictions in the permission system.
     """
@@ -323,43 +318,60 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
             for_user=self.user,
         )
         # set up zaken API data
-        zaak = generate_oas_component(
+        # zaak with rol
+        zaak1 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             zaaktype=zt1["url"],
             vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+            identificatie="zaak1",
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        # can't use generate_oas_component because of polymorphism
+        rol1 = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": zaak1["url"],
+            "betrokkene": None,
+            "betrokkeneType": "organisatorische_eenheid",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.oo.slug,
+            },
+        }
+        # zaak without rol
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+            identificatie="zaak2",
         )
+        m.get(zaak1["url"], json=zaak1)
+        m.get(zaak2["url"], json=zaak2)
+        self.create_zaak_document(zaak1)
+        self.add_rol_to_document(rol1)
+        self.create_zaak_document(zaak2)
 
         response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
 
-        # verify API calls
-        self.assertEqual(
-            len(m.request_history),
-            5,
-        )
-        (
-            req_ztc_schema,
-            req_zaaktypen,
-            req_zaaktypen_catalogus,
-            req_zrc_schema,
-            req_zaken,
-        ) = m.request_history
-        query = parse_qs(req_zaken.query)
+        zaken = response.context["zaken"]
+        self.assertEqual(len(zaken), 2)
 
-        self.assertEqual(
-            set(query.keys()), {"zaaktype", "maximalevertrouwelijkheidaanduiding"}
-        )
+        zaken = sorted(zaken, key=lambda zaak: zaak.identificatie)
+        self.assertEqual(zaken[0].url, zaak1["url"])
+        self.assertEqual(zaken[1].url, zaak2["url"])
 
     def test_oo_restriction(self, m):
         """
-        Test getting a zaak list without OO restrictions.
+        Test getting a zaak list with OO restrictions.
         """
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -395,52 +407,78 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
         ap.save()
 
         # set up zaken API data
-        zaak = generate_oas_component(
+        # zaak with rol
+        zaak1 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             zaaktype=zt1["url"],
             vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+            identificatie="zaak1",
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        # can't use generate_oas_component because of polymorphism
+        rol1 = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": zaak1["url"],
+            "betrokkene": None,
+            "betrokkeneType": "organisatorische_eenheid",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.oo.slug,
+            },
+        }
+        # zaak without rol
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+            identificatie="zaak2",
         )
+        # zaak with another oo
+        zaak3 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            zaaktype=zt1["url"],
+            vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
+            identificatie="zaak2",
+        )
+        rol3 = {
+            "url": f"{ZAKEN_ROOT}rollen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            "zaak": zaak3["url"],
+            "betrokkene": None,
+            "betrokkeneType": "organisatorische_eenheid",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": "12345",
+            },
+        }
+        for zaak in [zaak1, zaak2, zaak3]:
+            m.get(zaak["url"], json=zaak)
+            self.create_zaak_document(zaak)
+
+        self.add_rol_to_document(rol1)
+        self.add_rol_to_document(rol3)
 
         response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
 
-        # verify API calls
-        self.assertEqual(
-            len(m.request_history),
-            5,
-        )
-        (
-            req_ztc_schema,
-            req_zaaktypen,
-            req_zaaktypen_catalogus,
-            req_zrc_schema,
-            req_zaken,
-        ) = m.request_history
-        query = parse_qs(req_zaken.query)
-
-        self.assertEqual(
-            set(query.keys()),
-            {
-                "zaaktype",
-                "maximalevertrouwelijkheidaanduiding",
-                "rol__betrokkenetype",
-                "rol__betrokkeneidentificatie__organisatorischeeenheid__identificatie",
-            },
-        )
-        self.assertEqual(query["rol__betrokkenetype"][0], "organisatorische_eenheid")
-        self.assertEqual(
-            query[
-                "rol__betrokkeneidentificatie__organisatorischeeenheid__identificatie"
-            ][0],
-            "oo-test",
-        )
+        zaken = response.context["zaken"]
+        self.assertEqual(len(zaken), 1)
+        self.assertEqual(zaken[0].url, zaak1["url"])
 
     def test_same_perm_set_multiple_ap(self, m):
         """
@@ -486,6 +524,7 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
         ap2.userauthorizationprofile_set.create(user=self.user)
 
         # set up zaken API data
+        # zaak without rol
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -493,33 +532,13 @@ class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
             zaaktype=zt1["url"],
             vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
-        )
+        m.get(zaak["url"], json=zaak)
+        self.create_zaak_document(zaak)
 
         response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
 
-        # verify API calls
-        self.assertEqual(
-            len(m.request_history),
-            5,
-        )
-        (
-            req_ztc_schema,
-            req_zaaktypen,
-            req_zaaktypen_catalogus,
-            req_zrc_schema,
-            req_zaken,
-        ) = m.request_history
-        query = parse_qs(req_zaken.query)
-
-        self.assertEqual(
-            set(query.keys()),
-            {
-                "zaaktype",
-                "maximalevertrouwelijkheidaanduiding",
-            },
-        )
+        zaken = response.context["zaken"]
+        self.assertEqual(len(zaken), 1)
+        self.assertEqual(zaken[0].url, zaak["url"])

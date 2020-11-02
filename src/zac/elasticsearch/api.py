@@ -31,6 +31,8 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         va_order=VertrouwelijkheidsAanduidingen.get_choice(
             zaak.vertrouwelijkheidaanduiding
         ).order,
+        startdatum=zaak.startdatum,
+        registratiedatum=zaak.registratiedatum,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -56,6 +58,8 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         va_order=VertrouwelijkheidsAanduidingen.get_choice(
             zaak.vertrouwelijkheidaanduiding
         ).order,
+        startdatum=zaak.startdatum,
+        registratiedatum=zaak.registratiedatum,
     )
     return zaak_document
 
