@@ -3,6 +3,7 @@ from django.utils.encoding import force_text
 from django.utils.translation import gettext_lazy as _
 
 from solo.models import SingletonModel
+from zgw_consumers.constants import APITypes
 
 
 class KadasterConfig(SingletonModel):
@@ -10,15 +11,15 @@ class KadasterConfig(SingletonModel):
         _("root URL locatieserver"),
         default="https://geodata.nationaalgeoregister.nl/locatieserver/v3/",
     )
-    bag_api = models.URLField(
-        _("root URL BAG API"),
-        default="https://bag.basisregistraties.overheid.nl/api/v1/",
-    )
-    api_key = models.CharField(
-        _("API key"),
-        max_length=255,
-        blank=True,
-        help_text=_("API key used for BAG."),
+    service = models.ForeignKey(
+        "zgw_consumers.Service",
+        null=True,
+        on_delete=models.SET_NULL,
+        limit_choices_to={"api_type": APITypes.orc},
+        verbose_name=_("service"),
+        help_text=_(
+            "Configuration for the service that makes requests to the BAG API."
+        ),
     )
 
     class Meta:
@@ -30,8 +31,5 @@ class KadasterConfig(SingletonModel):
     def save(self, *args, **kwargs):
         if not self.locatieserver.endswith("/"):
             self.locatieserver = f"{self.locatieserver}/"
-
-        if not self.bag_api.endswith("/"):
-            self.bag_api = f"{self.bag_api}/"
 
         super().save(*args, **kwargs)

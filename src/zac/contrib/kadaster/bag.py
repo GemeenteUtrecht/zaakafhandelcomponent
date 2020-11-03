@@ -14,8 +14,8 @@ A_DAY = 60 * 60 * 24
 class Bag:
     def __init__(self):
         config = KadasterConfig.get_solo()
-        self.url = config.bag_api
-        self.headers = {"X-Api-Key": config.api_key}
+        self.url = config.service.api_root
+        self.headers = config.service.get_auth_header(self.url)
 
     def retrieve(self, url: str, *args, **kwargs):
         response = requests.get(url, headers=self.headers, *args, **kwargs)
