@@ -37,6 +37,12 @@ class Rol(_Rol):
 
         return getter(self)
 
+    def get_roltype_omschrijving(self) -> Optional[str]:
+        from zac.core.services import get_roltype
+
+        roltype = get_roltype(self.roltype)
+        return roltype.omschrijving
+
 
 def get_bsn(rol: Rol) -> str:
     if rol.betrokkene:
