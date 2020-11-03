@@ -18,7 +18,6 @@ urlpatterns = [
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),
     path("forms/", include("zac.forms.urls")),
-    path("regiezaken/", include("zac.regiezaken.urls")),
     path("contrib/", include("zac.contrib.kadaster.urls")),
     path("camunda/", include("zac.camunda.urls")),
     path("activities/", include("zac.activities.urls")),
