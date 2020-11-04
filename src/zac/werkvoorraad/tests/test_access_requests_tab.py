@@ -16,6 +16,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import (
     generate_oas_component,
     mock_service_oas_get,
@@ -35,17 +36,12 @@ def mock_dashboard_context():
         "zac.werkvoorraad.views.get_camunda_user_tasks", return_value=[]
     )
     m_get_camunda_user_tasks.start()
-    m_get_behandelaar_zaken_unfinished = patch(
-        "zac.werkvoorraad.views.get_behandelaar_zaken_unfinished", return_value=[]
-    )
-    m_get_behandelaar_zaken_unfinished.start()
     yield
     m_get_camunda_user_tasks.stop()
-    m_get_behandelaar_zaken_unfinished.stop()
 
 
 @requests_mock.Mocker()
-class AccessRequestsTabTests(ClearCachesMixin, TransactionWebTest):
+class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     url = reverse_lazy("index")
 
     def setUp(self):
@@ -71,7 +67,24 @@ class AccessRequestsTabTests(ClearCachesMixin, TransactionWebTest):
             identificatie=IDENTIFICATIE,
             zaaktype=self.zaaktype["url"],
         )
-
+        # can't use generate_oas_component because of polymorphism
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+            },
+        }
+        self.create_zaak_document(self.zaak)
+        self.add_rol_to_document(rol)
         self.access_request1 = AccessRequestFactory.create(zaak=self.zaak["url"])
         self.access_request2 = AccessRequestFactory.create()
 
@@ -84,15 +97,7 @@ class AccessRequestsTabTests(ClearCachesMixin, TransactionWebTest):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-
-        m.get(
-            f"{ZAKEN_ROOT}zaken?zaaktype={self.zaaktype['url']}"
-            "&maximaleVertrouwelijkheidaanduiding=zeer_geheim"
-            f"&rol__betrokkeneIdentificatie__medewerker__identificatie={self.user.username}"
-            "&rol__omschrijvingGeneriek=behandelaar"
-            "&rol__betrokkeneType=medewerker",
-            json=paginated_response([self.zaak]),
-        )
+        m.get(self.zaak["url"], json=self.zaak)
 
     def test_display_access_requests_no_handle_permission(self, m):
         self._setUpMocks(m)

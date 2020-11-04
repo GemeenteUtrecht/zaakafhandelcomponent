@@ -5,7 +5,7 @@ from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from ..documents import ZaakDocument
-from ..searches import search_zaken
+from ..searches import search
 from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -35,6 +35,7 @@ class SearchZakenTests(ESMixin, TestCase):
                 {
                     "url": f"{ZAKEN_ROOT}rollen/de7039d7-242a-4186-91c3-c3b49228211a",
                     "betrokkene_type": "medewerker",
+                    "omschrijving_generiek": "behandelaar",
                     "betrokkene_identificatie": {
                         "identificatie": "some_username",
                     },
@@ -59,7 +60,7 @@ class SearchZakenTests(ESMixin, TestCase):
         zaken.refresh()
 
     def test_search_zaaktype(self):
-        result = search_zaken(
+        result = search(
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
             ]
@@ -68,39 +69,56 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
-    def test_search_max_va(self):
-        result = search_zaken(max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
-
     def test_search_identificatie(self):
-        result = search_zaken(identificatie="ZAAK1")
+        result = search(identificatie="ZAAK1")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_bronorg(self):
-        result = search_zaken(bronorganisatie="123456")
+        result = search(bronorganisatie="123456")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
-    def test_search_oo(self):
-        result = search_zaken(oo="123456")
+    def test_search_behandelaar(self):
+        result = search(behandelaar="some_username")
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
+    def test_search_allowed(self):
+        allowed = [
+            {
+                "zaaktypen": [
+                    "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
+                ],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+                "oo": "123456",
+            }
+        ]
+
+        result = search(allowed=allowed)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_combined(self):
-        result = search_zaken(
+        result = search(
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
             ],
             bronorganisatie="123456",
             identificatie="ZAAK1",
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            oo="123456",
+            allowed=[
+                {
+                    "zaaktypen": [
+                        "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
+                    ],
+                    "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+                    "oo": "123456",
+                }
+            ],
         )
 
         self.assertEqual(len(result), 1)

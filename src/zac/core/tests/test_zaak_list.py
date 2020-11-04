@@ -245,15 +245,6 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
                 "results": [zt1, zt2],
             },
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken?zaaktype={zt1['url']}",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zaak1],
-            },
-        )
         m.get(zaak1["url"], json=zaak1)
         self.create_zaak_document(zaak1)
 
