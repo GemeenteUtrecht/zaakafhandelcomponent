@@ -422,6 +422,7 @@ def get_allowed_kwargs(user_perms: UserPermissions) -> list:
 
 def get_zaken_es(
     user_perms: UserPermissions,
+    size=None,
     query_params=None,
 ) -> List[Zaak]:
     """
@@ -440,7 +441,7 @@ def get_zaken_es(
     _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
 
     # ES search
-    zaak_urls = search(size=50, **find_kwargs)
+    zaak_urls = search(size=size, **find_kwargs)
 
     def _get_zaak(zaak_url):
         return get_zaak(zaak_url=zaak_url)
@@ -775,15 +776,8 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     """
     medewerker_id = user.username
     user_perms = UserPermissions(user)
-    behandelaar_zaken = get_zaken(
-        user_perms,
-        skip_cache=True,
-        find_all=True,
-        **{
-            "rol__betrokkeneIdentificatie__medewerker__identificatie": medewerker_id,
-            "rol__omschrijvingGeneriek": "behandelaar",
-            "rol__betrokkeneType": "medewerker",
-        },
+    behandelaar_zaken = get_zaken_es(
+        user_perms, query_params={"behandelaar": medewerker_id}
     )
     return behandelaar_zaken
 

@@ -9,50 +9,17 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from .documents import ZaakDocument
 
 
-def search_zaken(
-    size=25,
-    zaaktypen=None,
-    identificatie=None,
-    bronorganisatie=None,
-    max_va=None,
-    oo=None,
-) -> List[str]:
-    s = ZaakDocument.search()[:size]
-    if zaaktypen:
-        s = s.filter("terms", zaaktype=zaaktypen)
-    if identificatie:
-        s = s.filter("term", identificatie=identificatie)
-    if bronorganisatie:
-        s = s.filter("term", bronorganisatie=bronorganisatie)
-    if max_va:
-        max_va_order = VertrouwelijkheidsAanduidingen.get_choice(max_va).order
-        s = s.filter("range", va_order={"lte": max_va_order})
-    if oo:
-        s = s.filter(
-            "nested",
-            path="rollen",
-            query=Q(
-                "bool",
-                filter=[
-                    Q("term", rollen__betrokkene_type="organisatorische_eenheid"),
-                    Q("term", rollen__betrokkene_identificatie__identificatie=oo),
-                ],
-            ),
-        )
-
-    response = s.execute()
-    zaak_urls = [hit.url for hit in response]
-    return zaak_urls
-
-
 def search(
-    size=25,
+    size=None,
     identificatie=None,
     bronorganisatie=None,
     zaaktypen=None,
+    behandelaar=None,
     allowed=(),
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
-):
+) -> List[str]:
+
+    size = size or 10000
     s = ZaakDocument.search()[:size]
 
     if identificatie:
@@ -61,7 +28,23 @@ def search(
         s = s.filter(Term(bronorganisatie=bronorganisatie))
     if zaaktypen:
         s = s.filter(Terms(zaaktype=zaaktypen))
+    if behandelaar:
+        s = s.filter(
+            Nested(
+                path="rollen",
+                query=Bool(
+                    filter=[
+                        Term(rollen__betrokkene_type="medewerker"),
+                        Term(rollen__omschrijving_generiek="behandelaar"),
+                        Term(
+                            rollen__betrokkene_identificatie__identificatie=behandelaar
+                        ),
+                    ]
+                ),
+            )
+        )
 
+    # construct query part to display only allowed zaken
     _filters = []
     for filter in allowed:
         combined = Q("match_all")
