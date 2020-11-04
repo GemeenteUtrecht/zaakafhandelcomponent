@@ -195,6 +195,13 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
     return eigenschappen
 
 
+@cache_result("roltype:{url}", timeout=A_DAY)
+def get_roltype(url: str) -> RolType:
+    client = _client_from_url(url)
+    result = client.retrieve("roltype", url)
+    return factory(RolType, result)
+
+
 @cache_result("zt:roltypen:{zaaktype.url}:{omschrijving_generiek}", timeout=A_DAY)
 def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
     query_params = {"zaaktype": zaaktype.url}

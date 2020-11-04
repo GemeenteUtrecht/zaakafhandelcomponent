@@ -121,9 +121,9 @@
         {% for rol in rollen %}
             {% with rol.get_name|default:'' as name %}
                 <div class="betrokkene-data"
-                    data-system-type="{{ rol.betrokken_type }}"
+                    data-system-type="{{ rol.betrokkene_type }}"
                     data-type="{{ rol.get_betrokkene_type_display }}"
-                    data-role="{{ rol.get_omschrijving_generiek_display }}"
+                    data-role="{{ rol.get_roltype_omschrijving }}"
                     data-name="{{ name }}"
                     data-identification="{{ rol.get_identificatie|default:'' }}"
                 >
