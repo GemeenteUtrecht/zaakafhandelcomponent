@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse_lazy
 
 import requests_mock
@@ -83,3 +85,29 @@ class ReviewSubmittedTests(APITestCase):
             m.last_request.url,
             "https://camunda.example.com/engine-rest/task/some-task-id/complete",
         )
+
+    def test_no_user_tasks_found(self, m):
+        """
+        Assert that the notification is succesfully handled even if the user task is
+        already closed.
+
+        This can happen because of the `returnUrl` action.
+        """
+        mock_service_oas_get(m, "https://kownsl.example.com/api/v1/", "kownsl")
+        m.get(
+            "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://camunda.example.com/engine-rest/task"
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=bob",
+            json=[],
+        )
+
+        with patch("zac.contrib.kownsl.views.complete_task") as mock_complete:
+            response = self.client.post(self.endpoint, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(m.last_request.method, "GET")
+        mock_complete.assert_not_called()
