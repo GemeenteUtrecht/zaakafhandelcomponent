@@ -294,110 +294,6 @@ def _find_zaken(
     return _zaken
 
 
-def get_zaken(
-    user_perms: UserPermissions,
-    zaaktypen: List[str] = None,
-    identificatie: str = "",
-    bronorganisatie: str = "",
-    find_all=False,
-    **query_params,
-) -> List[Zaak]:
-    """
-    Fetch all zaken from the ZRCs.
-
-    Only retrieve what the user permissions dictate.
-    """
-    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
-    allowed_zaaktypen = _base_zaaktypen
-
-    if user_perms.user.is_superuser:
-        query_zaaktypen = zaaktypen or [""]
-    else:
-        query_zaaktypen = (
-            allowed_zaaktypen.keys()
-            if not zaaktypen
-            else set(zaaktypen).intersection(set(allowed_zaaktypen))
-        )
-
-    # build keyword arguments for retrieval jobs - running network calls in parallel
-    # if possible
-    find_kwargs = []
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    for zrc in zrcs:
-        client = zrc.build_client()
-
-        for zaaktype_url in query_zaaktypen:
-            # figure out the max va
-            relevant_perms = [
-                perm
-                for perm in user_perms.zaaktype_permissions
-                if perm.permission == zaken_inzien.name and perm.contains(zaaktype_url)
-            ]
-
-            if not relevant_perms and not user_perms.user.is_superuser:
-                continue
-
-            # sort them by max va
-            relevant_perms = sorted(
-                relevant_perms, key=lambda ztp: VA_ORDER[ztp.max_va], reverse=True
-            )
-            max_va = relevant_perms[0].max_va if relevant_perms else ""
-            if user_perms.user.is_superuser:
-                relevant_oos = {None}
-            else:
-                relevant_oos = {perm.oo for perm in relevant_perms}
-
-            base_find_kwargs = {
-                "client": client,
-                "identificatie": identificatie,
-                "bronorganisatie": bronorganisatie,
-                "zaaktype": zaaktype_url,
-                "max_va": max_va,
-                "find_all": find_all,
-            }
-
-            # check if we need to filter on OO
-            if (
-                None in relevant_oos
-            ):  # no limitation on OO because of some AP at some point
-                find_kwargs.append(
-                    {
-                        **base_find_kwargs,
-                        **query_params,
-                    }
-                )
-            else:
-                for oo_slug in relevant_oos:
-                    find_kwargs.append(
-                        {
-                            **base_find_kwargs,
-                            "rol__betrokkeneType": "organisatorische_eenheid",
-                            "rol__betrokkeneIdentificatie__organisatorischeEenheid__identificatie": oo_slug,
-                            **query_params,
-                        }
-                    )
-
-    with parallel() as executor:
-        results = executor.map(lambda kwargs: _find_zaken(**kwargs), find_kwargs)
-        flattened = sum(list(results), [])
-
-    zaken = factory(Zaak, flattened)
-
-    # resolve zaaktype reference
-    for zaak in zaken:
-        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
-
-    # sort results by startdatum / registratiedatum / identificatie
-
-    zaken = sorted(
-        zaken,
-        key=lambda zaak: (zaak.registratiedatum, zaak.startdatum, zaak.identificatie),
-        reverse=True,
-    )
-
-    return zaken
-
-
 def get_allowed_kwargs(user_perms: UserPermissions) -> list:
     if user_perms.user.is_superuser:
         return []
@@ -453,6 +349,43 @@ def get_zaken_es(
     # resolve zaaktype reference
     for zaak in zaken:
         zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
+
+    return zaken
+
+
+def get_zaken_all(
+    **query_params,
+) -> List[Zaak]:
+    """
+    Fetch all zaken from the ZRCs.
+    Used to index Zaken in ES.
+    Should not be used for searches with user permissions
+    """
+
+    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    clients = [zrc.build_client() for zrc in zrcs]
+
+    def _get_paginated_results(client):
+        return get_paginated_results(client, "zaak", query_params=query_params)
+
+    with parallel() as executor:
+        results = executor.map(_get_paginated_results, clients)
+        flattened = sum(list(results), [])
+
+    zaken = factory(Zaak, flattened)
+
+    # resolve zaaktype reference
+    for zaak in zaken:
+        zaak.zaaktype = zaaktypen[zaak.zaaktype]
+
+    # sort results by startdatum / registratiedatum / identificatie
+    zaken = sorted(
+        zaken,
+        key=lambda zaak: (zaak.registratiedatum, zaak.startdatum, zaak.identificatie),
+        reverse=True,
+    )
 
     return zaken
 
