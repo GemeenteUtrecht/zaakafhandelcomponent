@@ -7,7 +7,8 @@ class RolDocument(InnerDoc):
     url = field.Keyword()
     betrokkene_type = field.Keyword()
     betrokkene_identificatie = field.Object(
-        properties={"identificatie": field.Keyword()}
+        properties={"identificatie": field.Keyword()},
+        dynamic=False,
     )
 
 
