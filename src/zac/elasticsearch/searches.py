@@ -8,6 +8,13 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .documents import ZaakDocument
 
+SUPPORTED_QUERY_PARAMS = (
+    "identificatie",
+    "bronorganisatie",
+    "zaaktypen",
+    "behandelaar",
+)
+
 
 def search(
     size=None,

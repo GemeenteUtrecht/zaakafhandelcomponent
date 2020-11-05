@@ -28,10 +28,9 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
-from zac.elasticsearch.searches import search
+from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import InformatieObjectType, StatusType, Zaak
 
@@ -326,8 +325,16 @@ def get_zaken_es(
 
     Only retrieve what the user is allowed to see.
     """
-    # todo validate query_params
     find_kwargs = query_params or {}
+    # validate query params
+    not_supported_params = set(find_kwargs.keys()) - set(SUPPORTED_QUERY_PARAMS)
+    if not_supported_params:
+        raise ValueError(
+            "{} parameters are not supported for ES-based search".format(
+                not_supported_params
+            )
+        )
+
     allowed_kwargs = get_allowed_kwargs(user_perms)
     if not user_perms.user.is_superuser and not allowed_kwargs:
         return []
