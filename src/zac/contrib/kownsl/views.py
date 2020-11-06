@@ -4,12 +4,12 @@ from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
 from zgw_consumers.models import Service
 
-from zac.notifications.views import NotificationCallbackView
+from zac.notifications.views import BaseNotificationCallbackView
 
 logger = logging.getLogger(__name__)
 
 
-class KownslNotificationCallbackView(NotificationCallbackView):
+class KownslNotificationCallbackView(BaseNotificationCallbackView):
     def handle_notification(self, data: dict):
         # just to make sure, shouldn't happen with our URL routing
         if not data["kanaal"] == "kownsl":
