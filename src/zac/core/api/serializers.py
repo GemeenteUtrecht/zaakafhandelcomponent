@@ -1,7 +1,9 @@
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
+from djchoices import ChoiceItem, DjangoChoices
 from rest_framework import serializers
 
 from .utils import (
@@ -109,3 +111,15 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
     kinderen = serializers.ListField()
     verblijfplaats = serializers.DictField()
     partners = serializers.ListField()
+
+
+class AardRelatieChoices(DjangoChoices):
+    vervolg = ChoiceItem("vervolg", _("Vervolg"))
+    bijdrage = ChoiceItem("bijdrage", _("Bijdrage"))
+    onderwerp = ChoiceItem("onderwerp", _("Onderwerp"))
+
+
+class AddZaakRelationSerializer(serializers.Serializer):
+    relation_zaak = serializers.URLField(required=True)
+    aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
+    main_zaak = serializers.URLField(required=True)
