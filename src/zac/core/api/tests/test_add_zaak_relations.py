@@ -1,0 +1,208 @@
+from django.urls import reverse_lazy
+
+import requests_mock
+from rest_framework import status
+from rest_framework.test import APITestCase
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+
+from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.core.permissions import zaken_inzien
+from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import generate_oas_component, mock_service_oas_get
+
+
+@requests_mock.Mocker()
+class GetZakenTests(ESMixin, ClearCachesMixin, APITestCase):
+    endpoint = reverse_lazy("core:zaken")
+
+    def test_login_required(self, m):
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_no_query_parameter_errors(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_valid_request_without_permissions(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+
+        # Set up catalogus mocks
+        catalogus_root = "http://catalogus.nl/api/v1/"
+        catalogus_url = (
+            f"{catalogus_root}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=catalogus_root)
+        mock_service_oas_get(m, catalogus_root, "ztc")
+
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{catalogus_root}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        m.get(
+            url=f"{catalogus_root}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
+        )
+
+        # Set up zaken mocks
+        zaken_root = "http://zaken.nl/api/v1/"
+        zaak_identificatie = "ZAAK-2020-01"
+        Service.objects.create(api_type=APITypes.zrc, api_root=zaken_root)
+        mock_service_oas_get(m, zaken_root, "zrc")
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaken_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie=zaak_identificatie,
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        self.create_zaak_document(zaak)
+
+        response = self.client.get(self.endpoint, {"identificatie": zaak_identificatie})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.data), 0)
+
+    def test_valid_request_with_permissions(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+
+        # Set up catalogus mocks
+        catalogus_root = "http://catalogus.nl/api/v1/"
+        catalogus_url = (
+            f"{catalogus_root}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=catalogus_root)
+        mock_service_oas_get(m, catalogus_root, "ztc")
+
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{catalogus_root}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        m.get(
+            url=f"{catalogus_root}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
+        )
+
+        # Set up zaken mocks
+        zaken_root = "http://zaken.nl/api/v1/"
+        zaak_identificatie = "ZAAK-2020-01"
+        Service.objects.create(api_type=APITypes.zrc, api_root=zaken_root)
+        mock_service_oas_get(m, zaken_root, "zrc")
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaken_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie=zaak_identificatie,
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        self.create_zaak_document(zaak)
+
+        m.get(
+            url=zaak["url"],
+            json=zaak,
+        )
+
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus=catalogus_url,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        response = self.client.get(self.endpoint, {"identificatie": zaak_identificatie})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["identificatie"], zaak_identificatie)
+
+
+@requests_mock.Mocker()
+class CreateZakenRelationTests(APITestCase):
+    endpoint = reverse_lazy("core:add-zaak-relation")
+
+    def test_login_required(self, m):
+        response = self.client.post(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_no_query_parameter_errors(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.post(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_valid_request(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+
+        zaak_root = "http://zaken.nl/api/v1/"
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=zaak_root)
+        mock_service_oas_get(m, zaak_root, "zrc")
+
+        main_zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+        )
+        m.get(url=main_zaak["url"], json=main_zaak)
+
+        relation_zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaak_root}zaken/8d305721-15c9-4b1a-bfac-d2cd52a318d7",
+        )
+
+        # Mock the update of the main zaak
+        main_zaak["relevanteAndereZaken"].append(
+            {
+                "url": relation_zaak["url"],
+                "aardRelatie": "vervolg",
+            }
+        )
+        m.patch(url=main_zaak["url"], json=main_zaak)
+
+        response = self.client.post(
+            self.endpoint,
+            data={
+                "relation_zaak": relation_zaak["url"],
+                "main_zaak": main_zaak["url"],
+                "aard_relatie": "vervolg",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
