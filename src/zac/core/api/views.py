@@ -11,17 +11,20 @@ from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
 
+from ...accounts.permissions import UserPermissions
 from ..models import CoreConfig
-from ..services import get_document, get_informatieobjecttype, get_zaak
+from ..services import get_document, get_informatieobjecttype, get_zaak, get_zaken_es
 from .permissions import CanAddDocuments
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
+    AddZaakRelationSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
+    ZaakIdentificatieSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
 
@@ -149,3 +152,64 @@ class PostExtraInfoSubjectView(views.APIView):
 
         serializer = ExtraInfoSubjectSerializer(extra_info_inp)
         return Response(serializer.data)
+
+
+class AddZaakRelationView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_serializer(self, *args, **kwargs):
+        return AddZaakRelationSerializer(data=self.request.data)
+
+    def post(self, request: Request) -> Response:
+        serializer = self.get_serializer()
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieving the main zaak
+        service = Service.get_service(serializer.validated_data["main_zaak"])
+        client = service.build_client()
+        main_zaak = client.retrieve("zaak", url=serializer.validated_data["main_zaak"])
+
+        main_zaak["relevanteAndereZaken"].append(
+            {
+                "url": serializer.validated_data["relation_zaak"],
+                "aardRelatie": serializer.validated_data["aard_relatie"],
+            }
+        )
+
+        # Create the relation
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
+            url=serializer.validated_data["main_zaak"],
+        )
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class GetZakenView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_serializer(self, *args, **kwargs):
+        return ZaakIdentificatieSerializer(data=self.request.query_params)
+
+    def get(self, request: Request) -> Response:
+        serializer = self.get_serializer()
+        serializer.is_valid(raise_exception=True)
+
+        zaken = get_zaken_es(
+            user_perms=UserPermissions(request.user),
+            query_params={"identificatie": serializer.validated_data["identificatie"]},
+        )
+
+        data = []
+
+        for zaak in zaken:
+            data.append(
+                {
+                    "identificatie": serializer.validated_data["identificatie"],
+                    "bronorganisatie": zaak.bronorganisatie,
+                    "url": zaak.url,
+                }
+            )
+
+        return Response(data=data)
