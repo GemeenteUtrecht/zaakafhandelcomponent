@@ -9,6 +9,7 @@ import { DownloadUrlContext } from '../../components/documents/context';
 import { jsonScriptToVar } from '../../utils/json-script';
 import { AddZaakDocument } from './AddZaakDocument';
 import BetrokkenenTable from '../../components/betrokkenen/Betrokkenen';
+import {AddZaakRelation} from './AddZaakRelation';
 
 const initReviewRequests = () => {
     const node = document.getElementById('review-requests-react');
@@ -65,10 +66,28 @@ const initBetrokkenenTable = () => {
     );
 };
 
+const initZakenRelations = () => {
+    const node = document.getElementById('add-zaken-relation');
+    if (!node) {
+        return;
+    }
+
+    const { zaak, csrftoken } = node.dataset;
+
+    Modal.setAppElement(node);
+
+    ReactDOM.render(
+        // TODO: Deal with flushing cache?
+        <AddZaakRelation zaakUrl={zaak} csrfToken={csrftoken} onSuccessfulSubmit={() => window.location.reload()} />,
+        node,
+    );
+};
+
 const init = () => {
     initReviewRequests();
     initDocuments();
     initBetrokkenenTable();
+    initZakenRelations();
 };
 
 init();
