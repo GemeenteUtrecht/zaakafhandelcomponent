@@ -53,10 +53,17 @@ def permission_denied(request, exception, template_name=ERROR_403_TEMPLATE_NAME)
     ):
         kwargs = request.resolver_match.kwargs
         zaak = find_zaak(**kwargs)
-        if (
-            request.user.has_perm(zaken_request_access.name, zaak)
-            and not request.user.initiated_requests.filter(zaak=zaak.url).exists()
-        ):
-            context.update({"can_request_access": True, "zaak_kwargs": kwargs})
+        can_request_access = request.user.has_perm(zaken_request_access.name, zaak)
+        has_requested_access = request.user.initiated_requests.filter(
+            zaak=zaak.url
+        ).exists()
+
+        context.update(
+            {
+                "can_request_access": can_request_access and not has_requested_access,
+                "has_requested_access": has_requested_access,
+                "zaak_kwargs": kwargs,
+            }
+        )
 
     return http.HttpResponseForbidden(template.render(request=request, context=context))
