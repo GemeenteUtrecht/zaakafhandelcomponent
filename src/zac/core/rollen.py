@@ -53,6 +53,8 @@ def get_bsn(rol: Rol) -> str:
 
 
 def get_medewerker_username(rol: Rol) -> str:
+    if rol.betrokkene:
+        return _("(invalid medewerker URL!)")
     return rol.betrokkene_identificatie["identificatie"]
 
 
