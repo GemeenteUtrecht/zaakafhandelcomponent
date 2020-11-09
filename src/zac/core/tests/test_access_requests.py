@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import patch
 
 from django.core import mail
+from django.test import TestCase
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 
@@ -18,6 +19,9 @@ from zac.accounts.tests.factories import (
     AccessRequestFactory,
     PermissionSetFactory,
     UserFactory,
+)
+from zac.contrib.organisatieonderdelen.tests.factories import (
+    OrganisatieOnderdeelFactory,
 )
 from zac.tests.utils import (
     generate_oas_component,
@@ -195,6 +199,106 @@ class CreateAccessRequestTests(ClearCachesMixin, TransactionWebTest):
         self.assertEqual(
             AccessRequest.objects.exclude(id=previous_request.id).count(), 0
         )
+
+
+class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+
+    def test_user_has_no_permission_at_all(self):
+        user = UserFactory.create()
+
+        result = user.has_perm(zaken_request_access.name, self.zaak)
+
+        self.assertFalse(result)
+
+    @requests_mock.Mocker()
+    def test_user_has_other_permission(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        result = user.has_perm(zaken_request_access.name, self.zaak)
+
+        self.assertFalse(result)
+
+    @requests_mock.Mocker()
+    def test_has_permission_without_oo_restriction(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_request_access.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        result = user.has_perm(zaken_request_access.name, self.zaak)
+
+        self.assertTrue(result)
+
+    @requests_mock.Mocker()
+    def test_has_permission_with_oo_restriction(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
+        )
+        user = UserFactory.create()
+        permisson_set = PermissionSetFactory.create(
+            permissions=[zaken_request_access.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        oo = OrganisatieOnderdeelFactory.create()
+        auth_profile = permisson_set.authorizationprofile_set.get()
+        auth_profile.oo = oo
+        auth_profile.save()
+
+        result = user.has_perm(zaken_request_access.name, self.zaak)
+
+        self.assertFalse(result)
 
 
 @freeze_time("2020-01-01")

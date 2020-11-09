@@ -13,6 +13,10 @@
         <p>You can <a href="{{ request_url }}">request access</a> for this page</p>
     {% endblocktrans %}
 
+{% elif has_requested_access %}
+    <p>
+        {% trans "You have already requested access to this page." %}
+    </p>
 {% endif %}
 
 {% endblock content %}
