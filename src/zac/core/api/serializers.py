@@ -123,3 +123,7 @@ class AddZaakRelationSerializer(serializers.Serializer):
     relation_zaak = serializers.URLField(required=True)
     aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
     main_zaak = serializers.URLField(required=True)
+
+
+class ZaakIdentificatieSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=True)
