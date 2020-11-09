@@ -57,7 +57,7 @@ def _generic_zaakpermission(
         return False
 
     # check if it's restricted by OO
-    oo_allowed = test_oo_allowlist(user, zaak)
+    oo_allowed = test_oo_allowlist(user, zaak, permission)
     return oo_allowed
 
 
@@ -67,7 +67,7 @@ def _has_permission_key(permission_name: str, user: User):
 
 
 def _get_oos_from_zt_perms(
-    user_perms: UserPermissions, zaaktype: str, va: str
+    user_perms: UserPermissions, zaaktype: str, va: str, permission: Permission
 ) -> Set[str]:
     if user_perms.user.is_superuser:
         return {None}
@@ -77,15 +77,14 @@ def _get_oos_from_zt_perms(
         for zt_perm in user_perms.zaaktype_permissions
         if (
             zt_perm.contains(zaaktype)
-            and zt_perm.permission == zaken_inzien.name
+            and zt_perm.permission == permission.name
             and zt_perm.test_va(va)
         )
     }
     return perm_oos
 
 
-# TODO: extensive unit testing :-)
-def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
+def test_oo_allowlist(user: User, zaak: Zaak, permission: Permission) -> bool:
     """
     Test if the user and the zaak have an Organisatieonderdeel in common.
 
@@ -108,6 +107,7 @@ def test_oo_allowlist(user: User, zaak: Zaak) -> bool:
         UserPermissions(user),
         zaaktype_url,
         zaak.vertrouwelijkheidaanduiding,
+        permission,
     )
 
     # shortcut - as soon as there is a single AP that is NOT OO bound/scoped, it means
