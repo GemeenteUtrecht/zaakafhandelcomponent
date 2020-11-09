@@ -3,9 +3,7 @@ from django.core.management import BaseCommand
 
 from elasticsearch_dsl import Index
 
-from zac.accounts.models import User
-from zac.accounts.permissions import UserPermissions
-from zac.core.services import get_rollen_all, get_zaken
+from zac.core.services import get_rollen_all, get_zaken_all
 
 from ...api import append_rol_to_document, create_zaak_document
 from ...documents import ZaakDocument
@@ -29,10 +27,7 @@ class Command(BaseCommand):
         # create/refresh mapping in the ES
         ZaakDocument.init()
 
-        user, _ = User.objects.get_or_create(username="elastic", is_superuser=True)
-        user_perms = UserPermissions(user)
-
-        zaken = get_zaken(user_perms, find_all=True)
+        zaken = get_zaken_all()
         self.stdout.write(f"{len(zaken)} zaken are received from Zaken API")
 
         # TODO replace with bulk API

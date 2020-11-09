@@ -1,5 +1,3 @@
-from urllib.parse import parse_qs
-
 from django.conf import settings
 from django.urls import reverse_lazy
 
@@ -243,15 +241,6 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
                 "previous": None,
                 "next": None,
                 "results": [zt1, zt2],
-            },
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaken?zaaktype={zt1['url']}",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zaak1],
             },
         )
         m.get(zaak1["url"], json=zaak1)
