@@ -575,7 +575,9 @@ def get_statussen(zaak: Zaak) -> List[Status]:
 
 
 @cache_result("zaak-status:{zaak.status}", timeout=AN_HOUR)
-def get_status(zaak: Zaak) -> Status:
+def get_status(zaak: Zaak) -> Optional[Status]:
+    if not zaak.status:
+        return None
     assert isinstance(zaak.status, str), "Status already resolved."
     client = _client_from_object(zaak)
     _status = client.retrieve("status", url=zaak.status)
