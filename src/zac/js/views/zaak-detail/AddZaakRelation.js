@@ -126,6 +126,9 @@ const AddZaakRelation = ({ zaakUrl, csrfToken, onSuccessfulSubmit }) => {
                 <button onClick={ closeModal } className='modal__close btn'>&times;</button>
                 <h1 className='page-title'>Relatie toevoegen</h1>
                 <form onSubmit={ onSubmit }>
+                    <Wrapper errors={state.errors.nonFieldErrors}>
+                        <ErrorList errors={state.errors.nonFieldErrors} />
+                    </Wrapper>
                     <HiddenInput id='id_main_zaak' name='main_zaak' value={zaakUrl}/>
                     <Wrapper errors={relationZaakErrors}>
                         <Label label='Identificatie' required={true} />
