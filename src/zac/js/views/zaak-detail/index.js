@@ -10,6 +10,10 @@ import { jsonScriptToVar } from '../../utils/json-script';
 import { AddZaakDocument } from './AddZaakDocument';
 import BetrokkenenTable from '../../components/betrokkenen/Betrokkenen';
 import {AddZaakRelation} from './AddZaakRelation';
+import {apiCall} from "../../utils/fetch";
+
+
+const ENDPOINT_FLUSH_CACHE = '/core/_flush-cache/';
 
 const initReviewRequests = () => {
     const node = document.getElementById('review-requests-react');
@@ -76,9 +80,26 @@ const initZakenRelations = () => {
 
     Modal.setAppElement(node);
 
+    const refreshCache = async () => {
+
+        const data = new FormData();
+        data.append('csrfmiddlewaretoken', csrftoken);
+
+        await apiCall(
+            ENDPOINT_FLUSH_CACHE,
+            {
+                method: 'POST',
+                body: data,
+            }
+        );
+
+        window.location.reload()
+    };
+
     ReactDOM.render(
-        // TODO: Deal with flushing cache?
-        <AddZaakRelation zaakUrl={zaak} csrfToken={csrftoken} onSuccessfulSubmit={() => window.location.reload()} />,
+        //FIXME
+        // Currently the cache needs to be flushed, otherwise the new zaak relation doesn't appear
+        <AddZaakRelation zaakUrl={zaak} csrfToken={csrftoken} onSuccessfulSubmit={refreshCache} />,
         node,
     );
 };
