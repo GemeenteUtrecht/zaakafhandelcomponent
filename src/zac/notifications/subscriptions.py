@@ -31,6 +31,18 @@ DESIRED = [
 
 
 def subscribe_all(domain: str) -> List[Subscription]:
+    """
+    Subscribe to the configured channels, on all known NRCs.
+
+    Subscription is idempotent - the actual subscription will check if the desired
+    subscription already exists and only create it if it doesn't yet.
+
+    A system user/service account is created, whose token is used to authenticate
+    against the ZAC API.
+
+    :param domain: The domain (including protocol) where the application is hosted.
+      Required to build fully qualified callback URLs.
+    """
     user, _ = User.objects.get_or_create(username="notifications api")
     token, _ = Token.objects.get_or_create(user=user)
 
