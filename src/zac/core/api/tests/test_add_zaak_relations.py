@@ -206,3 +206,39 @@ class CreateZakenRelationTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_relate_zaak_to_itself(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+
+        zaak_root = "http://zaken.nl/api/v1/"
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=zaak_root)
+        mock_service_oas_get(m, zaak_root, "zrc")
+
+        main_zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+        )
+        m.get(url=main_zaak["url"], json=main_zaak)
+
+        # Mock the update of the main zaak
+        main_zaak["relevanteAndereZaken"].append(
+            {
+                "url": main_zaak["url"],
+                "aardRelatie": "vervolg",
+            }
+        )
+        m.patch(url=main_zaak["url"], json=main_zaak)
+
+        response = self.client.post(
+            self.endpoint,
+            data={
+                "relation_zaak": main_zaak["url"],  # Relate the zaak to itself
+                "main_zaak": main_zaak["url"],
+                "aard_relatie": "vervolg",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
