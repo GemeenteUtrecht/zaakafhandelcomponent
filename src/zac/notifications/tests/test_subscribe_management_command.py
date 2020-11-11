@@ -1,6 +1,5 @@
 import uuid
 
-from django.core.cache import caches
 from django.test import TestCase, tag
 
 import requests_mock
@@ -8,25 +7,19 @@ from rest_framework.authtoken.models import Token
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_service_oas_get
 
 from ..models import Subscription
 from ..subscriptions import subscribe_all
 
 
-class SubscribeCommandTests(TestCase):
+class SubscribeCommandTests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.nrc = Service.objects.create(
             api_root="https://some.nrc.nl/api/v1/", api_type=APITypes.nrc
         )
-
-    def setUp(self):
-        super().setUp()
-
-        cache = caches["oas"]
-        cache.clear()
-        self.addCleanup(cache.clear)
 
     @requests_mock.Mocker()
     def test_create_subscription(self, m):
