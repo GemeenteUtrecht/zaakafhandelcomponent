@@ -52,7 +52,7 @@ def subscribe_all(domain: str) -> List[Subscription]:
     return subs
 
 
-def subscribe(service: Service, token: str, domain: str) -> Subscription:
+def subscribe(service: Service, token: str, domain: str) -> List[Subscription]:
     nrc_client = service.build_client()
 
     auth_value = f"Token {token}"
