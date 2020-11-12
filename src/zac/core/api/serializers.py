@@ -3,8 +3,8 @@ from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from djchoices import ChoiceItem, DjangoChoices
 from rest_framework import serializers
+from zgw_consumers.api_models.constants import AardRelatieChoices
 
 from .utils import (
     CSMultipleChoiceField,
@@ -113,12 +113,6 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
     partners = serializers.ListField()
 
 
-class AardRelatieChoices(DjangoChoices):
-    vervolg = ChoiceItem("vervolg", _("Vervolg"))
-    bijdrage = ChoiceItem("bijdrage", _("Bijdrage"))
-    onderwerp = ChoiceItem("onderwerp", _("Onderwerp"))
-
-
 class AddZaakRelationSerializer(serializers.Serializer):
     relation_zaak = serializers.URLField(required=True)
     aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
@@ -136,3 +130,9 @@ class AddZaakRelationSerializer(serializers.Serializer):
 
 class ZaakIdentificatieSerializer(serializers.Serializer):
     identificatie = serializers.CharField(required=True)
+
+
+class ZaakSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=True)
+    bronorganisatie = serializers.CharField(required=True)
+    url = serializers.URLField(required=True)

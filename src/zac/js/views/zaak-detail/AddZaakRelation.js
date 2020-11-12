@@ -11,7 +11,7 @@ import {Label} from '../../components/forms/Label';
 import {Help} from '../../components/forms/Help';
 
 const ENDPOINT_ADD_RELATION = '/core/api/zaken_relation';
-const ENDPOINT_ZAKEN = '/core/api/zaken';
+const ENDPOINT_ZAKEN = '/core/api/zaken_search';
 
 const initialState = {
     errors: '',
@@ -124,7 +124,7 @@ const AddZaakRelation = ({ zaakUrl, csrfToken, onSuccessfulSubmit }) => {
               onRequestClose={closeModal}
             >
                 <button onClick={ closeModal } className='modal__close btn'>&times;</button>
-                <h1 className='page-title'>Relatie toevoegen</h1>
+                <div className='page-title'>Relatie toevoegen</div>
                 <form onSubmit={ onSubmit }>
                     <Wrapper errors={state.errors.nonFieldErrors}>
                         <ErrorList errors={state.errors.nonFieldErrors} />
