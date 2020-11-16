@@ -156,7 +156,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
 
 @requests_mock.Mocker()
-class CreateZakenRelationTests(APITestCase):
+class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
     endpoint = reverse_lazy("core:add-zaak-relation")
 
     def test_login_required(self, m):
@@ -219,7 +219,7 @@ class CreateZakenRelationTests(APITestCase):
         # Mock zaaktype
         catalogus_root = "http://catalogus.nl/api/v1/"
         catalogus_url = (
-            f"{catalogus_root}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{catalogus_root}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         Service.objects.create(api_type=APITypes.ztc, api_root=catalogus_root)
         mock_service_oas_get(m, catalogus_root, "ztc")
@@ -245,6 +245,8 @@ class CreateZakenRelationTests(APITestCase):
             "zrc",
             "schemas/Zaak",
             url=f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         m.get(url=main_zaak["url"], json=main_zaak)
 
@@ -317,6 +319,8 @@ class CreateZakenRelationTests(APITestCase):
             "zrc",
             "schemas/Zaak",
             url=f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         m.get(url=main_zaak["url"], json=main_zaak)
 
