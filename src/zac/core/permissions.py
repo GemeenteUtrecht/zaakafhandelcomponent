@@ -48,5 +48,5 @@ zaken_request_access = Permission(
 
 zaken_add_relations = Permission(
     name="zaken:nieuwe-relaties-toevoegen",
-    description="Voegen relaties tussen zaken toe.",
+    description="Relateer andere zaken aan de (hoofd)zaak.",
 )

@@ -45,13 +45,12 @@ class CanAddRelations(permissions.BasePermission):
         if not serializer.is_valid():
             return True
 
-        # Check that the user has access to both zaken being related
+        # Check that the user has access to the main zaak
         try:
-            get_zaak(zaak_url=serializer.validated_data["main_zaak"])
-            get_zaak(zaak_url=serializer.validated_data["relation_zaak"])
+            main_zaak = get_zaak(zaak_url=serializer.validated_data["main_zaak"])
         except ClientError:
             logger.info("Invalid Zaak specified", exc_info=True)
             return False
 
-        # Check that the user has permissions to add relations
-        return request.user.has_perm(zaken_add_relations.name)
+        # Check that the user has permissions to add relations to the main zaak
+        return request.user.has_perm(zaken_add_relations.name, main_zaak)
