@@ -96,9 +96,6 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             f"{catalogus_root}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=catalogus_root)
-        mock_service_oas_get(m, catalogus_root, "ztc")
-
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -108,21 +105,9 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
-        m.get(
-            url=f"{catalogus_root}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [zaaktype],
-            },
-        )
-
         # Set up zaken mocks
         zaken_root = "http://zaken.nl/api/v1/"
         zaak_identificatie = "ZAAK-2020-01"
-        Service.objects.create(api_type=APITypes.zrc, api_root=zaken_root)
-        mock_service_oas_get(m, zaken_root, "zrc")
 
         zaak = generate_oas_component(
             "zrc",
@@ -134,11 +119,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         )
 
         self.create_zaak_document(zaak)
-
-        m.get(
-            url=zaak["url"],
-            json=zaak,
-        )
+        self.refresh_index()
 
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],

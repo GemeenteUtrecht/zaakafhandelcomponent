@@ -12,6 +12,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
+from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ...accounts.permissions import UserPermissions
 from ..cache import invalidate_zaak_cache
@@ -197,12 +198,8 @@ class GetZakenView(views.APIView):
     def get(self, request: Request) -> Response:
         serializer = ZaakIdentificatieSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-
-        zaken = get_zaken_es(
-            user_perms=UserPermissions(request.user),
-            query_params={"identificatie": serializer.validated_data["identificatie"]},
+        zaken = autocomplete_zaak_search(
+            identificatie=serializer.validated_data["identificatie"]
         )
-
         zaak_serializer = ZaakSerializer(instance=zaken, many=True)
-
         return Response(data=zaak_serializer.data)
