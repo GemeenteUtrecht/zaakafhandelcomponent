@@ -229,7 +229,6 @@
     </section>
     {% endif %}
 
-    {% if related_zaken %}
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Gerelateerde zaken ({{ related_zaken|length }})</div>
 
@@ -265,8 +264,11 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <div id="add-zaken-relation" data-zaak="{{ zaak.url }}" data-csrftoken="{{ csrf_token }}">
+        {# React managed #}
+        </div>
     </section>
-    {% endif %}
 
     <section class="zaak-detail__panel zaak-detail__panel--full content-panel">
         <div class="section-title">Gerelateerde objecten</div>

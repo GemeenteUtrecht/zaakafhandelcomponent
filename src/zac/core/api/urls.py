@@ -1,9 +1,11 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from .views import (
     AddDocumentView,
+    AddZaakRelationView,
     GetDocumentInfoView,
     GetInformatieObjectTypenView,
+    GetZakenView,
     PostExtraInfoSubjectView,
 )
 
@@ -19,6 +21,8 @@ urlpatterns = [
         name="add-document",
     ),
     path("documents/info", GetDocumentInfoView.as_view(), name="get-document-info"),
+    path("zaken_relation", AddZaakRelationView.as_view(), name="add-zaak-relation"),
+    path("zaken_search", GetZakenView.as_view(), name="zaken-search"),
     path(
         "betrokkene/info",
         PostExtraInfoSubjectView.as_view(),

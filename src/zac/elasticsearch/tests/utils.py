@@ -11,10 +11,12 @@ from ..documents import ZaakDocument
 
 
 class ESMixin:
-    def clear_index(self):
+    @staticmethod
+    def clear_index(init=False):
         zaken = Index(settings.ES_INDEX_ZAKEN)
         zaken.delete(ignore=404)
-        ZaakDocument.init()
+        if init:
+            ZaakDocument.init()
 
     def refresh_index(self):
         zaken = Index(settings.ES_INDEX_ZAKEN)
@@ -33,4 +35,10 @@ class ESMixin:
     def setUp(self):
         super().setUp()
 
-        self.clear_index()
+        self.clear_index(init=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+
+        cls.clear_index()

@@ -16,6 +16,7 @@ from .permissions import (
     zaakproces_send_message,
     zaakproces_usertasks,
     zaken_add_documents,
+    zaken_add_relations,
     zaken_close,
     zaken_download_documents,
     zaken_handle_access,
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
     zaken_close,
     zaken_add_documents,
     zaken_request_access,
+    zaken_add_relations,
 )
 def _generic_zaakpermission(
     user: User, zaak: Union[dict, Zaak], permission: Permission

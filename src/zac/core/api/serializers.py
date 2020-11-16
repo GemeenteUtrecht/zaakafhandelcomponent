@@ -1,8 +1,10 @@
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.constants import AardRelatieChoices
 
 from .utils import (
     CSMultipleChoiceField,
@@ -109,3 +111,28 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
     kinderen = serializers.ListField()
     verblijfplaats = serializers.DictField()
     partners = serializers.ListField()
+
+
+class AddZaakRelationSerializer(serializers.Serializer):
+    relation_zaak = serializers.URLField(required=True)
+    aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
+    main_zaak = serializers.URLField(required=True)
+
+    def validate(self, data):
+        """Check that the main zaak and the relation are not the same"""
+
+        if data["relation_zaak"] == data["main_zaak"]:
+            raise serializers.ValidationError(
+                _("Zaken kunnen niet met zichzelf gerelateerd worden.")
+            )
+        return data
+
+
+class ZaakIdentificatieSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=True)
+
+
+class ZaakSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=True)
+    bronorganisatie = serializers.CharField(required=True)
+    url = serializers.URLField(required=True)

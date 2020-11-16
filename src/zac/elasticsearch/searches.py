@@ -3,7 +3,7 @@ from functools import reduce
 from typing import List
 
 from elasticsearch_dsl import Q
-from elasticsearch_dsl.query import Bool, Nested, Range, Term, Terms
+from elasticsearch_dsl.query import Bool, Nested, Range, Regexp, Term, Terms
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .documents import ZaakDocument
@@ -90,3 +90,16 @@ def search(
     response = s.execute()
     zaak_urls = [hit.url for hit in response]
     return zaak_urls
+
+
+def autocomplete_zaak_search(identificatie: str) -> List[ZaakDocument]:
+    search = ZaakDocument.search().query(
+        Regexp(
+            identificatie={
+                "value": f".*{identificatie}.*",
+                # "case_insensitive": True,  # 7.10 feature
+            }
+        )
+    )
+    response = search.execute()
+    return response.hits

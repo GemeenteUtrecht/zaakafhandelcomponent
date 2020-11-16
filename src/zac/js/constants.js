@@ -9,4 +9,10 @@ const VERTROUWELIJKHEIDAANDUIDINGEN = [
     ['zeer_geheim', 'Zeer geheim'],
 ];
 
-export { VERTROUWELIJKHEIDAANDUIDINGEN };
+const AARD_RELATIES = [
+    ['vervolg', 'Vervolg'],
+    ['bijdrage', 'Bijdrage'],
+    ['onderwerp', 'Onderwerp'],
+];
+
+export { VERTROUWELIJKHEIDAANDUIDINGEN, AARD_RELATIES };
