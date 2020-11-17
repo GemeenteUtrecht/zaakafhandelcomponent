@@ -3,9 +3,11 @@ from typing import List, Optional
 from django.contrib.auth import get_user_model
 
 import requests
-from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
+from zgw_consumers.api_models.base import (  # django_camunda can't handle inheritance yet
+    factory,
+)
 
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
@@ -62,8 +64,30 @@ def get_task(task_id: CamundaId) -> Optional[Task]:
         data = client.get(f"task/{task_id}")
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
-            return None
-        raise
+            # see if we can get it from the history
+            historical = client.get("history/task", {"taskId": task_id})
+            if not historical:
+                return None
+
+            assert (
+                len(historical) < 2
+            ), f"Found multiple tasks in the history for ID {task_id}"
+
+            data = historical[0]
+            # these properties do not exist in the history API:
+            # https://docs.camunda.org/manual/7.11/reference/rest/history/task/get-task-query/
+            data.update(
+                {
+                    "created": data["start_time"],
+                    "delegation_state": None,
+                    "suspended": False,
+                    "form_key": None,  # cannot determine this...
+                    "historical": True,
+                }
+            )
+
+        else:
+            raise
 
     task = factory(Task, data)
 

@@ -134,8 +134,8 @@ class UserTaskMixin:
         self.check_object_permissions(zaak)
         return zaak
 
-    def _get_task(self):
-        if not hasattr(self, "_task"):
+    def _get_task(self, refresh=False):
+        if not hasattr(self, "_task") or refresh:
             task = get_task(self.kwargs["task_id"])
             if task is None:
                 raise Http404("No such task")
@@ -364,8 +364,9 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
         return state
 
     def complete_task(self) -> HttpResponseRedirect:
-        task = self._get_task()
-        complete_task(task.id, {})
+        task = self._get_task(refresh=True)
+        if not task.historical:
+            complete_task(task.id, {})
         zaak_detail = reverse(
             "core:zaak-detail",
             kwargs={
