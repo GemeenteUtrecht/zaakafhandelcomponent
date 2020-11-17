@@ -3,11 +3,9 @@ from typing import List, Optional
 from django.contrib.auth import get_user_model
 
 import requests
+from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
-from zgw_consumers.api_models.base import (  # django_camunda can't handle inheritance yet
-    factory,
-)
 
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form

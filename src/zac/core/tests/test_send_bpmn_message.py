@@ -7,11 +7,12 @@ from django.urls import reverse_lazy
 import requests_mock
 
 from zac.accounts.tests.factories import SuperUserFactory, UserFactory
+from zac.core.tests.utils import ClearCachesMixin
 from zgw.models import Zaak
 
 
 @requests_mock.Mocker()
-class BPMNMessageSendTests(TestCase):
+class BPMNMessageSendTests(ClearCachesMixin, TestCase):
     url = reverse_lazy("core:send-message")
 
     @classmethod
@@ -70,7 +71,6 @@ class BPMNMessageSendTests(TestCase):
             relevante_andere_zaken=[],
             zaakgeometrie={},
         )
-
         response = self.client.post(
             self.url,
             {
@@ -178,6 +178,30 @@ class BPMNMessageSendTests(TestCase):
         m.get(
             f"https://camunda.example.com/engine-rest/process-instance/{PROCESS_INSTANCE_ID}",
             status_code=404,
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/history/process-instance/{PROCESS_INSTANCE_ID}",
+            json={
+                "id": PROCESS_INSTANCE_ID,
+                "businessKey": None,
+                "processDefinitionId": "invoice:1:7bf79f13-ef95-11e6-b6e6-34f39ab71d4e",
+                "processDefinitionKey": "invoice",
+                "processDefinitionName": "Invoice Receipt",
+                "processDefinitionVersion": 1,
+                "startTime": "2017-02-10T14:33:19.000+0200",
+                "endTime": None,
+                "removalTime": None,
+                "durationInMillis": None,
+                "startUserId": None,
+                "startActivityId": "StartEvent_1",
+                "deleteReason": None,
+                "rootProcessInstanceId": "f8259e5d-ab9d-11e8-8449-e4a7a094a9d6",
+                "superProcessInstanceId": None,
+                "superCaseInstanceId": None,
+                "caseInstanceId": None,
+                "tenantId": None,
+                "state": "ACTIVE",
+            },
         )
 
         response = self.client.post(

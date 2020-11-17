@@ -3,7 +3,6 @@ from typing import Dict, List
 from django_camunda.camunda_models import ProcessDefinition
 from django_camunda.client import Camunda, get_client
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.concurrent import parallel
 
 from zac.core.camunda import get_process_tasks
 

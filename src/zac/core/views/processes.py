@@ -49,7 +49,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
         # set the valid process instance messages _if_ a process instance exists
         process_instance = get_process_instance(process_instance_id)
-        if process_instance is None:
+        if process_instance is None or process_instance.historical:
             return form
 
         messages = get_messages(process_instance.definition_id)
