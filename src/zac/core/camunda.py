@@ -56,12 +56,15 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
     return tasks
 
 
-def get_task(task_id: CamundaId) -> Optional[Task]:
+def get_task(task_id: CamundaId, check_history=False) -> Optional[Task]:
     client = get_client()
     try:
         data = client.get(f"task/{task_id}")
     except requests.HTTPError as exc:
         if exc.response.status_code == 404:
+            if not check_history:
+                return None
+
             # see if we can get it from the history
             historical = client.get("history/task", {"taskId": task_id})
             if not historical:

@@ -124,6 +124,8 @@ class FormSetMixin:
 
 
 class UserTaskMixin:
+    check_task_history = False
+
     def get_zaak(self):
         task = self._get_task()
         process_instance = get_process_instance(task.process_instance_id)
@@ -136,7 +138,9 @@ class UserTaskMixin:
 
     def _get_task(self, refresh=False):
         if not hasattr(self, "_task") or refresh:
-            task = get_task(self.kwargs["task_id"])
+            task = get_task(
+                self.kwargs["task_id"], check_history=self.check_task_history
+            )
             if task is None:
                 raise Http404("No such task")
             self._task = task
@@ -268,6 +272,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
 class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
     permission_required = zaakproces_usertasks.name
+    check_task_history = True
 
     def get(self, request, *args, **kwargs):
         # check if we're returning from an external application - indicated by the
