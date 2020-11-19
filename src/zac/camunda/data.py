@@ -7,6 +7,8 @@ from django_camunda.api import get_process_instance_variable, get_task_variable
 from django_camunda.camunda_models import Model, Task as _Task
 from django_camunda.types import CamundaId
 
+from .history import get_historical_variable
+
 
 @dataclass
 class ProcessInstance(Model):
@@ -23,7 +25,11 @@ class ProcessInstance(Model):
     messages: list = field(default_factory=list)
     tasks: list = field(default_factory=list)
 
+    historical: bool = False
+
     def get_variable(self, name: str) -> Any:
+        if self.historical:
+            return get_historical_variable(self.id, name)
         return get_process_instance_variable(self.id, name)
 
     def title(self) -> str:
@@ -32,6 +38,8 @@ class ProcessInstance(Model):
 
 @dataclass
 class Task(_Task):
+    historical: bool = False
+
     def has_form(self) -> bool:
         return bool(self.form)
 

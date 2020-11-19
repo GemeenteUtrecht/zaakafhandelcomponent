@@ -15,7 +15,7 @@ from .mocks import get_camunda_task_mock
 
 
 @requests_mock.Mocker()
-class BPMNMessageSendTests(TestCase):
+class ClaimUserTaskTests(TestCase):
     url = reverse_lazy("core:claim-task")
 
     @classmethod
@@ -100,6 +100,10 @@ class BPMNMessageSendTests(TestCase):
         m.get(
             f"https://camunda.example.com/engine-rest/task/{TASK_ID}",
             status_code=404,
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/history/task?taskId={TASK_ID}",
+            json=[],
         )
 
         response = self.client.post(

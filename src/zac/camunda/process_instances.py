@@ -16,7 +16,21 @@ def get_process_instance(instance_id: CamundaId) -> Optional[ProcessInstance]:
     try:
         data = client.get(f"process-instance/{instance_id}")
     except requests.HTTPError as exc:
-        if exc.response.status_code == 404:
-            return None
-        raise
+        if exc.response.status_code != 404:
+            raise
+
+        # check the history
+        try:
+            data = client.get(f"history/process-instance/{instance_id}")
+        except requests.HTTPError as history_exc:
+            if history_exc.response.status_code == 404:
+                return None
+            raise
+
+        data.update(
+            {
+                "definition_id": data["process_definition_id"],
+                "historical": True,
+            }
+        )
     return factory(ProcessInstance, data)

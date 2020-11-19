@@ -49,7 +49,7 @@ class SendMessage(PermissionRequiredMixin, FormView):
 
         # set the valid process instance messages _if_ a process instance exists
         process_instance = get_process_instance(process_instance_id)
-        if process_instance is None:
+        if process_instance is None or process_instance.historical:
             return form
 
         messages = get_messages(process_instance.definition_id)
@@ -124,6 +124,8 @@ class FormSetMixin:
 
 
 class UserTaskMixin:
+    check_task_history = False
+
     def get_zaak(self):
         task = self._get_task()
         process_instance = get_process_instance(task.process_instance_id)
@@ -134,9 +136,11 @@ class UserTaskMixin:
         self.check_object_permissions(zaak)
         return zaak
 
-    def _get_task(self):
-        if not hasattr(self, "_task"):
-            task = get_task(self.kwargs["task_id"])
+    def _get_task(self, refresh=False):
+        if not hasattr(self, "_task") or refresh:
+            task = get_task(
+                self.kwargs["task_id"], check_history=self.check_task_history
+            )
             if task is None:
                 raise Http404("No such task")
             self._task = task
@@ -268,6 +272,7 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
 
 class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
     permission_required = zaakproces_usertasks.name
+    check_task_history = True
 
     def get(self, request, *args, **kwargs):
         # check if we're returning from an external application - indicated by the
@@ -364,8 +369,9 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
         return state
 
     def complete_task(self) -> HttpResponseRedirect:
-        task = self._get_task()
-        complete_task(task.id, {})
+        task = self._get_task(refresh=True)
+        if not task.historical:
+            complete_task(task.id, {})
         zaak_detail = reverse(
             "core:zaak-detail",
             kwargs={
