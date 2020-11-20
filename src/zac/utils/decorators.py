@@ -1,5 +1,7 @@
+import functools
 import inspect
 import logging
+import time
 from functools import wraps
 
 from django.core.cache import caches
@@ -81,5 +83,53 @@ def optional_service(func: callable):
         except requests.ConnectionError as exc:
             logger.debug("Service(s) down (%s)", exc.request.url)
             return default
+
+    return decorator
+
+
+def retry(
+    times=3,
+    exceptions=(Exception,),
+    condition: callable = lambda exc: True,
+    delay=1.0,
+    on_failure: callable = lambda exc, *args, **kwargs: None,
+):
+    """
+    Retry the decorated callable up to ``times`` if it raises a known exception.
+
+    If the retries are all spent, then on_failure will be invoked.
+
+    # Taken from bptl.utils.decorators
+    # https://github.com/GemeenteUtrecht/bptl/blob/master/src/bptl/utils/decorators.py
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            tries_left = times + 1
+
+            logger.info("Tries left: %d, %r", tries_left, func)
+
+            while tries_left > 0:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as exc:
+                    # the extra exception check doesn't pass, so consider it an
+                    # unexpected exception
+                    if not condition(exc):
+                        raise
+                    else:  # expected exception, retry (if there are retries left)
+                        tries_left -= 1
+
+                    # if we've reached the maximum number of retries, raise the
+                    # exception again
+                    if tries_left < 1:
+                        logger.error("Task didn't succeed after %d retries", times)
+                        on_failure(exc, *args, **kwargs)
+                        raise
+
+                time.sleep(delay)
+
+        return wrapper
 
     return decorator
