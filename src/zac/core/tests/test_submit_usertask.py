@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+import requests
 import requests_mock
 from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.base import factory
@@ -233,3 +234,121 @@ class SubmitRedirectUserTaskTests(ClearCachesMixin, TestCase):
             self.assertRedirects(response, expected_url, fetch_redirect_response=False)
 
         mock_complete_task.assert_not_called()
+
+    def test_camunda_optimistic_locking_race_condition(self, m):
+        # set up the Camunda mocks for a "live" task
+        PROCESS_INSTANCE_ID = "f0a2e2c4-b35c-49f1-9fba-aaa7a161f247"
+        ZAAK_URL = "https://open-zaak.nl/zaken/api/v1/zaken/1234"
+        task_id = str(uuid.uuid4())
+        url = reverse("core:redirect-task", kwargs={"task_id": task_id})
+        state = json.dumps(
+            {
+                "user_id": self.user.id,
+                "task_id": task_id,
+            }
+        ).encode("utf-8")
+        zaaktype = factory(ZaakType, generate_oas_component("ztc", "schemas/ZaakType"))
+        zaak = factory(
+            Zaak,
+            generate_oas_component(
+                "zrc",
+                "schemas/Zaak",
+                url=ZAAK_URL,
+                zaaktype=zaaktype.url,
+            ),
+        )
+        # normal responses
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/{PROCESS_INSTANCE_ID}",
+            json={
+                "id": PROCESS_INSTANCE_ID,
+                "definitionId": "proces:1",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        m.get(
+            (
+                "https://camunda.example.com/engine-rest/process-instance/"
+                f"{PROCESS_INSTANCE_ID}/variables/zaakUrl?deserializeValues=false"
+            ),
+            json=serialize_variable(ZAAK_URL),
+        )
+        # history responses
+        m.get(
+            f"https://camunda.example.com/engine-rest/history/task?taskId={task_id}",
+            json=[
+                {
+                    **HISTORIC_TASK,
+                    "id": task_id,
+                    "assignee": self.user.username,
+                    "processInstanceId": PROCESS_INSTANCE_ID,
+                }
+            ],
+        )
+
+        complete_task_calls = 0
+
+        def _complete_task(*args, **kwargs):
+            nonlocal complete_task_calls
+            complete_task_calls += 1
+            # the first time, we simulate Camunda throwing because of an optimistic locking
+            # condition
+            if complete_task_calls == 1:
+                response = requests.Response()
+                response.status_code = 500
+                raise requests.HTTPError(response=response)
+            else:
+                return None
+
+        def _get_task(request, context):
+            # first, the task does exist, any subsequent calls return a 404
+            nonlocal complete_task_calls
+            if complete_task_calls > 0:
+                context.status_code = 404
+                return {}
+            else:
+                context.status_code = 200
+                return {
+                    **TASK,
+                    "id": task_id,
+                    "assignee": self.user.username,
+                    "processInstanceId": PROCESS_INSTANCE_ID,
+                }
+
+        m.get(f"https://camunda.example.com/engine-rest/task/{task_id}", json=_get_task)
+
+        with patch("zac.core.views.processes.get_zaak", return_value=zaak), patch(
+            "zac.core.views.processes.fetch_zaaktype", return_value=zaaktype
+        ), patch(
+            "zac.core.views.processes.complete_task", side_effect=_complete_task
+        ) as mock_complete_task:
+            response = self.client.get(url, {"state": base64.b64encode(state)})
+
+            expected_url = reverse(
+                "core:zaak-detail",
+                kwargs={
+                    "bronorganisatie": zaak.bronorganisatie,
+                    "identificatie": zaak.identificatie,
+                },
+            )
+            self.assertRedirects(response, expected_url, fetch_redirect_response=False)
+
+        self.assertEqual(mock_complete_task.call_count, 1)
+        # last call should've been to fetch the task from the history
+        self.assertEqual(
+            m.request_history[-1].url,
+            f"https://camunda.example.com/engine-rest/history/task?taskId={task_id}",
+        )
+        # the call before that should've 404't
+        task_url = f"https://camunda.example.com/engine-rest/task/{task_id}"
+        self.assertEqual(m.request_history[-2].url, task_url)
+        # one call to initially get the task at the view entrypoint and validate that it
+        # exists, second call is a refresh call to check that the task is still active,
+        # third call happens after complete_task raises an exception, and the task is
+        # fetched again (now with a 404)
+        self.assertEqual(
+            len([req for req in m.request_history if req.url == task_url]), 3
+        )
