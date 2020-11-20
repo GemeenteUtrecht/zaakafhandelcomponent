@@ -1,6 +1,6 @@
 import uuid
 
-from django.test import TestCase, tag
+from django.test import TestCase
 
 import requests_mock
 from rest_framework.authtoken.models import Token
@@ -51,7 +51,6 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
         )
         self.assertEqual(Subscription.objects.count(), 2)
 
-    @tag("this")
     @requests_mock.Mocker()
     def test_verify_existing(self, m):
         mock_service_oas_get(m, self.nrc.api_root, "nrc")

@@ -13,6 +13,7 @@ from django.utils.http import is_safe_url
 from django.views import View
 from django.views.generic import FormView, RedirectView
 
+import requests
 from django_camunda.api import complete_task, get_task_variable, send_message
 from django_camunda.client import get_client
 
@@ -20,6 +21,7 @@ from zac.accounts.mixins import PermissionRequiredMixin
 from zac.camunda.forms import DummyForm, MessageForm
 from zac.camunda.messages import get_messages
 from zac.camunda.process_instances import get_process_instance
+from zac.utils.decorators import retry
 
 from ..camunda import get_process_zaak_url, get_task
 from ..forms import ClaimTaskForm
@@ -368,7 +370,25 @@ class RedirectTaskView(PermissionRequiredMixin, UserTaskMixin, RedirectView):
 
         return state
 
+    @retry(
+        times=3,
+        exceptions=(requests.HTTPError,),
+        condition=lambda exc: exc.response.status_code == 500,
+        delay=0.5,
+    )
     def complete_task(self) -> HttpResponseRedirect:
+        """
+        Complete the UserTask in Camunda.
+
+        Various race conditions apply - it *may* be that the UserTask was already
+        completed by a webhook handler. In that case, the task is historical and we
+        don't need to try to complete it.
+
+        It may also be that both the webhook handlers and this call are in a race
+        condition, after which Camunda will throw a 500 error for one of both and
+        roll back that transaction. The @retry decorator handles this, which leads to
+        the task refresh now yielding a historical task instead.
+        """
         task = self._get_task(refresh=True)
         if not task.historical:
             complete_task(task.id, {})
