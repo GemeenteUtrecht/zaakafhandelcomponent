@@ -51,7 +51,11 @@ REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += (
 
 
 # Django debug toolbar
-INSTALLED_APPS += ["debug_toolbar", "ddt_api_calls", "elastic_panel"]
+INSTALLED_APPS += [
+    "debug_toolbar",
+    "ddt_api_calls",
+    "elastic_panel",
+]
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 INTERNAL_IPS = ("127.0.0.1",)
 DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
