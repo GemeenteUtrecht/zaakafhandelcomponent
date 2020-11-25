@@ -54,6 +54,7 @@ IDENTIFICATIE = "ZAAK-001"
 @contextlib.contextmanager
 def mock_zaak_detail_context(documents=None):
     review_request_data = {
+        "created": datetime.datetime(2020, 1, 1, 12, 00, 1),
         "id": "45638aa6-e177-46cc-b580-43339795d5b5",
         "for_zaak": f"{ZAKEN_ROOT}zaak/123",
         "review_type": "approval",

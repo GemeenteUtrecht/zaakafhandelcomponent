@@ -127,4 +127,8 @@ urlpatterns = [
             ]
         ),
     ),
+    path(
+        "kownsl/",
+        include("zac.contrib.kownsl.urls"),
+    ),
 ]

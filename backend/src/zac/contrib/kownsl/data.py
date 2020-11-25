@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Dict, List
 
 from django.utils.translation import gettext_lazy as _
-
 from djchoices import ChoiceItem, DjangoChoices
 from zgw_consumers.api_models.base import Model
 
@@ -18,6 +17,7 @@ class KownslTypes(DjangoChoices):
 
 @dataclass
 class ReviewRequest(Model):
+    created: datetime
     id: uuid.UUID
     for_zaak: str
     review_type: str
