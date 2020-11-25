@@ -1,27 +1,20 @@
 import logging
 
-from django.contrib.auth.models import User
-
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from rest_framework import authentication, permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zds_client.client import get_operation_url
+from zgw_consumers.client import ZGWClient
 from zgw_consumers.models import Service
 
 from zac.notifications.views import BaseNotificationCallbackView
 
-logger = logging.getLogger(__name__)
-
-
-from typing import List
-
-from rest_framework.permissions import IsAuthenticated
-from zds_client.client import get_operation_url
-from zgw_consumers.client import ZGWClient
-
 from .models import KownslConfig
 from .permissions import IsReviewUser
+
+logger = logging.getLogger(__name__)
 
 
 def get_client() -> ZGWClient:
@@ -121,3 +114,62 @@ class AdviceRequestView(BaseRequestView):
 
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
+
+
+import json
+from datetime import datetime
+
+### Added a temporary endpoint for frontend dev ###
+from .tests.factories import (
+    AdviceFactory,
+    ApprovalFactory,
+    ReviewRequestFactory,
+    ZaakDocumentFactory,
+)
+
+
+class MockBaseReviewRequest(APIView):
+    permission_classes = (AllowAny,)
+    _operation_id = NotImplemented
+
+    def obj_to_dict(self, obj):
+        cleaned = {}
+        for key, val in obj.__dict__.items():
+            if isinstance(val, datetime):
+                cleaned[key] = str(val)
+            else:
+                cleaned[key] = val
+
+        return cleaned
+
+    def get(self, request):
+        zaak_documents = ZaakDocumentFactory.create_batch(2)
+        zaak_documents = [self.obj_to_dict(zd) for zd in zaak_documents]
+
+        rr = ReviewRequestFactory.create(
+            review_type=self._operation_id,
+        )
+        rr = self.obj_to_dict(rr)
+
+        if self._operation_id == "advice":
+            previous = AdviceFactory.create_batch(2)
+        else:
+            previous = ApprovalFactory.create_batch(2)
+
+        previous = [self.obj_to_dict(pr) for pr in previous]
+
+        rr.update({"zaak_documents": zaak_documents, "previous": previous})
+
+        return Response(json.dumps(rr), status=200)
+
+    def post(self, request):
+        message = {"Message": "Great success"}
+        return Response(message, status=201)
+
+
+class MockAdviceRequestView(MockBaseReviewRequest):
+    _operation_id = "advice"
+
+
+class MockApprovalRequestView(MockBaseReviewRequest):
+    _operation_id = "approval"

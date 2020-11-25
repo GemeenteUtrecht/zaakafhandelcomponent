@@ -18,6 +18,7 @@ class KownslTypes(DjangoChoices):
 
 @dataclass
 class ReviewRequest(Model):
+    created: datetime
     id: uuid.UUID
     for_zaak: str
     review_type: str
