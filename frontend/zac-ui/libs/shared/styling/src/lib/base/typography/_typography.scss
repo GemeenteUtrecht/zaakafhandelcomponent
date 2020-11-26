@@ -1,0 +1,54 @@
+@import '../colors/colors';
+
+@import "typography.abstract";
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  color: $color-text;
+  font-family: $font-family-text;
+  font-size: $font-size-m;
+  line-height: $line-height-m;
+}
+
+h1, .h1 {
+  @include heading;
+  font-size: $h1-font-size-xs;
+}
+
+h2, .h2 {
+  @include heading;
+  font-size: $h2-font-size-xs;
+}
+
+h3, .h3 {
+  @include heading;
+  font-size: $h3-font-size-xs;
+}
+
+h4, .h4 {
+  @include heading;
+  font-family: $font-family-text;
+  font-size: $h4-font-size-m;
+}
+
+p {
+  @include text;
+}
+
+@font-face {
+  font-family: "Lucida Grande";
+  font-style: normal;
+  font-weight: 400;
+  src: local("LucidaGrande");
+}
+
+@font-face {
+  font-family: "Lucida Grande";
+  font-style: normal;
+  font-weight: 700;
+  src: local("LucidaGrandeBold");
+}

@@ -23,6 +23,9 @@
             "aot": true,
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
             "styles": ["apps/zac-ui/src/styles.scss"],
+            "stylePreprocessorOptions": {
+              "includePaths": ["libs/shared/styling/src/lib/base"]
+            },
             "scripts": []
           },
           "configurations": {
@@ -130,7 +133,10 @@
           "builder": "@nrwl/angular:package",
           "options": {
             "tsConfig": "libs/features/kownsl/tsconfig.lib.json",
-            "project": "libs/features/kownsl/ng-package.json"
+            "project": "libs/features/kownsl/ng-package.json",
+            "stylePreprocessorOptions": {
+              "includePaths": ["libs/shared/styling/src/lib/base"]
+            }
           },
           "configurations": {
             "production": {
@@ -172,7 +178,10 @@
           "builder": "@nrwl/angular:package",
           "options": {
             "tsConfig": "libs/shared/ui-components/tsconfig.lib.json",
-            "project": "libs/shared/ui-components/ng-package.json"
+            "project": "libs/shared/ui-components/ng-package.json",
+            "stylePreprocessorOptions": {
+              "includePaths": ["libs/shared/styling/src/lib/base"]
+            }
           },
           "configurations": {
             "production": {
@@ -194,6 +203,36 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/shared/ui-components/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "shared-styling": {
+      "projectType": "library",
+      "root": "libs/shared/styling",
+      "sourceRoot": "libs/shared/styling/src",
+      "prefix": "zac-ui",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/styling/tsconfig.lib.json",
+              "libs/shared/styling/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/shared/styling/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/shared/styling/jest.config.js",
             "passWithNoTests": true
           }
         }

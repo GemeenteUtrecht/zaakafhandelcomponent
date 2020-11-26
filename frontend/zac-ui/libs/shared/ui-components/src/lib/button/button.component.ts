@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'gu-ui-button',
+  selector: 'gu-button',
   templateUrl: './button.component.html',
   styleUrls: ['./button.component.scss']
 })

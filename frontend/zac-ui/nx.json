@@ -1,5 +1,5 @@
 {
-  "npmScope": "zac-ui",
+  "npmScope": "gu",
   "affected": {
     "defaultBase": "master"
   },
@@ -34,6 +34,9 @@
       "tags": []
     },
     "shared-ui-components": {
+      "tags": []
+    },
+    "shared-styling": {
       "tags": []
     }
   }

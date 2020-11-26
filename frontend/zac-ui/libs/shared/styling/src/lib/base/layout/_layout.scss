@@ -1,0 +1,10 @@
+@import '../colors/colors';
+
+body {
+  background-color: $background-grey;
+}
+.layout {
+  min-height: 100vh;
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
