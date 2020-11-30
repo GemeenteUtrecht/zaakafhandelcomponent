@@ -10,8 +10,8 @@
 html {
   color: $color-text;
   font-family: $font-family-text;
-  font-size: $font-size-m;
   line-height: $line-height-m;
+  font-size: 62.5%; // This makes 1rem = 10px;
 }
 
 h1, .h1 {
@@ -37,6 +37,19 @@ h4, .h4 {
 
 p {
   @include text;
+  &.p--bold {
+    font-weight: bold;
+  }
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 @font-face {

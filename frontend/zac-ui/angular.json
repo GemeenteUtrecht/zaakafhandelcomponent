@@ -10,7 +10,7 @@
       },
       "root": "apps/zac-ui",
       "sourceRoot": "apps/zac-ui/src",
-      "prefix": "zac-ui",
+      "prefix": "gu",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
@@ -24,7 +24,7 @@
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
             "styles": ["apps/zac-ui/src/styles.scss"],
             "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib/base"]
+              "includePaths": ["libs/shared/styling/src/lib"]
             },
             "scripts": []
           },
@@ -135,7 +135,7 @@
             "tsConfig": "libs/features/kownsl/tsconfig.lib.json",
             "project": "libs/features/kownsl/ng-package.json",
             "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib/base"]
+              "includePaths": ["libs/shared/styling/src/lib"]
             }
           },
           "configurations": {
@@ -180,7 +180,7 @@
             "tsConfig": "libs/shared/ui-components/tsconfig.lib.json",
             "project": "libs/shared/ui-components/ng-package.json",
             "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib/base"]
+              "includePaths": ["libs/shared/styling/src/lib"]
             }
           },
           "configurations": {

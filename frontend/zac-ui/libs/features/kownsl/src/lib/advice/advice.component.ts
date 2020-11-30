@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'gu-kownsl-advice',
+  selector: 'gu-features-kownsl-advice',
   templateUrl: './advice.component.html',
   styleUrls: ['./advice.component.scss']
 })

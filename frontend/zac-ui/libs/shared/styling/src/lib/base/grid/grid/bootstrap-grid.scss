@@ -11,17 +11,6 @@
   } // stylelint-disable-line at-rule-no-vendor-prefix
 }
 
-html {
-  box-sizing: border-box;
-  -ms-overflow-style: scrollbar;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: inherit;
-}
-
 @import 'functions';
 @import 'variables';
 
