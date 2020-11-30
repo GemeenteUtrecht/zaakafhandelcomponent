@@ -41,6 +41,7 @@ services:
       - CACHE_AXES=redis:6379/0
       - CACHE_OAS=redis:6379/1
       - CACHE_SESSIONS=redis:6379/1
+      - CORS_HEADERS_ENABLED=True
     # expose backend port for frontend development
     ports:
       - 8000:8000
