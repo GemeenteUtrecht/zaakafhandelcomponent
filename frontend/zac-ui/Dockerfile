@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY . ./
 RUN npm ci
-RUN ./node_modules/.bin/ng build --prod
+ARG ui_prefix=/ui/
+RUN ./node_modules/.bin/ng build --prod --base-href="$ui_prefix"
 
 # Stage 2 -- serve static build with nginx
 FROM nginx:1.19
