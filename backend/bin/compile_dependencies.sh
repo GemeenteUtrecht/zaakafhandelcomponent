@@ -4,7 +4,7 @@ set -ex
 
 toplevel=$(git rev-parse --show-toplevel)
 
-cd $toplevel
+cd $toplevel/backend
 
 # Base (& prod) deps
 pip-compile \
