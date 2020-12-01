@@ -1,0 +1,31 @@
+@import './base/colors/colors';
+
+.btn {
+  align-items: center;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.4rem;
+  justify-content: center;
+  min-width: 10rem;
+  padding: 1rem 2rem;
+  text-transform: none;
+  transition: background-color .1s,color .1s,fill .1s,stroke .1s;
+  &--primary {
+    background-color: $color-blue;
+  }
+  &--secondary {
+    background-color: $color-orange;
+  }
+  &--tertiary {
+    background-color: unset;
+    color: $color-blue;
+    text-decoration: underline;
+  }
+  &--large {
+    padding: 1.4rem 2rem;
+    font-size: 1.6rem;
+    font-weight: bold;
+  }
+}

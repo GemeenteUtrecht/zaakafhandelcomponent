@@ -1,3 +1,13 @@
-<button>
 
+<button
+  class="btn"
+  [ngClass]="{
+  'btn--primary': type == 'primary',
+  'btn--secondary': type == 'secondary',
+  'btn--tertiary': type == 'tertiary',
+  'btn--small': size == 'small',
+  'btn--large': size == 'large'
+  }"
+>
+  <ng-content></ng-content>
 </button>

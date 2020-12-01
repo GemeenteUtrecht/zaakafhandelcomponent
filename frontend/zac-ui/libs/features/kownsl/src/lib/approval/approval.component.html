@@ -1,1 +1,71 @@
-<p>approval works!</p>
+<div class="kownsl-container">
+  <section>
+    <h1 class="">Accordering gevraagd</h1>
+    <div class="row no-gutters">
+      <div class="col-4">
+        <p class="p p--bold">Ingediend op:</p>
+      </div>
+      <div class="col-8">
+        <p class="p">2 november 2020 12:24</p>
+      </div>
+    </div>
+    <div class="row no-gutters">
+      <div class="col-4">
+        <p class="p p--bold">Toelichting:</p>
+      </div>
+      <div class="col-8">
+        <p class="p p--nomargin">
+          Uw akkoord is nodig bij dit onderwerp. Ik ontvang graag zsm een reactie van u terug.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Collapsible table with previous advices -->
+  <section>
+    <h2 class="mb-4">Vorige adviezen</h2>
+    <gu-table></gu-table>
+  </section>
+
+  <section>
+    <h2 class="mb-4">Documenten</h2>
+    <gu-file
+      fileName="test.txt"
+      downloadUrl="google.com"
+    ></gu-file>
+    <gu-file
+      fileName="test.txt"
+      downloadUrl="google.com"
+    ></gu-file>
+  </section>
+
+  <section>
+    <label class="h2 d-inline-block">Antwoord</label>
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <gu-radio
+          name="approval_answer"
+          id="1"
+          label="Akkoord"
+        ></gu-radio>
+      </div>
+      <div class="col-12 col-md-6">
+        <gu-radio
+          name="approval_answer"
+          id="2"
+          label="Niet akkoord"
+        ></gu-radio>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <label class="h2 d-inline-block" for="textarea_approval">Toelichting</label>
+    <span class="label label--optional">optioneel</span>
+    <span class="label label--hint">Toelichting op uw antwoord</span>
+    <textarea class="mb-0" id="textarea_advice"></textarea>
+  </section>
+  <div class="d-flex justify-content-end">
+    <gu-button type="primary" size="large">Accordering bevestigen</gu-button>
+  </div>
+</div>

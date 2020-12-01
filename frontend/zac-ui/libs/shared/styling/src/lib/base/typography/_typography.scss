@@ -16,12 +16,12 @@ html {
 
 h1, .h1 {
   @include heading;
-  font-size: $h1-font-size-xs;
+  font-size: $h1-font;
 }
 
 h2, .h2 {
   @include heading;
-  font-size: $h2-font-size-xs;
+  font-size: $h2-font;
 }
 
 h3, .h3 {
@@ -39,6 +39,9 @@ p {
   @include text;
   &.p--bold {
     font-weight: bold;
+  }
+  &.p--nomargin {
+    margin-bottom: 0;
   }
 }
 

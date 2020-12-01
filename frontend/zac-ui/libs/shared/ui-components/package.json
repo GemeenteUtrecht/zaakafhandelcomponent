@@ -6,6 +6,8 @@
     "@angular/core": "^10.1.6"
   },
   "dependencies": {
+    "@angular/cdk": "^11.0.1",
+    "@angular/material": "^10.2.7",
     "tslib": "^2.0.0"
   }
 }

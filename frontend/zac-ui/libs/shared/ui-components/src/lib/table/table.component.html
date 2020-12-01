@@ -1,0 +1,23 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th *ngIf="expandable"></th>
+      <th *ngFor="let key of headData">{{ key }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <ng-template ngFor let-element [ngForOf]="elementData">
+      <tr class="parent-row">
+        <td *ngIf="expandable" class="table-expand">
+          <button class="table-expand__button" (click)="expandRow($event)">
+            <mat-icon aria-hidden="false" aria-label="expand">keyboard_arrow_down</mat-icon>
+          </button>
+        </td>
+        <td *ngFor="let cell of element.cellData | keyvalue">{{ cell.value }}</td>
+      </tr>
+      <tr *ngIf="expandable" class="child-row">
+        <td colspan="10">{{ element.expandData }}</td>
+      </tr>
+    </ng-template>
+  </tbody>
+</table>

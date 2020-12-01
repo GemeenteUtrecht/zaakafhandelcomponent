@@ -1,3 +1,11 @@
 .kownsl {
   padding: 3rem 0;
+  &-container {
+    h1 {
+      margin-bottom: 3rem;
+    }
+    section {
+      margin-bottom: 4rem;
+    }
+  }
 }

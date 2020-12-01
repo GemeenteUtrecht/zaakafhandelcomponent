@@ -1,0 +1,11 @@
+textarea {
+  @include text;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #c8cacc;
+  border-radius: 2px;
+  height: 10rem;
+  overflow: visible;
+  padding: 1rem;
+  max-width: 100%;
+}

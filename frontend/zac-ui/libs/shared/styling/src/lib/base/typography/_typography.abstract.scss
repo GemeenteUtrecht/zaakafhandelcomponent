@@ -1,9 +1,9 @@
 $font-family-heading: ("Lucida Grande", "Arial", "Helvetica") !default;
 $font-family-text: ("Lucida Grande", "Arial", "Helvetica") !default;
 
-$font-size-s: 13px !default;
-$font-size-m: 16px !default;
-$font-size-l: 20px !default;
+//$font-size-s: 13px !default;
+//$font-size-m: 16px !default;
+//$font-size-l: 20px !default;
 
 $line-height-s: 1.2 !default;
 $line-height-m: 1.5 !default;
@@ -12,10 +12,12 @@ $line-height-l: 1.7 !default;
 $h1-font-size-xs: 28px !default;
 $h1-font-size-s: 36px !default;
 $h1-font-size-m: 44px !default;
+$h1-font: 2.8rem !default;
 
 $h2-font-size-xs: 18px !default;
 $h2-font-size-s: 27px !default;
 $h2-font-size-m: 32px !default;
+$h2-font: 2.0rem !default;
 
 $h3-font-size-xs: 20px !default;
 $h3-font-size-s: 21px !default;
@@ -36,7 +38,7 @@ $h4-font-size-m: 16px !default;
 
 @mixin text {
   font-family: $font-family-text;
-  font-size: $font-size-m;
+  font-size: 1.4rem;
   line-height: $line-height-m;
   margin-bottom: space(3);
   margin-top: 0;

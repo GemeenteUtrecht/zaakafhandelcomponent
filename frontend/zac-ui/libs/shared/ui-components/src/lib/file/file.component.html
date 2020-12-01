@@ -1,0 +1,20 @@
+<ng-template [ngIf]="downloadUrl">
+  <div class="file">
+    <div class="file-name-container">
+      <mat-icon aria-hidden="true">insert_drive_file_outline</mat-icon>
+      <a class="file-name file-name--link" href="{{downloadUrl}}">{{fileName}}</a>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template [ngIf]="delete">
+  <div class="file">
+    <div class="file-name-container">
+      <mat-icon aria-hidden="true">insert_drive_file_outline</mat-icon>
+      <span class="file-name">{{fileName}}</span>
+    </div>
+    <div class="file-delete">
+      <gu-button type="tertiary">Verwijder</gu-button>
+    </div>
+  </div>
+</ng-template>

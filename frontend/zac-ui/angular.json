@@ -127,7 +127,7 @@
       "projectType": "library",
       "root": "libs/features/kownsl",
       "sourceRoot": "libs/features/kownsl/src",
-      "prefix": "zac-ui",
+      "prefix": "gu",
       "architect": {
         "build": {
           "builder": "@nrwl/angular:package",
@@ -172,7 +172,7 @@
       "projectType": "library",
       "root": "libs/shared/ui-components",
       "sourceRoot": "libs/shared/ui-components/src",
-      "prefix": "zac-ui",
+      "prefix": "gu",
       "architect": {
         "build": {
           "builder": "@nrwl/angular:package",
@@ -217,7 +217,7 @@
       "projectType": "library",
       "root": "libs/shared/styling",
       "sourceRoot": "libs/shared/styling/src",
-      "prefix": "zac-ui",
+      "prefix": "gu",
       "architect": {
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
