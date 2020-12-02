@@ -7,14 +7,17 @@
 aiodns==2.0.0             # via -r requirements/base.txt
 aiohttp==3.6.1            # via -r requirements/base.txt
 amqp==2.5.1               # via -r requirements/base.txt, kombu
+appdirs==1.4.4            # via black
 async-timeout==3.0.1      # via -r requirements/base.txt, aiohttp
 attrs==19.1.0             # via -r requirements/base.txt, aiohttp
 beautifulsoup4==4.8.2     # via webtest
 billiard==3.6.1.0         # via -r requirements/base.txt, celery
+black==20.8b1             # via -r requirements/test-tools.in
 celery==4.3.0             # via -r requirements/base.txt, django-camunda
 certifi==2019.9.11        # via -r requirements/base.txt, elasticsearch, requests
 cffi==1.12.3              # via -r requirements/base.txt, cryptography, pycares
 chardet==3.0.4            # via -r requirements/base.txt, aiohttp, requests
+click==7.1.2              # via black
 coverage==5.0.3           # via -r requirements/test-tools.in
 cryptography==3.2.1       # via -r requirements/base.txt, django-auth-adfs
 cssselect==1.1.0          # via pyquery
@@ -53,15 +56,18 @@ idna==2.8                 # via -r requirements/base.txt, requests, yarl
 importlib-metadata==0.23  # via -r requirements/base.txt, kombu
 inflection==0.3.1         # via -r requirements/base.txt, django-camunda
 isodate==0.6.0            # via -r requirements/base.txt
+isort==5.6.4              # via -r requirements/test-tools.in
 jdcal==1.4.1              # via -r requirements/base.txt, openpyxl
 kombu==4.6.4              # via -r requirements/base.txt, celery
 lxml==4.5.0               # via pyquery
 markuppy==1.14            # via -r requirements/base.txt, tablib
 more-itertools==7.2.0     # via -r requirements/base.txt, zipp
 multidict==4.5.2          # via -r requirements/base.txt, aiohttp, yarl
+mypy-extensions==0.4.3    # via black
 odfpy==1.4.0              # via -r requirements/base.txt, tablib
 openpyxl==3.0.0           # via -r requirements/base.txt, tablib
 orderedmultidict==1.0.1   # via -r requirements/base.txt, furl
+pathspec==0.8.1           # via black
 psycopg2==2.8.3           # via -r requirements/base.txt
 pycares==3.0.0            # via -r requirements/base.txt, aiodns
 pycparser==2.19           # via -r requirements/base.txt, cffi
@@ -74,6 +80,7 @@ pytz==2019.2              # via -r requirements/base.txt, celery, django
 pyyaml==5.1.2             # via -r requirements/base.txt, gemma-zds-client, tablib
 raven==6.10.0             # via -r requirements/base.txt
 redis==3.3.8              # via -r requirements/base.txt, django-redis
+regex==2020.11.13         # via black
 requests-mock==1.7.0      # via -r requirements/base.txt, -r requirements/test-tools.in
 requests==2.22.0          # via -r requirements/base.txt, django-auth-adfs, django-camunda, gemma-zds-client, requests-mock, zgw-consumers
 rules==2.2                # via -r requirements/base.txt
@@ -83,6 +90,9 @@ sqlparse==0.3.0           # via -r requirements/base.txt, django
 tablib==0.14.0            # via -r requirements/base.txt, django-import-export
 tblib==1.6.0              # via -r requirements/test-tools.in
 text-unidecode==1.3       # via faker
+toml==0.10.2              # via black
+typed-ast==1.4.1          # via black
+typing-extensions==3.7.4.3  # via black
 urllib3==1.25.5           # via -r requirements/base.txt, elasticsearch, requests
 uwsgi==2.0.19.1           # via -r requirements/base.txt
 vine==1.3.0               # via -r requirements/base.txt, amqp, celery
