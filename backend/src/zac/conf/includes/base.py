@@ -3,7 +3,6 @@ import os
 from django.urls import reverse_lazy
 
 import raven
-from corsheaders.defaults import default_headers
 
 from .environ import config
 
@@ -239,6 +238,8 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 #
 # LOGGING
 #
+LOG_STDOUT = config("LOG_STDOUT", default=False)
+
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
 LOGGING = {
@@ -291,8 +292,16 @@ LOGGING = {
         },
     },
     "loggers": {
-        "zac": {"handlers": ["project"], "level": "INFO", "propagate": True},
-        "django.request": {"handlers": ["django"], "level": "ERROR", "propagate": True},
+        "zac": {
+            "handlers": ["project"] if not LOG_STDOUT else ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["django"] if not LOG_STDOUT else ["console"],
+            "level": "ERROR",
+            "propagate": True,
+        },
         "django.template": {
             "handlers": ["console"],
             "level": "INFO",

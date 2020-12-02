@@ -23,8 +23,8 @@ services:
       - es_data:/usr/share/elasticsearch/data
     # expose to the host machine so that we can use docker ES for development
     ports:
-       - 9200:9200
-       - 9300:9300
+      - 9200:9200
+      - 9300:9300
 
   backend:
     image: scrumteamzgw/zaakafhandelcomponent:${TAG:-latest}
@@ -57,14 +57,34 @@ services:
     depends_on:
       - backend
 
+  frontend-dev:
+    build:
+      context: ./frontend/zac-ui
+      dockerfile: Dockerfile-dev
+      args:
+        - NODE_VERSION=${NODE_VERSION:-13}
+    volumes:
+      - ./frontend/zac-ui:/app
+
   # ingress
-  ingress:
+  ingress: &ingress-default
     build: ./ingress
     ports:
       - 8080:80
     depends_on:
       - backend
       - frontend
+
+  ingress-dev:
+    <<: *ingress-default
+    environment:
+      - FRONTEND_HOST=frontend-dev
+      - FRONTEND_PORT=4200
+      - FRONTEND_PATH=
+    depends_on:
+      - backend
+      - frontend-dev
+
 
 volumes:
   postgres_data:
