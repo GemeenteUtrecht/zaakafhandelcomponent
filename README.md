@@ -50,13 +50,21 @@ Future improvements could bring in a database fixture with out-of-the-box config
 Alternatively, you could develop against `https://zac-test.utrechtproeftuin.nl` as
 backend.
 
+You can also run the frontend dev server using:
+
+```bash
+docker-compose up -d ingress-dev
+```
+
+The entire app is then available on `http://localhost:8080`.
+
 ### Full stack
 
 You can bring up the full stack of backend + frontend and supporting services using
 docker-compose:
 
 ```bash
-docker-compose up
+docker-compose up ingress
 ```
 
 Components are then available on their respective paths:
