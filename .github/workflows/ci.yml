@@ -1,0 +1,119 @@
+name: Run CI
+
+# Run this workflow every time a new commit pushed to your repository
+on:
+  push:
+    branches:
+      - develop
+    tags:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: scrumteamzgw/zaakafhandelcomponent
+
+jobs:
+  tests:
+    name: Run the Django test suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      redis:
+        image: redis:5
+        ports:
+          - 6379:6379
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+        env:
+           discovery.type: single-node
+           ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        ports:
+          - 9200:9200
+          - 9300:9300
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt codecov
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build --production
+
+      - name: Wait for ES to become available
+        run: |
+          es_status=red
+          until [[ $es_status = green ]]; do
+              >&2 echo "Waiting for ES to become available. Current status: $es_status"
+              sleep 1
+              es_status=$(curl -s -X GET http://localhost:9200/_cluster/health\?pretty\=true | jq -r .status)
+          done
+
+      - name: Run tests
+        run: |
+          python src/manage.py collectstatic --noinput --link
+          coverage run src/manage.py test src
+        env:
+          DJANGO_SETTINGS_MODULE: zac.conf.ci
+          SECRET_KEY: dummy
+          DB_USER: postgres
+          DB_PASSWORD: ''
+          IS_HTTPS: 'no'
+
+      - name: Publish coverage report
+        uses: codecov/codecov-action@v1
+
+  docker:
+    needs: tests
+
+    name: Build (and push) Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set tag
+        id: vars
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name (if present at all)
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "develop" ] && VERSION=latest
+
+          echo ::set-output name=tag::${VERSION}
+
+      - name: Build the Docker image
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: docker build . --tag $IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Log into registry
+        if: github.event_name == 'push'  # exclude PRs
+        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Push the Docker image
+        if: github.event_name == 'push'  # exclude PRs
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: docker push $IMAGE_NAME:$RELEASE_VERSION

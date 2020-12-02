@@ -6,3 +6,7 @@ freezegun
 pyquery
 requests-mock
 tblib
+
+# Code formatting
+black
+isort
