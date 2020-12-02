@@ -3,6 +3,7 @@ import os
 from django.urls import reverse_lazy
 
 import raven
+from corsheaders.defaults import default_headers
 
 from .environ import config
 
@@ -116,6 +117,7 @@ INSTALLED_APPS = [
     # External applications.
     "solo",
     "axes",
+    "corsheaders",
     "sniplates",
     "zgw_consumers",
     "django_camunda",
@@ -148,6 +150,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "axes.middleware.AxesMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -376,6 +379,18 @@ AXES_ONLY_USER_FAILURES = (
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = (
     False  # Default: False (you might want to block on username and IP)
 )
+
+#
+# CORS-HEADERS - see https://pypi.org/project/django-cors-headers/
+#
+# derive default value from debug yes/no - that enables it at dev-time but disables it
+# in production-like environments
+CORS_ALLOW_ALL_ORIGINS = config("CORS_HEADERS_ENABLED", default=DEBUG)
+_angular_dev_server_port = config("ANGULAR_DEV_SERVER_PORT", default=4200)
+CSRF_TRUSTED_ORIGINS = [
+    f"localhost:{_angular_dev_server_port}",
+    f"127.0.0.1:{_angular_dev_server_port}",
+]
 
 #
 # DJANGO AUTH ADFS

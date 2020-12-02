@@ -1,0 +1,71 @@
+# This docker-compose configuration is aimed at DEVELOPMENT. It is not suitable
+# for production at all.
+version: '3.8'
+
+services:
+  # backend
+  db:
+    image: postgres:11
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust  # do not use this in production!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:5-alpine
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    # expose to the host machine so that we can use docker ES for development
+    ports:
+       - 9200:9200
+       - 9300:9300
+
+  backend:
+    image: scrumteamzgw/zaakafhandelcomponent:${TAG:-latest}
+    build: ./backend
+    environment:
+      - DJANGO_SETTINGS_MODULE=zac.conf.docker
+      - SECRET_KEY=${SECRET_KEY:-changeme}
+      - IS_HTTPS=0
+      - ALLOWED_HOSTS=localhost
+      - REDIS_HOST=redis
+      - ES_HOST=elasticsearch
+      - USE_REDIS_CACHE=True
+      - CACHE_DEFAULT=redis:6379/0
+      - CACHE_AXES=redis:6379/0
+      - CACHE_OAS=redis:6379/1
+      - CACHE_SESSIONS=redis:6379/1
+      - CORS_HEADERS_ENABLED=True
+    # expose backend port for frontend development
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+
+  # frontend
+  frontend:
+    image: scrumteamzgw/zac-ui:${TAG:-latest}
+    build: ./frontend/zac-ui
+    depends_on:
+      - backend
+
+  # ingress
+  ingress:
+    build: ./ingress
+    ports:
+      - 8080:80
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  es_data:

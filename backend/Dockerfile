@@ -22,6 +22,7 @@ WORKDIR /app
 COPY ./requirements /app/requirements
 RUN pip install pip setuptools -U
 RUN pip install -r requirements/production.txt
+RUN pip install -r requirements/ci.txt
 
 
 # Stage 2 - build frontend
