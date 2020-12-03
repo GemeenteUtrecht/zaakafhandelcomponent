@@ -119,6 +119,9 @@ class ApprovalRequestView(BaseRequestView):
 import json
 from datetime import datetime
 
+import factory
+from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
+
 ### Added a temporary endpoint for frontend dev ###
 from .tests.factories import (
     AdviceFactory,
@@ -131,36 +134,23 @@ from .tests.factories import (
 class MockBaseReviewRequest(APIView):
     permission_classes = (AllowAny,)
     _operation_id = NotImplemented
-
-    def obj_to_dict(self, obj):
-        cleaned = {}
-        for key, val in obj.__dict__.items():
-            if isinstance(val, datetime):
-                cleaned[key] = str(val)
-            else:
-                cleaned[key] = val
-
-        return cleaned
+    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
 
     def get(self, request):
-        zaak_documents = ZaakDocumentFactory.create_batch(2)
-        zaak_documents = [self.obj_to_dict(zd) for zd in zaak_documents]
-
-        rr = ReviewRequestFactory.create(
-            review_type=self._operation_id,
+        zaak_documents = factory.build_batch(dict, 2, FACTORY_CLASS=ZaakDocumentFactory)
+        rr = factory.build(
+            dict, FACTORY_CLASS=ReviewRequestFactory, review_type=self._operation_id
         )
-        rr = self.obj_to_dict(rr)
+        reviews = factory.build_batch(
+            dict,
+            2,
+            FACTORY_CLASS=AdviceFactory
+            if self._operation_id == "advice"
+            else ApprovalFactory,
+        )
+        rr.update({"zaak_documents": zaak_documents, "reviews": reviews})
 
-        if self._operation_id == "advice":
-            previous = AdviceFactory.create_batch(2)
-        else:
-            previous = ApprovalFactory.create_batch(2)
-
-        previous = [self.obj_to_dict(pr) for pr in previous]
-
-        rr.update({"zaak_documents": zaak_documents, "previous": previous})
-
-        return Response(json.dumps(rr), status=200)
+        return Response(rr, status=200)
 
     def post(self, request):
         message = {"Message": "Great success"}

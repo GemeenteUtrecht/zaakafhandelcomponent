@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
+from django.utils.translation import gettext_lazy as _
+
 import factory
 import factory.fuzzy
-from django.utils.translation import gettext_lazy as _
 from djchoices import ChoiceItem, DjangoChoices
 from zgw_consumers.api_models.base import Model
 
