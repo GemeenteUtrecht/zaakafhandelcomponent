@@ -125,7 +125,7 @@ const AddZaakRelation = ({ zaakUrl, csrfToken, onSuccessfulSubmit }) => {
             >
                 <button onClick={ closeModal } className='modal__close btn'>&times;</button>
                 <div className='page-title'>Relatie toevoegen</div>
-                <form onSubmit={ onSubmit }>
+                <form onSubmit={ onSubmit } className="form form-modal">
                     <Wrapper errors={state.errors.nonFieldErrors}>
                         <ErrorList errors={state.errors.nonFieldErrors} />
                     </Wrapper>
