@@ -1,14 +1,14 @@
 # Minimal docker-compose to get the service up.
 # Note that this is NOT meant for real "production" deployments, but only to get up
 # and running quickly in a dev environment.
-version: '3.4'
+version: '3.8'
 
 services:
+  # backend
   db:
-    image: postgres:11-alpine
-    # environment:
-    #   - POSTGRES_USER=${PG_USER:zac}
-    #   - POSTGRES_PASSWORD=${PG_PASSWORD:zac}
+    image: postgres:11
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust  # do not use this in production!
 
   redis:
     image: redis:5-alpine
@@ -37,9 +37,6 @@ services:
       - CACHE_AXES=redis:6379/0
       - CACHE_OAS=redis:6379/1
       - CACHE_SESSIONS=redis:6379/1
-      # - DB_HOST=/var/run/postgresql
-    # volumes:
-    #   - /var/run/postgresql:/var/run/postgresql
     ports:
       - 8000:8000
     depends_on:
