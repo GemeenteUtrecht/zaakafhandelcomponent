@@ -10,6 +10,7 @@ python-dateutil
 isodate
 requests_mock
 rules  # permissions backend
+tablib[xlsx]
 elasticsearch-dsl
 
 # zgw-integration

@@ -112,7 +112,7 @@ sphinxcontrib-jsmath==1.0.1  # via sphinx
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 sqlparse==0.3.0           # via -r requirements/ci.txt, django, django-debug-toolbar
-tablib==0.14.0            # via -r requirements/ci.txt, django-import-export
+tablib[xlsx]==0.14.0      # via -r requirements/ci.txt, django-import-export
 tblib==1.6.0              # via -r requirements/ci.txt
 text-unidecode==1.3       # via -r requirements/ci.txt, faker
 toml==0.10.2              # via -r requirements/ci.txt, black
