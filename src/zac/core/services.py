@@ -86,11 +86,12 @@ def fetch_besluittype(url: str) -> BesluitType:
     return factory(BesluitType, result)
 
 
-def _get_from_catalogus(resource: str, catalogus: str = "") -> List:
+def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> List:
     """
     Retrieve informatieobjecttype or zaaktypen from all catalogi in the configured APIs.
     """
-    query_params = {"catalogus": catalogus} if catalogus else None
+    query_params = {"catalogus": catalogus} if catalogus else {}
+    query_params.update(**extra_query)
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
 
     if catalogus:

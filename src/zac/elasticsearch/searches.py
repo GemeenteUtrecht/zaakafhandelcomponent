@@ -3,7 +3,7 @@ from functools import reduce
 from typing import List
 
 from elasticsearch_dsl import Q
-from elasticsearch_dsl.query import Bool, Nested, Range, Regexp, Term, Terms
+from elasticsearch_dsl.query import Bool, Exists, Nested, Range, Regexp, Term, Terms
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .documents import ZaakDocument
@@ -23,6 +23,7 @@ def search(
     zaaktypen=None,
     behandelaar=None,
     allowed=(),
+    include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
 ) -> List[str]:
 
@@ -50,6 +51,9 @@ def search(
                 ),
             )
         )
+
+    if not include_closed:
+        s = s.filter(~Exists(field="einddatum"))
 
     # construct query part to display only allowed zaken
     _filters = []
