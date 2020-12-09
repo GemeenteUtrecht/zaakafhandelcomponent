@@ -6,6 +6,8 @@ from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
 
+from rules.contrib.views import PermissionRequiredMixin
+
 from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_zaaktypen
 
@@ -29,8 +31,11 @@ class ReportsListView(LoginRequiredMixin, ListView):
         return qs.filter(zaaktypen__contained_by=identificaties)
 
 
-class DownloadReportView(LoginRequiredMixin, SingleObjectMixin, View):
+class DownloadReportView(
+    LoginRequiredMixin, PermissionRequiredMixin, SingleObjectMixin, View
+):
     model = Report
+    permission_required = "reports:download"
 
     def get(self, request, *args, **kwargs):
         report = self.get_object()
