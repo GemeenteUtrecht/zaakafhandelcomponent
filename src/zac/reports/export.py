@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List, Tuple
+from typing import Dict, Iterator, List
 
 import tablib
 from zgw_consumers.api_models.base import factory
@@ -52,11 +52,6 @@ def get_export_zaken(report: Report) -> List[Zaak]:
 
 def export_zaken(report: Report) -> tablib.Dataset:
     zaken = get_export_zaken(report)
-
-    def _get_zaak_data(executor, zaak: Zaak) -> Tuple[Status, List[ZaakEigenschap]]:
-        status_future = executor.submit(get_status, zaak)
-        eigenschappen_future = executor.submit(get_zaak_eigenschappen, zaak)
-        return (status_future.result(), eigenschappen_future.result())
 
     # get the statuses & eigenschappen
     with parallel() as executor:
