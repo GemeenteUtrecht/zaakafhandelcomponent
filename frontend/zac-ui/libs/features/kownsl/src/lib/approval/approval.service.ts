@@ -10,11 +10,11 @@ export class ApprovalService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getApproval(): Observable<any> {
-    return this.http.Get<any>(encodeURI('/kownsl/review-requests/mock/approval'));
+  getApproval(uuid: string): Observable<any> {
+    return this.http.Get<any>(encodeURI(`/kownsl/review-requests/${uuid}/approval`));
   }
 
-  postApproval(formData: ApprovalForm): Observable<any> {
-    return this.http.Post<ApprovalForm>(encodeURI('/kownsl/review-requests/mock/approval'), formData);
+  postApproval(formData: ApprovalForm, uuid:string): Observable<any> {
+    return this.http.Post<ApprovalForm>(encodeURI(`/kownsl/review-requests/${uuid}/approval`), formData);
   }
 }

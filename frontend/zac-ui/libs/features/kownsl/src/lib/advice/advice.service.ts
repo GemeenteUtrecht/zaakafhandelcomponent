@@ -10,12 +10,12 @@ export class AdviceService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getAdvice(): Observable<any> {
-    return this.http.Get<any>(encodeURI('/kownsl/review-requests/mock/advice'));
+  getAdvice(uuid: string): Observable<any> {
+    return this.http.Get<any>(encodeURI(`/kownsl/review-requests/${uuid}/advice`));
   }
 
-  postAdvice(formData: AdviceForm): Observable<any> {
-    return this.http.Post<AdviceForm>(encodeURI('/kownsl/review-requests/mock/advice'), formData);
+  postAdvice(formData: AdviceForm, uuid: string): Observable<any> {
+    return this.http.Post<AdviceForm>(encodeURI(`/kownsl/review-requests/${uuid}/advice`), formData);
   }
 
 }

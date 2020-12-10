@@ -4,6 +4,7 @@ import { ApprovalService } from './approval.service';
 import { CellData, Table } from '@gu/models';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApprovalForm } from '../../models/approval-form';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gu-features-kownsl-approval',
@@ -11,6 +12,8 @@ import { ApprovalForm } from '../../models/approval-form';
   styleUrls: ['../features-kownsl.component.scss']
 })
 export class ApprovalComponent implements OnInit {
+  uuid: string;
+
   approvalData: ReviewRequest;
   isLoading: boolean;
   isSubmitting: boolean;
@@ -26,10 +29,12 @@ export class ApprovalComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private approvalService: ApprovalService
+    private approvalService: ApprovalService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
+    this.uuid = this.route.snapshot.queryParams["uuid"];
     this.fetchApproval()
     this.approvalForm = this.fb.group({
       approval: this.fb.control("", Validators.required),
@@ -39,7 +44,7 @@ export class ApprovalComponent implements OnInit {
 
   fetchApproval(): void {
     this.isLoading = true;
-    this.approvalService.getApproval().subscribe(data => {
+    this.approvalService.getApproval(this.uuid).subscribe(data => {
       this.approvalData = data;
       this.createTableData(data);
       this.isLoading = false;
@@ -78,7 +83,7 @@ export class ApprovalComponent implements OnInit {
 
   postApproval(formData: ApprovalForm): void {
     this.isSubmitting = true;
-    this.approvalService.postApproval(formData).subscribe(data => {
+    this.approvalService.postApproval(formData, this.uuid).subscribe(data => {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, error => {

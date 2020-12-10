@@ -5,6 +5,7 @@ import { AdviceForm, AdviceDocument } from '../../models/advice-form';
 import { ReviewRequest } from '../../models/review-request';
 import { CellData, FileUpload, Table } from '@gu/models';
 import { convertBlobToString } from '@gu/utils';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -12,6 +13,7 @@ import { convertBlobToString } from '@gu/utils';
   styleUrls: ['../features-kownsl.component.scss']
 })
 export class AdviceComponent implements OnInit {
+  uuid: string;
 
   adviceData: ReviewRequest;
   isLoading: boolean;
@@ -36,10 +38,12 @@ export class AdviceComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private adviceService: AdviceService
+    private adviceService: AdviceService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
+    this.uuid = this.route.snapshot.queryParams["uuid"];
     this.fetchAdvice()
     this.adviceForm = this.fb.group({
       advice: this.fb.control(""),
@@ -49,7 +53,7 @@ export class AdviceComponent implements OnInit {
 
   fetchAdvice(): void {
     this.isLoading = true;
-    this.adviceService.getAdvice().subscribe(data => {
+    this.adviceService.getAdvice(this.uuid).subscribe(data => {
       this.adviceData = data;
       this.tableData = this.createTableData(data);
       this.isLoading = false;
@@ -137,7 +141,7 @@ export class AdviceComponent implements OnInit {
 
   postAdvice(formData: AdviceForm): void {
     this.isSubmitting = true;
-    this.adviceService.postAdvice(formData).subscribe(data => {
+    this.adviceService.postAdvice(formData, this.uuid).subscribe(data => {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, error => {
