@@ -1,70 +1,79 @@
-<div class="kownsl-container">
-  <section>
-    <h1 class="">Advies gevraagd</h1>
-    <div class="row no-gutters">
-      <div class="col-4">
-        <p class="p p--bold">Ingediend op:</p>
-      </div>
-      <div class="col-8">
-        <p class="p">2 november 2020 12:24</p>
-      </div>
-    </div>
-    <div class="row no-gutters">
-      <div class="col-4">
-        <p class="p p--bold">Toelichting:</p>
-      </div>
-      <div class="col-8">
-        <p class="p p--nomargin">
-          Uw advies is nodig bij dit onderwerp. Ik ontvang graag zsm een reactie van u terug.
-        </p>
-      </div>
-    </div>
-  </section>
+<div class="kownsl__container">
+  <!--  Loading -->
+  <ng-template [ngIf]="(!adviceData && isLoading) && !submitSuccess">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-template>
 
-  <!-- Collapsible table with previous advices -->
-  <section>
-    <h2 class="mb-4">Vorige adviezen</h2>
-    <gu-table></gu-table>
-  </section>
-
-  <section>
-    <h2 class="mb-4">Documenten</h2>
-    <gu-file
-      fileName="test.txt"
-      downloadUrl="google.com"
-    ></gu-file>
-    <gu-file
-      fileName="test.txt"
-      downloadUrl="google.com"
-    ></gu-file>
-  </section>
-
-  <section>
-    <h2 class="d-inline-block">Documenten uploaden</h2>
-    <span class="label label--optional">optioneel</span>
-    <span class="label label--hint">Bijgewerkte documenten of documenten met aantekeningen</span>
-    <div class="row mb-3">
-      <div class="col-12 col-sm-6">
-        <gu-file
-          fileName="test.txt"
-          delete="true"
-        ></gu-file>
-        <gu-file
-          fileName="test.txt"
-          delete="true"
-        ></gu-file>
+  <!-- Main content -->
+  <ng-template [ngIf]="(adviceData && !isLoading) && !submitSuccess">
+    <section>
+      <h1 class="">Advies gevraagd</h1>
+      <div class="row no-gutters">
+        <div class="col-4">
+          <p class="p p--bold">Ingediend op:</p>
+        </div>
+        <div class="col-8">
+          <p class="p">{{adviceData.created}}</p>
+        </div>
       </div>
-    </div>
-    <gu-button type="secondary">Bestand uploaden</gu-button>
-  </section>
+      <div class="row no-gutters">
+        <div class="col-4">
+          <p class="p p--bold">Toelichting:</p>
+        </div>
+        <div class="col-8">
+          <p class="p p--nomargin">
+            {{adviceData.toelichting}}
+          </p>
+        </div>
+      </div>
+    </section>
 
-  <section>
-    <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
-    <span class="label label--optional">optioneel</span>
-    <span class="label label--hint">Inhoudelijk advies</span>
-    <textarea class="mb-0" id="textarea_advice"></textarea>
-  </section>
-  <div class="d-flex justify-content-end">
-    <gu-button type="primary" size="large">Advisering bevestigen</gu-button>
-  </div>
+    <!-- Collapsible table with previous advices -->
+    <section>
+      <h2 class="mb-4">Vorige adviezen</h2>
+      <gu-table
+        [tableData]="tableData"
+      ></gu-table>
+    </section>
+
+    <form [formGroup]="adviceForm">
+      <section>
+        <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
+        <gu-tooltip type="primary" inline="true">Upload een bijgewerkt bestand of een bestand met aantekeningen</gu-tooltip>
+        <div class="document-row" *ngFor="let file of adviceData.zaak_documents">
+          <div class="mb-4">
+            <gu-file
+              fileName="{{file.name}} ({{file.title}})"
+              [downloadUrl]="file.download_url"
+              class="d-inline-block"
+            ></gu-file>
+            <gu-chip type="tertiary" class="d-inline-block">
+              {{file.extra}}
+            </gu-chip>
+          </div>
+          <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.download_url))"></gu-file-upload>
+        </div>
+      </section>
+
+      <section>
+        <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
+        <span class="label label--optional">optioneel</span>
+        <span class="label label--hint">Inhoudelijk advies</span>
+        <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
+      </section>
+      <div class="d-flex justify-content-end">
+        <gu-button type="primary" size="large" (click)="submitForm()">Advisering bevestigen</gu-button>
+      </div>
+    </form>
+  </ng-template>
+
+  <!-- Success screen -->
+  <ng-template [ngIf]="submitSuccess">
+    <gu-success>
+      <h3 class="mb-4">Bedankt voor je reactie</h3>
+      <gu-button (click)="submitSuccess = false">
+        Terug
+      </gu-button>
+    </gu-success>
+  </ng-template>
 </div>

@@ -1,0 +1,70 @@
+@import '../colors/colors';
+
+@import "typography.abstract";
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  color: $color-text;
+  font-family: $font-family-text;
+  line-height: $line-height-m;
+  font-size: 62.5%; // This makes 1rem = 10px;
+}
+
+h1, .h1 {
+  @include heading;
+  font-size: $h1-font;
+}
+
+h2, .h2 {
+  @include heading;
+  font-size: $h2-font;
+}
+
+h3, .h3 {
+  @include heading;
+  font-size: $h3-font;
+}
+
+h4, .h4 {
+  @include heading;
+  font-family: $font-family-text;
+  font-size: $h4-font-size-m;
+}
+
+p {
+  @include text;
+  &.p--bold {
+    font-weight: bold;
+  }
+  &.p--nomargin {
+    margin-bottom: 0;
+  }
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+@font-face {
+  font-family: "Lucida Grande";
+  font-style: normal;
+  font-weight: 400;
+  src: local("LucidaGrande");
+}
+
+@font-face {
+  font-family: "Lucida Grande";
+  font-style: normal;
+  font-weight: 700;
+  src: local("LucidaGrandeBold");
+}

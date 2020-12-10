@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { KownslComponent } from './kownsl.component';
 
 import { KownslRoutingModule } from './kownsl-routing.module';
-import { SharedUiComponentsModule } from '@gu/ui-components';
+import { SharedUiComponentsModule } from '@gu/components';
 
 @NgModule({
   declarations: [KownslComponent],

@@ -24,7 +24,7 @@
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
             "styles": ["apps/zac-ui/src/styles.scss"],
             "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib"]
+              "includePaths": ["libs/shared/ui/styling/src/lib"]
             },
             "scripts": []
           },
@@ -62,7 +62,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "zac-ui:build"
+            "browserTarget": "zac-ui:build",
+            "baseHref": "/ui/"
           },
           "configurations": {
             "production": {
@@ -133,10 +134,7 @@
           "builder": "@nrwl/angular:package",
           "options": {
             "tsConfig": "libs/features/kownsl/tsconfig.lib.json",
-            "project": "libs/features/kownsl/ng-package.json",
-            "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib"]
-            }
+            "project": "libs/features/kownsl/ng-package.json"
           },
           "configurations": {
             "production": {
@@ -170,22 +168,19 @@
     },
     "shared-ui-components": {
       "projectType": "library",
-      "root": "libs/shared/ui-components",
-      "sourceRoot": "libs/shared/ui-components/src",
+      "root": "libs/shared/ui/components",
+      "sourceRoot": "libs/shared/ui/components/src",
       "prefix": "gu",
       "architect": {
         "build": {
           "builder": "@nrwl/angular:package",
           "options": {
-            "tsConfig": "libs/shared/ui-components/tsconfig.lib.json",
-            "project": "libs/shared/ui-components/ng-package.json",
-            "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/styling/src/lib"]
-            }
+            "tsConfig": "libs/shared/ui/components/tsconfig.lib.json",
+            "project": "libs/shared/ui/components/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "libs/shared/ui-components/tsconfig.lib.prod.json"
+              "tsConfig": "libs/shared/ui/components/tsconfig.lib.prod.json"
             }
           }
         },
@@ -193,16 +188,16 @@
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "libs/shared/ui-components/tsconfig.lib.json",
-              "libs/shared/ui-components/tsconfig.spec.json"
+              "libs/shared/ui/components/tsconfig.lib.json",
+              "libs/shared/ui/components/tsconfig.spec.json"
             ],
-            "exclude": ["**/node_modules/**", "!libs/shared/ui-components/**/*"]
+            "exclude": ["**/node_modules/**", "!libs/shared/ui/components/**/*"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/ui-components/jest.config.js",
+            "jestConfig": "libs/shared/ui/components/jest.config.js",
             "passWithNoTests": true
           }
         }
@@ -213,26 +208,89 @@
         }
       }
     },
-    "shared-styling": {
+    "shared-ui-styling": {
       "projectType": "library",
-      "root": "libs/shared/styling",
-      "sourceRoot": "libs/shared/styling/src",
+      "root": "libs/shared/ui/styling",
+      "sourceRoot": "libs/shared/ui/styling/src",
       "prefix": "gu",
       "architect": {
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "libs/shared/styling/tsconfig.lib.json",
-              "libs/shared/styling/tsconfig.spec.json"
+              "libs/shared/ui/styling/tsconfig.lib.json",
+              "libs/shared/ui/styling/tsconfig.spec.json"
             ],
-            "exclude": ["**/node_modules/**", "!libs/shared/styling/**/*"]
+            "exclude": ["**/node_modules/**", "!libs/shared/ui/styling/**/*"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/styling/jest.config.js",
+            "jestConfig": "libs/shared/ui/styling/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "shared-data-access-services": {
+      "projectType": "library",
+      "root": "libs/shared/data-access/services",
+      "sourceRoot": "libs/shared/data-access/services/src",
+      "prefix": "gu",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/data-access/services/tsconfig.lib.json",
+              "libs/shared/data-access/services/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/shared/data-access/services/**/*"
+            ]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/shared/data-access/services/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "shared-utils": {
+      "projectType": "library",
+      "root": "libs/shared/utils",
+      "sourceRoot": "libs/shared/utils/src",
+      "prefix": "gu",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/utils/tsconfig.lib.json",
+              "libs/shared/utils/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/shared/utils/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/shared/utils/jest.config.js",
             "passWithNoTests": true
           }
         }

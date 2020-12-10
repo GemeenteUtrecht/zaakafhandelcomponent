@@ -1,0 +1,22 @@
+<div
+  class="tooltip"
+  [ngClass]="{
+    'tooltip--primary': type == 'primary',
+    'tooltip--accent': type == 'accent',
+    'tooltip--warn': type == 'warn',
+    'tooltip--inline': inline
+    }"
+>
+  <div
+    role="tooltip"
+    class="tooltip__content"
+    [ngStyle]="{'visibility':isHovered ? 'visible' : 'hidden'}">
+    <ng-content></ng-content>
+  </div>
+  <mat-icon
+    aria-label="info"
+    (mouseover)="isHovered = true"
+    (mouseout)="isHovered = false">
+    info
+  </mat-icon>
+</div>

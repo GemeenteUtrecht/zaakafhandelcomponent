@@ -17,8 +17,11 @@
     "baseUrl": ".",
     "paths": {
       "@gu/kownsl": ["libs/features/kownsl/src/index.ts"],
-      "@gu/ui-components": ["libs/shared/ui-components/src/index.ts"],
-      "@gu/styling": ["libs/shared/styling/src/index.ts"]
+      "@gu/components": ["libs/shared/ui/components/src/index.ts"],
+      "@gu/styling": ["libs/shared/ui/styling/src/index.ts"],
+      "@gu/services": ["libs/shared/data-access/services/src/index.ts"],
+      "@gu/models": ["libs/shared/data-access/models/index.ts"],
+      "@gu/utils": ["libs/shared/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

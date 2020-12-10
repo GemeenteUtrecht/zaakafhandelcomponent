@@ -1,7 +1,0 @@
-@import '../colors/colors';
-
-.container-content {
-  @include media-breakpoint-up(md) {
-    max-width: 800px
-  }
-}

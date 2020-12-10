@@ -36,7 +36,13 @@
     "shared-ui-components": {
       "tags": []
     },
-    "shared-styling": {
+    "shared-ui-styling": {
+      "tags": []
+    },
+    "shared-data-access-services": {
+      "tags": []
+    },
+    "shared-utils": {
       "tags": []
     }
   }

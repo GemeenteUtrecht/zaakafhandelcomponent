@@ -1,0 +1,31 @@
+@import './base/colors/colors';
+
+.chip {
+  position: relative;
+  box-sizing: border-box;
+  transform: translateZ(0);
+  border: none;
+  display: inline-flex;
+  padding: 0.7rem 1.2rem;
+  border-radius: 16px;
+  align-items: center;
+  cursor: default;
+  min-height: 32px;
+  height: 1px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: $color-white;
+  &--primary {
+    background-color: $color-blue;
+  }
+  &--secondary {
+    background-color: $color-orange;
+  }
+  &--tertiary {
+    background-color: $background-grey;
+    color: $color-text;
+  }
+  &--warn {
+    background-color: $color-warn;
+  }
+}

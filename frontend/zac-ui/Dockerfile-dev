@@ -5,4 +5,4 @@ FROM node:$NODE_VERSION-buster-slim
 WORKDIR /app
 
 EXPOSE 4200
-CMD ["/app/node_modules/.bin/ng", "serve", "zac-ui", "--base-href=/ui/", "--host=0.0.0.0"]
+CMD ["/app/node_modules/.bin/ng", "serve", "zac-ui", "--host=0.0.0.0", "--disableHostCheck"]

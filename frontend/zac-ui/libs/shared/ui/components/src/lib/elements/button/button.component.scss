@@ -1,0 +1,110 @@
+@import './base/colors/colors';
+
+$button-text-color--primary: $color-white;
+$button-text-color--secondary: $color-blue;
+$button-text-color--tertiary: $color-blue;
+$spinner-top-color: rgba(255, 255, 255, 0.3);
+
+@mixin button {
+  align-items: center;
+  color: $button-text-color--primary;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.4rem;
+  justify-content: center;
+  min-width: 10rem;
+  padding: 1rem 2rem;
+  text-transform: none;
+  transition: background-color .1s,color .1s,fill .1s,stroke .1s;
+}
+
+@mixin button--primary {
+  background-color: $color-blue;
+}
+@mixin button--secondary {
+  background-color: $color-white;
+  color: $button-text-color--secondary;
+  border: 1px solid $color-blue;
+}
+@mixin button--tertiary {
+  background-color: unset;
+  color: $button-text-color--tertiary;
+}
+
+.btn {
+  @include button;
+  &--primary {
+    @include button--primary;
+    &:disabled,
+    &[disabled]{
+      background-color: $color-disabled;
+    }
+  }
+  &--secondary {
+    @include button--secondary;
+    &:disabled,
+    &[disabled]{
+      color: $color-disabled;
+      border-color: $color-disabled;
+    }
+  }
+  &--tertiary {
+    @include button--tertiary;
+    &:disabled,
+    &[disabled]{
+      color: $color-disabled;
+    }
+  }
+  &--large {
+    padding: 1.4rem 2rem;
+    font-size: 1.6rem;
+    font-weight: bold;
+  }
+  &:disabled,
+  &[disabled]{
+    cursor: default;
+  }
+
+  .btn__spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid white;
+    border-top-color: $spinner-top-color;
+    border-radius: 100%;
+    animation: spinner 0.6s infinite linear;
+    transition: top 0.3s 0.3s ease,
+    opacity 0.3s 0.3s ease,
+    border-radius 0.3s ease;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    z-index: 20;
+    margin-right: 0.5rem;
+    &--primary {
+      border-color: $button-text-color--primary;
+      border-top-color:  $spinner-top-color;
+    }
+    &--secondary {
+      border-color: $button-text-color--secondary;
+      border-top-color:  $spinner-top-color;
+    }
+    &--tertiary {
+      border-color: $button-text-color--tertiary;
+      border-top-color:  $spinner-top-color;
+    }
+    &:focus {
+      outline: none;
+      outline: 0;
+    }
+  }
+}
+
+// define animation for spinner
+@keyframes spinner {
+  0% {
+    transform: rotateZ(0deg);
+  }
+  100% {
+    transform: rotateZ(359deg);
+  }
+}
