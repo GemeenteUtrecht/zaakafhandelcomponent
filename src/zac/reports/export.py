@@ -20,13 +20,13 @@ from .models import Report
 def _get_zaaktypen(report: Report) -> List[ZaakType]:
     identificaties = report.zaaktypen
 
-    def _get_zaaktype_versions(identificatie: str):
-        return _get_from_catalogus(
-            "zaaktype", catalogus="", identificatie=identificatie
-        )
-
     with parallel() as executor:
-        zaaktypen = executor.map(_get_zaaktype_versions, identificaties)
+        zaaktypen = executor.map(
+            lambda identificatie: _get_from_catalogus(
+                "zaaktype", catalogus="", identificatie=identificatie
+            ),
+            identificaties,
+        )
 
     all_zaaktypen = sum(zaaktypen, [])
     return factory(ZaakType, all_zaaktypen)
