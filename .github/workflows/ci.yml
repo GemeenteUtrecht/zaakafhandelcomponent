@@ -157,7 +157,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         run: docker build . --tag $FRONTEND_IMAGE_NAME:$RELEASE_VERSION
-        working-directory: frontend
+        working-directory: frontend/zac-ui
 
       - name: Log into registry
         if: github.event_name == 'push'  # exclude PRs
