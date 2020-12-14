@@ -32,6 +32,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
             zaak.vertrouwelijkheidaanduiding
         ).order,
         startdatum=zaak.startdatum,
+        einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
     )
     zaak_document.save()
@@ -59,6 +60,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
             zaak.vertrouwelijkheidaanduiding
         ).order,
         startdatum=zaak.startdatum,
+        einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
     )
     return zaak_document

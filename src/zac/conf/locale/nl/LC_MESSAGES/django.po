@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-12 09:09+0000\n"
+"POT-Creation-Date: 2020-12-09 14:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Sergei Maertens <sergei@maykinmedia.nl>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,101 +18,101 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/zac/accounts/admin.py:50 src/zac/accounts/models.py:99
-#: src/zac/accounts/models.py:189
+#: zac/accounts/admin.py:59 zac/accounts/models.py:99
+#: zac/accounts/models.py:163
 msgid "permission sets"
 msgstr "rechtencollecties"
 
-#: src/zac/accounts/constants.py:7
+#: zac/accounts/constants.py:7
 msgid "approved"
 msgstr "goedgekeurd"
 
-#: src/zac/accounts/constants.py:8
+#: zac/accounts/constants.py:8
 msgid "rejected"
 msgstr "afgewezen"
 
-#: src/zac/accounts/forms.py:48
+#: zac/accounts/forms.py:55
 msgid "Permissions"
 msgstr "Rechten"
 
-#: src/zac/accounts/forms.py:50
+#: zac/accounts/forms.py:57
 msgid "Permissions given."
 msgstr "Toegekende rechten."
 
-#: src/zac/accounts/models.py:25
+#: zac/accounts/models.py:25
 msgid "username"
 msgstr "gebruikersnaam"
 
-#: src/zac/accounts/models.py:28
+#: zac/accounts/models.py:28
 msgid "Required. 150 characters or fewer."
 msgstr ""
 
-#: src/zac/accounts/models.py:29
+#: zac/accounts/models.py:29
 msgid "A user with that username already exists."
 msgstr ""
 
-#: src/zac/accounts/models.py:31
+#: zac/accounts/models.py:31
 msgid "first name"
 msgstr ""
 
-#: src/zac/accounts/models.py:32
+#: zac/accounts/models.py:32
 msgid "last name"
 msgstr ""
 
-#: src/zac/accounts/models.py:33 src/zac/contrib/validsign/forms.py:69
+#: zac/accounts/models.py:33 zac/contrib/validsign/forms.py:69
 msgid "email address"
 msgstr ""
 
-#: src/zac/accounts/models.py:35
+#: zac/accounts/models.py:35
 msgid "staff status"
 msgstr ""
 
-#: src/zac/accounts/models.py:37
+#: zac/accounts/models.py:37
 msgid "Designates whether the user can log into this admin site."
 msgstr ""
 
-#: src/zac/accounts/models.py:40
+#: zac/accounts/models.py:40
 msgid "active"
 msgstr ""
 
-#: src/zac/accounts/models.py:43
+#: zac/accounts/models.py:43
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
 msgstr ""
 
-#: src/zac/accounts/models.py:47
+#: zac/accounts/models.py:47
 msgid "date joined"
 msgstr ""
 
-#: src/zac/accounts/models.py:62
+#: zac/accounts/models.py:62
 msgid "user"
 msgstr "gebruiker"
 
-#: src/zac/accounts/models.py:63
+#: zac/accounts/models.py:63
 msgid "users"
 msgstr "gebruikers"
 
-#: src/zac/accounts/models.py:91 src/zac/activities/models.py:20
-#: src/zac/contrib/organisatieonderdelen/models.py:7
+#: zac/accounts/models.py:91 zac/activities/models.py:20
+#: zac/contrib/organisatieonderdelen/models.py:7 zac/reports/models.py:8
 msgid "name"
 msgstr "naam"
 
-#: src/zac/accounts/models.py:94
+#: zac/accounts/models.py:94
 msgid "Use an easily recognizable name that maps to the function of users."
 msgstr ""
 "Gebruik een herkenbare naam die overeenkomt met de functie van gebruikers."
 
-#: src/zac/accounts/models.py:101
+#: zac/accounts/models.py:101
 msgid ""
 "Selecting multiple sets makes them add/merge all the permissions together."
 msgstr "Bij selectie van meerdere collecties worden de rechten samengevoegd."
 
-#: src/zac/accounts/models.py:109
+#: zac/accounts/models.py:109
 msgid "organisatieonderdeel"
 msgstr "organisatieonderdeel"
 
-#: src/zac/accounts/models.py:111
+#: zac/accounts/models.py:111
 msgid ""
 "Limit access to data belonging to this OO. Leaving this blank means that "
 "there is no restriction on OO in place."
@@ -120,406 +120,513 @@ msgstr ""
 "Limiteer de toegang tot gegevens van dit OO. Indien je dit leeg laat, dan "
 "zijn de gegevens van alle OO's toegankelijk."
 
-#: src/zac/accounts/models.py:117
+#: zac/accounts/models.py:117
 msgid "authorization profile"
 msgstr "autorisatieprofiel"
 
-#: src/zac/accounts/models.py:118
+#: zac/accounts/models.py:118
 msgid "authorization profiles"
 msgstr "autorisatieprofielen"
 
-#: src/zac/accounts/models.py:129
+#: zac/accounts/models.py:129
 msgid "naam"
 msgstr ""
 
-#: src/zac/accounts/models.py:130
+#: zac/accounts/models.py:130
 msgid "description"
 msgstr "omschrijving"
 
-#: src/zac/accounts/models.py:135
+#: zac/accounts/models.py:135
 msgid "permissions"
 msgstr "rechten"
 
-#: src/zac/accounts/models.py:138
+#: zac/accounts/models.py:138 zac/accounts/models.py:186
 msgid "catalogus"
 msgstr "catalogus"
 
-#: src/zac/accounts/models.py:139
+#: zac/accounts/models.py:139
 msgid "Zaaktypencatalogus waarin de zaaktypen voorkomen."
 msgstr ""
 
-#: src/zac/accounts/models.py:152
+#: zac/accounts/models.py:152
 msgid "maximale vertrouwelijkheidaanduiding"
 msgstr ""
 
-#: src/zac/accounts/models.py:157
+#: zac/accounts/models.py:157
 msgid "Spans Zaken until and including this vertrouwelijkheidaanduiding."
 msgstr "Omvat Zaken tot en met deze vertrouwelijkheidaanduiding."
 
-#: src/zac/accounts/models.py:161
-msgid "informatieobjecttype catalogus"
-msgstr "informatieobjecttypecatalogus"
+#: zac/accounts/models.py:162 zac/accounts/models.py:182
+msgid "permission set"
+msgstr "rechtencollectie"
 
-#: src/zac/accounts/models.py:163
+#: zac/accounts/models.py:183
+msgid "Associated set of permissions for a zaaktype."
+msgstr ""
+
+#: zac/accounts/models.py:189
 msgid ""
 "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
 msgstr ""
 
-#: src/zac/accounts/models.py:172
-msgid ""
-"Specifies which document types within the case can be viewed. If left empty, "
-"all documents in the case can be viewed."
-msgstr ""
-"Bepaalt welke documenttypes binnen de zaak zichtbaar zijn. Indien dit "
-"leeggelaten wordt, dan zijn alle documenten in de zaak zichtbaar."
-
-#: src/zac/accounts/models.py:175
-msgid "informatieobjecttype omschrijvingen"
+#: zac/accounts/models.py:194
+msgid "omschrijving"
 msgstr ""
 
-#: src/zac/accounts/models.py:178
-msgid "informatieobjecttype maximum vertrouwelijkheidaanduiding"
-msgstr ""
+#: zac/accounts/models.py:195
+#, fuzzy
+#| msgid "informatieobjecttype catalogus"
+msgid "Informatieobjecttype omschrijving."
+msgstr "informatieobjecttypecatalogus"
 
-#: src/zac/accounts/models.py:183
-msgid "Maximum level of confidentiality for the document types in the case."
-msgstr "Maximale vertrouwelijkheidaanduiding voor de documenttypen in de zaak."
+#: zac/accounts/models.py:199
+#, fuzzy
+#| msgid "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+msgid "maximaal vertrouwelijkheidaanduiding"
+msgstr "Omvat Zaken tot en met deze vertrouwelijkheidaanduiding."
 
-#: src/zac/accounts/models.py:188
-msgid "permission set"
-msgstr "rechtencollectie"
+#: zac/accounts/models.py:203
+#, fuzzy
+#| msgid "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+msgid "Maximaal vertrouwelijkheidaanduiding."
+msgstr "Omvat Zaken tot en met deze vertrouwelijkheidaanduiding."
 
-#: src/zac/accounts/models.py:208
+#: zac/accounts/models.py:207
+#, fuzzy
+#| msgid "informatieobjecttype catalogus"
+msgid "informatieobjecttype permission"
+msgstr "informatieobjecttypecatalogus"
+
+#: zac/accounts/models.py:208
+#, fuzzy
+#| msgid "informatieobjecttype catalogus"
+msgid "informatieobjecttype permissions"
+msgstr "informatieobjecttypecatalogus"
+
+#: zac/accounts/models.py:218
 msgid "start"
 msgstr "start"
 
-#: src/zac/accounts/models.py:209
+#: zac/accounts/models.py:219
 msgid "end"
 msgstr "einde"
 
-#: src/zac/accounts/models.py:222
+#: zac/accounts/models.py:232
 msgid "user who has handled the request"
 msgstr "gebruiker die het verzoek beoordeelde"
 
-#: src/zac/accounts/models.py:225
+#: zac/accounts/models.py:235
 msgid "zaak"
 msgstr ""
 
-#: src/zac/accounts/models.py:227 src/zac/activities/models.py:18
+#: zac/accounts/models.py:237 zac/activities/models.py:18
 msgid "URL reference to the zaak in its API"
 msgstr "URL-referentie naar de zaak in de API"
 
-#: src/zac/accounts/models.py:229
+#: zac/accounts/models.py:239
 msgid "comment"
 msgstr "toelichting"
 
-#: src/zac/accounts/models.py:231
+#: zac/accounts/models.py:241
 msgid "result"
 msgstr "resultaat"
 
-#: src/zac/accounts/models.py:233
+#: zac/accounts/models.py:243
 msgid "start date"
 msgstr "startdatum"
 
-#: src/zac/accounts/models.py:234
+#: zac/accounts/models.py:244
 msgid "end date"
 msgstr "verloopdatum"
 
-#: src/zac/accounts/models.py:241
+#: zac/accounts/models.py:251
 msgid "The result can't be specified without its handler"
 msgstr "Je kan geen resultaat zetten zonder beoordelaar"
 
-#: src/zac/accounts/templates/accounts/authorizationprofile_detail.html:23
+#: zac/accounts/templates/accounts/authorizationprofile_detail.html:23
 #, python-format
 msgid "Data access is limited to \"%(oo)s\"."
 msgstr "Gegevenstoegang is beperkt tot \"%(oo)s\""
 
-#: src/zac/accounts/templates/accounts/authorizationprofile_detail.html:27
+#: zac/accounts/templates/accounts/authorizationprofile_detail.html:27
 msgid "Data access is not limited to any OO."
 msgstr "Gegevenstoegang is niet gelimiteerd tot een OO."
 
-#: src/zac/accounts/templates/accounts/authorizationprofile_form.html:28
-#: src/zac/accounts/templates/accounts/permissionset_form.html:49
-#: src/zac/accounts/templates/accounts/userauthorizationprofile_form.html:39
-#: src/zac/core/templates/core/create_access_request.html:21
+#: zac/accounts/templates/accounts/authorizationprofile_form.html:28
+#: zac/accounts/templates/accounts/userauthorizationprofile_form.html:39
+#: zac/core/templates/core/create_access_request.html:21
+#: zac/core/templates/core/create_zaak_besluit.html:53
 msgid "Toevoegen"
 msgstr ""
 
-#: src/zac/accounts/templates/accounts/login.html:17
-#: src/zac/templates/admin/login.html:11
+#: zac/accounts/templates/accounts/login.html:17
+#: zac/templates/admin/login.html:11
 msgid "Login with ADFS"
 msgstr "Inloggen met ADFS"
 
-#: src/zac/accounts/templates/accounts/login.html:37
+#: zac/accounts/templates/accounts/login.html:37
 msgid "Log in"
 msgstr "Inloggen"
 
-#: src/zac/activities/constants.py:7
+#: zac/accounts/templates/accounts/permissionset_form.html:39
+msgid "Case types"
+msgstr ""
+
+#: zac/accounts/templates/accounts/permissionset_form.html:44
+#, fuzzy
+#| msgid "informatieobjecttype catalogus"
+msgid "Information object types"
+msgstr "informatieobjecttypecatalogus"
+
+#: zac/accounts/templates/accounts/permissionset_form.html:90
+msgid "Change"
+msgstr ""
+
+#: zac/accounts/templates/accounts/permissionset_form.html:92
+msgid "Add"
+msgstr ""
+
+#: zac/activities/constants.py:7
 msgid "On-going"
 msgstr "Lopend"
 
-#: src/zac/activities/constants.py:8
+#: zac/activities/constants.py:8
 msgid "Finished"
 msgstr "Afgerond"
 
-#: src/zac/activities/models.py:16
+#: zac/activities/models.py:16
 msgid "zaak URL"
 msgstr "Zaak-URL"
 
-#: src/zac/activities/models.py:21
+#: zac/activities/models.py:21
 msgid "remarks"
 msgstr "opmerkingen"
 
-#: src/zac/activities/models.py:23
+#: zac/activities/models.py:23
 msgid "status"
 msgstr "status"
 
-#: src/zac/activities/models.py:32
+#: zac/activities/models.py:32
 msgid "assignee"
 msgstr "verantwoordelijke"
 
-#: src/zac/activities/models.py:33
+#: zac/activities/models.py:33
 msgid "Person responsible for managing this activity."
 msgstr "Persoon verantwoordelijk voor deze activiteit."
 
-#: src/zac/activities/models.py:37
+#: zac/activities/models.py:37
 msgid "document URL"
 msgstr "document-URL"
 
-#: src/zac/activities/models.py:40
+#: zac/activities/models.py:40
 msgid "Document in the Documents API."
 msgstr "Document in de Documtenten API."
 
-#: src/zac/activities/models.py:43 src/zac/activities/models.py:67
+#: zac/activities/models.py:43 zac/activities/models.py:67
 msgid "created"
 msgstr "aangemaakt"
 
-#: src/zac/activities/models.py:48
+#: zac/activities/models.py:48
 msgid "activity"
 msgstr "activiteit"
 
-#: src/zac/activities/models.py:49
+#: zac/activities/models.py:49
 msgid "activities"
 msgstr "activiteiten"
 
-#: src/zac/activities/models.py:66
+#: zac/activities/models.py:66
 msgid "notes"
 msgstr "opmerkingen"
 
-#: src/zac/activities/models.py:70
+#: zac/activities/models.py:70
 msgid "activity event"
 msgstr "gebeurtenis"
 
-#: src/zac/activities/models.py:71
+#: zac/activities/models.py:71
 msgid "activity events"
 msgstr "gebeurtenissen"
 
-#: src/zac/camunda/forms.py:15
+#: zac/camunda/forms.py:15
 msgid "Message"
 msgstr "Bericht"
 
-#: src/zac/contrib/brp/models.py:26
+#: zac/contrib/brp/models.py:26
 msgid "BRP configuration"
 msgstr "BRP-configuratie"
 
-#: src/zac/contrib/kadaster/models.py:10
+#: zac/contrib/kadaster/models.py:11
 msgid "root URL locatieserver"
 msgstr "root-URL locatieserver"
 
-#: src/zac/contrib/kadaster/models.py:14
-msgid "root URL BAG API"
-msgstr "root URL BAG API"
-
-#: src/zac/contrib/kadaster/models.py:18
-msgid "API key"
+#: zac/contrib/kadaster/models.py:19
+msgid "service"
 msgstr ""
 
-#: src/zac/contrib/kadaster/models.py:21
-msgid "API key used for BAG."
-msgstr "API key voor de BAG."
+#: zac/contrib/kadaster/models.py:21
+msgid "Configuration for the service that makes requests to the BAG API."
+msgstr ""
 
-#: src/zac/contrib/kadaster/models.py:25
+#: zac/contrib/kadaster/models.py:26
 msgid "kadasterconfiguratie"
 msgstr ""
 
-#: src/zac/contrib/kownsl/data.py:15
+#: zac/contrib/kownsl/data.py:15
 msgid "Advies"
 msgstr ""
 
-#: src/zac/contrib/kownsl/data.py:16
+#: zac/contrib/kownsl/data.py:16
 msgid "Accordering"
 msgstr ""
 
-#: src/zac/contrib/kownsl/models.py:26
+#: zac/contrib/kownsl/models.py:26
 msgid "Kownsl configuration"
 msgstr "Kownsl configuratie"
 
-#: src/zac/contrib/organisatieonderdelen/models.py:8
+#: zac/contrib/organisatieonderdelen/models.py:8
 msgid "slug"
 msgstr "slug"
 
-#: src/zac/contrib/organisatieonderdelen/models.py:11
+#: zac/contrib/organisatieonderdelen/models.py:11
 msgid "organisatie-onderdeel"
 msgstr ""
 
-#: src/zac/contrib/organisatieonderdelen/models.py:12
+#: zac/contrib/organisatieonderdelen/models.py:12
 msgid "organisatie-onderdelen"
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:14
+#: zac/contrib/validsign/forms.py:14
 msgid "Te ondertekenen documenten"
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:16
+#: zac/contrib/validsign/forms.py:16
 msgid ""
 "Dit zijn de documenten die bij de zaak horen. Selecteer de documenten die "
 "digitaal ondertekend moeten worden."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:64
+#: zac/contrib/validsign/forms.py:64
 msgid "Medewerker"
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:65
+#: zac/contrib/validsign/forms.py:65
 msgid "Selecteer een medewerker."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:71
+#: zac/contrib/validsign/forms.py:71
 msgid ""
 "De ondertekenaar ontvangt op dit e-mailadres een uitnoding ter ondertekening."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:76
+#: zac/contrib/validsign/forms.py:76
 msgid "voornaam"
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:77
+#: zac/contrib/validsign/forms.py:77
 msgid "De voornaam van de ondertekenaar."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:81
+#: zac/contrib/validsign/forms.py:81
 msgid "achternaam"
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:82
+#: zac/contrib/validsign/forms.py:82
 msgid "De achternaam van de ondertekenaar."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:98
+#: zac/contrib/validsign/forms.py:98
 msgid "We kennen geen e-mailadres voor deze gebruiker. Geef aub een email op."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:105
+#: zac/contrib/validsign/forms.py:105
 msgid "We kennen geen voornaam voor deze gebruiker. Geef aub een voornaam op."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:112
+#: zac/contrib/validsign/forms.py:112
 msgid ""
 "We kennen geen achternaam voor deze gebruiker. Geef aub een achternaam op."
 msgstr ""
 
-#: src/zac/contrib/validsign/forms.py:119
+#: zac/contrib/validsign/forms.py:119
 msgid ""
 "Selecteer een gebruiker of geef een e-mailadres, voornaam en achternaam op."
 msgstr ""
 
-#: src/zac/core/api/utils.py:49
+#: zac/core/api/serializers.py:126
+msgid "Zaken kunnen niet met zichzelf gerelateerd worden."
+msgstr ""
+
+#: zac/core/api/utils.py:49
 msgid "Error: Verwachtte een list maar kreeg {type(data).__name__}."
 msgstr ""
 
-#: src/zac/core/api/utils.py:57
+#: zac/core/api/utils.py:57
 msgid "Error: Verwachtte een str maar kreeg {type(data).__name__}."
 msgstr ""
 
-#: src/zac/core/api/utils.py:62
+#: zac/core/api/utils.py:62
 msgid "Error: Dit veld is verplicht en mag niet leeg zijn."
 msgstr ""
 
-#: src/zac/core/api/utils.py:79
+#: zac/core/api/utils.py:79
 #, python-brace-format
 msgid ""
 "Error: Dit veld bevatte: {invalid_choices_string}, maar mag alleen een "
 "(sub)set zijn van: {valid_choices_string}."
 msgstr ""
 
-#: src/zac/core/apps.py:9
+#: zac/core/apps.py:9
 msgid "zaakafhandelcomponent"
 msgstr ""
 
-#: src/zac/core/base_views.py:59
+#: zac/core/base_views.py:59
 #, python-format
 msgid "No %(verbose_name)s found matching the query"
 msgstr ""
 
-#: src/zac/core/forms.py:44
+#: zac/core/forms.py:57
 #, python-brace-format
 msgid "Version {zt.versiedatum} - {zt.identificatie}"
 msgstr "Versie {zt.versiedatum} - {zt.identificatie}"
 
-#: src/zac/core/forms.py:54
+#: zac/core/forms.py:67
 msgid "identificatie"
 msgstr ""
 
-#: src/zac/core/forms.py:58
+#: zac/core/forms.py:71
 msgid "zaaktypen (huidige versies)"
 msgstr ""
 
-#: src/zac/core/forms.py:97
+#: zac/core/forms.py:110
 msgid "The redirect URL is untrusted."
 msgstr "De redirect-URL is verdacht."
 
-#: src/zac/core/forms.py:106
+#: zac/core/forms.py:119 zac/core/tests/test_claim_usertask.py:117
 msgid "Invalid task referenced."
 msgstr "Ongeldige taakreferentie."
 
-#: src/zac/core/forms.py:162
+#: zac/core/forms.py:175
 msgid "De zaak is al gesloten en kan niet opnieuw gesloten worden."
 msgstr ""
 
-#: src/zac/core/forms.py:213 src/zac/core/forms.py:258
+#: zac/core/forms.py:226 zac/core/forms.py:274
 msgid "Selecteer de relevante documenten"
 msgstr ""
 
-#: src/zac/core/forms.py:215 src/zac/core/forms.py:260
+#: zac/core/forms.py:228 zac/core/forms.py:276
 msgid ""
 "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
 "documenten voor het vervolg van het proces."
 msgstr ""
 
-#: src/zac/core/forms.py:239 src/zac/core/forms.py:268
+#: zac/core/forms.py:252 zac/core/forms.py:323
 msgid "Users"
 msgstr "Gebruikers"
 
-#: src/zac/core/forms.py:271
-msgid "Selecteer de gewenste adviseurs."
+#: zac/core/forms.py:326
+msgid "Select the advisors."
 msgstr ""
 
-#: src/zac/core/forms.py:355
+#: zac/core/forms.py:331
+msgid "Deadline"
+msgstr ""
+
+#: zac/core/forms.py:332
+msgid "Select a date"
+msgstr "Kies een datum"
+
+#: zac/core/forms.py:350
+#, python-brace-format
+msgid ""
+"Deadlines are not allowed to be equal in a serial review request process but "
+"need to have at least 1 day in between them. Please select a date greater "
+"than {minimum_date}."
+msgstr ""
+
+#: zac/core/forms.py:369
+msgid "Please select at least 1 user."
+msgstr ""
+
+#: zac/core/forms.py:378
+msgid ""
+"Users in a serial review request process need to be unique. Please select "
+"unique users."
+msgstr ""
+
+#: zac/core/forms.py:488 zac/core/tests/test_access_requests.py:196
 msgid "You've already requested access for this zaak"
 msgstr "Je hebt al een toegangsverzoek voor deze zaak"
 
-#: src/zac/core/forms.py:395
+#: zac/core/forms.py:528 zac/core/tests/test_access_requests.py:504
 msgid "End date of the access must be specified"
 msgstr "Je moet de verloopdatum opgegeven."
 
-#: src/zac/core/forms.py:425
+#: zac/core/forms.py:558 zac/core/tests/test_access_requests.py:464
+#: zac/core/tests/test_access_requests.py:540
 #, python-format
 msgid "Access Request to %(zaak)s"
 msgstr "Toegangsverzoek voor %(zaak)s"
 
-#: src/zac/core/forms.py:456
+#: zac/core/forms.py:589
 msgid "Use correct 'submit' button"
 msgstr "Gebruik de juiste 'bevestig' knop"
 
-#: src/zac/core/rollen.py:44 src/zac/core/rollen.py:56
+#: zac/core/forms.py:595
+msgid "Type"
+msgstr ""
+
+#: zac/core/forms.py:597
+msgid ""
+"Selecteer een besluittype. Deze besluittypen horen bij het zaaktype van de "
+"zaak."
+msgstr ""
+
+#: zac/core/forms.py:601
+msgid "Beslisdatum"
+msgstr ""
+
+#: zac/core/forms.py:604
+msgid "De beslisdatum (AWB) van het besluit."
+msgstr ""
+
+#: zac/core/forms.py:607
+msgid "Ingangsdatum"
+msgstr ""
+
+#: zac/core/forms.py:610
+msgid "Ingangsdatum van de werkingsperiode van het besluit."
+msgstr ""
+
+#: zac/core/forms.py:615
+#, fuzzy
+#| msgid "document URL"
+msgid "Document"
+msgstr "document-URL"
+
+#: zac/core/forms.py:616
+msgid "Document waarin het besluit is vastgelegd."
+msgstr ""
+
+#: zac/core/models.py:26
+#, fuzzy
+#| msgid "Kownsl configuration"
+msgid "global configuration"
+msgstr "Kownsl configuratie"
+
+#: zac/core/rollen.py:50 zac/core/rollen.py:64
 msgid "(invalid BRP reference!)"
 msgstr "(ongeldige BRP-referentie!)"
 
-#: src/zac/core/rollen.py:64
+#: zac/core/rollen.py:57
+#, fuzzy
+#| msgid "(invalid BRP reference!)"
+msgid "(invalid medewerker URL!)"
+msgstr "(ongeldige BRP-referentie!)"
+
+#: zac/core/rollen.py:72
 msgid "(not set)"
 msgstr "(onbekend)"
 
-#: src/zac/core/templates/core/emails/access_request_result.txt:1
+#: zac/core/templates/core/emails/access_request_result.txt:1
 #, python-format
 msgid ""
 "Dear %(user)s\n"
@@ -530,276 +637,289 @@ msgstr ""
 "\n"
 "De toegang tot zaak %(identificatie)s is %(result)s."
 
-#: src/zac/core/templates/core/emails/access_request_result.txt:4
+#: zac/core/templates/core/emails/access_request_result.txt:4
 msgid "You can see it here:"
 msgstr "Je kan de zaak hier inzien:"
 
-#: src/zac/core/templates/core/emails/access_request_result.txt:6
+#: zac/core/templates/core/emails/access_request_result.txt:6
 msgid ""
 "Best regards,\n"
 "ZAC Team"
 msgstr "Dit is een automatisch bericht van het Zaakafhandelcomponent"
 
-#: src/zac/core/templates/core/includes/zaakobjecten/pand.html:9
+#: zac/core/templates/core/includes/zaakobjecten/pand.html:9
 msgid "Bouwjaar"
 msgstr ""
 
-#: src/zac/core/templates/core/includes/zaakobjecten/pand.html:13
-#: src/zac/core/templates/core/includes/zaakobjecten/verblijfsobject.html:13
+#: zac/core/templates/core/includes/zaakobjecten/pand.html:13
+#: zac/core/templates/core/includes/zaakobjecten/verblijfsobject.html:13
 msgid "Status"
 msgstr ""
 
-#: src/zac/core/templates/core/includes/zaakobjecten/pand.html:17
+#: zac/core/templates/core/includes/zaakobjecten/pand.html:17
 msgid "Aantal verblijfsobjecten"
 msgstr ""
 
-#: src/zac/core/templates/core/includes/zaakobjecten/verblijfsobject.html:9
+#: zac/core/templates/core/includes/zaakobjecten/verblijfsobject.html:9
 msgid "Oppervlakte"
 msgstr ""
 
-#: src/zac/core/templates/core/index.html:15
+#: zac/core/templates/core/index.html:15
 msgid "Identificatie"
 msgstr ""
 
-#: src/zac/core/templates/core/index.html:19
+#: zac/core/templates/core/index.html:19
 msgid "Zaaktype(n)"
 msgstr ""
 
-#: src/zac/core/templates/core/zaak_access_requests.html:12
+#: zac/core/templates/core/zaak_access_requests.html:12
 #, python-format
 msgid "Access requests for %(identificatie)s"
 msgstr "Toegangsverzoeken voor %(identificatie)s"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:36
+#: zac/core/templates/core/zaak_access_requests.html:36
 msgid "User"
 msgstr "Gebruiker"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:37
+#: zac/core/templates/core/zaak_access_requests.html:37
 msgid "Comments"
 msgstr "Toelichtingen"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:38
+#: zac/core/templates/core/zaak_access_requests.html:38
 msgid "End date"
 msgstr "Verloopdatum"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:64
+#: zac/core/templates/core/zaak_access_requests.html:64
 msgid "Approve"
 msgstr "Goedkeuren"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:65
+#: zac/core/templates/core/zaak_access_requests.html:65
 msgid "Reject"
 msgstr "Afwijzen"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:72
+#: zac/core/templates/core/zaak_access_requests.html:72
 msgid "Handled requests"
 msgstr "Behandelde verzoeken"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:76
+#: zac/core/templates/core/zaak_access_requests.html:76
 msgid "Requester"
 msgstr "Verzoeker"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:77
+#: zac/core/templates/core/zaak_access_requests.html:77
 msgid "Handler"
 msgstr "Beoordelaar"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:78
+#: zac/core/templates/core/zaak_access_requests.html:78
 msgid "Result"
 msgstr "Resultaat"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:79
+#: zac/core/templates/core/zaak_access_requests.html:79
 msgid "From"
 msgstr "Vanaf"
 
-#: src/zac/core/templates/core/zaak_access_requests.html:80
+#: zac/core/templates/core/zaak_access_requests.html:80
 msgid "Until"
 msgstr "Tot"
 
-#: src/zac/core/templates/core/zaak_detail.html:30
+#: zac/core/templates/core/zaak_detail.html:30
 msgid "Activiteiten"
 msgstr ""
 
-#: src/zac/core/templates/core/zaak_detail.html:31
+#: zac/core/templates/core/zaak_detail.html:31
 msgid "Besluiten"
 msgstr ""
 
-#: src/zac/core/templates/core/zaak_detail.html:33
-#: src/zac/templates/index.html:31
+#: zac/core/templates/core/zaak_detail.html:33 zac/templates/index.html:31
 msgid "Access requests"
 msgstr "Toegangsverzoeken"
 
-#: src/zac/core/templates/core/zaak_detail.html:139
+#: zac/core/templates/core/zaak_detail.html:139
 msgid "Uiterlijke einddatum"
 msgstr ""
 
-#: src/zac/core/templates/core/zaak_detail.html:140
+#: zac/core/templates/core/zaak_detail.html:140
 msgid "-"
 msgstr "-"
 
-#: src/zac/forms/forms.py:28
+#: zac/elasticsearch/apps.py:10
+#, fuzzy
+#| msgid "Kownsl configuration"
+msgid "Elasticsearch configuration"
+msgstr "Kownsl configuratie"
+
+#: zac/forms/forms.py:28
 msgid "Formulier"
 msgstr ""
 
-#: src/zac/forms/models.py:15
+#: zac/forms/models.py:15
 msgid "Select the service definition where Open Forms is hosted."
 msgstr ""
 
-#: src/zac/notifications/models.py:10
+#: zac/notifications/models.py:10
 msgid "Registered subscription"
 msgstr ""
 
-#: src/zac/notifications/models.py:11
+#: zac/notifications/models.py:11
 msgid "Registered subscriptions"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:8
+#: zac/notifications/serializers.py:8
 msgid "kanaal"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:11
+#: zac/notifications/serializers.py:11
 msgid ""
 "De naam van het kanaal (`KANAAL.naam`) waar het bericht op moet worden "
 "gepubliceerd."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:17
+#: zac/notifications/serializers.py:17
 msgid "hoofd object"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:19
+#: zac/notifications/serializers.py:19
 msgid ""
 "URL-referentie naar het hoofd object van de publicerende API die betrekking "
 "heeft op de `resource`."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:24
+#: zac/notifications/serializers.py:24
 msgid "resource"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:26
+#: zac/notifications/serializers.py:26
 msgid "De resourcenaam waar de notificatie over gaat."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:30
+#: zac/notifications/serializers.py:30
 msgid "resource URL"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:31
+#: zac/notifications/serializers.py:31
 msgid "URL-referentie naar de `resource` van de publicerende API."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:34
+#: zac/notifications/serializers.py:34
 msgid "actie"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:37
+#: zac/notifications/serializers.py:37
 msgid ""
 "De actie die door de publicerende API is gedaan. De publicerende API "
 "specificeert de toegestane acties."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:42
+#: zac/notifications/serializers.py:42
 msgid "aanmaakdatum"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:43
+#: zac/notifications/serializers.py:43
 msgid "Datum en tijd waarop de actie heeft plaatsgevonden."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:46
+#: zac/notifications/serializers.py:46
 msgid "kenmerken"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:49
+#: zac/notifications/serializers.py:49
 msgid "kenmerk"
 msgstr ""
 
-#: src/zac/notifications/serializers.py:51
+#: zac/notifications/serializers.py:51
 msgid "Een waarde behorende bij de sleutel."
 msgstr ""
 
-#: src/zac/notifications/serializers.py:54
+#: zac/notifications/serializers.py:54
 msgid ""
 "Mapping van kenmerken (sleutel/waarde) van de notificatie. De publicerende "
 "API specificeert de toegestane kenmerken."
 msgstr ""
 
-#: src/zac/regiezaken/models.py:45
-msgid "The name of the theme/subject"
-msgstr ""
+#: zac/reports/models.py:10
+msgid "zaaktype identification"
+msgstr "zaaktype-identificatie"
 
-#: src/zac/regiezaken/models.py:48
-msgid "Hoofdzaaktype"
-msgstr ""
+#: zac/reports/models.py:11
+msgid "zaaktypen"
+msgstr "zaaktypen"
 
-#: src/zac/regiezaken/models.py:49
-msgid "Zaken van dit zaaktype worden als de regiezaak beschouwd."
-msgstr ""
+#: zac/reports/models.py:16
+msgid "report"
+msgstr "rapportage"
 
-#: src/zac/regiezaken/models.py:55
-msgid ""
-"Zaken van deze zaaktypen worden beschouwd als onderdeel van de regiezaak."
-msgstr ""
+#: zac/reports/models.py:17
+msgid "reports"
+msgstr "rapportages"
 
-#: src/zac/regiezaken/templates/regiezaken/index.html:8
-#: src/zac/regiezaken/templates/regiezaken/regiezaak_detail.html:9
-#: src/zac/regiezaken/templates/regiezaken/zaak_detail.html:9
-msgid "Zaakafhandeling"
-msgstr ""
+#: zac/reports/templates/reports/report_list.html:6
+#: zac/templates/master.html:41
+msgid "Reports"
+msgstr "Rapportages"
 
-#: src/zac/regiezaken/templates/regiezaken/index.html:11
-#: src/zac/regiezaken/templates/regiezaken/regiezaak_detail.html:12
-#: src/zac/regiezaken/templates/regiezaken/zaak_detail.html:12
-msgid "Per onderwerp"
-msgstr ""
+#: zac/reports/templates/reports/report_list.html:9
+msgid "Here you can download pre-defined reports on open cases as Excel files."
+msgstr "Je kan hier voorgedefinieerde rapportages als Excelbestand downloaden."
 
-#: src/zac/templates/403.html:12
+#: zac/reports/templates/reports/report_list.html:17
+msgid "Report"
+msgstr "Rapportage"
+
+#: zac/reports/templates/reports/report_list.html:18
+#: zac/reports/templates/reports/report_list.html:27
+msgid "Download"
+msgstr "Downloaden"
+
+#: zac/templates/403.html:12
 #, python-format
 msgid ""
 "<p>You can <a href=\"%(request_url)s\">request access</a> for this page</p>"
 msgstr ""
 "<p>Je kan <a href=\"%(request_url)s\">toegang vragen</a> tot deze pagina.</p>"
 
-#: src/zac/templates/admin/base_site.html:4
-#: src/zac/templates/admin/base_site.html:54
+#: zac/templates/403.html:18
+msgid "You have already requested access to this page."
+msgstr "Je hebt al een toegangsverzoek voor deze pagina."
+
+#: zac/templates/admin/base_site.html:4 zac/templates/admin/base_site.html:54
 msgid "Administration"
 msgstr ""
 
-#: src/zac/templates/index.html:5 src/zac/templates/master.html:35
+#: zac/templates/index.html:5 zac/templates/master.html:38
 msgid "Werkvoorraad"
 msgstr ""
 
-#: src/zac/templates/master.html:36
+#: zac/templates/master.html:39
 msgid "Alle zaken"
 msgstr ""
 
-#: src/zac/templates/master.html:37
+#: zac/templates/master.html:40
 msgid "Zoeken"
 msgstr ""
 
-#: src/zac/templates/master.html:38
+#: zac/templates/master.html:42
 msgid "Formulieren"
 msgstr ""
 
-#: src/zac/templates/master.html:40
+#: zac/templates/master.html:43
 msgid "Autorisatieprofielen"
 msgstr ""
 
-#: src/zac/templates/master.html:41
+#: zac/templates/master.html:44
 msgid "Admin"
 msgstr ""
 
-#: src/zac/templates/sniplates/filters.html:27
+#: zac/templates/sniplates/filters.html:27
 msgid "Filter"
 msgstr ""
 
-#: src/zac/templates/sniplates/forms.html:258
+#: zac/templates/sniplates/forms.html:278
 msgid "Submit"
 msgstr ""
 
-#: src/zac/utils/templates/utils/import_export_change_form.html:7
+#: zac/utils/templates/utils/import_export_change_form.html:7
 msgid "Export"
 msgstr ""
 
-#: src/zac/utils/templates/utils/import_export_change_form.html:8
+#: zac/utils/templates/utils/import_export_change_form.html:8
 msgid "Import"
 msgstr ""

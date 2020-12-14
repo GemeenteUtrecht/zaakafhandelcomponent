@@ -10,6 +10,7 @@ python-dateutil
 isodate
 requests_mock
 rules  # permissions backend
+tablib[xlsx]
 elasticsearch-dsl
 
 # zgw-integration
@@ -23,6 +24,7 @@ zgw-consumers
 Django<3.0
 django-auth-adfs-db
 django-axes
+django-better-admin-arrayfield
 django-camunda
 django-choices
 django-extra-views
