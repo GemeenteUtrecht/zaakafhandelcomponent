@@ -48,18 +48,18 @@
           <section *ngIf="!!adviceData.documents.length > 0">
             <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
             <gu-tooltip type="primary" inline="true">Upload een bijgewerkt bestand of een bestand met aantekeningen</gu-tooltip>
-            <div class="document-row" *ngFor="let file of adviceData.zaak_documents">
+            <div class="document-row" *ngFor="let file of adviceData.zaakDocuments">
               <div class="mb-4">
                 <gu-file
                   fileName="{{file.name}} ({{file.title}})"
-                  [downloadUrl]="file.download_url"
+                  [downloadUrl]="file.downloadUrl"
                   class="d-inline-block"
                 ></gu-file>
                 <gu-chip type="tertiary" class="d-inline-block">
                   {{file.extra}}
                 </gu-chip>
               </div>
-              <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.download_url))"></gu-file-upload>
+              <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.downloadUrl))"></gu-file-upload>
             </div>
           </section>
         </ng-template>

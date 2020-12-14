@@ -1,5 +1,5 @@
 export interface ZaakDocument {
-  download_url: string;
+  downloadUrl: string;
   extra: string;
   name: string;
   title: string;

@@ -4,8 +4,8 @@ import { ZaakDocument } from './zaak-document';
 export interface ReviewRequest {
   created: string;
   documents: string[];
-  review_type: string;
+  reviewType: string;
   reviews: Review[];
   toelichting: string;
-  zaak_documents: ZaakDocument[];
+  zaakDocuments: ZaakDocument[];
 }

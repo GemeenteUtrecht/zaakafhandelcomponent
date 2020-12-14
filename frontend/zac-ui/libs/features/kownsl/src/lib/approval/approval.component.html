@@ -48,10 +48,10 @@
       <ng-template [ngIf]="!!approvalData.documents">
         <section *ngIf="!!approvalData.documents.length > 0">
           <h2 class="mb-4">Documenten</h2>
-          <div class="mb-1" *ngFor="let file of approvalData.zaak_documents">
+          <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
             <gu-file
               [fileName]="file.name"
-              [downloadUrl]="file.download_url"
+              [downloadUrl]="file.downloadUrl"
             ></gu-file>
           </div>
         </section>
