@@ -1,7 +1,6 @@
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-// import {environment} from '../environments/environment';
 
 export interface IRequestOptions {
   headers?: HttpHeaders;
@@ -22,8 +21,7 @@ export function applicationHttpClientCreator(http: HttpClient) {
 })
 export class ApplicationHttpClient {
 
-  // private api = environment.apiUrl;
-  private api = 'http://localhost:8080/core';
+  private api = '/core';
 
   public constructor(public http: HttpClient) {}
 
