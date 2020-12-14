@@ -18,6 +18,10 @@ jobs:
     name: Run the Django test suite
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: backend
+
     services:
       postgres:
         image: postgres:10
@@ -53,13 +57,11 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements/dev.txt codecov
-        working_directory: backend
 
       - name: Build frontend
         run: |
           npm ci
           npm run build --production
-        working_directory: backend
 
       - name: Wait for ES to become available
         run: |
@@ -80,17 +82,21 @@ jobs:
           DB_USER: postgres
           DB_PASSWORD: ''
           IS_HTTPS: 'no'
-        working_directory: backend
 
       - name: Publish coverage report
         uses: codecov/codecov-action@v1
-        working_directory: backend
+        with:
+          directory: backend
 
   backend-docker:
     needs: backend-tests
 
     name: Build (and push) backend Docker image
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - uses: actions/checkout@v2
@@ -113,7 +119,6 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         run: docker build . --tag $BACKEND_IMAGE_NAME:$RELEASE_VERSION
-        working_directory: backend
 
       - name: Log into registry
         if: github.event_name == 'push'  # exclude PRs
@@ -152,7 +157,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         run: docker build . --tag $FRONTEND_IMAGE_NAME:$RELEASE_VERSION
-        working_directory: frontend
+        working-directory: frontend
 
       - name: Log into registry
         if: github.event_name == 'push'  # exclude PRs
