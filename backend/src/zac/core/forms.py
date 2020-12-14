@@ -34,6 +34,7 @@ from .services import (
     zet_resultaat,
     zet_status,
 )
+from .utils import get_ui_url
 
 logger = logging.getLogger(__name__)
 
@@ -405,10 +406,19 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
     def get_process_variables(self) -> Dict[str, List]:
         assert self.is_valid(), "Formset must be valid"
 
+        kownsl_frontend_url = get_ui_url(
+            [
+                "ui",
+                "kownsl",
+                "review-request",
+                self.review_request.review_type,
+            ],
+            params={"uuid": self.review_request.id},
+        )
         return {
             "kownslUsersList": self.get_request_kownsl_user_data(),
             "kownslReviewRequestId": str(self.review_request.id),
-            "kownslFrontendUrl": self.review_request.frontend_url,
+            "kownslFrontendUrl": kownsl_frontend_url,
         }
 
     def get_user_deadlines(self) -> Dict:
