@@ -35,32 +35,34 @@
       </section>
 
       <!-- Collapsible table with previous advices -->
-      <section *ngIf="!!adviceData.reviews">
-        <h2 class="mb-4">Vorige adviezen</h2>
-        <gu-table
-          [tableData]="tableData"
-        ></gu-table>
-      </section>
+      <ng-template [ngIf]="!!adviceData.reviews">
+        <section *ngIf="adviceData.reviews.length > 0">
+          <h2 class="mb-4">Vorige adviezen</h2>
+          <gu-table [tableData]="tableData"></gu-table>
+        </section>
+      </ng-template>
 
       <!-- Documents and document upload -->
       <form [formGroup]="adviceForm">
-        <section *ngIf="!!adviceData.documents">
-          <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
-          <gu-tooltip type="primary" inline="true">Upload een bijgewerkt bestand of een bestand met aantekeningen</gu-tooltip>
-          <div class="document-row" *ngFor="let file of adviceData.zaak_documents">
-            <div class="mb-4">
-              <gu-file
-                fileName="{{file.name}} ({{file.title}})"
-                [downloadUrl]="file.download_url"
-                class="d-inline-block"
-              ></gu-file>
-              <gu-chip type="tertiary" class="d-inline-block">
-                {{file.extra}}
-              </gu-chip>
+        <ng-template [ngIf]="!!adviceData.documents">
+          <section *ngIf="!!adviceData.documents.length > 0">
+            <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
+            <gu-tooltip type="primary" inline="true">Upload een bijgewerkt bestand of een bestand met aantekeningen</gu-tooltip>
+            <div class="document-row" *ngFor="let file of adviceData.zaak_documents">
+              <div class="mb-4">
+                <gu-file
+                  fileName="{{file.name}} ({{file.title}})"
+                  [downloadUrl]="file.download_url"
+                  class="d-inline-block"
+                ></gu-file>
+                <gu-chip type="tertiary" class="d-inline-block">
+                  {{file.extra}}
+                </gu-chip>
+              </div>
+              <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.download_url))"></gu-file-upload>
             </div>
-            <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.download_url))"></gu-file-upload>
-          </div>
-        </section>
+          </section>
+        </ng-template>
 
         <!-- Advice text -->
         <section>

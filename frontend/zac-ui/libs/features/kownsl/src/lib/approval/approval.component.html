@@ -35,23 +35,27 @@
       </section>
 
       <!-- Collapsible table with previous approvals -->
-      <section *ngIf="!!approvalData.reviews">
-        <h2 class="mb-4">Vorige accorderingen</h2>
-        <gu-table
-          [tableData]="tableData"
-        ></gu-table>
-      </section>
+      <ng-template [ngIf]="!!approvalData.reviews">
+        <section *ngIf="!!approvalData.reviews.length > 0">
+          <h2 class="mb-4">Vorige accorderingen</h2>
+          <gu-table
+            [tableData]="tableData"
+          ></gu-table>
+        </section>
+      </ng-template>
 
       <!-- Documents -->
-      <section *ngIf="!!approvalData.documents">
-        <h2 class="mb-4">Documenten</h2>
-        <div class="mb-1" *ngFor="let file of approvalData.zaak_documents">
-          <gu-file
-            [fileName]="file.name"
-            [downloadUrl]="file.download_url"
-          ></gu-file>
-        </div>
-      </section>
+      <ng-template [ngIf]="!!approvalData.documents">
+        <section *ngIf="!!approvalData.documents.length > 0">
+          <h2 class="mb-4">Documenten</h2>
+          <div class="mb-1" *ngFor="let file of approvalData.zaak_documents">
+            <gu-file
+              [fileName]="file.name"
+              [downloadUrl]="file.download_url"
+            ></gu-file>
+          </div>
+        </section>
+      </ng-template>
 
       <!-- Approval form -->
       <form [formGroup]="approvalForm">
