@@ -16,9 +16,13 @@ export class ApprovalComponent implements OnInit {
 
   approvalData: ReviewRequest;
   isLoading: boolean;
+
   isSubmitting: boolean;
+  submitSuccess: boolean;
+  submitFailed: boolean;
+
   hasError: boolean;
-  submitSuccess: boolean
+  errorMessage: string;
 
   tableData: Table = {
     headData: [],
@@ -35,11 +39,15 @@ export class ApprovalComponent implements OnInit {
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    this.fetchApproval()
-    this.approvalForm = this.fb.group({
-      approval: this.fb.control("", Validators.required),
-      explanation: this.fb.control("")
-    })
+    if (this.uuid) {
+      this.fetchApproval()
+      this.approvalForm = this.fb.group({
+        approval: this.fb.control("", Validators.required),
+        explanation: this.fb.control("")
+      })
+    } else {
+      this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
+    }
   }
 
   fetchApproval(): void {
@@ -49,6 +57,7 @@ export class ApprovalComponent implements OnInit {
       this.createTableData(data);
       this.isLoading = false;
     }, error => {
+      this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
       this.hasError = true;
       this.isLoading = false;
     })
@@ -73,7 +82,7 @@ export class ApprovalComponent implements OnInit {
     });
   }
 
-  submitForm() {
+  submitForm(): void {
     const formData: ApprovalForm = {
       approval: this.approvalForm.controls['approval'].value,
       explanation: this.approvalForm.controls['explanation'].value,
@@ -87,7 +96,8 @@ export class ApprovalComponent implements OnInit {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, error => {
-      this.hasError = true;
+      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens..."
+      this.submitFailed = true;
       this.isSubmitting = false;
     })
   }

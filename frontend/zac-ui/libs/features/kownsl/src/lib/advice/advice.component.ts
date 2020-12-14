@@ -17,9 +17,13 @@ export class AdviceComponent implements OnInit {
 
   adviceData: ReviewRequest;
   isLoading: boolean;
+
   isSubmitting: boolean;
+  submitSuccess: boolean;
+  submitFailed: boolean;
+
   hasError: boolean;
-  submitSuccess: boolean
+  errorMessage: string;
 
   tableData: Table = {
     headData: [],
@@ -44,11 +48,15 @@ export class AdviceComponent implements OnInit {
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    this.fetchAdvice()
-    this.adviceForm = this.fb.group({
-      advice: this.fb.control(""),
-      documents: this.fb.group({})
-    })
+    if (this.uuid) {
+      this.fetchAdvice()
+      this.adviceForm = this.fb.group({
+        advice: this.fb.control(""),
+        documents: this.fb.group({})
+      })
+    } else {
+      this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
+    }
   }
 
   fetchAdvice(): void {
@@ -58,6 +66,7 @@ export class AdviceComponent implements OnInit {
       this.tableData = this.createTableData(data);
       this.isLoading = false;
     }, error => {
+      this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
       this.hasError = true;
       this.isLoading = false;
     })
@@ -123,7 +132,7 @@ export class AdviceComponent implements OnInit {
     return namedDocumentFormGroup;
   }
 
-  async submitForm(): Promise<void> {
+  submitForm(): void {
     let formData: AdviceForm;
 
     const documentGroupControls = (this.documents as FormGroup).controls;
@@ -145,7 +154,8 @@ export class AdviceComponent implements OnInit {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, error => {
-      this.hasError = true;
+      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens..."
+      this.submitFailed = true;
       this.isSubmitting = false;
     })
   }
