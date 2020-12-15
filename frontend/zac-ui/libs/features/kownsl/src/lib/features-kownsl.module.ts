@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ApprovalComponent } from './approval/approval.component';
@@ -15,6 +15,10 @@ import { SharedUiComponentsModule } from '@gu/components';
   imports: [
     CommonModule,
     HttpClientModule,
+    HttpClientXsrfModule.withOptions({
+      cookieName: 'csrftoken',
+      headerName: 'X-CSRFToken',
+    }),
     FormsModule,
     ReactiveFormsModule,
     FeaturesKownslRoutingModule,

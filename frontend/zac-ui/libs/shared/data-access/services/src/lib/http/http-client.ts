@@ -30,6 +30,11 @@ export class ApplicationHttpClient {
   }
 
   public Post<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<T> {
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+    options = {
+      headers: headers,
+      withCredentials: true
+    }
     return this.http.post<T>(this.api + endPoint, params, options);
   }
 
