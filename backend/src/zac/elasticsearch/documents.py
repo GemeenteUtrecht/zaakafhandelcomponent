@@ -23,6 +23,7 @@ class ZaakDocument(Document):
     rollen = Nested(RolDocument)
 
     startdatum = field.Date()
+    einddatum = field.Date()
     registratiedatum = field.Date()
 
     class Index:

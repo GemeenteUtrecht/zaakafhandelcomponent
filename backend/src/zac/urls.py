@@ -22,6 +22,7 @@ urlpatterns = [
     path("camunda/", include("zac.camunda.urls")),
     path("activities/", include("zac.activities.urls")),
     path("kownsl/", include("zac.contrib.kownsl.urls")),
+    path("reports/", include("zac.reports.urls")),
 ]
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie. no need to run collectstatic). Both the static

@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+{% load i18n %}
+
+
+{% block content %}
+<h1 class="page-title">{% trans "Reports" %}</h1>
+
+<p>
+    {% blocktrans trimmed %}
+        Here you can download pre-defined reports on open cases as Excel files.
+    {% endblocktrans %}
+</p>
+
+<table class="table table--comfortable">
+    <thead>
+        <tr>
+            <th class="table__header">{% trans "Report" %}</th>
+            <th class="table__header">{% trans "Download" %}</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for report in reports %}
+            <tr>
+                <td>{{ report.name }}</td>
+                <td>
+                    <a class="link" href="{% url 'reports:download' pk=report.pk %}">{% trans "Download" %}</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
