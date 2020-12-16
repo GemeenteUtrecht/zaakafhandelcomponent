@@ -73,21 +73,25 @@ class BaseRequestView(APIView):
     permission_classes = (IsAuthenticated & IsReviewUser,)
     _operation_id = NotImplemented
 
-    def get(self, request, request_uuid):
-        client = get_client(request.user)
+    def get_object(self):
+        client = get_client(self.request.user)
         operation_id = "reviewrequest_retrieve"
         url = get_operation_url(
             client.schema,
             operation_id,
-            uuid=request_uuid,
+            uuid=self.kwargs["request_uuid"],
         )
-        self.rr = client.request(url, operation_id)
-        self.check_object_permissions(request, self.rr)
-        return Response(self.rr)
+        review_request = client.request(url, operation_id)
+        self.check_object_permissions(self.request, review_request)
+        return review_request
+
+    def get(self, request, request_uuid):
+        review_request = self.get_object()
+        return Response(review_request)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
-        self.get(request, request_uuid)
+        self.get_object()
 
         client = get_client(request.user)
         operation_id = self._operation_id
