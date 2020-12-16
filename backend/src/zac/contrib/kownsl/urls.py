@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import path
 
 from .views import (
     AdviceRequestView,
@@ -6,6 +6,8 @@ from .views import (
     MockAdviceRequestView,
     MockApprovalRequestView,
 )
+
+app_name = "kownsl"
 
 urlpatterns = [
     path(

@@ -2,6 +2,7 @@ import logging
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
+from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -105,7 +106,7 @@ class BaseRequestView(APIView):
         response = client.request(
             url, operation_id, method="POST", expected_status=201, json=request.data
         )
-        return Response(response)
+        return Response(response, status=status.HTTP_201_CREATED)
 
 
 class AdviceRequestView(BaseRequestView):
