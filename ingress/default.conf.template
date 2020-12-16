@@ -1,0 +1,30 @@
+server {
+    listen       80;
+    server_name  localhost;
+    root /usr/share/nginx/html;
+
+    # anything going to the /ui/ URL is handled by the SPA
+    location /ui/ {
+        proxy_pass http://${FRONTEND_HOST}:${FRONTEND_PORT}${FRONTEND_PATH};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # anything else (API, admin...) is handled by Django
+    location / {
+        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

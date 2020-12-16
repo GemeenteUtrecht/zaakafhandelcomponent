@@ -1,0 +1,64 @@
+@import './base/colors/colors';
+
+// define animation for spinner
+@keyframes spinner {
+  0% {
+    transform: rotateZ(0deg);
+  }
+  100% {
+    transform: rotateZ(359deg);
+  }
+}
+
+.loading__spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid $color-blue;
+  border-top-color: rgba(255, 255, 255, 0.3);
+  border-radius: 100%;
+  animation: spinner 0.6s infinite linear;
+  transition: top 0.3s 0.3s ease,
+  opacity 0.3s 0.3s ease,
+  border-radius 0.3s ease;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  z-index: 20;
+
+  &:focus {
+    outline: none;
+    outline: 0;
+  }
+}
+
+// Overlay spinner on elements
+.loading-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+
+  &.backdrop {
+    background-color: $background-white;
+    opacity: .9;
+
+    &--backdrop-grey {
+      background-color: $background-lightgrey;
+    }
+  }
+
+  &.min-height {
+    min-height: 200px;
+  }
+
+  .loading__spinner {
+    transition: all .3s ease;
+    border-width: 2px;
+    width: 40px;
+    height: 40px;
+  }
+}

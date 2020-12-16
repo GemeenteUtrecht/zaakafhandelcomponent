@@ -1,0 +1,11 @@
+<div
+  class="chip"
+  [ngClass]="{
+  'chip--primary': type == 'primary',
+  'chip--secondary': type == 'secondary',
+  'chip--tertiary': type == 'tertiary',
+  'chip--warn': type == 'warn'
+  }"
+>
+  <ng-content></ng-content>
+</div>

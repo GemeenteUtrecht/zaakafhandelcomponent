@@ -1,0 +1,47 @@
+@import './base/colors/colors';
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tooltip {
+  position: relative;
+  cursor: default;
+  &--inline {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  &__content {
+    background: $color-blue;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 2px 0;
+    transition: 0.2s ease;
+    opacity: 0.9;
+    max-width: 200px;
+    bottom: 26px;
+    left: 16px;
+    position: absolute;
+    font-size: 1.2rem;
+    visibility: hidden;
+  }
+  &--primary {
+    .tooltip__content {
+      background-color: $color-blue;
+    }
+    .mat-icon {
+      color: $color-blue;
+    }
+  }
+  &--accent {
+    .tooltip__content {
+      background-color: $color-orange;
+    }
+    .mat-icon {
+      color: $color-orange;
+    }
+  }
+}

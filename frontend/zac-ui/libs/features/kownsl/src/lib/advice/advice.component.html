@@ -1,0 +1,105 @@
+<div class="kownsl__container">
+  <ng-template [ngIf]="uuid && !submitSuccess">
+    <!-- Loading -->
+    <ng-template [ngIf]="!adviceData && isLoading">
+      <gu-loading-indicator></gu-loading-indicator>
+    </ng-template>
+
+    <!-- Error -->
+    <ng-template [ngIf]="hasError && !isLoading">
+      <p>{{errorMessage}}</p>
+    </ng-template>
+
+    <!-- Main content -->
+    <ng-template [ngIf]="!!adviceData && !isLoading">
+      <section>
+        <h1 class="">Advies gevraagd</h1>
+        <div class="row no-gutters">
+          <div class="col-4">
+            <p class="p p--bold">Ingediend op:</p>
+          </div>
+          <div class="col-8">
+            <p class="p">{{adviceData.created}}</p>
+          </div>
+        </div>
+        <div class="row no-gutters">
+          <div class="col-4">
+            <p class="p p--bold">Toelichting:</p>
+          </div>
+          <div class="col-8">
+            <p class="p p--nomargin">
+              {{adviceData.toelichting}}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Collapsible table with previous advices -->
+      <ng-template [ngIf]="!!adviceData.reviews">
+        <section *ngIf="adviceData.reviews.length > 0">
+          <h2 class="mb-4">Vorige adviezen</h2>
+          <gu-table [tableData]="tableData"></gu-table>
+        </section>
+      </ng-template>
+
+      <!-- Documents and document upload -->
+      <form [formGroup]="adviceForm">
+        <ng-template [ngIf]="!!adviceData.documents">
+          <section *ngIf="!!adviceData.documents.length > 0">
+            <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
+            <gu-tooltip type="primary" inline="true">Upload een bijgewerkt bestand of een bestand met aantekeningen</gu-tooltip>
+            <div class="document-row" *ngFor="let file of adviceData.zaakDocuments">
+              <div class="mb-4">
+                <gu-file
+                  fileName="{{file.name}} ({{file.title}})"
+                  [downloadUrl]="file.downloadUrl"
+                  class="d-inline-block"
+                ></gu-file>
+                <gu-chip type="tertiary" class="d-inline-block">
+                  {{file.extra}}
+                </gu-chip>
+              </div>
+              <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.downloadUrl))"></gu-file-upload>
+            </div>
+          </section>
+        </ng-template>
+
+        <!-- Advice text -->
+        <section>
+          <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
+          <span class="label label--optional">optioneel</span>
+          <span class="label label--hint">Inhoudelijk advies</span>
+          <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
+        </section>
+        <div class="d-flex justify-content-end">
+          <gu-button
+            [disabled]="!adviceForm.valid"
+            [loading]="isSubmitting"
+            type="primary"
+            size="large"
+            (click)="submitForm()">
+            Advisering bevestigen
+          </gu-button>
+        </div>
+        <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+          <p>{{errorMessage}}</p>
+        </div>
+      </form>
+    </ng-template>
+  </ng-template>
+
+  <!-- Success screen -->
+  <ng-template [ngIf]="submitSuccess">
+    <gu-success>
+      <h3 class="mb-4">Bedankt voor je reactie</h3>
+      <gu-button (click)="submitSuccess = false">
+        Terug
+      </gu-button>
+    </gu-success>
+  </ng-template>
+
+  <!-- Error: no uuid -->
+  <ng-template [ngIf]="!uuid">
+    <p>{{errorMessage}}</p>
+  </ng-template>
+</div>

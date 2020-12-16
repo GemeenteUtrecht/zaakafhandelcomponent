@@ -1,0 +1,11 @@
+@import '../colors/colors';
+
+.feature-container {
+  padding: 2rem 0;
+}
+
+.container-content {
+  @include media-breakpoint-up(md) {
+    max-width: 800px
+  }
+}

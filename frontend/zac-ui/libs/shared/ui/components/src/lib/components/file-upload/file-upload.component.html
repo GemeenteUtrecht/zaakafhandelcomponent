@@ -1,0 +1,12 @@
+<div class="file-upload">
+  <button class="file-upload__upload-button">
+    <span>Selecteer document</span>
+    <input
+      type="file"
+      (change)="handleFileChangeEvent($event)">
+  </button>
+  <div class="file-upload__selected-file" *ngIf="fileInput">
+    <span class="selected-file__name">{{fileInput.name}}</span>
+    <mat-icon (click)="deleteSelectedFile()">delete</mat-icon>
+  </div>
+</div>

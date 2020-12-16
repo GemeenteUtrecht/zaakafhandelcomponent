@@ -1,0 +1,22 @@
+
+<button
+  class="btn"
+  [ngClass]="{
+  'btn--primary': type == 'primary',
+  'btn--secondary': type == 'secondary',
+  'btn--tertiary': type == 'tertiary',
+  'btn--small': size == 'small',
+  'btn--large': size == 'large'
+  }"
+  [disabled]="disabled">
+  <span
+    *ngIf="loading"
+    class="btn__spinner"
+    [ngClass]="{
+    'btn__spinner--primary': type == 'primary',
+    'btn__spinner--secondary': type == 'secondary',
+    'btn__spinner--tertiary': type == 'tertiary'
+    }"
+  ></span>
+  <ng-content></ng-content>
+</button>

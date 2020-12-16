@@ -1,0 +1,113 @@
+<div class="kownsl__container">
+  <ng-template [ngIf]="uuid && !submitSuccess">
+    <!-- Loading -->
+    <ng-template [ngIf]="!approvalData && isLoading">
+      <gu-loading-indicator></gu-loading-indicator>
+    </ng-template>
+
+    <!-- Error -->
+    <ng-template [ngIf]="hasError && !isLoading">
+      <p>{{errorMessage}}</p>
+    </ng-template>
+
+    <!-- Main content -->
+    <ng-template [ngIf]="approvalData && !isLoading">
+      <section>
+        <h1 class="">Accordering gevraagd</h1>
+        <div class="row no-gutters">
+          <div class="col-4">
+            <p class="p p--bold">Ingediend op:</p>
+          </div>
+          <div class="col-8">
+            <p class="p">{{approvalData.created}}</p>
+          </div>
+        </div>
+        <div class="row no-gutters">
+          <div class="col-4">
+            <p class="p p--bold">Toelichting:</p>
+          </div>
+          <div class="col-8">
+            <p class="p p--nomargin">
+              {{approvalData.toelichting}}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Collapsible table with previous approvals -->
+      <ng-template [ngIf]="!!approvalData.reviews">
+        <section *ngIf="!!approvalData.reviews.length > 0">
+          <h2 class="mb-4">Vorige accorderingen</h2>
+          <gu-table
+            [tableData]="tableData"
+          ></gu-table>
+        </section>
+      </ng-template>
+
+      <!-- Documents -->
+      <ng-template [ngIf]="!!approvalData.documents">
+        <section *ngIf="!!approvalData.documents.length > 0">
+          <h2 class="mb-4">Documenten</h2>
+          <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
+            <gu-file
+              [fileName]="file.name"
+              [downloadUrl]="file.downloadUrl"
+            ></gu-file>
+          </div>
+        </section>
+      </ng-template>
+
+      <!-- Approval form -->
+      <form [formGroup]="approvalForm">
+        <section>
+          <label class="h2 d-inline-block">Antwoord</label>
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approval"></gu-radio>
+            </div>
+            <div class="col-12 col-md-6">
+              <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approval"></gu-radio>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <label class="h2 d-inline-block" for="textarea_approval">Toelichting</label>
+          <span class="label label--optional">optioneel</span>
+          <span class="label label--hint">Toelichting op uw antwoord</span>
+          <textarea formControlName="explanation" class="mb-0" id="textarea_approval"></textarea>
+        </section>
+        <div class="d-flex justify-content-end">
+          <gu-button
+            [disabled]="!approvalForm.valid"
+            [loading]="isSubmitting"
+            type="primary"
+            size="large"
+            (click)="submitForm()">
+            Accordering bevestigen
+          </gu-button>
+          <p *ngIf="submitFailed">{{errorMessage}}</p>
+        </div>
+        <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+          <p>{{errorMessage}}</p>
+        </div>
+      </form>
+    </ng-template>
+
+  </ng-template>
+
+  <!-- Success screen -->
+  <ng-template [ngIf]="submitSuccess">
+    <gu-success>
+      <h3 class="mb-4">Bedankt voor je reactie</h3>
+      <gu-button (click)="submitSuccess = false">
+        Terug
+      </gu-button>
+    </gu-success>
+  </ng-template>
+
+  <!-- Error: no uuid -->
+  <ng-template [ngIf]="!uuid">
+    <p>{{errorMessage}}</p>
+  </ng-template>
+</div>

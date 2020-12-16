@@ -1,0 +1,30 @@
+@import '../base/colors/colors';
+
+.label {
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.8rem;
+  margin: 0 .25rem;
+  padding: 0 .4rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  &--optional {
+    color: $color-dimgray;
+  }
+  &--hint {
+    color: $color-dimgray;
+    display: block;
+    font-style: italic;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    margin-top: .2rem;
+    font-weight: normal;
+    text-transform: none;
+    padding: 0;
+  }
+}

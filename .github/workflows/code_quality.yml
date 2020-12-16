@@ -7,10 +7,10 @@ on:
       - master
     tags:
     paths:
-      - '**.py'
+      - 'backend/**.py'
   pull_request:
     paths:
-      - '**.py'
+      - 'backend/**.py'
   workflow_dispatch:
 
 jobs:
@@ -24,11 +24,9 @@ jobs:
         with:
           python-version: '3.7'
       - name: Install dependencies
-        run: |
-          pip install -r requirements/ci.txt
+        run: pip install -r backend/requirements/ci.txt
       - name: Run isort
-        run: |
-          isort --check-only --diff src doc
+        run: isort --check-only --diff backend/src backend/doc
 
   black:
     name: Check code formatting with black
@@ -40,8 +38,6 @@ jobs:
         with:
           python-version: '3.7'
       - name: Install dependencies
-        run: |
-          pip install -r requirements/ci.txt
+        run: pip install -r backend/requirements/ci.txt
       - name: Run black
-        run: |
-          black --check src doc
+        run: black --check backend/src backend/doc

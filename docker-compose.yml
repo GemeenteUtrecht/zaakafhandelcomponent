@@ -1,6 +1,5 @@
-# Minimal docker-compose to get the service up.
-# Note that this is NOT meant for real "production" deployments, but only to get up
-# and running quickly in a dev environment.
+# This docker-compose configuration is aimed at DEVELOPMENT. It is not suitable
+# for production at all.
 version: '3.8'
 
 services:
@@ -9,25 +8,30 @@ services:
     image: postgres:11
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust  # do not use this in production!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:5-alpine
 
   elasticsearch:
-     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
-     environment:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-     ports:
-       - 9200:9200
-       - 9300:9300
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    # expose to the host machine so that we can use docker ES for development
+    ports:
+      - 9200:9200
+      - 9300:9300
 
-  web:
-    image: scrumteamzgw/zaakafhandelcomponent
-    build: .
+  backend:
+    image: scrumteamzgw/zaakafhandelcomponent:${TAG:-latest}
+    build: ./backend
     environment:
       - DJANGO_SETTINGS_MODULE=zac.conf.docker
-      - SECRET_KEY=${SECRET_KEY:-kvilzgj7=*hi*1$$nf2p-%&r*(@83q^wkdkb^^y#!(yaw=8_o!-}
+      - SECRET_KEY=${SECRET_KEY:-changeme}
       - IS_HTTPS=0
       - ALLOWED_HOSTS=localhost
       - REDIS_HOST=redis
@@ -37,9 +41,51 @@ services:
       - CACHE_AXES=redis:6379/0
       - CACHE_OAS=redis:6379/1
       - CACHE_SESSIONS=redis:6379/1
+      - CORS_HEADERS_ENABLED=True
+      - DEBUG=True
+    # expose backend port for frontend development
     ports:
       - 8000:8000
     depends_on:
       - db
       - redis
       - elasticsearch
+
+  # frontend
+  frontend:
+    image: scrumteamzgw/zac-ui:${TAG:-latest}
+    build: ./frontend/zac-ui
+    depends_on:
+      - backend
+
+  frontend-dev:
+    build:
+      context: ./frontend/zac-ui
+      dockerfile: Dockerfile-dev
+      args:
+        - NODE_VERSION=${NODE_VERSION:-13}
+    volumes:
+      - ./frontend/zac-ui:/app
+
+  # ingress
+  ingress: &ingress-default
+    build: ./ingress
+    ports:
+      - 8080:80
+    depends_on:
+      - backend
+      - frontend
+
+  ingress-dev:
+    <<: *ingress-default
+    environment:
+      - FRONTEND_HOST=frontend-dev
+      - FRONTEND_PORT=4200
+      - FRONTEND_PATH=
+    depends_on:
+      - backend
+      - frontend-dev
+
+volumes:
+  postgres_data:
+  es_data:

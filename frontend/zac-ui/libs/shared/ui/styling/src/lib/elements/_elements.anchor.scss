@@ -1,0 +1,18 @@
+a.anchor {
+  font-size: 1.4rem;
+  &--back {
+    display: inline-block;
+    &:before {
+      display: inline-block;
+      content: ' ';
+      background-image: url('../../../../assets/icons/arrow.svg');
+      background-repeat: no-repeat;
+      background-size: 14px 14px;
+      height: 14px;
+      width: 14px;
+      transform: rotate(180deg);
+      margin-right: 5px;
+      margin-bottom: -1px;
+    }
+  }
+}

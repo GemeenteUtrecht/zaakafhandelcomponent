@@ -1,0 +1,20 @@
+.kownsl {
+  &__container {
+    position: relative;
+    min-height: 200px;
+    h1 {
+      margin-bottom: 3rem;
+    }
+    section {
+      margin-bottom: 4rem;
+    }
+  }
+  ::ng-deep .document-row {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid lightgray;
+    padding: 10px;
+    .file {
+      margin-right: 1rem;
+    }
+  }
+}
