@@ -33,9 +33,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             label="Kownsl",
             api_type=APITypes.orc,
             api_root="https://kownsl.nl",
-            auth_type=AuthTypes.api_key,
-            header_key="Authorization",
-            header_value="Token foobarbaz",
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
             oas="https://kownsl.nl/api/v1",
         )
 
@@ -64,6 +64,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         _uuid = uuid.uuid4()
         response = {
             "id": str(_uuid),
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
             "documents": ["https://doc.nl/123"],
@@ -90,6 +91,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         # can't use generate_oas_component because Kownsl API schema doesn't have components
         _review_request = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
             "documents": [],
@@ -137,6 +139,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     def test_retrieve_approvals(self, m):
         _review_request = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "approval",
             "documents": [],
@@ -195,6 +198,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         _uuid = uuid.uuid4()
         response = {
             "id": str(_uuid),
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
             "documents": [],

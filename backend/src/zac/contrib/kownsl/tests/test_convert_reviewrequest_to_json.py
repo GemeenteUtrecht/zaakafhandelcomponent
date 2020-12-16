@@ -14,6 +14,7 @@ class ConvertToJsonTests(TestCase):
     def test_review_requests_for_advice(self):
         review_request_data = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
             "documents": [],
@@ -47,6 +48,9 @@ class ConvertToJsonTests(TestCase):
             [
                 {
                     "id": uuid.UUID("45638aa6-e177-46cc-b580-43339795d5b5"),
+                    "created": timezone.make_aware(
+                        datetime.datetime(2020, 12, 16, 14, 15, 22)
+                    ),
                     "for_zaak": "https://zaken.nl/api/v1/zaak/123",
                     "review_type": "advice",
                     "documents": [],
@@ -78,6 +82,7 @@ class ConvertToJsonTests(TestCase):
     def test_review_request_for_approval(self):
         review_request_data = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
+            "created": "2020-12-16T14:15:22Z",
             "for_zaak": "https://zaken.nl/api/v1/zaak/123",
             "review_type": "advice",
             "documents": [],
@@ -111,6 +116,9 @@ class ConvertToJsonTests(TestCase):
             [
                 {
                     "id": uuid.UUID("45638aa6-e177-46cc-b580-43339795d5b5"),
+                    "created": timezone.make_aware(
+                        datetime.datetime(2020, 12, 16, 14, 15, 22)
+                    ),
                     "for_zaak": "https://zaken.nl/api/v1/zaak/123",
                     "review_type": "advice",
                     "documents": [],
