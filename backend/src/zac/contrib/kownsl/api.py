@@ -1,20 +1,27 @@
-from typing import List
+from typing import List, Optional
 
 from zds_client.client import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
 
+from zac.accounts.models import User
 from zac.utils.decorators import optional_service
 
 from .data import Advice, Approval, ReviewRequest
 from .models import KownslConfig
 
 
-def get_client() -> ZGWClient:
+def get_client(user: Optional[User] = None) -> ZGWClient:
     config = KownslConfig.get_solo()
     assert config.service, "A service must be configured first"
-    return config.service.build_client()
+    service = config.service
+
+    # override the actual logged in user in the `user_id` claim, so that Kownsl is
+    # aware of the actual end user
+    if user is not None:
+        service.user_id = user.username
+    return service.build_client()
 
 
 def create_review_request(

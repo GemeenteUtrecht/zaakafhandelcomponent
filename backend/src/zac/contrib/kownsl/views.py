@@ -7,21 +7,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zds_client.client import get_operation_url
-from zgw_consumers.client import ZGWClient
 from zgw_consumers.models import Service
 
 from zac.notifications.views import BaseNotificationCallbackView
 
-from .models import KownslConfig
+from .api import get_client
 from .permissions import IsReviewUser
 
 logger = logging.getLogger(__name__)
-
-
-def get_client() -> ZGWClient:
-    config = KownslConfig.get_solo()
-    assert config.service, "A service must be configured first"
-    return config.service.build_client()
 
 
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
@@ -81,7 +74,7 @@ class BaseRequestView(APIView):
     _operation_id = NotImplemented
 
     def get(self, request, request_uuid):
-        client = get_client()
+        client = get_client(request.user)
         operation_id = "reviewrequest_retrieve"
         url = get_operation_url(
             client.schema,
@@ -96,7 +89,7 @@ class BaseRequestView(APIView):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get(request, request_uuid)
 
-        client = get_client()
+        client = get_client(request.user)
         operation_id = self._operation_id
         url = get_operation_url(
             client.schema,
