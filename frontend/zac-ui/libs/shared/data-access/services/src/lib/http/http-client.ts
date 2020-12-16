@@ -21,7 +21,7 @@ export function applicationHttpClientCreator(http: HttpClient) {
 })
 export class ApplicationHttpClient {
 
-  private api = '/core';
+  private api = '/api';
 
   public constructor(public http: HttpClient) {}
 
