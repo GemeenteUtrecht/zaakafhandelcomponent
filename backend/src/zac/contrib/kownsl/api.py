@@ -56,9 +56,7 @@ def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     :return: an list of advice object
     """
     client = get_client()
-    operation_id = "reviewrequest_advices"
-    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
-    result = client.request(url, operation_id)
+    result = client.list("advice", parent_lookup_request__uuid=review_request.id)
     return factory(Advice, result)
 
 
@@ -71,9 +69,7 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     :return: an approval-collection object
     """
     client = get_client()
-    operation_id = "reviewrequest_approvals"
-    url = get_operation_url(client.schema, operation_id, uuid=review_request.id)
-    result = client.request(url, operation_id)
+    result = client.list("approval", parent_lookup_request__uuid=review_request.id)
     return factory(Approval, result)
 
 
