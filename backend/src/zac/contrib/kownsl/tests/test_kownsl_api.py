@@ -2,6 +2,7 @@ import uuid
 
 from django.test import TestCase
 
+import jwt
 import requests_mock
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
@@ -37,6 +38,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             client_id="zac",
             secret="supersecret",
             oas="https://kownsl.nl/api/v1",
+            user_id="zac",
         )
 
         config = KownslConfig.get_solo()
@@ -51,8 +53,17 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         client = get_client()
 
         self.assertIsInstance(client.schema, dict)
-        self.assertIsNone(client.auth)
-        self.assertEqual(client.auth_header, {"Authorization": "Token foobarbaz"})
+        # we're using the ZGW Auth mechanism to pass currently logged-in user information
+        self.assertIsNotNone(client.auth)
+        self.assertEqual(client.auth.user_id, "zac")
+        header = client.auth_header["Authorization"]
+        self.assertTrue(header.startswith("Bearer "))
+
+        # inspect the user_id claim
+        token = header.split(" ")[1]
+        claims = jwt.decode(token, verify=False)
+        self.assertEqual(claims["user_id"], "zac")
+
         self.assertEqual(len(m.request_history), 1)
         self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
 
@@ -85,7 +96,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         self.assertEqual(review_request.id, _uuid)
         self.assertEqual(review_request.for_zaak, "https://zaken.nl/api/v1/zaak/123")
-        self.assertEqual(m.last_request.headers["Authorization"], "Token foobarbaz")
+        self.assertTrue(m.last_request.headers["Authorization"].startswith("Bearer "))
 
     def test_retrieve_advices(self, m):
         # can't use generate_oas_component because Kownsl API schema doesn't have components
