@@ -54,7 +54,7 @@ export class ApprovalComponent implements OnInit {
     this.isLoading = true;
     this.approvalService.getApproval(this.uuid).subscribe(data => {
       this.approvalData = data;
-      this.createTableData(data);
+      this.tableData = this.createTableData(data);
       this.isLoading = false;
     }, error => {
       this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
@@ -63,23 +63,26 @@ export class ApprovalComponent implements OnInit {
     })
   }
 
-  createTableData(adviceData: ReviewRequest): void {
-    // Add authors to table head
-    this.tableData.headData = adviceData.reviews.map( review => {
-      return review.author;
-    });
+  createTableData(approvalData: ReviewRequest): Table {
+    const tableData: Table = {
+      headData: ['Accordeur', 'Gedaan op', 'Akkoord'],
+      elementData: []
+    }
 
     // Add table body data
-    this.tableData.elementData = adviceData.reviews.map( review => {
+    tableData.elementData = approvalData.reviews.map( review => {
       const cellData: CellData = {
         cellData: {
           author: review.author,
-          created: review.created
+          created: review.created,
+          approved: review.approved ? 'Akkoord' : 'Niet Akkoord'
         },
         expandData: review.toelichting
       }
       return cellData
     });
+
+    return tableData;
   }
 
   submitForm(): void {

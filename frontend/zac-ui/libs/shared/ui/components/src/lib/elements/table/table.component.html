@@ -2,7 +2,7 @@
   <thead>
     <tr>
       <th *ngIf="expandable"></th>
-      <th *ngFor="let key of tableData.headData">{{ key }}</th>
+      <th *ngFor="let head of tableData.headData">{{ head }}</th>
     </tr>
   </thead>
   <tbody>

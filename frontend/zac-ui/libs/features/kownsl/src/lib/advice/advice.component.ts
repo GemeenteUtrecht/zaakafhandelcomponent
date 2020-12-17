@@ -74,14 +74,9 @@ export class AdviceComponent implements OnInit {
 
   createTableData(adviceData: ReviewRequest): Table {
     const tableData: Table = {
-      headData: [],
+      headData: ['Adviseur', 'Gedaan op'],
       elementData: []
     }
-
-    // Add authors to table head
-    tableData.headData = adviceData.reviews.map( review => {
-      return review.author;
-    });
 
     // Add table body data
     tableData.elementData = adviceData.reviews.map( review => {
