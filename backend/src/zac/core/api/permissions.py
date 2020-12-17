@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from zds_client import ClientError
 
-from ..permissions import zaken_add_documents, zaken_add_relations
+from ..permissions import zaken_add_documents, zaken_add_relations, zaken_inzien
 from ..services import get_zaak
 
 logger = logging.getLogger(__name__)
@@ -54,3 +54,13 @@ class CanAddRelations(permissions.BasePermission):
 
         # Check that the user has permissions to add relations to the main zaak
         return request.user.has_perm(zaken_add_relations.name, main_zaak)
+
+
+class CanReadZaken(permissions.BasePermission):
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.method not in permissions.SAFE_METHODS:
+            return False
+        return request.user.has_perm(zaken_inzien.name)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        return request.user.has_perm(zaken_inzien.name, obj)

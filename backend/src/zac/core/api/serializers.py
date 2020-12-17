@@ -136,3 +136,7 @@ class ZaakSerializer(serializers.Serializer):
     identificatie = serializers.CharField(required=True)
     bronorganisatie = serializers.CharField(required=True)
     url = serializers.URLField(required=True)
+
+
+class ZaakDetailSerializer(serializers.Serializer):
+    pass

@@ -15,6 +15,7 @@ urlpatterns = [
     path("adfs/", include("django_auth_adfs.urls")),
     path("api/", include("zac.notifications.urls")),
     path("api/kownsl/", include("zac.contrib.kownsl.urls")),
+    path("api/core/", include("zac.core.api.bff_urls")),
     path("", SummaryView.as_view(), name="index"),
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),
