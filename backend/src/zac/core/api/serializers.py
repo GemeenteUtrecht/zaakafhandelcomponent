@@ -6,6 +6,9 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import AardRelatieChoices
 
+from zgw.models.zrc import Zaak
+from zgw.serializers import APIModelSerializer
+
 from .utils import (
     CSMultipleChoiceField,
     ValidExpandChoices,
@@ -138,5 +141,11 @@ class ZaakSerializer(serializers.Serializer):
     url = serializers.URLField(required=True)
 
 
-class ZaakDetailSerializer(serializers.Serializer):
-    pass
+class ZaakDetailSerializer(APIModelSerializer):
+    class Meta:
+        model = Zaak
+        fields = (
+            "url",
+            "identificatie",
+            "bronorganisatie",
+        )

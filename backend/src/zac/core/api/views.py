@@ -14,10 +14,9 @@ from zgw_consumers.models import Service
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
-from ...accounts.permissions import UserPermissions
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
-from ..services import get_document, get_informatieobjecttype, get_zaak, get_zaken_es
+from ..services import find_zaak, get_document, get_informatieobjecttype, get_zaak
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -214,10 +213,7 @@ class ZaakDetailView(views.APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
 
     def get(self, request, *args, **kwargs):
-        import bpdb
-
-        bpdb.set_trace()
+        zaak = find_zaak(**self.kwargs)
         self.check_object_permissions(request, zaak)
-
         serializer = ZaakDetailSerializer(instance=zaak)
         return Response(serializer.data)

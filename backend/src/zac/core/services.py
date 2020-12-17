@@ -469,25 +469,32 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     """
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
-    # not in cache -> check it in all known ZRCs
-    zrcs = Service.objects.filter(api_type=APITypes.zrc)
-    zaak = None
-    for zrc in zrcs:
-        client = zrc.build_client()
-        results = get_paginated_results(client, "zaak", query_params=query)
+    # try local search index first
+    results = search(size=1, **query)
+    if results:
+        zaak = get_zaak(zaak_url=results[0])
+    else:
+        # not in cache -> check it in all known ZRCs
+        zrcs = Service.objects.filter(api_type=APITypes.zrc)
+        zaak = None
+        for zrc in zrcs:
+            client = zrc.build_client()
+            results = get_paginated_results(client, "zaak", query_params=query)
 
-        if not results:
-            continue
+            if not results:
+                continue
 
-        if len(results) > 1:
-            logger.warning("Found multiple Zaken for query %r", query)
+            if len(results) > 1:
+                logger.warning("Found multiple Zaken for query %r", query)
 
-        # there's only supposed to be one unique case
-        zaak = factory(Zaak, results[0])
-        break
+            # there's only supposed to be one unique case
+            zaak = factory(Zaak, results[0])
+            break
 
-    if zaak is None:
-        raise ObjectDoesNotExist("Zaak object was not found in any known registrations")
+        if zaak is None:
+            raise ObjectDoesNotExist(
+                "Zaak object was not found in any known registrations"
+            )
 
     # resolve relation
     zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
