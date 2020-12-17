@@ -1,11 +1,32 @@
 import copy
 from collections import OrderedDict
 from datetime import date, datetime, time
+from typing import Union
 
 from rest_framework import fields, serializers
 from zgw_consumers.api_models.base import get_all_annotations
 
 from .utils import get_field_kwargs
+
+
+def extract_model_field_type(model_class, field_name):
+    annotations = get_all_annotations(model_class)
+    typehint = annotations[field_name]
+
+    if typehint is None:
+        typehint = type(None)
+
+    # support for Optional / List
+    if hasattr(typehint, "__origin__"):
+        if typehint.__origin__ is list and typehint.__args__:
+            subtypehint = typehint.__args__[0]
+            raise NotImplementedError("TODO: support collections")
+
+        if typehint.__origin__ is Union:
+            typehint = typehint.__args__
+            # Optional is ONE type combined with None
+            typehint = next(t for t in typehint if t is not None)
+    return typehint
 
 
 class APIModelSerializer(serializers.Serializer):
@@ -151,7 +172,7 @@ class APIModelSerializer(serializers.Serializer):
         return kwargs
 
     def build_field(self, field_name, model_class):
-        model_field_type = get_all_annotations(model_class)[field_name]
+        model_field_type = extract_model_field_type(model_class, field_name)
         return self.build_standard_field(field_name, model_field_type)
 
     def build_standard_field(self, field_name, model_field_type):

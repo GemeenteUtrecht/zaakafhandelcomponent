@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import AardRelatieChoices
 
 from zgw.models.zrc import Zaak
@@ -141,11 +142,33 @@ class ZaakSerializer(serializers.Serializer):
     url = serializers.URLField(required=True)
 
 
+class ZaakTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = ZaakType
+        fields = (
+            "url",
+            "catalogus",
+            "omschrijving",
+            "versiedatum",
+        )
+
+
 class ZaakDetailSerializer(APIModelSerializer):
+    zaaktype = ZaakTypeSerializer()
+
     class Meta:
         model = Zaak
         fields = (
             "url",
             "identificatie",
             "bronorganisatie",
+            "zaaktype",
+            "omschrijving",
+            "toelichting",
+            "registratiedatum",
+            "startdatum",
+            "einddatum",
+            "einddatum_gepland",
+            "uiterlijke_einddatum_afdoening",
+            "vertrouwelijkheidaanduiding",
         )
