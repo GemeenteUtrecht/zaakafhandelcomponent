@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ReviewRequest } from '../../models/review-request';
 import { ApprovalService } from './approval.service';
 import { CellData, Table } from '@gu/models';
@@ -30,6 +31,8 @@ export class ApprovalComponent implements OnInit {
   }
 
   approvalForm: FormGroup;
+
+  pipe = new DatePipe("nl-NL");
 
   constructor(
     private fb: FormBuilder,
@@ -71,11 +74,14 @@ export class ApprovalComponent implements OnInit {
 
     // Add table body data
     tableData.elementData = approvalData.reviews.map( review => {
+      const author = `${review.author.firstName} ${review.author.lastName}`;
+      const date = this.pipe.transform(review.created, 'short');
+      const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
       const cellData: CellData = {
         cellData: {
-          author: review.author,
-          created: review.created,
-          approved: review.approved ? 'Akkoord' : 'Niet Akkoord'
+          author: author,
+          created: date,
+          approved: approved
         },
         expandData: review.toelichting
       }

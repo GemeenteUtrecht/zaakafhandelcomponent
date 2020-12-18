@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
@@ -29,6 +30,8 @@ export class AdviceComponent implements OnInit {
     headData: [],
     elementData: []
   }
+
+  pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
   readonly documentFormGroup = {
@@ -80,10 +83,12 @@ export class AdviceComponent implements OnInit {
 
     // Add table body data
     tableData.elementData = adviceData.reviews.map( review => {
+      const author = `${review.author.firstName} ${review.author.lastName}`;
+      const date = this.pipe.transform(review.created, 'short');
       const cellData: CellData = {
         cellData: {
-          author: review.author,
-          created: review.created
+          author: author,
+          created: date
         },
         expandData: review.advice
       }

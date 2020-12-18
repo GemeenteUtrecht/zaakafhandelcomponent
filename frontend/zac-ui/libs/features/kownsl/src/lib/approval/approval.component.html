@@ -19,7 +19,7 @@
             <p class="p p--bold">Ingediend op:</p>
           </div>
           <div class="col-8">
-            <p class="p">{{approvalData.created}}</p>
+            <p class="p">{{approvalData.created | date:'fullDate'}}</p>
           </div>
         </div>
         <div class="row no-gutters">
@@ -86,14 +86,12 @@
             (click)="submitForm()">
             Accordering bevestigen
           </gu-button>
-          <p *ngIf="submitFailed">{{errorMessage}}</p>
         </div>
         <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
           <p>{{errorMessage}}</p>
         </div>
       </form>
     </ng-template>
-
   </ng-template>
 
   <!-- Success screen -->
