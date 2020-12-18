@@ -1,7 +1,9 @@
+import { Author } from './author';
+
 export interface Review {
   advice?: string;
   toelichting?: string;
   approved?: boolean;
-  author: string;
+  author: Author;
   created: string;
 }

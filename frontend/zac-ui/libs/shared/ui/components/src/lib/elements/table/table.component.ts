@@ -13,6 +13,8 @@ export class TableComponent {
 
   constructor() { }
 
+  keepOriginalOrder = (a) => a.key
+
   expandRow(event) {
     const arrow = event.target;
     const parentRow = event.currentTarget.parentElement.parentElement;
