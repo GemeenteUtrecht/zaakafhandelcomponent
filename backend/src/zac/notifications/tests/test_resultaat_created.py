@@ -11,6 +11,7 @@ from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
+from zac.elasticsearch.tests.utils import ESMixin
 
 from .utils import (
     BRONORGANISATIE,
@@ -37,7 +38,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class ResultaatCreatedTests(APITestCase):
+class ResultaatCreatedTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-creation notifications.
     """

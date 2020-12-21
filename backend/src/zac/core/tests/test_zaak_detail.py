@@ -26,6 +26,7 @@ from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
+from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import make_document_objects, paginated_response
 
 from ...accounts.models import InformatieobjecttypePermission
@@ -121,7 +122,7 @@ def mock_zaak_detail_context(documents=None):
 
 
 @requests_mock.Mocker()
-class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
+class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     url = reverse_lazy(
         "core:zaak-detail",
@@ -340,7 +341,7 @@ class ZaakDetailTests(ClearCachesMixin, TransactionWebTest):
 
 
 @requests_mock.Mocker()
-class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
+class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     zaak_detail_url = reverse_lazy(
         "core:zaak-detail",
@@ -580,7 +581,7 @@ class ZaakDetailsDocumentenTests(ClearCachesMixin, TransactionWebTest):
         self.assertNotIn("Test Document 2", response.html.text)
 
 
-class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
+class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def setUp(self):
         super().setUp()
 
@@ -821,7 +822,7 @@ class ZaakProcessPermissionTests(ClearCachesMixin, TransactionWebTest):
 
 
 @requests_mock.Mocker()
-class OORestrictionTests(ClearCachesMixin, TransactionWebTest):
+class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     url = reverse_lazy(
         "core:zaak-detail",
         kwargs={

@@ -12,6 +12,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 
 from ..permissions import zaken_close, zaken_set_result
@@ -25,7 +26,7 @@ IDENTIFICATIE = "ZAAK-001"
 
 
 @requests_mock.Mocker()
-class ZaakAfhandelingGETTests(ClearCachesMixin, WebTest):
+class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
     """
     Permission tests to get to the zaakafhandeling page.
     """
@@ -217,7 +218,7 @@ class ZaakAfhandelingGETTests(ClearCachesMixin, WebTest):
 
 
 @requests_mock.Mocker()
-class ZaakAfhandelingPOSTTests(ClearCachesMixin, WebTest):
+class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
     """
     Permission tests for afhandel-form submission.
     """
