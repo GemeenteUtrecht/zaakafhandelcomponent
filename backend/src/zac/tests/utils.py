@@ -1,9 +1,14 @@
 from typing import Any, Dict, List
 
+from requests_mock import Mocker
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from zgw.models import InformatieObjectType
+
+
+def mock_resource_get(m: Mocker, resource: dict) -> None:
+    m.get(resource["url"], json=resource)
 
 
 def paginated_response(results: List[dict]) -> Dict[str, Any]:
