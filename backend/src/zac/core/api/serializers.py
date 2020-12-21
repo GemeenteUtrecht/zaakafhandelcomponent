@@ -6,9 +6,9 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import AardRelatieChoices
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zgw.models.zrc import Zaak
-from zgw.serializers import APIModelSerializer
 
 from .utils import (
     CSMultipleChoiceField,
