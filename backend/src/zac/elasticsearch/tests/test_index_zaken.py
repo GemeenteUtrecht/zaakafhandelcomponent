@@ -4,9 +4,9 @@ from django.test import TestCase
 import requests_mock
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..documents import ZaakDocument
 from .utils import ESMixin

@@ -7,9 +7,10 @@ from django_camunda.models import CamundaConfig
 from django_webtest import WebTest
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
-from zac.tests.utils import mock_service_oas_get, paginated_response
+from zac.tests.utils import paginated_response
 from zac.tests.zrc import get_zaak_response
 from zac.tests.ztc import get_roltype_response, get_zaaktype_response
 

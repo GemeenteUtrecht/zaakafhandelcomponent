@@ -13,6 +13,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.tests.factories import (
@@ -25,12 +26,7 @@ from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
-from zac.tests.utils import (
-    generate_oas_component,
-    make_document_objects,
-    mock_service_oas_get,
-    paginated_response,
-)
+from zac.tests.utils import make_document_objects, paginated_response
 
 from ...accounts.models import InformatieobjecttypePermission
 from ..permissions import (

@@ -8,10 +8,10 @@ from django.urls import reverse, reverse_lazy
 from tablib import Dataset
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import SuperUserFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import generate_oas_component
 
 from .factories import ReportFactory
 

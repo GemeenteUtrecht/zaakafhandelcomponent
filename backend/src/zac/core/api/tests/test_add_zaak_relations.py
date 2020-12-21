@@ -6,16 +6,13 @@ from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.core.permissions import zaken_add_relations, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import (
-    generate_oas_component,
-    mock_service_oas_get,
-    paginated_response,
-)
+from zac.tests.utils import paginated_response
 
 
 @requests_mock.Mocker()

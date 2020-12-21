@@ -6,10 +6,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_service_oas_get
 
 from ..models import KownslConfig
 

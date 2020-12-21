@@ -447,6 +447,9 @@ if SENTRY_DSN:
 # ZGW-CONSUMERS
 #
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
+ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
+    os.path.join(DJANGO_PROJECT_DIR, "tests", "schemas"),
+]
 
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = "/"
