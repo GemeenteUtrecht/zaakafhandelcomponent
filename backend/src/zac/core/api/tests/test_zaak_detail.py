@@ -58,20 +58,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
-    def setUp(self):
-        super().setUp()
-
-        # ensure that we have a user with all permissions
-        self.client.force_authenticate(user=self.user)
-
-    def test_get_zaak_detail(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaak)
-        mock_resource_get(m, self.zaaktype)
-        self.create_zaak_document(self.zaak)
-        self.refresh_index()
-        url = reverse(
+        cls.detail_url = reverse(
             "zaak-detail",
             kwargs={
                 "bronorganisatie": "123456782",
@@ -79,7 +66,21 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        response = self.client.get(url)
+    def setUp(self):
+        super().setUp()
+
+        # ensure that we have a user with all permissions
+        self.client.force_authenticate(user=self.user)
+
+    def test_get_zaak_detail_indexed_in_es(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        self.create_zaak_document(self.zaak)
+        self.refresh_index()
+
+        response = self.client.get(self.detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_response = {
@@ -106,21 +107,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_not_indexed_in_es(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
-        url = reverse(
-            "zaak-detail",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "ZAAK-2020-0010",
-            },
-        )
 
-        response = self.client.get(url)
+        response = self.client.get(self.detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_response = {
@@ -143,3 +136,14 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "vertrouwelijkheidaanduiding": "openbaar",
         }
         self.assertEqual(response.json(), expected_response)
+
+    def test_not_found(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([]),
+        )
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -1,6 +1,8 @@
 import base64
 from datetime import date
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 
@@ -213,7 +215,10 @@ class ZaakDetailView(views.APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
 
     def get(self, request, *args, **kwargs):
-        zaak = find_zaak(**self.kwargs)
+        try:
+            zaak = find_zaak(**self.kwargs)
+        except ObjectDoesNotExist:
+            raise Http404("No zaak matches the given query.")
         self.check_object_permissions(request, zaak)
         serializer = ZaakDetailSerializer(instance=zaak)
         return Response(serializer.data)
