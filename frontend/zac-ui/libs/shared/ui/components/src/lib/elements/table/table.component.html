@@ -2,7 +2,7 @@
   <thead>
     <tr>
       <th *ngIf="expandable"></th>
-      <th *ngFor="let key of tableData.headData">{{ key }}</th>
+      <th *ngFor="let head of tableData.headData">{{ head }}</th>
     </tr>
   </thead>
   <tbody>
@@ -13,7 +13,7 @@
             <mat-icon aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
           </button>
         </td>
-        <td *ngFor="let cell of element.cellData | keyvalue">{{ cell.value }}</td>
+        <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">{{ cell.value }}</td>
       </tr>
       <tr *ngIf="expandable" class="child-row">
         <td colspan="10">{{ element.expandData }}</td>

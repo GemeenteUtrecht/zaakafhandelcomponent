@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Table } from '@gu/models';
 
 @Component({
@@ -6,15 +6,14 @@ import { Table } from '@gu/models';
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss']
 })
-export class TableComponent implements OnInit {
+export class TableComponent {
 
   @Input() expandable = true;
   @Input() tableData: Table;
 
   constructor() { }
 
-  ngOnInit(): void {
-  }
+  keepOriginalOrder = (a) => a.key
 
   expandRow(event) {
     const arrow = event.target;

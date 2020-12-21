@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ReviewRequest } from '../../models/review-request';
 import { ApprovalService } from './approval.service';
 import { CellData, Table } from '@gu/models';
@@ -31,6 +32,8 @@ export class ApprovalComponent implements OnInit {
 
   approvalForm: FormGroup;
 
+  pipe = new DatePipe("nl-NL");
+
   constructor(
     private fb: FormBuilder,
     private approvalService: ApprovalService,
@@ -54,7 +57,7 @@ export class ApprovalComponent implements OnInit {
     this.isLoading = true;
     this.approvalService.getApproval(this.uuid).subscribe(data => {
       this.approvalData = data;
-      this.createTableData(data);
+      this.tableData = this.createTableData(data);
       this.isLoading = false;
     }, error => {
       this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
@@ -63,23 +66,29 @@ export class ApprovalComponent implements OnInit {
     })
   }
 
-  createTableData(adviceData: ReviewRequest): void {
-    // Add authors to table head
-    this.tableData.headData = adviceData.reviews.map( review => {
-      return review.author;
-    });
+  createTableData(approvalData: ReviewRequest): Table {
+    const tableData: Table = {
+      headData: ['Accordeur', 'Gedaan op', 'Akkoord'],
+      elementData: []
+    }
 
     // Add table body data
-    this.tableData.elementData = adviceData.reviews.map( review => {
+    tableData.elementData = approvalData.reviews.map( review => {
+      const author = `${review.author.firstName} ${review.author.lastName}`;
+      const date = this.pipe.transform(review.created, 'short');
+      const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
       const cellData: CellData = {
         cellData: {
-          author: review.author,
-          created: review.created
+          author: author,
+          created: date,
+          approved: approved
         },
         expandData: review.toelichting
       }
       return cellData
     });
+
+    return tableData;
   }
 
   submitForm(): void {
