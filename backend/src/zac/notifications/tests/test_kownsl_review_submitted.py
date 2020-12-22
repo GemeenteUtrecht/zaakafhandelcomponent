@@ -6,9 +6,9 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
-from zac.tests.utils import mock_service_oas_get
 
 NOTIFICATION = {
     "kanaal": "kownsl",

@@ -1,10 +1,12 @@
 import base64
 from datetime import date
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 
-from rest_framework import exceptions, permissions, status, views
+from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
@@ -14,11 +16,10 @@ from zgw_consumers.models import Service
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
-from ...accounts.permissions import UserPermissions
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
-from ..services import get_document, get_informatieobjecttype, get_zaak, get_zaken_es
-from .permissions import CanAddDocuments, CanAddRelations
+from ..services import find_zaak, get_document, get_informatieobjecttype, get_zaak
+from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
@@ -28,6 +29,7 @@ from .serializers import (
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
+    ZaakDetailSerializer,
     ZaakIdentificatieSerializer,
     ZaakSerializer,
 )
@@ -203,3 +205,20 @@ class GetZakenView(views.APIView):
         )
         zaak_serializer = ZaakSerializer(instance=zaken, many=True)
         return Response(data=zaak_serializer.data)
+
+
+# Backend-For-Frontend endpoints (BFF)
+
+
+class ZaakDetailView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            zaak = find_zaak(**self.kwargs)
+        except ObjectDoesNotExist:
+            raise Http404("No zaak matches the given query.")
+        self.check_object_permissions(request, zaak)
+        serializer = ZaakDetailSerializer(instance=zaak)
+        return Response(serializer.data)

@@ -12,10 +12,10 @@ import requests_mock
 from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import generate_oas_component
 from zgw.models import Zaak
 
 TASK = {

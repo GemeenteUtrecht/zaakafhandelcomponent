@@ -4,8 +4,8 @@ from django.test import TestCase
 
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakEigenschap
+from zgw_consumers.test import generate_oas_component
 
-from zac.tests.utils import generate_oas_component
 from zgw.models.zrc import Zaak
 
 from ..export import export_zaken

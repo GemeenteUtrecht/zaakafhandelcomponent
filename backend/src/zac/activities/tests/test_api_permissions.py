@@ -7,11 +7,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..permissions import activiteiten_schrijven
 from .factories import ActivityFactory

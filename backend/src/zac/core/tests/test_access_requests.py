@@ -12,6 +12,7 @@ from freezegun import freeze_time
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest
@@ -23,11 +24,8 @@ from zac.accounts.tests.factories import (
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
-from zac.tests.utils import (
-    generate_oas_component,
-    mock_service_oas_get,
-    paginated_response,
-)
+from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 
 from ..permissions import zaken_handle_access, zaken_request_access
 from .utils import ClearCachesMixin
@@ -40,7 +38,7 @@ IDENTIFICATIE = "ZAAK-001"
 
 
 @requests_mock.Mocker()
-class CreateAccessRequestTests(ClearCachesMixin, TransactionWebTest):
+class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     url = reverse_lazy(
         "core:access-request-create",
         kwargs={
@@ -303,7 +301,7 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
 
 @freeze_time("2020-01-01")
 @requests_mock.Mocker()
-class HandleAccessRequestsTests(TransactionWebTest):
+class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
     url = reverse_lazy(
         "core:zaak-access-requests",
         kwargs={

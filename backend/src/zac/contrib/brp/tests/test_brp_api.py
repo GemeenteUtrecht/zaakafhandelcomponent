@@ -8,10 +8,10 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_service_oas_get
 
 from ..api import fetch_extrainfo_np, fetch_natuurlijkpersoon, get_client
 from ..models import BRPConfig

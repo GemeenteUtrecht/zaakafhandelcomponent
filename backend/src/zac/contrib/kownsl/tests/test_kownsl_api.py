@@ -8,10 +8,10 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import generate_oas_component, mock_service_oas_get
 
 from ..api import (
     create_review_request,
