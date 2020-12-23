@@ -8,8 +8,8 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     # API schema documentation
-    path("", SpectacularAPIView.as_view(), name="api-schema-json"),
-    path("schema", SpectacularJSONAPIView.as_view(), name="api-schema"),
+    path("", SpectacularJSONAPIView.as_view(), name="api-schema-json"),
+    path("schema", SpectacularAPIView.as_view(), name="api-schema"),
     path("docs/", SpectacularRedocView.as_view(url_name="api-schema"), name="api-docs"),
     # actual API endpoints
     path("kownsl/", include("zac.contrib.kownsl.urls")),
