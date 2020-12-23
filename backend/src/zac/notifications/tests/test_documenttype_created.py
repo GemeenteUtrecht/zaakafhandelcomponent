@@ -51,14 +51,14 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
         )
 
         # call to populate cache
-        informatieobjecttypen1 = get_informatieobjecttypen(catalogus=CATALOGUS)
+        get_informatieobjecttypen(catalogus=CATALOGUS)
 
         # post the notification
         response = self.client.post(reverse("notifications:callback"), NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # second call should not hit the cache
-        informatieobjecttypen2 = get_informatieobjecttypen(catalogus=CATALOGUS)
+        get_informatieobjecttypen(catalogus=CATALOGUS)
         self.assertEqual(m.call_count, 3)  # 1 call for API spec
         self.assertEqual(
             m.request_history[1].url,

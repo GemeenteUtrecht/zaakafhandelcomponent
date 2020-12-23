@@ -51,14 +51,14 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
         )
 
         # call to populate cache
-        zaaktypen1 = get_zaaktypen(catalogus=CATALOGUS)
+        get_zaaktypen(catalogus=CATALOGUS)
 
         # post the notification
         response = self.client.post(reverse("notifications:callback"), NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # second call should not hit the cache
-        zaaktypen2 = get_zaaktypen(catalogus=CATALOGUS)
+        get_zaaktypen(catalogus=CATALOGUS)
         self.assertEqual(m.call_count, 3)  # 1 call for API spec
         self.assertEqual(
             m.request_history[1].url,
