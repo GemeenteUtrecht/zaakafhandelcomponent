@@ -39,3 +39,4 @@ django-sniplates
 # Restful API
 djangorestframework
 djangorestframework-camel-case
+drf-spectacular
