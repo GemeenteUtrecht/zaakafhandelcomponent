@@ -11,6 +11,7 @@ from zac.core.services import get_informatieobjecttypen
 class InformatieobjecttypenJSONView(views.APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
+    schema = None
 
     def get(self, request):
         """Return the informatieobjecttypen for a catalogus"""

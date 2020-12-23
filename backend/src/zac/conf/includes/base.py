@@ -424,6 +424,13 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+#
+# SPECTACULAR
+#
+SPECTACULAR_SETTINGS = {
+    "SCHEMA_PATH_PREFIX": r"/api",
     "TITLE": "ZAC BFF",
     "DESCRIPTION": "Internal backend-for-frontend API documentation.",
     "TOS": None,
@@ -440,13 +447,6 @@ REST_FRAMEWORK = {
     "EXTERNAL_DOCS": {
         "url": "https://zaakafhandelcomponent.readthedocs.io/",
     },
-}
-
-#
-# SPECTACULAR
-#
-SPECTACULAR_DEFAULTS = {
-    "SCHEMA_PATH_PREFIX": r"/api",
 }
 
 #

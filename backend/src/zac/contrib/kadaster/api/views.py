@@ -9,6 +9,7 @@ from ..bag import Bag, LocationServer
 
 class AdresSearchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    schema = None
 
     def get(self, request: Request, *args, **kwargs):
         query = request.GET.get("q")
@@ -42,6 +43,7 @@ class AdresSearchView(APIView):
 
 class BagObjectFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    schema = None
 
     def get_address(self, address_id: str) -> dict:
         location_server = LocationServer()
@@ -90,6 +92,8 @@ class BagObjectFetchView(APIView):
 
 
 class PandFetchView(BagObjectFetchView):
+    schema = None
+
     def get_bag_object(self, address):
         vo_id = address["adresseerbaarobject_id"]
         bag = Bag()
@@ -112,6 +116,8 @@ class PandFetchView(BagObjectFetchView):
 
 
 class VerblijfsobjectFetchView(BagObjectFetchView):
+    schema = None
+
     def get_bag_object(self, address):
         vo_id = address["adresseerbaarobject_id"]
         bag = Bag()

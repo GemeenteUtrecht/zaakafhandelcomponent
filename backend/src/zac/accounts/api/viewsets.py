@@ -19,3 +19,4 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     )
     search_fields = ["username", "first_name", "last_name"]
     filterset_class = UserFilter
+    schema = None

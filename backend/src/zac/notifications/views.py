@@ -18,6 +18,8 @@ from .serializers import NotificatieSerializer
 
 
 class BaseNotificationCallbackView(APIView):
+    schema = None
+
     def post(self, request, *args, **kwargs):
         serializer = NotificatieSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
