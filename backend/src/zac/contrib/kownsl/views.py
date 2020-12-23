@@ -87,6 +87,7 @@ class BaseRequestView(APIView):
 
     def get(self, request, request_uuid):
         review_request = self.get_object()
+        # import bpdb; bpdb.set_trace()
         return Response(review_request)
 
     def post(self, request, request_uuid):
