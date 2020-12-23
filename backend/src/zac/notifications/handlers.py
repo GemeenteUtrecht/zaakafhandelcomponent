@@ -64,6 +64,13 @@ class ZakenHandler:
         update_rollen_in_zaak_document(zaak)
 
 
+class ZaaktypenHandler:
+    def handle(self, data: dict) -> None:
+        import bpdb
+
+        bpdb.set_trace()
+
+
 class RoutingHandler:
     def __init__(self, config: dict, default=None):
         self.config = config
