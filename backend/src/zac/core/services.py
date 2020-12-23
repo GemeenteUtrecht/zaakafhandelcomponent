@@ -17,8 +17,10 @@ from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
     BesluitType,
     Eigenschap,
+    InformatieObjectType,
     ResultaatType,
     RolType,
+    StatusType,
     ZaakType,
 )
 from zgw_consumers.api_models.documenten import Document
@@ -32,7 +34,7 @@ from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
-from zgw.models import InformatieObjectType, StatusType, Zaak
+from zgw.models import Zaak
 
 from ..accounts.models import User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
