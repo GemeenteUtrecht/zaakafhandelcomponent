@@ -2,7 +2,7 @@ import logging
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,70 +10,13 @@ from rest_framework.views import APIView
 from zds_client.client import get_operation_url
 from zgw_consumers.models import Service
 
-from zac.api.utils import remote_schema_ref
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import get_client
 from .permissions import IsReviewUser
+from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
 
 logger = logging.getLogger(__name__)
-
-
-KOWNSL_OAS = "https://kownsl.utrechtproeftuin.nl/api/v1"
-
-KOWNSL_REVIEW_REQUEST_SCHEMA = [
-    "paths",
-    "/api/v1/review-requests/{uuid}",
-    "get",
-    "responses",
-    "200",
-    "content",
-    "application/json",
-    "schema",
-]
-
-
-KOWNSL_ADVICE_REQUEST_SCHEMA = [
-    "paths",
-    "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
-    "post",
-    "requestBody",
-    "content",
-    "application/json",
-    "schema",
-]
-
-KOWNSL_ADVICE_RESPONSE_SCHEMA = [
-    "paths",
-    "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
-    "post",
-    "responses",
-    "200",
-    "content",
-    "application/json",
-    "schema",
-]
-
-KOWNSL_APPROVAL_REQUEST_SCHEMA = [
-    "paths",
-    "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
-    "post",
-    "requestBody",
-    "content",
-    "application/json",
-    "schema",
-]
-
-KOWNSL_APPROVAL_RESPONSE_SCHEMA = [
-    "paths",
-    "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
-    "post",
-    "responses",
-    "200",
-    "content",
-    "application/json",
-    "schema",
-]
 
 
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
@@ -145,13 +88,7 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    @extend_schema(
-        responses={
-            (200, "application/json"): {
-                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_REVIEW_REQUEST_SCHEMA)
-            }
-        }
-    )
+    @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
         review_request = self.get_object()
         return Response(review_request)
@@ -174,36 +111,18 @@ class BaseRequestView(APIView):
 
 
 @extend_schema_view(
-    post=extend_schema(
-        request={
-            "application/json": {
-                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_ADVICE_REQUEST_SCHEMA),
-            }
-        },
-        responses={
-            (201, "application/json"): {
-                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_ADVICE_RESPONSE_SCHEMA),
-            }
-        },
-    )
+    post=remote_kownsl_create_schema(
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices"
+    ),
 )
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
 
 @extend_schema_view(
-    post=extend_schema(
-        request={
-            "application/json": {
-                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_APPROVAL_REQUEST_SCHEMA),
-            }
-        },
-        responses={
-            (201, "application/json"): {
-                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_APPROVAL_RESPONSE_SCHEMA),
-            }
-        },
-    )
+    post=remote_kownsl_create_schema(
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals"
+    ),
 )
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
