@@ -55,9 +55,15 @@ export class ApprovalComponent implements OnInit {
 
   fetchApproval(): void {
     this.isLoading = true;
-    this.approvalService.getApproval(this.uuid).subscribe(data => {
-      this.approvalData = data;
-      this.tableData = this.createTableData(data);
+    this.approvalService.getApproval(this.uuid).subscribe(res => {
+      const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
+      if (isSubmittedBefore === "false") {
+        this.approvalData = res.body;
+        this.tableData = this.createTableData(res.body);
+      } else {
+        this.hasError = true;
+        this.errorMessage = "U heeft deze aanvraag al beantwoord.";
+      }
       this.isLoading = false;
     }, error => {
       this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."

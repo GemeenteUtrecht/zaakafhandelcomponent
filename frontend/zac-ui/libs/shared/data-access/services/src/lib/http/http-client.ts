@@ -4,7 +4,7 @@ import {Observable} from 'rxjs';
 
 export interface IRequestOptions {
   headers?: HttpHeaders;
-  observe?: 'body';
+  observe: any;
   params?: HttpParams;
   reportProgress?: boolean;
   responseType?: any;
@@ -25,24 +25,24 @@ export class ApplicationHttpClient {
 
   public constructor(public http: HttpClient) {}
 
-  public Get<T>(endPoint: string, options?: IRequestOptions): Observable<T> {
+  public Get<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
     return this.http.get<T>(this.api + endPoint, options);
   }
 
-  public Post<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<T> {
+  public Post<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<any> {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     options = {
       headers: headers,
-      withCredentials: true
+      withCredentials: true,
     }
     return this.http.post<T>(this.api + endPoint, params, options);
   }
 
-  public Put<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<T> {
+  public Put<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<any> {
     return this.http.put<T>(this.api + endPoint, params, options);
   }
 
-  public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<T> {
+  public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
     return this.http.delete<T>(this.api + endPoint, options);
   }
 }
