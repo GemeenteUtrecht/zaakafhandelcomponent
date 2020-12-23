@@ -20,10 +20,54 @@ logger = logging.getLogger(__name__)
 
 
 KOWNSL_OAS = "https://kownsl.utrechtproeftuin.nl/api/v1"
+
 KOWNSL_REVIEW_REQUEST_SCHEMA = [
     "paths",
     "/api/v1/review-requests/{uuid}",
     "get",
+    "responses",
+    "200",
+    "content",
+    "application/json",
+    "schema",
+]
+
+
+KOWNSL_ADVICE_REQUEST_SCHEMA = [
+    "paths",
+    "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
+    "post",
+    "requestBody",
+    "content",
+    "application/json",
+    "schema",
+]
+
+KOWNSL_ADVICE_RESPONSE_SCHEMA = [
+    "paths",
+    "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
+    "post",
+    "responses",
+    "200",
+    "content",
+    "application/json",
+    "schema",
+]
+
+KOWNSL_APPROVAL_REQUEST_SCHEMA = [
+    "paths",
+    "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
+    "post",
+    "requestBody",
+    "content",
+    "application/json",
+    "schema",
+]
+
+KOWNSL_APPROVAL_RESPONSE_SCHEMA = [
+    "paths",
+    "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
+    "post",
     "responses",
     "200",
     "content",
@@ -128,10 +172,37 @@ class BaseRequestView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-# @extend_schema_view()
+@extend_schema_view(
+    post=extend_schema(
+        request={
+            "application/json": {
+                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_ADVICE_REQUEST_SCHEMA),
+            }
+        },
+        responses={
+            (201, "application/json"): {
+                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_ADVICE_RESPONSE_SCHEMA),
+            }
+        },
+    )
+)
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
 
+@extend_schema_view(
+    post=extend_schema(
+        request={
+            "application/json": {
+                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_APPROVAL_REQUEST_SCHEMA),
+            }
+        },
+        responses={
+            (201, "application/json"): {
+                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_APPROVAL_RESPONSE_SCHEMA),
+            }
+        },
+    )
+)
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
