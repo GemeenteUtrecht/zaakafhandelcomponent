@@ -131,6 +131,7 @@ class BaseRequestView(APIView):
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
     _operation_id = NotImplemented
+    serializer_class = None  # this only serves to shut up drf-spectacular errors
 
     def get_object(self):
         client = get_client(self.request.user)
