@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "django_auth_adfs_db",
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_spectacular",
     "rules.apps.AutodiscoverRulesConfig",
     "django_filters",
     "extra_views",
@@ -422,6 +423,30 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "TITLE": "ZAC BFF",
+    "DESCRIPTION": "Internal backend-for-frontend API documentation.",
+    "TOS": None,
+    # Optional: MAY contain "name", "url", "email"
+    "CONTACT": {
+        "url": "https://github.com/GemeenteUtrecht/zaakafhandelcomponent",
+    },
+    # Optional: MUST contain "name", MAY contain URL
+    "LICENSE": {"name": "EUPL-1.2"},
+    "VERSION": "1.0.0",
+    # Tags defined in the global scope
+    "TAGS": [],
+    # Optional: MUST contain 'url', may contain "description"
+    "EXTERNAL_DOCS": {
+        "url": "https://zaakafhandelcomponent.readthedocs.io/",
+    },
+}
+
+#
+# SPECTACULAR
+#
+SPECTACULAR_DEFAULTS = {
+    "SCHEMA_PATH_PREFIX": r"/api",
 }
 
 #
