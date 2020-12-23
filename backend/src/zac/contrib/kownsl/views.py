@@ -4,7 +4,7 @@ from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zds_client.client import get_operation_url
@@ -135,52 +135,3 @@ class AdviceRequestView(BaseRequestView):
 
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
-
-
-import json
-from datetime import datetime
-
-import factory
-from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
-
-### Added a temporary endpoint for frontend dev ###
-from .tests.factories import (
-    AdviceFactory,
-    ApprovalFactory,
-    ReviewRequestFactory,
-    ZaakDocumentFactory,
-)
-
-
-class MockBaseReviewRequest(APIView):
-    permission_classes = (AllowAny,)
-    _operation_id = NotImplemented
-    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
-
-    def get(self, request):
-        zaak_documents = factory.build_batch(dict, 2, FACTORY_CLASS=ZaakDocumentFactory)
-        rr = factory.build(
-            dict, FACTORY_CLASS=ReviewRequestFactory, review_type=self._operation_id
-        )
-        reviews = factory.build_batch(
-            dict,
-            2,
-            FACTORY_CLASS=AdviceFactory
-            if self._operation_id == "advice"
-            else ApprovalFactory,
-        )
-        rr.update({"zaak_documents": zaak_documents, "reviews": reviews})
-
-        return Response(rr, status=200)
-
-    def post(self, request):
-        message = {"Message": "Great success"}
-        return Response(message, status=201)
-
-
-class MockAdviceRequestView(MockBaseReviewRequest):
-    _operation_id = "advice"
-
-
-class MockApprovalRequestView(MockBaseReviewRequest):
-    _operation_id = "approval"
