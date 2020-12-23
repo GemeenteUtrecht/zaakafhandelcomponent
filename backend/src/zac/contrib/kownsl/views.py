@@ -2,6 +2,7 @@ import logging
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,12 +10,26 @@ from rest_framework.views import APIView
 from zds_client.client import get_operation_url
 from zgw_consumers.models import Service
 
+from zac.api.utils import remote_schema_ref
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import get_client
 from .permissions import IsReviewUser
 
 logger = logging.getLogger(__name__)
+
+
+KOWNSL_OAS = "https://kownsl.utrechtproeftuin.nl/api/v1"
+KOWNSL_REVIEW_REQUEST_SCHEMA = [
+    "paths",
+    "/api/v1/review-requests/{uuid}",
+    "get",
+    "responses",
+    "200",
+    "content",
+    "application/json",
+    "schema",
+]
 
 
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
@@ -85,6 +100,13 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
+    @extend_schema(
+        responses={
+            (200, "application/json"): {
+                "$ref": remote_schema_ref(KOWNSL_OAS, KOWNSL_REVIEW_REQUEST_SCHEMA)
+            }
+        }
+    )
     def get(self, request, request_uuid):
         review_request = self.get_object()
         return Response(review_request)
@@ -106,6 +128,7 @@ class BaseRequestView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+# @extend_schema_view()
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 

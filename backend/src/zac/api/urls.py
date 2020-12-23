@@ -6,9 +6,12 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from .views import remote_schema_view
+
 urlpatterns = [
     # API schema documentation
     path("", SpectacularJSONAPIView.as_view(schema=None), name="api-schema-json"),
+    path("_get-remote-schema/", remote_schema_view, name="get-remote-schema"),
     path("schema", SpectacularAPIView.as_view(schema=None), name="api-schema"),
     path("docs/", SpectacularRedocView.as_view(url_name="api-schema"), name="api-docs"),
     # actual API endpoints
