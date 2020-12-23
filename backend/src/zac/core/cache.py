@@ -18,6 +18,11 @@ def invalidate_zaaktypen_cache(catalogus: str = ""):
     cache.delete(key)
 
 
+def invalidate_informatieobjecttypen_cache(catalogus: str = ""):
+    key = f"informatieobjecttypen:{catalogus}"
+    cache.delete(key)
+
+
 def invalidate_zaak_cache(zaak: Zaak):
     zaak_uuids = (None, zaak.uuid)
     zaak_urls = (None, zaak.url)

@@ -3,6 +3,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.activities.models import Activity
 from zac.core.cache import (
+    invalidate_informatieobjecttypen_cache,
     invalidate_zaak_cache,
     invalidate_zaak_list_cache,
     invalidate_zaaktypen_cache,
@@ -71,8 +72,17 @@ class ZakenHandler:
 class ZaaktypenHandler:
     def handle(self, data: dict) -> None:
         if data["resource"] == "zaaktype":
-            if data["actie"] == "create":
+            if data["actie"] in ["create", "update", "partial_update"]:
                 invalidate_zaaktypen_cache(catalogus=data["kenmerken"]["catalogus"])
+
+
+class InformatieObjecttypenHandler:
+    def handle(self, data: dict) -> None:
+        if data["resource"] == "informatieobjecttype":
+            if data["actie"] in ["create", "update", "partial_update"]:
+                invalidate_informatieobjecttypen_cache(
+                    catalogus=data["kenmerken"]["catalogus"]
+                )
 
 
 class RoutingHandler:
@@ -91,6 +101,7 @@ class RoutingHandler:
 handler = RoutingHandler(
     {
         "zaaktypen": ZaaktypenHandler(),
+        "informatieobjecttypen": InformatieObjecttypenHandler(),
         "zaken": ZakenHandler(),
     }
 )

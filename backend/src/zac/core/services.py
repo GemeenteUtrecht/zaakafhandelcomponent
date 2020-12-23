@@ -115,7 +115,7 @@ def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
     return factory(ZaakType, results)
 
 
-@cache_result("informatieobjecttype:{catalogus}", timeout=AN_HOUR)
+@cache_result("informatieobjecttypen:{catalogus}", timeout=AN_HOUR)
 def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]:
     """
     Retrieve all the specified informatieobjecttypen from all catalogi in the configured APIs.
