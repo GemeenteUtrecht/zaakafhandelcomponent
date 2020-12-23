@@ -11,6 +11,6 @@ urlpatterns = [
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/statuses",
         ZaakStatusesView.as_view(),
-        name="zaak-statussen",
+        name="zaak-statuses",
     ),
 ]
