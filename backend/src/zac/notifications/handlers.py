@@ -2,7 +2,11 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.activities.models import Activity
-from zac.core.cache import invalidate_zaak_cache, invalidate_zaak_list_cache
+from zac.core.cache import (
+    invalidate_zaak_cache,
+    invalidate_zaak_list_cache,
+    invalidate_zaaktypen_cache,
+)
 from zac.core.services import _client_from_url
 from zac.elasticsearch.api import (
     create_zaak_document,
@@ -66,9 +70,9 @@ class ZakenHandler:
 
 class ZaaktypenHandler:
     def handle(self, data: dict) -> None:
-        import bpdb
-
-        bpdb.set_trace()
+        if data["resource"] == "zaaktype":
+            if data["actie"] == "create":
+                invalidate_zaaktypen_cache(catalogus=data["kenmerken"]["catalogus"])
 
 
 class RoutingHandler:
@@ -85,5 +89,8 @@ class RoutingHandler:
 
 
 handler = RoutingHandler(
-    {"zaken": ZakenHandler()},
+    {
+        "zaaktypen": ZaaktypenHandler(),
+        "zaken": ZakenHandler(),
+    }
 )
