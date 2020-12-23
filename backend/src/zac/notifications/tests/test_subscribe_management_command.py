@@ -32,8 +32,8 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
 
         result = subscribe_all("https://zac.example.com")
 
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(m.request_history), 3)
+        self.assertEqual(len(result), 4)
+        self.assertEqual(len(m.request_history), 5)
 
         token = Token.objects.get()
         self.assertEqual(
@@ -49,7 +49,7 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
                 ],
             },
         )
-        self.assertEqual(Subscription.objects.count(), 2)
+        self.assertEqual(Subscription.objects.count(), 4)
 
     @requests_mock.Mocker()
     def test_verify_existing(self, m):
@@ -79,8 +79,8 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
 
         result = subscribe_all("https://zac.example.com")
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(m.request_history), 3)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(len(m.request_history), 5)
 
         token = Token.objects.get()
         self.assertEqual(
@@ -90,10 +90,10 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
                 "auth": f"Token {token.key}",
                 "kanalen": [
                     {
-                        "naam": "zaken",
+                        "naam": "informatieobjecttypen",
                         "filters": {},
                     }
                 ],
             },
         )
-        self.assertEqual(Subscription.objects.count(), 2)
+        self.assertEqual(Subscription.objects.count(), 4)
