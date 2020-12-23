@@ -4,7 +4,7 @@ import {Observable} from 'rxjs';
 
 export interface IRequestOptions {
   headers?: HttpHeaders;
-  observe: any;
+  observe?: any;
   params?: HttpParams;
   reportProgress?: boolean;
   responseType?: any;
