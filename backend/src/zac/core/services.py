@@ -810,8 +810,8 @@ def get_documenten(
         ]
 
     informatieobjecttypen = {
-        raw["url"]: InformatieObjectType.from_raw(raw)
-        for raw in all_informatieobjecttypen
+        iot["url"]: factory(InformatieObjectType, iot)
+        for iot in all_informatieobjecttypen
     }
 
     documenten = factory(Document, found)

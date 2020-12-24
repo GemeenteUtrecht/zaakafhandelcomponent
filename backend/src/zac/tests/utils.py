@@ -27,7 +27,7 @@ def make_document_objects(
 
     # Make objects for all informatieobjecttypen
     informatieobjecttypen = {
-        iot["url"]: InformatieObjectType.from_raw(iot) for iot in informatieobjecttypen
+        iot["url"]: factory(InformatieObjectType, iot) for iot in informatieobjecttypen
     }
 
     # resolve relations
