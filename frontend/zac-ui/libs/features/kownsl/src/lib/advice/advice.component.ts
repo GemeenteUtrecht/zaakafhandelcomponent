@@ -64,9 +64,15 @@ export class AdviceComponent implements OnInit {
 
   fetchAdvice(): void {
     this.isLoading = true;
-    this.adviceService.getAdvice(this.uuid).subscribe(data => {
-      this.adviceData = data;
-      this.tableData = this.createTableData(data);
+    this.adviceService.getAdvice(this.uuid).subscribe(res => {
+      const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
+      if (isSubmittedBefore === "false") {
+        this.adviceData = res.body;
+        this.tableData = this.createTableData(res.body);
+      } else {
+        this.hasError = true;
+        this.errorMessage = "U heeft deze aanvraag al beantwoord.";
+      }
       this.isLoading = false;
     }, error => {
       this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."

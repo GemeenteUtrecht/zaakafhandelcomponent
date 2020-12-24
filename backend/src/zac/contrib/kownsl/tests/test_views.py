@@ -93,3 +93,31 @@ class ViewTests(ClearCachesMixin, APITestCase):
         claims = jwt.decode(token, verify=False)
         self.assertEqual(claims["client_id"], "zac")
         self.assertEqual(claims["user_id"], "some-user")
+
+    def test_retrieve_review_request_kownsl_not_submitted(self, m):
+        self._mock_oas_get(m)
+
+        cases = (
+            ("other-user", "false"),
+            ("some-user", "true"),
+        )
+
+        for username, submitted in cases:
+            with self.subTest(username=username, submitted=submitted):
+                m.get(
+                    "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
+                    json={
+                        **REVIEW_REQUEST,
+                        "reviews": [{"author": {"username": username}}],
+                    },
+                )
+                self.client.force_authenticate(user=self.user)
+                url = reverse(
+                    "kownsl:reviewrequest-approval",
+                    kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+                )
+
+                response = self.client.get(url)
+
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(response["X-Kownsl-Submitted"], submitted)

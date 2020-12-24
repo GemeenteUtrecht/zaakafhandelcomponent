@@ -87,7 +87,15 @@ class BaseRequestView(APIView):
 
     def get(self, request, request_uuid):
         review_request = self.get_object()
-        return Response(review_request)
+        review_users = [
+            review["author"]["username"] for review in review_request["reviews"]
+        ]
+        headers = {
+            "X-Kownsl-Submitted": "true"
+            if request.user.username in review_users
+            else "false"
+        }
+        return Response(review_request, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
