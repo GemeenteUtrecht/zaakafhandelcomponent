@@ -90,7 +90,7 @@ class RoutingHandler:
         self.config = config
         self.default = default
 
-    def handle(self, message: dict):
+    def handle(self, message: dict) -> None:
         handler = self.config.get(message["kanaal"])
         if handler is not None:
             handler.handle(message)
