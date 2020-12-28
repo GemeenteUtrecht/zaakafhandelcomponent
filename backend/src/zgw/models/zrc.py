@@ -27,26 +27,3 @@ class Zaak(_Zaak):
         if spent_duration >= total_duration:
             return 100.0
         return round(spent_duration / total_duration * 100, 2)
-
-    @cached_property
-    def status_information(self) -> dict:
-        """
-        Fetch the current status in context of all statusses.
-        """
-        from zac.core.services import get_statustypen
-
-        zaaktype = self.get_zaaktype()
-        statustypen = get_statustypen(zaaktype)
-
-        if self.status is None:
-            return {"volgnummer": 0, "omschrijving": "", "totaal": len(statustypen)}
-
-        current_status = next(
-            (status for status in self.statussen if status.url == self.status)
-        )
-
-        return {
-            "volgnummer": current_status.status_type.volgnummer,
-            "omschrijving": current_status.status_type.omschrijving,
-            "totaal": len(statustypen),
-        }
