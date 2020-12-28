@@ -23,6 +23,16 @@ DESIRED = [
         "filters": {},
     },
     {
+        "path": reverse_lazy("notifications:callback"),
+        "channel": "zaaktypen",
+        "filters": {},
+    },
+    {
+        "path": reverse_lazy("notifications:callback"),
+        "channel": "informatieobjecttypen",
+        "filters": {},
+    },
+    {
         "path": reverse_lazy("notifications:kownsl-callback"),
         "channel": "kownsl",
         "filters": {},

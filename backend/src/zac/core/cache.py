@@ -13,6 +13,16 @@ from zgw.models.zrc import Zaak
 ALL_VAS_SORTED = list(VertrouwelijkheidsAanduidingen.values.keys())
 
 
+def invalidate_zaaktypen_cache(catalogus: str = ""):
+    key = f"zaaktypen:{catalogus}"
+    cache.delete(key)
+
+
+def invalidate_informatieobjecttypen_cache(catalogus: str = ""):
+    key = f"informatieobjecttypen:{catalogus}"
+    cache.delete(key)
+
+
 def invalidate_zaak_cache(zaak: Zaak):
     zaak_uuids = (None, zaak.uuid)
     zaak_urls = (None, zaak.url)
