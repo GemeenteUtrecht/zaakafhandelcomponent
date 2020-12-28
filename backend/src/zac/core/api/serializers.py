@@ -4,8 +4,9 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import AardRelatieChoices
+from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zgw.models.zrc import Zaak
@@ -155,6 +156,15 @@ class ZaakTypeSerializer(APIModelSerializer):
 
 class ZaakDetailSerializer(APIModelSerializer):
     zaaktype = ZaakTypeSerializer()
+    deadline = serializers.DateField(read_only=True)
+    deadline_progress = serializers.FloatField(
+        label=_("Progress towards deadline"),
+        read_only=True,
+        help_text=_(
+            "Value between 0-100, representing a percentage. 100 means the deadline "
+            "has been reached or exceeded."
+        ),
+    )
 
     class Meta:
         model = Zaak
@@ -171,4 +181,32 @@ class ZaakDetailSerializer(APIModelSerializer):
             "einddatum_gepland",
             "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
+            "deadline",
+            "deadline_progress",
+        )
+
+
+class StatusTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = StatusType
+        fields = (
+            "url",
+            "omschrijving",
+            "omschrijving_generiek",
+            "statustekst",
+            "volgnummer",
+            "is_eindstatus",
+        )
+
+
+class ZaakStatusSerializer(APIModelSerializer):
+    statustype = StatusTypeSerializer()
+
+    class Meta:
+        model = Status
+        fields = (
+            "url",
+            "datum_status_gezet",
+            "statustoelichting",
+            "statustype",
         )

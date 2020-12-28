@@ -397,6 +397,9 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
         "omschrijving": "Test Omschrijving 1",
         "vertrouwelijkheidaanduiding": "openbaar",
+        "beginGeldigheid": "2020-12-01",
+        "eindeGeldigheid": None,
+        "concept": False,
     }
 
     iot_2 = {
@@ -404,6 +407,9 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
         "omschrijving": "Test Omschrijving 2",
         "vertrouwelijkheidaanduiding": "geheim",
+        "beginGeldigheid": "2020-12-01",
+        "eindeGeldigheid": None,
+        "concept": False,
     }
 
     def setUp(self):

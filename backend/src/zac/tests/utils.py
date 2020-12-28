@@ -2,9 +2,8 @@ from typing import Any, Dict, List
 
 from requests_mock import Mocker
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
-
-from zgw.models import InformatieObjectType
 
 
 def mock_resource_get(m: Mocker, resource: dict) -> None:
@@ -28,7 +27,7 @@ def make_document_objects(
 
     # Make objects for all informatieobjecttypen
     informatieobjecttypen = {
-        iot["url"]: InformatieObjectType.from_raw(iot) for iot in informatieobjecttypen
+        iot["url"]: factory(InformatieObjectType, iot) for iot in informatieobjecttypen
     }
 
     # resolve relations

@@ -51,6 +51,9 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
         "omschrijving": "Test Omschrijving 1",
         "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        "beginGeldigheid": "2020-12-01",
+        "eindeGeldigheid": None,
+        "concept": False,
     }
 
     inhoud_1 = b"Test content 1"

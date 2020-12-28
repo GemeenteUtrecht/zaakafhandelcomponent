@@ -18,7 +18,13 @@ from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
-from ..services import find_zaak, get_document, get_informatieobjecttype, get_zaak
+from ..services import (
+    find_zaak,
+    get_document,
+    get_informatieobjecttype,
+    get_statussen,
+    get_zaak,
+)
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -32,6 +38,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakIdentificatieSerializer,
     ZaakSerializer,
+    ZaakStatusSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
 
@@ -218,16 +225,34 @@ class GetZakenView(views.APIView):
 # Backend-For-Frontend endpoints (BFF)
 
 
-class ZaakDetailView(views.APIView):
+class GetZaakMixin:
+    def get_object(self):
+        try:
+            zaak = find_zaak(**self.kwargs)
+        except ObjectDoesNotExist:
+            raise Http404("No zaak matches the given query.")
+        self.check_object_permissions(self.request, zaak)
+        return zaak
+
+
+class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakDetailSerializer
 
     def get(self, request, *args, **kwargs):
-        try:
-            zaak = find_zaak(**self.kwargs)
-        except ObjectDoesNotExist:
-            raise Http404("No zaak matches the given query.")
-        self.check_object_permissions(request, zaak)
+        zaak = self.get_object()
         serializer = self.serializer_class(instance=zaak)
+        return Response(serializer.data)
+
+
+class ZaakStatusesView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakStatusSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        statussen = get_statussen(zaak)
+        serializer = self.serializer_class(instance=statussen, many=True)
         return Response(serializer.data)
