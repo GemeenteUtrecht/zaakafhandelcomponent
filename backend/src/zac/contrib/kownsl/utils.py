@@ -4,7 +4,7 @@ API documentation utils.
 The internal API proxies to Kownsl, so we also point the API schema references to the
 Kownsl API spec.
 
-The Kownsl API spec inlines everythign - it doesn't yet make use of components. For that
+The Kownsl API spec inlines everything - it doesn't yet make use of components. For that
 reason, we currently need to hardcode the URLs rather than relying on operation IDs,
 for example. In the future, we'll be able to point to
 ``#/components/schemas/ReviewRequest`` for example.
