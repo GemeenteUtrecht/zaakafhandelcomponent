@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -61,6 +62,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
         cls.detail_url = reverse(
@@ -77,6 +80,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
+    @freeze_time("2020-12-26T12:00:00Z")
     def test_get_zaak_detail_indexed_in_es(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -101,14 +105,17 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "omschrijving": self.zaak["omschrijving"],
             "toelichting": self.zaak["toelichting"],
             "registratiedatum": self.zaak["registratiedatum"],
-            "startdatum": self.zaak["startdatum"],
+            "startdatum": "2020-12-25",
             "einddatum": None,
             "einddatumGepland": None,
-            "uiterlijkeEinddatumAfdoening": None,
+            "uiterlijkeEinddatumAfdoening": "2021-01-04",
             "vertrouwelijkheidaanduiding": "openbaar",
+            "deadline": "2021-01-04",
+            "deadlineProgress": 10.00,
         }
         self.assertEqual(response.json(), expected_response)
 
+    @freeze_time("2020-12-26T12:00:00Z")
     def test_not_indexed_in_es(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -134,11 +141,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "omschrijving": self.zaak["omschrijving"],
             "toelichting": self.zaak["toelichting"],
             "registratiedatum": self.zaak["registratiedatum"],
-            "startdatum": self.zaak["startdatum"],
+            "startdatum": "2020-12-25",
             "einddatum": None,
             "einddatumGepland": None,
-            "uiterlijkeEinddatumAfdoening": None,
+            "uiterlijkeEinddatumAfdoening": "2021-01-04",
             "vertrouwelijkheidaanduiding": "openbaar",
+            "deadline": "2021-01-04",
+            "deadlineProgress": 10.00,
         }
         self.assertEqual(response.json(), expected_response)
 

@@ -24,6 +24,8 @@ class Zaak(_Zaak):
         today = timezone.now().date()
         total_duration = (self.deadline - self.startdatum).days
         spent_duration = (today - self.startdatum).days
+        if spent_duration >= total_duration:
+            return 100.0
         return round(spent_duration / total_duration * 100, 2)
 
     @cached_property

@@ -156,6 +156,15 @@ class ZaakTypeSerializer(APIModelSerializer):
 
 class ZaakDetailSerializer(APIModelSerializer):
     zaaktype = ZaakTypeSerializer()
+    deadline = serializers.DateField(read_only=True)
+    deadline_progress = serializers.FloatField(
+        label=_("Progress towards deadline"),
+        read_only=True,
+        help_text=_(
+            "Value between 0-100, representing a percentage. 100 means the deadline "
+            "has been reached or exceeded."
+        ),
+    )
 
     class Meta:
         model = Zaak
@@ -172,6 +181,8 @@ class ZaakDetailSerializer(APIModelSerializer):
             "einddatum_gepland",
             "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
+            "deadline",
+            "deadline_progress",
         )
 
 
