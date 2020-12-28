@@ -2,8 +2,9 @@ import logging
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
+from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zds_client.client import get_operation_url
@@ -13,6 +14,7 @@ from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import get_client
 from .permissions import IsReviewUser
+from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ class BaseRequestView(APIView):
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
     _operation_id = NotImplemented
+    serializer_class = None  # this only serves to shut up drf-spectacular errors
 
     def get_object(self):
         client = get_client(self.request.user)
@@ -85,6 +88,7 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
+    @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
         review_request = self.get_object()
         review_users = [
@@ -114,58 +118,19 @@ class BaseRequestView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+@extend_schema_view(
+    post=remote_kownsl_create_schema(
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices"
+    ),
+)
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
 
+@extend_schema_view(
+    post=remote_kownsl_create_schema(
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals"
+    ),
+)
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
-
-
-import json
-from datetime import datetime
-
-import factory
-from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
-
-### Added a temporary endpoint for frontend dev ###
-from .tests.factories import (
-    AdviceFactory,
-    ApprovalFactory,
-    ReviewRequestFactory,
-    ZaakDocumentFactory,
-)
-
-
-class MockBaseReviewRequest(APIView):
-    permission_classes = (AllowAny,)
-    _operation_id = NotImplemented
-    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
-
-    def get(self, request):
-        zaak_documents = factory.build_batch(dict, 2, FACTORY_CLASS=ZaakDocumentFactory)
-        rr = factory.build(
-            dict, FACTORY_CLASS=ReviewRequestFactory, review_type=self._operation_id
-        )
-        reviews = factory.build_batch(
-            dict,
-            2,
-            FACTORY_CLASS=AdviceFactory
-            if self._operation_id == "advice"
-            else ApprovalFactory,
-        )
-        rr.update({"zaak_documents": zaak_documents, "reviews": reviews})
-
-        return Response(rr, status=200)
-
-    def post(self, request):
-        message = {"Message": "Great success"}
-        return Response(message, status=201)
-
-
-class MockAdviceRequestView(MockBaseReviewRequest):
-    _operation_id = "advice"
-
-
-class MockApprovalRequestView(MockBaseReviewRequest):
-    _operation_id = "approval"

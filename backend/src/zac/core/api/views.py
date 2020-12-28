@@ -37,6 +37,7 @@ from .utils import get_informatieobjecttypen_for_zaak
 
 
 class GetInformatieObjectTypenView(views.APIView):
+    schema = None
 
     # TODO: permissions checks on zaak - can this user read/mutate the zaak?
 
@@ -53,6 +54,7 @@ class GetInformatieObjectTypenView(views.APIView):
 
 class AddDocumentView(views.APIView):
     permission_classes = (permissions.IsAuthenticated, CanAddDocuments)
+    schema = None
 
     def get_serializer(self, *args, **kwargs):
         return AddDocumentSerializer(data=self.request.data)
@@ -110,6 +112,8 @@ class AddDocumentView(views.APIView):
 
 
 class GetDocumentInfoView(views.APIView):
+    schema = None
+
     def get(self, request: Request) -> Response:
         document_url = request.query_params.get("document")
         if not document_url:
@@ -127,6 +131,8 @@ class GetDocumentInfoView(views.APIView):
 
 
 class PostExtraInfoSubjectView(views.APIView):
+    schema = None
+
     @method_decorator(csrf_protect)
     def post(self, request: Request, **kwargs) -> Response:
         # Serialize data from request.query_params
@@ -163,6 +169,7 @@ class PostExtraInfoSubjectView(views.APIView):
 
 class AddZaakRelationView(views.APIView):
     permission_classes = (permissions.IsAuthenticated, CanAddRelations)
+    schema = None
 
     def get_serializer(self, *args, **kwargs):
         return AddZaakRelationSerializer(data=self.request.data)
@@ -196,6 +203,7 @@ class AddZaakRelationView(views.APIView):
 
 class GetZakenView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
+    schema = None
 
     def get(self, request: Request) -> Response:
         serializer = ZaakIdentificatieSerializer(data=request.query_params)
@@ -213,6 +221,7 @@ class GetZakenView(views.APIView):
 class ZaakDetailView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakDetailSerializer
 
     def get(self, request, *args, **kwargs):
         try:
@@ -220,5 +229,5 @@ class ZaakDetailView(views.APIView):
         except ObjectDoesNotExist:
             raise Http404("No zaak matches the given query.")
         self.check_object_permissions(request, zaak)
-        serializer = ZaakDetailSerializer(instance=zaak)
+        serializer = self.serializer_class(instance=zaak)
         return Response(serializer.data)

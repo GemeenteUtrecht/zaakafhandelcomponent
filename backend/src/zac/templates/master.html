@@ -42,6 +42,9 @@
                     {% nav_menu_item 'forms:select-form' _("Formulieren") %}
                     {% nav_menu_item 'accounts:authprofile-list' _("Autorisatieprofielen") %}
                     {% nav_menu_item 'admin:index' _("Admin") %}
+                    {% if request.user.is_staff %}
+                        {% nav_menu_item 'api-docs' _("API documentation") %}
+                    {% endif %}
                 </ul>
 
                 <div class="nav-panel__controls">

@@ -8,6 +8,8 @@ from .serializers import ProcessInstanceSerializer
 
 
 class ProcessInstanceFetchView(APIView):
+    schema = None
+
     def get(self, request: Request, *args, **kwargs):
         zaak_url = request.GET.get("zaak_url")
         if not zaak_url:
