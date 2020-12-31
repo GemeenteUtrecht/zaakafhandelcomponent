@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
@@ -9,12 +11,13 @@ from zgw_consumers.api_models.catalogi import (
     Eigenschap,
     EigenschapSpecificatie,
     InformatieObjectType,
+    ResultaatType,
     StatusType,
     ZaakType,
 )
 from zgw_consumers.api_models.constants import AardRelatieChoices
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
+from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zgw.models.zrc import Zaak
@@ -220,6 +223,20 @@ class ZaakStatusSerializer(APIModelSerializer):
         )
 
 
+class ResultaatTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = ResultaatType
+        fields = ("url", "omschrijving")
+
+
+class ResultaatSerializer(APIModelSerializer):
+    resultaattype = ResultaatTypeSerializer()
+
+    class Meta:
+        model = Resultaat
+        fields = ("url", "resultaattype", "toelichting")
+
+
 class EigenschapSpecificatieSerializer(APIModelSerializer):
     waardenverzameling = serializers.ListField(child=serializers.CharField())
     formaat = serializers.ChoiceField(
@@ -266,7 +283,7 @@ class ZaakEigenschapSerializer(APIModelSerializer):
             "value",
         )
 
-    def get_value(self, obj):
+    def get_value(self, obj) -> Any:
         return obj.get_waarde()
 
 
@@ -321,3 +338,16 @@ class ZaakDocumentSerializer(APIModelSerializer):
             },
         )
         return self.context["request"].build_absolute_uri(path)
+
+
+class RelatedZaakDetailSerializer(ZaakDetailSerializer):
+    status = ZaakStatusSerializer()
+    resultaat = ResultaatSerializer()
+
+    class Meta(ZaakDetailSerializer.Meta):
+        fields = ZaakDetailSerializer.Meta.fields + ("status", "resultaat")
+
+
+class RelatedZaakSerializer(serializers.Serializer):
+    aard_relatie = serializers.CharField()
+    zaak = RelatedZaakDetailSerializer()

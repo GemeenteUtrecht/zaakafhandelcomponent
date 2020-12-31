@@ -24,6 +24,7 @@ from ..services import (
     get_document,
     get_documenten,
     get_informatieobjecttype,
+    get_related_zaken,
     get_statussen,
     get_zaak,
     get_zaak_eigenschappen,
@@ -39,6 +40,7 @@ from .serializers import (
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
+    RelatedZaakSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -292,4 +294,22 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
         serializer = self.serializer_class(
             instance=filtered_documenten, many=True, context={"request": request}
         )
+        return Response(serializer.data)
+
+
+class RelatedZakenView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = RelatedZaakSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        related_zaken = [
+            {
+                "aard_relatie": aard_relatie,
+                "zaak": zaak,
+            }
+            for aard_relatie, zaak in get_related_zaken(zaak)
+        ]
+        serializer = self.serializer_class(instance=related_zaken, many=True)
         return Response(serializer.data)
