@@ -15,11 +15,13 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
-from zgw_consumers.api_models.constants import AardRelatieChoices
+from zgw_consumers.api_models.constants import AardRelatieChoices, RolTypes
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
+from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -351,3 +353,26 @@ class RelatedZaakDetailSerializer(ZaakDetailSerializer):
 class RelatedZaakSerializer(serializers.Serializer):
     aard_relatie = serializers.CharField()
     zaak = RelatedZaakDetailSerializer()
+
+
+class RolSerializer(APIModelSerializer):
+    name = serializers.CharField(source="get_name")
+    identificatie = serializers.CharField(source="get_identificatie")
+    betrokkene_type = serializers.ChoiceField(choices=RolTypes)
+    betrokkene_type_display = serializers.CharField(
+        source="get_betrokkene_type_display"
+    )
+
+    class Meta:
+        model = Rol
+        fields = (
+            "url",
+            "betrokkene_type",
+            "betrokkene_type_display",
+            "omschrijving",
+            "omschrijving_generiek",
+            "roltoelichting",
+            "registratiedatum",
+            "name",
+            "identificatie",
+        )
