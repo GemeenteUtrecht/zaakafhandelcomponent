@@ -4,9 +4,15 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
+from zgw_consumers.api_models.catalogi import (
+    EIGENSCHAP_FORMATEN,
+    Eigenschap,
+    EigenschapSpecificatie,
+    StatusType,
+    ZaakType,
+)
 from zgw_consumers.api_models.constants import AardRelatieChoices
-from zgw_consumers.api_models.zaken import Status
+from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zgw.models.zrc import Zaak
@@ -210,3 +216,53 @@ class ZaakStatusSerializer(APIModelSerializer):
             "statustoelichting",
             "statustype",
         )
+
+
+class EigenschapSpecificatieSerializer(APIModelSerializer):
+    waardenverzameling = serializers.ListField(child=serializers.CharField())
+    formaat = serializers.ChoiceField(
+        choices=list(EIGENSCHAP_FORMATEN.keys()),
+        label=_("data type"),
+    )
+
+    class Meta:
+        model = EigenschapSpecificatie
+        fields = (
+            "groep",
+            "formaat",
+            "lengte",
+            "kardinaliteit",
+            "waardenverzameling",
+        )
+
+
+class EigenschapSerializer(APIModelSerializer):
+    specificatie = EigenschapSpecificatieSerializer(label=_("property definition"))
+
+    class Meta:
+        model = Eigenschap
+        fields = (
+            "url",
+            "naam",
+            "toelichting",
+            "specificatie",
+        )
+
+
+class ZaakEigenschapSerializer(APIModelSerializer):
+    value = serializers.SerializerMethodField(
+        label=_("property value"),
+        help_text=_("The backing data type depens on the eigenschap format."),
+    )
+    eigenschap = EigenschapSerializer()
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = (
+            "url",
+            "eigenschap",
+            "value",
+        )
+
+    def get_value(self, obj):
+        return obj.get_waarde()

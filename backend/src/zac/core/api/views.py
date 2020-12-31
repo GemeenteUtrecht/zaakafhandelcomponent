@@ -24,6 +24,7 @@ from ..services import (
     get_informatieobjecttype,
     get_statussen,
     get_zaak,
+    get_zaak_eigenschappen,
 )
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
@@ -36,6 +37,7 @@ from .serializers import (
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
     ZaakDetailSerializer,
+    ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
@@ -255,4 +257,16 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
         serializer = self.serializer_class(instance=statussen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakEigenschappenView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakEigenschapSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        eigenschappen = get_zaak_eigenschappen(zaak)
+        serializer = self.serializer_class(instance=eigenschappen, many=True)
         return Response(serializer.data)
