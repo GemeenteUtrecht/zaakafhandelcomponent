@@ -17,12 +17,15 @@ import { TooltipComponent } from './elements/tooltip/tooltip.component';
 import { FileComponent } from './components/file/file.component';
 import { FileUploadComponent } from './components/file-upload/file-upload.component';
 import { SuccessComponent } from './components/success/success.component';
+import { CollapsibleComponent } from './elements/collapsible/collapsible.component';
+import { ProgressBarComponent } from './elements/progress-bar/progress-bar.component';
 
 @NgModule({
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule],
   declarations: [
     ButtonComponent,
     ChipComponent,
+    CollapsibleComponent,
     FileComponent,
     FileUploadComponent,
     LoadingIndicatorComponent,
@@ -30,10 +33,12 @@ import { SuccessComponent } from './components/success/success.component';
     TableComponent,
     TooltipComponent,
     SuccessComponent,
+    ProgressBarComponent,
   ],
   exports: [
     ButtonComponent,
     ChipComponent,
+    CollapsibleComponent,
     FileComponent,
     FileUploadComponent,
     LoadingIndicatorComponent,
@@ -41,6 +46,7 @@ import { SuccessComponent } from './components/success/success.component';
     TableComponent,
     TooltipComponent,
     SuccessComponent,
+    ProgressBarComponent,
   ],
 })
 export class SharedUiComponentsModule {}

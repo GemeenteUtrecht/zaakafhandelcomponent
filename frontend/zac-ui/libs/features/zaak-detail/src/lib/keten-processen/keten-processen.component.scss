@@ -1,0 +1,19 @@
+.keten-processen {
+  &__actie-buttons-container {
+    margin-bottom: 2.4rem;
+  }
+  &__taken {
+    .taak {
+      padding-bottom: 2rem;
+      margin-bottom: 2.4rem;
+      border-bottom: 1px solid lightgrey;
+      &:last-child {
+        margin-bottom: 0;
+        border: none;
+      }
+    }
+    .taak__buttons * {
+      margin-right: 1rem;
+    }
+  }
+}

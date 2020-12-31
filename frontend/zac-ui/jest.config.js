@@ -6,5 +6,6 @@ module.exports = {
     '<rootDir>/libs/shared/ui/styling',
     '<rootDir>/libs/shared/data-access/services',
     '<rootDir>/libs/shared/utils',
+    '<rootDir>/libs/features/zaak-detail',
   ],
 };

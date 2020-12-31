@@ -1,0 +1,37 @@
+.status {
+  .timeline {
+    position: relative;
+    &__item {
+      display: flex;
+      &:before {
+        content: "";
+        display: block;
+        margin-left: 10px;
+        margin-right: -12px;
+        border-left: 2px solid #FFF5CC;
+      }
+      &--last {
+        &:before {
+          content: none;
+        }
+      }
+    }
+    &__item-left {
+      display: flex;
+      padding-bottom: 0.6rem;
+    }
+    &__item-nr {
+      position: relative;
+      z-index: 2;
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      background: #FFF5CC;
+      font-weight: 600;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 3rem;
+    }
+  }
+}

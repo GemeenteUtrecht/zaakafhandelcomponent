@@ -40,6 +40,9 @@ p {
   &.p--bold {
     font-weight: bold;
   }
+  &.p--marginsmall {
+    margin-bottom: 1rem;
+  }
   &.p--nomargin {
     margin-bottom: 0;
   }

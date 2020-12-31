@@ -1,0 +1,25 @@
+@import './base/colors/colors';
+
+.collapsible {
+  border: 1px solid $border-grey;
+  padding: 0.7rem 1.2rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  .mat-icon {
+    color: $color-blue;
+    font-size: 3rem;
+    margin-right: 5px;
+  }
+  p {
+    margin: 0;
+    &.p--bold {
+      margin-bottom: 0.3rem;
+    }
+    &.p--grey {
+      color: dimgray;
+    }
+  }
+}

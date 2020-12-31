@@ -1,6 +1,6 @@
 export interface CellData {
   cellData: object;
-  expandData: string;
+  expandData?: string;
 }
 
 export interface Table {
