@@ -8,10 +8,12 @@ from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
     Eigenschap,
     EigenschapSpecificatie,
+    InformatieObjectType,
     StatusType,
     ZaakType,
 )
 from zgw_consumers.api_models.constants import AardRelatieChoices
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
@@ -266,3 +268,56 @@ class ZaakEigenschapSerializer(APIModelSerializer):
 
     def get_value(self, obj):
         return obj.get_waarde()
+
+
+class DocumentTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = InformatieObjectType
+        fields = (
+            "url",
+            "omschrijving",
+        )
+
+
+class ZaakDocumentSerializer(APIModelSerializer):
+    download_url = serializers.SerializerMethodField(
+        label=_("ZAC download URL"),
+        help_text=_(
+            "The download URL for the end user. Will serve the file as attachment."
+        ),
+    )
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        source="get_vertrouwelijkheidaanduiding_display"
+    )
+    informatieobjecttype = DocumentTypeSerializer()
+
+    class Meta:
+        model = Document
+        fields = (
+            "url",
+            "auteur",
+            "identificatie",
+            "beschrijving",
+            "bestandsnaam",
+            "locked",
+            "informatieobjecttype",
+            "titel",
+            "vertrouwelijkheidaanduiding",
+            "bestandsomvang",
+            "download_url",
+        )
+        extra_kwargs = {
+            "bestandsomvang": {
+                "help_text": _("File size in bytes"),
+            }
+        }
+
+    def get_download_url(self, obj) -> str:
+        path = reverse(
+            "core:download-document",
+            kwargs={
+                "bronorganisatie": obj.bronorganisatie,
+                "identificatie": obj.identificatie,
+            },
+        )
+        return self.context["request"].build_absolute_uri(path)

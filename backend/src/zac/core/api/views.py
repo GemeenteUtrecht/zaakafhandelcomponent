@@ -14,6 +14,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
+from zac.contrib.kownsl.api import get_review_requests
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
@@ -21,11 +22,13 @@ from ..models import CoreConfig
 from ..services import (
     find_zaak,
     get_document,
+    get_documenten,
     get_informatieobjecttype,
     get_statussen,
     get_zaak,
     get_zaak_eigenschappen,
 )
+from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -37,6 +40,7 @@ from .serializers import (
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
     ZaakDetailSerializer,
+    ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
     ZaakSerializer,
@@ -269,4 +273,23 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
         eigenschappen = get_zaak_eigenschappen(zaak)
         serializer = self.serializer_class(instance=eigenschappen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakDocumentsView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakDocumentSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+
+        review_requests = get_review_requests(zaak)
+        doc_versions = get_source_doc_versions(review_requests)
+        documents, gone = get_documenten(zaak, doc_versions)
+        filtered_documenten = filter_documenten_for_permissions(documents, request.user)
+
+        serializer = self.serializer_class(
+            instance=filtered_documenten, many=True, context={"request": request}
+        )
         return Response(serializer.data)

@@ -1,5 +1,5 @@
-from itertools import chain, groupby
-from typing import Any, Dict, List, Optional
+from itertools import groupby
+from typing import Any, Dict, List
 
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
@@ -51,7 +51,11 @@ from ..services import (
     get_zaken_es,
 )
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .utils import filter_documenten_for_permissions, get_zaak_from_query
+from .utils import (
+    filter_documenten_for_permissions,
+    get_source_doc_versions,
+    get_zaak_from_query,
+)
 
 
 class Index(PermissionRequiredMixin, BaseListView):
@@ -124,7 +128,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
 
         # get the advice versions - the minimal versions are needed
         # for the documents table
-        doc_versions = self.get_source_doc_versions(review_requests)
+        doc_versions = get_source_doc_versions(review_requests)
         self._set_advice_documents(review_requests)
 
         with parallel() as executor:
@@ -165,20 +169,6 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
         )
 
         return context
-
-    @staticmethod
-    def get_source_doc_versions(
-        review_requests: List[ReviewRequest],
-    ) -> Optional[Dict[str, int]]:
-        advices = list(chain(*[rr.advices for rr in review_requests if rr.advices]))
-        all_documents = sum((advice.documents for advice in advices), [])
-        sort_key = lambda ad: ad.document  # noqa
-        all_documents = sorted(all_documents, key=sort_key)
-        doc_versions = {
-            document_url: min(doc.source_version for doc in docs)
-            for document_url, docs in groupby(all_documents, key=sort_key)
-        }
-        return doc_versions
 
     @staticmethod
     def _set_advice_documents(review_requests: List[ReviewRequest]):

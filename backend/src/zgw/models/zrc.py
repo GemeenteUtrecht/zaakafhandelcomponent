@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from django.utils import timezone
 from django.utils.functional import cached_property
 
+from zgw_consumers.api_models.base import ZGWModel
 from zgw_consumers.api_models.zaken import Zaak as _Zaak
 
 
@@ -27,3 +28,14 @@ class Zaak(_Zaak):
         if spent_duration >= total_duration:
             return 100.0
         return round(spent_duration / total_duration * 100, 2)
+
+
+@dataclass
+class ZaakInformatieObject(ZGWModel):
+    url: str
+    zaak: str
+    informatieobject: str
+    aard_relatie_weergave: str
+    titel: str
+    beschrijving: str
+    registratiedatum: datetime.datetime
