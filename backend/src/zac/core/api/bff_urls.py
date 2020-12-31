@@ -5,6 +5,7 @@ from .views import (
     ZaakDetailView,
     ZaakDocumentsView,
     ZaakEigenschappenView,
+    ZaakObjectsView,
     ZaakRolesView,
     ZaakStatusesView,
 )
@@ -39,5 +40,10 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/roles",
         ZaakRolesView.as_view(),
         name="zaak-roles",
+    ),
+    path(
+        "cases/<str:bronorganisatie>/<str:identificatie>/objects",
+        ZaakObjectsView.as_view(),
+        name="zaak-objects",
     ),
 ]

@@ -1,5 +1,6 @@
 import base64
 from datetime import date
+from itertools import groupby
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -29,8 +30,10 @@ from ..services import (
     get_statussen,
     get_zaak,
     get_zaak_eigenschappen,
+    get_zaakobjecten,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
+from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -47,6 +50,7 @@ from .serializers import (
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
+    ZaakObjectGroupSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
 )
@@ -326,4 +330,33 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
         rollen = get_rollen(zaak)
         serializer = self.serializer_class(instance=rollen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakObjectsView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakObjectGroupSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        zaakobjecten = get_zaakobjecten(zaak.url)
+
+        def group_key(zo):
+            if zo.object_type == "overige":
+                return zo.object_type_overige
+            return zo.object_type
+
+        # re-group by type
+        groups = []
+        zaakobjecten = sorted(zaakobjecten, key=group_key)
+        grouped = groupby(zaakobjecten, key=group_key)
+        for _group, items in grouped:
+            group = GROUPS.get(
+                _group, ZaakObjectGroup(object_type=_group, label=_group)
+            )
+            group.retrieve_items(items)
+            groups.append(group)
+
+        serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)

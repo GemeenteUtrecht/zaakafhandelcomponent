@@ -20,10 +20,10 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
+from ..zaakobjecten import ZaakObjectGroup
 from .utils import (
     CSMultipleChoiceField,
     ValidExpandChoices,
@@ -376,3 +376,18 @@ class RolSerializer(APIModelSerializer):
             "name",
             "identificatie",
         )
+
+
+class ZaakObjectGroupSerializer(APIModelSerializer):
+    items = serializers.ListField(
+        child=serializers.JSONField(),
+        help_text=_(
+            "Collection of object-type specific items. "
+            "The schema is determined by the usptream API(s). "
+            "See `zac.core.zaakobjecten` for the available implementations."
+        ),
+    )
+
+    class Meta:
+        model = ZaakObjectGroup
+        fields = ("object_type", "label", "items")
