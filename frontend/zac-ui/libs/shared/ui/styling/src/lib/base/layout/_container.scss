@@ -4,8 +4,15 @@
   padding: 2rem 0;
 }
 
-.container-content {
-  @include media-breakpoint-up(md) {
-    max-width: 800px
+.container {
+  &--small {
+    @include media-breakpoint-up(md) {
+      max-width: 800px;
+    }
+  }
+  &--max {
+    @include media-breakpoint-up(md) {
+      max-width: 1200px;
+    }
   }
 }

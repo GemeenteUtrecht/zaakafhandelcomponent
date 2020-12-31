@@ -8,7 +8,7 @@ import { Table } from '@gu/models';
 })
 export class TableComponent {
 
-  @Input() expandable = true;
+  @Input() expandable = false;
   @Input() tableData: Table;
 
   constructor() { }
