@@ -4,12 +4,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 
 import requests_mock
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.catalogi import ResultaatType, StatusType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import Resultaat, Status
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -26,13 +27,11 @@ from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 
 
-@requests_mock.Mocker()
-class ZaakDocumentsResponseTests(APITestCase):
+class RelatedCasesResponseTests(APITestCase):
     """
-    Test the API response body for zaak-documents endpoint.
+    Test the API response body for zaak-related-cases endpoint.
     """
 
     @classmethod
@@ -43,7 +42,6 @@ class ZaakDocumentsResponseTests(APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -56,14 +54,59 @@ class ZaakDocumentsResponseTests(APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.documenttype = generate_oas_component(
+        related_zaaktype = generate_oas_component(
             "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-            omschrijving="bijlage",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/743b3537-f458-47ef-a1c5-2aa50e4e1563",
+            identificatie="ZT2",
             catalogus=catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
+        related_statustype = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            zaaktype=related_zaaktype["url"],
+            volgnummer=1,
+        )
+        related_resultaattype = generate_oas_component(
+            "ztc",
+            "schemas/ResultaatType",
+            url=f"{CATALOGI_ROOT}resultaattypen/362b23eb-d8a9-486f-b236-8adb58ebc18f",
+            zaaktype=related_zaaktype["url"],
+            omschrijving="geannuleerd",
+        )
+
+        related_zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/3fa0292f-f03a-4b30-8ff5-fad60fdd21a1",
+            identificatie="ZAAK-2020-0011",
+            bronorganisatie="123456782",
+            zaaktype=related_zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            startdatum="2021-01-01",
+            uiterlijkeEinddatumAfdoening="2021-01-21",
+            status=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            resultaat=f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
+        )
+        related_status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            zaak=related_zaak["url"],
+            statustype=related_statustype["url"],
+            datumStatusGezet="2021-01-01T00:00:00Z",
+            statustoelichting="",
+        )
+        related_resultaat = generate_oas_component(
+            "zrc",
+            "schemas/Resultaat",
+            url=f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
+            zaak=related_zaak["url"],
+            resultaattype=related_resultaattype["url"],
+        )
+
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -72,36 +115,38 @@ class ZaakDocumentsResponseTests(APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            startdatum="2020-12-25",
-            uiterlijkeEinddatumAfdoening="2021-01-04",
-        )
-        cls.document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            identificatie="DOC-2020-007",
-            bronorganisatie="123456782",
-            informatieobjecttype=cls.documenttype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            bestandsomvang=10,
+            relevanteAndereZaken=[
+                {
+                    "aardRelatie": "bijdrage",
+                    "url": related_zaak["url"],
+                }
+            ],
         )
 
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
-        document = factory(Document, cls.document)
-        document.informatieobjecttype = factory(InformatieObjectType, cls.documenttype)
+        related_zaak = factory(Zaak, related_zaak)
+        related_zaak.zaaktype = factory(ZaakType, related_zaaktype)
+        related_zaak.status = factory(Status, related_status)
+        related_zaak.status.statustype = factory(StatusType, related_statustype)
+        related_zaak.resultaat = factory(Resultaat, related_resultaat)
+        related_zaak.resultaat.resultaattype = factory(
+            ResultaatType, related_resultaattype
+        )
+
+        cls.related_zaak = related_zaak
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[]
-        )
-        cls.get_documenten_patcher = patch(
-            "zac.core.api.views.get_documenten", return_value=([document], [])
+        cls.get_related_zaken_patcher = patch(
+            "zac.core.api.views.get_related_zaken",
+            return_value=[
+                (zaak.relevante_andere_zaken[0]["aard_relatie"], related_zaak)
+            ],
         )
 
         cls.endpoint = reverse(
-            "zaak-documents",
+            "zaak-related",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -114,62 +159,82 @@ class ZaakDocumentsResponseTests(APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
-
-        self.get_documenten_patcher.start()
-        self.addCleanup(self.get_documenten_patcher.stop)
+        self.get_related_zaken_patcher.start()
+        self.addCleanup(self.get_related_zaken_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_get_zaak_documents(self, m):
-        download_url = reverse(
-            "core:download-document",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "DOC-2020-007",
-            },
-        )
-
+    @freeze_time("2021-01-11T12:00:00Z")
+    def test_get_related_cases(self):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
             {
-                "url": self.document["url"],
-                "auteur": self.document["auteur"],
-                "identificatie": "DOC-2020-007",
-                "beschrijving": self.document["beschrijving"],
-                "bestandsnaam": self.document["bestandsnaam"],
-                "locked": False,
-                "informatieobjecttype": {
-                    "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                    "omschrijving": "bijlage",
+                "aardRelatie": "bijdrage",
+                "zaak": {
+                    "url": f"{ZAKEN_ROOT}zaken/3fa0292f-f03a-4b30-8ff5-fad60fdd21a1",
+                    "identificatie": "ZAAK-2020-0011",
+                    "bronorganisatie": "123456782",
+                    "zaaktype": {
+                        "url": f"{CATALOGI_ROOT}zaaktypen/743b3537-f458-47ef-a1c5-2aa50e4e1563",
+                        "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                        "omschrijving": self.related_zaak.zaaktype.omschrijving,
+                        "versiedatum": self.related_zaak.zaaktype.versiedatum.isoformat(),
+                    },
+                    "omschrijving": self.related_zaak.omschrijving,
+                    "toelichting": self.related_zaak.toelichting,
+                    "registratiedatum": self.related_zaak.registratiedatum.isoformat(),
+                    "startdatum": self.related_zaak.startdatum.isoformat(),
+                    "einddatum": None,
+                    "einddatumGepland": None,
+                    "uiterlijkeEinddatumAfdoening": "2021-01-21",
+                    "vertrouwelijkheidaanduiding": "beperkt_openbaar",
+                    "deadline": "2021-01-21",
+                    "deadlineProgress": 50.00,
+                    "status": {
+                        "url": f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+                        "datumStatusGezet": "2021-01-01T00:00:00Z",
+                        "statustoelichting": "",
+                        "statustype": {
+                            "url": f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+                            "omschrijving": self.related_zaak.status.statustype.omschrijving,
+                            "omschrijvingGeneriek": self.related_zaak.status.statustype.omschrijving_generiek,
+                            "statustekst": self.related_zaak.status.statustype.statustekst,
+                            "volgnummer": 1,
+                            "isEindstatus": self.related_zaak.status.statustype.is_eindstatus,
+                        },
+                    },
+                    "resultaat": {
+                        "url": f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
+                        "toelichting": self.related_zaak.resultaat.toelichting,
+                        "resultaattype": {
+                            "url": f"{CATALOGI_ROOT}resultaattypen/362b23eb-d8a9-486f-b236-8adb58ebc18f",
+                            "omschrijving": "geannuleerd",
+                        },
+                    },
                 },
-                "titel": self.document["titel"],
-                "vertrouwelijkheidaanduiding": "Openbaar",
-                "bestandsomvang": 10,
-                "downloadUrl": f"http://testserver{download_url}",
             }
         ]
+        self.maxDiff = None
         self.assertEqual(response_data, expected)
 
-    def test_no_documents(self, m):
-        with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
+    def test_no_related(self):
+        with patch("zac.core.api.views.get_related_zaken", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
-    def test_not_found(self, m):
+    def test_not_found(self):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
+class RelatedCasesPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -204,15 +269,12 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[]
-        )
-        cls.get_documenten_patcher = patch(
-            "zac.core.api.views.get_documenten", return_value=([], [])
+        cls.get_related_zaken_patcher = patch(
+            "zac.core.api.views.get_related_zaken", return_value=[]
         )
 
         cls.endpoint = reverse(
-            "zaak-documents",
+            "zaak-related",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -225,11 +287,8 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
-
-        self.get_documenten_patcher.start()
-        self.addCleanup(self.get_documenten_patcher.stop)
+        self.get_related_zaken_patcher.start()
+        self.addCleanup(self.get_related_zaken_patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.get(self.endpoint)

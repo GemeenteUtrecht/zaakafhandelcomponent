@@ -317,6 +317,7 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
             }
             for aard_relatie, zaak in get_related_zaken(zaak)
         ]
+
         serializer = self.serializer_class(instance=related_zaken, many=True)
         return Response(serializer.data)
 
