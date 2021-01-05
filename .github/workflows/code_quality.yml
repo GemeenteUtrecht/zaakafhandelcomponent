@@ -6,6 +6,7 @@ on:
     branches:
       - master
     tags:
+      - '*'
     paths:
       - 'backend/**.py'
   pull_request:
