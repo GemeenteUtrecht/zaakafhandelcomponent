@@ -13,7 +13,14 @@
             <mat-icon aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
           </button>
         </td>
-        <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">{{ cell.value }}</td>
+        <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
+          <ng-template [ngIf]="isString(cell.value)">
+            {{ cell.value }}
+          </ng-template>
+          <ng-template [ngIf]="isObject(cell.value) && cell.value">
+            <a class="anchor" [href]="cell.value.link">{{ cell.value.title }}</a>
+          </ng-template>
+        </td>
       </tr>
       <tr *ngIf="expandable" class="child-row">
         <td colspan="10">{{ element.expandData }}</td>

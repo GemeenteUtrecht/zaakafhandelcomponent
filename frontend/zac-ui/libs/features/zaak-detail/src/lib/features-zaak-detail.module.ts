@@ -9,6 +9,7 @@ import { KetenProcessenComponent } from './keten-processen/keten-processen.compo
 import { GerelateerdeZakenComponent } from './gerelateerde-zaken/gerelateerde-zaken.component';
 import { GerelateerdeObjectenComponent } from './gerelateerde-objecten/gerelateerde-objecten.component';
 import { DocumentenComponent } from './documenten/documenten.component';
+import { AdviserenAccorderenComponent } from './adviseren-accorderen/adviseren-accorderen.component';
 
 @NgModule({
   imports: [
@@ -23,7 +24,8 @@ import { DocumentenComponent } from './documenten/documenten.component';
     KetenProcessenComponent,
     GerelateerdeZakenComponent,
     GerelateerdeObjectenComponent,
-    DocumentenComponent
+    DocumentenComponent,
+    AdviserenAccorderenComponent
   ],
   exports: [FeaturesZaakDetailComponent]
 })
