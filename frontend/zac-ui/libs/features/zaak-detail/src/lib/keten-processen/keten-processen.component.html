@@ -1,29 +1,37 @@
 <div class="keten-processen card">
   <h3>Actieve (keten)processen</h3>
-  <div class="keten-processen__actie-buttons-container">
-    <gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2">Advies vragen</gu-button>
-    <gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2">Akkoord vragen</gu-button>
-    <gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2">BBV vragen</gu-button>
-    <gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2">Annuleer behandeling</gu-button>
-    <gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2">Start digitale ondertekening</gu-button>
-  </div>
-  <div class="keten-processen__taken">
-    <h4>Taken</h4>
-    <div class="taak">
-      <p class="p--marginsmall d-inline-block">Bepalen resultaat</p>
-      <label class="label label--date">2 november 2020</label>
-      <div class="taak__buttons">
-        <gu-button type="secondary">Claimen</gu-button>
-        <gu-button type="secondary">Uitvoeren</gu-button>
-      </div>
+  <ng-template [ngIf]="(!data) && (isLoading)">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-template>
+  <ng-template [ngIf]="data">
+    <div class="keten-processen__actie-buttons-container">
+      <gu-button
+        (click)="sendMessage(message)"
+        *ngFor="let message of data[0].messages"
+        type="primary" size="small" class="d-inline-block mr-2 mb-2">
+        {{message}}
+      </gu-button>
     </div>
-    <div class="taak">
-      <p class="p--marginsmall d-inline-block">Adviesvraag configureren</p>
-      <label class="label label--date">2 november 2020</label>
-      <div class="taak__buttons">
-        <gu-button type="secondary">Claimen</gu-button>
-        <gu-button type="secondary">Uitvoeren</gu-button>
+    <div class="keten-processen__taken">
+      <h4>Taken</h4>
+      <div class="taak" *ngFor="let task of data[0].tasks">
+        <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
+        <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+        <div class="taak__buttons">
+          <gu-button type="secondary">Claimen</gu-button>
+          <gu-button type="secondary" (click)="redirect(task.executeUrl)">Uitvoeren</gu-button>
+        </div>
       </div>
+      <div class="taak" *ngFor="let subProcess of data[0].subProcesses">
+        <p class="p--marginsmall p--bold d-inline-block">{{subProcess.tasks[0].name}}</p>
+        <label class="label label--date">{{subProcess.tasks[0].created | date:'fullDate'}}</label>
+        <p class="p--marginsmall d-block">{{subProcess.tasks[0].assignee.username}}</p>
+        <div class="taak__buttons">
+          <gu-button type="secondary">Claimen</gu-button>
+          <gu-button type="secondary" (click)="redirect(subProcess.tasks[0].executeUrl)">Uitvoeren</gu-button>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </ng-template>
 </div>

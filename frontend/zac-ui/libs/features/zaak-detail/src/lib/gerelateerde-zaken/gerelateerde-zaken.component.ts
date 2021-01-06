@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Table } from '@gu/models';
+import { ApplicationHttpClient } from '@gu/services';
+import { ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
+import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
 
 @Component({
   selector: 'gu-gerelateerde-zaken',
@@ -9,32 +14,57 @@ import { Table } from '@gu/models';
 export class GerelateerdeZakenComponent implements OnInit {
 
   tableData: Table = {
-    headData: ['Status', 'Zaak ID', 'Behandelaar', 'Resultaat', 'Aard'],
-    elementData: [
-      {
-       cellData: {
-         status: "Ontvangen",
-         zaakId: "2020-0000003594",
-         behandelaar: "John Doe",
-         resultaat: "Goed",
-         aard: "Bijdrage"
-       }
-      },
-      {
-        cellData: {
-          status: "Ontvangen",
-          zaakId: "2020-0000003594",
-          behandelaar: "John Doe",
-          resultaat: "Goed",
-          aard: "Bijdrage"
-        }
-      }
-    ]
+    headData: ['Status', 'Zaak ID', 'Resultaat', 'Aard'],
+    elementData: []
   }
 
-  constructor() { }
+  data: any;
+  isLoading = true;
+  bronorganisatie: string;
+  identificatie: string;
+
+  constructor(
+    private http: ApplicationHttpClient,
+    private route: ActivatedRoute
+  ) {
+    this.route.paramMap.subscribe( params => {
+      this.bronorganisatie = params.get('bronorganisatie');
+      this.identificatie = params.get('identificatie');
+    });
+  }
 
   ngOnInit(): void {
+    this.isLoading = true;
+    this.getRelatedCases().subscribe( data => {
+      console.log(data);
+      this.formatTableData(data)
+      this.isLoading = false;
+    }, error => {
+      console.log(error);
+      this.isLoading = false;
+    })
+  }
+
+  getRelatedCases(): Observable<HttpResponse<any>> {
+    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
+    return this.http.Get<ReviewRequest>(endpoint);
+  }
+
+  formatTableData(data){
+    this.tableData.elementData = data.map( element => {
+      console.log(element.zaak.url);
+      return {
+        cellData: {
+          status: element.zaak.status.statustype.omschrijving,
+          zaakId: {
+            title: element.zaak.identificatie,
+            link: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
+          },
+          resultaat: element.zaak.resultaat,
+          aard: element.aardRelatie,
+        }
+      }
+    })
   }
 
 }

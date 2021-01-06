@@ -1,54 +1,22 @@
 <div class="informatie card">
-  <ng-template [ngIf]="!data">
+  <ng-template [ngIf]="(!infoData || !propertiesData) && (isLoading)">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-template>
-  <ng-template [ngIf]="data">
+  <ng-template [ngIf]="infoData && propertiesData">
     <h3>Zaak informatie</h3>
     <div class="informatie__details">
-      <p class="informatie__nummer p--marginsmall d-inline-block">{{data.identificatie}}</p>
+      <p class="informatie__nummer p--marginsmall d-inline-block">{{identificatie}}</p>
       <gu-chip type="tertiary" class="d-inline-block">Zaakvertrouwelijk</gu-chip>
     </div>
-    <p class="p--marginsmall p--bold">{{data.omschrijving}}</p>
-    <p>{{data.toelichting ? data.toelichting : '(geen toelichting)'}}</p>
+    <p class="p--marginsmall p--bold">{{infoData.omschrijving}}</p>
+    <p>{{infoData.toelichting ? infoData.toelichting : '(geen toelichting)'}}</p>
     <div class="zaak-detail__contact-gegevens">
-      <div class="row">
+      <div class="row" *ngFor="let prop of propertiesData;">
         <div class="col-5">
-          <p class="p--bold p--marginsmall">E-mail:</p>
+          <p class="p--bold p--marginsmall">{{prop.eigenschap.naam}}:</p>
         </div>
         <div class="col-7">
-          <p class="p--marginsmall">eenlangemailadres@gemeenteutrecht.nl</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-5">
-          <p class="p--bold p--marginsmall">Telefoonnummer:</p>
-        </div>
-        <div class="col-7">
-          <p class="p--marginsmall">0612341234</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-5">
-          <p class="p--bold p--marginsmall">Thema:</p>
-        </div>
-        <div class="col-7">
-          <p class="p--marginsmall">Ruimtelijke ordening</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-5">
-          <p class="p--bold p--marginsmall">Beleidsveld:</p>
-        </div>
-        <div class="col-7">
-          <p class="p--marginsmall">Erfgoed</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-5">
-          <p class="p--bold p--marginsmall">Geo:</p>
-        </div>
-        <div class="col-7">
-          <p class="p--marginsmall">Binnenstad</p>
+          <p class="p--marginsmall">{{prop.value}}</p>
         </div>
       </div>
     </div>

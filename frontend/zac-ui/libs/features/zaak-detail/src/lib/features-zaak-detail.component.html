@@ -5,16 +5,26 @@
       <div class="card-container">
         <div class="row">
           <div class="col-12 col-md-4">
-            <gu-informatie *ngIf="data" [data]="data" class="zaak-detail__section"></gu-informatie>
+            <gu-informatie
+              *ngIf="data"
+              [infoData]="data"
+              class="zaak-detail__section">
+            </gu-informatie>
             <gu-betrokkenen class="zaak-detail__section"></gu-betrokkenen>
+            <gu-adviseren-accorderen class="zaak-detail__section"></gu-adviseren-accorderen>
           </div>
           <div class="col-12 col-md-8">
             <gu-status
               *ngIf="data"
               [progress]="data.deadlineProgress"
               [deadline]="data.deadline"
-              class="zaak-detail__section"></gu-status>
-            <gu-keten-processen class="zaak-detail__section"></gu-keten-processen>
+              class="zaak-detail__section">
+            </gu-status>
+            <gu-keten-processen
+              *ngIf="data"
+              [zaakUrl]="data.url"
+              class="zaak-detail__section">
+            </gu-keten-processen>
             <gu-gerelateerde-zaken class="zaak-detail__section"></gu-gerelateerde-zaken>
 <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
             <gu-documenten class="zaak-detail__section"></gu-documenten>

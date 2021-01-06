@@ -37,4 +37,11 @@ export class TableComponent {
     }
   }
 
+  isString(value) {
+    return typeof value === 'string';
+  }
+
+  isObject(value) {
+    return typeof value === 'object';
+  }
 }

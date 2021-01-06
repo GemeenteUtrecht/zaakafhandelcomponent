@@ -34,7 +34,6 @@ export class StatusComponent implements OnInit {
 
   ngOnInit(): void {
     this.getStatuses().subscribe(data => {
-      console.log(data);
       this.data = data;
     }, error => {
       console.log(error);
