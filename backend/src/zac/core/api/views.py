@@ -12,10 +12,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
-from zac.contrib.kownsl.api import get_review_requests
+from zac.contrib.kownsl.api import (
+    get_review_requests,
+    retrieve_advices,
+    retrieve_approvals,
+)
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
@@ -51,6 +56,8 @@ from .serializers import (
     ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
     ZaakObjectGroupSerializer,
+    ZaakRevReqCompletedSerializer,
+    ZaakRevReqDetailSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
 )
@@ -293,6 +300,16 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
 
         review_requests = get_review_requests(zaak)
+
+        with parallel() as executor:
+            _advices = executor.map(
+                lambda rr: retrieve_advices(rr) if rr else [],
+                [rr if rr.num_advices else None for rr in review_requests],
+            )
+
+            for rr, rr_advices, rr_approvals in zip(review_requests, _advices):
+                rr.advices = rr_advices
+
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
         filtered_documenten = filter_documenten_for_permissions(documents, request.user)
@@ -360,4 +377,44 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
             groups.append(group)
 
         serializer = self.serializer_class(instance=groups, many=True)
+        return Response(serializer.data)
+
+
+class ZaakReviewRequestCompletedView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakRevReqCompletedSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        review_requests = get_review_requests(zaak)
+        serializer = self.serializer_class(instance=review_requests, many=True)
+        return Response(serializer.data)
+
+
+class ZaakReviewRequestDetailView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakRevReqDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        review_requests = get_review_requests(zaak)
+        with parallel() as executor:
+            _advices = executor.map(
+                lambda rr: retrieve_advices(rr) if rr else [],
+                [rr if rr.num_advices else None for rr in review_requests],
+            )
+            _approvals = executor.map(
+                lambda rr: retrieve_approvals(rr) if rr else [],
+                [rr if rr.num_approvals else None for rr in review_requests],
+            )
+
+            for rr, rr_advices, rr_approvals in zip(
+                review_requests, _advices, _approvals
+            ):
+                rr.advices = rr_advices
+                rr.approvals = rr_approvals
+
+        serializer = self.serializer_class(instance=review_requests, many=True)
         return Response(serializer.data)
