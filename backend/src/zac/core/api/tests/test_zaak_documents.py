@@ -143,7 +143,7 @@ class ZaakDocumentsResponseTests(APITestCase):
                 "identificatie": "DOC-2020-007",
                 "beschrijving": self.document["beschrijving"],
                 "bestandsnaam": self.document["bestandsnaam"],
-                "locked": False,
+                "locked": self.document["locked"],
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
                     "omschrijving": "bijlage",
