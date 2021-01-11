@@ -56,8 +56,6 @@ from .serializers import (
     ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
     ZaakObjectGroupSerializer,
-    ZaakRevReqCompletedSerializer,
-    ZaakRevReqDetailSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
 )
@@ -307,7 +305,7 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
                 [rr if rr.num_advices else None for rr in review_requests],
             )
 
-            for rr, rr_advices, rr_approvals in zip(review_requests, _advices):
+            for rr, rr_advices in zip(review_requests, _advices):
                 rr.advices = rr_advices
 
         doc_versions = get_source_doc_versions(review_requests)
@@ -377,44 +375,4 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
             groups.append(group)
 
         serializer = self.serializer_class(instance=groups, many=True)
-        return Response(serializer.data)
-
-
-class ZaakReviewRequestCompletedView(GetZaakMixin, views.APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakRevReqCompletedSerializer
-
-    def get(self, request, *args, **kwargs):
-        zaak = self.get_object()
-        review_requests = get_review_requests(zaak)
-        serializer = self.serializer_class(instance=review_requests, many=True)
-        return Response(serializer.data)
-
-
-class ZaakReviewRequestDetailView(GetZaakMixin, views.APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakRevReqDetailSerializer
-
-    def get(self, request, *args, **kwargs):
-        zaak = self.get_object()
-        review_requests = get_review_requests(zaak)
-        with parallel() as executor:
-            _advices = executor.map(
-                lambda rr: retrieve_advices(rr) if rr else [],
-                [rr if rr.num_advices else None for rr in review_requests],
-            )
-            _approvals = executor.map(
-                lambda rr: retrieve_approvals(rr) if rr else [],
-                [rr if rr.num_approvals else None for rr in review_requests],
-            )
-
-            for rr, rr_advices, rr_approvals in zip(
-                review_requests, _advices, _approvals
-            ):
-                rr.advices = rr_advices
-                rr.approvals = rr_approvals
-
-        serializer = self.serializer_class(instance=review_requests, many=True)
         return Response(serializer.data)
