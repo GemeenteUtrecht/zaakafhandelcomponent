@@ -260,6 +260,10 @@ class PerformTaskView(PermissionRequiredMixin, FormSetMixin, UserTaskMixin, Form
         }
 
         formset_vars = formset.get_process_variables() if formset else {}
+        if "kownslFrontendUrl" in formset_vars:
+            formset_vars["kownslFrontendUrl"] = self.request.build_absolute_uri(
+                formset_vars["kownslFrontendUrl"]
+            )
 
         variables = {
             "services": services,
