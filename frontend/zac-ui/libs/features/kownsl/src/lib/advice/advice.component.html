@@ -1,4 +1,5 @@
 <div class="kownsl__container">
+  <h1 class="">Advies gevraagd</h1>
   <ng-template [ngIf]="uuid && !submitSuccess">
     <!-- Loading -->
     <ng-template [ngIf]="!adviceData && isLoading">
@@ -13,7 +14,6 @@
     <!-- Main content -->
     <ng-template [ngIf]="!!adviceData && !isLoading">
       <section>
-        <h1 class="">Advies gevraagd</h1>
         <div class="row no-gutters">
           <div class="col-4">
             <p class="p p--bold">Ingediend op:</p>

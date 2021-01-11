@@ -1,4 +1,9 @@
 <div class="documenten card">
   <h3>Documenten</h3>
-  <gu-table [tableData]="tableData"></gu-table>
+  <ng-container *ngIf="!data && isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <ng-container *ngIf="data && !isLoading">
+    <gu-table [tableData]="tableData"></gu-table>
+  </ng-container>
 </div>

@@ -15,7 +15,7 @@ export class GerelateerdeZakenComponent implements OnInit {
 
   tableData: Table = {
     headData: ['Status', 'Zaak ID', 'Resultaat', 'Aard'],
-    elementData: []
+    tableData: []
   }
 
   data: any;
@@ -36,8 +36,8 @@ export class GerelateerdeZakenComponent implements OnInit {
   ngOnInit(): void {
     this.isLoading = true;
     this.getRelatedCases().subscribe( data => {
-      console.log(data);
       this.formatTableData(data)
+      this.data = data;
       this.isLoading = false;
     }, error => {
       console.log(error);
@@ -51,14 +51,15 @@ export class GerelateerdeZakenComponent implements OnInit {
   }
 
   formatTableData(data){
-    this.tableData.elementData = data.map( element => {
+    this.tableData.tableData = data.map( element => {
       console.log(element.zaak.url);
       return {
         cellData: {
           status: element.zaak.status.statustype.omschrijving,
           zaakId: {
-            title: element.zaak.identificatie,
-            link: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
+            type: 'link',
+            value: element.zaak.identificatie,
+            url: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
           resultaat: element.zaak.resultaat,
           aard: element.aardRelatie,

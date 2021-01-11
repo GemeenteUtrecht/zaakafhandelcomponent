@@ -9,7 +9,7 @@ import { Table } from '@gu/models';
 export class AdviserenAccorderenComponent implements OnInit {
   tableData: Table = {
     headData: ['Type', 'Opgehaald'],
-    elementData: [
+    tableData: [
       {
         cellData: {
           type: "Advies",

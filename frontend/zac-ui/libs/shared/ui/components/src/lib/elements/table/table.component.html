@@ -6,7 +6,7 @@
     </tr>
   </thead>
   <tbody>
-    <ng-template ngFor let-element [ngForOf]="tableData.elementData">
+    <ng-template ngFor let-element [ngForOf]="tableData.tableData">
       <tr class="parent-row">
         <td *ngIf="expandable" class="table-expand">
           <button class="table-expand__button" (click)="expandRow($event)">
@@ -14,13 +14,21 @@
           </button>
         </td>
         <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
-          <ng-template [ngIf]="isString(cell.value)">
+          <ng-container *ngIf="isString(cell.value); else extensiveCell">
             {{ cell.value }}
-          </ng-template>
-          <ng-template [ngIf]="isObject(cell.value) && cell.value">
-            <a class="anchor" [href]="cell.value.link">{{ cell.value.title }}</a>
+          </ng-container>
+          <ng-template #extensiveCell>
+            <ng-container [ngSwitch]="checkCellType(cell.value)">
+              <ng-container *ngSwitchCase="'link'">
+                <a class="anchor" [href]="cell.value['url']">{{ cell.value['value'] }}</a>
+              </ng-container>
+              <ng-container *ngSwitchCase="'icon'">
+                <mat-icon>{{cell.value['value']}}</mat-icon>
+              </ng-container>
+            </ng-container>
           </ng-template>
         </td>
+
       </tr>
       <tr *ngIf="expandable" class="child-row">
         <td colspan="10">{{ element.expandData }}</td>

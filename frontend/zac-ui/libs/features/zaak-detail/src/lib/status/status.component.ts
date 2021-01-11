@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
-import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -33,15 +32,18 @@ export class StatusComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.getStatuses().subscribe(data => {
       this.data = data;
+      this.isLoading = false;
     }, error => {
       console.log(error);
+      this.isLoading = false;
     })
   }
 
   getStatuses(): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/statuses`);
-    return this.http.Get<ReviewRequest>(endpoint);
+    return this.http.Get<any>(endpoint);
   }
 }
