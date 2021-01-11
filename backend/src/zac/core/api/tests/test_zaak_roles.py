@@ -19,6 +19,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.core.permissions import zaken_inzien
+from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -27,10 +28,9 @@ CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 
-@requests_mock.Mocker()
-class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
+class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
     """
-    Test the API response body for zaak-statuses endpoint.
+    Test the API response body for zaak-detail endpoint.
     """
 
     @classmethod
@@ -53,20 +53,6 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.statustype_1 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=1,
-        )
-        cls.statustype_2 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/486f83e6-f841-462c-aa3b-f3d0f4d72870",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=2,
-        )
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -75,6 +61,8 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
         zaak = factory(Zaak, cls.zaak)
@@ -83,7 +71,7 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
 
         cls.endpoint = reverse(
-            "zaak-statuses",
+            "zaak-roles",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -99,74 +87,64 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_no_statuses(self, m):
-        with patch("zac.core.api.views.get_statussen", return_value=[]):
+    def test_get_zaak_rollen(self):
+        medewerker = generate_oas_component(
+            "zrc",
+            "schemas/RolMedewerker",
+            identificatie="some-username",
+            achternaam="Orange",
+            voorletters="W.",
+            voorvoegselAchternaam="van",
+        )
+
+        _rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=f"{CATALOGI_ROOT}roltypen/a28646d7-d0dd-4d6a-a747-7e882fb3e750",
+            betrokkeneIdentificatie=medewerker,
+        )
+
+        rol = factory(Rol, _rol)
+
+        with patch("zac.core.api.views.get_rollen", return_value=[rol]):
+            response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        expected = [
+            {
+                "url": rol.url,
+                "betrokkeneType": "medewerker",
+                "betrokkeneTypeDisplay": "Medewerker",
+                "omschrijving": rol.omschrijving,
+                "omschrijvingGeneriek": rol.omschrijving_generiek,
+                "roltoelichting": rol.roltoelichting,
+                "registratiedatum": rol.registratiedatum.isoformat().replace(
+                    "+00:00", "Z"
+                ),
+                "name": "W. van Orange",
+                "identificatie": "some-username",
+            }
+        ]
+        self.assertEqual(response_data, expected)
+
+    def test_no_roles(self):
+        with patch("zac.core.api.views.get_rollen", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
-    def test_multiple_statuses(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        status_1 = generate_oas_component(
-            "zrc",
-            "schemas/Status",
-            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
-            zaak=self.zaak["url"],
-            statustype=self.statustype_1["url"],
-            datumStatusGezet="2020-12-25T00:00:00Z",
-        )
-        status_2 = generate_oas_component(
-            "zrc",
-            "schemas/Status",
-            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
-            zaak=self.zaak["url"],
-            statustype=self.statustype_2["url"],
-            datumStatusGezet="2020-12-26T00:00:00Z",
-        )
-        m.get(
-            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
-            json=paginated_response([self.statustype_1, self.statustype_2]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}statussen?zaak={self.zaak['url']}",
-            json=paginated_response([status_1, status_2]),
-        )
-
-        response = self.client.get(self.endpoint)
-
-        response_data = response.json()
-        self.assertEqual(len(response_data), 2)
-        self.assertEqual(response_data[0]["datumStatusGezet"], "2020-12-26T00:00:00Z")
-        self.assertEqual(response_data[0]["statustype"]["volgnummer"], 2)
-
-        self.assertEqual(response_data[1]["datumStatusGezet"], "2020-12-25T00:00:00Z")
-        self.assertEqual(response_data[1]["statustype"]["volgnummer"], 1)
-
-        self.assertEqual(
-            set(response_data[0].keys()),
-            {"url", "datumStatusGezet", "statustoelichting", "statustype"},
-        )
-        self.assertEqual(
-            set(response_data[0]["statustype"].keys()),
-            {
-                "url",
-                "omschrijving",
-                "omschrijvingGeneriek",
-                "statustekst",
-                "volgnummer",
-                "isEindstatus",
-            },
-        )
-
-    def test_not_found(self, m):
+    def test_not_found(self):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
+class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -185,20 +163,6 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.statustype_1 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=1,
-        )
-        cls.statustype_2 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/486f83e6-f841-462c-aa3b-f3d0f4d72870",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=2,
-        )
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -207,18 +171,18 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_statuses_patcher = patch(
-            "zac.core.api.views.get_statussen", return_value=[]
-        )
+        cls.get_rollen_patcher = patch("zac.core.api.views.get_rollen", return_value=[])
 
         cls.endpoint = reverse(
-            "zaak-statuses",
+            "zaak-roles",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -231,8 +195,8 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_statuses_patcher.start()
-        self.addCleanup(self.get_statuses_patcher.stop)
+        self.get_rollen_patcher.start()
+        self.addCleanup(self.get_rollen_patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.get(self.endpoint)

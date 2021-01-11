@@ -20,7 +20,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -28,9 +28,9 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 
 @requests_mock.Mocker()
-class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
+class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
     """
-    Test the API response body for zaak-statuses endpoint.
+    Test the API response body for zaak-detail endpoint.
     """
 
     @classmethod
@@ -53,19 +53,18 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.statustype_1 = generate_oas_component(
+        cls.eigenschap = generate_oas_component(
             "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            "schemas/Eigenschap",
             zaaktype=cls.zaaktype["url"],
-            volgnummer=1,
-        )
-        cls.statustype_2 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/486f83e6-f841-462c-aa3b-f3d0f4d72870",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=2,
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -75,6 +74,8 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
         zaak = factory(Zaak, cls.zaak)
@@ -83,7 +84,7 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
 
         cls.endpoint = reverse(
-            "zaak-statuses",
+            "zaak-properties",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -99,65 +100,55 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_no_statuses(self, m):
-        with patch("zac.core.api.views.get_statussen", return_value=[]):
-            response = self.client.get(self.endpoint)
-
-        self.assertEqual(response.data, [])
-
-    def test_multiple_statuses(self, m):
+    def test_get_zaak_eigenschappen(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        status_1 = generate_oas_component(
-            "zrc",
-            "schemas/Status",
-            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
-            zaak=self.zaak["url"],
-            statustype=self.statustype_1["url"],
-            datumStatusGezet="2020-12-25T00:00:00Z",
-        )
-        status_2 = generate_oas_component(
-            "zrc",
-            "schemas/Status",
-            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
-            zaak=self.zaak["url"],
-            statustype=self.statustype_2["url"],
-            datumStatusGezet="2020-12-26T00:00:00Z",
-        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
         m.get(
-            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
-            json=paginated_response([self.statustype_1, self.statustype_2]),
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.eigenschap]),
         )
-        m.get(
-            f"{ZAKEN_ROOT}statussen?zaak={self.zaak['url']}",
-            json=paginated_response([status_1, status_2]),
+        eigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            zaak=self.zaak["url"],
+            eigenschap=self.eigenschap["url"],
+            naam=self.eigenschap["naam"],
+            waarde="bar",
         )
+        m.get(f"{self.zaak['url']}/zaakeigenschappen", json=[eigenschap])
 
         response = self.client.get(self.endpoint)
 
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        self.assertEqual(len(response_data), 2)
-        self.assertEqual(response_data[0]["datumStatusGezet"], "2020-12-26T00:00:00Z")
-        self.assertEqual(response_data[0]["statustype"]["volgnummer"], 2)
 
-        self.assertEqual(response_data[1]["datumStatusGezet"], "2020-12-25T00:00:00Z")
-        self.assertEqual(response_data[1]["statustype"]["volgnummer"], 1)
-
-        self.assertEqual(
-            set(response_data[0].keys()),
-            {"url", "datumStatusGezet", "statustoelichting", "statustype"},
-        )
-        self.assertEqual(
-            set(response_data[0]["statustype"].keys()),
+        expected = [
             {
-                "url",
-                "omschrijving",
-                "omschrijvingGeneriek",
-                "statustekst",
-                "volgnummer",
-                "isEindstatus",
-            },
-        )
+                "url": eigenschap["url"],
+                "value": "bar",
+                "eigenschap": {
+                    "url": self.eigenschap["url"],
+                    "naam": "some-property",
+                    "toelichting": self.eigenschap["toelichting"],
+                    "specificatie": {
+                        "groep": "dummy",
+                        "formaat": "tekst",
+                        "lengte": "3",
+                        "kardinaliteit": "1",
+                        "waardenverzameling": [],
+                    },
+                },
+            }
+        ]
+        self.assertEqual(response_data, expected)
+
+    def test_no_properties(self, m):
+        with patch("zac.core.api.views.get_zaak_eigenschappen", return_value=[]):
+            response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.data, [])
 
     def test_not_found(self, m):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
@@ -166,7 +157,7 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
+class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -185,20 +176,6 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.statustype_1 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=1,
-        )
-        cls.statustype_2 = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=f"{CATALOGI_ROOT}statustypen/486f83e6-f841-462c-aa3b-f3d0f4d72870",
-            zaaktype=cls.zaaktype["url"],
-            volgnummer=2,
-        )
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -207,18 +184,20 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_statuses_patcher = patch(
-            "zac.core.api.views.get_statussen", return_value=[]
+        cls.get_eigenschappen_patcher = patch(
+            "zac.core.api.views.get_zaak_eigenschappen", return_value=[]
         )
 
         cls.endpoint = reverse(
-            "zaak-statuses",
+            "zaak-properties",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
@@ -231,8 +210,8 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_statuses_patcher.start()
-        self.addCleanup(self.get_statuses_patcher.stop)
+        self.get_eigenschappen_patcher.start()
+        self.addCleanup(self.get_eigenschappen_patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.get(self.endpoint)

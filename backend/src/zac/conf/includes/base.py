@@ -433,6 +433,10 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api",
     "TITLE": "ZAC BFF",
     "DESCRIPTION": "Internal backend-for-frontend API documentation.",
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
+    ],
     "TOS": None,
     # Optional: MAY contain "name", "url", "email"
     "CONTACT": {

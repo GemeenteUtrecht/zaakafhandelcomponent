@@ -1,5 +1,6 @@
 import base64
 from datetime import date
+from itertools import groupby
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -14,6 +15,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
+from zac.contrib.kownsl.api import get_review_requests
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
@@ -21,10 +23,17 @@ from ..models import CoreConfig
 from ..services import (
     find_zaak,
     get_document,
+    get_documenten,
     get_informatieobjecttype,
+    get_related_zaken,
+    get_rollen,
     get_statussen,
     get_zaak,
+    get_zaak_eigenschappen,
+    get_zaakobjecten,
 )
+from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
+from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -35,8 +44,13 @@ from .serializers import (
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
     InformatieObjectTypeSerializer,
+    RelatedZaakSerializer,
+    RolSerializer,
     ZaakDetailSerializer,
+    ZaakDocumentSerializer,
+    ZaakEigenschapSerializer,
     ZaakIdentificatieSerializer,
+    ZaakObjectGroupSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
 )
@@ -255,4 +269,95 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
         serializer = self.serializer_class(instance=statussen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakEigenschappenView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakEigenschapSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        eigenschappen = get_zaak_eigenschappen(zaak)
+        serializer = self.serializer_class(instance=eigenschappen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakDocumentsView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakDocumentSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+
+        review_requests = get_review_requests(zaak)
+        doc_versions = get_source_doc_versions(review_requests)
+        documents, gone = get_documenten(zaak, doc_versions)
+        filtered_documenten = filter_documenten_for_permissions(documents, request.user)
+
+        serializer = self.serializer_class(
+            instance=filtered_documenten, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+
+class RelatedZakenView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = RelatedZaakSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        related_zaken = [
+            {
+                "aard_relatie": aard_relatie,
+                "zaak": zaak,
+            }
+            for aard_relatie, zaak in get_related_zaken(zaak)
+        ]
+
+        serializer = self.serializer_class(instance=related_zaken, many=True)
+        return Response(serializer.data)
+
+
+class ZaakRolesView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = RolSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        rollen = get_rollen(zaak)
+        serializer = self.serializer_class(instance=rollen, many=True)
+        return Response(serializer.data)
+
+
+class ZaakObjectsView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakObjectGroupSerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        zaakobjecten = get_zaakobjecten(zaak.url)
+
+        def group_key(zo):
+            if zo.object_type == "overige":
+                return zo.object_type_overige
+            return zo.object_type
+
+        # re-group by type
+        groups = []
+        zaakobjecten = sorted(zaakobjecten, key=group_key)
+        grouped = groupby(zaakobjecten, key=group_key)
+        for _group, items in grouped:
+            group = GROUPS.get(
+                _group, ZaakObjectGroup(object_type=_group, label=_group)
+            )
+            group.retrieve_items(items)
+            groups.append(group)
+
+        serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)

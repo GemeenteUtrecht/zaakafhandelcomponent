@@ -1,16 +1,29 @@
+from typing import Any
+
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
-from zgw_consumers.api_models.constants import AardRelatieChoices
-from zgw_consumers.api_models.zaken import Status
+from zgw_consumers.api_models.catalogi import (
+    EIGENSCHAP_FORMATEN,
+    Eigenschap,
+    EigenschapSpecificatie,
+    InformatieObjectType,
+    ResultaatType,
+    StatusType,
+    ZaakType,
+)
+from zgw_consumers.api_models.constants import AardRelatieChoices, RolTypes
+from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
+from ..zaakobjecten import ZaakObjectGroup
 from .utils import (
     CSMultipleChoiceField,
     ValidExpandChoices,
@@ -210,3 +223,171 @@ class ZaakStatusSerializer(APIModelSerializer):
             "statustoelichting",
             "statustype",
         )
+
+
+class ResultaatTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = ResultaatType
+        fields = ("url", "omschrijving")
+
+
+class ResultaatSerializer(APIModelSerializer):
+    resultaattype = ResultaatTypeSerializer()
+
+    class Meta:
+        model = Resultaat
+        fields = ("url", "resultaattype", "toelichting")
+
+
+class EigenschapSpecificatieSerializer(APIModelSerializer):
+    waardenverzameling = serializers.ListField(child=serializers.CharField())
+    formaat = serializers.ChoiceField(
+        choices=list(EIGENSCHAP_FORMATEN.keys()),
+        label=_("data type"),
+    )
+
+    class Meta:
+        model = EigenschapSpecificatie
+        fields = (
+            "groep",
+            "formaat",
+            "lengte",
+            "kardinaliteit",
+            "waardenverzameling",
+        )
+
+
+class EigenschapSerializer(APIModelSerializer):
+    specificatie = EigenschapSpecificatieSerializer(label=_("property definition"))
+
+    class Meta:
+        model = Eigenschap
+        fields = (
+            "url",
+            "naam",
+            "toelichting",
+            "specificatie",
+        )
+
+
+class ZaakEigenschapSerializer(APIModelSerializer):
+    value = serializers.SerializerMethodField(
+        label=_("property value"),
+        help_text=_("The backing data type depens on the eigenschap format."),
+    )
+    eigenschap = EigenschapSerializer()
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = (
+            "url",
+            "eigenschap",
+            "value",
+        )
+
+    def get_value(self, obj) -> Any:
+        return obj.get_waarde()
+
+
+class DocumentTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = InformatieObjectType
+        fields = (
+            "url",
+            "omschrijving",
+        )
+
+
+class ZaakDocumentSerializer(APIModelSerializer):
+    download_url = serializers.SerializerMethodField(
+        label=_("ZAC download URL"),
+        help_text=_(
+            "The download URL for the end user. Will serve the file as attachment."
+        ),
+    )
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        source="get_vertrouwelijkheidaanduiding_display"
+    )
+    informatieobjecttype = DocumentTypeSerializer()
+
+    class Meta:
+        model = Document
+        fields = (
+            "url",
+            "auteur",
+            "identificatie",
+            "beschrijving",
+            "bestandsnaam",
+            "locked",
+            "informatieobjecttype",
+            "titel",
+            "vertrouwelijkheidaanduiding",
+            "bestandsomvang",
+            "download_url",
+        )
+        extra_kwargs = {
+            "bestandsomvang": {
+                "help_text": _("File size in bytes"),
+            }
+        }
+
+    def get_download_url(self, obj) -> str:
+        path = reverse(
+            "core:download-document",
+            kwargs={
+                "bronorganisatie": obj.bronorganisatie,
+                "identificatie": obj.identificatie,
+            },
+        )
+        return self.context["request"].build_absolute_uri(path)
+
+
+class RelatedZaakDetailSerializer(ZaakDetailSerializer):
+    status = ZaakStatusSerializer()
+    resultaat = ResultaatSerializer()
+
+    class Meta(ZaakDetailSerializer.Meta):
+        fields = ZaakDetailSerializer.Meta.fields + ("status", "resultaat")
+
+
+class RelatedZaakSerializer(serializers.Serializer):
+    aard_relatie = serializers.CharField()
+    zaak = RelatedZaakDetailSerializer()
+
+
+class RolSerializer(APIModelSerializer):
+    name = serializers.CharField(source="get_name")
+    identificatie = serializers.CharField(source="get_identificatie")
+    betrokkene_type = serializers.ChoiceField(choices=RolTypes)
+    betrokkene_type_display = serializers.CharField(
+        source="get_betrokkene_type_display"
+    )
+
+    class Meta:
+        model = Rol
+        fields = (
+            "url",
+            "betrokkene_type",
+            "betrokkene_type_display",
+            "omschrijving",
+            "omschrijving_generiek",
+            "roltoelichting",
+            "registratiedatum",
+            "name",
+            "identificatie",
+        )
+
+
+class ZaakObjectGroupSerializer(APIModelSerializer):
+    items = serializers.ListField(
+        child=serializers.JSONField(),
+        help_text=_(
+            "Collection of object-type specific items. "
+            "The schema is determined by the usptream API(s). "
+            "See `zac.core.zaakobjecten` for the available implementations."
+        ),
+    )
+
+    class Meta:
+        model = ZaakObjectGroup
+        fields = ("object_type", "label", "items")
