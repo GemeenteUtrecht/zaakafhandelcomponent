@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Table } from '@gu/models';
+import { ExtensiveCell, Table } from '@gu/models';
 
 @Component({
   selector: 'gu-table',
@@ -41,7 +41,12 @@ export class TableComponent {
     return typeof value === 'string';
   }
 
-  isObject(value) {
-    return typeof value === 'object';
+  checkCellType(value: ExtensiveCell | string) {
+
+    if (!!value) {
+      if (typeof value === 'object') {
+        return value.type;
+      }
+    }
   }
 }

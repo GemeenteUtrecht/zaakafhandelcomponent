@@ -3,7 +3,7 @@
   <ng-template [ngIf]="(!data) && (isLoading)">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-template>
-  <ng-template [ngIf]="data">
+  <ng-template [ngIf]="!!data && data.length > 0">
     <div class="keten-processen__actie-buttons-container">
       <gu-button
         (click)="sendMessage(message)"
