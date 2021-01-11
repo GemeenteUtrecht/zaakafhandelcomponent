@@ -73,7 +73,7 @@ jdcal==1.4.1              # via -r requirements/ci.txt, openpyxl
 jinja2==2.11.2            # via sphinx
 jsonschema==3.2.0         # via -r requirements/ci.txt, drf-spectacular
 kombu==4.6.4              # via -r requirements/ci.txt, celery
-lxml==4.5.0               # via -r requirements/ci.txt, pyquery
+lxml==4.6.2               # via -r requirements/ci.txt, pyquery
 markuppy==1.14            # via -r requirements/ci.txt, tablib
 markupsafe==1.1.1         # via jinja2
 more-itertools==7.2.0     # via -r requirements/ci.txt, zipp
