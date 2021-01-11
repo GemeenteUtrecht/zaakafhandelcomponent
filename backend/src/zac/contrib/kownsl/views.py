@@ -1,19 +1,32 @@
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.utils import extend_schema_view
-from rest_framework import status
+from rest_framework import authentication, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zds_client.client import get_operation_url
 from zgw_consumers.models import Service
 
+from zac.core.api.permissions import CanReadZaken
+from zac.core.api.views import GetZaakMixin
+from zac.core.services import get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
-from .api import get_client
+from .api import (
+    get_client,
+    get_review_request,
+    get_review_requests,
+    retrieve_advices,
+    retrieve_approvals,
+)
 from .permissions import IsReviewUser
+from .serializers import ZaakRevReqDetailSerializer, ZaakRevReqSummarySerializer
 from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
 
 logger = logging.getLogger(__name__)
@@ -134,3 +147,36 @@ class AdviceRequestView(BaseRequestView):
 )
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
+
+
+class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakRevReqSummarySerializer
+
+    def get(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        review_requests = get_review_requests(zaak)
+        serializer = self.serializer_class(instance=review_requests, many=True)
+        return Response(serializer.data)
+
+
+class ZaakReviewRequestDetailView(APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    serializer_class = ZaakRevReqDetailSerializer
+
+    def get(self, request, request_uuid, *args, **kwargs):
+        review_request = get_review_request(request_uuid)
+
+        try:
+            zaak = get_zaak(review_request.for_zaak)
+        except ObjectDoesNotExist:
+            raise Http404(f"No zaak is found for url: {review_request.for_zaak}.")
+
+        self.check_object_permissions(self.request, zaak)
+
+        review_request.advices = retrieve_advices(review_request)
+        review_request.approvals = retrieve_approvals(review_request)
+        serializer = self.serializer_class(instance=review_request)
+        return Response(serializer.data)

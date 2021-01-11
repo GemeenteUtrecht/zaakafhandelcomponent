@@ -7,6 +7,7 @@ from django.urls import reverse
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -92,6 +93,9 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+        cls.get_zaak_patcher = patch(
+            "zac.contrib.kownsl.views.get_zaak", return_value=zaak
+        )
 
         # can't use generate_oas_component because Kownsl API schema doesn't have components
         # so manually creating review request, author, advicedocument, advice
@@ -113,7 +117,11 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         review_request = factory(ReviewRequest, review_request)
 
         cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[review_request]
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[review_request],
+        )
+        cls.get_review_request_patcher = patch(
+            "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
 
         advice_document = {
@@ -138,25 +146,24 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         ]
         advices = factory(Advice, advices)
 
-        cls.get_review_requests_advices_patcher = patch(
-            "zac.core.api.views.retrieve_advices", return_value=advices
+        cls.get_advices_patcher = patch(
+            "zac.contrib.kownsl.views.retrieve_advices", return_value=advices
         )
-        cls.get_review_requests_approvals_patcher = patch(
-            "zac.core.api.views.retrieve_approvals", return_value=[]
+        cls.get_approvals_patcher = patch(
+            "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
         )
 
-        cls.endpoint_completed = reverse(
-            "zaak-review-requests-completed",
+        cls.endpoint_summary = reverse(
+            "kownsl:zaak-review-requests-summary",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
             },
         )
         cls.endpoint_detail = reverse(
-            "zaak-review-requests-detail",
+            "kownsl:zaak-review-requests-detail",
             kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "ZAAK-2020-0010",
+                "request_uuid": review_request.id,
             },
         )
 
@@ -166,20 +173,26 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
+        self.get_zaak_patcher.start()
+        self.addCleanup(self.get_zaak_patcher.stop)
+
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
 
-        self.get_review_requests_advices_patcher.start()
-        self.addCleanup(self.get_review_requests_advices_patcher.stop)
+        self.get_review_request_patcher.start()
+        self.addCleanup(self.get_review_request_patcher.stop)
 
-        self.get_review_requests_approvals_patcher.start()
-        self.addCleanup(self.get_review_requests_approvals_patcher.stop)
+        self.get_advices_patcher.start()
+        self.addCleanup(self.get_advices_patcher.stop)
+
+        self.get_approvals_patcher.start()
+        self.addCleanup(self.get_approvals_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_review_requests_completed(self, m):
-        response = self.client.get(self.endpoint_completed)
+        response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertEqual(
@@ -200,40 +213,44 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         response_data = response.json()
         self.assertEqual(
             response_data,
-            [
-                {
-                    "id": str(self._uuid),
-                    "reviewType": KownslTypes.advice,
-                    "reviews": [
-                        {
-                            "created": "2021-01-07T12:00:00Z",
-                            "author": {
-                                "firstName": "some-first-name",
-                                "lastName": "some-last-name",
-                            },
-                            "advice": "some-advice",
-                            "documents": [
-                                {
-                                    "document": self.document["url"],
-                                    "sourceVersion": 1,
-                                    "adviceVersion": 1,
-                                }
-                            ],
-                        }
-                    ],
-                }
-            ],
+            {
+                "id": str(self._uuid),
+                "reviewType": KownslTypes.advice,
+                "reviews": [
+                    {
+                        "created": "2021-01-07T12:00:00Z",
+                        "author": {
+                            "firstName": "some-first-name",
+                            "lastName": "some-last-name",
+                        },
+                        "advice": "some-advice",
+                        "documents": [
+                            {
+                                "document": self.document["url"],
+                                "sourceVersion": 1,
+                                "adviceVersion": 1,
+                            }
+                        ],
+                    }
+                ],
+            },
         )
 
+    def test_get_zaak_not_found(self, m):
+        with patch("zac.contrib.kownsl.views.get_zaak", side_effect=ObjectDoesNotExist):
+            response = self.client.get(self.endpoint_detail)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_no_review_requests(self, m):
-        with patch("zac.core.api.views.get_review_requests", return_value=[]):
-            response = self.client.get(self.endpoint_completed)
+        with patch("zac.contrib.kownsl.views.get_review_requests", return_value=[]):
+            response = self.client.get(self.endpoint_summary)
 
         self.assertEqual(response.data, [])
 
-    def test_zaak_not_found(self, m):
+    def test_find_zaak_not_found(self, m):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
-            response = self.client.get(self.endpoint_completed)
+            response = self.client.get(self.endpoint_summary)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -290,7 +307,11 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
+
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+        cls.get_zaak_patcher = patch(
+            "zac.contrib.kownsl.views.get_zaak", return_value=zaak
+        )
 
         # can't use generate_oas_component because Kownsl API schema doesn't have components
         # so manually creating review request, author, advicedocument, advice
@@ -312,7 +333,11 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         review_request = factory(ReviewRequest, review_request)
 
         cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[review_request]
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[review_request],
+        )
+        cls.get_review_request_patcher = patch(
+            "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
 
         advice_document = {
@@ -337,25 +362,24 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         ]
         advices = factory(Advice, advices)
 
-        cls.get_review_requests_advices_patcher = patch(
-            "zac.core.api.views.retrieve_advices", return_value=advices
+        cls.get_advices_patcher = patch(
+            "zac.contrib.kownsl.api.retrieve_advices", return_value=advices
         )
-        cls.get_review_requests_approvals_patcher = patch(
-            "zac.core.api.views.retrieve_approvals", return_value=[]
+        cls.get_approvals_patcher = patch(
+            "zac.contrib.kownsl.api.retrieve_approvals", return_value=[]
         )
 
-        cls.endpoint_completed = reverse(
-            "zaak-review-requests-completed",
+        cls.endpoint_summary = reverse(
+            "kownsl:zaak-review-requests-summary",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
             },
         )
         cls.endpoint_detail = reverse(
-            "zaak-review-requests-detail",
+            "kownsl:zaak-review-requests-detail",
             kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "ZAAK-2020-0010",
+                "request_uuid": review_request.id,
             },
         )
 
@@ -365,28 +389,34 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
+        self.get_zaak_patcher.start()
+        self.addCleanup(self.get_zaak_patcher.stop)
+
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
 
-        self.get_review_requests_advices_patcher.start()
-        self.addCleanup(self.get_review_requests_advices_patcher.stop)
+        self.get_review_request_patcher.start()
+        self.addCleanup(self.get_review_request_patcher.stop)
 
-        self.get_review_requests_approvals_patcher.start()
-        self.addCleanup(self.get_review_requests_approvals_patcher.stop)
+        self.get_advices_patcher.start()
+        self.addCleanup(self.get_advices_patcher.stop)
 
-    def test_rr_completed_not_authenticated(self):
-        response = self.client.get(self.endpoint_completed)
+        self.get_approvals_patcher.start()
+        self.addCleanup(self.get_approvals_patcher.stop)
+
+    def test_rr_summary_not_authenticated(self):
+        response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_rr_detail_not_authenticated(self):
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_rr_completed_authenticated_no_permissions(self):
+    def test_rr_summary_authenticated_no_permissions(self):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint_completed)
+        response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_rr_detail_authenticated_no_permissions(self):
@@ -408,8 +438,8 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_completed = self.client.get(self.endpoint_completed)
-        self.assertEqual(response_completed.status_code, status.HTTP_403_FORBIDDEN)
+        response_summary = self.client.get(self.endpoint_summary)
+        self.assertEqual(response_summary.status_code, status.HTTP_403_FORBIDDEN)
 
         response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
@@ -432,8 +462,8 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_completed = self.client.get(self.endpoint_completed)
-        self.assertEqual(response_completed.status_code, status.HTTP_403_FORBIDDEN)
+        response_summary = self.client.get(self.endpoint_summary)
+        self.assertEqual(response_summary.status_code, status.HTTP_403_FORBIDDEN)
 
         response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
@@ -456,8 +486,8 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_completed = self.client.get(self.endpoint_completed)
-        self.assertEqual(response_completed.status_code, status.HTTP_200_OK)
+        response_summmary = self.client.get(self.endpoint_summary)
+        self.assertEqual(response_summmary.status_code, status.HTTP_200_OK)
 
-        response_detail = self.client.get(self.endpoint_detail)
-        self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
+        # response_detail = self.client.get(self.endpoint_detail)
+        # self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
