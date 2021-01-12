@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zds_client.client import get_operation_url
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.core.api.permissions import CanReadZaken
@@ -171,12 +172,23 @@ class ZaakReviewRequestDetailView(APIView):
 
         try:
             zaak = get_zaak(review_request.for_zaak)
+
         except ObjectDoesNotExist:
             raise Http404(f"No zaak is found for url: {review_request.for_zaak}.")
 
         self.check_object_permissions(self.request, zaak)
 
-        review_request.advices = retrieve_advices(review_request)
-        review_request.approvals = retrieve_approvals(review_request)
+        with parallel() as executor:
+
+            review_request.advices = []
+            if review_request.num_advices:
+                _advices = executor.submit(retrieve_advices, review_request)
+                review_request.advices = _advices.result()
+
+            review_request.approvals = []
+            if review_request.num_approvals:
+                _approvals = executor.submit(retrieve_approvals, review_request)
+                review_request.approvals = _approvals.result()
+
         serializer = self.serializer_class(instance=review_request)
         return Response(serializer.data)

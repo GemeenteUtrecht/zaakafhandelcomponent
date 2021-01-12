@@ -76,6 +76,24 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
 
 
 @optional_service
+def get_review_request(uuid: str) -> Optional[ReviewRequest]:
+    client = get_client()
+    # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
+    # operation_id in the schema (yet?). Building the url and doing the request
+    # manually for now.
+    operation_id = "reviewrequest_retrieve"
+    try:
+        url = client.get_operation_url(client.schema, operation_id, **{"uuid": uuid})
+        result = client.request(url, operation_id)
+
+    except ClientError:
+        raise Http404(f"Review request with id {uuid} does not exist.")
+
+    review_request = factory(ReviewRequest, result)
+    return review_request
+
+
+@optional_service
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
     result = client.list("reviewrequest", query_params={"for_zaak": zaak.url})
@@ -85,23 +103,3 @@ def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     for review_request in review_requests:
         review_request.for_zaak = zaak
     return review_requests
-
-
-@optional_service
-def get_review_request(uuid: str) -> Optional[ReviewRequest]:
-    client = get_client()
-
-    # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
-    # operation_id in the schema (yet?). Building the url and doing the request
-    # manually for now.
-    try:
-        url = client.get_operation_url(
-            client.schema, "reviewrequest_retrieve", **{"uuid": uuid}
-        )
-        result = client.request(url)
-
-    except ClientError:
-        return Http404(f"Review request with id {uuid} does not exist.")
-
-    review_request = factory(ReviewRequest, result)
-    return review_request

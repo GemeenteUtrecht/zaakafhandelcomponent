@@ -11,8 +11,7 @@ from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.constants import APITypes
+from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
@@ -21,7 +20,9 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.kownsl.api import get_client
 from zac.contrib.kownsl.data import Advice, KownslTypes, ReviewRequest
+from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -47,6 +48,20 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        cls.kownsl_service = Service.objects.create(
+            label="Kownsl",
+            api_type=APITypes.orc,
+            api_root="https://kownsl.nl",
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
+            oas="https://kownsl.nl/api/v1",
+            user_id="zac",
+        )
+
+        config = KownslConfig.get_solo()
+        config.service = cls.kownsl_service
+        config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -116,12 +131,13 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         }
         review_request = factory(ReviewRequest, review_request)
 
+        cls.get_review_request_patcher = patch(
+            "zac.contrib.kownsl.views.get_review_request", return_value=review_request
+        )
+
         cls.get_review_requests_patcher = patch(
             "zac.contrib.kownsl.views.get_review_requests",
             return_value=[review_request],
-        )
-        cls.get_review_request_patcher = patch(
-            "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
 
         advice_document = {
@@ -179,9 +195,6 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
 
-        self.get_review_request_patcher.start()
-        self.addCleanup(self.get_review_request_patcher.stop)
-
         self.get_advices_patcher.start()
         self.addCleanup(self.get_advices_patcher.stop)
 
@@ -208,9 +221,11 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         )
 
     def test_get_zaak_review_requests_detail(self, m):
+        self.get_review_request_patcher.start()
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
+
         self.assertEqual(
             response_data,
             {
@@ -222,6 +237,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                         "author": {
                             "firstName": "some-first-name",
                             "lastName": "some-last-name",
+                            "username": self.user.username,
                         },
                         "advice": "some-advice",
                         "documents": [
@@ -235,23 +251,41 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 ],
             },
         )
+        self.get_review_request_patcher.stop()
+
+    def test_no_review_request(self, m):
+        mock_service_oas_get(
+            m, self.kownsl_service.api_root, "kownsl", oas_url=self.kownsl_service.oas
+        )
+
+        kownsl_client = get_client()
+        with patch.object(
+            kownsl_client, "get_operation_url", return_value="", create=True
+        ):
+            with patch.object(
+                kownsl_client, "request", side_effect=ClientError, create=True
+            ):
+                with patch(
+                    "zac.contrib.kownsl.api.get_client", return_value=kownsl_client
+                ):
+                    response = self.client.get(self.endpoint_detail)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_zaak_not_found(self, m):
+        self.get_review_request_patcher.start()
         with patch("zac.contrib.kownsl.views.get_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint_detail)
-
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.get_review_request_patcher.stop()
 
     def test_no_review_requests(self, m):
         with patch("zac.contrib.kownsl.views.get_review_requests", return_value=[]):
             response = self.client.get(self.endpoint_summary)
-
         self.assertEqual(response.data, [])
 
     def test_find_zaak_not_found(self, m):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint_summary)
-
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -263,6 +297,20 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        cls.kownsl_service = Service.objects.create(
+            label="Kownsl",
+            api_type=APITypes.orc,
+            api_root="https://kownsl.nl",
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
+            oas="https://kownsl.nl/api/v1",
+            user_id="zac",
+        )
+
+        config = KownslConfig.get_solo()
+        config.service = cls.kownsl_service
+        config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -316,8 +364,8 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         # can't use generate_oas_component because Kownsl API schema doesn't have components
         # so manually creating review request, author, advicedocument, advice
         cls._uuid = uuid.uuid4()
-        review_request = {
-            "id": cls._uuid,
+        cls.review_request_data = {
+            "id": str(cls._uuid),
             "created": "2021-01-07T12:00:00Z",
             "for_zaak": zaak.url,
             "review_type": KownslTypes.advice,
@@ -330,15 +378,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "user_deadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
             "requester": "some-other-user",
         }
-        review_request = factory(ReviewRequest, review_request)
-
-        cls.get_review_requests_patcher = patch(
-            "zac.contrib.kownsl.views.get_review_requests",
-            return_value=[review_request],
-        )
-        cls.get_review_request_patcher = patch(
-            "zac.contrib.kownsl.views.get_review_request", return_value=review_request
-        )
+        cls.review_request = factory(ReviewRequest, cls.review_request_data)
 
         advice_document = {
             "document": cls.document["url"],
@@ -360,7 +400,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
                 "documents": [advice_document],
             },
         ]
-        advices = factory(Advice, advices)
+        cls.advices = factory(Advice, advices)
 
         cls.get_advices_patcher = patch(
             "zac.contrib.kownsl.api.retrieve_advices", return_value=advices
@@ -379,7 +419,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         cls.endpoint_detail = reverse(
             "kownsl:zaak-review-requests-detail",
             kwargs={
-                "request_uuid": review_request.id,
+                "request_uuid": cls.review_request_data["id"],
             },
         )
 
@@ -391,18 +431,6 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.get_zaak_patcher.start()
         self.addCleanup(self.get_zaak_patcher.stop)
-
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
-
-        self.get_review_request_patcher.start()
-        self.addCleanup(self.get_review_request_patcher.stop)
-
-        self.get_advices_patcher.start()
-        self.addCleanup(self.get_advices_patcher.stop)
-
-        self.get_approvals_patcher.start()
-        self.addCleanup(self.get_approvals_patcher.stop)
 
     def test_rr_summary_not_authenticated(self):
         response = self.client.get(self.endpoint_summary)
@@ -438,10 +466,18 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_summary = self.client.get(self.endpoint_summary)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[self.review_request],
+        ):
+            response_summary = self.client.get(self.endpoint_summary)
         self.assertEqual(response_summary.status_code, status.HTTP_403_FORBIDDEN)
 
-        response_detail = self.client.get(self.endpoint_detail)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=self.review_request,
+        ):
+            response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -462,10 +498,18 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_summary = self.client.get(self.endpoint_summary)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[self.review_request],
+        ):
+            response_summary = self.client.get(self.endpoint_summary)
         self.assertEqual(response_summary.status_code, status.HTTP_403_FORBIDDEN)
 
-        response_detail = self.client.get(self.endpoint_detail)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=self.review_request,
+        ):
+            response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -486,8 +530,22 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response_summmary = self.client.get(self.endpoint_summary)
-        self.assertEqual(response_summmary.status_code, status.HTTP_200_OK)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[self.review_request],
+        ):
+            response_summary = self.client.get(self.endpoint_summary)
+        self.assertEqual(response_summary.status_code, status.HTTP_200_OK)
 
-        # response_detail = self.client.get(self.endpoint_detail)
-        # self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=self.review_request,
+        ):
+            with patch(
+                "zac.contrib.kownsl.views.retrieve_advices", return_value=self.advices
+            ):
+                with patch(
+                    "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
+                ):
+                    response_detail = self.client.get(self.endpoint_detail)
+        self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
