@@ -1,4 +1,4 @@
 export interface ApprovalForm {
-  approval: boolean | string;
-  explanation: string;
+  approved: boolean | string;
+  toelichting: string;
 }

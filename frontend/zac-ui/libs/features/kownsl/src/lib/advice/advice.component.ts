@@ -74,8 +74,8 @@ export class AdviceComponent implements OnInit {
         this.errorMessage = "U heeft deze aanvraag al beantwoord.";
       }
       this.isLoading = false;
-    }, error => {
-      this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
+    }, res => {
+      this.errorMessage = res.error.detail
       this.hasError = true;
       this.isLoading = false;
     })
