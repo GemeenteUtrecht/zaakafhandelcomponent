@@ -45,8 +45,8 @@ export class ApprovalComponent implements OnInit {
     if (this.uuid) {
       this.fetchApproval()
       this.approvalForm = this.fb.group({
-        approval: this.fb.control("", Validators.required),
-        explanation: this.fb.control("")
+        approved: this.fb.control("", Validators.required),
+        toelichting: this.fb.control("")
       })
     } else {
       this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
@@ -65,8 +65,8 @@ export class ApprovalComponent implements OnInit {
         this.errorMessage = "U heeft deze aanvraag al beantwoord.";
       }
       this.isLoading = false;
-    }, error => {
-      this.errorMessage = "Er is een fout opgetreden bij het ophalen van de details..."
+    }, res => {
+      this.errorMessage = res.error.detail;
       this.hasError = true;
       this.isLoading = false;
     })
@@ -99,8 +99,8 @@ export class ApprovalComponent implements OnInit {
 
   submitForm(): void {
     const formData: ApprovalForm = {
-      approval: this.approvalForm.controls['approval'].value,
-      explanation: this.approvalForm.controls['explanation'].value,
+      approved: this.approvalForm.controls['approved'].value,
+      toelichting: this.approvalForm.controls['toelichting'].value
     }
     this.postApproval(formData);
   }
