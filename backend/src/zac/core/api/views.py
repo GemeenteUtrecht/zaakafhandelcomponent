@@ -12,10 +12,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
-from zac.contrib.kownsl.api import get_review_requests
+from zac.contrib.kownsl.api import (
+    get_review_requests,
+    retrieve_advices,
+    retrieve_approvals,
+)
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
@@ -293,6 +298,16 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
         zaak = self.get_object()
 
         review_requests = get_review_requests(zaak)
+
+        with parallel() as executor:
+            _advices = executor.map(
+                lambda rr: retrieve_advices(rr) if rr else [],
+                [rr if rr.num_advices else None for rr in review_requests],
+            )
+
+            for rr, rr_advices in zip(review_requests, _advices):
+                rr.advices = rr_advices
+
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
         filtered_documenten = filter_documenten_for_permissions(documents, request.user)

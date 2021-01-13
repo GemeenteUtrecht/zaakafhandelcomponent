@@ -1,6 +1,8 @@
 from typing import List, Optional
 
-from zds_client.client import get_operation_url
+from django.http import Http404
+
+from zds_client.client import ClientError, get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
@@ -71,6 +73,24 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     client = get_client()
     result = client.list("approval", parent_lookup_request__uuid=review_request.id)
     return factory(Approval, result)
+
+
+@optional_service
+def get_review_request(uuid: str) -> Optional[ReviewRequest]:
+    client = get_client()
+    # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
+    # operation_id in the schema (yet?). Building the url and doing the request
+    # manually for now.
+    operation_id = "reviewrequest_retrieve"
+    try:
+        url = client.get_operation_url(client.schema, operation_id, **{"uuid": uuid})
+        result = client.request(url, operation_id)
+
+    except ClientError:
+        raise Http404(f"Review request with id {uuid} does not exist.")
+
+    review_request = factory(ReviewRequest, result)
+    return review_request
 
 
 @optional_service
