@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service

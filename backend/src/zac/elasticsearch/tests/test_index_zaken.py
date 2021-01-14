@@ -2,6 +2,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 import requests_mock
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -69,7 +70,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         self.assertEqual(zaak_document.identificatie, "ZAAK1")
         self.assertEqual(zaak_document.bronorganisatie, "002220647")
         self.assertEqual(zaak_document.zaaktype, zaaktype["url"])
-        self.assertEqual(zaak_document.va_order, 18)
+
+        choice = VertrouwelijkheidsAanduidingen.get_choice(
+            zaak["vertrouwelijkheidaanduiding"]
+        )
+        self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(zaak_document.rollen, [])
 
     def test_index_zaken_with_rollen(self, m):
@@ -148,7 +153,10 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         self.assertEqual(zaak_document.identificatie, "ZAAK1")
         self.assertEqual(zaak_document.bronorganisatie, "002220647")
         self.assertEqual(zaak_document.zaaktype, zaaktype["url"])
-        self.assertEqual(zaak_document.va_order, 18)
+        choice = VertrouwelijkheidsAanduidingen.get_choice(
+            zaak["vertrouwelijkheidaanduiding"]
+        )
+        self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(len(zaak_document.rollen), 2)
 
         rollen = zaak_document.rollen
@@ -232,7 +240,10 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         self.assertEqual(zaak_document.identificatie, "ZAAK1")
         self.assertEqual(zaak_document.bronorganisatie, "002220647")
         self.assertEqual(zaak_document.zaaktype, zaaktype["url"])
-        self.assertEqual(zaak_document.va_order, 18)
+        choice = VertrouwelijkheidsAanduidingen.get_choice(
+            zaak["vertrouwelijkheidaanduiding"]
+        )
+        self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(len(zaak_document.rollen), 2)
 
         rollen = zaak_document.rollen
