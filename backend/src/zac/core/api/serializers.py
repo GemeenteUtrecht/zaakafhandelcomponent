@@ -391,3 +391,9 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
     class Meta:
         model = ZaakObjectGroup
         fields = ("object_type", "label", "items")
+
+
+class ZaakTypeAggregateSerializer(serializers.Serializer):
+    omschrijving = serializers.CharField()
+    identificatie = serializers.CharField()
+    catalogus = serializers.URLField()

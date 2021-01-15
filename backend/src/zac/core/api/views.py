@@ -15,12 +15,9 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
-from zac.contrib.kownsl.api import (
-    get_review_requests,
-    retrieve_advices,
-    retrieve_approvals,
-)
+from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache
@@ -36,6 +33,7 @@ from ..services import (
     get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
+    get_zaaktypen,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
@@ -58,6 +56,7 @@ from .serializers import (
     ZaakObjectGroupSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
+    ZaakTypeAggregateSerializer,
 )
 from .utils import get_informatieobjecttypen_for_zaak
 
@@ -375,4 +374,31 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
             groups.append(group)
 
         serializer = self.serializer_class(instance=groups, many=True)
+        return Response(serializer.data)
+
+
+class ZaakTypenView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ZaakTypeAggregateSerializer
+
+    def get(self, request, *args, **kwargs):
+        # todo filters and pagination
+        zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
+
+        # aggregate
+        zaaktypen_data = [
+            {
+                "catalogus": zaaktype.catalogus,
+                "identificatie": zaaktype.identificatie,
+                "omschrijving": zaaktype.omschrijving,
+            }
+            for zaaktype in zaaktypen
+        ]
+        zaaktypen_aggregated = [
+            dict(z) for z in set(tuple(zaaktype.items()) for zaaktype in zaaktypen_data)
+        ]
+
+        serializer = self.serializer_class(zaaktypen_aggregated, many=True)
+
         return Response(serializer.data)
