@@ -1,6 +1,7 @@
 import base64
 from datetime import date
 from itertools import groupby
+from typing import List
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -8,6 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
+from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
@@ -37,6 +39,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .pagination import BffPagination
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -377,13 +380,27 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
-class ZaakTypenView(views.APIView):
+class ZaakTypenView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
+    pagination_class = BffPagination
 
-    def get(self, request, *args, **kwargs):
-        # todo filters and pagination
+    def get_queryset(self) -> List[dict]:
+        zaaktypen = self.get_zaaktypen()
+
+        # filtering on query params
+        q = self.request.query_params.get("q")
+        if q:
+            zaaktypen = [
+                zaaktype
+                for zaaktype in zaaktypen
+                if q.lower() in zaaktype["omschrijving"].lower()
+            ]
+
+        return zaaktypen
+
+    def get_zaaktypen(self) -> List[dict]:
         zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
 
         # aggregate
@@ -398,7 +415,7 @@ class ZaakTypenView(views.APIView):
         zaaktypen_aggregated = [
             dict(z) for z in set(tuple(zaaktype.items()) for zaaktype in zaaktypen_data)
         ]
-
-        serializer = self.serializer_class(zaaktypen_aggregated, many=True)
-
-        return Response(serializer.data)
+        zaaktypen_aggregated = sorted(
+            zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
+        )
+        return zaaktypen_aggregated

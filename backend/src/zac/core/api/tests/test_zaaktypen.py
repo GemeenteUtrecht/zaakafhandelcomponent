@@ -199,25 +199,31 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         )
 
         response = self.client.get(self.endpoint)
+        print(response.json())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data["results"]), 2)
         self.assertEqual(
             data,
-            [
-                {
-                    "omschrijving": "some zaaktype 1",
-                    "identificatie": "ZT1",
-                    "catalogus": CATALOGUS_URL,
-                },
-                {
-                    "omschrijving": "some zaaktype 2",
-                    "identificatie": "ZT2",
-                    "catalogus": CATALOGUS_URL,
-                },
-            ],
+            {
+                "count": 2,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "omschrijving": "some zaaktype 1",
+                        "identificatie": "ZT1",
+                        "catalogus": CATALOGUS_URL,
+                    },
+                    {
+                        "omschrijving": "some zaaktype 2",
+                        "identificatie": "ZT2",
+                        "catalogus": CATALOGUS_URL,
+                    },
+                ],
+            },
         )
 
     def test_get_with_aggregation(self, m):
@@ -248,14 +254,50 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        self.assertEqual(len(data), 1)
+        self.assertEqual(len(data["results"]), 1)
         self.assertEqual(
             data,
-            [
-                {
-                    "omschrijving": "some zaaktype",
-                    "identificatie": "ZT",
-                    "catalogus": CATALOGUS_URL,
-                },
-            ],
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "omschrijving": "some zaaktype",
+                        "identificatie": "ZT",
+                        "catalogus": CATALOGUS_URL,
+                    },
+                ],
+            },
         )
+
+    def test_get_with_filter_q(self, m):
+        zaaktype_1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 1",
+        )
+        zaaktype_2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
+            identificatie="ZT2",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 2",
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+
+        response = self.client.get(self.endpoint, {"q": "ZAAKTYPE 1"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["identificatie"], "ZT1")
