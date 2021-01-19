@@ -66,7 +66,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 0)
+        self.assertEqual(len(response.json()["results"]), 0)
 
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -87,7 +87,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 0)
+        self.assertEqual(len(response.json()["results"]), 0)
 
     def test_has_perm_for_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -109,7 +109,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["identificatie"], "ZT1")
 
@@ -126,7 +126,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(len(data), 2)
 
     def test_has_all_perms(self, m):
@@ -149,7 +149,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(len(data), 2)
 
 
