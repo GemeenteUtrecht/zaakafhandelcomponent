@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    EigenschappenView,
     RelatedZakenView,
     ZaakDetailView,
     ZaakDocumentsView,
@@ -48,4 +49,5 @@ urlpatterns = [
         name="zaak-objects",
     ),
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),
+    path("eigenschappen", EigenschappenView.as_view(), name="eigenschappen"),
 ]

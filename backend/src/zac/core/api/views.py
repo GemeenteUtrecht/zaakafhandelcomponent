@@ -29,6 +29,7 @@ from ..services import (
     find_zaak,
     get_document,
     get_documenten,
+    get_eigenschappen,
     get_informatieobjecttype,
     get_related_zaken,
     get_rollen,
@@ -54,6 +55,7 @@ from .serializers import (
     InformatieObjectTypeSerializer,
     RelatedZaakSerializer,
     RolSerializer,
+    SearchEigenschapSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -63,7 +65,10 @@ from .serializers import (
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
-from .utils import get_informatieobjecttypen_for_zaak
+from .utils import (
+    convert_eigenschap_spec_to_json_schema,
+    get_informatieobjecttypen_for_zaak,
+)
 
 
 class GetInformatieObjectTypenView(views.APIView):
@@ -413,3 +418,33 @@ class ZaakTypenView(ListAPIView):
             zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
         )
         return zaaktypen_aggregated
+
+
+class EigenschappenView(ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = SearchEigenschapSerializer
+
+    def get_queryset(self):
+        catalogus = self.request.query_params.get("catalogus")
+        zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
+
+        zaaktypen = get_zaaktypen(
+            UserPermissions(self.request.user), catalogus=catalogus
+        )
+        zaaktypen = [
+            zaaktype
+            for zaaktype in zaaktypen
+            if zaaktype.omschrijving == zaaktype_omschrijving
+        ]
+
+        eigenschappen = []
+        for zaaktype in zaaktypen:
+            eigenschappen += get_eigenschappen(zaaktype)
+
+        for eigenschap in eigenschappen:
+            eigenschap.spec = convert_eigenschap_spec_to_json_schema(
+                eigenschap.specificatie
+            )
+
+        return eigenschappen

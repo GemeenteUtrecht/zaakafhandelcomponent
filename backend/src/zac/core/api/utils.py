@@ -84,3 +84,30 @@ class CSMultipleChoiceField(serializers.Field):
                 values = subset.copy()
 
         return values
+
+
+class TypeChoices(DjangoChoices):
+    string = ChoiceItem("string")
+    number = ChoiceItem("number")
+
+
+EIGENSCHAP_FORMAT_TYPE_MAPPING = {
+    "tekst": {"type": TypeChoices.string},
+    "getal": {"type": TypeChoices.number},
+    "datum": {"type": TypeChoices.string, "format": "date"},
+    "datum_tijd": {"type": TypeChoices.string, "format": "date-time"},
+}
+
+
+def convert_eigenschap_spec_to_json_schema(spec) -> dict:
+    json_schema = EIGENSCHAP_FORMAT_TYPE_MAPPING[spec.formaat]
+
+    if spec.formaat != "tekst":
+        return json_schema
+
+    json_schema.update({"minLength": 1, "maxLength": spec.lengte})
+
+    if spec.waardenverzameling:
+        json_schema.update({"enum": spec.waardenverzameling})
+
+    return json_schema

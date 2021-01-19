@@ -26,6 +26,7 @@ from zgw.models.zrc import Zaak
 from ..zaakobjecten import ZaakObjectGroup
 from .utils import (
     CSMultipleChoiceField,
+    TypeChoices,
     ValidExpandChoices,
     ValidFieldChoices,
     get_informatieobjecttypen_for_zaak,
@@ -397,3 +398,24 @@ class ZaakTypeAggregateSerializer(serializers.Serializer):
     omschrijving = serializers.CharField()
     identificatie = serializers.CharField()
     catalogus = serializers.URLField()
+
+
+class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=TypeChoices.choices)
+    format = serializers.CharField(required=False)
+    minLength = serializers.IntegerField(required=False)
+    maxLength = serializers.IntegerField(required=False)
+    enum = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class SearchEigenschapSerializer(APIModelSerializer):
+    spec = SearchEigenschapSpecificatieSerializer(label=_("property definition"))
+
+    class Meta:
+        model = Eigenschap
+        fields = (
+            "url",
+            "name",
+            "spec",
+        )
+        extra_kwargs = {"name": {"source": "naam"}}
