@@ -4,7 +4,9 @@ from zac.utils.filters import ApiFilterSet
 
 
 class ZaaktypenFilterSet(ApiFilterSet):
-    q = fields.CharField()
+    q = fields.CharField(
+        required=False, help_text="`icontains` on `omschrijving` field"
+    )
 
     def filter_q(self, queryset, value) -> list:
         return [
