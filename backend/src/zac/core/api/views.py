@@ -21,6 +21,7 @@ from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.elasticsearch.searches import autocomplete_zaak_search
+from zac.utils.filters import ApiFilterBackend
 
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
@@ -39,6 +40,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .filters import ZaaktypenFilterSet
 from .pagination import BffPagination
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
@@ -385,19 +387,11 @@ class ZaakTypenView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
     pagination_class = BffPagination
+    filter_backends = (ApiFilterBackend,)
+    filterset_class = ZaaktypenFilterSet
 
     def get_queryset(self) -> List[dict]:
         zaaktypen = self.get_zaaktypen()
-
-        # filtering on query params
-        q = self.request.query_params.get("q")
-        if q:
-            zaaktypen = [
-                zaaktype
-                for zaaktype in zaaktypen
-                if q.lower() in zaaktype["omschrijving"].lower()
-            ]
-
         return zaaktypen
 
     def get_zaaktypen(self) -> List[dict]:
