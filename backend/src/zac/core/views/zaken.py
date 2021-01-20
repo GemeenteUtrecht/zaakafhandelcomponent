@@ -247,7 +247,9 @@ class FetchZaakObjecten(PermissionRequiredMixin, TemplateView):
         zaakobjecten = sorted(zaakobjecten, key=group_key)
         grouped = groupby(zaakobjecten, key=group_key)
         for _group, items in grouped:
-            group = GROUPS.get(_group, ZaakObjectGroup(label=_group))
+            group = GROUPS.get(
+                _group, ZaakObjectGroup(object_type=_group, label=_group)
+            )
             group.retrieve_items(items)
             render_groups.append(group)
         return render_groups
