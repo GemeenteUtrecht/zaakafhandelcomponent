@@ -22,7 +22,7 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b3
 
 
 @requests_mock.Mocker()
-class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
+class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -154,7 +154,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
 
 
 @requests_mock.Mocker()
-class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
+class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
     """
     Test the API response body for zaaktypen endpoint.
     """
