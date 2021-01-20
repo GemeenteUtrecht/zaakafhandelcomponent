@@ -14,3 +14,10 @@ class ZaaktypenFilterSet(ApiFilterSet):
             for zaaktype in queryset
             if value.lower() in zaaktype["omschrijving"].lower()
         ]
+
+
+class EigenschappenFilterSet(ApiFilterSet):
+    # filtering is done in viewset.get_queryset() method.
+    # This filterset is used just to validate query params
+    zaaktype_omschrijving = fields.CharField()
+    catalogus = fields.URLField()

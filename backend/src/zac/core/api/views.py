@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.generics import ListAPIView
+from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
@@ -41,7 +42,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .filters import ZaaktypenFilterSet
+from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
@@ -394,6 +395,7 @@ class ZaakTypenView(ListAPIView):
     pagination_class = BffPagination
     filter_backends = (ApiFilterBackend,)
     filterset_class = ZaaktypenFilterSet
+    action = "list"
 
     def get_queryset(self) -> List[dict]:
         zaaktypen = self.get_zaaktypen()
@@ -424,20 +426,38 @@ class EigenschappenView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
+    filter_backends = (ApiFilterBackend,)
+    filterset_class = EigenschappenFilterSet
+    renderer_classes = (JSONRenderer,)
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
+        # validate query params
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
+        zaaktypen = self.get_zaaktypen()
+        eigenschappen = self.get_eigenschappen(zaaktypen)
+
+        serializer = self.get_serializer(eigenschappen, many=True)
+        return Response(serializer.data)
+
+    def get_zaaktypen(self):
         catalogus = self.request.query_params.get("catalogus")
         zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
 
         zaaktypen = get_zaaktypen(
             UserPermissions(self.request.user), catalogus=catalogus
         )
-        zaaktypen = [
+        return [
             zaaktype
             for zaaktype in zaaktypen
             if zaaktype.omschrijving == zaaktype_omschrijving
         ]
 
+    def get_eigenschappen(self, zaaktypen):
         eigenschappen = []
         for zaaktype in zaaktypen:
             eigenschappen += get_eigenschappen(zaaktype)
