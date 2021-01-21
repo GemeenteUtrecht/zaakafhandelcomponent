@@ -1,8 +1,10 @@
+from dataclasses import dataclass
+
 from zgw_consumers.api_models.base import Model
 
 
 @dataclass
-class DocRequest(Model):
+class DowcResponse(Model):
     purpose: str
     uuid: str
-    drc_url: str
+    magic_url: str

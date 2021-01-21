@@ -133,6 +133,7 @@ INSTALLED_APPS = [
     "compat",  # Part of hijack
     "hijack_admin",
     "django_better_admin_arrayfield",
+    "django_extensions",
     # Project applications.
     "zac.accounts",
     "zac.camunda",
@@ -149,6 +150,7 @@ INSTALLED_APPS = [
     "zac.contrib.organisatieonderdelen",
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
+    "zac.contrib.dowc",
 ]
 
 MIDDLEWARE = [

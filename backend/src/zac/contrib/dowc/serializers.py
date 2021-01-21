@@ -6,10 +6,10 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.contrib.documents.data import DocRequest
+from .data import DowcResponse
 
 
-class DocRequestSerializer(APIModelSerializer):
+class DowcResponseSerializer(APIModelSerializer):
     delete_url = serializers.SerializerMethodField(
         label=_("deletion url"),
         help_text=_(
@@ -18,12 +18,12 @@ class DocRequestSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = DocRequest
+        model = DowcResponse
         fields = (
-            "uuid",
             "purpose",
-            "drc_url",
+            "magic_url",
+            "delete_url",
         )
 
     def get_delete_url(self, obj) -> str:
-        return reverse("doc:delete-document", kwargs={"doc_request_uuid": obj.uuid})
+        return reverse("dowc:patch-destroy-doc", kwargs={"dowc_request_uuid": obj.uuid})
