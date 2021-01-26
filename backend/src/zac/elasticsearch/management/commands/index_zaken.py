@@ -49,5 +49,5 @@ class Command(BaseCommand):
 
     def index_zaak_eigenschappen(self, zaken):
         for zaak in zaken:
-            if zaak.eieigenschappen:
+            if zaak.eigenschappen:
                 update_eigenschappen_in_zaak_document(zaak)
