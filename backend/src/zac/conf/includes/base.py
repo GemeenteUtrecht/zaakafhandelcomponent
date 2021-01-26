@@ -133,7 +133,6 @@ INSTALLED_APPS = [
     "compat",  # Part of hijack
     "hijack_admin",
     "django_better_admin_arrayfield",
-    "django_extensions",
     # Project applications.
     "zac.accounts",
     "zac.camunda",

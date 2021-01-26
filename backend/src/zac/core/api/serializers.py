@@ -81,7 +81,7 @@ class DocumentInfoSerializer(serializers.Serializer):
 
     def get_download_url(self, obj):
         path = reverse(
-            "core:download-document",
+            "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
                 "identificatie": obj.identificatie,
@@ -300,9 +300,9 @@ class DocumentTypeSerializer(APIModelSerializer):
 
 class ZaakDocumentSerializer(APIModelSerializer):
     download_url = serializers.SerializerMethodField(
-        label=_("ZAC download URL"),
+        label=_("ZAC document URL"),
         help_text=_(
-            "The download URL for the end user. Will serve the file as attachment."
+            "The document URL for the end user. Will serve the file from a WebDAV server."
         ),
     )
     vertrouwelijkheidaanduiding = serializers.CharField(
@@ -333,7 +333,7 @@ class ZaakDocumentSerializer(APIModelSerializer):
 
     def get_download_url(self, obj) -> str:
         path = reverse(
-            "core:download-document",
+            "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
                 "identificatie": obj.identificatie,

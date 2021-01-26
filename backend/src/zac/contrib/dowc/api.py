@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from rest_framework import status
 from zds_client.schema import get_operation_url
@@ -25,7 +25,7 @@ def get_client(user: User) -> ZGWClient:
 
 
 @optional_service
-def get_doc_info(user: User, drc_url: str, purpose: str) -> Optional[DowcResponse]:
+def get_doc_info(user: User, drc_url: str, purpose: str) -> Optional[Tuple[DowcResponse, int]]:
     client = get_client(user)
     try:
         response = client.create(
@@ -35,7 +35,7 @@ def get_doc_info(user: User, drc_url: str, purpose: str) -> Optional[DowcRespons
                 "purpose": purpose,
             },
         )
-        status_code = status.HTTP_201_CREATED
+        return factory(DowcResponse, response), status.HTTP_201_CREATED
     except AssertionError:
         response = client.list(
             "v1_documenten",
@@ -44,8 +44,7 @@ def get_doc_info(user: User, drc_url: str, purpose: str) -> Optional[DowcRespons
                 "purpose": purpose,
             },
         )
-        status_code = status.HTTP_200_OK
-    return factory(DowcResponse, response), status_code
+        return factory(DowcResponse, response[0]), status.HTTP_200_OK
 
 
 @optional_service
