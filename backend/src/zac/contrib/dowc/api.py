@@ -25,7 +25,9 @@ def get_client(user: User) -> ZGWClient:
 
 
 @optional_service
-def get_doc_info(user: User, drc_url: str, purpose: str) -> Optional[Tuple[DowcResponse, int]]:
+def get_doc_info(
+    user: User, drc_url: str, purpose: str
+) -> Optional[Tuple[DowcResponse, int]]:
     client = get_client(user)
     try:
         response = client.create(
