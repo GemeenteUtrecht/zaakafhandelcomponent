@@ -403,8 +403,8 @@ class ZaakTypeAggregateSerializer(serializers.Serializer):
 class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=TypeChoices.choices)
     format = serializers.CharField(required=False)
-    minLength = serializers.IntegerField(required=False)
-    maxLength = serializers.IntegerField(required=False)
+    min_length = serializers.IntegerField(required=False)
+    max_length = serializers.IntegerField(required=False)
     enum = serializers.ListField(child=serializers.CharField(), required=False)
 
 
