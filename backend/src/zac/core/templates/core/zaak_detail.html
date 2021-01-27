@@ -204,7 +204,7 @@
                  data-zaak="{{ zaak.url }}"
                  data-can-send-bpmn-messages="{{ can_send_bpmn_messages|yesno:'true,false' }}"
                  data-can-do-usertasks="{{ can_do_usertasks|yesno:'true,false' }}"
-                 data-endpoint="{% url 'camunda:fetch-process-instances' %}?zaak_url={{ zaak.url }}"
+                 data-endpoint="{% url 'fetch-process-instances' %}?zaak_url={{ zaak.url }}"
                  data-claim-task-url="{% url 'core:claim-task' %}"
                  data-send-message-url="{% url 'core:send-message' %}"
                  data-csrftoken="{{ csrf_token }}"
