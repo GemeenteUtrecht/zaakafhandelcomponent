@@ -1,17 +1,35 @@
 openapi: 3.0.3
 info:
-  title: D.O.C.
+  title: DO.W.C.
   version: 1.0.0
   description: |-
-    D.O.C. facilitates reading and editing centrally located documents on local clients.
+    DO.W.C. facilitates reading and editing centrally located documents on local clients.
     This API provides an interface to request the URL required to read/edit a document.
   contact:
-    url: https://github.com/GemeenteUtrecht/doc
+    url: https://github.com/GemeenteUtrecht/dowc
 paths:
   /api/v1/documenten:
     get:
       operationId: v1_documenten_list
       description: ''
+      parameters:
+      - in: query
+        name: drc_url
+        schema:
+          type: string
+          format: uri
+          description: URL reference to the source document in the Documents API.
+            May include the 'versie' querystring parameter.
+        description: drc_url
+      - in: query
+        name: purpose
+        schema:
+          enum:
+          - read
+          - write
+          type: string
+          description: Purpose of requesting the document.
+        description: purpose
       tags:
       - v1
       security:
