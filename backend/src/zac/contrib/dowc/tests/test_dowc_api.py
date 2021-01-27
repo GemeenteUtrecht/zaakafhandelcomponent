@@ -33,7 +33,7 @@ from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
-DOWC_API_ROOT = "https://doc.nl"
+DOWC_API_ROOT = "https://dowc.nl"
 
 BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "DOC-001"
@@ -55,7 +55,7 @@ class DOCAPITests(APITestCase):
             auth_type=AuthTypes.zgw,
             client_id="zac",
             secret="supersecret",
-            oas="https://dowc.nl/api/v1",
+            oas=f"{DOWC_API_ROOT}/api/v1",
             user_id="zac",
         )
 

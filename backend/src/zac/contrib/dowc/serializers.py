@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from .constants import DocFileTypes
 from .data import DowcResponse
 
 
@@ -26,4 +27,9 @@ class DowcResponseSerializer(APIModelSerializer):
         )
 
     def get_delete_url(self, obj) -> str:
-        return reverse("dowc:patch-destroy-doc", kwargs={"dowc_request_uuid": obj.uuid})
+        if obj.purpose == DocFileTypes.write:
+            return reverse(
+                "dowc:patch-destroy-doc", kwargs={"dowc_request_uuid": obj.uuid}
+            )
+        else:
+            return ""

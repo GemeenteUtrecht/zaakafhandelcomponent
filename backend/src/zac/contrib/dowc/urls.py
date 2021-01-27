@@ -1,18 +1,18 @@
 from django.urls import include, path
 
-from .views import DowcView
+from .views import DeleteDowcView, OpenDowcView
 
 app_name = "dowc"
 
 urlpatterns = [
     path(
         "<uuid:dowc_request_uuid>/",
-        DowcView.as_view(),
+        DeleteDowcView.as_view(),
         name="patch-destroy-doc",
     ),
     path(
         "<str:bronorganisatie>/<str:identificatie>/<str:purpose>",
-        DowcView.as_view(),
+        OpenDowcView.as_view(),
         name="request-doc",
     ),
 ]
