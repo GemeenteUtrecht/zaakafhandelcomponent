@@ -23,13 +23,12 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b3
 
 @requests_mock.Mocker()
 class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
+    def setUp(self):
+        super().setUp()
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
-        cls.zaaktype = generate_oas_component(
+        self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
@@ -38,10 +37,10 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
-        cls.eigenschap = generate_oas_component(
+        self.eigenschap = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
-            zaaktype=cls.zaaktype["url"],
+            zaaktype=self.zaaktype["url"],
             naam="some-property",
             specificatie={
                 "groep": "dummy",
@@ -52,7 +51,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        cls.endpoint = reverse("eigenschappen")
+        self.endpoint = reverse("eigenschappen")
 
     def test_not_authenticated(self, m):
         response = self.client.get(self.endpoint)
