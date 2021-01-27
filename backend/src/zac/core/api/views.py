@@ -7,6 +7,7 @@ from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 
+from django_camunda.api import send_message
 from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,6 +16,8 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.camunda.messages import get_messages
+from zac.camunda.process_instances import get_process_instance
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import (
     get_review_requests,
@@ -26,6 +29,7 @@ from zac.elasticsearch.searches import autocomplete_zaak_search
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
 from ..services import (
+    _client_from_url,
     find_zaak,
     get_document,
     get_documenten,
@@ -39,7 +43,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
-from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
+from .permissions import CanAddDocuments, CanAddRelations, CanPerformTasks, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
@@ -376,3 +380,61 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
+
+
+#
+# User Task BFF endpoints
+#
+
+
+class SendMessageView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken & CanPerformTasks,)
+    serializer_class = MessageSerializer  # MessageForm
+
+    def get_serializer(self, **kwargs):
+        serializer = super().get_serializer(**kwargs)
+        process_instance_id = serializer.data.get("process_instance_id")
+
+        # no (valid) process instance ID -> get a form with no valid messages -> invalid
+        # POST request
+        if not process_instance_id:
+            return serializer
+
+        # set the valid process instance messages _if_ a process instance exists
+        process_instance = get_process_instance(process_instance_id)
+        if process_instance is None or process_instance.historical:
+            return serializer
+
+        messages = get_messages(process_instance.definition_id)
+        serializer.set_message_choices(messages)
+
+        return serializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # check permissions
+        process_instance_id = serializer.validated_data["process_instance_id"]
+        process_instance = get_process_instance(process_instance_id)
+
+        zaak_url = process_instance.get_variable("zaakUrl")
+        zaak = get_zaak(zaak_url=zaak_url)
+        self.check_object_permissions(request, zaak)
+
+        # build service variables to continue execution
+        zrc_client = _client_from_url(zaak.url)
+        ztc_client = _client_from_url(zaak.zaaktype)
+
+        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
+        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
+
+        variables = {
+            "services": {
+                "zrc": {"jwt": zrc_jwt},
+                "ztc": {"jwt": ztc_jwt},
+            },
+        }
+
+        send_message(form.cleaned_data["message"], [process_instance.id], variables)
+        return Response(status=status.HTTP_201_CREATED)

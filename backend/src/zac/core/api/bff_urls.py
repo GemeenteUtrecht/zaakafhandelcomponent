@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     RelatedZakenView,
+    SendMessageView,
     ZaakDetailView,
     ZaakDocumentsView,
     ZaakEigenschappenView,
@@ -45,5 +46,10 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/objects",
         ZaakObjectsView.as_view(),
         name="zaak-objects",
+    ),
+    path(
+        "_send-message",
+        SendMessage.as_view(),
+        name="send-message",
     ),
 ]
