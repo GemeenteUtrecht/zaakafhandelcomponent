@@ -1,9 +1,13 @@
 <div class="gerelateerde-zaken card">
-  <h3>Gerelateerde zaken</h3>
+  <h2>Gerelateerde zaken</h2>
+  <!-- Loading -->
   <ng-container *ngIf="!data && isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
+
+  <!-- Table -->
   <ng-container *ngIf="data && !isLoading">
-    <gu-table *ngIf=tableData [tableData]="tableData"></gu-table>
+    <gu-table *ngIf="(data.length > 0) && tableData" [tableData]="tableData"></gu-table>
+    <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>
   </ng-container>
 </div>

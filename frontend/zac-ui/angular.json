@@ -22,7 +22,10 @@
             "tsConfig": "apps/zac-ui/tsconfig.app.json",
             "aot": true,
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
-            "styles": ["apps/zac-ui/src/styles.scss"],
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "apps/zac-ui/src/styles.scss"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": ["libs/shared/ui/styling/src/lib"]
             },

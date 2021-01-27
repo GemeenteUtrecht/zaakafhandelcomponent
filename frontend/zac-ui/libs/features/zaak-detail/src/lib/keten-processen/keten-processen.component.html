@@ -1,9 +1,9 @@
 <div class="keten-processen card">
-  <h3>Actieve (keten)processen</h3>
-  <ng-template [ngIf]="(!data) && (isLoading)">
+  <h2>Actieve (keten)processen</h2>
+  <ng-container *ngIf="(!data) && (isLoading)">
     <gu-loading-indicator></gu-loading-indicator>
-  </ng-template>
-  <ng-template [ngIf]="!!data && data.length > 0">
+  </ng-container>
+  <ng-container *ngIf="!!data && data.length > 0">
     <div class="keten-processen__actie-buttons-container">
       <gu-button
         (click)="sendMessage(message)"
@@ -13,13 +13,13 @@
       </gu-button>
     </div>
     <div class="keten-processen__taken">
-      <h4>Taken</h4>
+      <h3>Taken</h3>
       <div class="taak" *ngFor="let task of data[0].tasks">
         <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
         <label class="label label--date">{{task.created | date:'fullDate'}}</label>
         <div class="taak__buttons">
           <gu-button type="secondary">Claimen</gu-button>
-          <gu-button type="secondary" (click)="redirect(task.executeUrl)">Uitvoeren</gu-button>
+          <gu-button type="secondary" (click)="executeTask(task.id)">Uitvoeren</gu-button>
         </div>
       </div>
       <div class="taak" *ngFor="let subProcess of data[0].subProcesses">
@@ -28,10 +28,25 @@
         <p class="p--marginsmall d-block">{{subProcess.tasks[0].assignee.username}}</p>
         <div class="taak__buttons">
           <gu-button type="secondary">Claimen</gu-button>
-          <gu-button type="secondary" (click)="redirect(subProcess.tasks[0].executeUrl)">Uitvoeren</gu-button>
+          <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
         </div>
       </div>
-
     </div>
-  </ng-template>
+  </ng-container>
+  <ng-container *ngIf="!!data && data.length === 0">
+    <p>Er zijn geen actieve (keten)processen.</p>
+  </ng-container>
 </div>
+<!--<gu-button (click)="openModal('custom-modal-1')">-->
+<!--  Uitvoeren-->
+<!--</gu-button>-->
+<!--<gu-modal-->
+<!--  id="custom-modal-1"-->
+<!--  [closeIcon]="true"-->
+<!--  title="Configuratie: Adviseren"-->
+<!--&gt;-->
+<!--  <gu-config-adviseren-accorderen-->
+<!--  ></gu-config-adviseren-accorderen>-->
+<!--</gu-modal>-->
+
+

@@ -15,7 +15,7 @@ export class GerelateerdeZakenComponent implements OnInit {
 
   tableData: Table = {
     headData: ['Status', 'Zaak ID', 'Resultaat', 'Aard'],
-    tableData: []
+    bodyData: []
   }
 
   data: any;
@@ -51,7 +51,7 @@ export class GerelateerdeZakenComponent implements OnInit {
   }
 
   formatTableData(data){
-    this.tableData.tableData = data.map( element => {
+    this.tableData.bodyData = data.map( element => {
       console.log(element.zaak.url);
       return {
         cellData: {

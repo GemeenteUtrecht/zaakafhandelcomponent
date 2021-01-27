@@ -1,7 +1,7 @@
 .status {
   .timeline {
     position: relative;
-    &__item {
+    &__row {
       display: flex;
       &:before {
         content: "";
@@ -16,22 +16,29 @@
         }
       }
     }
-    &__item-left {
-      display: flex;
-      padding-bottom: 0.6rem;
+    &-item {
+      &--left {
+        padding-bottom: 0.6rem;
+      }
+      &--right {
+        padding-left: 0.6rem;
+      }
+      &__nr {
+        position: relative;
+        z-index: 2;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 50%;
+        background: #FFF5CC;
+        font-weight: 600;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+      }
     }
-    &__item-nr {
-      position: relative;
-      z-index: 2;
-      width: 2.4rem;
-      height: 2.4rem;
-      border-radius: 50%;
-      background: #FFF5CC;
-      font-weight: 600;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-right: 3rem;
+    .item-left__info {
+      display: inline-grid;
+      margin-left: 2rem;
     }
   }
 }

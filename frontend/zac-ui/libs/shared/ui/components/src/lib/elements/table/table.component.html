@@ -6,31 +6,48 @@
     </tr>
   </thead>
   <tbody>
-    <ng-template ngFor let-element [ngForOf]="tableData.tableData">
-      <tr class="parent-row">
-        <td *ngIf="expandable" class="table-expand">
-          <button class="table-expand__button" (click)="expandRow($event)">
-            <mat-icon aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
-          </button>
+    <ng-template ngFor let-element [ngForOf]="tableData.bodyData">
+      <tr
+        class="parent-row"
+        [ngClass]="element.clickOutput || expandable ? 'parent-row--clickable' : ''"
+        (click)="handleRowClickOutput(element.clickOutput); expandRow($event)"
+        [attr.role]="element.clickOutput || expandable ? 'button' : ''"
+      >
+        <!-- Expand icon -->
+        <td *ngIf="expandable && element.expandData" class="table-expand">
+            <mat-icon class="arrow" aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
         </td>
+
         <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
+          <!-- Regular string table cell -->
           <ng-container *ngIf="isString(cell.value); else extensiveCell">
             {{ cell.value }}
           </ng-container>
+
+          <!-- Special table cells -->
           <ng-template #extensiveCell>
             <ng-container [ngSwitch]="checkCellType(cell.value)">
+
+              <!-- Clickable cell link -->
               <ng-container *ngSwitchCase="'link'">
                 <a class="anchor" [href]="cell.value['url']">{{ cell.value['value'] }}</a>
               </ng-container>
+
+              <!-- Icon -->
               <ng-container *ngSwitchCase="'icon'">
-                <mat-icon>{{cell.value['value']}}</mat-icon>
+                <mat-icon
+                  class="icon"
+                  [ngClass]="(cell.value['iconColor'] ? 'icon--' + cell.value['iconColor'] : '')">
+                  {{cell.value['value']}}
+                </mat-icon>
               </ng-container>
             </ng-container>
           </ng-template>
         </td>
-
       </tr>
-      <tr *ngIf="expandable" class="child-row">
+
+      <!-- Expand row -->
+      <tr *ngIf="expandable && element.expandData" class="child-row">
         <td colspan="10">{{ element.expandData }}</td>
       </tr>
     </ng-template>

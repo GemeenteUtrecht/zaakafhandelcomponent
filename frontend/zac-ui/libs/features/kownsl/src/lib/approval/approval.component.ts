@@ -27,7 +27,7 @@ export class ApprovalComponent implements OnInit {
 
   tableData: Table = {
     headData: [],
-    tableData: []
+    bodyData: []
   }
 
   approvalForm: FormGroup;
@@ -75,11 +75,11 @@ export class ApprovalComponent implements OnInit {
   createTableData(approvalData: ReviewRequest): Table {
     const tableData: Table = {
       headData: ['Accordeur', 'Gedaan op', 'Akkoord'],
-      tableData: []
+      bodyData: []
     }
 
     // Add table body data
-    tableData.tableData = approvalData.reviews.map( review => {
+    tableData.bodyData = approvalData.reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';

@@ -1,0 +1,10 @@
+<ng-multiselect-dropdown
+  (keyup)="typing()"
+  [placeholder]="'Selecteer adviseur(s)'"
+  [settings]="dropdownSettings"
+  [data]="dropdownList"
+  [(ngModel)]="selectedItems"
+  (onSelect)="onItemSelect($event)"
+  (onSelectAll)="onSelectAll($event)"
+>
+</ng-multiselect-dropdown>

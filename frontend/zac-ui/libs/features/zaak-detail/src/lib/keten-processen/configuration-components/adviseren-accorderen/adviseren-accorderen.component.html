@@ -1,0 +1,47 @@
+<div class="gu-config-adviseren-accorderen">
+  <section class="card card--blue zaak-informatie">
+    <h2>Testdossier</h2>
+    <p>Dit is een toelichting</p>
+  </section>
+  <section class="card configuration-form">
+    <h2>Gegevens</h2>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block mr-2">Selecteer relevante documenten</label>
+      <gu-tooltip type="primary" inline="true">Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</gu-tooltip>
+      <div class="configuration-files">
+        <gu-checkbox id="1" value="true" checkboxFormControl="approved">
+          <span><a>text.txt</a> (Collegevoorstel, Openbaar)</span>
+        </gu-checkbox>
+        <gu-checkbox id="2" value="true" checkboxFormControl="approved">
+          <span><a href="google.com">text.txt</a> (Collegevoorstel, Openbaar)</span>
+        </gu-checkbox>
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block" for="textarea_config">Adviseur(s)</label>
+      <div class="step-container mb-5"
+           id="configuration-multiselect--{{i}}"
+           *ngFor="let step of [].constructor(steps); let i = index"
+      >
+        <div class="d-flex">
+          <span class="step-label">Stap {{i + 1}}</span>
+          <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep(i)">delete</gu-icon>
+        </div>
+
+        <gu-multiselect></gu-multiselect>
+        <span class="step-datepicker">Uiterste datum:</span><gu-datepicker></gu-datepicker>
+      </div>
+      <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
+      <div class="d-flex justify-content-end">
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
+      <span class="label label--optional">optioneel</span>
+      <textarea id="textarea_config"></textarea>
+    </article>
+    <div class="d-flex justify-content-end">
+      <gu-button size="large" (click)="addStep()">Voltooien</gu-button>
+    </div>
+  </section>
+</div>

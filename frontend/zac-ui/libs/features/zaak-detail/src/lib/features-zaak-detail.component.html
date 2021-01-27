@@ -20,9 +20,13 @@
               [deadline]="data.deadline"
               class="zaak-detail__section">
             </gu-status>
+<!--            <gu-keten-processen-->
+<!--              *ngIf="data"-->
+<!--              [zaakUrl]="data.url"-->
+<!--              class="zaak-detail__section">-->
+<!--            </gu-keten-processen>-->
             <gu-keten-processen
-              *ngIf="data"
-              [zaakUrl]="data.url"
+              [zaakUrl]="'lol'"
               class="zaak-detail__section">
             </gu-keten-processen>
             <gu-gerelateerde-zaken class="zaak-detail__section"></gu-gerelateerde-zaken>

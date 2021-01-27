@@ -4,7 +4,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
-import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
+import { convertKbToMb } from '@gu/utils';
 
 @Component({
   selector: 'gu-documenten',
@@ -14,11 +14,15 @@ import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
 export class DocumentenComponent implements OnInit {
   tableData: Table = {
     headData: ['Op slot', 'Type', 'Bestandsnaam', 'Vertrouwelijkheid', 'Bestandsgrootte'],
-    tableData: []
+    bodyData: []
   }
 
   data: any;
+
   isLoading = true;
+  hasError: boolean;
+  errorMessage: string;
+
   bronorganisatie: string;
   identificatie: string;
 
@@ -35,27 +39,35 @@ export class DocumentenComponent implements OnInit {
   ngOnInit(): void {
     this.isLoading = true;
     this.getDocuments().subscribe( data => {
-      this.tableData.tableData = this.formatTableData(data)
+      this.tableData.bodyData = this.formatTableData(data)
       this.data = data;
       this.isLoading = false;
-    }, error => {
-      console.log(error);
+    }, res => {
+      this.errorMessage = res.error.detail;
+      this.hasError = true;
       this.isLoading = false;
     })
   }
 
   getDocuments(): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/documents`);
-    return this.http.Get<ReviewRequest>(endpoint);
+    return this.http.Get<any>(endpoint);
   }
 
   formatTableData(data): RowData[] {
-   return data.map( element => {
+    return data.map( element => {
+     const icon = element.locked ? 'lock' : 'lock_open'
+     const iconColor = element.locked ? 'green' : 'orange'
+     const bestandsomvang =
+       element.bestandsomvang > 999 ? `${(convertKbToMb(element.bestandsomvang, 2)).toLocaleString("nl-NL")} MB`
+       : `${element.bestandsomvang} KB`
+
      const cellData: RowData = {
        cellData: {
          opSlot: {
            type: 'icon',
-           value: element.locked ? 'lock' : 'lock_open'
+           value: icon,
+           iconColor: iconColor
          },
          type: element.informatieobjecttype['omschrijving'],
          bestandsnaam: {
@@ -64,7 +76,7 @@ export class DocumentenComponent implements OnInit {
            url: element.downloadUrl
          },
          vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
-         bestandsgrootte: `${element.bestandsomvang} KB`
+         bestandsomvang: bestandsomvang
        }
      }
      return cellData;

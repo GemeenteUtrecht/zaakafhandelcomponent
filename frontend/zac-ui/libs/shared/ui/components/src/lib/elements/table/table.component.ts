@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ExtensiveCell, Table } from '@gu/models';
 
 @Component({
@@ -11,29 +11,40 @@ export class TableComponent {
   @Input() expandable = false;
   @Input() tableData: Table;
 
+  @Output() tableOutput = new EventEmitter<any>();
+
   constructor() { }
 
   keepOriginalOrder = (a) => a.key
 
-  expandRow(event) {
-    const arrow = event.target;
-    const parentRow = event.currentTarget.parentElement.parentElement;
-    const childRow = parentRow.nextElementSibling;
-
-    if (!childRow.classList.contains('child-row--expanded')) {
-      childRow.classList.add('child-row--expanded');
-    } else {
-      childRow.classList.remove('child-row--expanded');
+  handleRowClickOutput(value) {
+    if (value) {
+      this.tableOutput.emit(value);
     }
-
-    this.rotateArrow(arrow);
   }
 
-  rotateArrow(arrow) {
-    if (!arrow.classList.contains('arrow--rotated')) {
-      arrow.classList.add('arrow--rotated');
+  expandRow(event) {
+    if (this.expandable) {
+      const clickedElement = event.target;
+      const parentRow = clickedElement.closest('tr.parent-row')
+      const arrowElement = parentRow.querySelector('.arrow');
+      const childRow = parentRow.nextElementSibling;
+
+      if (!childRow.classList.contains('child-row--expanded')) {
+        childRow.classList.add('child-row--expanded');
+      } else {
+        childRow.classList.remove('child-row--expanded');
+      }
+
+      this.rotateArrow(arrowElement);
+    }
+  }
+
+  rotateArrow(element) {
+    if (!element.classList.contains('arrow--rotated')) {
+      element.classList.add('arrow--rotated');
     } else {
-      arrow.classList.remove('arrow--rotated');
+      element.classList.remove('arrow--rotated');
     }
   }
 
@@ -42,7 +53,6 @@ export class TableComponent {
   }
 
   checkCellType(value: ExtensiveCell | string) {
-
     if (!!value) {
       if (typeof value === 'object') {
         return value.type;

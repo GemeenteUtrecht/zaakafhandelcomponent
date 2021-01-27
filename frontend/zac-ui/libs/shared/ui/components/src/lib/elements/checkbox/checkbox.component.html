@@ -1,0 +1,13 @@
+<label class="gu-checkbox" for="cb--{{id}}">
+  <input
+    type="checkbox"
+    [value]="value"
+    id="cb--{{id}}"
+    class="checkbox"
+    tabindex="0"
+    aria-checked="false">
+  <span class="checkbox-label">
+      <span style="display: none;">&nbsp;</span>
+    <ng-content></ng-content>
+  </span>
+</label>

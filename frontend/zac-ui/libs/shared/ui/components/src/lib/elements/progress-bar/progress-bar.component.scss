@@ -1,6 +1,7 @@
 @import './base/colors/colors';
 
 .progress-bar {
+  white-space: nowrap;
   &-container {
     height: 3.6rem;
     border: 1px solid $border-grey;

@@ -1,20 +1,27 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { ModalService } from '@gu/components'
 
 @Component({
   selector: 'gu-keten-processen',
   templateUrl: './keten-processen.component.html',
   styleUrls: ['./keten-processen.component.scss']
 })
-export class KetenProcessenComponent implements OnInit {
 
+export class KetenProcessenComponent implements OnInit {
+  // @ViewChild('modal') private modalComponent: ModalComponent
   @Input() zaakUrl: string;
+
   data: any;
+
   isLoading = true;
+  hasError: boolean;
+  errorMessage: string;
+
   bronorganisatie: string;
   identificatie: string;
 
@@ -23,7 +30,8 @@ export class KetenProcessenComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private customHttp: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private modalService: ModalService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -36,8 +44,9 @@ export class KetenProcessenComponent implements OnInit {
     this.getProcesses().subscribe( data => {
       this.data = data;
       this.isLoading = false;
-    }, error => {
-      console.log(error);
+    }, res => {
+      this.errorMessage = res.error.detail;
+      this.hasError = true;
       this.isLoading = false;
     })
   }
@@ -59,8 +68,17 @@ export class KetenProcessenComponent implements OnInit {
     })
   }
 
-  redirect(url) {
-    window.open(url,"_self")
+  executeTask(taskId) {
+    console.log(taskId)
+    console.log(1)
+    // this.openModal()
   }
 
+  openModal(id: string) {
+    this.modalService.open(id);
+  }
+
+  closeModal(id: string) {
+    this.modalService.close(id);
+  }
 }
