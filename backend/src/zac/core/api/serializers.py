@@ -405,7 +405,29 @@ class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
     format = serializers.CharField(required=False)
     min_length = serializers.IntegerField(required=False)
     max_length = serializers.IntegerField(required=False)
-    enum = serializers.ListField(child=serializers.CharField(), required=False)
+    enum = serializers.ListField(required=False)
+
+    def get_enum_child_field(self, instance):
+        enum = instance.get("enum")
+
+        if not enum:
+            return serializers.CharField()
+
+        if instance["type"] == "string":
+            return serializers.CharField()
+
+        for el in enum:
+            if not isinstance(el, int):
+                return serializers.FloatField()
+
+        return serializers.IntegerField()
+
+    def to_representation(self, instance):
+        self.fields["enum"].child = self.get_enum_child_field(instance)
+
+        result = super().to_representation(instance)
+
+        return result
 
 
 class SearchEigenschapSerializer(APIModelSerializer):

@@ -8,10 +8,10 @@ class ZaaktypenFilterSet(ApiFilterSet):
         required=False, help_text="`icontains` on `omschrijving` field"
     )
 
-    def filter_q(self, queryset, value) -> list:
+    def filter_q(self, results, value) -> list:
         return [
             zaaktype
-            for zaaktype in queryset
+            for zaaktype in results
             if value.lower() in zaaktype["omschrijving"].lower()
         ]
 

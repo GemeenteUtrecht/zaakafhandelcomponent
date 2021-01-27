@@ -10,7 +10,6 @@ from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.generics import ListAPIView
-from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
@@ -428,7 +427,6 @@ class EigenschappenView(ListAPIView):
     serializer_class = SearchEigenschapSerializer
     filter_backends = (ApiFilterBackend,)
     filterset_class = EigenschappenFilterSet
-    renderer_classes = (JSONRenderer,)
 
     def list(self, request, *args, **kwargs):
         # validate query params
@@ -458,9 +456,10 @@ class EigenschappenView(ListAPIView):
         ]
 
     def get_eigenschappen(self, zaaktypen):
-        eigenschappen = []
-        for zaaktype in zaaktypen:
-            eigenschappen += get_eigenschappen(zaaktype)
+        with parallel() as executor:
+            _eigenschappen = executor.map(get_eigenschappen, zaaktypen)
+
+        eigenschappen = sum(list(_eigenschappen), [])
 
         for eigenschap in eigenschappen:
             eigenschap.spec = convert_eigenschap_spec_to_json_schema(

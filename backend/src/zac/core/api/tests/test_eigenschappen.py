@@ -1,13 +1,8 @@
-from unittest.mock import patch
-
-from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 
 import requests_mock
 from rest_framework import status
-from rest_framework.test import APITestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -21,14 +16,13 @@ from zac.accounts.tests.factories import (
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
-from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
-class EigenschappenPermissiontests(ClearCachesMixin, APITestCase):
+class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -169,29 +163,20 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITestCase):
         self.assertEqual(len(data), 1)
 
 
-class EigenschappenResponseTests(ClearCachesMixin, APITestCase):
-    """
-    Test the API response body for zaak-detail endpoint.
-    """
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-
-        cls.user = SuperUserFactory.create()
-
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-
-        cls.endpoint = reverse("eigenschappen")
-
+class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
         # ensure that we have a user with all permissions
+        self.user = SuperUserFactory.create()
         self.client.force_authenticate(user=self.user)
 
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        self.endpoint = reverse("eigenschappen")
+
     @requests_mock.Mocker()
-    def test_get_eigenschappen(self, m):
+    def test_get_eigenschappen_string(self, m):
         zaaktype1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -272,6 +257,64 @@ class EigenschappenResponseTests(ClearCachesMixin, APITestCase):
             ],
         )
 
+    @requests_mock.Mocker()
+    def test_get_eigenschappen_number(self, m):
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "1",
+                "kardinaliteit": "1",
+                "waardenverzameling": [1, 2],
+            },
+        )
+
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
+            json=paginated_response([zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
+
+        response = self.client.get(
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    "url": eigenschap["url"],
+                    "name": "some-property",
+                    "spec": {
+                        "type": "number",
+                        "enum": [1, 2],
+                    },
+                }
+            ],
+        )
+
     def test_get_eigenschappen_without_query_params(self):
         response = self.client.get(self.endpoint)
 
@@ -279,7 +322,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "zaaktype_omschrijving": ["Dit veld is vereist."],
+                "zaaktypeOmschrijving": ["Dit veld is vereist."],
                 "catalogus": ["Dit veld is vereist."],
             },
         )

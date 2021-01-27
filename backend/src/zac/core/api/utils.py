@@ -102,10 +102,8 @@ EIGENSCHAP_FORMAT_TYPE_MAPPING = {
 def convert_eigenschap_spec_to_json_schema(spec) -> dict:
     json_schema = EIGENSCHAP_FORMAT_TYPE_MAPPING[spec.formaat]
 
-    if spec.formaat != "tekst":
-        return json_schema
-
-    json_schema.update({"minLength": 1, "maxLength": spec.lengte})
+    if spec.formaat == "tekst":
+        json_schema.update({"min_length": 1, "max_length": spec.lengte})
 
     if spec.waardenverzameling:
         json_schema.update({"enum": spec.waardenverzameling})

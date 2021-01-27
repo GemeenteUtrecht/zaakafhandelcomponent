@@ -31,6 +31,8 @@ class ApiFilterSetMetaclass(type):
 
 class BaseApiFilterSet:
     def __init__(self, data=None, queryset=None, *, request=None):
+        # queryset here is iterable (list or tuple) which can be serialized and used as a result of ListView
+        # it is not renamed into 'results' in order to use DjangoFilterBackend methods
         self.data = data or {}
         self.queryset = queryset
         self.request = request
@@ -66,19 +68,21 @@ class BaseApiFilterSet:
         return self.serializer.errors
 
     @property
-    def qs(self):
+    def qs(self) -> list:
+        # `qs` here is iterable, which can be serialized and used as a result of ListView
+        # it is not renamed into 'results' in order to use DjangoFilterBackend methods
         if not hasattr(self, "_qs"):
             qs = self.queryset
             if self.is_bound:
                 # ensure form validation before filtering
                 self.errors
-                qs = self.filter_queryset(qs)
+                qs = self.filter_results(qs)
             self._qs = qs
         return self._qs
 
-    def filter_queryset(self, queryset: list):
+    def filter_results(self, results: list):
         """
-        Filter queryset using filter_<filter_name> methods of the filterset
+        Filter results using filter_<filter_name> methods of the filterset
         """
         for name, value in self.serializer.data.items():
             method_name = f"filter_{name}"
@@ -87,8 +91,8 @@ class BaseApiFilterSet:
                     "%s method should be implemented in the filterset" % method_name
                 )
             method = getattr(self, method_name)
-            queryset = method(queryset, value)
-        return queryset
+            results = method(results, value)
+        return results
 
 
 class ApiFilterSet(BaseApiFilterSet, metaclass=ApiFilterSetMetaclass):
