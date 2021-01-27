@@ -127,8 +127,10 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak):
 
     eigenschappen_doc = defaultdict(dict)
     for zaak_eigenschap in get_zaak_eigenschappen(zaak):
-        format = zaak_eigenschap.eigenschap.specificatie.formaat
-        eigenschappen_doc[format].update({zaak_eigenschap.naam: zaak_eigenschap.waarde})
+        spec_format = zaak_eigenschap.eigenschap.specificatie.formaat
+        eigenschappen_doc[spec_format].update(
+            {zaak_eigenschap.naam: zaak_eigenschap.waarde}
+        )
 
     zaak_document.eigenschappen = eigenschappen_doc
     zaak_document.save()
