@@ -51,3 +51,9 @@ class Command(BaseCommand):
         for zaak in zaken:
             if zaak.eigenschappen:
                 update_eigenschappen_in_zaak_document(zaak)
+
+        self.stdout.write(
+            "eigenschappen were indexed for {} zaken".format(
+                len([zaak for zaak in zaken if zaak.eigenschappen])
+            )
+        )
