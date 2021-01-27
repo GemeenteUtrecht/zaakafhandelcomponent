@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from elasticsearch_dsl import Document, InnerDoc, Nested, field
+from elasticsearch_dsl import Document, InnerDoc, MetaField, Nested, field
 
 
 class EigenschapDocument(InnerDoc):
@@ -37,3 +37,34 @@ class ZaakDocument(Document):
 
     class Index:
         name = settings.ES_INDEX_ZAKEN
+        settings = {"index.mapping.ignore_malformed": True}
+
+    class Meta:
+        dynamic_templates = MetaField(
+            [
+                {
+                    "eigenschap_string": {
+                        "path_match": "eigenschappen.tekst.*",
+                        "mapping": {"type": "keyword"},
+                    }
+                },
+                {
+                    "eigenschap_number": {
+                        "path_match": "eigenschappen.getal.*",
+                        "mapping": {"type": "integer"},
+                    }
+                },
+                {
+                    "eigenschap_date": {
+                        "path_match": "eigenschappen.datum.*",
+                        "mapping": {"type": "date"},
+                    }
+                },
+                {
+                    "eigenschap_datetime": {
+                        "path_match": "eigenschappen.datum_tijd.*",
+                        "mapping": {"type": "date"},
+                    }
+                },
+            ]
+        )

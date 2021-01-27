@@ -413,7 +413,7 @@ class ZaakTypenView(ListAPIView):
             for zaaktype in zaaktypen
         ]
         zaaktypen_aggregated = {
-            frozenset(zaaktype.items()) : zaaktype for zaaktype in zaaktypen_data
+            frozenset(zaaktype.items()): zaaktype for zaaktype in zaaktypen_data
         }.values()
         zaaktypen_aggregated = sorted(
             zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
