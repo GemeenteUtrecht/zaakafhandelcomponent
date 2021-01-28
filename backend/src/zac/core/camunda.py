@@ -1,3 +1,4 @@
+import warnings
 from typing import List, Optional
 
 from django.contrib.auth import get_user_model
@@ -5,7 +6,6 @@ from django.contrib.auth import get_user_model
 import requests
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
-from django_camunda.types import CamundaId
 
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
@@ -56,48 +56,14 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
     return tasks
 
 
-def get_task(task_id: CamundaId, check_history=False) -> Optional[Task]:
-    client = get_client()
-    try:
-        data = client.get(f"task/{task_id}")
-    except requests.HTTPError as exc:
-        if exc.response.status_code == 404:
-            if not check_history:
-                return None
+def get_task(*args, **kwargs) -> Optional[Task]:
+    from zac.camunda.user_tasks import get_task
 
-            # see if we can get it from the history
-            historical = client.get("history/task", {"taskId": task_id})
-            if not historical:
-                return None
-
-            assert (
-                len(historical) < 2
-            ), f"Found multiple tasks in the history for ID {task_id}"
-
-            data = historical[0]
-            # these properties do not exist in the history API:
-            # https://docs.camunda.org/manual/7.11/reference/rest/history/task/get-task-query/
-            data.update(
-                {
-                    "created": data["start_time"],
-                    "delegation_state": None,
-                    "suspended": False,
-                    "form_key": None,  # cannot determine this...
-                    "historical": True,
-                }
-            )
-
-        else:
-            raise
-
-    task = factory(Task, data)
-
-    # add Django integration
-    if task.assignee:
-        task.assignee = _resolve_assignee(task.assignee)
-    task.form = extract_task_form(task, FORM_KEYS)
-
-    return task
+    warnings.warn(
+        "'zac.core.camunda.get_task' is deprecated, use 'zac.camunda.user_tasks.get_task' instead",
+        DeprecationWarning,
+    )
+    return get_task(*args, **kwargs)
 
 
 def get_process_zaak_url(process: ProcessInstance) -> str:
