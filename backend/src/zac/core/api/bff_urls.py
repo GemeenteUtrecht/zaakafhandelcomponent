@@ -47,9 +47,4 @@ urlpatterns = [
         ZaakObjectsView.as_view(),
         name="zaak-objects",
     ),
-    path(
-        "_send-message",
-        SendMessage.as_view(),
-        name="send-message",
-    ),
 ]

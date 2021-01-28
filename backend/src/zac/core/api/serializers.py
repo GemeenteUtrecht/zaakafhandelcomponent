@@ -391,21 +391,3 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
     class Meta:
         model = ZaakObjectGroup
         fields = ("object_type", "label", "items")
-
-
-#
-# User Task Serializers for BFF endpoints
-#
-
-
-class MessageSerializer(serializers.Serializer):
-    process_instance_id = serializers.CharField()
-    message = serializers.ChoiceField(choices=())
-
-    def __init__(self, *args, **kwargs):
-        message_names = kwargs.pop("message_names", [])
-        super().__init__(*args, **kwargs)
-        self.set_message_choices(message_names)
-
-    def set_message_choices(self, message_names: List[str]):
-        self.fields["message"].choices = [(name, name) for name in message_names]

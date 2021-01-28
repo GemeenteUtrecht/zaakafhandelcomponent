@@ -1,3 +1,5 @@
+from typing import List
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -64,3 +66,16 @@ class UserTaskContextSerializer(PolymorphicSerializer):
         super().__init__(*args, **kwargs)
 
         self.fields["form"].choices = list(REGISTRY.keys())
+
+
+class MessageSerializer(serializers.Serializer):
+    process_instance_id = serializers.CharField()
+    message = serializers.ChoiceField(choices=())
+
+    def __init__(self, *args, **kwargs):
+        message_names = kwargs.pop("message_names", [])
+        super().__init__(*args, **kwargs)
+        self.set_message_choices(message_names)
+
+    def set_message_choices(self, message_names: List[str]):
+        self.fields["message"].choices = [(name, name) for name in message_names]
