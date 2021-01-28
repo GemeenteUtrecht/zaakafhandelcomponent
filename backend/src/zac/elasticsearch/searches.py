@@ -3,7 +3,16 @@ from functools import reduce
 from typing import List
 
 from elasticsearch_dsl import Q
-from elasticsearch_dsl.query import Bool, Exists, Nested, Range, Regexp, Term, Terms
+from elasticsearch_dsl.query import (
+    Bool,
+    Exists,
+    Match,
+    Nested,
+    Range,
+    Regexp,
+    Term,
+    Terms,
+)
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from .documents import ZaakDocument
@@ -11,6 +20,7 @@ from .documents import ZaakDocument
 SUPPORTED_QUERY_PARAMS = (
     "identificatie",
     "bronorganisatie",
+    "omschrijving",
     "zaaktypen",
     "behandelaar",
 )
@@ -20,6 +30,7 @@ def search(
     size=None,
     identificatie=None,
     bronorganisatie=None,
+    omschrijving=None,
     zaaktypen=None,
     behandelaar=None,
     allowed=(),
@@ -34,6 +45,8 @@ def search(
         s = s.filter(Term(identificatie=identificatie))
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
+    if omschrijving:
+        s = s.query(Match(omschrijving=omschrijving))
     if zaaktypen:
         s = s.filter(Terms(zaaktype=zaaktypen))
     if behandelaar:
