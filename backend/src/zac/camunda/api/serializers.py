@@ -3,8 +3,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from zac.accounts.serializers import UserSerializer
+from zac.api.polymorphism import PolymorphicSerializer
 
-from ..user_tasks import REGISTRY
+from ..user_tasks.context import REGISTRY
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -36,7 +37,10 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class UserTaskContextSerializer(serializers.Serializer):
+class UserTaskContextSerializer(PolymorphicSerializer):
+    discriminator_field = "form"
+    serializer_mapping = {}  # set at run-time based on the REGISTRY
+
     form = serializers.ChoiceField(
         label=_("Form to render"),
         source="task.form_key",
@@ -48,16 +52,15 @@ class UserTaskContextSerializer(serializers.Serializer):
         choices=(),
     )
     task = TaskSerializer(label=_("User task summary"))
-    context = serializers.JSONField(
-        label=_("User task context"),
-        help_text=_(
-            "The task context shape depends on the `form` property. The value will be "
-            "`null` if the backend does not 'know' the user task `formKey`."
-        ),
-        allow_null=True,
-    )
+    # the context is added by the serializer_mapping serializers
 
     def __init__(self, *args, **kwargs):
+
+        self.serializer_mapping = {
+            form_key: serializer
+            for form_key, (callback, serializer) in REGISTRY.items()
+        }
+
         super().__init__(*args, **kwargs)
 
         self.fields["form"].choices = list(REGISTRY.keys())

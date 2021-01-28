@@ -5,10 +5,9 @@ class ValidSignConfig(AppConfig):
     name = "zac.contrib.validsign"
 
     def ready(self):
-        from zac.camunda.user_tasks import REGISTRY
-        from zac.camunda.user_tasks.context import noop
         from zac.core.camunda import FORM_KEYS
 
+        from . import camunda  # noqa
         from .forms import ConfigurePackageForm, SignerFormSet
 
         FORM_KEYS.update(
@@ -19,5 +18,3 @@ class ValidSignConfig(AppConfig):
                 },
             }
         )
-
-        REGISTRY["zac:validSign:configurePackage"] = noop
