@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -10,6 +12,7 @@ from .serializers import ErrorSerializer, ProcessInstanceSerializer
 
 
 class ProcessInstanceFetchView(APIView):
+    schema_summary = _("List process instances for a zaak")
     serializer_class = ProcessInstanceSerializer
 
     @extend_schema(
@@ -27,6 +30,14 @@ class ProcessInstanceFetchView(APIView):
         },
     )
     def get(self, request: Request, *args, **kwargs):
+        """
+        Get the Camunda process instances for a given zaak.
+
+        Retrieve the process instances where the zaak URL is matches the process
+        `zaakUrl` variable. Process instances return the available message that can be
+        sent into the process and the available user tasks. The response includes the
+        child-process instances of each matching process instance.
+        """
         zaak_url = request.GET.get("zaak_url")
         if not zaak_url:
             err_serializer = ErrorSerializer(data={"error": "missing zaak_url"})
