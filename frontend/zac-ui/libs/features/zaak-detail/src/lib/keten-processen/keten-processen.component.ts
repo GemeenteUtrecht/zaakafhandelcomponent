@@ -52,7 +52,7 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   getProcesses(): Observable<any> {
-    const endpoint = encodeURI(`/camunda/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
+    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
     return this.http.get(endpoint);
   }
 
