@@ -400,7 +400,7 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
 
 class MessageSerializer(serializers.Serializer):
     process_instance_id = serializers.CharField()
-    message = forms.ChoiceField(choices=())
+    message = serializers.ChoiceField(choices=())
 
     def __init__(self, *args, **kwargs):
         message_names = kwargs.pop("message_names", [])
