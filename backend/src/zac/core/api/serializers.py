@@ -461,3 +461,15 @@ class SearchEigenschapSerializer(APIModelSerializer):
             "spec",
         )
         extra_kwargs = {"name": {"source": "naam"}}
+
+
+class SearchZaaktypeSerializer(serializers.Serializer):
+    omschrijving = serializers.CharField()
+    catalogus = serializers.URLField()
+
+
+class SearchSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=False)
+    zaaktype = SearchZaaktypeSerializer(required=False)
+    omschrijving = serializers.CharField(required=False)
+    eigenschappen = serializers.DictField(child=serializers.DictField(), required=False)

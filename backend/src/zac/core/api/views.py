@@ -48,6 +48,7 @@ from ..services import (
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
+    get_zaken_es,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
@@ -66,6 +67,7 @@ from .serializers import (
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
+    SearchSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -500,14 +502,11 @@ class EigenschappenView(ListAPIView):
         catalogus = self.request.query_params.get("catalogus")
         zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
 
-        zaaktypen = get_zaaktypen(
-            UserPermissions(self.request.user), catalogus=catalogus
+        return get_zaaktypen(
+            UserPermissions(self.request.user),
+            catalogus=catalogus,
+            omschrijving=zaaktype_omschrijving,
         )
-        return [
-            zaaktype
-            for zaaktype in zaaktypen
-            if zaaktype.omschrijving == zaaktype_omschrijving
-        ]
 
     def get_eigenschappen(self, zaaktypen):
         with parallel() as executor:
@@ -521,3 +520,33 @@ class EigenschappenView(ListAPIView):
             )
 
         return eigenschappen
+
+
+class SearchViewSet(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = SearchSerializer
+
+    def post(self, request, *args, **kwargs):
+        input_serializer = self.serializer_class(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        zaken = self.perform_search(input_serializer.data)
+        zaak_serializer = ZaakDetailSerializer(zaken, many=True)
+
+        return Response(zaak_serializer.data)
+
+    def perform_search(self, data) -> List[Zaak]:
+        user_perms = UserPermissions(self.request.user)
+
+        if data.get("zaaktype"):
+            zaaktype_data = data.pop("zaaktype")
+            zaaktypen = get_zaaktypen(
+                user_perms,
+                catalogus=zaaktype_data["catalogus"],
+                omschrijving=zaaktype_data["omschrijving"],
+            )
+            data["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
+
+        zaken = get_zaken_es(user_perms, size=50, query_params=data)
+        return zaken

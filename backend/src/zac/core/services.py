@@ -128,12 +128,19 @@ def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]
 
 
 def get_zaaktypen(
-    user_perms: Optional[UserPermissions] = None, catalogus: str = ""
+    user_perms: Optional[UserPermissions] = None,
+    catalogus: str = "",
+    omschrijving: str = "",
 ) -> List[ZaakType]:
     zaaktypen = _get_zaaktypen(catalogus=catalogus)
     if user_perms is not None:
         # filter out zaaktypen from permissions
         zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
+
+    if omschrijving:
+        zaaktypen = [
+            zaaktype for zaaktype in zaaktypen if zaaktype.omschrijving == omschrijving
+        ]
     return zaaktypen
 
 
