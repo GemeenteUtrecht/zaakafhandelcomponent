@@ -9,6 +9,7 @@ from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.zaken import Zaak
 
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import _client_from_url, get_zaak
@@ -76,7 +77,7 @@ class GetTaskContextView(APIView):
     # TODO: check permissions that user is allowed to execute process task stuff.
     # See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/blob/9b7ea9cbab66c7356e7417b6ce98245272954e1c/backend/src/zac/core/api/permissions.py#L69  # noqa
     # for a first pass
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken & CanPerformTasks,)
+    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = UserTaskContextSerializer
     schema_summary = _("Retrieve user task data and context")
 
@@ -187,59 +188,14 @@ class PerformTaskView(APIView):
         return zaak
 
     def get(self, request, *args, **kwargs):
-        self.zaak = self._get_zaak(request)
+        zaak = self._get_zaak(request)
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.zaak = self._get_zaak(request)
-        response = super().post(request, *args, **kwargs)
-        return response
+        zaak = self._get_zaak(request)
 
-    def get_form_class(self):
-        task = self._get_task()
-        return task.form["form"] if task.form else DummyForm
-
-    def get_form_kwargs(self):
-        base = super().get_form_kwargs()
-        task = self._get_task()
-        extra = {"task": task}
-        return {**base, **extra}
-
-    def get_form(self, *args, **kwargs):
-        form = super().get_form(*args, **kwargs)
-        form.set_context({"request": self.request, "view": self})
-        return form
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        task = self._get_task()
-        context.update(
-            {
-                "zaak": self.zaak,
-                "task": task,
-                "return_url": self.request.GET.get("returnUrl"),
-            }
-        )
-
-        return context
-
-    def form_valid(self, form):
-        formset = self.get_formset()
-
-        if formset and not formset.is_valid():
-            return self.render_to_response(
-                self.get_context_data(form=form, formset=formset)
-            )
-
-        form.on_submission()
-
-        if formset and formset.is_valid():
-            formset.on_submission(form=form)
-
-        task = self._get_task()
-
-        zrc_client = _client_from_url(self.zaak.url)
-        ztc_client = _client_from_url(self.zaak.zaaktype.url)
+        zrc_client = _client_from_url(zaak.url)
+        ztc_client = _client_from_url(zaak.zaaktype.url)
 
         zrc_jwt = zrc_client.auth.credentials()["Authorization"]
         ztc_jwt = ztc_client.auth.credentials()["Authorization"]
@@ -249,18 +205,9 @@ class PerformTaskView(APIView):
             "ztc": {"jwt": ztc_jwt},
         }
 
-        formset_vars = formset.get_process_variables() if formset else {}
-        if "kownslFrontendUrl" in formset_vars:
-            formset_vars["kownslFrontendUrl"] = self.request.build_absolute_uri(
-                formset_vars["kownslFrontendUrl"]
-            )
-
         variables = {
             "services": services,
             **form.get_process_variables(),
-            **formset_vars,
         }
 
-        complete_task(task.id, variables)
-
-        return super().form_valid(form)
+        complete_task(self._task.id, variables)

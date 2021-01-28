@@ -5,6 +5,7 @@ from itertools import groupby
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
