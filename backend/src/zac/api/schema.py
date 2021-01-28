@@ -1,6 +1,9 @@
 from drf_spectacular.openapi import AutoSchema as _AutoSchema
 from drf_spectacular.plumbing import build_media_type_object, force_instance
 
+# ensure extensions are loaded
+from .drf_spectacular import polymorphic  # noqa
+
 
 class AutoSchema(_AutoSchema):
     def _get_request_body(self):

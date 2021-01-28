@@ -65,9 +65,7 @@ def register(form_key: str, serializer_cls: Type[serializers.Serializer]):
     return decorator
 
 
-@usertask_context_serializer
-class EmptySerializer(serializers.Serializer):
-    pass
+EmptySerializer = usertask_context_serializer(serializers.JSONField)
 
 
 @register("", EmptySerializer)
