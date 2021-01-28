@@ -17,6 +17,6 @@ urlpatterns = [
     # actual API endpoints
     path("kownsl/", include("zac.contrib.kownsl.urls")),
     path("core/", include("zac.core.api.bff_urls")),
-    path("camunda/", include("zac.camunda.api")),
+    path("camunda/", include("zac.camunda.api.urls")),
     path("", include("zac.notifications.urls")),
 ]
