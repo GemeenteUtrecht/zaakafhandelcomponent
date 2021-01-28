@@ -1,0 +1,30 @@
+<div class="status card">
+  <h2>Status</h2>
+  <ng-container *ngIf="!data && isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <ng-container *ngIf="data && !isLoading">
+    <gu-progress-bar *ngIf="progress" [progress]=progress class="d-block mb-3"></gu-progress-bar>
+    <p class="p--bold d-inline-block mr-3">Uiterlijke einddatum:</p>
+    <p class="d-inline-block" *ngIf="deadline">{{deadline}}</p>
+    <div class="timeline" *ngIf="data">
+      <div class="timeline__row row no-gutters"
+           *ngFor="let status of data; let last = last"
+           [ngClass]="(last ? 'timeline__row--last' : '')"
+      >
+        <div class="col-1">
+          <div class="timeline-item__nr">{{status.statustype.volgnummer}}</div>
+        </div>
+        <div class="timeline-item timeline-item--left col-6">
+          <div class="item-left__info">
+            <p class="p--nomargin p--bold">{{status.statustype.omschrijving}}</p>
+            <label class="label label--date p-0 m-0">{{status.datumStatusGezet | date:'shortDate'}}</label>
+          </div>
+        </div>
+        <div class="timeline-item timeline-item--right col-5">
+          <p class="p--nomargin">{{status.statustoelichting}}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -12,9 +12,14 @@
   padding: 0 .4rem;
   text-decoration: none;
   text-transform: uppercase;
-  white-space: nowrap;
   &--optional {
     color: $color-dimgray;
+  }
+  &--date {
+    color: $color-text--gray;
+    text-transform: none;
+    font-size: 1.2rem;
+    font-weight: normal;
   }
   &--hint {
     color: $color-dimgray;

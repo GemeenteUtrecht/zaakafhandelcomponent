@@ -1,0 +1,19 @@
+@import './base/colors/colors';
+
+.progress-bar {
+  white-space: nowrap;
+  &-container {
+    height: 3.6rem;
+    border: 1px solid $border-grey;
+    border-radius: 5px;
+  }
+  width: 0;
+  height: 100%;
+  background-color: $background-yellow;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: $color-text--gray;
+}

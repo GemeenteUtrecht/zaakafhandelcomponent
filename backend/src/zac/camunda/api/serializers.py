@@ -3,6 +3,10 @@ from rest_framework import serializers
 from zac.accounts.serializers import UserSerializer
 
 
+class ErrorSerializer(serializers.Serializer):
+    error = serializers.CharField()
+
+
 class RecursiveField(serializers.Serializer):
     def to_representation(self, instance):
         return self.parent.parent.to_representation(instance)

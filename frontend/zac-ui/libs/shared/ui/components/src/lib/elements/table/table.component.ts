@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { Table } from '@gu/models';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ExtensiveCell, Table } from '@gu/models';
 
 @Component({
   selector: 'gu-table',
@@ -8,33 +8,55 @@ import { Table } from '@gu/models';
 })
 export class TableComponent {
 
-  @Input() expandable = true;
+  @Input() expandable = false;
   @Input() tableData: Table;
+
+  @Output() tableOutput = new EventEmitter<any>();
 
   constructor() { }
 
   keepOriginalOrder = (a) => a.key
 
+  handleRowClickOutput(value) {
+    if (value) {
+      this.tableOutput.emit(value);
+    }
+  }
+
   expandRow(event) {
-    const arrow = event.target;
-    const parentRow = event.currentTarget.parentElement.parentElement;
-    const childRow = parentRow.nextElementSibling;
+    if (this.expandable) {
+      const clickedElement = event.target;
+      const parentRow = clickedElement.closest('tr.parent-row')
+      const arrowElement = parentRow.querySelector('.arrow');
+      const childRow = parentRow.nextElementSibling;
 
-    if (!childRow.classList.contains('child-row--expanded')) {
-      childRow.classList.add('child-row--expanded');
-    } else {
-      childRow.classList.remove('child-row--expanded');
-    }
+      if (!childRow.classList.contains('child-row--expanded')) {
+        childRow.classList.add('child-row--expanded');
+      } else {
+        childRow.classList.remove('child-row--expanded');
+      }
 
-    this.rotateArrow(arrow);
-  }
-
-  rotateArrow(arrow) {
-    if (!arrow.classList.contains('arrow--rotated')) {
-      arrow.classList.add('arrow--rotated');
-    } else {
-      arrow.classList.remove('arrow--rotated');
+      this.rotateArrow(arrowElement);
     }
   }
 
+  rotateArrow(element) {
+    if (!element.classList.contains('arrow--rotated')) {
+      element.classList.add('arrow--rotated');
+    } else {
+      element.classList.remove('arrow--rotated');
+    }
+  }
+
+  isString(value) {
+    return typeof value === 'string';
+  }
+
+  checkCellType(value: ExtensiveCell | string) {
+    if (!!value) {
+      if (typeof value === 'object') {
+        return value.type;
+      }
+    }
+  }
 }

@@ -1,0 +1,42 @@
+@import './base/colors/colors';
+
+.gu-config-adviseren-accorderen {
+  .zaak-informatie {
+    margin-bottom: 2rem;
+  }
+  .configuration-details {
+    margin-bottom: 3rem;
+  }
+  .step-container {
+    border-bottom: 1px solid $border-grey;
+    padding-bottom: 2rem;
+  }
+  .step-label {
+    display: inline-block;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    margin-right: 5px;
+    color: $color-text;
+    vertical-align: top;
+  }
+  .step-datepicker {
+    font-size: 1.4rem;
+    margin-right: 5px;
+  }
+  gu-multiselect {
+    display: block;
+    width: 70%;
+    margin-bottom: 10px;
+  }
+  gu-icon {
+    font-size: 1.6rem;
+    color: $color-warn;
+    cursor: pointer;
+    margin-top: -2px;
+  }
+  input {
+    border: 1px solid grey;
+    padding: 2px 5px;
+  }
+}

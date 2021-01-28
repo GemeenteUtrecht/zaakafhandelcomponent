@@ -1,0 +1,10 @@
+<div class="gu-modal container">
+  <div class="gu-modal-body">
+    <div class="gu-modal-header">
+      <h1 *ngIf="title" class="mb-0">{{title}}</h1>
+      <mat-icon role="button" (click)="close()">close</mat-icon>
+    </div>
+    <ng-content></ng-content>
+  </div>
+</div>
+<div class="gu-modal-background"></div>

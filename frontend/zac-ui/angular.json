@@ -22,7 +22,10 @@
             "tsConfig": "apps/zac-ui/tsconfig.app.json",
             "aot": true,
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
-            "styles": ["apps/zac-ui/src/styles.scss"],
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "apps/zac-ui/src/styles.scss"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": ["libs/shared/ui/styling/src/lib"]
             },
@@ -291,6 +294,48 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/shared/utils/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "features-zaak-detail": {
+      "projectType": "library",
+      "root": "libs/features/zaak-detail",
+      "sourceRoot": "libs/features/zaak-detail/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/zaak-detail/tsconfig.lib.json",
+            "project": "libs/features/zaak-detail/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/zaak-detail/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/zaak-detail/tsconfig.lib.json",
+              "libs/features/zaak-detail/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/features/zaak-detail/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/zaak-detail/jest.config.js",
             "passWithNoTests": true
           }
         }

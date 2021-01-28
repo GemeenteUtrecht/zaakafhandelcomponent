@@ -1,0 +1,19 @@
+@import './base/colors/colors';
+
+.betrokkenen {
+  &__role {
+    border: 1px solid $border-grey;
+    padding: 0.7rem 1.2rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    p {
+      margin: 0;
+      &.p--bold {
+        margin-bottom: 0.6rem;
+      }
+      &.p--grey {
+        color: dimgray;
+      }
+    }
+  }
+}
