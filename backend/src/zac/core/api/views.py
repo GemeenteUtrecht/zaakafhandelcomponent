@@ -18,7 +18,6 @@ from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-
 from zac.elasticsearch.searches import autocomplete_zaak_search
 
 from ..cache import invalidate_zaak_cache

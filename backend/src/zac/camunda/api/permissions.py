@@ -4,7 +4,12 @@ from rest_framework.views import APIView
 
 from zac.core.permissions import zaakproces_usertasks
 
+
 class CanPerformTasks(permissions.BasePermission):
+    """
+    TODO: Write tests.
+    """
+
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method not in permissions.SAFE_METHODS:
             return False

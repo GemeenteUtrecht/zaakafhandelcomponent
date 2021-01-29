@@ -22,9 +22,9 @@ from ..user_tasks import UserTaskData, get_context, get_task
 from .permissions import CanPerformTasks
 from .serializers import (
     ErrorSerializer,
+    MessageSerializer,
     ProcessInstanceSerializer,
     UserTaskContextSerializer,
-    MessageSerializer,
 )
 
 
@@ -106,9 +106,13 @@ class GetTaskContextView(APIView):
         # May raise a permission denied
         self.check_object_permissions(self.request, task)
         return task
-        
+
 
 class SendMessageView(APIView):
+    """
+    TODO: Write tests.
+    """
+
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = MessageSerializer
 
@@ -157,57 +161,15 @@ class SendMessageView(APIView):
             },
         }
 
-        send_message(serializer.cleaned_data["message"], [process_instance.id], variables)
+        send_message(
+            serializer.cleaned_data["message"], [process_instance.id], variables
+        )
         return Response(status=status.HTTP_201_CREATED)
 
 
 class PerformTaskView(APIView):
-    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    check_task_history = False
+    """
+    Implement polymorphic perform task view
+    """
 
-    def _get_task(self, refresh=False) -> Task:
-        if not hasattr(self, "_task") or refresh:
-            task = get_task(
-                self.kwargs["task_id"], check_history=self.check_task_history
-            )
-            if task is None:
-                raise Http404("No such task")
-            self._task = task
-        return self._task
-
-    def _get_zaak(self, request: Request) -> Zaak:
-        task = self._get_task()
-        process_instance = get_process_instance(self._task.process_instance_id)
-
-        zaak_url = get_process_zaak_url(process_instance)
-        zaak = get_zaak(zaak_url=zaak_url)
-        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
-        
-        # Check permissions on zaak
-        self.check_object_permissions(request, zaak)
-        return zaak
-
-    def get(self, request, *args, **kwargs):
-        zaak = self._get_zaak(request)
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        zaak = self._get_zaak(request)
-
-        zrc_client = _client_from_url(zaak.url)
-        ztc_client = _client_from_url(zaak.zaaktype.url)
-
-        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
-        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
-
-        services = {
-            "zrc": {"jwt": zrc_jwt},
-            "ztc": {"jwt": ztc_jwt},
-        }
-
-        variables = {
-            "services": services,
-            **form.get_process_variables(),
-        }
-
-        complete_task(self._task.id, variables)
+    pass

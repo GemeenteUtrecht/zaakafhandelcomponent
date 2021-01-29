@@ -69,6 +69,10 @@ class UserTaskContextSerializer(PolymorphicSerializer):
 
 
 class MessageSerializer(serializers.Serializer):
+    """
+    TODO: Write tests.
+    """
+
     process_instance_id = serializers.CharField()
     message = serializers.ChoiceField(choices=())
 
