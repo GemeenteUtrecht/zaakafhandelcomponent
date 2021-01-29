@@ -5,24 +5,29 @@
   page-break-inside: avoid;
   break-inside: avoid;
   display: inline-block;
-  font-size: 1rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  line-height: 1.8rem;
+  line-height: 1.125rem;
   margin: 0 .25rem;
-  padding: 0 .4rem;
+  padding: 0 .2.5rem;
   text-decoration: none;
   text-transform: uppercase;
-  white-space: nowrap;
   &--optional {
     color: $color-dimgray;
+  }
+  &--date {
+    color: $color-text--gray;
+    text-transform: none;
+    font-size: 0.75rem;
+    font-weight: normal;
   }
   &--hint {
     color: $color-dimgray;
     display: block;
     font-style: italic;
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-    margin-top: .2rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.625rem;
+    margin-top: 1.25rem;
     font-weight: normal;
     text-transform: none;
     padding: 0;

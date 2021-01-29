@@ -1,4 +1,5 @@
 <div class="kownsl__container">
+  <h1 class="">Accordering gevraagd</h1>
   <ng-template [ngIf]="uuid && !submitSuccess">
     <!-- Loading -->
     <ng-template [ngIf]="!approvalData && isLoading">
@@ -11,9 +12,8 @@
     </ng-template>
 
     <!-- Main content -->
-    <ng-template [ngIf]="approvalData && !isLoading">
+    <ng-template [ngIf]="!!approvalData && !isLoading">
       <section>
-        <h1 class="">Accordering gevraagd</h1>
         <div class="row no-gutters">
           <div class="col-4">
             <p class="p p--bold">Ingediend op:</p>
@@ -40,6 +40,7 @@
           <h2 class="mb-4">Vorige accorderingen</h2>
           <gu-table
             [tableData]="tableData"
+            [expandable]="true"
           ></gu-table>
         </section>
       </ng-template>

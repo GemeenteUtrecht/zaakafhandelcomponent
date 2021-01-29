@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ReviewRequest } from '../../models/review-request';
 import { ApprovalService } from './approval.service';
-import { CellData, Table } from '@gu/models';
+import { RowData, Table } from '@gu/models';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApprovalForm } from '../../models/approval-form';
 import { ActivatedRoute } from '@angular/router';
@@ -27,7 +27,7 @@ export class ApprovalComponent implements OnInit {
 
   tableData: Table = {
     headData: [],
-    elementData: []
+    bodyData: []
   }
 
   approvalForm: FormGroup;
@@ -75,15 +75,15 @@ export class ApprovalComponent implements OnInit {
   createTableData(approvalData: ReviewRequest): Table {
     const tableData: Table = {
       headData: ['Accordeur', 'Gedaan op', 'Akkoord'],
-      elementData: []
+      bodyData: []
     }
 
     // Add table body data
-    tableData.elementData = approvalData.reviews.map( review => {
+    tableData.bodyData = approvalData.reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
-      const cellData: CellData = {
+      const rowData: RowData = {
         cellData: {
           author: author,
           created: date,
@@ -91,7 +91,7 @@ export class ApprovalComponent implements OnInit {
         },
         expandData: review.toelichting
       }
-      return cellData
+      return rowData
     });
 
     return tableData;

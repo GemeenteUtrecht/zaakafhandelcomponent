@@ -1,0 +1,11 @@
+vaadin-datepicker {
+  input {
+    border: 1px solid grey;
+    padding: 2px 5px;
+    font-size: 0.875rem;
+  }
+  :host [part="input-field"] {
+    border: 1px solid black;
+    background-color: white;
+  }
+}

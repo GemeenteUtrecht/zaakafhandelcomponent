@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "allowJs": true,
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
@@ -21,7 +22,8 @@
       "@gu/styling": ["libs/shared/ui/styling/src/index.ts"],
       "@gu/services": ["libs/shared/data-access/services/src/index.ts"],
       "@gu/models": ["libs/shared/data-access/models/index.ts"],
-      "@gu/utils": ["libs/shared/utils/src/index.ts"]
+      "@gu/utils": ["libs/shared/utils/src/index.ts"],
+      "@gu/zaak-detail": ["libs/features/zaak-detail/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

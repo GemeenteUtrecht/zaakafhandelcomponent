@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
 import { ReviewRequest } from '../../models/review-request';
-import { CellData, FileUpload, Table } from '@gu/models';
+import { RowData, FileUpload, Table } from '@gu/models';
 import { convertBlobToString } from '@gu/utils';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -28,7 +28,7 @@ export class AdviceComponent implements OnInit {
 
   tableData: Table = {
     headData: [],
-    elementData: []
+    bodyData: []
   }
 
   pipe = new DatePipe("nl-NL");
@@ -84,21 +84,21 @@ export class AdviceComponent implements OnInit {
   createTableData(adviceData: ReviewRequest): Table {
     const tableData: Table = {
       headData: ['Adviseur', 'Gedaan op'],
-      elementData: []
+      bodyData: []
     }
 
     // Add table body data
-    tableData.elementData = adviceData.reviews.map( review => {
+    tableData.bodyData = adviceData.reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
-      const cellData: CellData = {
+      const rowData: RowData = {
         cellData: {
           author: author,
           created: date
         },
         expandData: review.advice
       }
-      return cellData
+      return rowData
     });
 
     return tableData

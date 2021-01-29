@@ -21,11 +21,11 @@
     margin: 2px 0;
     transition: 0.2s ease;
     opacity: 0.9;
-    max-width: 200px;
+    min-width: 200px;
     bottom: 26px;
     left: 16px;
     position: absolute;
-    font-size: 1.2rem;
+    font-size: 0.75rem;
     visibility: hidden;
   }
   &--primary {

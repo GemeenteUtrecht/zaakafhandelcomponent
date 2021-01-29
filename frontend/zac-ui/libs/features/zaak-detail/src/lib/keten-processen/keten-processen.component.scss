@@ -1,0 +1,21 @@
+@import './base/colors/colors';
+
+.keten-processen {
+  &__actie-buttons-container {
+    margin-bottom: 1.5rem;
+  }
+  &__taken {
+    .taak {
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid $border-grey;
+      &:last-child {
+        margin-bottom: 0;
+        border: none;
+      }
+    }
+    .taak__buttons * {
+      margin-right: 0.625rem;
+    }
+  }
+}

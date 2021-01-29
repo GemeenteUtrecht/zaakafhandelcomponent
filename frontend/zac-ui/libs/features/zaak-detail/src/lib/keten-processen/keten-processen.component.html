@@ -1,0 +1,93 @@
+<div class="keten-processen card">
+  <h2>Actieve (keten)processen</h2>
+  <ng-container *ngIf="(!data) && (isLoading)">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <ng-container *ngIf="!!data && data.length > 0">
+    <div class="keten-processen__actie-buttons-container">
+      <gu-button
+        (click)="sendMessage(message)"
+        *ngFor="let message of data[0].messages"
+        type="primary" size="small" class="d-inline-block mr-2 mb-2">
+        {{message}}
+      </gu-button>
+    </div>
+    <div class="keten-processen__taken">
+      <h3>Taken</h3>
+      <div class="taak" *ngFor="let task of data[0].tasks">
+        <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
+        <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+        <div class="taak__buttons">
+          <gu-button type="secondary">Claimen</gu-button>
+          <gu-button type="secondary" (click)="executeTask(task.id)">Uitvoeren</gu-button>
+        </div>
+      </div>
+      <div class="taak" *ngFor="let subProcess of data[0].subProcesses">
+        <p class="p--marginsmall p--bold d-inline-block">{{subProcess.tasks[0].name}}</p>
+        <label class="label label--date">{{subProcess.tasks[0].created | date:'fullDate'}}</label>
+        <gu-chip
+          *ngIf="!!subProcess.tasks[0].assignee"
+          type="primary"
+          class="d-inline-block mb-3">
+          {{subProcess.tasks[0].assignee.username}}
+        </gu-chip>
+        <div class="taak__buttons">
+          <gu-button type="secondary">Claimen</gu-button>
+          <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+        </div>
+      </div>
+    </div>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-1')">
+      Configureer adviseren/accorderen
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-2')">
+      Document selecteren
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-3')">
+      Document ondertekenen
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-4')">
+      Dynamische form
+    </gu-button>
+  </ng-container>
+  <ng-container *ngIf="!!data && data.length === 0">
+    <p>Er zijn geen actieve (keten)processen.</p>
+  </ng-container>
+</div>
+<!--<gu-button (click)="openModal('custom-modal-1')">-->
+<!--  Uitvoeren-->
+<!--</gu-button>-->
+<gu-modal
+  id="custom-modal-1"
+  [closeIcon]="true"
+  title="Adviesvraag configureren"
+>
+  <gu-config-adviseren-accorderen
+  ></gu-config-adviseren-accorderen>
+</gu-modal>
+<gu-modal
+  id="custom-modal-2"
+  [closeIcon]="true"
+  title="Selecteer documenten bijdragezaak"
+><gu-document-select></gu-document-select>
+</gu-modal>
+<gu-modal
+  id="custom-modal-3"
+  [closeIcon]="true"
+  title="Digitale ondertekening"
+><gu-sign-document></gu-sign-document>
+</gu-modal>
+<gu-modal
+  id="custom-modal-4"
+  [closeIcon]="true"
+  title="Dynamische form"
+><gu-dynamic-form></gu-dynamic-form>
+</gu-modal>

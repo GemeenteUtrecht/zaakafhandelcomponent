@@ -1,6 +1,10 @@
+@import '../base/colors/colors';
+
 a.anchor {
-  font-size: 1.4rem;
+  font-size: 0.875rem;
+  color: $color-blue;
   &--back {
+    color: $color-text;
     display: inline-block;
     &:before {
       display: inline-block;
