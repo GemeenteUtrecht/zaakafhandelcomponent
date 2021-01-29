@@ -73,7 +73,7 @@ export class DocumentenComponent implements OnInit {
          bestandsnaam: {
            type: 'link',
            value: element.bestandsnaam,
-           url: element.downloadUrl
+           url: element.readUrl
          },
          vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
          bestandsomvang: bestandsomvang
