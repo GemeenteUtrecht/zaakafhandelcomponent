@@ -22,6 +22,7 @@ class SearchZakenTests(ESMixin, TestCase):
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
             identificatie="ZAAK1",
             bronorganisatie="123456",
+            omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
             va_order=16,
             rollen=[
@@ -41,6 +42,7 @@ class SearchZakenTests(ESMixin, TestCase):
                     },
                 },
             ],
+            eigenschappen={"tekst": {"Beleidsveld": "Asiel en Integratie"}},
         )
         self.zaak_document1.save()
 
@@ -50,9 +52,11 @@ class SearchZakenTests(ESMixin, TestCase):
             zaaktype="https://api.catalogi.nl/api/v1/zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
             identificatie="ZAAK2",
             bronorganisatie="7890",
+            omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
             va_order=20,
             rollen=[],
+            eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
         )
         self.zaak_document2.save()
 
@@ -103,6 +107,18 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
+    def test_search_omschrijving(self):
+        result = search(omschrijving="some")
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
+    def test_search_eigenschappen(self):
+        result = search(eigenschappen={"Beleidsveld": "Asiel en Integratie"})
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
     def test_combined(self):
         result = search(
             zaaktypen=[
@@ -110,6 +126,8 @@ class SearchZakenTests(ESMixin, TestCase):
             ],
             bronorganisatie="123456",
             identificatie="ZAAK1",
+            omschrijving="some",
+            eigenschappen={"Beleidsveld": "Asiel en Integratie"},
             allowed=[
                 {
                     "zaaktypen": [
