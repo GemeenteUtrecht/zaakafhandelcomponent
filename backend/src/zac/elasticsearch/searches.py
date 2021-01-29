@@ -8,6 +8,7 @@ from elasticsearch_dsl.query import (
     Exists,
     Match,
     Nested,
+    QueryString,
     Range,
     Regexp,
     Term,
@@ -23,6 +24,7 @@ SUPPORTED_QUERY_PARAMS = (
     "omschrijving",
     "zaaktypen",
     "behandelaar",
+    "eigenschappen",
 )
 
 
@@ -33,6 +35,7 @@ def search(
     omschrijving=None,
     zaaktypen=None,
     behandelaar=None,
+    eigenschappen=None,
     allowed=(),
     include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
@@ -64,6 +67,14 @@ def search(
                 ),
             )
         )
+    if eigenschappen:
+        for eigenschap_name, eigenschap_value in eigenschappen.items():
+            s = s.query(
+                QueryString(
+                    fields=[f"eigenschappen.*.{eigenschap_name}"],
+                    query=eigenschap_value,
+                )
+            )
 
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))

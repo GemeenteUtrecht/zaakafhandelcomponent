@@ -472,4 +472,18 @@ class SearchSerializer(serializers.Serializer):
     identificatie = serializers.CharField(required=False)
     zaaktype = SearchZaaktypeSerializer(required=False)
     omschrijving = serializers.CharField(required=False)
-    eigenschappen = serializers.DictField(child=serializers.DictField(), required=False)
+    eigenschappen = serializers.JSONField(required=False)
+
+    def validate_eigenschappen(self, data):
+        validated_data = dict()
+        for name, value in data.items():
+            if not isinstance(value, dict):
+                raise serializers.ValidationError(
+                    "'Eigenschappen' field values should be JSON objects"
+                )
+            if "value" not in value:
+                raise serializers.ValidationError(
+                    "'Eigenschappen' fields should include 'value' attribute"
+                )
+            validated_data[name] = value["value"]
+        return validated_data
