@@ -164,7 +164,6 @@ class ZaakDocumentsResponseTests(APITestCase):
                 "bestandsomvang": 10,
                 "readUrl": f"http://testserver{read_url}",
                 "writeUrl": f"http://testserver{write_url}",
-
             }
         ]
         self.assertEqual(response_data, expected)
