@@ -314,7 +314,7 @@ class ZaakDocumentSerializer(APIModelSerializer):
         ),
     )
     write_url = serializers.SerializerMethodField(
-        label=_("ZAC document read URL"),
+        label=_("ZAC document write URL"),
         help_text=_(
             "The document URL for the end user that opens a document to be written. Will serve the file from a WebDAV server."
         ),
