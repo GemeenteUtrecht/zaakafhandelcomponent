@@ -81,9 +81,8 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
 class BaseRequestView(APIView):
     """
-    This view allows a user to:
-    1) get relevant review request data from the kownsl API to be able to form an advice,
-    2) post their advice/approval to the kownsl component.
+    This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+    and post their advice/approval to the kownsl component.
 
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
@@ -114,14 +113,6 @@ class BaseRequestView(APIView):
             else "false"
         }
 
-        ## Added return url #TODO: Add test
-        _next = request.META.get("HTTP_REFERER", "")
-        if _next and is_safe_url(_next, [request.get_host()], settings.IS_HTTPS):
-            data.update(
-                {
-                    "returnUrl": _next,
-                }
-            )
         return Response(data, headers=headers)
 
     def post(self, request, request_uuid):

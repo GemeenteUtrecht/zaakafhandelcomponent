@@ -6,10 +6,14 @@ from django.urls import reverse
 import requests_mock
 from django_camunda.models import CamundaConfig
 from rest_framework import status
+from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
+from zac.core.utils import get_ui_url
 
-ZAAK_URL = "https://some.zrc.nl/api/v1/zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
+ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
+ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
@@ -31,6 +35,10 @@ class ProcessInstanceTests(TestCase):
         config.save()
 
         cls.user = UserFactory.create()
+
+        Service.objects.create(
+            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
+        )
 
     def setUp(self) -> None:
         super().setUp()
@@ -133,6 +141,16 @@ class ProcessInstanceTests(TestCase):
     def test_fetch_process_instances(self, m_messages, m_task_from, m_request):
         self._setUpMock(m_request)
 
+        mock_service_oas_get(m_request, ZAKEN_ROOT, "zrc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=ZAAK_URL,
+            bronorganisatie="1234567890",
+            identificatie="ZAAK-2021-0000001337",
+        )
+        m_request.get(ZAAK_URL, json=zaak)
+
         url = reverse("fetch-process-instances")
 
         response = self.client.get(url, {"zaak_url": ZAAK_URL})
@@ -140,6 +158,21 @@ class ProcessInstanceTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
+
+        expected_params = {
+            "returnUrl": get_ui_url(
+                [
+                    "ui",
+                    "zaken",
+                    zaak["bronorganisatie"],
+                    zaak["identificatie"],
+                ]
+            )
+        }
+        expected_execute_url = get_ui_url(
+            [reverse("core:zaak-task", args=[self.task_data[1][0]["id"]])],
+            params=expected_params,
+        )
         expected_data = [
             {
                 "id": self.process_instance_data[0]["id"],
@@ -156,9 +189,7 @@ class ProcessInstanceTests(TestCase):
                         "tasks": [
                             {
                                 "id": self.task_data[1][0]["id"],
-                                "executeUrl": reverse(
-                                    "core:zaak-task", args=[self.task_data[1][0]["id"]]
-                                ),
+                                "executeUrl": expected_execute_url,
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
                                 "hasForm": False,
