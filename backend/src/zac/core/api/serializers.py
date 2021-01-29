@@ -415,17 +415,39 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
 
 
 class ZaakTypeAggregateSerializer(serializers.Serializer):
-    omschrijving = serializers.CharField()
-    identificatie = serializers.CharField()
-    catalogus = serializers.URLField()
+    omschrijving = serializers.CharField(
+        help_text=_(
+            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+        )
+    )
+    identificatie = serializers.CharField(
+        help_text=_(
+            "Identifier of ZAAKTYPE, different ZAAKTYPE versions can share the same identifier"
+        )
+    )
+    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
 
 
 class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
-    type = serializers.ChoiceField(choices=TypeChoices.choices)
-    format = serializers.CharField(required=False)
-    min_length = serializers.IntegerField(required=False)
-    max_length = serializers.IntegerField(required=False)
-    enum = serializers.ListField(required=False)
+    type = serializers.ChoiceField(
+        choices=TypeChoices.choices,
+        help_text=_("According to JSON schema date values have `string` type"),
+    )
+    format = serializers.CharField(
+        required=False,
+        help_text=_(
+            "Used to differentiate `date` and `date-time` values from other strings"
+        ),
+    )
+    min_length = serializers.IntegerField(
+        required=False, help_text=_("Only for strings")
+    )
+    max_length = serializers.IntegerField(
+        required=False, help_text=_("Only for strings")
+    )
+    enum = serializers.ListField(
+        required=False, help_text=_("An array of possible values")
+    )
 
     def get_enum_child_field(self, instance):
         enum = instance.get("enum")
@@ -451,7 +473,10 @@ class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
 
 
 class SearchEigenschapSerializer(APIModelSerializer):
-    spec = SearchEigenschapSpecificatieSerializer(label=_("property definition"))
+    spec = SearchEigenschapSpecificatieSerializer(
+        label=_("property definition"),
+        help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values"),
+    )
 
     class Meta:
         model = Eigenschap
@@ -460,19 +485,37 @@ class SearchEigenschapSerializer(APIModelSerializer):
             "name",
             "spec",
         )
-        extra_kwargs = {"name": {"source": "naam"}}
+        extra_kwargs = {
+            "name": {"source": "naam", "help_text": _("Name of EIGENSCHAP")}
+        }
 
 
 class SearchZaaktypeSerializer(serializers.Serializer):
-    omschrijving = serializers.CharField()
-    catalogus = serializers.URLField()
+    omschrijving = serializers.CharField(
+        help_text=_(
+            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+        )
+    )
+    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
 
 
 class SearchSerializer(serializers.Serializer):
-    identificatie = serializers.CharField(required=False)
-    zaaktype = SearchZaaktypeSerializer(required=False)
-    omschrijving = serializers.CharField(required=False)
-    eigenschappen = serializers.JSONField(required=False)
+    identificatie = serializers.CharField(
+        required=False,
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`"),
+    )
+    zaaktype = SearchZaaktypeSerializer(
+        required=False, help_text=_("Properties to identify ZAAKTYPEn")
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of ZAAK")
+    )
+    eigenschappen = serializers.JSONField(
+        required=False,
+        help_text=_(
+            "ZAAK-EIGENSCHAPpen in format `<property name>:{'value': <property value>}`"
+        ),
+    )
 
     def validate_eigenschappen(self, data):
         validated_data = dict()
