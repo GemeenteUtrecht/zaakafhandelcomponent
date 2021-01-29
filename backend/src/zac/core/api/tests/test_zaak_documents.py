@@ -134,15 +134,6 @@ class ZaakDocumentsResponseTests(APITestCase):
             },
         )
 
-        write_url = reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "DOC-2020-007",
-                "purpose": DocFileTypes.write,
-            },
-        )
-
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -163,7 +154,6 @@ class ZaakDocumentsResponseTests(APITestCase):
                 "vertrouwelijkheidaanduiding": "Openbaar",
                 "bestandsomvang": 10,
                 "readUrl": f"http://testserver{read_url}",
-                "writeUrl": f"http://testserver{write_url}",
             }
         ]
         self.assertEqual(response_data, expected)
