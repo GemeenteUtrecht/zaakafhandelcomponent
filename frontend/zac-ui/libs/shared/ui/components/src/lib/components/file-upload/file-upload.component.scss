@@ -21,14 +21,14 @@
   }
   ::-webkit-file-upload-button { cursor:pointer; }
   &__selected-file {
-    font-size: 1.2rem;
-    margin-top: 1rem;
+    font-size: 0.75rem;
+    margin-top: 0.625rem;
     display: flex;
     align-items: center;
     .mat-icon {
       cursor: pointer;
       color: $color-warn;
-      margin-left: 2rem;
+      margin-left: 1.25rem;
     }
   }
 }

@@ -1,27 +1,30 @@
 @import './base/colors/colors';
 
-.gu-config-adviseren-accorderen {
-  .zaak-informatie {
-    margin-bottom: 2rem;
-  }
-  .configuration-details {
-    margin-bottom: 3rem;
-  }
+.configuration-component {
   .step-container {
     border-bottom: 1px solid $border-grey;
-    padding-bottom: 2rem;
+    padding-bottom: 1.25rem;
+  }
+  .configuration-form {
+    margin-bottom: 1.25rem;
+  }
+  .configuration-details {
+    border: 1px solid $border-grey;
+    padding: 0.625rem;
+    border-radius: 10px;
+    margin-bottom: 0.875rem;
   }
   .step-label {
     display: inline-block;
-    font-size: 1.4rem;
+    font-size: 0.875rem;
     font-weight: bold;
-    margin-bottom: 1rem;
+    margin-bottom: 0.625rem;
     margin-right: 5px;
     color: $color-text;
     vertical-align: top;
   }
-  .step-datepicker {
-    font-size: 1.4rem;
+  .datepicker-label {
+    font-size: 0.875rem;
     margin-right: 5px;
   }
   gu-multiselect {
@@ -30,7 +33,7 @@
     margin-bottom: 10px;
   }
   gu-icon {
-    font-size: 1.6rem;
+    font-size: 1rem;
     color: $color-warn;
     cursor: pointer;
     margin-top: -2px;

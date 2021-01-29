@@ -7,29 +7,25 @@ gu-modal {
   }
 
   .gu-modal {
-    /* modal container fixed across whole screen */
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
 
-    /* z-index must be higher than .gu-modal-background */
-    z-index: 1000;
+    z-index: 100;
 
-    /* enables scrolling for tall modals */
     overflow: auto;
 
     .gu-modal-body {
       padding: 20px;
       background: #fff;
-
-      /* margin exposes part of the modal background */
-      margin: 40px;
+      margin: 40px auto;
+      border-radius: 6px;
     }
     .gu-modal-header {
       display: flex;
-      margin-bottom: 3rem;
+      margin-bottom: 1.875rem;
       mat-icon {
         align-self: flex-start;
         margin-left: auto;
@@ -39,23 +35,19 @@ gu-modal {
   }
 
   .gu-modal-background {
-    /* modal background fixed across whole screen */
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
 
-    /* semi-transparent black  */
     background-color: #000;
     opacity: 0.75;
 
-    /* z-index must be below .gu-modal and above everything else  */
-    z-index: 900;
+    z-index: 99;
   }
 }
 
 body.gu-modal-open {
-  /* body overflow is hidden to hide main scrollbar when modal window is open */
   overflow: hidden;
 }

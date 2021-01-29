@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -13,7 +13,6 @@ import { ModalService } from '@gu/components'
 })
 
 export class KetenProcessenComponent implements OnInit {
-  // @ViewChild('modal') private modalComponent: ModalComponent
   @Input() zaakUrl: string;
 
   data: any;
@@ -26,6 +25,8 @@ export class KetenProcessenComponent implements OnInit {
   identificatie: string;
 
   pipe = new DatePipe("nl-NL");
+
+  uitvoerenType: 'advice-approve' | 'document-select' | 'dynamic-form' | 'sign-document' = "advice-approve"
 
   constructor(
     private http: HttpClient,
@@ -40,6 +41,10 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchProcesses();
+  }
+
+  fetchProcesses() {
     this.isLoading = true;
     this.getProcesses().subscribe( data => {
       this.data = data;

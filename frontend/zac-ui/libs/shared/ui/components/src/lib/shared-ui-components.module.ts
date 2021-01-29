@@ -26,11 +26,10 @@ import { FileComponent } from './components/file/file.component';
 import { FileUploadComponent } from './components/file-upload/file-upload.component';
 import { SuccessComponent } from './components/success/success.component';
 import { ModalComponent } from './components/modal/modal.component';
-import { MultiselectComponent } from './elements/multiselect/multiselect.component';
-import { MultiselectModule } from './elements/multiselect/multiselect.module';
 import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
-// import { ModalModule } from './components/modal';
+import { TextFieldComponent } from './elements/text-field/text-field.component';
+import { DropdownComponent } from './elements/dropdown/dropdown.component';
 
 @NgModule({
   imports: [
@@ -58,7 +57,8 @@ import { DatepickerComponent } from './components/datepicker/datepicker.componen
     CheckboxComponent,
     IconComponent,
     DatepickerComponent,
-    // MultiselectComponent,
+    TextFieldComponent,
+    DropdownComponent,
   ],
   exports: [
     ButtonComponent,
@@ -76,8 +76,9 @@ import { DatepickerComponent } from './components/datepicker/datepicker.componen
     CheckboxComponent,
     IconComponent,
     DatepickerComponent,
-    // MultiselectComponent,
     MatIconModule,
+    TextFieldComponent,
+    DropdownComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
