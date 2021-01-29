@@ -12,7 +12,7 @@ class DocWrapper:
     @property
     def download_url(self):
         download_path = reverse(
-            "dowc:download-document",
+            "core:download-document",
             kwargs={
                 "bronorganisatie": self.doc.bronorganisatie,
                 "identificatie": self.doc.identificatie,
