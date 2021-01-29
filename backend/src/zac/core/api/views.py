@@ -8,6 +8,7 @@ from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
+from drf_spectacular.utils import extend_schema
 
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
@@ -527,6 +528,7 @@ class SearchViewSet(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
 
+    @extend_schema(responses=ZaakDetailSerializer(many=True))
     def post(self, request, *args, **kwargs):
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
