@@ -1,15 +1,20 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import jwt
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.core.utils import get_ui_url
+from zgw.models.zrc import Zaak
 
 from ..models import KownslConfig
 
@@ -33,6 +38,7 @@ REVIEW_REQUEST = {
     "zaak_documents": [],
     "reviews": [],
 }
+ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 
 @requests_mock.Mocker()
@@ -41,6 +47,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         cls.service = Service.objects.create(
             label="Kownsl",
             api_type=APITypes.orc,
@@ -56,7 +63,26 @@ class ViewTests(ClearCachesMixin, APITestCase):
         config.service = cls.service
         config.save()
 
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+        )
+
+        zaak = factory(Zaak, cls.zaak)
+        cls.get_zaak_patcher = patch(
+            "zac.contrib.kownsl.views.get_zaak", return_value=zaak
+        )
+
         cls.user = UserFactory.create(username="some-user")
+
+    def setUp(self):
+        super().setUp()
+
+        self.get_zaak_patcher.start()
+        self.addCleanup(self.get_zaak_patcher.stop)
 
     def _mock_oas_get(self, m):
         mock_service_oas_get(

@@ -17,6 +17,7 @@ from zgw_consumers.models import Service
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaak
+from zac.core.utils import get_ui_url
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import (
@@ -113,7 +114,18 @@ class BaseRequestView(APIView):
             if request.user.username in review_users
             else "false"
         }
-        return Response(review_request, headers=headers)
+        zaak_url = review_request["for_zaak"]
+        zaak = get_zaak(zaak_url)
+        return_url = get_ui_url(
+            [
+                "ui",
+                "zaken",
+                zaak.bronorganisatie,
+                zaak.identificatie,
+            ]
+        )
+        data = {**review_request, "return_url": return_url}
+        return Response(data, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
