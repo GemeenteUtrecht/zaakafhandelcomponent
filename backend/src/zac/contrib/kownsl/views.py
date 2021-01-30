@@ -1,7 +1,6 @@
 import logging
 from copy import copy
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -106,15 +105,16 @@ class BaseRequestView(APIView):
 
     @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
-        data = self.get_object()
-        review_users = [review["author"]["username"] for review in data["reviews"]]
+        review_request = self.get_object()
+        review_users = [
+            review["author"]["username"] for review in review_request["reviews"]
+        ]
         headers = {
             "X-Kownsl-Submitted": "true"
             if request.user.username in review_users
             else "false"
         }
-
-        return Response(data, headers=headers)
+        return Response(review_request, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
