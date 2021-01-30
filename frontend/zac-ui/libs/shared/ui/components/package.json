@@ -6,12 +6,6 @@
     "@angular/core": "^10.1.6"
   },
   "dependencies": {
-    "@angular/cdk": "^11.1.0",
-    "@angular/material": "^11.1.0",
-    "@angular/material-moment-adapter": "^11.1.0",
-    "@ng-bootstrap/ng-bootstrap": "^9.0.2",
-    "@vaadin/vaadin-date-picker": "^4.4.1",
-    "ng-multiselect-dropdown": "^0.3.0",
     "tslib": "^2.0.0"
   }
 }
