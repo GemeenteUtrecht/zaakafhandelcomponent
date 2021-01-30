@@ -11,7 +11,7 @@ import { GerelateerdeObjectenComponent } from './gerelateerde-objecten/gerelatee
 import { DocumentenComponent } from './documenten/documenten.component';
 import { AdviserenAccorderenComponent } from './adviseren-accorderen/adviseren-accorderen.component';
 import { KetenProcessenModule } from './keten-processen/keten-processen.module';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // import { ModalModule } from '@gu/components';
 
 @NgModule({
@@ -34,6 +34,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     DocumentenComponent,
     AdviserenAccorderenComponent
   ],
-  exports: [FeaturesZaakDetailComponent]
+  exports: [FeaturesZaakDetailComponent],
+  providers: [FormGroupDirective]
 })
 export class FeaturesZaakDetailModule {}

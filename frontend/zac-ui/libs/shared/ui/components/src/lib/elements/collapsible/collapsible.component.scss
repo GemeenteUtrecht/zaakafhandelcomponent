@@ -2,21 +2,21 @@
 
 .collapsible {
   border: 1px solid $border-grey;
-  padding: 0.7rem 1.2rem;
+  padding: 0.45rem 0.75rem;
   border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
   .mat-icon {
     color: $color-blue;
-    font-size: 3rem;
+    font-size: 1.875rem;
     margin-right: 5px;
   }
   p {
     margin: 0;
     &.p--bold {
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.1.875rem;
     }
     &.p--grey {
       color: dimgray;

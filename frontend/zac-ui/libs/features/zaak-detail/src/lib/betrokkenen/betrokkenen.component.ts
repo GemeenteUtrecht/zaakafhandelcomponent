@@ -40,7 +40,7 @@ export class BetrokkenenComponent implements OnInit {
   }
 
   getRoles(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/roles`);
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/roles`);
     return this.http.Get<ReviewRequest>(endpoint);
   }
 }

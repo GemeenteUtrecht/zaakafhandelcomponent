@@ -5,15 +5,17 @@
   </ng-container>
   <ng-container *ngIf="data && !isLoading">
     <gu-progress-bar *ngIf="progress" [progress]=progress class="d-block mb-3"></gu-progress-bar>
-    <p class="p--bold d-inline-block mr-3">Uiterlijke einddatum:</p>
-    <p class="d-inline-block" *ngIf="deadline">{{deadline}}</p>
+    <div class="d-flex">
+      <p class="p--bold mr-3">Uiterlijke einddatum:</p>
+      <p *ngIf="deadline">{{deadline}}</p>
+    </div>
     <div class="timeline" *ngIf="data">
       <div class="timeline__row row no-gutters"
            *ngFor="let status of data; let last = last"
            [ngClass]="(last ? 'timeline__row--last' : '')"
       >
         <div class="col-1">
-          <div class="timeline-item__nr">{{status.statustype.volgnummer}}</div>
+          <div class="timeline-item__nr"></div>
         </div>
         <div class="timeline-item timeline-item--left col-6">
           <div class="item-left__info">

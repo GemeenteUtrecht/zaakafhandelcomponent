@@ -10,7 +10,7 @@
     @error "The normalize vertical-rhythm module only supports px inputs. The typey library is better.";
   }
   @if $unit == rem {
-    @return ($value / $base-font-size) * 1rem;
+    @return ($value / $base-font-size) * 0.625rem;
   }
   @else if $unit == em {
     @return ($value / $relative-to) * 1em;

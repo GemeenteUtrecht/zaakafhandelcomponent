@@ -1,0 +1,44 @@
+@import './base/colors/colors';
+
+.gu-dropdown,
+.gu-dropdown * {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  box-sizing: border-box;
+  z-index: 101;
+}
+.gu-dropdown {
+  position: relative;
+  border: 1px solid $border-darkgrey;
+  border-radius: 4px;
+}
+.gu-dropdown select {
+  font-size: 0.825rem;
+  font-weight: normal;
+  color: $color-text;
+  width: 100%;
+  //padding: 8px 24px 8px 10px;
+  padding: 0.625rem;
+  border: none;
+  background-color: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.gu-dropdown select:active, .gu-dropdown select:focus {
+  outline: none;
+  box-shadow: none;
+}
+.gu-dropdown:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-top: 5px solid #aaa;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}

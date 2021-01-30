@@ -12,6 +12,7 @@ export class TableComponent {
   @Input() tableData: Table;
 
   @Output() tableOutput = new EventEmitter<any>();
+  @Output() buttonOutput = new EventEmitter<any>();
 
   constructor() { }
 
@@ -20,6 +21,14 @@ export class TableComponent {
   handleRowClickOutput(value) {
     if (value) {
       this.tableOutput.emit(value);
+    }
+  }
+
+  handleButtonClick(key, value) {
+    if (key && value) {
+      this.buttonOutput.emit(
+        {[key]: value}
+      )
     }
   }
 

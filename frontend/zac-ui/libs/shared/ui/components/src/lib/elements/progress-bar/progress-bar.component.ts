@@ -8,11 +8,17 @@ import { Component, Input, OnInit } from '@angular/core';
 export class ProgressBarComponent implements OnInit {
 
   @Input() progress: number;
+  roundedNumber: string;
   total = 100;
 
   constructor() { }
 
   ngOnInit(): void {
+    this.roundedNumber = this.progress.toFixed(2);
+    this.setProgress();
+  }
+
+  setProgress() {
     //if we don't have progress, set it to 0.
     if(!this.progress) {
       this.progress = 0;
@@ -30,5 +36,4 @@ export class ProgressBarComponent implements OnInit {
     }
     this.progress = (this.progress / this.total) * 100;
   }
-
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -13,7 +13,6 @@ import { ModalService } from '@gu/components'
 })
 
 export class KetenProcessenComponent implements OnInit {
-  // @ViewChild('modal') private modalComponent: ModalComponent
   @Input() zaakUrl: string;
 
   data: any;
@@ -27,9 +26,10 @@ export class KetenProcessenComponent implements OnInit {
 
   pipe = new DatePipe("nl-NL");
 
+  uitvoerenType: 'advice-approve' | 'document-select' | 'dynamic-form' | 'sign-document' = "advice-approve"
+
   constructor(
-    private http: HttpClient,
-    private customHttp: ApplicationHttpClient,
+    private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private modalService: ModalService
   ) {
@@ -40,6 +40,10 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchProcesses();
+  }
+
+  fetchProcesses() {
     this.isLoading = true;
     this.getProcesses().subscribe( data => {
       this.data = data;
@@ -53,7 +57,7 @@ export class KetenProcessenComponent implements OnInit {
 
   getProcesses(): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
-    return this.http.get(endpoint);
+    return this.http.Get(endpoint);
   }
 
   sendMessage(value) {
@@ -63,7 +67,7 @@ export class KetenProcessenComponent implements OnInit {
       headers: headers,
       withCredentials: true,
     }
-    this.http.post(endpoint, {"message": value}, options).subscribe( res => {
+    this.http.Post(endpoint, {"message": value}, options).subscribe( res => {
       console.log(res);
     })
   }

@@ -19,8 +19,10 @@ export class RadioComponent implements OnInit {
   constructor(private parentForm: FormGroupDirective) {}
 
   ngOnInit(): void {
-    this.childForm = this.parentForm.form;
-    this.childForm.addControl(this.radioFormControl, new FormControl(''))
+    if (this.radioFormControl) {
+      this.childForm = this.parentForm.form;
+      this.childForm.addControl(this.radioFormControl, new FormControl(''))
+    }
   }
 
 }

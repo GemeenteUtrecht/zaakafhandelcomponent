@@ -22,16 +22,43 @@
           <gu-button type="secondary" (click)="executeTask(task.id)">Uitvoeren</gu-button>
         </div>
       </div>
-      <div class="taak" *ngFor="let subProcess of data[0].subProcesses">
-        <p class="p--marginsmall p--bold d-inline-block">{{subProcess.tasks[0].name}}</p>
-        <label class="label label--date">{{subProcess.tasks[0].created | date:'fullDate'}}</label>
-        <p class="p--marginsmall d-block">{{subProcess.tasks[0].assignee.username}}</p>
-        <div class="taak__buttons">
-          <gu-button type="secondary">Claimen</gu-button>
-          <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+      <ng-container *ngFor="let subProcess of data[0].subProcesses">
+        <div class="taak" *ngFor="let task of subProcess.tasks">
+          <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
+          <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+          <gu-chip
+            *ngIf="!!task.assignee"
+            type="primary"
+            class="d-inline-block mb-3">
+            {{task.assignee.username}}
+          </gu-chip>
+          <div class="taak__buttons">
+            <gu-button type="secondary">Claimen</gu-button>
+            <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+          </div>
         </div>
-      </div>
+      </ng-container>
     </div>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-1')">
+      Configureer adviseren/accorderen
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-2')">
+      Document selecteren
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-3')">
+      Document ondertekenen
+    </gu-button>
+    <gu-button
+      type="secondary"
+      (click)="openModal('custom-modal-4')">
+      Dynamische form
+    </gu-button>
   </ng-container>
   <ng-container *ngIf="!!data && data.length === 0">
     <p>Er zijn geen actieve (keten)processen.</p>
@@ -40,13 +67,29 @@
 <!--<gu-button (click)="openModal('custom-modal-1')">-->
 <!--  Uitvoeren-->
 <!--</gu-button>-->
-<!--<gu-modal-->
-<!--  id="custom-modal-1"-->
-<!--  [closeIcon]="true"-->
-<!--  title="Configuratie: Adviseren"-->
-<!--&gt;-->
-<!--  <gu-config-adviseren-accorderen-->
-<!--  ></gu-config-adviseren-accorderen>-->
-<!--</gu-modal>-->
-
-
+<gu-modal
+  id="custom-modal-1"
+  [closeIcon]="true"
+  title="Adviesvraag configureren"
+>
+  <gu-config-adviseren-accorderen
+  ></gu-config-adviseren-accorderen>
+</gu-modal>
+<gu-modal
+  id="custom-modal-2"
+  [closeIcon]="true"
+  title="Selecteer documenten bijdragezaak"
+><gu-document-select></gu-document-select>
+</gu-modal>
+<gu-modal
+  id="custom-modal-3"
+  [closeIcon]="true"
+  title="Digitale ondertekening"
+><gu-sign-document></gu-sign-document>
+</gu-modal>
+<gu-modal
+  id="custom-modal-4"
+  [closeIcon]="true"
+  title="Dynamische form"
+><gu-dynamic-form></gu-dynamic-form>
+</gu-modal>

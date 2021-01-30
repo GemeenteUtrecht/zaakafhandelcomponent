@@ -7,6 +7,6 @@
 
   <!-- Table -->
   <ng-container *ngIf="data && !isLoading">
-    <gu-table [tableData]="tableData"></gu-table>
+    <gu-table [tableData]="tableData" (buttonOutput)="handleTableButtonOutput($event)"></gu-table>
   </ng-container>
 </div>

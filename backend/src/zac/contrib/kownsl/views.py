@@ -1,6 +1,7 @@
 import logging
 from copy import copy
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -81,7 +82,7 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
 class BaseRequestView(APIView):
     """
-    This view allows a user to get relevant review request data from the kownsl API to be able to form an advice
+    This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
     and post their advice/approval to the kownsl component.
 
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
@@ -105,16 +106,15 @@ class BaseRequestView(APIView):
 
     @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
-        review_request = self.get_object()
-        review_users = [
-            review["author"]["username"] for review in review_request["reviews"]
-        ]
+        data = self.get_object()
+        review_users = [review["author"]["username"] for review in data["reviews"]]
         headers = {
             "X-Kownsl-Submitted": "true"
             if request.user.username in review_users
             else "false"
         }
-        return Response(review_request, headers=headers)
+
+        return Response(data, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.

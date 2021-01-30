@@ -1,0 +1,33 @@
+@import './base/colors/colors';
+
+.gu-textfield-container {
+  .textfield-label {
+    align-self: flex-start;
+    color: $color-text--gray;
+    font-weight: 500;
+    font-size: 0.825rem;
+    margin-left: 2px;
+    transition: color 0.2s;
+    line-height: 1;
+    margin-bottom: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .input__control {
+    &--text {
+      background: $color-white;
+      border: 1px solid $border-darkgrey;
+      color: $color-text;
+      overflow: visible;
+      padding: 0.625rem;
+      height: 2.25rem;
+      font-weight: normal;
+      font-size: 0.875rem;
+      border-radius: 3px;
+    }
+  }
+}

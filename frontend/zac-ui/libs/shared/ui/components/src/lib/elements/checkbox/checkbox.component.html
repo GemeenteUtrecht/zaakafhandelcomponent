@@ -1,13 +1,15 @@
-<label class="gu-checkbox" for="cb--{{id}}">
-  <input
-    type="checkbox"
-    [value]="value"
-    id="cb--{{id}}"
-    class="checkbox"
-    tabindex="0"
-    aria-checked="false">
-  <span class="checkbox-label">
-      <span style="display: none;">&nbsp;</span>
-    <ng-content></ng-content>
-  </span>
-</label>
+<!--<label class="gu-checkbox" for="cb&#45;&#45;{{id}}">-->
+<!--  <input-->
+<!--    type="checkbox"-->
+<!--    [value]="value"-->
+<!--    id="cb&#45;&#45;{{id}}"-->
+<!--    class="checkbox"-->
+<!--    tabindex="0"-->
+<!--    aria-checked="false">-->
+<!--  <span class="checkbox-label">-->
+<!--      <span style="display: none;">&nbsp;</span>-->
+<!--    <ng-content></ng-content>-->
+<!--  </span>-->
+<!--</label>-->
+<input type="checkbox" [value]="value" id="checkbox--{{id}}" class="checkbox">
+<label class="checkbox-label" for="checkbox--{{id}}"><ng-content></ng-content></label>
