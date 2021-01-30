@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from django.core.validators import URLValidator
 from django.utils.translation import gettext as _
@@ -7,8 +7,11 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.models import User
+from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks.api import get_task
-from zac.core.servicers import get_documenten
+from zac.core.camunda import get_process_zaak_url
+from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 from zac.core.utils import get_ui_url
 
 from .api import create_review_request
@@ -99,9 +102,18 @@ class SelectUsersRevReqSerializer(serializers.Serializer):
         input_formats=["%Y-%m-%d"],
     )
 
-    def validate_kownsl_users(self, value):
-        if len(value) > len(set(value)):
+    def validate_users(self, users):
+        # Check if users are unique.
+        if len(users) > len(set(users)):
             raise serializers.ValidationError("Users need to be unique.")
+
+        # Check if users exist.
+        usernames = User.objects.all().values_list("username", flat=True)
+        invalid_usernames = [user not in usernames for user in users]
+        if invalid_usernames:
+            raise serializers.ValidationError(
+                f"Users {invalid_usernames} do not exist."
+            )
         return value
 
 
@@ -121,13 +133,11 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Get zaak documents to verify valid document selection
         task_id = kwargs["task_id"]
         self.task = get_task(task_id)
-
-        # retrieve process instance variables
-        self.zaak_url = get_process_instance_variable(
-            self.task.process_instance_id, "zaakUrl"
-        )
+        process_instance = get_process_instance(self.task.process_instance_id)
+        self.zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, _ = get_documenten(zaak)
 
@@ -136,6 +146,7 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
         ]
 
     def get_process_variables(self) -> Dict[str, List]:
+        # Assert is_valid has been called so that we can access validated data.
         assert self.is_valid(), "Serializer must be valid"
 
         kownsl_frontend_url = get_ui_url(
@@ -164,7 +175,7 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
         errors = self.validate_deadlines_monotonic_increasing()
         errors.extend(self.validate_users_are_unique())
         if errors:
-            raise forms.ValidationError(errors)
+            raise serializers.ValidationError(errors)
 
         return True
 
@@ -181,7 +192,7 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
         )
 
         user_deadlines = {
-            user.username: str(data["deadline"])
+            user["username"]: str(data["deadline"])
             for data in self.validated_data["assigned_users"]
             for users in data["users"]
         }

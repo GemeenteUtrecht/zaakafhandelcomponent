@@ -117,8 +117,8 @@ class SendMessageView(APIView):
     serializer_class = MessageSerializer
 
     def get_serializer(self, **kwargs):
-        serializer = super().get_serializer(**kwargs)
-        process_instance_id = serializer.data.get("process_instance_id")
+        serializer = self.serializer_class(**kwargs)
+        process_instance_id = serializer.data.get("process_instance_id", None)
 
         # no (valid) process instance ID -> get a form with no valid messages -> invalid
         # POST request
@@ -169,7 +169,7 @@ class SendMessageView(APIView):
 
 class PerformTaskView(APIView):
     """
-    Implement polymorphic perform task view
+    Implement polymorphic(?) perform task view
     """
 
     pass
