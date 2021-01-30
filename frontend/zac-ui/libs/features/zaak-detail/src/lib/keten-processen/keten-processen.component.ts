@@ -29,8 +29,7 @@ export class KetenProcessenComponent implements OnInit {
   uitvoerenType: 'advice-approve' | 'document-select' | 'dynamic-form' | 'sign-document' = "advice-approve"
 
   constructor(
-    private http: HttpClient,
-    private customHttp: ApplicationHttpClient,
+    private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private modalService: ModalService
   ) {
@@ -58,7 +57,7 @@ export class KetenProcessenComponent implements OnInit {
 
   getProcesses(): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
-    return this.http.get(endpoint);
+    return this.http.Get(endpoint);
   }
 
   sendMessage(value) {
@@ -68,7 +67,7 @@ export class KetenProcessenComponent implements OnInit {
       headers: headers,
       withCredentials: true,
     }
-    this.http.post(endpoint, {"message": value}, options).subscribe( res => {
+    this.http.Post(endpoint, {"message": value}, options).subscribe( res => {
       console.log(res);
     })
   }

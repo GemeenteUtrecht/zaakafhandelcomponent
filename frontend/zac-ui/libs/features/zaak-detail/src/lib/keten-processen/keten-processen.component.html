@@ -22,20 +22,22 @@
           <gu-button type="secondary" (click)="executeTask(task.id)">Uitvoeren</gu-button>
         </div>
       </div>
-      <div class="taak" *ngFor="let subProcess of data[0].subProcesses">
-        <p class="p--marginsmall p--bold d-inline-block">{{subProcess.tasks[0].name}}</p>
-        <label class="label label--date">{{subProcess.tasks[0].created | date:'fullDate'}}</label>
-        <gu-chip
-          *ngIf="!!subProcess.tasks[0].assignee"
-          type="primary"
-          class="d-inline-block mb-3">
-          {{subProcess.tasks[0].assignee.username}}
-        </gu-chip>
-        <div class="taak__buttons">
-          <gu-button type="secondary">Claimen</gu-button>
-          <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+      <ng-container *ngFor="let subProcess of data[0].subProcesses">
+        <div class="taak" *ngFor="let task of subProcess.tasks">
+          <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
+          <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+          <gu-chip
+            *ngIf="!!task.assignee"
+            type="primary"
+            class="d-inline-block mb-3">
+            {{task.assignee.username}}
+          </gu-chip>
+          <div class="taak__buttons">
+            <gu-button type="secondary">Claimen</gu-button>
+            <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+          </div>
         </div>
-      </div>
+      </ng-container>
     </div>
     <gu-button
       type="secondary"

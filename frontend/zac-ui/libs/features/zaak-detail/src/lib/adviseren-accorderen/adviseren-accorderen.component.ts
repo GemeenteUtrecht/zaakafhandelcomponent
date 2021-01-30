@@ -44,7 +44,7 @@ export class AdviserenAccorderenComponent implements OnInit {
   }
 
   getSummary(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/kownsl/zaak-review-requests/${this.bronorganisatie}/${this.identificatie}/summary`);
+    const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${this.bronorganisatie}/${this.identificatie}/summary`);
     return this.http.Get<any>(endpoint);
   }
 
@@ -62,7 +62,7 @@ export class AdviserenAccorderenComponent implements OnInit {
         cellData: {
           icon: {
             type: 'icon',
-            value: icon,
+            label: icon,
             iconColor: iconColor
           },
           type: reviewType,
@@ -85,7 +85,7 @@ export class AdviserenAccorderenComponent implements OnInit {
   }
 
   getReviewRequestDetail(uuid): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/kownsl/zaak-review-requests/${uuid}/detail`);
+    const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${uuid}/detail`);
     return this.http.Get<any>(endpoint);
   }
 }

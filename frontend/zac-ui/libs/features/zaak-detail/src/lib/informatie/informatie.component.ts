@@ -41,7 +41,7 @@ export class InformatieComponent implements OnInit {
   }
 
   getProperties(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/properties`);
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/properties`);
     return this.http.Get<any>(endpoint);
   }
 }

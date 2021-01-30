@@ -6,14 +6,17 @@ import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { convertKbToMb } from '@gu/utils';
 
+import {DocumentUrls } from './documenten.interface';
+
 @Component({
   selector: 'gu-documenten',
   templateUrl: './documenten.component.html',
   styleUrls: ['./documenten.component.scss']
 })
+
 export class DocumentenComponent implements OnInit {
   tableData: Table = {
-    headData: ['Op slot', 'Type', 'Bestandsnaam', 'Vertrouwelijkheid', 'Bestandsgrootte'],
+    headData: ['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'],
     bodyData: []
   }
 
@@ -25,6 +28,9 @@ export class DocumentenComponent implements OnInit {
 
   bronorganisatie: string;
   identificatie: string;
+
+  docsInEditMode: string[] = [];
+  deleteUrls: DocumentUrls[] = [];
 
   constructor(
     private http: ApplicationHttpClient,
@@ -49,37 +55,81 @@ export class DocumentenComponent implements OnInit {
     })
   }
 
-  getDocuments(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/documents`);
-    return this.http.Get<any>(endpoint);
-  }
-
   formatTableData(data): RowData[] {
     return data.map( element => {
      const icon = element.locked ? 'lock' : 'lock_open'
-     const iconColor = element.locked ? 'green' : 'orange'
+     const iconColor = element.locked ? 'orange' : 'green'
      const bestandsomvang =
        element.bestandsomvang > 999 ? `${(convertKbToMb(element.bestandsomvang, 2)).toLocaleString("nl-NL")} MB`
-       : `${element.bestandsomvang} KB`
+       : `${element.bestandsomvang} KB`;
+     const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
+     const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
 
      const cellData: RowData = {
        cellData: {
          opSlot: {
            type: 'icon',
-           value: icon,
+           label: icon,
            iconColor: iconColor
          },
-         type: element.informatieobjecttype['omschrijving'],
-         bestandsnaam: {
-           type: 'link',
-           value: element.bestandsnaam,
-           url: element.readUrl
+         lezen: {
+           type: 'button',
+           label: 'Lezen',
+           value: element.readUrl
          },
+         bewerken: {
+           type: 'button',
+           label: editLabel,
+           value: element.writeUrl,
+           buttonType: editButtonStyle
+         },
+         bestandsnaam: element.bestandsnaam,
+         type: element.informatieobjecttype['omschrijving'],
          vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
          bestandsomvang: bestandsomvang
        }
      }
      return cellData;
     })
+  }
+
+  handleTableButtonOutput(action: object) {
+    const actionType = Object.keys(action)[0];
+    const actionUrl = action[actionType];
+
+    if (actionType === 'bewerken') {
+      this.editDocument(actionUrl);
+    }
+  }
+
+  editDocument(actionUrl) {
+    if (!this.docsInEditMode.includes(actionUrl)) {
+      this.docsInEditMode.push(actionUrl);
+      this.openDocumentEdit(actionUrl);
+    } else {
+      this.deleteUrls.forEach(document => {
+        if (document.actionUrl === actionUrl) {
+
+        }
+      })
+    }
+  }
+
+  openDocumentEdit(actionUrl) {
+    this.writeDocuments(actionUrl).subscribe( res => {
+      console.log(res);
+    }, errorResponse => {
+
+    })
+  }
+
+  getDocuments(): Observable<HttpResponse<any>> {
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/documents`);
+    return this.http.Get<any>(endpoint);
+  }
+
+  writeDocuments(writeUrl): Observable<HttpResponse<any>> {
+    const endpoint = encodeURI(writeUrl);
+    return this.http.Post<any>(endpoint);
   }
 }
