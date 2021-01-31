@@ -31,7 +31,7 @@ export class ApplicationHttpClient {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     options = {
       headers: headers,
-      withCredentials: true,
+      withCredentials: true
     }
     return this.http.post<T>(endPoint, params, options);
   }
