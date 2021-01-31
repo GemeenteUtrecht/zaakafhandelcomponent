@@ -101,6 +101,10 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
+    def dispatch(self, request, *args, **kwargs):
+        print(request.user)
+        return super().dispatch(request, *args, **kwargs)
+
     @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
         review_request = self.get_object()
@@ -117,7 +121,6 @@ class BaseRequestView(APIView):
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
-
         client = get_client(request.user)
         operation_id = self._operation_id
         url = get_operation_url(

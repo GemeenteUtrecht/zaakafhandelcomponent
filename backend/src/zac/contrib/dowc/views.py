@@ -2,7 +2,8 @@ from typing import Any, NoReturn, Optional
 
 from django.http import HttpResponse
 
-from rest_framework import authentication, permissions, status
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,8 +21,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 class OpenDowcView(APIView):
-    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
-    http_method_names = ["post"]
+    permission_classes = (IsAuthenticated,)
     document = None
     serializer_class = DowcResponseSerializer
 
@@ -33,9 +33,17 @@ class OpenDowcView(APIView):
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
             self.document = find_document(bronorganisatie, identificatie, versie=versie)
+        return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
-        self.get_object()
+        return Response(
+            {
+                "magic_url": f"http://some-document-url.com/{bronorganisatie}/{identificatie}/{purpose}",
+                "purpose": purpose,
+                "delete_url": f"http://some-delete-url.com/{bronorganisatie}/{identificatie}/{purpose}",
+            }
+        )
+        document = self.get_object()
         drc_url = self.document.url
         dowc_response, status_code = get_doc_info(request.user, drc_url, purpose)
         serializer = self.serializer_class(dowc_response)
@@ -43,8 +51,7 @@ class OpenDowcView(APIView):
 
 
 class DeleteDowcView(APIView):
-    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
-    http_method_names = ["delete"]
+    permission_classes = (IsAuthenticated,)
 
     def delete(self, request, doc_request_uuid):
         response = patch_and_destroy_doc(request.user, doc_request_uuid)
