@@ -21,7 +21,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 class OpenDowcView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated & CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
 
@@ -36,14 +36,14 @@ class OpenDowcView(APIView):
         return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
+        document = self.get_object()
         return Response(
             {
-                "magic_url": f"http://some-document-url.com/{bronorganisatie}/{identificatie}/{purpose}",
+                "magic_url": document.url,
+                "delete_url": document.url,
                 "purpose": purpose,
-                "delete_url": f"http://some-delete-url.com/{bronorganisatie}/{identificatie}/{purpose}",
             }
         )
-        document = self.get_object()
         drc_url = self.document.url
         dowc_response, status_code = get_doc_info(request.user, drc_url, purpose)
         serializer = self.serializer_class(dowc_response)
@@ -51,7 +51,7 @@ class OpenDowcView(APIView):
 
 
 class DeleteDowcView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated & CanOpenDocuments,)
 
     def delete(self, request, doc_request_uuid):
         response = patch_and_destroy_doc(request.user, doc_request_uuid)
