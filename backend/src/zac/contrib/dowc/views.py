@@ -20,7 +20,6 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 class OpenDowcView(APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     http_method_names = ["post"]
     document = None
@@ -44,7 +43,6 @@ class OpenDowcView(APIView):
 
 
 class DeleteDowcView(APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     http_method_names = ["delete"]
 
