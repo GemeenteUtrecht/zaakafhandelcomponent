@@ -14,7 +14,7 @@ export class ProgressBarComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.roundedNumber = this.progress.toFixed(2);
+    this.roundedNumber = this.progress.toFixed(0);
     this.setProgress();
   }
 

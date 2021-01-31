@@ -18,13 +18,13 @@
         <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
         <label class="label label--date">{{task.created | date:'fullDate'}}</label>
         <div class="taak__buttons">
-          <gu-button type="secondary">Claimen</gu-button>
-          <gu-button type="secondary" (click)="executeTask(task.id)">Uitvoeren</gu-button>
+          <gu-button type="secondary" size="small">Claimen</gu-button>
+          <gu-button type="secondary" size="small" (click)="executeTask(task.id)">Uitvoeren</gu-button>
         </div>
       </div>
       <ng-container *ngFor="let subProcess of data[0].subProcesses">
         <div class="taak" *ngFor="let task of subProcess.tasks">
-          <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
+          <p class="p--marginsmall p--bold d-inline-block" *ngIf="task.name">{{task.name}}</p>
           <label class="label label--date">{{task.created | date:'fullDate'}}</label>
           <gu-chip
             *ngIf="!!task.assignee"
