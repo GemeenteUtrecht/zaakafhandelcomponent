@@ -25,6 +25,14 @@ class DowcResponseSerializer(APIModelSerializer):
             "magic_url",
             "delete_url",
         )
+        extra_kwargs = {
+            "purpose": {
+                "read_only": True,
+            },
+            "magic_url": {
+                "read_only": True,
+            },
+        }
 
     def get_delete_url(self, obj) -> str:
         if obj.purpose == DocFileTypes.write:
