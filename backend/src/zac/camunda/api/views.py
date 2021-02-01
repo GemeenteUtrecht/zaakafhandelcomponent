@@ -143,7 +143,7 @@ class SendMessageView(APIView):
         process_instance_id = serializer.validated_data["process_instance_id"]
         process_instance = get_process_instance(process_instance_id)
 
-        zaak_url = get_process_zaak_url(get_process_instance)
+        zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
