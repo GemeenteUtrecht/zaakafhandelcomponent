@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from rest_framework import authentication, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.documenten import Document
 
 from zac.core.services import find_document
 
