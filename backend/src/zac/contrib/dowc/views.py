@@ -48,6 +48,6 @@ class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
 
-    def delete(self, request, doc_request_uuid):
-        response = patch_and_destroy_doc(request.user, doc_request_uuid)
-        return response
+    def delete(self, request, dowc_request_uuid):
+        patch_and_destroy_doc(request.user, dowc_request_uuid)
+        return Response(status=status.HTTP_204_NO_CONTENT)
