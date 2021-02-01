@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
@@ -565,6 +566,15 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """
     Retrieve zaak with uuid or url
     """
+    if zaak_uuid and (
+        zaak_uuid.startswith("http://") or zaak_uuid.startswith("https://")
+    ):
+        warnings.warn(
+            "It looks like a URL was supplied as a zaak.uuid!",
+            RuntimeWarning,
+        )
+        zaak_url, zaak_uuid = zaak_uuid, None
+
     if client is None and zaak_url is not None:
         client = _client_from_url(zaak_url)
 

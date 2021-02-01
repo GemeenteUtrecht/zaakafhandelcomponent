@@ -16,7 +16,6 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.core.api.permissions import CanReadZaken
-from zac.core.api.serializers import ZaakSerializer
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
@@ -29,7 +28,11 @@ from .api import (
     retrieve_approvals,
 )
 from .permissions import IsReviewUser
-from .serializers import ZaakRevReqDetailSerializer, ZaakRevReqSummarySerializer
+from .serializers import (
+    KownslReviewRequestSerializer,
+    ZaakRevReqDetailSerializer,
+    ZaakRevReqSummarySerializer,
+)
 from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
 
 logger = logging.getLogger(__name__)
@@ -89,7 +92,7 @@ class BaseRequestView(APIView):
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
     _operation_id = NotImplemented
-    serializer_class = None  # this only serves to shut up drf-spectacular errors
+    serializer_class = KownslReviewRequestSerializer
 
     def get_object(self):
         client = get_client(self.request.user)
@@ -115,12 +118,14 @@ class BaseRequestView(APIView):
             else "false"
         }
         zaak_url = review_request["for_zaak"]
-        zaak = get_zaak(zaak_url)
-        response_data = {
-            **review_request,
-            "zaak": ZaakSerializer(instance=zaak).data,
-        }
-        return Response(response_data, headers=headers)
+        serializer = self.serializer_class(
+            instance={
+                **review_request,
+                "zaak": get_zaak(zaak_url=zaak_url),
+            },
+            context={"request": request, "view": self},
+        )
+        return Response(serializer.data, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
