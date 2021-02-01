@@ -37,7 +37,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   }
 
   getInformation(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}`);
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}`);
     return this.http.Get<ReviewRequest>(endpoint);
   }
 

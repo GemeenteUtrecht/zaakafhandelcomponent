@@ -47,7 +47,7 @@ faker==5.0.2              # via zgw-consumers
 furl==2.1.0               # via -r requirements/base.in
 gemma-zds-client==0.13.3  # via -r requirements/base.in, zgw-consumers
 idna==2.8                 # via requests, yarl
-importlib-metadata==0.23  # via kombu
+importlib-metadata==0.23  # via jsonschema, kombu
 inflection==0.3.1         # via django-camunda, drf-spectacular
 isodate==0.6.0            # via -r requirements/base.in
 jdcal==1.4.1              # via openpyxl

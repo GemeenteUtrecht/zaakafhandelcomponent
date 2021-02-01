@@ -16,8 +16,8 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   display: inline-flex;
   font-size: 0.875rem;
   justify-content: center;
-  min-width: 10rem;
-  padding: 0.625rem 1.25rem;
+  min-width: 6.25rem;
+  padding: 0.4rem 1rem;
   border-radius: 0.25rem;
   text-transform: none;
   transition: background-color .1s,color .1s,fill .1s,stroke .1s;
@@ -35,7 +35,9 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   background-color: unset;
   color: $button-text-color--tertiary;
 }
-
+:host {
+  width: fit-content;
+}
 .btn {
   @include button;
   &--primary {
@@ -47,7 +49,10 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
     &[disabled]{
       background-color: $color-disabled;
     }
-
+  }
+  &--primary#{&}--extrasmall {
+    padding: 0.5rem 0.625rem;
+    min-width: unset;
   }
   &--secondary {
     @include button--secondary;
@@ -66,6 +71,13 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
     &:disabled,
     &[disabled]{
       color: $color-disabled;
+    }
+  }
+  &--tertiary#{&}--extrasmall {
+    padding: 0;
+    min-width: unset;
+    &:hover {
+      text-decoration: underline;
     }
   }
   &--large {

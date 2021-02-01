@@ -46,22 +46,21 @@ export class GerelateerdeZakenComponent implements OnInit {
   }
 
   getRelatedCases(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
     return this.http.Get<ReviewRequest>(endpoint);
   }
 
   formatTableData(data){
     this.tableData.bodyData = data.map( element => {
-      console.log(element.zaak.url);
       return {
         cellData: {
           status: element.zaak.status.statustype.omschrijving,
           zaakId: {
             type: 'link',
-            value: element.zaak.identificatie,
+            label: element.zaak.identificatie,
             url: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
-          resultaat: element.zaak.resultaat,
+          resultaat: element.zaak.resultaat ? element.zaak.resultaat : '-',
           aard: element.aardRelatie,
         }
       }

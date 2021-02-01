@@ -43,7 +43,7 @@ export class StatusComponent implements OnInit {
   }
 
   getStatuses(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/cases/${this.bronorganisatie}/${this.identificatie}/statuses`);
+    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/statuses`);
     return this.http.Get<any>(endpoint);
   }
 }

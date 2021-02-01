@@ -15,7 +15,9 @@ export interface CellData {
 
 export interface ExtensiveCell {
   type: 'link' | 'icon' | 'button';
-  value: string | number;
+  label: string | number;
   url?: string;
+  value?: string;
   iconColor?: string;
+  buttonType?: string;
 }

@@ -79,9 +79,8 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
 class BaseRequestView(APIView):
     """
-    This view allows a user to:
-    1) get relevant review request data from the kownsl API to be able to form an advice,
-    2) post their advice/approval to the kownsl component.
+    This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+    and post their advice/approval to the kownsl component.
 
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
@@ -118,7 +117,6 @@ class BaseRequestView(APIView):
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
-
         client = get_client(request.user)
         operation_id = self._operation_id
         url = get_operation_url(

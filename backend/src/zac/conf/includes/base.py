@@ -149,6 +149,7 @@ INSTALLED_APPS = [
     "zac.contrib.organisatieonderdelen",
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
+    "zac.contrib.dowc",
 ]
 
 MIDDLEWARE = [

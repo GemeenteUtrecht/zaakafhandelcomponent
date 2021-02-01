@@ -33,7 +33,19 @@
 
               <!-- Clickable cell link -->
               <ng-container *ngSwitchCase="'link'">
-                <a class="anchor" [href]="cell.value['url']">{{ cell.value['value'] }}</a>
+                <a class="anchor" [href]="cell.value['url']">{{ cell.value['label'] }}</a>
+              </ng-container>
+
+              <!-- Button -->
+              <ng-container *ngSwitchCase="'button'">
+                <gu-button
+                  [type]=" cell.value['buttonType'] ? cell.value['buttonType'] : 'tertiary'"
+                  size="extrasmall"
+                  noPadding
+                  (click)="
+                  handleButtonClick(cell.key, cell.value['value'])">
+                  {{ cell.value['label'] }}
+                </gu-button>
               </ng-container>
 
               <!-- Icon -->
@@ -41,7 +53,7 @@
                 <mat-icon
                   class="icon"
                   [ngClass]="(cell.value['iconColor'] ? 'icon--' + cell.value['iconColor'] : '')">
-                  {{cell.value['value']}}
+                  {{cell.value['label']}}
                 </mat-icon>
               </ng-container>
             </ng-container>

@@ -20,6 +20,7 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.contrib.dowc.constants import DocFileTypes
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
@@ -75,20 +76,26 @@ class DocumentInfoSerializer(serializers.Serializer):
         source="get_vertrouwelijkheidaanduiding_display"
     )
     bestandsgrootte = serializers.SerializerMethodField()
-    download_url = serializers.SerializerMethodField()
+
+    read_url = serializers.SerializerMethodField(
+        label=_("ZAC document read URL"),
+        help_text=_(
+            "The document URL for the end user that opens a document to be read. Will serve the file from a WebDAV server."
+        ),
+    )
 
     def get_bestandsgrootte(self, obj):
         return filesizeformat(obj.bestandsomvang)
 
-    def get_download_url(self, obj):
-        path = reverse(
-            "core:download-document",
+    def get_read_url(self, obj) -> str:
+        return reverse(
+            "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
                 "identificatie": obj.identificatie,
+                "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -300,10 +307,16 @@ class DocumentTypeSerializer(APIModelSerializer):
 
 
 class ZaakDocumentSerializer(APIModelSerializer):
-    download_url = serializers.SerializerMethodField(
-        label=_("ZAC download URL"),
+    read_url = serializers.SerializerMethodField(
+        label=_("ZAC document read URL"),
         help_text=_(
-            "The download URL for the end user. Will serve the file as attachment."
+            "The document URL for the end user that opens a document to be read. Will serve the file from a WebDAV server."
+        ),
+    )
+    write_url = serializers.SerializerMethodField(
+        label=_("ZAC document write URL"),
+        help_text=_(
+            "The document URL for the end user that opens a document to be written. Will serve the file from a WebDAV server."
         ),
     )
     vertrouwelijkheidaanduiding = serializers.CharField(
@@ -324,7 +337,8 @@ class ZaakDocumentSerializer(APIModelSerializer):
             "titel",
             "vertrouwelijkheidaanduiding",
             "bestandsomvang",
-            "download_url",
+            "read_url",
+            "write_url",
         )
         extra_kwargs = {
             "bestandsomvang": {
@@ -332,15 +346,25 @@ class ZaakDocumentSerializer(APIModelSerializer):
             }
         }
 
-    def get_download_url(self, obj) -> str:
-        path = reverse(
-            "core:download-document",
+    def get_read_url(self, obj) -> str:
+        return reverse(
+            "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
                 "identificatie": obj.identificatie,
+                "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
+
+    def get_write_url(self, obj) -> str:
+        return reverse(
+            "dowc:request-doc",
+            kwargs={
+                "bronorganisatie": obj.bronorganisatie,
+                "identificatie": obj.identificatie,
+                "purpose": DocFileTypes.write,
+            },
+        )
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
