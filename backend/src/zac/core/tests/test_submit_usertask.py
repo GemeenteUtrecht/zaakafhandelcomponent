@@ -77,7 +77,7 @@ class SubmitRedirectUserTaskTests(ClearCachesMixin, TestCase):
         self.client.force_login(user=self.user)
 
         extract_form_patcher = patch(
-            "zac.core.camunda.extract_task_form", return_value=None
+            "zac.camunda.user_tasks.api.extract_task_form", return_value=None
         )
         extract_form_patcher.start()
         self.addCleanup(extract_form_patcher.stop)

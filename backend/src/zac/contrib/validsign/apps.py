@@ -7,6 +7,7 @@ class ValidSignConfig(AppConfig):
     def ready(self):
         from zac.core.camunda import FORM_KEYS
 
+        from . import camunda  # noqa
         from .forms import ConfigurePackageForm, SignerFormSet
 
         FORM_KEYS.update(

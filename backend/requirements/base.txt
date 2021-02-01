@@ -22,7 +22,7 @@ django-auth-adfs-db==0.2.0  # via -r requirements/base.in
 django-auth-adfs==1.3.1   # via django-auth-adfs-db
 django-axes==5.0.13       # via -r requirements/base.in
 django-better-admin-arrayfield==1.4.0  # via -r requirements/base.in
-django-camunda==0.9.6     # via -r requirements/base.in
+django-camunda==0.10.0    # via -r requirements/base.in
 django-choices==1.7.0     # via -r requirements/base.in, zgw-consumers
 django-compat==1.0.15     # via django-hijack, django-hijack-admin
 django-cors-headers==3.5.0  # via -r requirements/base.in

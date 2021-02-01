@@ -760,7 +760,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         )
         url = reverse("core:claim-task")
 
-        with patch("zac.core.camunda.extract_task_form", return_value=None):
+        with patch("zac.camunda.user_tasks.api.extract_task_form", return_value=None):
             self.client.force_login(self.user)
             response = self.client.post(
                 url,
@@ -811,7 +811,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         )
 
         with patch("zac.core.views.processes.get_client") as m_client, patch(
-            "zac.core.camunda.extract_task_form",
+            "zac.camunda.user_tasks.api.extract_task_form",
             return_value=None,
         ), patch(
             "zac.core.views.processes.get_roltypen",

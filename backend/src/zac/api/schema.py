@@ -1,6 +1,9 @@
 from drf_spectacular.openapi import AutoSchema as _AutoSchema
 from drf_spectacular.plumbing import build_media_type_object, force_instance
 
+# ensure extensions are loaded
+from .drf_spectacular import polymorphic  # noqa
+
 
 class AutoSchema(_AutoSchema):
     def _get_request_body(self):
@@ -23,3 +26,11 @@ class AutoSchema(_AutoSchema):
             return request_body
 
         return super()._get_request_body()
+
+    def get_summary(self):
+        action_or_method = getattr(
+            self.view, getattr(self.view, "action", self.method.lower()), None
+        )
+        cls_summary = getattr(self.view.__class__, "schema_summary", None)
+        action_or_method_summary = getattr(action_or_method, "schema_summary", None)
+        return action_or_method_summary or cls_summary
