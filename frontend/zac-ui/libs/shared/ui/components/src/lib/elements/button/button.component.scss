@@ -3,6 +3,9 @@
 $button-text-color--primary: $color-white;
 $button-text-color--secondary: $color-blue;
 $button-text-color--tertiary: $color-blue;
+
+$button-hover-color--primary: $color-blue--hover;
+
 $spinner-top-color: rgba(255, 255, 255, 0.3);
 
 @mixin button {
@@ -11,10 +14,11 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   border: none;
   cursor: pointer;
   display: inline-flex;
-  font-size: 1.4rem;
+  font-size: 0.875rem;
   justify-content: center;
-  min-width: 10rem;
-  padding: 1rem 2rem;
+  min-width: 6.25rem;
+  padding: 0.4rem 1rem;
+  border-radius: 0.25rem;
   text-transform: none;
   transition: background-color .1s,color .1s,fill .1s,stroke .1s;
 }
@@ -31,18 +35,31 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   background-color: unset;
   color: $button-text-color--tertiary;
 }
-
+:host {
+  width: fit-content;
+}
 .btn {
   @include button;
   &--primary {
     @include button--primary;
+    &:hover {
+      background-color: $button-hover-color--primary;
+    }
     &:disabled,
     &[disabled]{
       background-color: $color-disabled;
     }
   }
+  &--primary#{&}--extrasmall {
+    padding: 0.5rem 0.625rem;
+    min-width: unset;
+  }
   &--secondary {
     @include button--secondary;
+    &:hover {
+      color: $color-white;
+      background-color: $button-text-color--secondary;
+    }
     &:disabled,
     &[disabled]{
       color: $color-disabled;
@@ -56,9 +73,16 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
       color: $color-disabled;
     }
   }
+  &--tertiary#{&}--extrasmall {
+    padding: 0;
+    min-width: unset;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
   &--large {
-    padding: 1.4rem 2rem;
-    font-size: 1.6rem;
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
     font-weight: bold;
   }
   &:disabled,
@@ -68,8 +92,8 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
 
   .btn__spinner {
     display: inline-block;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 0.9rem;
+    height: 0.9rem;
     border: 2px solid white;
     border-top-color: $spinner-top-color;
     border-radius: 100%;

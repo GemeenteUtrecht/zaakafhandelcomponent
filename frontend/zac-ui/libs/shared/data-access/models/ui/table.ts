@@ -1,9 +1,23 @@
-export interface CellData {
-  cellData: object;
-  expandData: string;
-}
-
 export interface Table {
   headData: string[];
-  elementData: CellData[];
+  bodyData: RowData[];
+}
+
+export interface RowData {
+  cellData: CellData;
+  expandData?: string;
+  clickOutput?: any;
+}
+
+export interface CellData {
+  [key: string]: string | ExtensiveCell;
+}
+
+export interface ExtensiveCell {
+  type: 'link' | 'icon' | 'button';
+  label: string | number;
+  url?: string;
+  value?: string;
+  iconColor?: string;
+  buttonType?: string;
 }

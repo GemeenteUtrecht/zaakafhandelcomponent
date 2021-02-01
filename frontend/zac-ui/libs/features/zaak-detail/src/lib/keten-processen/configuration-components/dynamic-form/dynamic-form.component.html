@@ -1,0 +1,45 @@
+<div class="configuration-component">
+  <section class="card card--blue col-md-6 mb-4">
+    <h2>Testdossier</h2>
+    <p>Dit is een toelichting</p>
+  </section>
+  <form class="card configuration-form" [formGroup]="dynamicForm">
+    <h2>Elementen</h2>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block mr-2">Textfield (string/number)</label>
+      <div class="col-md-6">
+        <gu-text-field label="label"></gu-text-field>
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 mr-2">Datum</label>
+      <div class="col-md-6">
+        <gu-datepicker></gu-datepicker>
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block mr-2">Dropdown (enum)</label>
+      <div class="col-md-6">
+        <gu-dropdown></gu-dropdown>
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block mr-2">Checkbox</label>
+      <div class="col-md-6">
+        <gu-checkbox id="30" value="true" checkboxFormControl="approved">
+          <span><a href="google.com">test1.txt</a> (Collegevoorstel, Openbaar)</span>
+        </gu-checkbox>
+        <gu-checkbox id="40" value="true" checkboxFormControl="approved">
+          <span><a href="google.com">test2.txt</a> (Collegevoorstel, Openbaar)</span>
+        </gu-checkbox>
+      </div>
+    </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block mr-2">Boolean</label>
+      <div class="col-md-6">
+        <gu-radio id="10" label="Akkoord" value="true" radioFormControl="test"></gu-radio>
+        <gu-radio id="21" label="Niet akkoord" value="false" radioFormControl="test"></gu-radio>
+      </div>
+    </article>
+  </form>
+</div>

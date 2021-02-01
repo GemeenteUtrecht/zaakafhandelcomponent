@@ -76,10 +76,11 @@ jobs:
       - name: Run tests
         run: |
           python src/manage.py collectstatic --noinput --link
-          coverage run src/manage.py test src
+          coverage run src/manage.py test src -v 3
         env:
           DJANGO_SETTINGS_MODULE: zac.conf.ci
           SECRET_KEY: dummy
+          DB_NAME: postgres
           DB_USER: postgres
           DB_PASSWORD: ''
           IS_HTTPS: 'no'

@@ -131,13 +131,13 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-        zt_choices = response.context["filter_form"].fields["zaaktypen"].choices
-        self.assertEqual(len(zt_choices), 1)
-        self.assertEqual(zt_choices[0][1][0][0], zt1["url"])
-
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)
         self.assertEqual(zaken[0].url, zaak1["url"])
+
+        zt_choices = response.context["filter_form"].fields["zaaktypen"].choices
+        self.assertEqual(len(zt_choices), 1)
+        self.assertEqual(zt_choices[0][1][0][0], zt1["url"])
 
         # verify API calls
         self.assertEqual(
@@ -464,7 +464,6 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
-
         zaken = response.context["zaken"]
         self.assertEqual(len(zaken), 1)
         self.assertEqual(zaken[0].url, zaak1["url"])

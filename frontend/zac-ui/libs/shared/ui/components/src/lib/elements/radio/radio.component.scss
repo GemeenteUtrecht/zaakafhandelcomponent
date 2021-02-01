@@ -7,33 +7,33 @@
   width: 1px;
   z-index: 1;
   &-label {
-    line-height: 2.6rem;
-    margin-bottom: .2rem;
+    line-height: 1.625rem;
+    margin-bottom: 1.25rem;
     background-color: $background-lightgrey;
-    border: .1rem solid $background-lightgrey;
+    border: 0.0625rem solid $background-lightgrey;
     cursor: pointer;
     display: inline-block;
-    min-height: 4.8rem;
-    padding: 1.2rem 2rem 1rem 4.7rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.25rem 0.625rem 2.9rem;
     position: relative;
     width: 100%;
-    font-size: 1.4rem;
+    font-size: 0.875rem;
     &:before {
       background-color: #fff;
       border: 1px solid #999;
       content: "";
-      height: 2rem;
+      height: 1.25rem;
       left: 0;
-      margin-left: 1.4rem;
+      margin-left: 0.875rem;
       position: absolute;
-      top: 1.4rem;
-      width: 2rem;
+      top: 0.875rem;
+      width: 1.25rem;
       border-radius: 50%;
     }
   }
   &:checked + label {
     background-color: transparent;
-    border: .1rem solid $color-blue;
+    border: 0.0625rem solid $color-blue;
   }
   &:checked+.radio-label:before {
     background-color: $color-blue;
@@ -42,11 +42,11 @@
     background-color: #fff;
     border: 1px solid #999;
     content: "";
-    height: 1rem;
-    width: 1rem;
-    top: 1.9rem;
-    left: 0.5rem;
-    margin-left: 1.4rem;
+    height: 0.625rem;
+    width: 0.625rem;
+    top: 1.1875rem;
+    left: 0.3125rem;
+    margin-left: 0.875rem;
     position: absolute;
     border-radius: 50%;
   }

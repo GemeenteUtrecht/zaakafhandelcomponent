@@ -1,0 +1,25 @@
+<div class="informatie card">
+  <h2>Zaak informatie</h2>
+  <ng-container *ngIf="(!infoData || !propertiesData) && (isLoading)">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <ng-container *ngIf="infoData && propertiesData">
+    <div class="informatie__details">
+      <p class="informatie__nummer p--marginsmall d-inline-block">{{identificatie}}</p>
+      <gu-chip type="tertiary" class="d-inline-block">Zaakvertrouwelijk</gu-chip>
+    </div>
+    <p class="p--marginsmall p--bold">{{infoData.omschrijving}}</p>
+    <p>{{infoData.toelichting ? infoData.toelichting : '(geen toelichting)'}}</p>
+    <div class="zaak-detail__contact-gegevens">
+      <div class="row" *ngFor="let prop of propertiesData;">
+        <div class="col-5">
+          <p class="p--bold p--marginsmall">{{prop.eigenschap.naam}}:</p>
+        </div>
+        <div class="col-7">
+          <p class="p--marginsmall">{{prop.value}}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+

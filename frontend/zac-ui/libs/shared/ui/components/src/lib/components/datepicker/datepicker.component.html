@@ -1,0 +1,11 @@
+<dom-module id="custom-input-field-style" theme-for="vaadin-text-field">
+  <template>
+    <style>
+      :host([theme~="custom-input-field-style"]) [part="input-field"] {
+        border: 1px solid black;
+        background-color: white;
+      }
+    </style>
+  </template>
+</dom-module>
+<vaadin-date-picker theme="custom-input-field-style"></vaadin-date-picker>

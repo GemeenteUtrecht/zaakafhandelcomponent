@@ -1,0 +1,60 @@
+@import './base/colors/colors';
+
+:host {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.table {
+  border-spacing: 0;
+  border-radius: 2px;
+  width: 100%;
+  white-space: nowrap;
+  border-collapse: collapse;
+  th, td {
+    padding: 0.75rem 0.625rem;
+    font-size: 0.875rem;
+    vertical-align: middle;
+    text-align: left;
+  }
+  td.table-expand {
+    padding-left: 0.625rem;
+    width: 1.25rem;
+    .mat-icon.arrow {
+      color: $color-blue;
+      vertical-align: middle;
+      &.arrow--rotated {
+        transform: rotate(90deg);
+      }
+    }
+  }
+  .parent-row {
+    border-top: 1px solid $background-grey;
+    &--clickable:hover {
+      cursor: pointer;
+      background-color: $background-grey;
+    }
+  }
+  .child-row {
+    visibility: collapse;
+    transition: opacity 150ms cubic-bezier(0.2, 0, 0.38, 0.9);
+    opacity: 0;
+    &--expanded {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+  .icon {
+    font-size: 2.1.25rem;
+    vertical-align: middle;
+    &--orange {
+      color: $color-orange
+    }
+    &--green {
+      color: $color-success
+    }
+  }
+}

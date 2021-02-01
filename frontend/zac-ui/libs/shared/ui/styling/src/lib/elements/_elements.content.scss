@@ -1,13 +1,15 @@
 @import '../base/colors/colors';
-@import '../base/grid/grid';
 
 .content-background {
   background: $background-white;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   .content {
-    padding: 2rem;
+    padding: 1.25rem;
     @include media-breakpoint-up(md) {
-      padding: 4rem 6rem;
+      padding: 2.5rem 3.75rem;
+    }
+    &--wide {
+      padding: 1.25rem;
     }
   }
 }

@@ -133,7 +133,7 @@ class ProcessInstanceTests(TestCase):
     def test_fetch_process_instances(self, m_messages, m_task_from, m_request):
         self._setUpMock(m_request)
 
-        url = reverse("camunda:fetch-process-instances")
+        url = reverse("fetch-process-instances")
 
         response = self.client.get(url, {"zaak_url": ZAAK_URL})
 

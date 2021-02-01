@@ -1,0 +1,45 @@
+@import './base/colors/colors';
+
+.configuration-component {
+  .step-container {
+    border-bottom: 1px solid $border-grey;
+    padding-bottom: 1.25rem;
+  }
+  .configuration-form {
+    margin-bottom: 1.25rem;
+  }
+  .configuration-details {
+    border: 1px solid $border-grey;
+    padding: 0.625rem;
+    border-radius: 10px;
+    margin-bottom: 0.875rem;
+  }
+  .step-label {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: bold;
+    margin-bottom: 0.625rem;
+    margin-right: 5px;
+    color: $color-text;
+    vertical-align: top;
+  }
+  .datepicker-label {
+    font-size: 0.875rem;
+    margin-right: 5px;
+  }
+  gu-multiselect {
+    display: block;
+    width: 70%;
+    margin-bottom: 10px;
+  }
+  gu-icon {
+    font-size: 1rem;
+    color: $color-warn;
+    cursor: pointer;
+    margin-top: -2px;
+  }
+  input {
+    border: 1px solid grey;
+    padding: 2px 5px;
+  }
+}

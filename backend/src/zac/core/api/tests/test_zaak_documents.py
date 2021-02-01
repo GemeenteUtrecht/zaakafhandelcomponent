@@ -19,6 +19,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.constants import DocFileTypes
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -124,11 +125,21 @@ class ZaakDocumentsResponseTests(APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_documents(self, m):
-        download_url = reverse(
-            "core:download-document",
+        read_url = reverse(
+            "dowc:request-doc",
             kwargs={
                 "bronorganisatie": "123456782",
                 "identificatie": "DOC-2020-007",
+                "purpose": DocFileTypes.read,
+            },
+        )
+
+        write_url = reverse(
+            "dowc:request-doc",
+            kwargs={
+                "bronorganisatie": "123456782",
+                "identificatie": "DOC-2020-007",
+                "purpose": DocFileTypes.write,
             },
         )
 
@@ -151,7 +162,8 @@ class ZaakDocumentsResponseTests(APITestCase):
                 "titel": self.document["titel"],
                 "vertrouwelijkheidaanduiding": "Openbaar",
                 "bestandsomvang": 10,
-                "downloadUrl": f"http://testserver{download_url}",
+                "readUrl": read_url,
+                "writeUrl": write_url,
             }
         ]
         self.assertEqual(response_data, expected)

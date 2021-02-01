@@ -2,6 +2,7 @@ import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
@@ -15,6 +16,7 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.core.api.permissions import CanReadZaken
+from zac.core.api.serializers import ZaakSerializer
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
@@ -79,9 +81,8 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
 class BaseRequestView(APIView):
     """
-    This view allows a user to:
-    1) get relevant review request data from the kownsl API to be able to form an advice,
-    2) post their advice/approval to the kownsl component.
+    This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+    and post their advice/approval to the kownsl component.
 
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
@@ -113,12 +114,17 @@ class BaseRequestView(APIView):
             if request.user.username in review_users
             else "false"
         }
-        return Response(review_request, headers=headers)
+        zaak_url = review_request["for_zaak"]
+        zaak = get_zaak(zaak_url)
+        response_data = {
+            **review_request,
+            "zaak": ZaakSerializer(instance=zaak).data,
+        }
+        return Response(response_data, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
-
         client = get_client(request.user)
         operation_id = self._operation_id
         url = get_operation_url(
@@ -140,6 +146,14 @@ class BaseRequestView(APIView):
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+
+    get.schema_summary = _("Retrieve advice review request")
+
+
+AdviceRequestView.post.schema_summary = _("Register advice for review request")
+
 
 @extend_schema_view(
     post=remote_kownsl_create_schema(
@@ -149,16 +163,27 @@ class AdviceRequestView(BaseRequestView):
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
 
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+
+    get.schema_summary = _("Retrieve approval review request")
+
+
+ApprovalRequestView.post.schema_summary = _("Register approval for review request")
+
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakRevReqSummarySerializer
+    schema_summary = _("List review requests summary for a case")
+
+    def get_serializer(self, **kwargs):
+        return ZaakRevReqSummarySerializer(many=True, **kwargs)
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         review_requests = get_review_requests(zaak)
-        serializer = self.serializer_class(instance=review_requests, many=True)
+        serializer = self.get_serializer(instance=review_requests)
         return Response(serializer.data)
 
 
@@ -166,6 +191,7 @@ class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakRevReqDetailSerializer
+    schema_summary = _("Retrieve review request details")
 
     def get(self, request, request_uuid, *args, **kwargs):
         review_request = get_review_request(request_uuid)

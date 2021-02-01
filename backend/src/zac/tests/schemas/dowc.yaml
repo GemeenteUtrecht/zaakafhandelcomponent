@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: DO.W.C.
+  version: 1.0.0
+  description: |-
+    DO.W.C. facilitates reading and editing centrally located documents on local clients.
+    This API provides an interface to request the URL required to read/edit a document.
+  contact:
+    url: https://github.com/GemeenteUtrecht/dowc
+paths:
+  /api/v1/documenten:
+    get:
+      operationId: v1_documenten_list
+      description: ''
+      parameters:
+      - in: query
+        name: drc_url
+        schema:
+          type: string
+          format: uri
+          description: URL reference to the source document in the Documents API.
+            May include the 'versie' querystring parameter.
+        description: drc_url
+      - in: query
+        name: purpose
+        schema:
+          enum:
+          - read
+          - write
+          type: string
+          description: Purpose of requesting the document.
+        description: purpose
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentFile'
+          description: ''
+    post:
+      operationId: v1_documenten_create
+      description: ''
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFile'
+          description: ''
+  /api/v1/documenten/{uuid}:
+    get:
+      operationId: v1_documenten_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+          description: A unique UUID for the DocumentFile object.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFile'
+          description: ''
+    put:
+      operationId: v1_documenten_update
+      description: ''
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+          description: A unique UUID for the DocumentFile object.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentFile'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFile'
+          description: ''
+    patch:
+      operationId: v1_documenten_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+          description: A unique UUID for the DocumentFile object.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentFile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentFile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentFile'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFile'
+          description: ''
+    delete:
+      operationId: v1_documenten_destroy
+      description: ''
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+          description: A unique UUID for the DocumentFile object.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    DocumentFile:
+      type: object
+      properties:
+        drc_url:
+          type: string
+          format: uri
+          writeOnly: true
+          description: URL reference to the source document in the Documents API.
+            May include the 'versie' querystring parameter.
+          maxLength: 1000
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/PurposeEnum'
+          description: Purpose of requesting the document.
+        magic_url:
+          type: string
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+          description: A unique UUID for the DocumentFile object.
+      required:
+      - drc_url
+      - magic_url
+      - purpose
+      - uuid
+    PatchedDocumentFile:
+      type: object
+      properties:
+        drc_url:
+          type: string
+          format: uri
+          writeOnly: true
+          description: URL reference to the source document in the Documents API.
+            May include the 'versie' querystring parameter.
+          maxLength: 1000
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/PurposeEnum'
+          description: Purpose of requesting the document.
+        magic_url:
+          type: string
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+          description: A unique UUID for the DocumentFile object.
+    PurposeEnum:
+      enum:
+      - write
+      - read
+      type: string
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

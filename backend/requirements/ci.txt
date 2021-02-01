@@ -28,7 +28,7 @@ django-auth-adfs-db==0.2.0  # via -r requirements/base.txt
 django-auth-adfs==1.3.1   # via -r requirements/base.txt, django-auth-adfs-db
 django-axes==5.0.13       # via -r requirements/base.txt
 django-better-admin-arrayfield==1.4.0  # via -r requirements/base.txt
-django-camunda==0.9.6     # via -r requirements/base.txt
+django-camunda==0.10.0    # via -r requirements/base.txt
 django-choices==1.7.0     # via -r requirements/base.txt, zgw-consumers
 django-compat==1.0.15     # via -r requirements/base.txt, django-hijack, django-hijack-admin
 django-cors-headers==3.5.0  # via -r requirements/base.txt
@@ -56,7 +56,7 @@ freezegun==0.3.15         # via -r requirements/test-tools.in
 furl==2.1.0               # via -r requirements/base.txt
 gemma-zds-client==0.13.3  # via -r requirements/base.txt, zgw-consumers
 idna==2.8                 # via -r requirements/base.txt, requests, yarl
-importlib-metadata==0.23  # via -r requirements/base.txt, kombu
+importlib-metadata==0.23  # via -r requirements/base.txt, jsonschema, kombu
 inflection==0.3.1         # via -r requirements/base.txt, django-camunda, drf-spectacular
 isodate==0.6.0            # via -r requirements/base.txt
 isort==5.6.4              # via -r requirements/test-tools.in

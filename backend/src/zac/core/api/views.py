@@ -6,6 +6,7 @@ from typing import List
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
@@ -267,6 +268,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakDetailSerializer
+    schema_summary = _("Retrieve case details")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -278,6 +280,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakStatusSerializer
+    schema_summary = _("List case statuses")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -290,6 +293,7 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
+    schema_summary = _("List case properties (eigenschappen)")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -302,6 +306,7 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakDocumentSerializer
+    schema_summary = _("List case documents")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -331,6 +336,7 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RelatedZaakSerializer
+    schema_summary = _("List related cases")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -350,6 +356,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RolSerializer
+    schema_summary = _("List case roles")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -362,6 +369,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakObjectGroupSerializer
+    schema_summary = _("List related objects of a case")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()

@@ -32,7 +32,7 @@ django-auth-adfs-db==0.2.0  # via -r requirements/ci.txt
 django-auth-adfs==1.3.1   # via -r requirements/ci.txt, django-auth-adfs-db
 django-axes==5.0.13       # via -r requirements/ci.txt
 django-better-admin-arrayfield==1.4.0  # via -r requirements/ci.txt
-django-camunda==0.9.6     # via -r requirements/ci.txt
+django-camunda==0.10.0    # via -r requirements/ci.txt
 django-choices==1.7.0     # via -r requirements/ci.txt, zgw-consumers
 django-compat==1.0.15     # via -r requirements/ci.txt, django-hijack, django-hijack-admin
 django-cors-headers==3.5.0  # via -r requirements/ci.txt
@@ -65,7 +65,7 @@ furl==2.1.0               # via -r requirements/ci.txt
 gemma-zds-client==0.13.3  # via -r requirements/ci.txt, zgw-consumers
 idna==2.8                 # via -r requirements/ci.txt, requests, yarl
 imagesize==1.2.0          # via sphinx
-importlib-metadata==0.23  # via -r requirements/ci.txt, kombu
+importlib-metadata==0.23  # via -r requirements/ci.txt, jsonschema, kombu
 inflection==0.3.1         # via -r requirements/ci.txt, django-camunda, drf-spectacular
 isodate==0.6.0            # via -r requirements/ci.txt
 isort==5.6.4              # via -r requirements/ci.txt

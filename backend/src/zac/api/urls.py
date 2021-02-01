@@ -16,6 +16,8 @@ urlpatterns = [
     path("docs/", SpectacularRedocView.as_view(url_name="api-schema"), name="api-docs"),
     # actual API endpoints
     path("kownsl/", include("zac.contrib.kownsl.urls")),
+    path("dowc/", include("zac.contrib.dowc.urls")),
     path("core/", include("zac.core.api.bff_urls")),
+    path("camunda/", include("zac.camunda.api.urls")),
     path("", include("zac.notifications.urls")),
 ]

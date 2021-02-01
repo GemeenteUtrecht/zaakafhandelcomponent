@@ -1,0 +1,12 @@
+<div class="documenten card">
+  <h2>Documenten</h2>
+  <!-- Loading -->
+  <ng-container *ngIf="!documentsData && isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+
+  <!-- Table -->
+  <ng-container *ngIf="documentsData && !isLoading">
+    <gu-table [tableData]="tableData" (buttonOutput)="handleTableButtonOutput($event)"></gu-table>
+  </ng-container>
+</div>

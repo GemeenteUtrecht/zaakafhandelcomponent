@@ -1,4 +1,5 @@
 <div class="kownsl__container">
+  <h1 class="">Advies gevraagd</h1>
   <ng-template [ngIf]="uuid && !submitSuccess">
     <!-- Loading -->
     <ng-template [ngIf]="!adviceData && isLoading">
@@ -13,7 +14,6 @@
     <!-- Main content -->
     <ng-template [ngIf]="!!adviceData && !isLoading">
       <section>
-        <h1 class="">Advies gevraagd</h1>
         <div class="row no-gutters">
           <div class="col-4">
             <p class="p p--bold">Ingediend op:</p>
@@ -38,7 +38,7 @@
       <ng-template [ngIf]="!!adviceData.reviews">
         <section *ngIf="adviceData.reviews.length > 0">
           <h2 class="mb-4">Vorige adviezen</h2>
-          <gu-table [tableData]="tableData"></gu-table>
+          <gu-table [tableData]="tableData" [expandable]="true"></gu-table>
         </section>
       </ng-template>
 
@@ -66,7 +66,7 @@
 
         <!-- Advice text -->
         <section>
-          <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
+          <label class="h2 d-inline-block mb-0" for="textarea_advice">Uw advies</label>
           <span class="label label--optional">optioneel</span>
           <span class="label label--hint">Inhoudelijk advies</span>
           <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>

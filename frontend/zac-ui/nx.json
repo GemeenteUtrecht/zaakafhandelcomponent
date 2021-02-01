@@ -44,6 +44,9 @@
     },
     "shared-utils": {
       "tags": []
+    },
+    "features-zaak-detail": {
+      "tags": []
     }
   }
 }

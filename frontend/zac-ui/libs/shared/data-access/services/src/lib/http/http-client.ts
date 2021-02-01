@@ -21,28 +21,29 @@ export function applicationHttpClientCreator(http: HttpClient) {
 })
 export class ApplicationHttpClient {
 
-  private api = '/api';
-
   public constructor(public http: HttpClient) {}
 
   public Get<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
-    return this.http.get<T>(this.api + endPoint, options);
+    return this.http.get<T>(endPoint, options);
   }
 
-  public Post<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<any> {
+  public Post<T>(endPoint: string, params?: object, options?: IRequestOptions): Observable<any> {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     options = {
       headers: headers,
-      withCredentials: true,
+      withCredentials: true
     }
-    return this.http.post<T>(this.api + endPoint, params, options);
+    return this.http.post<T>(endPoint, params, options);
   }
 
   public Put<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<any> {
-    return this.http.put<T>(this.api + endPoint, params, options);
+    return this.http.put<T>(endPoint, params, options);
   }
 
   public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
-    return this.http.delete<T>(this.api + endPoint, options);
+    options = {
+      withCredentials: true
+    }
+    return this.http.delete<T>(endPoint, options);
   }
 }

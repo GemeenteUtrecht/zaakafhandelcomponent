@@ -1,6 +1,17 @@
+from typing import List
+
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from zac.accounts.serializers import UserSerializer
+from zac.api.polymorphism import PolymorphicSerializer
+
+from ..user_tasks.context import REGISTRY
+
+
+class ErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField()
 
 
 class RecursiveField(serializers.Serializer):
@@ -26,3 +37,49 @@ class ProcessInstanceSerializer(serializers.Serializer):
         child=serializers.CharField(max_length=100), allow_empty=True
     )
     tasks = TaskSerializer(many=True)
+
+
+class UserTaskContextSerializer(PolymorphicSerializer):
+    discriminator_field = "form"
+    serializer_mapping = {}  # set at run-time based on the REGISTRY
+
+    form = serializers.ChoiceField(
+        label=_("Form to render"),
+        source="task.form_key",
+        help_text=_(
+            "The form key of the form to render. Note that unknown form keys (= not "
+            "present in the enum) will be returned as is."
+        ),
+        allow_blank=True,
+        choices=(),
+    )
+    task = TaskSerializer(label=_("User task summary"))
+    # the context is added by the serializer_mapping serializers
+
+    def __init__(self, *args, **kwargs):
+
+        self.serializer_mapping = {
+            form_key: serializer
+            for form_key, (callback, serializer) in REGISTRY.items()
+        }
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["form"].choices = list(REGISTRY.keys())
+
+
+class MessageSerializer(serializers.Serializer):
+    """
+    TODO: Write tests.
+    """
+
+    process_instance_id = serializers.CharField()
+    message = serializers.ChoiceField(choices=())
+
+    def __init__(self, *args, **kwargs):
+        message_names = kwargs.pop("message_names", [])
+        super().__init__(*args, **kwargs)
+        self.set_message_choices(message_names)
+
+    def set_message_choices(self, message_names: List[str]):
+        self.fields["message"].choices = [(name, name) for name in message_names]

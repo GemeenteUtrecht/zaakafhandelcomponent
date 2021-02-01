@@ -11,7 +11,7 @@ html {
   color: $color-text;
   font-family: $font-family-text;
   line-height: $line-height-m;
-  font-size: 62.5%; // This makes 1rem = 10px;
+  font-size: 100%; // This makes 0.625rem = 10px;
 }
 
 h1, .h1 {
@@ -40,18 +40,21 @@ p {
   &.p--bold {
     font-weight: bold;
   }
+  &.p--marginsmall {
+    margin-bottom: 0.625rem;
+  }
   &.p--nomargin {
     margin-bottom: 0;
   }
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
+a, .anchor {
+  text-decoration: underline;
+  color: $color-blue;
 
   &:hover {
     text-decoration: none;
-    color: inherit;
+    cursor: pointer;
   }
 }
 

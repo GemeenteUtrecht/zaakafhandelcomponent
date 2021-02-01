@@ -121,7 +121,7 @@ class TaskClaimTests(WebTest):
         url = reverse("core:claim-task")
         next_url = reverse("index")
 
-        with patch("zac.core.camunda.extract_task_form", return_value=None):
+        with patch("zac.camunda.user_tasks.api.extract_task_form", return_value=None):
             response = self.client.post(
                 url, {"zaak": ZAAK, "task_id": task["id"]}, HTTP_REFERER=next_url
             )
