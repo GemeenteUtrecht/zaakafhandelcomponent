@@ -2,18 +2,27 @@ import uuid
 
 from django.utils.translation import gettext_lazy as _
 
+from django_camunda.api import complete_task, send_message
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.zaken import Zaak
+
+from zac.core.camunda import get_process_zaak_url
+from zac.core.services import _client_from_url, get_zaak
 
 from ..data import Task
+from ..messages import get_messages
+from ..process_instances import get_process_instance
 from ..processes import get_process_instances
 from ..user_tasks import UserTaskData, get_context, get_task
+from .permissions import CanPerformTasks
 from .serializers import (
     ErrorSerializer,
+    MessageSerializer,
     ProcessInstanceSerializer,
     UserTaskContextSerializer,
 )
@@ -68,7 +77,7 @@ class GetTaskContextView(APIView):
     # TODO: check permissions that user is allowed to execute process task stuff.
     # See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/blob/9b7ea9cbab66c7356e7417b6ce98245272954e1c/backend/src/zac/core/api/permissions.py#L69  # noqa
     # for a first pass
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = UserTaskContextSerializer
     schema_summary = _("Retrieve user task data and context")
 
@@ -97,3 +106,70 @@ class GetTaskContextView(APIView):
         # May raise a permission denied
         self.check_object_permissions(self.request, task)
         return task
+
+
+class SendMessageView(APIView):
+    """
+    TODO: Write tests.
+    """
+
+    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
+    serializer_class = MessageSerializer
+
+    def get_serializer(self, **kwargs):
+        serializer = self.serializer_class(**kwargs)
+        process_instance_id = serializer.data.get("process_instance_id", None)
+
+        # no (valid) process instance ID -> get a form with no valid messages -> invalid
+        # POST request
+        if not process_instance_id:
+            return serializer
+
+        # set the valid process instance messages _if_ a process instance exists
+        process_instance = get_process_instance(process_instance_id)
+        if process_instance is None or process_instance.historical:
+            return serializer
+
+        messages = get_messages(process_instance.definition_id)
+        serializer.set_message_choices(messages)
+
+        return serializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # check permissions
+        process_instance_id = serializer.validated_data["process_instance_id"]
+        process_instance = get_process_instance(process_instance_id)
+
+        zaak_url = get_process_zaak_url(process_instance)
+        zaak = get_zaak(zaak_url=zaak_url)
+        self.check_object_permissions(request, zaak)
+
+        # build service variables to continue execution
+        zrc_client = _client_from_url(zaak.url)
+        ztc_client = _client_from_url(zaak.zaaktype)
+
+        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
+        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
+
+        variables = {
+            "services": {
+                "zrc": {"jwt": zrc_jwt},
+                "ztc": {"jwt": ztc_jwt},
+            },
+        }
+
+        send_message(
+            serializer.cleaned_data["message"], [process_instance.id], variables
+        )
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class PerformTaskView(APIView):
+    """
+    Implement polymorphic(?) perform task view
+    """
+
+    pass
