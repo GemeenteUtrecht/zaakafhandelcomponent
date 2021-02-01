@@ -118,7 +118,7 @@ class SendMessageView(APIView):
 
     def get_serializer(self, **kwargs):
         serializer = self.serializer_class(**kwargs)
-        process_instance_id = serializer.data.get("process_instance_id", None)
+        process_instance_id = serializer.initial_data.get("process_instance_id", None)
 
         # no (valid) process instance ID -> get a form with no valid messages -> invalid
         # POST request
