@@ -7,6 +7,6 @@ class UtilsConfig(AppConfig):
     name = "zac.utils"
 
     def ready(self):
-        from . import checks  # noqa
+        from . import checks, schema_extensions  # noqa
 
         replace_cache()
