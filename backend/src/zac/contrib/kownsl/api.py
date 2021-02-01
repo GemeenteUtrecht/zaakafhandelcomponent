@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from django.http import Http404
 
-from zds_client.client import ClientError, get_operation_url
+from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
