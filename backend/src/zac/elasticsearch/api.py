@@ -1,10 +1,11 @@
 import logging
+from collections import defaultdict
 
 from elasticsearch import exceptions
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.core.rollen import Rol
-from zac.core.services import get_rollen
+from zac.core.services import get_rollen, get_zaak_eigenschappen
 from zgw.models.zrc import Zaak
 
 from .documents import RolDocument, ZaakDocument
@@ -114,4 +115,22 @@ def update_rollen_in_zaak_document(zaak: Zaak):
     ]
 
     zaak_document.rollen = rol_documents
+    zaak_document.save()
+
+
+def update_eigenschappen_in_zaak_document(zaak: Zaak):
+    try:
+        zaak_document = ZaakDocument.get(id=zaak.uuid)
+    except exceptions.NotFoundError as exc:
+        logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
+        zaak_document = create_zaak_document(zaak)
+
+    eigenschappen_doc = defaultdict(dict)
+    for zaak_eigenschap in get_zaak_eigenschappen(zaak):
+        spec_format = zaak_eigenschap.eigenschap.specificatie.formaat
+        eigenschappen_doc[spec_format].update(
+            {zaak_eigenschap.naam: zaak_eigenschap.waarde}
+        )
+
+    zaak_document.eigenschappen = eigenschappen_doc
     zaak_document.save()
