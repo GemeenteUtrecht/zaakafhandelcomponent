@@ -13,8 +13,9 @@ def get_task(task_id: CamundaId, check_history=False) -> Optional[Task]:
 
     # check if task is not None
     # add Django integration
-    if task and task.assignee:
-        task.assignee = _resolve_assignee(task.assignee)
+    if task is not None:
+        if task.assignee:
+            task.assignee = _resolve_assignee(task.assignee)
         task.form = extract_task_form(task, FORM_KEYS)
 
     return task
