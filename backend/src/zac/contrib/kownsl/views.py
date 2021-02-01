@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from drf_spectacular.utils import extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import authentication, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,7 +16,6 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.core.api.permissions import CanReadZaken
-from zac.core.api.serializers import ZaakSerializer
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
@@ -29,8 +28,12 @@ from .api import (
     retrieve_approvals,
 )
 from .permissions import IsReviewUser
-from .serializers import ZaakRevReqDetailSerializer, ZaakRevReqSummarySerializer
-from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
+from .serializers import (
+    KownslReviewRequestSerializer,
+    ZaakRevReqDetailSerializer,
+    ZaakRevReqSummarySerializer,
+)
+from .utils import remote_kownsl_create_schema
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +92,7 @@ class BaseRequestView(APIView):
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
     _operation_id = NotImplemented
-    serializer_class = None  # this only serves to shut up drf-spectacular errors
+    serializer_class = KownslReviewRequestSerializer
 
     def get_object(self):
         client = get_client(self.request.user)
@@ -103,7 +106,6 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
         review_request = self.get_object()
         review_users = [
@@ -115,12 +117,14 @@ class BaseRequestView(APIView):
             else "false"
         }
         zaak_url = review_request["for_zaak"]
-        zaak = get_zaak(zaak_url)
-        response_data = {
-            **review_request,
-            "zaak": ZaakSerializer(instance=zaak).data,
-        }
-        return Response(response_data, headers=headers)
+        serializer = self.serializer_class(
+            instance={
+                **review_request,
+                "zaak": get_zaak(zaak_url=zaak_url),
+            },
+            context={"request": request, "view": self},
+        )
+        return Response(serializer.data, headers=headers)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
@@ -139,37 +143,25 @@ class BaseRequestView(APIView):
 
 
 @extend_schema_view(
+    get=extend_schema(summary=_("Retrieve advice review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices"
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
+        summary=_("Register advice for review request"),
     ),
 )
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-
-    get.schema_summary = _("Retrieve advice review request")
-
-
-AdviceRequestView.post.schema_summary = _("Register advice for review request")
-
 
 @extend_schema_view(
+    get=extend_schema(summary=_("Retrieve approval review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals"
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
+        summary=_("Register approval for review request"),
     ),
 )
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
-
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-
-    get.schema_summary = _("Retrieve approval review request")
-
-
-ApprovalRequestView.post.schema_summary = _("Register approval for review request")
 
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
