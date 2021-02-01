@@ -1,18 +1,21 @@
-from typing import Dict, Optional, Tuple
+from typing import Dict, NoReturn, Optional, Tuple
+
+from django.http import Http404
 
 from rest_framework import status
+from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.client import ZGWClient
 
 from zac.accounts.models import User
+from zac.client import Client
 from zac.utils.decorators import optional_service
 
 from .data import DowcResponse
 from .models import DowcConfig
 
 
-def get_client(user: User) -> ZGWClient:
+def get_client(user: User) -> Client:
     config = DowcConfig.get_solo()
     assert config.service, "A service must be configured first"
     service = config.service
@@ -50,10 +53,12 @@ def get_doc_info(
 
 
 @optional_service
-def patch_and_destroy_doc(user: User, uuid: str) -> Dict:
+def patch_and_destroy_doc(user: User, uuid: str) -> Optional[NoReturn]:
     client = get_client(user)
-    response = client.delete(
-        "v1_documenten",
-        uuid=uuid,
-    )
-    return response
+    operation_id = "v1_documenten_destroy"
+    try:
+        url = get_operation_url(client.schema, operation_id, **{"uuid": uuid})
+        client.request(url, operation_id, method="DELETE", expected_status=204)
+
+    except ClientError:
+        raise Http404(f"DocumentFile with id {uuid} does not exist.")
