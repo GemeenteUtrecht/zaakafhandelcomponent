@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from drf_spectacular.utils import extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import authentication, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -33,7 +33,7 @@ from .serializers import (
     ZaakRevReqDetailSerializer,
     ZaakRevReqSummarySerializer,
 )
-from .utils import remote_kownsl_create_schema, remote_kownsl_get_schema
+from .utils import remote_kownsl_create_schema
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,6 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    @remote_kownsl_get_schema("/api/v1/review-requests/{uuid}")
     def get(self, request, request_uuid):
         review_request = self.get_object()
         review_users = [
@@ -144,37 +143,25 @@ class BaseRequestView(APIView):
 
 
 @extend_schema_view(
+    get=extend_schema(summary=_("Retrieve advice review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices"
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
+        summary=_("Register advice for review request"),
     ),
 )
 class AdviceRequestView(BaseRequestView):
     _operation_id = "advice_create"
 
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-
-    get.schema_summary = _("Retrieve advice review request")
-
-
-AdviceRequestView.post.schema_summary = _("Register advice for review request")
-
 
 @extend_schema_view(
+    get=extend_schema(summary=_("Retrieve approval review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals"
+        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
+        summary=_("Register approval for review request"),
     ),
 )
 class ApprovalRequestView(BaseRequestView):
     _operation_id = "approval_create"
-
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-
-    get.schema_summary = _("Retrieve approval review request")
-
-
-ApprovalRequestView.post.schema_summary = _("Register approval for review request")
 
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):

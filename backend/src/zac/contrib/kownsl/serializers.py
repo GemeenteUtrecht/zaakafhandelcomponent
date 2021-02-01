@@ -23,7 +23,8 @@ from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
-    REMOTE_SCHEMA = ("/api/v1/review-requests/{uuid}", "get")
+    PROXY_SCHEMA_BASE = "https://kownsl.utrechtproeftuin.nl/api/v1"
+    PROXY_SCHEMA = ("/api/v1/review-requests/{uuid}", "get")
     zaak = ZaakSerializer()
 
 

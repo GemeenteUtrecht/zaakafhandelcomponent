@@ -17,7 +17,7 @@ KOWNSL_OAS = "https://kownsl.utrechtproeftuin.nl/api/v1"
 
 
 def remote_kownsl_create_schema(
-    url: str, status_code=201, media_type="application/json"
+    url: str, status_code=201, media_type="application/json", **kwargs
 ) -> callable:
     """
     Extend the schema to include request and response bodies from a remote schema.
@@ -33,24 +33,5 @@ def remote_kownsl_create_schema(
         responses={
             (status_code, media_type): remote_schema_ref(KOWNSL_OAS, response_schema),
         },
-    )
-
-
-def remote_kownsl_get_schema(
-    url: str, status_code=200, media_type="application/json"
-) -> callable:
-    response_schema = [
-        "paths",
-        url,
-        "get",
-        "responses",
-        status_code,
-        "content",
-        media_type,
-        "schema",
-    ]
-    return extend_schema(
-        responses={
-            (status_code, media_type): remote_schema_ref(KOWNSL_OAS, response_schema)
-        }
+        **kwargs,
     )

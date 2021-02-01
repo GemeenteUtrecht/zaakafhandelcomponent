@@ -3,6 +3,7 @@ from drf_spectacular.plumbing import build_media_type_object, force_instance
 
 # ensure extensions are loaded
 from .drf_spectacular import polymorphic  # noqa
+from .drf_spectacular import proxy  # noqa
 
 
 class AutoSchema(_AutoSchema):
