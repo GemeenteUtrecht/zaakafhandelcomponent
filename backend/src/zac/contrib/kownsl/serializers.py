@@ -11,7 +11,8 @@ from zac.accounts.models import User
 from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks.api import get_task
 from zac.core.camunda import get_process_zaak_url
-from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
+from zac.core.forms import _repr
+from zac.core.services import get_documenten, get_zaak
 from zac.core.utils import get_ui_url
 
 from .api import create_review_request
@@ -114,7 +115,7 @@ class SelectUsersRevReqSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 f"Users {invalid_usernames} do not exist."
             )
-        return value
+        return users
 
 
 class ConfigureReviewRequestSerializer(serializers.Serializer):
@@ -192,7 +193,7 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
         )
 
         user_deadlines = {
-            user["username"]: str(data["deadline"])
+            data["username"]: str(data["deadline"])
             for data in self.validated_data["assigned_users"]
             for users in data["users"]
         }
@@ -219,7 +220,9 @@ class ConfigureReviewRequestSerializer(serializers.Serializer):
                 errors.append(
                     serializers.ValidationError(
                         _(
-                            "Deadlines are not allowed to be equal in a serial review request process but need to have at least 1 day in between them. Please select a date greater than {minimum_date}."
+                            "Deadlines are not allowed to be equal in a serial review request "
+                            "process but need to have at least 1 day in between them. "
+                            "Please select a date greater than {minimum_date}."
                         ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
                         code="date-not-valid",
                     )
