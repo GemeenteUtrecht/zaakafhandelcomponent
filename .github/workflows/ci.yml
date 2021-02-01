@@ -81,6 +81,7 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: zac.conf.ci
           SECRET_KEY: dummy
+          DB_NAME: postgres
           DB_USER: postgres
           DB_PASSWORD: ''
           IS_HTTPS: 'no'
