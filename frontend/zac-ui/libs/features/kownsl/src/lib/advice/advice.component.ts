@@ -93,7 +93,7 @@ export class AdviceComponent implements OnInit {
       const date = this.pipe.transform(review.created, 'short');
       const rowData: RowData = {
         cellData: {
-          author: author,
+          author: author ? author : '',
           created: date
         },
         expandData: review.advice

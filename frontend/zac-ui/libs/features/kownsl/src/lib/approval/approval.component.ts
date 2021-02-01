@@ -85,8 +85,8 @@ export class ApprovalComponent implements OnInit {
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
       const rowData: RowData = {
         cellData: {
-          author: author,
-          created: date,
+          author: author ? author : '',
+          created: date ? date : '',
           approved: approved
         },
         expandData: review.toelichting

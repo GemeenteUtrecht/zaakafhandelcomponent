@@ -9,14 +9,17 @@
     <ng-template ngFor let-element [ngForOf]="tableData.bodyData">
       <tr
         class="parent-row"
-        [ngClass]="element.clickOutput || expandable ? 'parent-row--clickable' : ''"
+        [ngClass]="element.clickOutput || (expandable && element.expandData) ? 'parent-row--clickable' : ''"
         (click)="handleRowClickOutput(element.clickOutput); expandRow($event)"
-        [attr.role]="element.clickOutput || expandable ? 'button' : ''"
+        [attr.role]="element.clickOutput || (expandable && element.expandData) ? 'button' : ''"
       >
         <!-- Expand icon -->
-        <td *ngIf="expandable && element.expandData" class="table-expand">
+        <ng-container>
+          <td *ngIf="expandable && element.expandData" class="table-expand">
             <mat-icon class="arrow" aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
-        </td>
+          </td>
+          <td *ngIf="expandable && !element.expandData"></td>
+        </ng-container>
 
         <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
           <!-- Regular string table cell -->
