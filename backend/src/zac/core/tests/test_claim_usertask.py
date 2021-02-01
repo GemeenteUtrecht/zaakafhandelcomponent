@@ -28,7 +28,7 @@ class ClaimUserTaskTests(TestCase):
         super().setUp()
         self.client.force_login(user=self.user)
 
-    @patch("zac.core.camunda.extract_task_form", return_value=None)
+    @patch("zac.camunda.user_tasks.api.extract_task_form", return_value=None)
     @patch("zac.core.views.processes.get_roltypen", return_value=[])
     @patch("zac.core.views.processes.fetch_zaaktype", return_value=None)
     @patch("zac.core.views.processes.get_zaak")
@@ -117,7 +117,7 @@ class ClaimUserTaskTests(TestCase):
             response.json()["task_id"][0]["message"], _("Invalid task referenced.")
         )
 
-    @patch("zac.core.camunda.extract_task_form", return_value=None)
+    @patch("zac.camunda.user_tasks.api.extract_task_form", return_value=None)
     @patch("zac.core.views.processes.get_zaak")
     def test_no_permission(self, m, m_get_zaak, *other_mocks):
         TASK_ID = str(uuid.uuid4())
