@@ -35,6 +35,8 @@ import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
     GerelateerdeObjectenComponent,
     DocumentenComponent,
     AdviserenAccorderenComponent
-  ]
+  ],
+  exports: [FeaturesZaakDetailComponent],
+  providers: [FormGroupDirective]
 })
 export class FeaturesZaakDetailModule {}

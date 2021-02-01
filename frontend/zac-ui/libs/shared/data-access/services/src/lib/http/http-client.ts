@@ -41,6 +41,9 @@ export class ApplicationHttpClient {
   }
 
   public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
+    options = {
+      withCredentials: true
+    }
     return this.http.delete<T>(endPoint, options);
   }
 }

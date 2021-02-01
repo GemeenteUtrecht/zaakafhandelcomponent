@@ -6,7 +6,8 @@ import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { convertKbToMb } from '@gu/utils';
 
-import {DocumentUrls } from './documenten.interface';
+import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
+import { DocumentenService } from './documenten.service';
 
 @Component({
   selector: 'gu-documenten',
@@ -20,7 +21,7 @@ export class DocumentenComponent implements OnInit {
     bodyData: []
   }
 
-  data: any;
+  documentsData: any;
 
   isLoading = true;
   hasError: boolean;
@@ -34,7 +35,8 @@ export class DocumentenComponent implements OnInit {
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private documentenService: DocumentenService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -44,9 +46,9 @@ export class DocumentenComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoading = true;
-    this.getDocuments().subscribe( data => {
+    this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
       this.tableData.bodyData = this.formatTableData(data)
-      this.data = data;
+      this.documentsData = data;
       this.isLoading = false;
     }, res => {
       this.errorMessage = res.error.detail;
@@ -56,7 +58,7 @@ export class DocumentenComponent implements OnInit {
   }
 
   formatTableData(data): RowData[] {
-    return data.map( element => {
+    return data.map( (element: Document) => {
      const icon = element.locked ? 'lock' : 'lock_open'
      const iconColor = element.locked ? 'orange' : 'green'
      const bestandsomvang =
@@ -97,39 +99,79 @@ export class DocumentenComponent implements OnInit {
     const actionType = Object.keys(action)[0];
     const actionUrl = action[actionType];
 
+    switch (actionType) {
+      case 'lezen':
+        this.readDocument(actionUrl);
+        break;
+      case 'bewerken':
+        this.editDocument(actionUrl);
+        break;
+    }
     if (actionType === 'bewerken') {
       this.editDocument(actionUrl);
     }
   }
 
-  editDocument(actionUrl) {
-    if (!this.docsInEditMode.includes(actionUrl)) {
-      this.docsInEditMode.push(actionUrl);
-      this.openDocumentEdit(actionUrl);
-    } else {
-      this.deleteUrls.forEach(document => {
-        if (document.actionUrl === actionUrl) {
-
-        }
-      })
-    }
-  }
-
-  openDocumentEdit(actionUrl) {
-    this.writeDocuments(actionUrl).subscribe( res => {
-      console.log(res);
+  readDocument(readUrl) {
+    this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
     }, errorResponse => {
 
     })
   }
 
-  getDocuments(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/documents`);
-    return this.http.Get<any>(endpoint);
+  editDocument(writeUrl) {
+    if (!this.docsInEditMode.includes(writeUrl)) {
+      this.docsInEditMode.push(writeUrl);
+      this.openDocumentEdit(writeUrl);
+    } else {
+      this.deleteUrls.forEach( (document, index) => {
+        if (document.writeUrl === writeUrl) {
+          this.closeDocumentEdit(document.deleteUrl, writeUrl);
+          this.deleteUrls.splice(index, 1);
+        }
+      })
+    }
   }
 
-  writeDocuments(writeUrl): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(writeUrl);
-    return this.http.Post<any>(endpoint);
+  openDocumentEdit(writeUrl) {
+    this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
+      // Open document
+      window.open(res.magicUrl, "_blank");
+
+      // Change table layout so "Bewerkingen opslaan" button will be shown
+      this.tableData.bodyData = this.formatTableData(this.documentsData);
+
+      // Map received deleteUrl to the writeUrl
+      this.addDeleteUrlsMapping(writeUrl, res.deleteUrl);
+    }, errorResponse => {
+
+    })
   }
+
+  closeDocumentEdit(deleteUrl, writeUrl) {
+    return this.documentenService.closeDocumentEdit(deleteUrl).subscribe( res => {
+      // Remove deleteUrl mapping from local array
+      this.deleteUrls.forEach( (document, index) => {
+        if (document.deleteUrl === deleteUrl) {
+          this.deleteUrls.splice(index, 1);
+        }
+      })
+
+      // Remove editMode
+      this.docsInEditMode = this.docsInEditMode.filter(e => e !== writeUrl);
+      this.tableData.bodyData = this.formatTableData(this.documentsData);
+    }, errorResponse => {
+
+    })
+  }
+
+  addDeleteUrlsMapping(writeUrl, deleteUrl) {
+    const urlMapping = {
+      writeUrl: writeUrl,
+      deleteUrl: deleteUrl
+    }
+    this.deleteUrls.push(urlMapping);
+  }
+
 }
