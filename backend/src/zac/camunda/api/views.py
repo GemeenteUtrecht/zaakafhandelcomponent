@@ -19,7 +19,7 @@ from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
 from ..user_tasks import UserTaskData, get_context, get_task
-from .permissions import CanPerformTasks
+from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     ErrorSerializer,
     MessageSerializer,
@@ -113,7 +113,7 @@ class SendMessageView(APIView):
     TODO: Write tests.
     """
 
-    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
+    permission_classes = (permissions.IsAuthenticated & CanSendMessages,)
     serializer_class = MessageSerializer
 
     def get_serializer(self, **kwargs):
