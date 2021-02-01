@@ -31,7 +31,7 @@ export class ApplicationHttpClient {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     options = {
       headers: headers,
-      withCredentials: true,
+      withCredentials: true
     }
     return this.http.post<T>(endPoint, params, options);
   }
@@ -41,6 +41,9 @@ export class ApplicationHttpClient {
   }
 
   public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<any> {
+    options = {
+      withCredentials: true
+    }
     return this.http.delete<T>(endPoint, options);
   }
 }

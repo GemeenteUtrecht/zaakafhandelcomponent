@@ -27,6 +27,7 @@ from zgw.models.zrc import Zaak
 from ..zaakobjecten import ZaakObjectGroup
 from .utils import (
     CSMultipleChoiceField,
+    TypeChoices,
     ValidExpandChoices,
     ValidFieldChoices,
     get_informatieobjecttypen_for_zaak,
@@ -87,7 +88,7 @@ class DocumentInfoSerializer(serializers.Serializer):
         return filesizeformat(obj.bestandsomvang)
 
     def get_read_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -95,7 +96,6 @@ class DocumentInfoSerializer(serializers.Serializer):
                 "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -347,7 +347,7 @@ class ZaakDocumentSerializer(APIModelSerializer):
         }
 
     def get_read_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -355,10 +355,9 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
     def get_write_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -366,7 +365,6 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "purpose": DocFileTypes.write,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
@@ -418,3 +416,52 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
     class Meta:
         model = ZaakObjectGroup
         fields = ("object_type", "label", "items")
+
+
+class ZaakTypeAggregateSerializer(serializers.Serializer):
+    omschrijving = serializers.CharField()
+    identificatie = serializers.CharField()
+    catalogus = serializers.URLField()
+
+
+class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=TypeChoices.choices)
+    format = serializers.CharField(required=False)
+    min_length = serializers.IntegerField(required=False)
+    max_length = serializers.IntegerField(required=False)
+    enum = serializers.ListField(required=False)
+
+    def get_enum_child_field(self, instance):
+        enum = instance.get("enum")
+
+        if not enum:
+            return serializers.CharField()
+
+        if instance["type"] == "string":
+            return serializers.CharField()
+
+        for el in enum:
+            if not isinstance(el, int):
+                return serializers.FloatField()
+
+        return serializers.IntegerField()
+
+    def to_representation(self, instance):
+        self.fields["enum"].child = self.get_enum_child_field(instance)
+
+        result = super().to_representation(instance)
+
+        return result
+
+
+class SearchEigenschapSerializer(APIModelSerializer):
+    spec = SearchEigenschapSpecificatieSerializer(label=_("property definition"))
+
+    class Meta:
+        model = Eigenschap
+        fields = (
+            "url",
+            "name",
+            "spec",
+        )
+        extra_kwargs = {"name": {"source": "naam"}}

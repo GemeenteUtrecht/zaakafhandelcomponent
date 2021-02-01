@@ -1,6 +1,7 @@
 import base64
 from datetime import date
 from itertools import groupby
+from typing import List
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -9,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
 from rest_framework import authentication, exceptions, permissions, status, views
+from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
@@ -16,9 +18,11 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.elasticsearch.searches import autocomplete_zaak_search
+from zac.utils.filters import ApiFilterBackend
 
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig
@@ -26,6 +30,7 @@ from ..services import (
     find_zaak,
     get_document,
     get_documenten,
+    get_eigenschappen,
     get_informatieobjecttype,
     get_related_zaken,
     get_rollen,
@@ -33,9 +38,12 @@ from ..services import (
     get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
+    get_zaaktypen,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
+from .pagination import BffPagination
 from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -48,6 +56,7 @@ from .serializers import (
     InformatieObjectTypeSerializer,
     RelatedZaakSerializer,
     RolSerializer,
+    SearchEigenschapSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -55,8 +64,12 @@ from .serializers import (
     ZaakObjectGroupSerializer,
     ZaakSerializer,
     ZaakStatusSerializer,
+    ZaakTypeAggregateSerializer,
 )
-from .utils import get_informatieobjecttypen_for_zaak
+from .utils import (
+    convert_eigenschap_spec_to_json_schema,
+    get_informatieobjecttypen_for_zaak,
+)
 
 
 class GetInformatieObjectTypenView(views.APIView):
@@ -380,3 +393,85 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
+
+
+class ZaakTypenView(ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ZaakTypeAggregateSerializer
+    pagination_class = BffPagination
+    filter_backends = (ApiFilterBackend,)
+    filterset_class = ZaaktypenFilterSet
+    action = "list"
+
+    def get_queryset(self) -> List[dict]:
+        zaaktypen = self.get_zaaktypen()
+        return zaaktypen
+
+    def get_zaaktypen(self) -> List[dict]:
+        zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
+
+        # aggregate
+        zaaktypen_data = [
+            {
+                "catalogus": zaaktype.catalogus,
+                "identificatie": zaaktype.identificatie,
+                "omschrijving": zaaktype.omschrijving,
+            }
+            for zaaktype in zaaktypen
+        ]
+        zaaktypen_aggregated = [
+            dict(z) for z in set(tuple(zaaktype.items()) for zaaktype in zaaktypen_data)
+        ]
+        zaaktypen_aggregated = sorted(
+            zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
+        )
+        return zaaktypen_aggregated
+
+
+class EigenschappenView(ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = SearchEigenschapSerializer
+    filter_backends = (ApiFilterBackend,)
+    filterset_class = EigenschappenFilterSet
+
+    def list(self, request, *args, **kwargs):
+        # validate query params
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
+        zaaktypen = self.get_zaaktypen()
+        eigenschappen = self.get_eigenschappen(zaaktypen)
+
+        serializer = self.get_serializer(eigenschappen, many=True)
+        return Response(serializer.data)
+
+    def get_zaaktypen(self):
+        catalogus = self.request.query_params.get("catalogus")
+        zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
+
+        zaaktypen = get_zaaktypen(
+            UserPermissions(self.request.user), catalogus=catalogus
+        )
+        return [
+            zaaktype
+            for zaaktype in zaaktypen
+            if zaaktype.omschrijving == zaaktype_omschrijving
+        ]
+
+    def get_eigenschappen(self, zaaktypen):
+        with parallel() as executor:
+            _eigenschappen = executor.map(get_eigenschappen, zaaktypen)
+
+        eigenschappen = sum(list(_eigenschappen), [])
+
+        for eigenschap in eigenschappen:
+            eigenschap.spec = convert_eigenschap_spec_to_json_schema(
+                eigenschap.specificatie
+            )
+
+        return eigenschappen

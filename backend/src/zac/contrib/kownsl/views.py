@@ -119,7 +119,6 @@ class BaseRequestView(APIView):
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
-
         client = get_client(request.user)
         operation_id = self._operation_id
         url = get_operation_url(
