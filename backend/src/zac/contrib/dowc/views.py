@@ -25,7 +25,7 @@ class OpenDowcView(APIView):
     document = None
     serializer_class = DowcResponseSerializer
 
-    def get_object(self) -> NoReturn:
+    def get_object(self) -> Document:
         bronorganisatie = self.kwargs["bronorganisatie"]
         identificatie = self.kwargs["identificatie"]
         purpose = self.kwargs["purpose"]
