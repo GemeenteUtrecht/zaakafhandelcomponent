@@ -1,5 +1,4 @@
 import logging
-from copy import copy
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -20,7 +19,6 @@ from zac.core.api.permissions import CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaak
-from zac.core.utils import get_ui_url
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import (
