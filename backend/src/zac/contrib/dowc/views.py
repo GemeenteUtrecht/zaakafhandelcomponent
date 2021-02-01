@@ -37,13 +37,6 @@ class OpenDowcView(APIView):
 
     def post(self, request, bronorganisatie, identificatie, purpose):
         document = self.get_object()
-        return Response(
-            {
-                "magic_url": document.url,
-                "delete_url": document.url,
-                "purpose": purpose,
-            }
-        )
         drc_url = self.document.url
         dowc_response, status_code = get_doc_info(request.user, drc_url, purpose)
         serializer = self.serializer_class(dowc_response)
