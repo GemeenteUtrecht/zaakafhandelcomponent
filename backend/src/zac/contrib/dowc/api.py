@@ -41,7 +41,7 @@ def get_doc_info(
             },
         )
         return factory(DowcResponse, response), status.HTTP_201_CREATED
-    except AssertionError:
+    except ClientError:
         response = client.list(
             "v1_documenten",
             query_params={
