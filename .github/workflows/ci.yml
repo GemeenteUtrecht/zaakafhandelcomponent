@@ -76,7 +76,6 @@ jobs:
       - name: Run tests
         run: |
           python src/manage.py collectstatic --noinput --link
-          echo 'select 1' | src/manage.py dbshell
           coverage run src/manage.py test src -v 3
         env:
           DJANGO_SETTINGS_MODULE: zac.conf.ci
