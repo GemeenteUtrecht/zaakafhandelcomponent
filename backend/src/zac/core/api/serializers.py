@@ -87,7 +87,7 @@ class DocumentInfoSerializer(serializers.Serializer):
         return filesizeformat(obj.bestandsomvang)
 
     def get_read_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -95,7 +95,6 @@ class DocumentInfoSerializer(serializers.Serializer):
                 "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -347,7 +346,7 @@ class ZaakDocumentSerializer(APIModelSerializer):
         }
 
     def get_read_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -355,10 +354,9 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
     def get_write_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -366,7 +364,6 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "purpose": DocFileTypes.write,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):

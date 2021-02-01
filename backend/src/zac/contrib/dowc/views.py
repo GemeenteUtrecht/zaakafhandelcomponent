@@ -2,8 +2,7 @@ from typing import Any, NoReturn, Optional
 
 from django.http import HttpResponse
 
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import authentication, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,7 +20,8 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 class OpenDowcView(APIView):
-    permission_classes = (IsAuthenticated & CanOpenDocuments,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
 
@@ -51,7 +51,8 @@ class OpenDowcView(APIView):
 
 
 class DeleteDowcView(APIView):
-    permission_classes = (IsAuthenticated & CanOpenDocuments,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
 
     def delete(self, request, doc_request_uuid):
         response = patch_and_destroy_doc(request.user, doc_request_uuid)

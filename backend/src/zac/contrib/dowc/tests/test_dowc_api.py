@@ -111,8 +111,6 @@ class DOCAPITests(APITestCase):
         self.find_document_patcher.start()
         self.addCleanup(self.find_document_patcher.stop)
 
-        self.client.force_authenticate(user=self.user)
-
     def test_client(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
 
@@ -139,7 +137,7 @@ class DOCAPITests(APITestCase):
 
     def test_create_doc_file_with_all_permissions(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
-
+        self.client.force_authenticate(user=self.user)
         m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten",
             status_code=201,
@@ -149,18 +147,14 @@ class DOCAPITests(APITestCase):
         with patch(
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
-            with patch(
-                "zac.contrib.dowc.views.CanOpenDocuments.has_object_permission",
-                return_value=True,
-            ):
-                response = self.client.post(self.zac_dowc_url)
-                response = response.json()
-                self.assertEqual(response["purpose"], self.dowc_request["purpose"])
-                self.assertEqual(response["magicUrl"], self.dowc_request["magic_url"])
-                self.assertEqual(
-                    response["deleteUrl"],
-                    reverse(
-                        "dowc:patch-destroy-doc",
-                        kwargs={"dowc_request_uuid": self.dowc_request["uuid"]},
-                    ),
-                )
+            response = self.client.post(self.zac_dowc_url)
+            response = response.json()
+            self.assertEqual(response["purpose"], self.dowc_request["purpose"])
+            self.assertEqual(response["magicUrl"], self.dowc_request["magic_url"])
+            self.assertEqual(
+                response["deleteUrl"],
+                reverse(
+                    "dowc:patch-destroy-doc",
+                    kwargs={"dowc_request_uuid": self.dowc_request["uuid"]},
+                ),
+            )

@@ -162,8 +162,8 @@ class ZaakDocumentsResponseTests(APITestCase):
                 "titel": self.document["titel"],
                 "vertrouwelijkheidaanduiding": "Openbaar",
                 "bestandsomvang": 10,
-                "readUrl": f"http://testserver{read_url}",
-                "writeUrl": f"http://testserver{write_url}",
+                "readUrl": read_url,
+                "writeUrl": write_url,
             }
         ]
         self.assertEqual(response_data, expected)
