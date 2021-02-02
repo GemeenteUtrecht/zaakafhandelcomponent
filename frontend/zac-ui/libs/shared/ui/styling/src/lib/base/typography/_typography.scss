@@ -31,6 +31,7 @@ h3, .h3 {
 
 h4, .h4 {
   @include heading;
+  margin-bottom: space(2);
   font-family: $font-family-text;
   font-size: $h4-font-size-m;
 }

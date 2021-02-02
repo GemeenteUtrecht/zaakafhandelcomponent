@@ -12,6 +12,8 @@ import { AdviserenAccorderenComponent } from './adviseren-accorderen/adviseren-a
 import { KetenProcessenModule } from './keten-processen/keten-processen.module';
 import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
+import { GerelateerdeZakenModule } from './gerelateerde-zaken/gerelateerde-zaken.module';
+import { DocumentenModule } from './documenten/documenten.module';
 
 @NgModule({
   imports: [
@@ -25,16 +27,16 @@ import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
     ReactiveFormsModule,
     SharedUiComponentsModule,
     KetenProcessenModule,
+    GerelateerdeZakenModule,
+    DocumentenModule
   ],
   declarations: [
     FeaturesZaakDetailComponent,
     InformatieComponent,
     BetrokkenenComponent,
     StatusComponent,
-    GerelateerdeZakenComponent,
     GerelateerdeObjectenComponent,
-    DocumentenComponent,
-    AdviserenAccorderenComponent
+    AdviserenAccorderenComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

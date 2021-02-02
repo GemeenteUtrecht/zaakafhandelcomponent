@@ -3,6 +3,7 @@
     <span>Selecteer document</span>
     <input
       type="file"
+      [(ngModel)]="file"
       (change)="handleFileChangeEvent($event)">
   </button>
   <div class="file-upload__selected-file" *ngIf="fileInput">

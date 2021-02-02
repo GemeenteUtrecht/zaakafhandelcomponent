@@ -1,4 +1,9 @@
 {
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true,
+    "enableIvy": false
+  },
   "compileOnSave": false,
   "compilerOptions": {
     "allowJs": true,

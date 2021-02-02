@@ -12,6 +12,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   @Input() id: string;
   @Input() closeIcon: boolean;
   @Input() title: string;
+  @Input() size = 'medium';
 
   private element: any;
 

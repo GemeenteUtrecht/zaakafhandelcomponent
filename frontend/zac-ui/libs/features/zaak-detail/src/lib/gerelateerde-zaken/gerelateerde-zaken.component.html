@@ -1,13 +1,34 @@
 <div class="gerelateerde-zaken card">
   <h2>Gerelateerde zaken</h2>
   <!-- Loading -->
-  <ng-container *ngIf="!data && isLoading">
+  <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
   <!-- Table -->
   <ng-container *ngIf="data && !isLoading">
-    <gu-table *ngIf="(data.length > 0) && tableData" [tableData]="tableData"></gu-table>
+    <gu-table *ngIf="(data.length > 0) && tableData"
+              [tableData]="tableData"
+              class="mb-4">
+    </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>
   </ng-container>
+
+  <div class="d-flex justify-content-end">
+    <gu-button
+      type="secondary"
+      (click)="openModal('gerelateerde-zaken-modal')"
+      >
+      Relatie toevoegen
+    </gu-button>
+  </div>
 </div>
+<gu-modal id="gerelateerde-zaken-modal"
+          [closeIcon]="true"
+          title="Relatie toevoegen"
+          size="small"
+>
+  <gu-relatie-toevoegen [mainZaakUrl]="mainZaakUrl"
+                        (reload)="fetchRelatedCases()">
+  </gu-relatie-toevoegen>
+</gu-modal>

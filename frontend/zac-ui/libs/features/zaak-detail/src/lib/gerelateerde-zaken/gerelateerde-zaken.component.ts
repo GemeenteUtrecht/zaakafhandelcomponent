@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-gerelateerde-zaken',
@@ -12,6 +13,7 @@ import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
   styleUrls: ['./gerelateerde-zaken.component.scss']
 })
 export class GerelateerdeZakenComponent implements OnInit {
+  @Input() mainZaakUrl: string;
 
   tableData: Table = {
     headData: ['Status', 'Zaak ID', 'Resultaat', 'Aard'],
@@ -25,7 +27,8 @@ export class GerelateerdeZakenComponent implements OnInit {
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private modalService: ModalService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -34,9 +37,13 @@ export class GerelateerdeZakenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchRelatedCases();
+  }
+
+  fetchRelatedCases() {
     this.isLoading = true;
     this.getRelatedCases().subscribe( data => {
-      this.formatTableData(data)
+      this.tableData.bodyData = this.formatTableData(data);
       this.data = data;
       this.isLoading = false;
     }, error => {
@@ -51,20 +58,23 @@ export class GerelateerdeZakenComponent implements OnInit {
   }
 
   formatTableData(data){
-    this.tableData.bodyData = data.map( element => {
+    return data.map( element => {
       return {
         cellData: {
-          status: element.zaak.status.statustype.omschrijving,
+          status: element.zaak.status ? element.zaak.status.statustype.omschrijving : '-',
           zaakId: {
             type: 'link',
             label: element.zaak.identificatie,
             url: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
           resultaat: element.zaak.resultaat ? element.zaak.resultaat : '-',
-          aard: element.aardRelatie,
+          aard: element.aardRelatie ? element.aardRelatie : '-',
         }
       }
     })
   }
 
+  openModal(id: string) {
+    this.modalService.open(id);
+  }
 }

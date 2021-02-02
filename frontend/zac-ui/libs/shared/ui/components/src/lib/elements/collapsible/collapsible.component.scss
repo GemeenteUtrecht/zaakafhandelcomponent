@@ -16,10 +16,13 @@
   p {
     margin: 0;
     &.p--bold {
-      margin-bottom: 0.1.875rem;
+      margin-bottom: 0.875rem;
     }
     &.p--grey {
       color: dimgray;
+    }
+    &.p--error {
+      color: $color-warn;
     }
   }
 }

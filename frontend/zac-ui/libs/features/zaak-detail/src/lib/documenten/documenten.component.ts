@@ -1,13 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { CellData, Table, RowData } from '@gu/models';
+import { Component, Input, OnInit } from '@angular/core';
+import { Table, RowData } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
 import { convertKbToMb } from '@gu/utils';
 
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
 import { DocumentenService } from './documenten.service';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-documenten',
@@ -16,6 +15,8 @@ import { DocumentenService } from './documenten.service';
 })
 
 export class DocumentenComponent implements OnInit {
+  @Input() mainZaakUrl: string;
+
   tableData: Table = {
     headData: ['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'],
     bodyData: []
@@ -36,7 +37,8 @@ export class DocumentenComponent implements OnInit {
   constructor(
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
-    private documentenService: DocumentenService
+    private documentenService: DocumentenService,
+    private modalService: ModalService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -45,6 +47,10 @@ export class DocumentenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchDocuments()
+  }
+
+  fetchDocuments() {
     this.isLoading = true;
     this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
       this.tableData.bodyData = this.formatTableData(data)
@@ -174,4 +180,7 @@ export class DocumentenComponent implements OnInit {
     this.deleteUrls.push(urlMapping);
   }
 
+  openModal(id: string) {
+    this.modalService.open(id);
+  }
 }

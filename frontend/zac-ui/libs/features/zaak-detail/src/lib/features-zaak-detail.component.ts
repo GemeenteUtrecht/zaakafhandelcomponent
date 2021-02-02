@@ -16,6 +16,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
   bronorganisatie: string;
   identificatie: string;
 
+  mainZaakUrl: string;
+
   constructor(
     private http: ApplicationHttpClient,
     private route: ActivatedRoute
@@ -29,6 +31,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   ngOnInit(): void {
     this.getInformation().subscribe(data => {
       this.data = data;
+      this.mainZaakUrl = data.url ? data.url : null;
       this.isLoading = false;
     }, error => {
       console.log(error);

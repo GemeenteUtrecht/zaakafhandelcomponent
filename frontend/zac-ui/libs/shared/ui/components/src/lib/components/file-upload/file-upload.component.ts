@@ -7,8 +7,10 @@ import { Component, EventEmitter, Output } from '@angular/core';
 })
 export class FileUploadComponent {
   @Output() selectedFileOutput: EventEmitter<File> = new EventEmitter();
+  @Output() fileValue: EventEmitter<File> = new EventEmitter();
 
   fileInput: File;
+  file: File;
 
   constructor() { }
 
@@ -17,6 +19,7 @@ export class FileUploadComponent {
     const fileList: FileList | null = element.files;
     this.fileInput = fileList ? fileList.item(0) : null;
     this.selectedFileOutput.emit(this.fileInput);
+    this.fileValue.emit(this.file);
   }
 
   deleteSelectedFile() {

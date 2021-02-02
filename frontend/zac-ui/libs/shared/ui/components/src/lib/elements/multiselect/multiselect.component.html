@@ -1,10 +1,13 @@
-<ng-multiselect-dropdown
-  (keyup)="typing()"
-  [placeholder]="placeholder"
-  [settings]="dropdownSettings"
-  [data]="dropdownList"
-  [(ngModel)]="selectedItems"
-  (onSelect)="onItemSelect($event)"
-  (onSelectAll)="onSelectAll($event)"
+<ng-select [items]="items"
+           (search)="onSearch($event)"
+           [multiple]="multiple"
+           [bindLabel]="bindLabel"
+           autofocus
+           [bindValue]="bindValue"
+           [placeholder]="placeholder"
+           notFoundText="Niets gevonden"
+           loadingText="Zoeken"
+           [(ngModel)]="selectedItems"
+           [formControlName]="customFormControl"
 >
-</ng-multiselect-dropdown>
+</ng-select>

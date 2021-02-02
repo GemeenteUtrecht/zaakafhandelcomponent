@@ -13,7 +13,7 @@ import { ModalService } from '@gu/components'
 })
 
 export class KetenProcessenComponent implements OnInit {
-  @Input() zaakUrl: string;
+  @Input() mainZaakUrl: string;
 
   data: any;
   processInstanceId: string;
@@ -61,7 +61,7 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   getProcesses(): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
+    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.mainZaakUrl}`);
     return this.http.Get(endpoint);
   }
 
@@ -81,7 +81,23 @@ export class KetenProcessenComponent implements OnInit {
     })
   }
 
-  executeTask(taskId) {
+  executeTask(taskId, hasForm, executeUrl) {
+    if (!hasForm) {
+      window.location = executeUrl;
+    } else {
+      this.fetchFormLayout(taskId);
+    }
+  }
+
+  fetchFormLayout(taskId) {
+    this.getFormLayout(taskId).subscribe(res => {
+      console.log(res);
+    })
+  }
+
+  getFormLayout(taskId): Observable<any> {
+    const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
+    return this.http.Get(endpoint);
   }
 
   openModal(id: string) {
