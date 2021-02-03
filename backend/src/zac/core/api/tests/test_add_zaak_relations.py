@@ -262,7 +262,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_valid_request_without_permissions_to_relate(self, m):
         user = UserFactory.create()
