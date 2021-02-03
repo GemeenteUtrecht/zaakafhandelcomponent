@@ -1,0 +1,11 @@
+@import './base/colors/colors';
+
+.gu-message {
+  border: 1px solid;
+  padding: 0.825rem;
+  border-radius: 4px;
+  &--warn {
+    border-color: $color-warn;
+    background-color: $background-red;
+  }
+}

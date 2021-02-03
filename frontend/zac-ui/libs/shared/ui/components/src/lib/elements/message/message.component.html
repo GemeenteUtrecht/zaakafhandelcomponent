@@ -1,0 +1,8 @@
+<div class="gu-message" [ngClass]="{
+  'gu-message--normal': type == 'normal',
+  'gu-message--success': type == 'success',
+  'gu-message--warn': type == 'warn'
+  }">
+  <h4 *ngIf="title">{{title}}</h4>
+  <p class="mb-0" *ngIf="message">{{message}}</p>
+</div>

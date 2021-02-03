@@ -12,11 +12,13 @@ import { ReviewRequest } from '../../../kownsl/src/models/review-request';
 })
 export class FeaturesZaakDetailComponent implements OnInit {
   data: any;
-  isLoading: boolean;
   bronorganisatie: string;
   identificatie: string;
-
   mainZaakUrl: string;
+
+  isLoading: boolean;
+  hasError: boolean;
+  errorMessage: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -29,12 +31,18 @@ export class FeaturesZaakDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchInformation();
+  }
+
+  fetchInformation() {
+    this.isLoading = true;
     this.getInformation().subscribe(data => {
       this.data = data;
       this.mainZaakUrl = data.url ? data.url : null;
       this.isLoading = false;
-    }, error => {
-      console.log(error);
+    }, errorResponse => {
+      this.hasError = true;
+      this.errorMessage = errorResponse.error.detail;
       this.isLoading = false;
     })
   }

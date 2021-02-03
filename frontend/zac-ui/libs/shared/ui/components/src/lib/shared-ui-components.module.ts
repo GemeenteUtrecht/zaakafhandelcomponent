@@ -29,6 +29,8 @@ import { ModalComponent } from './components/modal/modal.component';
 import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
 import { TableComponent } from './components/table/table.component';
+import { MessageComponent } from './elements/message/message.component';
+import { Message } from '@angular/compiler/src/i18n/i18n_ast';
 
 @NgModule({
   imports: [
@@ -58,6 +60,7 @@ import { TableComponent } from './components/table/table.component';
     DatepickerComponent,
     TextFieldComponent,
     DropdownComponent,
+    MessageComponent,
   ],
   exports: [
     ButtonComponent,
@@ -78,6 +81,7 @@ import { TableComponent } from './components/table/table.component';
     MatIconModule,
     TextFieldComponent,
     DropdownComponent,
+    MessageComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

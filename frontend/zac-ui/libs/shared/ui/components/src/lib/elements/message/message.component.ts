@@ -1,0 +1,12 @@
+import { Component, Input, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'gu-message',
+  templateUrl: './message.component.html',
+  styleUrls: ['./message.component.scss']
+})
+export class MessageComponent {
+  @Input() title: string;
+  @Input() message: string;
+  @Input() type: 'normal' | 'success' | 'warn'
+}
