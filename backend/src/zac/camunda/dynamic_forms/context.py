@@ -60,11 +60,11 @@ def get_context(task: Task) -> DynamicFormContext:
     zaaktype = fetch_zaaktype(zaak.zaaktype)
     title = f"{zaaktype.omschrijving} - {zaaktype.versiedatum}"
 
-    # task_form_fields = get_form_fields_from_task(task)
-    # form_fields = get_form_fields(task_form_fields)
+    task_form_fields = get_form_fields_from_task(task)
+    form_fields = get_form_fields(task_form_fields)
 
     return DynamicFormContext(
         title=title,
         zaak_informatie=zaak,
-        # form_fields=form_fields,
+        form_fields=form_fields,
     )
