@@ -34,7 +34,7 @@ def get_context(task: Task) -> Optional[Context]:
     ``REGISTRY`` constant and registering their form key with the appropriote callback
     callable.
     """
-    (callback, *rest) = REGISTRY.get(task.form_key)
+    (callback, *rest) = REGISTRY.get(task.form_key, "zac:dynamic_form")
     if callback is None:
         return None
     return callback(task)

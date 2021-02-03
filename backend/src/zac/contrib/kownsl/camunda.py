@@ -9,6 +9,7 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.camunda.api.serializers import TaskZaakInformatieSerializer
 from zac.camunda.data import Task
 from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
@@ -24,16 +25,6 @@ class AdviceApprovalContext(Context):
     title: str
     zaak: Zaak
     documents: List[Document]
-
-
-class ZaakInformatieTaskSerializer(APIModelSerializer):
-    # TODO: Write tests.
-    class Meta:
-        model = Zaak
-        fields = (
-            "omschrijving",
-            "toelichting",
-        )
 
 
 class DocumentUserTaskSerializer(APIModelSerializer):
@@ -69,7 +60,7 @@ class DocumentUserTaskSerializer(APIModelSerializer):
 class AdviceApprovalContextSerializer(APIModelSerializer):
     # TODO: Write tests.
     documents = DocumentUserTaskSerializer(many=True)
-    zaak_informatie = ZaakInformatieTaskSerializer()
+    zaak_informatie = TaskZaakInformatieSerializer()
 
     class Meta:
         model = AdviceApprovalContext

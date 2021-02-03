@@ -3,6 +3,8 @@ from typing import List
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.serializers import UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
@@ -83,3 +85,16 @@ class MessageSerializer(serializers.Serializer):
 
     def set_message_choices(self, message_names: List[str]):
         self.fields["message"].choices = [(name, name) for name in message_names]
+
+
+class TaskZaakInformatieSerializer(APIModelSerializer):
+    """
+    TODO: Write tests
+    """
+
+    class Meta:
+        model = Zaak
+        fields = (
+            "omschrijving",
+            "toelichting",
+        )
