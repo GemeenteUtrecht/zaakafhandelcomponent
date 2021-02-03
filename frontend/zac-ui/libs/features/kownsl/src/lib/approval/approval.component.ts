@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ReviewRequest } from '../../models/review-request';
+import { Zaak } from '../../models/zaak';
 import { ApprovalService } from './approval.service';
 import { RowData, Table } from '@gu/models';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApprovalForm } from '../../models/approval-form';
 import { ActivatedRoute } from '@angular/router';
-import { Zaak } from '../../models/zaak';
 
 @Component({
   selector: 'gu-features-kownsl-approval',

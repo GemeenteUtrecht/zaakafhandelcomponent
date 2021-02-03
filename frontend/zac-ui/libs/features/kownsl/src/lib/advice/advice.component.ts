@@ -4,10 +4,10 @@ import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
+import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
 import { RowData, FileUpload, Table } from '@gu/models';
 import { convertBlobToString } from '@gu/utils';
-import { Zaak } from '../../models/zaak';
 
 @Component({
   selector: 'gu-features-kownsl-advice',

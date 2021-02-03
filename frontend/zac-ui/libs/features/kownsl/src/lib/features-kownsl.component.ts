@@ -6,4 +6,8 @@ import { Component } from '@angular/core';
   styleUrls: ['./features-kownsl.component.scss']
 })
 
-export class FeaturesKownslComponent {}
+export class FeaturesKownslComponent{
+
+  constructor() { }
+
+}
