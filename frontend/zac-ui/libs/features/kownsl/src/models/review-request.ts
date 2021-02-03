@@ -1,5 +1,6 @@
 import { Review } from './review';
 import { ZaakDocument } from './zaak-document';
+import { Zaak } from './zaak';
 
 export interface ReviewRequest {
   created: string;
@@ -8,4 +9,5 @@ export interface ReviewRequest {
   reviews: Review[];
   toelichting: string;
   zaakDocuments: ZaakDocument[];
+  zaak: Zaak;
 }

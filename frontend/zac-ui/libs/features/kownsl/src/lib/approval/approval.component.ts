@@ -6,6 +6,7 @@ import { RowData, Table } from '@gu/models';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApprovalForm } from '../../models/approval-form';
 import { ActivatedRoute } from '@angular/router';
+import { Zaak } from '../../models/zaak';
 
 @Component({
   selector: 'gu-features-kownsl-approval',
@@ -14,6 +15,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class ApprovalComponent implements OnInit {
   uuid: string;
+  zaakUrl: string;
 
   approvalData: ReviewRequest;
   isLoading: boolean;
@@ -56,6 +58,7 @@ export class ApprovalComponent implements OnInit {
   fetchApproval(): void {
     this.isLoading = true;
     this.approvalService.getApproval(this.uuid).subscribe(res => {
+      this.setZaakUrl(res.body.zaak);
       const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
       if (isSubmittedBefore === "false") {
         this.approvalData = res.body;
@@ -70,6 +73,10 @@ export class ApprovalComponent implements OnInit {
       this.hasError = true;
       this.isLoading = false;
     })
+  }
+
+  setZaakUrl(zaakData: Zaak) {
+    this.zaakUrl = `/zaken/${zaakData.bronorganisatie}/${zaakData.identificatie}`;
   }
 
   createTableData(approvalData: ReviewRequest): Table {

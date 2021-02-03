@@ -1,62 +1,53 @@
-<div class="kownsl__container">
-  <h1 class="">Accordering gevraagd</h1>
-  <ng-template [ngIf]="uuid && !submitSuccess">
-    <!-- Loading -->
-    <ng-template [ngIf]="!approvalData && isLoading">
-      <gu-loading-indicator></gu-loading-indicator>
-    </ng-template>
+<a class="anchor anchor--back" *ngIf="zaakUrl" [routerLink]="[zaakUrl]">Terug naar zaak</a>
+<div class="kownsl feature-container">
+  <div class="content-background">
+    <div class="content">
+      <div class="kownsl__container">
+        <h1 class="">Accordering gevraagd</h1>
+        <ng-template [ngIf]="uuid && !submitSuccess">
+          <!-- Loading -->
+          <ng-template [ngIf]="!approvalData && isLoading">
+            <gu-loading-indicator></gu-loading-indicator>
+          </ng-template>
 
-    <!-- Error -->
-    <ng-template [ngIf]="hasError && !isLoading">
-      <p>{{errorMessage}}</p>
-    </ng-template>
+          <!-- Error -->
+          <ng-template [ngIf]="hasError && !isLoading">
+            <p>{{errorMessage}}</p>
+          </ng-template>
 
-    <!-- Main content -->
-    <ng-template [ngIf]="!!approvalData && !isLoading">
-      <section>
-        <div class="row no-gutters">
-          <div class="col-4">
-            <p class="p p--bold">Ingediend op:</p>
-          </div>
-          <div class="col-8">
-            <p class="p">{{approvalData.created | date:'fullDate'}}</p>
-          </div>
-        </div>
-        <div class="row no-gutters">
-          <div class="col-4">
-            <p class="p p--bold">Toelichting:</p>
-          </div>
-          <div class="col-8">
-            <p class="p p--nomargin">
-              {{approvalData.toelichting}}
-            </p>
-          </div>
-        </div>
-      </section>
+          <!-- Main content -->
+          <ng-template [ngIf]="!!approvalData && !isLoading">
+            <section>
+              <div class="row no-gutters">
+                <div class="col-4">
+                  <p class="p p--bold">Ingediend op:</p>
+                </div>
+                <div class="col-8">
+                  <p class="p">{{approvalData.created | date:'fullDate'}}</p>
+                </div>
+              </div>
+              <div class="row no-gutters">
+                <div class="col-4">
+                  <p class="p p--bold">Toelichting:</p>
+                </div>
+                <div class="col-8">
+                  <p class="p p--nomargin">
+                    {{approvalData.toelichting}}
+                  </p>
+                </div>
+              </div>
+            </section>
 
-      <!-- Collapsible table with previous approvals -->
-      <ng-template [ngIf]="!!approvalData.reviews">
-        <section *ngIf="!!approvalData.reviews.length > 0">
-          <h2 class="mb-4">Vorige accorderingen</h2>
-          <gu-table
-            [tableData]="tableData"
-            [expandable]="true"
-          ></gu-table>
-        </section>
-      </ng-template>
-
-      <!-- Documents -->
-      <ng-template [ngIf]="!!approvalData.documents">
-        <section *ngIf="!!approvalData.documents.length > 0">
-          <h2 class="mb-4">Documenten</h2>
-          <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
-            <gu-file
-              [fileName]="file.name"
-              [downloadUrl]="file.downloadUrl"
-            ></gu-file>
-          </div>
-        </section>
-      </ng-template>
+            <!-- Collapsible table with previous approvals -->
+            <ng-template [ngIf]="!!approvalData.reviews">
+              <section *ngIf="approvalData.reviews.length > 0">
+                <h2 class="mb-4">Vorige accorderingen</h2>
+                <gu-table
+                  [tableData]="tableData"
+                  [expandable]="true"
+                ></gu-table>
+              </section>
+            </ng-template>
 
       <!-- Approval form -->
       <form [formGroup]="approvalForm">
@@ -71,39 +62,68 @@
             </div>
           </div>
         </section>
+            <!-- Documents -->
+            <ng-template [ngIf]="!!approvalData.documents">
+              <section *ngIf="approvalData.documents.length > 0">
+                <h2 class="mb-4">Documenten</h2>
+                <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
+                  <gu-file
+                    [fileName]="file.name"
+                    [downloadUrl]="file.downloadUrl"
+                  ></gu-file>
+                </div>
+              </section>
+            </ng-template>
 
-        <section>
-          <label class="h2 d-inline-block mb-0" for="textarea_approval">Toelichting</label>
-          <span class="label label--optional">optioneel</span>
-          <span class="label label--hint">Toelichting op uw antwoord</span>
-          <textarea formControlName="toelichting" class="mb-0" id="textarea_approval"></textarea>
-        </section>
-        <div class="d-flex justify-content-end">
-          <gu-button
-            [disabled]="!approvalForm.valid"
-            [loading]="isSubmitting"
-            type="primary"
-            size="large"
-            (click)="submitForm()">
-            Accordering bevestigen
-          </gu-button>
-        </div>
-        <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+            <!-- Approval form -->
+            <form [formGroup]="approvalForm">
+              <section>
+                <label class="h2 d-inline-block">Antwoord</label>
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approved"></gu-radio>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approved"></gu-radio>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <label class="h2 d-inline-block mb-0" for="textarea_approval">Toelichting</label>
+                <span class="label label--optional">optioneel</span>
+                <span class="label label--hint">Toelichting op uw antwoord</span>
+                <textarea formControlName="toelichting" class="mb-0" id="textarea_approval"></textarea>
+              </section>
+              <div class="d-flex justify-content-end">
+                <gu-button
+                  [disabled]="!approvalForm.valid"
+                  [loading]="isSubmitting"
+                  type="primary"
+                  size="large"
+                  (click)="submitForm()">
+                  Accordering bevestigen
+                </gu-button>
+              </div>
+              <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+                <p>{{errorMessage}}</p>
+              </div>
+            </form>
+          </ng-template>
+        </ng-template>
+
+        <!-- Success screen -->
+        <ng-template [ngIf]="submitSuccess">
+          <gu-success>
+            <h3 class="mb-4">Bedankt voor je reactie</h3>
+          </gu-success>
+        </ng-template>
+
+        <!-- Error: no uuid -->
+        <ng-template [ngIf]="!uuid">
           <p>{{errorMessage}}</p>
-        </div>
-      </form>
-    </ng-template>
-  </ng-template>
-
-  <!-- Success screen -->
-  <ng-template [ngIf]="submitSuccess">
-    <gu-success>
-      <h3 class="mb-4">Bedankt voor je reactie</h3>
-    </gu-success>
-  </ng-template>
-
-  <!-- Error: no uuid -->
-  <ng-template [ngIf]="!uuid">
-    <p>{{errorMessage}}</p>
-  </ng-template>
+        </ng-template>
+      </div>
+    </div>
+  </div>
 </div>
