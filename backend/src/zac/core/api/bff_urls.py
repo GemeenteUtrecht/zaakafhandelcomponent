@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    CreateZaakRelationView,
     EigenschappenView,
     RelatedZakenView,
     ZaakDetailView,
@@ -37,6 +38,9 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/related-cases",
         RelatedZakenView.as_view(),
         name="zaak-related",
+    ),
+    path(
+        "cases/related-case", CreateZaakRelationView.as_view(), name="add-zaak-relation"
     ),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/roles",

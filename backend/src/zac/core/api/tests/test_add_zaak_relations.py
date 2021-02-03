@@ -135,7 +135,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
 @requests_mock.Mocker()
 class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("core:add-zaak-relation")
+    endpoint = reverse_lazy("add-zaak-relation")
 
     def test_login_required(self, m):
         response = self.client.post(self.endpoint)

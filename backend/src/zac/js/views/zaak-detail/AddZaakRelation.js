@@ -10,7 +10,7 @@ import {AARD_RELATIES} from '../../constants';
 import {Label} from '../../components/forms/Label';
 import {Help} from '../../components/forms/Help';
 
-const ENDPOINT_ADD_RELATION = '/core/api/zaken_relation';
+const ENDPOINT_ADD_RELATION = '/api/core/cases/related-case';
 const ENDPOINT_ZAKEN = '/api/search/zaken/autocomplete';
 
 const initialState = {

@@ -9,6 +9,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
@@ -200,40 +201,6 @@ class PostExtraInfoSubjectView(views.APIView):
         return Response(serializer.data)
 
 
-class AddZaakRelationView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated, CanAddRelations)
-    schema = None
-
-    def get_serializer(self, *args, **kwargs):
-        return AddZaakRelationSerializer(data=self.request.data)
-
-    def post(self, request: Request) -> Response:
-        serializer = self.get_serializer()
-        serializer.is_valid(raise_exception=True)
-
-        # Retrieving the main zaak
-        client = Service.get_client(serializer.validated_data["main_zaak"])
-        main_zaak = client.retrieve("zaak", url=serializer.validated_data["main_zaak"])
-
-        main_zaak["relevanteAndereZaken"].append(
-            {
-                "url": serializer.validated_data["relation_zaak"],
-                "aardRelatie": serializer.validated_data["aard_relatie"],
-            }
-        )
-
-        # Create the relation
-        client.partial_update(
-            "zaak",
-            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
-            url=serializer.validated_data["main_zaak"],
-        )
-
-        invalidate_zaak_cache(factory(Zaak, main_zaak))
-
-        return Response(status=status.HTTP_200_OK)
-
-
 # Backend-For-Frontend endpoints (BFF)
 
 
@@ -333,6 +300,41 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=related_zaken, many=True)
         return Response(serializer.data)
+
+
+@extend_schema(summary=_("Add related zaak"))
+class CreateZaakRelationView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, CanAddRelations)
+
+    def get_serializer(self, *args, **kwargs):
+        return AddZaakRelationSerializer(data=self.request.data)
+
+    def post(self, request: Request) -> Response:
+        serializer = self.get_serializer()
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieving the main zaak
+        zaak_url = serializer.validated_data["main_zaak"]
+        client = Service.get_client(zaak_url)
+        main_zaak = client.retrieve("zaak", url=zaak_url)
+
+        main_zaak["relevanteAndereZaken"].append(
+            {
+                "url": serializer.validated_data["relation_zaak"],
+                "aardRelatie": serializer.validated_data["aard_relatie"],
+            }
+        )
+
+        # Create the relation
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
+            url=zaak_url,
+        )
+
+        invalidate_zaak_cache(factory(Zaak, main_zaak))
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ZaakRolesView(GetZaakMixin, views.APIView):
