@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
+import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
 import { RowData, FileUpload, Table } from '@gu/models';
 import { convertBlobToString } from '@gu/utils';
@@ -15,6 +16,7 @@ import { convertBlobToString } from '@gu/utils';
 })
 export class AdviceComponent implements OnInit {
   uuid: string;
+  zaakUrl: string;
 
   adviceData: ReviewRequest;
   isLoading: boolean;
@@ -65,6 +67,7 @@ export class AdviceComponent implements OnInit {
   fetchAdvice(): void {
     this.isLoading = true;
     this.adviceService.getAdvice(this.uuid).subscribe(res => {
+      this.setZaakUrl(res.body.zaak);
       const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
       if (isSubmittedBefore === "false") {
         this.adviceData = res.body;
@@ -79,6 +82,10 @@ export class AdviceComponent implements OnInit {
       this.hasError = true;
       this.isLoading = false;
     })
+  }
+
+  setZaakUrl(zaakData: Zaak) {
+    this.zaakUrl = `/zaken/${zaakData.bronorganisatie}/${zaakData.identificatie}`;
   }
 
   createTableData(adviceData: ReviewRequest): Table {
