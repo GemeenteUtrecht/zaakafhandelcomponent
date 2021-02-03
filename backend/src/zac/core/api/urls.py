@@ -1,13 +1,8 @@
 from django.urls import path
 
-from .views import AddDocumentView, GetDocumentInfoView, PostExtraInfoSubjectView
+from .views import GetDocumentInfoView, PostExtraInfoSubjectView
 
 urlpatterns = [
-    path(
-        "documents/upload",
-        AddDocumentView.as_view(),
-        name="add-document",
-    ),
     path("documents/info", GetDocumentInfoView.as_view(), name="get-document-info"),
     path(
         "betrokkene/info",

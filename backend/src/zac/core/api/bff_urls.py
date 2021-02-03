@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    CreateZaakDocumentView,
     CreateZaakRelationView,
     EigenschappenView,
     InformatieObjectTypeListView,
@@ -15,6 +16,7 @@ from .views import (
 )
 
 urlpatterns = [
+    # core zgw
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>",
         ZaakDetailView.as_view(),
@@ -36,6 +38,11 @@ urlpatterns = [
         name="zaak-documents",
     ),
     path(
+        "cases/document",
+        CreateZaakDocumentView.as_view(),
+        name="add-document",
+    ),
+    path(
         "cases/<str:bronorganisatie>/<str:identificatie>/related-cases",
         RelatedZakenView.as_view(),
         name="zaak-related",
@@ -53,6 +60,7 @@ urlpatterns = [
         ZaakObjectsView.as_view(),
         name="zaak-objects",
     ),
+    # meta
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),
     path("eigenschappen", EigenschappenView.as_view(), name="eigenschappen"),
     path(

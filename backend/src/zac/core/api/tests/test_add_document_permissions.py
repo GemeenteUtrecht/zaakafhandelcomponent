@@ -22,7 +22,7 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse_lazy("core:add-document")
+    endpoint = reverse_lazy("add-document")
 
     def setUp(self):
         super().setUp()

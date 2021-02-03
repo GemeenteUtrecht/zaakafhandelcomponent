@@ -12,7 +12,7 @@ import { Select } from '../forms/Select';
 import { SubmitRow } from '../forms/Utils';
 
 
-const ENDPOINT_UPLOAD = '/core/api/documents/upload';
+const ENDPOINT_UPLOAD = '/api/core/cases/document';
 const ENDPOINT_GET_ZIO = '/api/core/document-types';
 
 
