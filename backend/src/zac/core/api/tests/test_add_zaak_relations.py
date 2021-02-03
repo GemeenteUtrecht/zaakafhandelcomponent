@@ -17,7 +17,7 @@ from zac.tests.utils import paginated_response
 
 @requests_mock.Mocker()
 class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse_lazy("core:zaken-search")
+    endpoint = reverse_lazy("zaken-search")
 
     def test_login_required(self, m):
         response = self.client.get(self.endpoint)

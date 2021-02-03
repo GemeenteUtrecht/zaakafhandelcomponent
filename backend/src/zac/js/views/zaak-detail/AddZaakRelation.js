@@ -11,7 +11,7 @@ import {Label} from '../../components/forms/Label';
 import {Help} from '../../components/forms/Help';
 
 const ENDPOINT_ADD_RELATION = '/core/api/zaken_relation';
-const ENDPOINT_ZAKEN = '/core/api/zaken_search';
+const ENDPOINT_ZAKEN = '/api/search/zaken/autocomplete';
 
 const initialState = {
     errors: '',

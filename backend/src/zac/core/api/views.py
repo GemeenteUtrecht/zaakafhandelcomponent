@@ -21,7 +21,6 @@ from zgw_consumers.models import Service
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-from zac.elasticsearch.searches import autocomplete_zaak_search
 from zac.utils.filters import ApiFilterBackend
 
 from ..cache import invalidate_zaak_cache
@@ -60,9 +59,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
-    ZaakIdentificatieSerializer,
     ZaakObjectGroupSerializer,
-    ZaakSerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
@@ -235,20 +232,6 @@ class AddZaakRelationView(views.APIView):
         invalidate_zaak_cache(factory(Zaak, main_zaak))
 
         return Response(status=status.HTTP_200_OK)
-
-
-class GetZakenView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    schema = None
-
-    def get(self, request: Request) -> Response:
-        serializer = ZaakIdentificatieSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        zaken = autocomplete_zaak_search(
-            identificatie=serializer.validated_data["identificatie"]
-        )
-        zaak_serializer = ZaakSerializer(instance=zaken, many=True)
-        return Response(data=zaak_serializer.data)
 
 
 # Backend-For-Frontend endpoints (BFF)
