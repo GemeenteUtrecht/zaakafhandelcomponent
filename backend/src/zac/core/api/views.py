@@ -380,7 +380,15 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(summary=_("List zaaktypen"), tags=["meta"])
 class ZaakTypenView(ListAPIView):
+    """
+    List a collection of zaaktypen available to the end user.
+
+    Different versions of the same zaaktype are aggregated. Only the zaaktypen that
+    the authenticated user has read-permissions for are returned.
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
@@ -414,7 +422,19 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen_aggregated
 
 
+@extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
 class EigenschappenView(ListAPIView):
+    """
+    List the available eigenschappen for a given zaaktype.
+
+    Given the `zaaktype_omschrijving`, all versions of the matching zaaktype are
+    considered. Returns the eigenschappen available for the aggregated set of zaaktype
+    versions.
+
+    Note that only the zaaktypen that the authenticated user has read-permissions for
+    are considered.
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
