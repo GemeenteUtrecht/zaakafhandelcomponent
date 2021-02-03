@@ -9,8 +9,16 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
-from drf_spectacular.utils import extend_schema
-from rest_framework import authentication, exceptions, permissions, status, views
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import (
+    authentication,
+    exceptions,
+    generics,
+    permissions,
+    status,
+    views,
+)
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -68,22 +76,6 @@ from .utils import (
     convert_eigenschap_spec_to_json_schema,
     get_informatieobjecttypen_for_zaak,
 )
-
-
-class GetInformatieObjectTypenView(views.APIView):
-    schema = None
-
-    # TODO: permissions checks on zaak - can this user read/mutate the zaak?
-
-    def get(self, request: Request) -> Response:
-        zaak_url = request.query_params.get("zaak")
-        if not zaak_url:
-            raise exceptions.ValidationError("'zaak' query parameter is required.")
-
-        informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak_url)
-
-        serializer = InformatieObjectTypeSerializer(informatieobjecttypen, many=True)
-        return Response(serializer.data)
 
 
 class AddDocumentView(views.APIView):
@@ -378,6 +370,40 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
+
+
+###############################
+#  META / Catalogi API views  #
+###############################
+
+
+@extend_schema(
+    summary=_("List document types"),
+    tags=["meta"],
+    parameters=[
+        OpenApiParameter(
+            name="zaak",
+            required=True,
+            type=OpenApiTypes.URI,
+            description=_("Zaak to list available document types for"),
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+)
+class InformatieObjectTypeListView(generics.ListAPIView):
+    """
+    List the available document types for a given zaak.
+
+    TODO: permissions checks on zaak - can this user read/mutate the zaak?
+    """
+
+    serializer_class = InformatieObjectTypeSerializer
+
+    def get_queryset(self):
+        zaak_url = self.request.query_params.get("zaak")
+        if not zaak_url:
+            raise exceptions.ValidationError("'zaak' query parameter is required.")
+        return get_informatieobjecttypen_for_zaak(zaak_url)
 
 
 @extend_schema(summary=_("List zaaktypen"), tags=["meta"])

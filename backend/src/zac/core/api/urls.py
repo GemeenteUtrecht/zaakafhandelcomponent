@@ -1,18 +1,8 @@
 from django.urls import path
 
-from .views import (
-    AddDocumentView,
-    GetDocumentInfoView,
-    GetInformatieObjectTypenView,
-    PostExtraInfoSubjectView,
-)
+from .views import AddDocumentView, GetDocumentInfoView, PostExtraInfoSubjectView
 
 urlpatterns = [
-    path(
-        "documents/get-informatieobjecttypen",
-        GetInformatieObjectTypenView.as_view(),
-        name="get-informatieobjecttypen",
-    ),
     path(
         "documents/upload",
         AddDocumentView.as_view(),
