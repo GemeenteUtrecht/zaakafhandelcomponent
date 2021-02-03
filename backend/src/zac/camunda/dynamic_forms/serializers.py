@@ -59,14 +59,14 @@ class DynamicFormContextSerializer(APIModelSerializer):
 
     title = serializers.CharField()
     zaak_informatie = TaskZaakInformatieSerializer(label=_("Case summary"))
-    # form_fields = DynamicFormFieldSerializer(many=True)
+    form_fields = DynamicFormFieldSerializer(many=True)
 
     class Meta:
         model = DynamicFormContext
         fields = (
             "title",
             "zaak_informatie",
-            # "form_fields",
+            "form_fields",
         )
 
 

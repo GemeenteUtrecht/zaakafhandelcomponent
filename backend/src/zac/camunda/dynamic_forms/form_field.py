@@ -50,7 +50,6 @@ def register_input_type(input_type: str, serializer_cls: Type[serializers.Serial
 
     def decorator(func: callable):
         if input_type in REGISTRY_INPUT_TYPES:
-            print(REGISTRY_INPUT_TYPES)
             warnings.warn(
                 f"Overwriting existing input type '{input_type}' in registry.",
                 DuplicateInputTypeWarning,
