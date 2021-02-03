@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -23,31 +25,22 @@ from .form_field import REGISTRY_INPUT_TYPES, register_input_type
 class DynamicFormFieldSerializer(PolymorphicSerializer):
     discriminator_field = "input_type"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
-
     input_type = serializers.ChoiceField(
         label=_("Input type for form field"),
         source="formfield.input_type",
-        help_text=_(
-            "The input type of the form field to render. Note that unknown input type keys (= not "
-            "present in the enum) will be returned as is."
-        ),
-        allow_blank=True,
+        help_text=_("The input type of the form field to render."),
         choices=(),
     )
-
     name = serializers.CharField()
     label = serializers.CharField()
     # the form_field_context is added by the serializer_mapping serializers
 
     def __init__(self, *args, **kwargs):
-
         self.serializer_mapping = {
             form_key: serializer
             for form_key, (callback, serializer) in REGISTRY_INPUT_TYPES.items()
         }
-
         super().__init__(*args, **kwargs)
-
         self.fields["input_type"].choices = list(REGISTRY_INPUT_TYPES.keys())
 
 
@@ -100,6 +93,8 @@ class StringFieldSerializer(APIModelSerializer):
 
 @form_field_context_serializer
 class ChoiceFieldContextSerializer(APIModelSerializer):
+    choices = serializers.ListField(child=serializers.CharField())
+
     class Meta:
         model = ChoiceField
         fields = (
@@ -117,10 +112,12 @@ INPUT_TYPE_FIELD_MAPPING = {
 }
 
 
-@register_input_type("zac:form_field:boolean", BooleanFieldSerializer)
-@register_input_type("zac:form_field:date", DateTimeFieldSerializer)
-@register_input_type("zac:form_field:long", IntFieldSerializer)
-@register_input_type("zac:form_field:string", StringFieldSerializer)
-@register_input_type("zac:form_field:enum", ChoiceFieldContextSerializer)
-def get_form_field_context(input_type: str, **kwargs):
+@register_input_type("boolean", BooleanFieldSerializer)
+@register_input_type("date", DateTimeFieldSerializer)
+@register_input_type("long", IntFieldSerializer)
+@register_input_type("string", StringFieldSerializer)
+@register_input_type("enum", ChoiceFieldContextSerializer)
+def get_form_field_context(
+    input_type: str, **kwargs
+) -> Union[BooleanField, DateTimeField, IntField, StringField, ChoiceField]:
     return INPUT_TYPE_FIELD_MAPPING[input_type](**kwargs)

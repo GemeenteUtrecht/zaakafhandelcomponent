@@ -37,7 +37,7 @@ class FormField:
     name: str
     label: str
     input_type: str
-    form_field_context: FormFieldContext
+    context: FormFieldContext
 
 
 @dataclass

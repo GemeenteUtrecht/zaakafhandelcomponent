@@ -20,18 +20,15 @@ def form_field_context_serializer(serializer_cls: SerializerCls) -> SerializerCl
     name = formatting.remove_trailing_string(name, "Field")
 
     class FormFieldSerializer(APIModelSerializer):
-        form_field_context = serializer_cls(
+        context = serializer_cls(
             label=_("Form Field Context"),
-            help_text=_(
-                "The form field shape depends on the `input_type` property. The value will be "
-                "`null` if the backend does not 'know' the form field `input_type`."
-            ),
+            help_text=_("The form field shape depends on the `input_type` property."),
             allow_null=True,
         )
 
         class Meta:
             model = FormField
-            fields = ("form_field_context",)
+            fields = ("context",)
 
     name = f"{name}FormFieldSerializer"
     return type(name, (FormFieldSerializer,), {})

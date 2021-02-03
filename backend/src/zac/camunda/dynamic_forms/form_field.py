@@ -33,7 +33,7 @@ def get_form_field_context(input_type: str, **kwargs) -> Optional[FormFieldConte
     ``REGISTRY`` constant and registering their input_type key with the appropriate callback
     callable.
     """
-    (callback, *rest) = REGISTRY_INPUT_TYPES.get(f"zac:form_field:{input_type}")
+    (callback, *rest) = REGISTRY_INPUT_TYPES.get(input_type)
     if callback is None:
         return None
     return callback(input_type, **kwargs)
