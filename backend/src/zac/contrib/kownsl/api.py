@@ -3,6 +3,7 @@ from typing import List, Optional
 from django.http import Http404
 
 from zds_client.client import ClientError
+from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
@@ -83,7 +84,7 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     # manually for now.
     operation_id = "reviewrequest_retrieve"
     try:
-        url = client.get_operation_url(client.schema, operation_id, **{"uuid": uuid})
+        url = get_operation_url(client.schema, operation_id, **{"uuid": uuid})
         result = client.request(url, operation_id)
 
     except ClientError:
