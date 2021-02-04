@@ -188,6 +188,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Some zaak 1",
             eigenschappen=[],
         )
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -223,7 +225,32 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         data = response.json()
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["url"], zaak1["url"])
+        self.assertEqual(
+            data,
+            [
+                {
+                    "url": zaak1_model.url,
+                    "identificatie": "zaak1",
+                    "bronorganisatie": zaak1_model.bronorganisatie,
+                    "zaaktype": {
+                        "url": zaaktype["url"],
+                        "catalogus": CATALOGUS_URL,
+                        "omschrijving": "ZT1",
+                        "versiedatum": zaaktype["versiedatum"],
+                    },
+                    "omschrijving": "Some zaak 1",
+                    "toelichting": zaak1_model.toelichting,
+                    "registratiedatum": zaak1_model.registratiedatum.isoformat(),
+                    "startdatum": zaak1_model.startdatum.isoformat(),
+                    "einddatum": None,
+                    "einddatumGepland": zaak1_model.einddatum_gepland,
+                    "uiterlijkeEinddatumAfdoening": zaak1_model.uiterlijke_einddatum_afdoening,
+                    "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
+                    "deadline": zaak1_model.deadline.isoformat(),
+                    "deadlineProgress": zaak1_model.deadline_progress(),
+                }
+            ],
+        )
 
     def test_search_on_eigenschappen(self, m):
         # set up catalogi api data
@@ -311,10 +338,36 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         update_eigenschappen_in_zaak_document(zaak2_model)
         self.refresh_index()
 
-        data = {"eigenschappen": {"Buurt": {"value": "Leidsche Rijn"}}}
+        input = {"eigenschappen": {"Buurt": {"value": "Leidsche Rijn"}}}
 
-        response = self.client.post(self.endpoint, data=data)
+        response = self.client.post(self.endpoint, data=input)
 
         data = response.json()
+
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["url"], zaak1["url"])
+        self.assertEqual(
+            data,
+            [
+                {
+                    "url": zaak1_model.url,
+                    "identificatie": "zaak1",
+                    "bronorganisatie": zaak1_model.bronorganisatie,
+                    "zaaktype": {
+                        "url": zaaktype["url"],
+                        "catalogus": CATALOGUS_URL,
+                        "omschrijving": "ZT1",
+                        "versiedatum": zaaktype["versiedatum"],
+                    },
+                    "omschrijving": "Some zaak 1",
+                    "toelichting": zaak1_model.toelichting,
+                    "registratiedatum": zaak1_model.registratiedatum.isoformat(),
+                    "startdatum": zaak1_model.startdatum.isoformat(),
+                    "einddatum": None,
+                    "einddatumGepland": zaak1_model.einddatum_gepland,
+                    "uiterlijkeEinddatumAfdoening": zaak1_model.uiterlijke_einddatum_afdoening,
+                    "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
+                    "deadline": zaak1_model.deadline.isoformat(),
+                    "deadlineProgress": zaak1_model.deadline_progress(),
+                }
+            ],
+        )
