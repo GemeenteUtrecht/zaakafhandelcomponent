@@ -9,10 +9,9 @@ from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.core.camunda import get_process_zaak_url
-from zac.core.services import _client_from_url, get_zaak
+from zac.core.services import get_zaak
 
 from ..data import Task
 from ..messages import get_messages
@@ -26,6 +25,7 @@ from .serializers import (
     ProcessInstanceSerializer,
     UserTaskContextSerializer,
 )
+from .utils import get_service_variables
 
 
 class ProcessInstanceFetchView(APIView):
@@ -110,7 +110,8 @@ class GetTaskContextView(APIView):
 
 class SendMessageView(APIView):
     """
-    TODO: Write tests.
+    This message will start a sub-process belonging to the process instance of which the ID is given
+    in the process engine (Camunda).
     """
 
     permission_classes = (permissions.IsAuthenticated & CanSendMessages,)
@@ -120,7 +121,7 @@ class SendMessageView(APIView):
         serializer = self.serializer_class(**kwargs)
         process_instance_id = serializer.initial_data.get("process_instance_id", None)
 
-        # no (valid) process instance ID -> get a form with no valid messages -> invalid
+        # no (valid) process instance ID -> get a serializer with no valid messages -> invalid
         # POST request
         if not process_instance_id:
             return serializer
@@ -135,34 +136,36 @@ class SendMessageView(APIView):
 
         return serializer
 
+    @extend_schema(
+        responses={
+            201: MessageSerializer,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+        }
+    )
     def post(self, request, *args, **kwargs):
+        """
+        Send a message to initiate a sub process of a process instance in the process engine (Camunda).
+        """
+        # First populate message choices from the process instance...
         serializer = self.get_serializer(data=request.data)
+        # ... then validate.
         serializer.is_valid(raise_exception=True)
 
-        # check permissions
+        # Check permissions
         process_instance_id = serializer.validated_data["process_instance_id"]
         process_instance = get_process_instance(process_instance_id)
-
         zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
-        # build service variables to continue execution
-        zrc_client = _client_from_url(zaak.url)
-        ztc_client = _client_from_url(zaak.zaaktype)
-
-        zrc_jwt = zrc_client.auth.credentials()["Authorization"]
-        ztc_jwt = ztc_client.auth.credentials()["Authorization"]
-
-        variables = {
-            "services": {
-                "zrc": {"jwt": zrc_jwt},
-                "ztc": {"jwt": ztc_jwt},
-            },
-        }
+        # Get variables
+        variables = get_service_variables(zaak)
 
         send_message(
-            serializer.cleaned_data["message"], [process_instance.id], variables
+            serializer.validated_data["message"],
+            [process_instance.id],
+            variables,
         )
         return Response(status=status.HTTP_201_CREATED)
 

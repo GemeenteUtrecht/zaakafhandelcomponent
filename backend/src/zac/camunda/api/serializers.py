@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, NoReturn
 
 from django.utils.translation import gettext_lazy as _
 
@@ -69,17 +69,15 @@ class UserTaskContextSerializer(PolymorphicSerializer):
 
 
 class MessageSerializer(serializers.Serializer):
-    """
-    TODO: Write tests.
-    """
+    process_instance_id = serializers.UUIDField(
+        label=_("Process instance ID"),
+        help_text=_("The ID of the process instance where the message is sent to."),
+    )
+    message = serializers.ChoiceField(
+        choices=(),
+        label=_("Message"),
+        help_text=_("The message that is sent to the process instance."),
+    )
 
-    process_instance_id = serializers.CharField()
-    message = serializers.ChoiceField(choices=())
-
-    def __init__(self, *args, **kwargs):
-        message_names = kwargs.pop("message_names", [])
-        super().__init__(*args, **kwargs)
-        self.set_message_choices(message_names)
-
-    def set_message_choices(self, message_names: List[str]):
+    def set_message_choices(self, message_names: List[str]) -> NoReturn:
         self.fields["message"].choices = [(name, name) for name in message_names]

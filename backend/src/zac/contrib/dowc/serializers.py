@@ -41,3 +41,9 @@ class DowcResponseSerializer(APIModelSerializer):
             )
         else:
             return ""
+
+
+class DowcSerializer(APIModelSerializer):
+    class Meta:
+        model = DowcResponse
+        fields = "uuid"
