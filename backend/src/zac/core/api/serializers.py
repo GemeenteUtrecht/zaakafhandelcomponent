@@ -154,10 +154,6 @@ class AddZaakRelationSerializer(serializers.Serializer):
         return data
 
 
-class ZaakIdentificatieSerializer(serializers.Serializer):
-    identificatie = serializers.CharField(required=True)
-
-
 class ZaakSerializer(serializers.Serializer):
     identificatie = serializers.CharField(required=True)
     bronorganisatie = serializers.CharField(required=True)

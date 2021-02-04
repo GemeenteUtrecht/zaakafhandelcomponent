@@ -17,7 +17,7 @@ from zac.tests.utils import paginated_response
 
 @requests_mock.Mocker()
 class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse_lazy("core:zaken-search")
+    endpoint = reverse_lazy("zaken-search")
 
     def test_login_required(self, m):
         response = self.client.get(self.endpoint)
@@ -135,7 +135,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
 @requests_mock.Mocker()
 class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("core:add-zaak-relation")
+    endpoint = reverse_lazy("add-zaak-relation")
 
     def test_login_required(self, m):
         response = self.client.post(self.endpoint)
@@ -262,7 +262,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_valid_request_without_permissions_to_relate(self, m):
         user = UserFactory.create()

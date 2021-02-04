@@ -9,7 +9,17 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
-from rest_framework import authentication, exceptions, permissions, status, views
+from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import (
+    authentication,
+    exceptions,
+    generics,
+    permissions,
+    status,
+    views,
+)
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,7 +31,6 @@ from zgw_consumers.models import Service
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-from zac.elasticsearch.searches import autocomplete_zaak_search
 from zac.utils.filters import ApiFilterBackend
 
 from ..cache import invalidate_zaak_cache
@@ -60,9 +69,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
-    ZaakIdentificatieSerializer,
     ZaakObjectGroupSerializer,
-    ZaakSerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
@@ -70,81 +77,6 @@ from .utils import (
     convert_eigenschap_spec_to_json_schema,
     get_informatieobjecttypen_for_zaak,
 )
-
-
-class GetInformatieObjectTypenView(views.APIView):
-    schema = None
-
-    # TODO: permissions checks on zaak - can this user read/mutate the zaak?
-
-    def get(self, request: Request) -> Response:
-        zaak_url = request.query_params.get("zaak")
-        if not zaak_url:
-            raise exceptions.ValidationError("'zaak' query parameter is required.")
-
-        informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak_url)
-
-        serializer = InformatieObjectTypeSerializer(informatieobjecttypen, many=True)
-        return Response(serializer.data)
-
-
-class AddDocumentView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated, CanAddDocuments)
-    schema = None
-
-    def get_serializer(self, *args, **kwargs):
-        return AddDocumentSerializer(data=self.request.data)
-
-    def post(self, request: Request) -> Response:
-        serializer = self.get_serializer()
-        serializer.is_valid(raise_exception=True)
-
-        # create the document
-        zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
-
-        uploaded_file = serializer.validated_data["file"]
-
-        with uploaded_file.open("rb") as content:
-            inhoud = base64.b64encode(content.read())
-
-        document_data = {
-            "informatieobjecttype": serializer.validated_data["informatieobjecttype"],
-            "bronorganisatie": zaak.bronorganisatie,  # TODO: what if it's different?
-            "creatiedatum": date.today().isoformat(),  # TODO: what if it's created on another date
-            "titel": uploaded_file.name,
-            # TODO: take user input
-            "auteur": request.user.get_full_name() or request.user.username,
-            "taal": "nld",
-            "inhoud": str(inhoud),  # it's base64, so ascii compatible
-            "formaat": uploaded_file.content_type,
-            "bestandsnaam": uploaded_file.name,
-            "ontvangstdatum": date.today().isoformat(),
-            # "beschrijving": serializer.validated_data.get("beschrijving", ""),
-        }
-
-        core_config = CoreConfig.get_solo()
-        service = core_config.primary_drc
-        if not service:
-            raise RuntimeError("No DRC configured!")
-
-        drc_client = service.build_client()
-
-        document = drc_client.create("enkelvoudiginformatieobject", document_data)
-
-        # relate document and zaak
-        zrc_client = Service.get_client(
-            zaak.url
-        )  # resolves, otherwise the get_zaak would've failed
-        zrc_client.create(
-            "zaakinformatieobject",
-            {
-                "informatieobject": document["url"],
-                "zaak": zaak.url,
-            },
-        )
-
-        response_serializer = AddDocumentResponseSerializer(document)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class GetDocumentInfoView(views.APIView):
@@ -201,54 +133,6 @@ class PostExtraInfoSubjectView(views.APIView):
 
         serializer = ExtraInfoSubjectSerializer(extra_info_inp)
         return Response(serializer.data)
-
-
-class AddZaakRelationView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated, CanAddRelations)
-    schema = None
-
-    def get_serializer(self, *args, **kwargs):
-        return AddZaakRelationSerializer(data=self.request.data)
-
-    def post(self, request: Request) -> Response:
-        serializer = self.get_serializer()
-        serializer.is_valid(raise_exception=True)
-
-        # Retrieving the main zaak
-        client = Service.get_client(serializer.validated_data["main_zaak"])
-        main_zaak = client.retrieve("zaak", url=serializer.validated_data["main_zaak"])
-
-        main_zaak["relevanteAndereZaken"].append(
-            {
-                "url": serializer.validated_data["relation_zaak"],
-                "aardRelatie": serializer.validated_data["aard_relatie"],
-            }
-        )
-
-        # Create the relation
-        client.partial_update(
-            "zaak",
-            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
-            url=serializer.validated_data["main_zaak"],
-        )
-
-        invalidate_zaak_cache(factory(Zaak, main_zaak))
-
-        return Response(status=status.HTTP_200_OK)
-
-
-class GetZakenView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    schema = None
-
-    def get(self, request: Request) -> Response:
-        serializer = ZaakIdentificatieSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        zaken = autocomplete_zaak_search(
-            identificatie=serializer.validated_data["identificatie"]
-        )
-        zaak_serializer = ZaakSerializer(instance=zaken, many=True)
-        return Response(data=zaak_serializer.data)
 
 
 # Backend-For-Frontend endpoints (BFF)
@@ -352,6 +236,41 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(summary=_("Add related zaak"))
+class CreateZaakRelationView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, CanAddRelations)
+
+    def get_serializer(self, *args, **kwargs):
+        return AddZaakRelationSerializer(data=self.request.data)
+
+    def post(self, request: Request) -> Response:
+        serializer = self.get_serializer()
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieving the main zaak
+        zaak_url = serializer.validated_data["main_zaak"]
+        client = Service.get_client(zaak_url)
+        main_zaak = client.retrieve("zaak", url=zaak_url)
+
+        main_zaak["relevanteAndereZaken"].append(
+            {
+                "url": serializer.validated_data["relation_zaak"],
+                "aardRelatie": serializer.validated_data["aard_relatie"],
+            }
+        )
+
+        # Create the relation
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
+            url=zaak_url,
+        )
+
+        invalidate_zaak_cache(factory(Zaak, main_zaak))
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
@@ -395,7 +314,122 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
+###############################
+#          Documents          #
+###############################
+
+
+class CreateZaakDocumentView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated, CanAddDocuments)
+    parser_classes = (CamelCaseMultiPartParser,)
+
+    def get_serializer(self, *args, **kwargs):
+        return AddDocumentSerializer(*args, **kwargs)
+
+    @extend_schema(
+        summary=_("Add a document to a zaak"),
+        responses=AddDocumentResponseSerializer,
+    )
+    def post(self, request: Request) -> Response:
+        """
+        Upload a document to the Documenten API and relate it to a zaak.
+        """
+        serializer = self.get_serializer(
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        # create the document
+        zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
+
+        uploaded_file = serializer.validated_data["file"]
+
+        with uploaded_file.open("rb") as content:
+            inhoud = base64.b64encode(content.read())
+
+        document_data = {
+            "informatieobjecttype": serializer.validated_data["informatieobjecttype"],
+            "bronorganisatie": zaak.bronorganisatie,  # TODO: what if it's different?
+            "creatiedatum": date.today().isoformat(),  # TODO: what if it's created on another date
+            "titel": uploaded_file.name,
+            # TODO: take user input
+            "auteur": request.user.get_full_name() or request.user.username,
+            "taal": "nld",
+            "inhoud": str(inhoud),  # it's base64, so ascii compatible
+            "formaat": uploaded_file.content_type,
+            "bestandsnaam": uploaded_file.name,
+            "ontvangstdatum": date.today().isoformat(),
+            # "beschrijving": serializer.validated_data.get("beschrijving", ""),
+        }
+
+        core_config = CoreConfig.get_solo()
+        service = core_config.primary_drc
+        if not service:
+            raise RuntimeError("No DRC configured!")
+
+        drc_client = service.build_client()
+
+        document = drc_client.create("enkelvoudiginformatieobject", document_data)
+
+        # relate document and zaak
+        zrc_client = Service.get_client(
+            zaak.url
+        )  # resolves, otherwise the get_zaak would've failed
+        zrc_client.create(
+            "zaakinformatieobject",
+            {
+                "informatieobject": document["url"],
+                "zaak": zaak.url,
+            },
+        )
+
+        response_serializer = AddDocumentResponseSerializer(document)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+###############################
+#  META / Catalogi API views  #
+###############################
+
+
+@extend_schema(
+    summary=_("List document types"),
+    tags=["meta"],
+    parameters=[
+        OpenApiParameter(
+            name="zaak",
+            required=True,
+            type=OpenApiTypes.URI,
+            description=_("Zaak to list available document types for"),
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+)
+class InformatieObjectTypeListView(generics.ListAPIView):
+    """
+    List the available document types for a given zaak.
+
+    TODO: permissions checks on zaak - can this user read/mutate the zaak?
+    """
+
+    serializer_class = InformatieObjectTypeSerializer
+
+    def get_queryset(self):
+        zaak_url = self.request.query_params.get("zaak")
+        if not zaak_url:
+            raise exceptions.ValidationError("'zaak' query parameter is required.")
+        return get_informatieobjecttypen_for_zaak(zaak_url)
+
+
+@extend_schema(summary=_("List zaaktypen"), tags=["meta"])
 class ZaakTypenView(ListAPIView):
+    """
+    List a collection of zaaktypen available to the end user.
+
+    Different versions of the same zaaktype are aggregated. Only the zaaktypen that
+    the authenticated user has read-permissions for are returned.
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
@@ -429,7 +463,19 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen_aggregated
 
 
+@extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
 class EigenschappenView(ListAPIView):
+    """
+    List the available eigenschappen for a given zaaktype.
+
+    Given the `zaaktype_omschrijving`, all versions of the matching zaaktype are
+    considered. Returns the eigenschappen available for the aggregated set of zaaktype
+    versions.
+
+    Note that only the zaaktypen that the authenticated user has read-permissions for
+    are considered.
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
