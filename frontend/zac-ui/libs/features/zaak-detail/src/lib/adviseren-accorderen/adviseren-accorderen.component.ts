@@ -4,6 +4,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-adviseren-accorderen',
@@ -23,7 +24,8 @@ export class AdviserenAccorderenComponent implements OnInit {
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private modalService: ModalService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');

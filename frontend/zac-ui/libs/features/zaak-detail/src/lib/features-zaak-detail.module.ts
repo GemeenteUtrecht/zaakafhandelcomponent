@@ -5,15 +5,14 @@ import { SharedUiComponentsModule } from '@gu/components';
 import { InformatieComponent } from './informatie/informatie.component';
 import { BetrokkenenComponent } from './betrokkenen/betrokkenen.component';
 import { StatusComponent } from './status/status.component';
-import { GerelateerdeZakenComponent } from './gerelateerde-zaken/gerelateerde-zaken.component';
 import { GerelateerdeObjectenComponent } from './gerelateerde-objecten/gerelateerde-objecten.component';
-import { DocumentenComponent } from './documenten/documenten.component';
 import { AdviserenAccorderenComponent } from './adviseren-accorderen/adviseren-accorderen.component';
 import { KetenProcessenModule } from './keten-processen/keten-processen.module';
 import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { GerelateerdeZakenModule } from './gerelateerde-zaken/gerelateerde-zaken.module';
 import { DocumentenModule } from './documenten/documenten.module';
+import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail-modal.component';
 
 @NgModule({
   imports: [
@@ -37,6 +36,7 @@ import { DocumentenModule } from './documenten/documenten.module';
     StatusComponent,
     GerelateerdeObjectenComponent,
     AdviserenAccorderenComponent,
+    DetailModalComponent
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]
