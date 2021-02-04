@@ -6,7 +6,6 @@ from .views import (
     EigenschappenView,
     InformatieObjectTypeListView,
     RelatedZakenView,
-    SearchViewSet,
     ZaakDetailView,
     ZaakDocumentsView,
     ZaakEigenschappenView,
@@ -69,5 +68,4 @@ urlpatterns = [
         InformatieObjectTypeListView.as_view(),
         name="document-types-list",
     ),
-    path("search", SearchViewSet.as_view(), name="search"),
 ]

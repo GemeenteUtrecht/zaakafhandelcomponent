@@ -1,15 +1,20 @@
+from typing import List
+
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions, views
+from rest_framework import authentication, permissions, views
 from rest_framework.request import Request
 from rest_framework.response import Response
+from zgw_consumers.api_models.zaken import Zaak
 
+from zac.accounts.permissions import UserPermissions
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
-from zac.core.api.serializers import ZaakSerializer
+from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
+from zac.core.services import get_zaaktypen, get_zaken_es
 
 from ..searches import autocomplete_zaak_search
-from .serializers import ZaakIdentificatieSerializer
+from .serializers import SearchSerializer, ZaakIdentificatieSerializer
 
 
 class GetZakenView(views.APIView):
@@ -34,3 +39,38 @@ class GetZakenView(views.APIView):
         )
         zaak_serializer = self.get_serializer(instance=zaken)
         return Response(data=zaak_serializer.data)
+
+
+class SearchViewSet(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = SearchSerializer
+
+    @extend_schema(summary=_("Search zaken"), responses=ZaakDetailSerializer(many=True))
+    def post(self, request, *args, **kwargs):
+        """
+        Retrieve a list of zaken based on input data.
+        The response contains only zaken the user has permisisons to see.
+        """
+        input_serializer = self.serializer_class(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        zaken = self.perform_search(input_serializer.data)
+        zaak_serializer = ZaakDetailSerializer(zaken, many=True)
+
+        return Response(zaak_serializer.data)
+
+    def perform_search(self, data) -> List[Zaak]:
+        user_perms = UserPermissions(self.request.user)
+
+        if data.get("zaaktype"):
+            zaaktype_data = data.pop("zaaktype")
+            zaaktypen = get_zaaktypen(
+                user_perms,
+                catalogus=zaaktype_data["catalogus"],
+                omschrijving=zaaktype_data["omschrijving"],
+            )
+            data["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
+
+        zaken = get_zaken_es(user_perms, size=50, query_params=data)
+        return zaken
