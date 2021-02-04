@@ -66,7 +66,9 @@ class UserTaskContextSerializer(PolymorphicSerializer):
 
         super().__init__(*args, **kwargs)
 
-        self.fields["form"].choices = list(REGISTRY.keys())
+        self.fields["form"].choices = [
+            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
+        ]
 
 
 class MessageSerializer(serializers.Serializer):

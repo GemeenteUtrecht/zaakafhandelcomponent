@@ -2,6 +2,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
+from zac.api.polymorphism import PolymorphicSerializer
+
 from ..user_tasks import usertask_context_serializer
 
 FIELD_TYPE_MAP = {
@@ -24,6 +26,7 @@ INPUT_TYPE_MAP = {
 
 class EnumField(serializers.ListField):
     child = serializers.ListField(
+        child=serializers.CharField(),
         label=_("Possible enum choice"),
         help_text=_("First element is the value, second element is the label."),
         min_length=2,
@@ -31,7 +34,46 @@ class EnumField(serializers.ListField):
     )
 
 
-class FormFieldSerializer(serializers.Serializer):
+VALUE_DEFAULTS = {
+    "label": _("Field value"),
+    "help_text": _("Current or default value."),
+    "allow_null": True,
+}
+
+
+class StringSerializer(serializers.Serializer):
+    value = serializers.CharField(**VALUE_DEFAULTS)
+
+
+class EnumSerializer(StringSerializer):
+    enum = EnumField(
+        label=_("Possible enum choices"),
+        required=True,
+    )
+
+
+class IntSerializer(serializers.Serializer):
+    value = serializers.IntegerField(**VALUE_DEFAULTS)
+
+
+class BooleanSerializer(serializers.Serializer):
+    value = serializers.BooleanField(**VALUE_DEFAULTS)
+
+
+class DatetimeSerializer(serializers.Serializer):
+    value = serializers.DateTimeField(**VALUE_DEFAULTS)
+
+
+class FormFieldSerializer(PolymorphicSerializer):
+    discriminator_field = "input_type"
+    serializer_mapping = {
+        "enum": EnumSerializer,
+        "string": StringSerializer,
+        "int": IntSerializer,
+        "boolean": BooleanSerializer,
+        "date": DatetimeSerializer,
+    }
+
     name = serializers.CharField(
         label=_("Field name/identifier"),
         required=True,
@@ -47,16 +89,6 @@ class FormFieldSerializer(serializers.Serializer):
         label=_("Input data type"),
         choices=list(INPUT_TYPE_MAP.values()),
         required=True,
-    )
-    value = serializers.Field(
-        label=_("Field value"),
-        help_text=_("Current or default value"),
-        allow_null=True,
-    )
-    enum = EnumField(
-        label=_("Possible enum choices"),
-        help_text=_("Type varies with the input type."),
-        allow_null=True,
     )
 
 
