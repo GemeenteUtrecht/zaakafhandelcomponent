@@ -155,6 +155,6 @@ class DOCAPITests(APITestCase):
                 response["deleteUrl"],
                 reverse(
                     "dowc:patch-destroy-doc",
-                    kwargs={"dowc_request_uuid": self.dowc_request["uuid"]},
+                    kwargs={"dowc_uuid": self.dowc_request["uuid"]},
                 ),
             )
