@@ -36,9 +36,7 @@ class DowcResponseSerializer(APIModelSerializer):
 
     def get_delete_url(self, obj) -> str:
         if obj.purpose == DocFileTypes.write:
-            return reverse(
-                "dowc:patch-destroy-doc", kwargs={"dowc_uuid": obj.uuid}
-            )
+            return reverse("dowc:patch-destroy-doc", kwargs={"dowc_uuid": obj.uuid})
         else:
             return ""
 
