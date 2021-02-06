@@ -16,6 +16,7 @@ gu-modal {
     overflow: auto;
 
     .gu-modal-body {
+      position: relative;
       width: 100%;
       padding: 20px;
       background: #fff;

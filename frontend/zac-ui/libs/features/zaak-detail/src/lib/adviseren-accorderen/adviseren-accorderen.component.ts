@@ -22,6 +22,8 @@ export class AdviserenAccorderenComponent implements OnInit {
   bronorganisatie: string;
   identificatie: string;
 
+  selectedUuid: string;
+
   constructor(
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
@@ -52,7 +54,7 @@ export class AdviserenAccorderenComponent implements OnInit {
 
   formatTableData(data): RowData[] {
     return data.map( element => {
-      const icon = element.completed === element ? 'done' : 'timer'
+      const icon = element.completed === element.numAssignedUsers ? 'assignment_turned_in' : 'timer'
       const iconColor = element.completed === element.numAssignedUsers ? 'green' : 'orange'
       const reviewType =
         element.reviewType === 'approval' ? 'Akkoord'
@@ -78,12 +80,12 @@ export class AdviserenAccorderenComponent implements OnInit {
 
   handleTableClickOutput(value) {
     this.openDetailModal(value);
+    this.selectedUuid = value;
+    this.modalService.open('adviseren-accorderen-detail-modal')
   }
 
   openDetailModal(uuid) {
-    this.getReviewRequestDetail(uuid).subscribe( data => {
-      console.log(data);
-    });
+
   }
 
   getReviewRequestDetail(uuid): Observable<HttpResponse<any>> {

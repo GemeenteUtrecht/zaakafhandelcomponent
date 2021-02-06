@@ -1,9 +1,9 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
 import { ApplicationHttpClient } from '@gu/services';
-import { ReviewDetail } from './detail-modal.interface';
-import { RowData } from '@gu/models';
+import { Review, ReviewDetail } from './detail-modal.interface';
+import { RowData, Table } from '@gu/models';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-detail-modal',
@@ -13,8 +13,21 @@ import { RowData } from '@gu/models';
 export class DetailModalComponent implements OnChanges {
   @Input() uuid: string;
 
+  data: Review[];
+  title: string;
+  readonly ACCORDERINGEN = "Accorderingen";
+  readonly ADVIEZEN = "Adviezen";
+
+  tableData: Table = {
+    headData: [],
+    bodyData: []
+  }
+  tableHeadApproval = ['Akkoord', 'Van', 'Gegeven op', 'Toelichting'];
+  tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
+
   isLoading: boolean;
-  reviewType: 'approval' | 'advice';
+
+  pipe = new DatePipe("nl-NL");
 
   constructor(private http: ApplicationHttpClient) { }
 
@@ -27,21 +40,53 @@ export class DetailModalComponent implements OnChanges {
   fetchReviewDetails() {
     this.isLoading = true;
     this.getReviewRequestDetail(this.uuid).subscribe(res => {
-      this.reviewType = res.reviewType;
+      switch (res.reviewType) {
+        case 'approval':
+          this.formatTableDataApproval(res);
+          this.title = this.ACCORDERINGEN;
+          break;
+        case 'advice':
+          this.formatTableDataAdvice(res);
+          this.title = this.ADVIEZEN;
+          break;
+      }
+      this.data = res.reviews;
+      this.isLoading = false;
     }, errorRes => {
 
     })
   }
 
-  formatTableData(data): RowData[] {
-    return data.map( element => {
-      const icon = element.completed === 'Akkoord' ? 'done' : 'close'
-      const iconColor = element.completed === 'Akkoord' ? 'green' : 'red'
-      const reviewType =
-        element.reviewType === 'approval' ? 'Akkoord'
-          : element.reviewType === 'advice' ? 'Advies'
-          : ''
-      const completed = `${element.completed}/${element.numAssignedUsers}`
+  formatTableDataAdvice(data): void {
+    this.tableData.headData = this.tableHeadAdvice;
+    this.tableData.bodyData = data.reviews.map( (review: Review) => {
+      const author = review.author['firstName']
+        ? `${review.author['firstName']} ${review.author['lastName']}`
+        : review.author['username'];
+      const date = this.pipe.transform(review.created, 'short');
+      const docAdviezen = review.documents ? review.documents.length.toString() : '-';
+
+      const cellData: RowData = {
+        cellData: {
+          advies: review.advice,
+          van: author,
+          datum: date,
+          docAdviezen: docAdviezen
+        }
+      }
+      return cellData;
+    })
+  }
+
+  formatTableDataApproval(data): void {
+    this.tableData.headData = this.tableHeadApproval;
+    this.tableData.bodyData = data.reviews.map( (review: Review) => {
+      const icon = review.status === 'Akkoord' ? 'done' : 'close'
+      const iconColor = review.status === 'Akkoord' ? 'green' : 'red'
+      const author = review.author['firstName']
+        ? `${review.author['firstName']} ${review.author['lastName']}`
+        : review.author['username'];
+      const date = this.pipe.transform(review.created, 'short');
 
       const cellData: RowData = {
         cellData: {
@@ -50,10 +95,10 @@ export class DetailModalComponent implements OnChanges {
             label: icon,
             iconColor: iconColor
           },
-          type: reviewType,
-          completed: completed
-        },
-        clickOutput: element.id
+          van: author,
+          datum: date,
+          toelichting: review.toelichting
+        }
       }
       return cellData;
     })
