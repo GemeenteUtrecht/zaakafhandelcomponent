@@ -72,7 +72,7 @@ export class AdviserenAccorderenComponent implements OnInit {
           type: reviewType,
           completed: completed
         },
-        clickOutput: element.id
+        clickOutput: element.completed > 0 ? element.id : null
       }
       return cellData;
     })
