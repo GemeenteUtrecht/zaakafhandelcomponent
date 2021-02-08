@@ -28,12 +28,12 @@ export class ApplicationHttpClient {
   }
 
   public Post<T>(endPoint: string, params?: object, options?: IRequestOptions): Observable<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    options = {
-      headers: headers,
+    const defaultOptions = {
+      headers: new HttpHeaders().set('Content-Type', 'application/json'),
       withCredentials: true
     }
-    return this.http.post<T>(endPoint, params, options);
+    const mergedOptions = {...defaultOptions, ...options};
+    return this.http.post<T>(endPoint, params, mergedOptions);
   }
 
   public Put<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<any> {

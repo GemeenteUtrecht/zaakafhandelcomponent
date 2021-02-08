@@ -51,7 +51,7 @@ export class KetenProcessenComponent implements OnInit {
     this.isLoading = true;
     this.getProcesses().subscribe( data => {
       this.data = data;
-      this.processInstanceId = data[0].id
+      this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
     }, errorRes => {
       this.errorMessage = errorRes.error.detail;

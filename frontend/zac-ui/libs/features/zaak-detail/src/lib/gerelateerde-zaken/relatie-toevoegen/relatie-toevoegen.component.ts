@@ -40,13 +40,14 @@ export class RelatieToevoegenComponent implements OnInit {
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private modalService: ModalService
-  ) { }
-
-  ngOnInit(): void {
+  ) {
     this.addRelationForm = this.fb.group({
       identificatie: this.fb.control("", Validators.required),
       aard_relaties: this.fb.control("", Validators.required),
     })
+  }
+
+  ngOnInit(): void {
   }
 
   handleSearch(searchValue) {
@@ -58,7 +59,7 @@ export class RelatieToevoegenComponent implements OnInit {
   }
 
   getSearchZaken(searchValue): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/api/zaken_search?identificatie=${searchValue}`);
+    const endpoint = encodeURI(`/api/search/zaken/autocomplete?identificatie=${searchValue}`);
     return this.http.Get<any>(endpoint);
   }
 
@@ -83,7 +84,7 @@ export class RelatieToevoegenComponent implements OnInit {
   }
 
   postRelation(formData: any): Observable<any> {
-    return this.http.Post<any>(encodeURI("/core/api/zaken_relation"), formData);
+    return this.http.Post<any>(encodeURI("/api/core/cases/related-case"), formData);
   }
 
 }

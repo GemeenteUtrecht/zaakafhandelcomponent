@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
+import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { ModalService } from '@gu/components';
@@ -47,7 +47,7 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   getDocumentTypes(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/core/api/documents/get-informatieobjecttypen?zaak=${this.mainZaakUrl}`);
+    const endpoint = encodeURI(`/api/core/document-types?zaak=${this.mainZaakUrl}`);
     return this.http.Get<any>(endpoint);
   }
 
@@ -71,12 +71,14 @@ export class DocumentToevoegenComponent implements OnInit {
     })
   }
 
-  postDocument(formData: any): Observable<any> {
-    return this.http.Post<any>(encodeURI("/core/api/documents/upload"), formData);
+  postDocument(formData: FormData): Observable<any> {
+    const options = {
+      headers: new HttpHeaders().set('Content-Type', 'multipart/form-data'),
+    }
+    return this.http.Post<any>(encodeURI("/api/core/cases/document"), formData, options);
   }
 
   async handleFileSelect(file: File) {
-    console.log(file);
     const convertedFile = await convertBlobToString(file);
     this.addDocumentForm.controls['documentFile'].setValue(convertedFile);
   }
