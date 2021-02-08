@@ -25,7 +25,6 @@ from .serializers import (
     ProcessInstanceSerializer,
     UserTaskContextSerializer,
 )
-from .utils import get_service_variables
 
 
 class ProcessInstanceFetchView(APIView):
@@ -108,6 +107,9 @@ class GetTaskContextView(APIView):
         return task
 
 
+ZAC_BPTL_APP_ID = "https://openzaak.utrechtproeftuin.nl/autorisaties/api/v1/applicaties/60d3f3f0-03fb-444d-b4e0-b2c198bab49a"
+
+
 class SendMessageView(APIView):
     """
     This message will start a sub-process belonging to the process instance of which the ID is given
@@ -138,7 +140,7 @@ class SendMessageView(APIView):
 
     @extend_schema(
         responses={
-            201: MessageSerializer,
+            204: None,
             403: ErrorSerializer,
             404: ErrorSerializer,
         }
@@ -159,15 +161,17 @@ class SendMessageView(APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
-        # Get variables
-        variables = get_service_variables(zaak)
+        # Set variables
+        variables = {
+            "bptlAppId": ZAC_BPTL_APP_ID,
+        }
 
         send_message(
             serializer.validated_data["message"],
             [process_instance.id],
             variables,
         )
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PerformTaskView(APIView):

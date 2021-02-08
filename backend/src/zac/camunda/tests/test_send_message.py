@@ -8,14 +8,22 @@ import requests_mock
 from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.core.permissions import zaakproces_send_message, zaken_inzien
+from zac.tests.utils import paginated_response
 
 from ..api.serializers import MessageSerializer
+from ..data import ProcessInstance
+
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
+ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 
 class SendMessageSerializerTests(APITestCase):
@@ -46,20 +54,7 @@ class SendMessageSerializerTests(APITestCase):
         self.assertEqual(message_serializer.validated_data, self.message)
 
 
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.zaken import Zaak
-
-from zac.core.permissions import zaakproces_send_message, zaken_inzien
-from zac.tests.utils import paginated_response
-
-from ..data import ProcessInstance
-
-CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-
-
-class ZaakDocumentsPermissionAndResponseTests(APITestCase):
+class SendMessagePermissionAndResponseTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -121,11 +116,6 @@ class ZaakDocumentsPermissionAndResponseTests(APITestCase):
             return_value=zaak,
         )
 
-        cls.patch_get_service_variables = patch(
-            "zac.camunda.api.views.get_service_variables",
-            return_value={},
-        )
-
         cls.endpoint = reverse("send-message")
 
     def setUp(self):
@@ -143,9 +133,6 @@ class ZaakDocumentsPermissionAndResponseTests(APITestCase):
         self.patch_get_zaak.start()
         self.addCleanup(self.patch_get_zaak.stop)
 
-        self.patch_get_service_variables.start()
-        self.addCleanup(self.patch_get_service_variables.stop)
-
     def test_not_authenticated(self):
         response = self.client.post(self.endpoint)
 
@@ -157,67 +144,6 @@ class ZaakDocumentsPermissionAndResponseTests(APITestCase):
 
         response = self.client.post(self.endpoint)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_has_perm_but_not_for_zaaktype(self):
-        # gives them access to the page, but no catalogus specified -> nothing visible
-        user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        self.client.force_authenticate(user=user)
-
-        response = self.client.post(self.endpoint)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_has_perm_but_not_for_va(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        user = UserFactory.create()
-        # gives them access to the page and zaaktype, but insufficient VA
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
-        self.client.force_authenticate(user=user)
-
-        response = self.client.post(self.endpoint)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_has_perm_but_not_for_send_message(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        user = UserFactory.create()
-
-        # gives them access to the page, zaaktype and VA specified -> visible
-        # but does not allow them to send messages
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-        )
-
-        self.client.force_authenticate(user=user)
-        response = self.client.post(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -232,7 +158,7 @@ class ZaakDocumentsPermissionAndResponseTests(APITestCase):
         # gives them access to the page, zaaktype and VA specified -> visible
         # and allows them to send messages
         PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaakproces_send_message.name],
+            permissions=[zaakproces_send_message.name],
             for_user=user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
@@ -250,4 +176,4 @@ class ZaakDocumentsPermissionAndResponseTests(APITestCase):
                 },
             )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
