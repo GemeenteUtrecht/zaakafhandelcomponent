@@ -13,9 +13,10 @@ import { ModalService } from '@gu/components'
 })
 
 export class KetenProcessenComponent implements OnInit {
-  @Input() zaakUrl: string;
+  @Input() mainZaakUrl: string;
 
   data: any;
+  processInstanceId: string;
 
   isLoading = true;
   hasError: boolean;
@@ -25,6 +26,9 @@ export class KetenProcessenComponent implements OnInit {
   identificatie: string;
 
   pipe = new DatePipe("nl-NL");
+
+  sendMessageErrorMessage: string;
+  sendMessageHasError: boolean;
 
   uitvoerenType: 'advice-approve' | 'document-select' | 'dynamic-form' | 'sign-document' = "advice-approve"
 
@@ -47,35 +51,53 @@ export class KetenProcessenComponent implements OnInit {
     this.isLoading = true;
     this.getProcesses().subscribe( data => {
       this.data = data;
+      this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
-    }, res => {
-      this.errorMessage = res.error.detail;
+    }, errorRes => {
+      this.errorMessage = errorRes.error.detail;
       this.hasError = true;
       this.isLoading = false;
     })
   }
 
   getProcesses(): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.zaakUrl}`);
+    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.mainZaakUrl}`);
     return this.http.Get(endpoint);
   }
 
   sendMessage(value) {
-    const endpoint = encodeURI("/core/_send-message");
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    const options = {
-      headers: headers,
-      withCredentials: true,
+    this.isLoading = true
+    const endpoint = encodeURI("/api/camunda/send-message");
+    const formData = {
+      processInstanceId: this.processInstanceId,
+      message: value
     }
-    this.http.Post(endpoint, {"message": value}, options).subscribe( res => {
+    this.http.Post(endpoint, formData).subscribe( res => {
+      this.fetchProcesses();
+    }, errorRes => {
+      this.sendMessageErrorMessage = errorRes.error.detail;
+      this.sendMessageHasError = true;
+      this.isLoading = false;
+    })
+  }
+
+  executeTask(taskId, hasForm, executeUrl) {
+    if (!hasForm) {
+      window.location = executeUrl;
+    } else {
+      this.fetchFormLayout(taskId);
+    }
+  }
+
+  fetchFormLayout(taskId) {
+    this.getFormLayout(taskId).subscribe(res => {
       console.log(res);
     })
   }
 
-  executeTask(taskId) {
-    console.log(taskId)
-    console.log(1)
-    // this.openModal()
+  getFormLayout(taskId): Observable<any> {
+    const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
+    return this.http.Get(endpoint);
   }
 
   openModal(id: string) {

@@ -12,12 +12,12 @@ export class AdviceService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getAdvice(uuid: string): Observable<HttpResponse<ReviewRequest>> {
+  getAdvice(uuid: string): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/advice`);
     const options = {
       observe: 'response' as 'response'
     }
-    return this.http.Get<ReviewRequest>(endpoint, options);
+    return this.http.Get<any>(endpoint, options);
   }
 
   postAdvice(formData: AdviceForm, uuid: string): Observable<AdviceForm> {

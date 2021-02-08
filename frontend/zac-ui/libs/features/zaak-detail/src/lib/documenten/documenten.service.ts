@@ -12,7 +12,7 @@ export class DocumentenService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getDocuments(bronorganisatie, identificatie): Observable<HttpResponse<Document[]>> {
+  getDocuments(bronorganisatie, identificatie): Observable<Document[]> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/documents`);
     return this.http.Get<Document[]>(endpoint);
   }

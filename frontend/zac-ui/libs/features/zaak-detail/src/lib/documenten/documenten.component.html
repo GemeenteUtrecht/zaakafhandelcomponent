@@ -1,12 +1,34 @@
 <div class="documenten card">
   <h2>Documenten</h2>
   <!-- Loading -->
-  <ng-container *ngIf="!documentsData && isLoading">
+  <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
   <!-- Table -->
   <ng-container *ngIf="documentsData && !isLoading">
-    <gu-table [tableData]="tableData" (buttonOutput)="handleTableButtonOutput($event)"></gu-table>
+    <gu-table *ngIf="(documentsData.length > 0) && tableData"
+              [tableData]="tableData"
+              (buttonOutput)="handleTableButtonOutput($event)"
+              class="mb-4"></gu-table>
+    <p *ngIf="(documentsData.length === 0)">Er zijn geen documenten.</p>
   </ng-container>
+
+  <div class="d-flex justify-content-end">
+    <gu-button
+      type="secondary"
+      (click)="openModal('document-toevoegen-modal')"
+    >
+      Document toevoegen
+    </gu-button>
+  </div>
 </div>
+
+<gu-modal id="document-toevoegen-modal"
+          [closeIcon]="true"
+          title="Document toevoegen"
+          size="small">
+  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         (reload)="fetchDocuments()">
+  </gu-document-toevoegen>
+</gu-modal>

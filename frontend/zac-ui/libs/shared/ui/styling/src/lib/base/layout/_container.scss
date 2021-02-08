@@ -5,6 +5,11 @@
 }
 
 .container {
+  &--extramall {
+    @include media-breakpoint-up(md) {
+      max-width: 500px;
+    }
+  }
   &--small {
     @include media-breakpoint-up(md) {
       max-width: 800px;

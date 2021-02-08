@@ -1,0 +1,40 @@
+<div class="relatie-toevoegen">
+  <form class="" [formGroup]="addRelationForm">
+    <label class="h4 d-inline-block mr-2">Identificatie</label>
+    <gu-tooltip type="primary" inline="true">Voeg de identificatie toe van de zaak die u wilt relateren.</gu-tooltip>
+    <gu-multiselect
+      (typeOutput)="handleSearch($event)"
+      [multiple]="false"
+      [items]="zaken"
+      placeholder="Zoek een zaak..."
+      bindLabel="identificatie"
+      bindValue="url"
+      class="mb-5"
+      customFormControl="identificatie"
+    >
+    </gu-multiselect>
+
+    <label class="h4 d-inline-block mr-2">Aard relatie</label>
+    <gu-tooltip type="primary" inline="true">Aard van de relatie tussen de zaken.</gu-tooltip>
+
+    <gu-multiselect
+      [multiple]="false"
+      [items]="aardRelaties"
+      placeholder="Aard relatie"
+      bindLabel="label"
+      bindValue="value"
+      class="mb-5"
+      customFormControl="aard_relaties">
+    </gu-multiselect>
+    <div class="d-flex justify-content-end">
+      <gu-button
+        [disabled]="!addRelationForm.valid"
+        [loading]="isSubmitting"
+        type="primary"
+        size="large"
+        (click)="submitForm()">
+        Relatie toevoegen
+      </gu-button>
+    </div>
+  </form>
+</div>

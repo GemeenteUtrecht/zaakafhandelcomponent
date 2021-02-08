@@ -41,6 +41,7 @@
     "@angular/platform-browser-dynamic": "^10.1.0",
     "@angular/router": "^10.1.0",
     "@ng-bootstrap/ng-bootstrap": "^8.0.0",
+    "@ng-select/ng-select": "^6.0.0",
     "@nrwl/angular": "10.4.4",
     "@vaadin/vaadin-date-picker": "^4.4.1",
     "bootstrap": "^4.6.0",

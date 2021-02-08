@@ -1,9 +1,9 @@
 <div class="keten-processen card">
   <h2>Actieve (keten)processen</h2>
-  <ng-container *ngIf="(!data) && (isLoading)">
+  <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <ng-container *ngIf="!!data && data.length > 0">
+  <ng-container *ngIf="!!data && data.length > 0 && !isLoading">
     <div class="keten-processen__actie-buttons-container">
       <gu-button
         (click)="sendMessage(message)"
@@ -12,6 +12,7 @@
         {{message}}
       </gu-button>
     </div>
+    <p class="p--error" *ngIf="sendMessageHasError">{{sendMessageErrorMessage}}</p>
     <div class="keten-processen__taken">
       <h3>Taken</h3>
       <div class="taak" *ngFor="let task of data[0].tasks">
@@ -19,7 +20,7 @@
         <label class="label label--date">{{task.created | date:'fullDate'}}</label>
         <div class="taak__buttons">
           <gu-button type="secondary" size="small">Claimen</gu-button>
-          <gu-button type="secondary" size="small" (click)="executeTask(task.id)">Uitvoeren</gu-button>
+          <gu-button type="secondary" size="small" (click)="executeTask(task.id, task.hasForm, task.executeUrl)">Uitvoeren</gu-button>
         </div>
       </div>
       <ng-container *ngFor="let subProcess of data[0].subProcesses">
@@ -34,7 +35,7 @@
           </gu-chip>
           <div class="taak__buttons">
             <gu-button type="secondary">Claimen</gu-button>
-            <gu-button type="secondary" (click)="executeTask(subProcess.id)">Uitvoeren</gu-button>
+            <gu-button type="secondary" (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">Uitvoeren</gu-button>
           </div>
         </div>
       </ng-container>
@@ -60,7 +61,7 @@
       Dynamische form
     </gu-button>
   </ng-container>
-  <ng-container *ngIf="!!data && data.length === 0">
+  <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
     <p>Er zijn geen actieve (keten)processen.</p>
   </ng-container>
 </div>
