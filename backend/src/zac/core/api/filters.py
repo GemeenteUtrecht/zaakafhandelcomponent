@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import fields
 
 from zac.utils.filters import ApiFilterSet
@@ -19,5 +21,9 @@ class ZaaktypenFilterSet(ApiFilterSet):
 class EigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_queryset() method.
     # This filterset is used just to validate query params
-    zaaktype_omschrijving = fields.CharField()
-    catalogus = fields.URLField()
+    zaaktype_omschrijving = fields.CharField(
+        help_text=_(
+            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+        )
+    )
+    catalogus = fields.URLField(help_text=_("Url reference of related CATALOGUS"))

@@ -500,14 +500,11 @@ class EigenschappenView(ListAPIView):
         catalogus = self.request.query_params.get("catalogus")
         zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
 
-        zaaktypen = get_zaaktypen(
-            UserPermissions(self.request.user), catalogus=catalogus
+        return get_zaaktypen(
+            UserPermissions(self.request.user),
+            catalogus=catalogus,
+            omschrijving=zaaktype_omschrijving,
         )
-        return [
-            zaaktype
-            for zaaktype in zaaktypen
-            if zaaktype.omschrijving == zaaktype_omschrijving
-        ]
 
     def get_eigenschappen(self, zaaktypen):
         with parallel() as executor:

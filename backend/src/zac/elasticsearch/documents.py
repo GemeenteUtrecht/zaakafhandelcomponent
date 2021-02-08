@@ -25,6 +25,7 @@ class ZaakDocument(Document):
     zaaktype = field.Keyword()
     identificatie = field.Keyword()
     bronorganisatie = field.Keyword()
+    omschrijving = field.Text()
     vertrouwelijkheidaanduiding = field.Text()
     va_order = field.Integer()
     rollen = Nested(RolDocument)

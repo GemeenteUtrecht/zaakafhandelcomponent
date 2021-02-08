@@ -28,6 +28,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         zaaktype=zaaktype_url,
         identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
+        omschrijving=zaak.omschrijving,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
         va_order=VertrouwelijkheidsAanduidingen.get_choice(
             zaak.vertrouwelijkheidaanduiding
