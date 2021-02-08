@@ -23,7 +23,7 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
 
     field_definition = {
         "name": field_id,
-        "title": field.attrib.get("label", field_id),
+        "label": field.attrib.get("label", field_id),
         "input_type": input_type,
         "value": default,
     }

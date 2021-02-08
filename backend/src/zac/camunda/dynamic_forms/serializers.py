@@ -78,7 +78,7 @@ class FormFieldSerializer(PolymorphicSerializer):
         label=_("Field name/identifier"),
         required=True,
     )
-    title = serializers.CharField(
+    label = serializers.CharField(
         label=_("Field label"),
         help_text=_(
             "Human-readable field title. Defaults to `name` property if not provided."
