@@ -15,6 +15,7 @@ from zac.core.services import get_zaak
 
 from ..data import Task
 from ..messages import get_messages
+from ..models import BPTLAppId
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
 from ..user_tasks import UserTaskData, get_context, get_task
@@ -107,9 +108,6 @@ class GetTaskContextView(APIView):
         return task
 
 
-ZAC_BPTL_APP_ID = "https://openzaak.utrechtproeftuin.nl/autorisaties/api/v1/applicaties/60d3f3f0-03fb-444d-b4e0-b2c198bab49a"
-
-
 class SendMessageView(APIView):
     """
     This message will start a sub-process belonging to the process instance of which the ID is given
@@ -161,9 +159,11 @@ class SendMessageView(APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
+        bptl_app_id = BPTLAppId.get_solo()
+
         # Set variables
         variables = {
-            "bptlAppId": ZAC_BPTL_APP_ID,
+            "bptlAppId": bptl_app_id.app_id,
         }
 
         send_message(

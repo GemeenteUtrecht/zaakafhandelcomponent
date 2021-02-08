@@ -5,6 +5,7 @@ from django.urls import reverse
 
 import jwt
 import requests_mock
+from django_camunda.utils import serialize_variable
 from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -21,6 +22,7 @@ from zac.tests.utils import paginated_response
 
 from ..api.serializers import MessageSerializer
 from ..data import ProcessInstance
+from ..models import BPTLAppId
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -89,7 +91,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         process_definition_id = uuid.uuid4()
         definition_id = f"BBV_vragen:3:{process_definition_id}"
         cls.process_instance = {
-            "id": process_instance_id,
+            "id": str(process_instance_id),
             "definition_id": definition_id,
         }
 
@@ -117,6 +119,10 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         )
 
         cls.endpoint = reverse("send-message")
+
+        cls.bptl_app_id = BPTLAppId.get_solo()
+        cls.bptl_app_id.app_id = "http://some-open-zaak-url.nl/with/uuid/"
+        cls.bptl_app_id.save()
 
     def setUp(self):
         super().setUp()
@@ -167,13 +173,24 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         self.client.force_authenticate(user=user)
 
-        with patch("zac.camunda.api.views.send_message", return_value=None):
-            response = self.client.post(
-                self.endpoint,
-                data={
-                    "message": "some-message",
-                    "process_instance_id": str(uuid.uuid4()),
-                },
-            )
+        # with patch("zac.camunda.api.views.send_message", return_value=None):
+        m.post("https://camunda.example.com/engine-rest/message", status_code=201)
 
+        data = {
+            "message": "some-message",
+            "process_instance_id": self.process_instance["id"],
+        }
+        response = self.client.post(
+            self.endpoint,
+            data=data,
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        expected_payload = {
+            "messageName": data["message"],
+            "processInstanceId": data["process_instance_id"],
+            "processVariables": {
+                "bptlAppId": serialize_variable(self.bptl_app_id.app_id)
+            },
+        }
+        self.assertEqual(m.last_request.json(), expected_payload)
