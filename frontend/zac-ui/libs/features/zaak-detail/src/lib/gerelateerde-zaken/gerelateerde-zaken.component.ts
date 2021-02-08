@@ -52,7 +52,7 @@ export class GerelateerdeZakenComponent implements OnInit {
     })
   }
 
-  getRelatedCases(): Observable<HttpResponse<any>> {
+  getRelatedCases(): Observable<ReviewRequest> {
     const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
     return this.http.Get<ReviewRequest>(endpoint);
   }

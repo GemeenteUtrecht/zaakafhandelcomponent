@@ -40,7 +40,6 @@ export class DocumentToevoegenComponent implements OnInit {
     this.isLoading = true;
     if (this.mainZaakUrl) {
       this.getDocumentTypes().subscribe( res => {
-        console.log(res)
         this.documentTypes = res;
       })
     }
@@ -52,13 +51,11 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   submitForm(): void {
-    let formData;
+    const formData = new FormData();
 
-    formData = {
-      informatieobjecttype: this.addDocumentForm.controls['documentType'].value,
-      file: this.addDocumentForm.controls['documentFile'].value,
-      zaak: this.mainZaakUrl
-    }
+    formData.append("informatieobjecttype", this.addDocumentForm.controls['documentType'].value);
+    formData.append("file", this.addDocumentForm.controls['documentFile'].value);
+    formData.append("zaak", this.mainZaakUrl);
 
     this.isSubmitting = true;
     this.postDocument(formData).subscribe(() => {
@@ -72,15 +69,11 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   postDocument(formData: FormData): Observable<any> {
-    const options = {
-      headers: new HttpHeaders().set('Content-Type', 'multipart/form-data'),
-    }
-    return this.http.Post<any>(encodeURI("/api/core/cases/document"), formData, options);
+    return this.http.Post<any>(encodeURI("/api/core/cases/document"), formData);
   }
 
   async handleFileSelect(file: File) {
-    const convertedFile = await convertBlobToString(file);
-    this.addDocumentForm.controls['documentFile'].setValue(convertedFile);
+    this.addDocumentForm.controls['documentFile'].setValue(file);
   }
 
 }

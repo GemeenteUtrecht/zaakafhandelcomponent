@@ -12,12 +12,12 @@ export class ApprovalService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getApproval(uuid: string): Observable<HttpResponse<ReviewRequest>> {
+  getApproval(uuid: string): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/approval`);
     const options = {
       observe: 'response' as 'response'
     }
-    return this.http.Get<ReviewRequest>(endpoint, options);
+    return this.http.Get<any>(endpoint, options);
   }
 
   postApproval(formData: ApprovalForm, uuid:string): Observable<any> {
