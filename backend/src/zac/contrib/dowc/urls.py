@@ -6,7 +6,7 @@ app_name = "dowc"
 
 urlpatterns = [
     path(
-        "<uuid:dowc_request_uuid>/",
+        "<uuid:dowc_uuid>/",
         DeleteDowcView.as_view(),
         name="patch-destroy-doc",
     ),

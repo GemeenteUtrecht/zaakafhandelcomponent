@@ -11,7 +11,7 @@ from zac.core.services import find_document
 
 from .api import get_doc_info, patch_and_destroy_doc
 from .permissions import CanOpenDocuments
-from .serializers import DowcResponseSerializer
+from .serializers import DowcResponseSerializer, DowcSerializer
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -37,6 +37,9 @@ class OpenDowcView(APIView):
         return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
+        """
+        This will create a dowc object in the dowc API and exposes the document through a URL.
+        """
         document = self.get_object()
         drc_url = self.document.url
         dowc_response, status_code = get_doc_info(request.user, drc_url, purpose)
@@ -47,7 +50,15 @@ class OpenDowcView(APIView):
 class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
+    serializer_class = DowcSerializer
 
-    def delete(self, request, dowc_request_uuid):
-        patch_and_destroy_doc(request.user, dowc_request_uuid)
+    def delete(self, request, dowc_uuid):
+        """
+        This will attempt to delete the dowc object in the dowc API.
+        This implies that the dowc will attempt to patch the document in the
+        DRC API.
+        """
+        serializer = self.serializer_class(data={"uuid": dowc_uuid})
+        serializer.is_valid(raise_exception=True)
+        patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
         return Response(status=status.HTTP_204_NO_CONTENT)
