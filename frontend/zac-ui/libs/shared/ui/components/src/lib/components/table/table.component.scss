@@ -48,13 +48,16 @@
   }
 
   .icon {
-    font-size: 2.1.25rem;
+    font-size: 1.25rem;
     vertical-align: middle;
     &--orange {
-      color: $color-orange
+      color: $color-orange;
     }
     &--green {
-      color: $color-success
+      color: $color-success;
+    }
+    &--red {
+      color: $color-warn;
     }
   }
 }

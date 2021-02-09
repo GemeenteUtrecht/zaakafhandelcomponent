@@ -4,6 +4,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-adviseren-accorderen',
@@ -21,9 +22,12 @@ export class AdviserenAccorderenComponent implements OnInit {
   bronorganisatie: string;
   identificatie: string;
 
+  selectedUuid: string;
+
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private modalService: ModalService
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -50,7 +54,7 @@ export class AdviserenAccorderenComponent implements OnInit {
 
   formatTableData(data): RowData[] {
     return data.map( element => {
-      const icon = element.completed === element ? 'done' : 'timer'
+      const icon = element.completed === element.numAssignedUsers ? 'assignment_turned_in' : 'timer'
       const iconColor = element.completed === element.numAssignedUsers ? 'green' : 'orange'
       const reviewType =
         element.reviewType === 'approval' ? 'Akkoord'
@@ -68,7 +72,7 @@ export class AdviserenAccorderenComponent implements OnInit {
           type: reviewType,
           completed: completed
         },
-        clickOutput: element.id
+        clickOutput: element.completed > 0 ? element.id : null
       }
       return cellData;
     })
@@ -76,12 +80,12 @@ export class AdviserenAccorderenComponent implements OnInit {
 
   handleTableClickOutput(value) {
     this.openDetailModal(value);
+    this.selectedUuid = value;
+    this.modalService.open('adviseren-accorderen-detail-modal')
   }
 
   openDetailModal(uuid) {
-    this.getReviewRequestDetail(uuid).subscribe( data => {
-      console.log(data);
-    });
+
   }
 
   getReviewRequestDetail(uuid): Observable<HttpResponse<any>> {

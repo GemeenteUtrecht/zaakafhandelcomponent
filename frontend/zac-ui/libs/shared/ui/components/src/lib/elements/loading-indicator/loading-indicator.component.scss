@@ -45,6 +45,7 @@
   &.backdrop {
     background-color: $background-white;
     opacity: .9;
+    border-radius: 6px;
 
     &--backdrop-grey {
       background-color: $background-lightgrey;
