@@ -40,6 +40,8 @@ class ProcessInstance(Model):
 class Task(_Task):
     historical: bool = False
 
+    form = None
+
     def has_form(self) -> bool:
         return bool(self.form)
 

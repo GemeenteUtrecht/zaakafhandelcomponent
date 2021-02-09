@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Type
+from xml.etree.ElementTree import Element
 
 from django import forms
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +9,7 @@ from django_camunda.camunda_models import Task
 from django_camunda.forms import formfield_from_xml
 
 from .bpmn import get_bpmn
+from .user_tasks.context import REGISTRY
 
 
 class MessageForm(forms.Form):
@@ -101,11 +103,15 @@ class DummyForm(TaskFormMixin, forms.Form):
     pass
 
 
-def extract_task_form(
-    task: Task, form_key_mapping: dict
-) -> Optional[Dict[str, Type[TaskFormMixin]]]:
-    if task.form_key in form_key_mapping:
-        return form_key_mapping[task.form_key]
+def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
+    """
+    Get the Camunda form fields definition from the BPMN definition.
+
+    Camunda embeds form fields as an extension into the BPMN definition. We can extract
+    these and map them to form or serializer fields.
+    """
+    if task.form_key and task.form_key in REGISTRY:
+        return None
 
     tree = get_bpmn(task.process_definition_id)
 
@@ -113,6 +119,19 @@ def extract_task_form(
     task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
     formfields = task_definition.findall(".//camunda:formField", CAMUNDA_NS)
     if not formfields:
+        return None
+
+    return formfields
+
+
+def extract_task_form(
+    task: Task, form_key_mapping: dict
+) -> Optional[Dict[str, Type[TaskFormMixin]]]:
+    if task.form_key in form_key_mapping:
+        return form_key_mapping[task.form_key]
+
+    formfields = extract_task_form_fields(task)
+    if formfields is None:
         return None
 
     # construct the Form class

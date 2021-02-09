@@ -34,7 +34,14 @@ def get_context(task: Task) -> Optional[Context]:
     ``REGISTRY`` constant and registering their form key with the appropriote callback
     callable.
     """
-    (callback, *rest) = REGISTRY.get(task.form_key)
+    lookup = task.form_key
+    if task.form_key not in REGISTRY:
+        warnings.warn(
+            f"Unknown task registry key: '{lookup}'. Falling back to dynamic form.",
+            RuntimeWarning,
+        )
+        lookup = ""
+    (callback, *rest) = REGISTRY.get(lookup)
     if callback is None:
         return None
     return callback(task)
@@ -68,7 +75,6 @@ def register(form_key: str, serializer_cls: Type[serializers.Serializer]):
 EmptySerializer = usertask_context_serializer(serializers.JSONField)
 
 
-@register("", EmptySerializer)
 @register("zac:documentSelectie", EmptySerializer)
 @register("zac:gebruikerSelectie", EmptySerializer)
 def noop(task) -> None:

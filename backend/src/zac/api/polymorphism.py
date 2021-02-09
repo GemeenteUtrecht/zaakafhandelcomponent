@@ -28,7 +28,7 @@ without explicitly wrapping this in a parent serializer, i.e. - ``polymorphic_co
 can not be a PolymorphicSerializer itself, as it requires access to the ``object_type``
 in the parent scope.
 """
-
+import warnings
 from typing import Dict, Optional, Type, Union
 
 from django.core.exceptions import ImproperlyConfigured
@@ -45,6 +45,7 @@ class PolymorphicSerializer(serializers.Serializer):
     serializer_mapping: Optional[Dict[Primitive, SerializerClsOrInstance]] = None
     # the serializer field that holds the discriminator values
     discriminator_field = "object_type"
+    fallback_distriminator_value = None
     strict = True
 
     def __new__(cls, *args, **kwargs):
@@ -85,6 +86,18 @@ class PolymorphicSerializer(serializers.Serializer):
         discriminator_value = self.fields[self.discriminator_field].get_attribute(
             instance
         )
+
+        if (
+            discriminator_value not in self.serializer_mapping
+            and self.fallback_distriminator_value is not None
+        ):
+            warnings.warn(
+                f"Discriminator value {discriminator_value} missing from mapping, "
+                f"falling back to {self.fallback_distriminator_value}",
+                RuntimeWarning,
+            )
+            discriminator_value = self.fallback_distriminator_value
+
         try:
             return self.serializer_mapping[discriminator_value]
         except KeyError as exc:

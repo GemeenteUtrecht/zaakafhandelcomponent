@@ -42,6 +42,7 @@ class ProcessInstanceSerializer(serializers.Serializer):
 class UserTaskContextSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
+    fallback_distriminator_value = ""  # fall back to dynamic form
 
     form = serializers.ChoiceField(
         label=_("Form to render"),
@@ -65,7 +66,9 @@ class UserTaskContextSerializer(PolymorphicSerializer):
 
         super().__init__(*args, **kwargs)
 
-        self.fields["form"].choices = list(REGISTRY.keys())
+        self.fields["form"].choices = [
+            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
+        ]
 
 
 class MessageSerializer(serializers.Serializer):
