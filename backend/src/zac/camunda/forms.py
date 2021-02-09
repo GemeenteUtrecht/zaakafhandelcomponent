@@ -110,7 +110,7 @@ def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
     Camunda embeds form fields as an extension into the BPMN definition. We can extract
     these and map them to form or serializer fields.
     """
-    if task.form_key in REGISTRY:
+    if task.form_key and task.form_key in REGISTRY:
         return None
 
     tree = get_bpmn(task.process_definition_id)

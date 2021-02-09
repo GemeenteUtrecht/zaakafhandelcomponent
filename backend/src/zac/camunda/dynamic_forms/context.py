@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from xml.etree.ElementTree import Element
 
 from ..data import Task
@@ -10,6 +10,12 @@ from .serializers import FIELD_TYPE_MAP, INPUT_TYPE_MAP, DynamicFormSerializer
 @dataclass
 class DynamicFormContext(Context):
     form_fields: List[Dict[str, Any]]
+
+
+def get_choice(value: Element) -> Tuple[str, str]:
+    val = value.attrib["id"]
+    label = value.attrib.get("name", val)
+    return (val, label)
 
 
 def get_field_definition(field: Element) -> Dict[str, Any]:
@@ -29,9 +35,7 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
     }
 
     if field_type == "enum":
-        choices = [
-            (value.attrib["id"], value.attrib["name"]) for value in field.getchildren()
-        ]
+        choices = [get_choice(value) for value in field.getchildren()]
         field_definition["enum"] = choices
 
     return field_definition
@@ -41,6 +45,6 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
 def get_context(task: Task) -> DynamicFormContext:
     from ..forms import extract_task_form_fields
 
-    formfields = extract_task_form_fields(task)
+    formfields = extract_task_form_fields(task) or []
     form_fields = [get_field_definition(field) for field in formfields]
     return DynamicFormContext(form_fields=form_fields)
