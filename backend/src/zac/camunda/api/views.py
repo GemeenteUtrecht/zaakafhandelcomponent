@@ -151,11 +151,6 @@ class GetTaskContextView(APIView):
 
 
 class SendMessageView(APIView):
-    """
-    This message will start a sub-process belonging to the process instance of which the ID is given
-    in the process engine (Camunda).
-    """
-
     permission_classes = (permissions.IsAuthenticated & CanSendMessages,)
     serializer_class = MessageSerializer
 
@@ -179,15 +174,23 @@ class SendMessageView(APIView):
         return serializer
 
     @extend_schema(
+        summary=_("Send BPMN message"),
+        request=MessageSerializer,
         responses={
             204: None,
             403: ErrorSerializer,
             404: ErrorSerializer,
-        }
+        },
     )
     def post(self, request, *args, **kwargs):
         """
-        Send a message to initiate a sub process of a process instance in the process engine (Camunda).
+        Send a BPMN message into a running process instance.
+
+        Typically this will start an embedded sub process in the running process
+        instance.
+
+        Note that the available/valid messages depend on the specific process
+        definition and are validated at run-time.
         """
         # First populate message choices from the process instance...
         serializer = self.get_serializer(data=request.data)
