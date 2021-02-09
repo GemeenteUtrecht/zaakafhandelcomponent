@@ -67,14 +67,14 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class UserTaskView(APIView):  # change into -> UserTaskView
+class UserTaskView(APIView): 
     """
     Get the user task context from Camunda and perform the user task on Camunda.
 
     Given the task ID, retrieve the task details from Camunda and enrich this with
     context for the UI. The shape of the context depends on the ``form`` value.
 
-    The shape of the payload of the user task depends on the ``form`` value as well.
+    When submitting user task data, the shape of the payload also depends on the ``form`` value.
     """
 
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
