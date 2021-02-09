@@ -12,8 +12,7 @@ class NotificatieSerializer(serializers.Serializer):
             "op moet worden gepubliceerd."
         ),
     )
-    hoofdObject = serializers.URLField(
-        source="hoofd_object",
+    hoofd_object = serializers.URLField(
         label=_("hoofd object"),
         help_text=_(
             "URL-referentie naar het hoofd object van de publicerende "
@@ -25,8 +24,7 @@ class NotificatieSerializer(serializers.Serializer):
         max_length=100,
         help_text=_("De resourcenaam waar de notificatie over gaat."),
     )
-    resourceUrl = serializers.URLField(
-        source="resource_url",
+    resource_url = serializers.URLField(
         label=_("resource URL"),
         help_text=_("URL-referentie naar de `resource` van de publicerende " "API."),
     )
