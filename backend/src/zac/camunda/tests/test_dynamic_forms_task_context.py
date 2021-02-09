@@ -67,7 +67,7 @@ def mock_bpmn_response(
 
 
 class DynamicFormTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("get-task-data", kwargs={"task_id": TASK_DATA["id"]})
+    endpoint = reverse_lazy("user-task", kwargs={"task_id": TASK_DATA["id"]})
 
     @classmethod
     def setUpTestData(cls):

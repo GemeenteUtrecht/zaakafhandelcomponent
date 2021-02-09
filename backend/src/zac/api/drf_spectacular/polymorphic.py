@@ -31,6 +31,7 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
         auto_schema.registry.register(main)
 
         # build the components for the polymorphic extra fields
+        # INCLUDE SERIALIZER_MAPPING_FOR_WRITE_STUFFS
         for (
             discriminator_value,
             sub_serializer,

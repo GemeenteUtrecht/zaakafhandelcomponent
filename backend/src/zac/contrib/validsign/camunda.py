@@ -18,6 +18,6 @@ class ValidSignSerializer(APIModelSerializer):
         fields = ()
 
 
-@register("zac:validSign:configurePackage", ValidSignSerializer)
+@register("zac:validSign:configurePackage", ValidSignSerializer, ValidSignSerializer)
 def get_context(task: Task) -> ValidSignContext:
     return ValidSignContext()

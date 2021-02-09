@@ -39,9 +39,10 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class UserTaskContextSerializer(PolymorphicSerializer):
+class UserTaskSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
+    serializer_mapping_for_write = {}
     fallback_distriminator_value = ""  # fall back to dynamic form
 
     form = serializers.ChoiceField(
@@ -58,11 +59,9 @@ class UserTaskContextSerializer(PolymorphicSerializer):
     # the context is added by the serializer_mapping serializers
 
     def __init__(self, *args, **kwargs):
-
-        self.serializer_mapping = {
-            form_key: serializer
-            for form_key, (callback, serializer) in REGISTRY.items()
-        }
+        for form_key, (callback, read_serializer, write_serializer) in REGISTRY.items():
+            self.serializer_mapping[form_key] = read_serializer
+            self.serializer_mapping_for_write[form_key] = write_serializer
 
         super().__init__(*args, **kwargs)
 
