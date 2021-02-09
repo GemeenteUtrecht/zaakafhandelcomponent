@@ -92,8 +92,12 @@ class ApprovalContextSerializer(AdviceApprovalContextSerializer):
         fields = AdviceApprovalContextSerializer.Meta.fields + ("review_type",)
 
 
-@register("zac:configureApprovalRequest", ApprovalContextSerializer)
-@register("zac:configureAdviceRequest", AdviceContextSerializer)
+@register(
+    "zac:configureApprovalRequest", ApprovalContextSerializer, ApprovalContextSerializer
+)
+@register(
+    "zac:configureAdviceRequest", AdviceContextSerializer, AdviceContextSerializer
+)
 def get_context(task: Task) -> AdviceApprovalContext:
     # TODO: Write tests.
     process_instance = get_process_instance(task.process_instance_id)

@@ -24,7 +24,7 @@ from .serializers import (
     ErrorSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
-    UserTaskContextSerializer,
+    UserTaskSerializer,
 )
 from .utils import get_bptl_app_id_variable
 
@@ -67,19 +67,21 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class GetTaskContextView(APIView):
+class UserTaskView(APIView):  # change into -> UserTaskView
     """
-    Retrieve the user task context from Camunda.
+    Get the user task context from Camunda and perform the user task on Camunda.
 
     Given the task ID, retrieve the task details from Camunda and enrich this with
     context for the UI. The shape of the context depends on the ``form`` value.
+
+    The shape of the payload of the user task depends on the ``form`` value as well.
     """
 
     # TODO: check permissions that user is allowed to execute process task stuff.
     # See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/blob/9b7ea9cbab66c7356e7417b6ce98245272954e1c/backend/src/zac/core/api/permissions.py#L69  # noqa
     # for a first pass
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    serializer_class = UserTaskContextSerializer
+    serializer_class = UserTaskSerializer
 
     def get_object(self) -> Task:
         task = get_task(self.kwargs["task_id"], check_history=False)
@@ -97,7 +99,7 @@ class GetTaskContextView(APIView):
     @extend_schema(
         summary=_("Retrieve user task data and context"),
         responses={
-            200: UserTaskContextSerializer,
+            200: UserTaskSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
         },
@@ -137,7 +139,13 @@ class GetTaskContextView(APIView):
         """
         task = self.get_object()
         # TODO: properly abstract away with Daniël's work
-        serializer = build_dynamic_form_serializer(task, data=request.data)
+        serializer = self.get_serializer(
+            data={
+                **request.data,
+                "form": task.form,
+            },
+            context={"task": task},
+        )
         serializer.is_valid(raise_exception=True)
 
         variables = {
