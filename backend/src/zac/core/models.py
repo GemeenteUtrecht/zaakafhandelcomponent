@@ -22,6 +22,15 @@ class CoreConfig(SingletonModel):
         related_name="+",
     )
 
+    app_id = models.URLField(
+        _("BPTL Application ID"),
+        help_text=_(
+            "A (globally) unique ID of the BPTL application. In this case the URL that points to the appropriate"
+            "application on the Openzaak Autorisaties API."
+        ),
+        default="",
+    )
+
     class Meta:
         verbose_name = _("global configuration")
 
