@@ -3,6 +3,7 @@ import uuid
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, send_message
+from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, permissions, status
@@ -153,6 +154,7 @@ class GetTaskContextView(APIView):
 class SendMessageView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanSendMessages,)
     serializer_class = MessageSerializer
+    parser_classes = (CamelCaseJSONParser,)
 
     def get_serializer(self, **kwargs):
         serializer = self.serializer_class(**kwargs)
