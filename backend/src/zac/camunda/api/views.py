@@ -11,11 +11,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from zac.core.camunda import get_process_zaak_url
+from zac.core.models import CoreConfig
 from zac.core.services import get_zaak
 
 from ..data import Task
 from ..messages import get_messages
-from ..models import BPTLAppId
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
 from ..user_tasks import UserTaskData, get_context, get_task
@@ -159,11 +159,11 @@ class SendMessageView(APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
-        bptl_app_id = BPTLAppId.get_solo()
+        core_config = CoreConfig.get_solo()
 
         # Set variables
         variables = {
-            "bptlAppId": bptl_app_id.app_id,
+            "bptlAppId": core_config.app_id,
         }
 
         send_message(

@@ -17,12 +17,12 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message, zaken_inzien
 from zac.tests.utils import paginated_response
 
 from ..api.serializers import MessageSerializer
 from ..data import ProcessInstance
-from ..models import BPTLAppId
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -120,9 +120,9 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         cls.endpoint = reverse("send-message")
 
-        cls.bptl_app_id = BPTLAppId.get_solo()
-        cls.bptl_app_id.app_id = "http://some-open-zaak-url.nl/with/uuid/"
-        cls.bptl_app_id.save()
+        cls.core_config = CoreConfig.get_solo()
+        cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
+        cls.core_config.save()
 
     def setUp(self):
         super().setUp()
@@ -190,7 +190,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
             "messageName": data["message"],
             "processInstanceId": data["process_instance_id"],
             "processVariables": {
-                "bptlAppId": serialize_variable(self.bptl_app_id.app_id)
+                "bptlAppId": serialize_variable(self.core_config.app_id)
             },
         }
         self.assertEqual(m.last_request.json(), expected_payload)
