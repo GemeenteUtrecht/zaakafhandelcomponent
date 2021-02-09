@@ -6,6 +6,7 @@ user task. When using simple forms built into the process model form, the API
 describes these forms.
 """
 import uuid
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -196,3 +197,56 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
             },
         ]
         self.assertEqual(data["context"]["formFields"], expected_formfields)
+
+    @requests_mock.Mocker()
+    def test_submit_form_data_ok(self, m):
+        self.mock_get_task.return_value = self._get_task()
+        mock_bpmn_response(m, FILES_DIR / "dynamic-form.bpmn")
+        data = {
+            "stringField": "Some string",
+            "intField": 42,
+            "boolField": True,
+            "dateField": "2021-02-09T00:00Z",
+            "enumField": "second",
+        }
+
+        with patch("zac.camunda.api.views.complete_task") as mock_complete:
+            response = self.client.put(self.endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_complete.assert_called_once_with(
+            uuid.UUID("598347ee-62fc-46a2-913a-6e0788bc1b8c"),
+            {
+                "bptlAppId": "",
+                "stringField": "Some string",
+                "intField": 42,
+                "boolField": True,
+                "dateField": datetime.fromisoformat("2021-02-09T00:00:00+00:00"),
+                "enumField": "second",
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_submit_form_data_validation_errors(self, m):
+        self.mock_get_task.return_value = self._get_task()
+        mock_bpmn_response(m, FILES_DIR / "dynamic-form.bpmn")
+        data = {
+            "stringField": "",
+            "intField": "not-an-int",
+            "boolField": "not-a-bool",
+            "dateField": "not-a-timestamp",
+            "enumField": "third",
+        }
+
+        with patch("zac.camunda.api.views.complete_task") as mock_complete:
+            response = self.client.put(self.endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+
+        # TOD: swap to invalidParams convention
+        for key in data:
+            with self.subTest(key=key):
+                self.assertIn(key, response_data)
+
+        mock_complete.assert_not_called()
