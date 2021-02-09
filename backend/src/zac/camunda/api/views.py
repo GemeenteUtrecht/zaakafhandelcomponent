@@ -80,7 +80,6 @@ class GetTaskContextView(APIView):
     # for a first pass
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = UserTaskContextSerializer
-    schema_summary = _("Retrieve user task data and context")
 
     def get_object(self) -> Task:
         task = get_task(self.kwargs["task_id"], check_history=False)
@@ -96,11 +95,12 @@ class GetTaskContextView(APIView):
         return self.serializer_class(**kwargs)
 
     @extend_schema(
+        summary=_("Retrieve user task data and context"),
         responses={
             200: UserTaskContextSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
-        }
+        },
     )
     def get(self, request: Request, task_id: uuid.UUID):
         task = self.get_object()
@@ -112,6 +112,7 @@ class GetTaskContextView(APIView):
         return Response(serializer.data)
 
     @extend_schema(
+        summary=_("Submit user task data"),
         request=OpenApiTypes.OBJECT,
         responses={
             200: OpenApiTypes.OBJECT,
@@ -122,6 +123,18 @@ class GetTaskContextView(APIView):
         },
     )
     def put(self, request: Request, task_id: uuid.UUID):
+        """
+        Submit user task data for Camunda user tasks.
+
+        The exact shape of the data depends on the Camunda task type. On succesful,
+        valid submission, the user task in Camunda is completed and the resulting
+        process variables are set.
+
+        The ZAC always injects its own ``bptlAppId`` process variable so that BPTL
+        executes tasks from the right context.
+
+        This endpoint is only available if you have permissions to perform user tasks.
+        """
         task = self.get_object()
         # TODO: properly abstract away with Daniël's work
         serializer = build_dynamic_form_serializer(task, data=request.data)
