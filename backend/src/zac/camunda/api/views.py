@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.api import complete_task, send_message
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework import exceptions, permissions, status
+from rest_framework import exceptions, parsers, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,11 +77,9 @@ class UserTaskView(APIView):  # change into -> UserTaskView
     The shape of the payload of the user task depends on the ``form`` value as well.
     """
 
-    # TODO: check permissions that user is allowed to execute process task stuff.
-    # See https://github.com/GemeenteUtrecht/zaakafhandelcomponent/blob/9b7ea9cbab66c7356e7417b6ce98245272954e1c/backend/src/zac/core/api/permissions.py#L69  # noqa
-    # for a first pass
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = UserTaskSerializer
+    parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
         task = get_task(self.kwargs["task_id"], check_history=False)

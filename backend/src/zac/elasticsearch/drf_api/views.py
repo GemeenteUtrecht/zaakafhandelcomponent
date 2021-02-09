@@ -14,6 +14,7 @@ from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
 
 from ..searches import autocomplete_zaak_search
+from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
 
 
@@ -42,6 +43,7 @@ class GetZakenView(views.APIView):
 
 
 class SearchViewSet(views.APIView):
+    parser_classes = (IgnoreCamelCaseJSONParser,)
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
