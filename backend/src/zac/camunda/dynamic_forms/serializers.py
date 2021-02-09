@@ -1,17 +1,47 @@
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers
+from rest_framework import fields, serializers
 
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks import usertask_context_serializer
 
+
+def get_default_field_kwargs(definition: dict):
+    initial = definition["value"]
+    return {
+        "label": definition["label"],
+        "initial": initial if initial is not None else fields.empty,
+    }
+
+
+def enum_field_kwargs(definition):
+    base = get_default_field_kwargs(definition)
+    choices = definition["enum"]
+    return {**base, "choices": choices}
+
+
 FIELD_TYPE_MAP = {
-    "enum": serializers.ChoiceField,
-    "string": serializers.CharField,
-    "long": serializers.IntegerField,
-    "boolean": serializers.BooleanField,
-    "date": serializers.DateTimeField,
+    "enum": (
+        serializers.ChoiceField,
+        enum_field_kwargs,
+    ),
+    "string": (
+        serializers.CharField,
+        get_default_field_kwargs,
+    ),
+    "long": (
+        serializers.IntegerField,
+        get_default_field_kwargs,
+    ),
+    "boolean": (
+        serializers.BooleanField,
+        get_default_field_kwargs,
+    ),
+    "date": (
+        serializers.DateTimeField,
+        get_default_field_kwargs,
+    ),
 }
 
 
@@ -95,3 +125,14 @@ class FormFieldSerializer(PolymorphicSerializer):
 @usertask_context_serializer
 class DynamicFormSerializer(serializers.Serializer):
     form_fields = FormFieldSerializer(many=True, read_only=True)
+
+
+# Write serializers
+
+
+class DynamicFormWriteSerializer(serializers.Serializer):
+    def on_submission(self):
+        pass
+
+    def get_process_variables(self):
+        return self.validated_data

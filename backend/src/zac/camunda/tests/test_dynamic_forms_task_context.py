@@ -6,6 +6,7 @@ user task. When using simple forms built into the process model form, the API
 describes these forms.
 """
 import uuid
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -220,7 +221,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
                 "stringField": "Some string",
                 "intField": 42,
                 "boolField": True,
-                "dateField": "2021-02-09T00:00Z",
+                "dateField": datetime.fromisoformat("2021-02-09T00:00:00+00:00"),
                 "enumField": "second",
             },
         )

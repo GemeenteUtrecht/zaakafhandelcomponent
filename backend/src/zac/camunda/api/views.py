@@ -11,10 +11,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from zac.core.camunda import get_process_zaak_url
-from zac.core.models import CoreConfig
 from zac.core.services import get_zaak
 
 from ..data import Task
+from ..dynamic_forms.context import build_dynamic_form_serializer
 from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
@@ -26,6 +26,7 @@ from .serializers import (
     ProcessInstanceSerializer,
     UserTaskContextSerializer,
 )
+from .utils import get_bptl_app_id_variable
 
 
 class ProcessInstanceFetchView(APIView):
@@ -81,6 +82,19 @@ class GetTaskContextView(APIView):
     serializer_class = UserTaskContextSerializer
     schema_summary = _("Retrieve user task data and context")
 
+    def get_object(self) -> Task:
+        task = get_task(self.kwargs["task_id"], check_history=False)
+        if task is None:
+            raise exceptions.NotFound(
+                _("The task with given task ID does not exist (anymore).")
+            )
+        # May raise a permission denied
+        self.check_object_permissions(self.request, task)
+        return task
+
+    def get_serializer(self, **kwargs):
+        return self.serializer_class(**kwargs)
+
     @extend_schema(
         responses={
             200: UserTaskContextSerializer,
@@ -91,21 +105,36 @@ class GetTaskContextView(APIView):
     def get(self, request: Request, task_id: uuid.UUID):
         task = self.get_object()
         task_data = UserTaskData(task=task, context=get_context(task))
-        serializer = self.serializer_class(
+        serializer = self.get_serializer(
             instance=task_data,
             context={"request": request, "view": self},
         )
         return Response(serializer.data)
 
-    def get_object(self) -> Task:
-        task = get_task(self.kwargs["task_id"], check_history=False)
-        if task is None:
-            raise exceptions.NotFound(
-                _("The task with given task ID does not exist (anymore).")
-            )
-        # May raise a permission denied
-        self.check_object_permissions(self.request, task)
-        return task
+    @extend_schema(
+        request=OpenApiTypes.OBJECT,
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+            403: ErrorSerializer,
+            404: ErrorSerializer,
+            500: ErrorSerializer,
+        },
+    )
+    def put(self, request: Request, task_id: uuid.UUID):
+        task = self.get_object()
+        # TODO: properly abstract away with Daniël's work
+        serializer = build_dynamic_form_serializer(task, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        variables = {
+            **get_bptl_app_id_variable(),
+            **serializer.get_process_variables(),
+        }
+
+        complete_task(task.id, variables)
+
+        return Response(serializer.data)
 
 
 class SendMessageView(APIView):
@@ -159,12 +188,8 @@ class SendMessageView(APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
 
-        core_config = CoreConfig.get_solo()
-
         # Set variables
-        variables = {
-            "bptlAppId": core_config.app_id,
-        }
+        variables = get_bptl_app_id_variable()
 
         send_message(
             serializer.validated_data["message"],

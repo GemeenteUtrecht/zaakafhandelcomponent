@@ -4,7 +4,12 @@ from xml.etree.ElementTree import Element
 
 from ..data import Task
 from ..user_tasks import Context, register
-from .serializers import FIELD_TYPE_MAP, INPUT_TYPE_MAP, DynamicFormSerializer
+from .serializers import (
+    FIELD_TYPE_MAP,
+    INPUT_TYPE_MAP,
+    DynamicFormSerializer,
+    DynamicFormWriteSerializer,
+)
 
 
 @dataclass
@@ -48,3 +53,23 @@ def get_context(task: Task) -> DynamicFormContext:
     formfields = extract_task_form_fields(task) or []
     form_fields = [get_field_definition(field) for field in formfields]
     return DynamicFormContext(form_fields=form_fields)
+
+
+def build_dynamic_form_serializer(task: Task, **kwargs) -> DynamicFormWriteSerializer:
+    from ..forms import extract_task_form_fields
+
+    formfields = extract_task_form_fields(task) or []
+
+    fields = {}
+    for field in formfields:
+        field_type = field.attrib["type"]
+        field_definition = get_field_definition(field)
+        field_cls, get_kwargs = FIELD_TYPE_MAP[field_type]
+        name = field_definition.pop("name")
+        fields[name] = field_cls(**get_kwargs(field_definition))
+
+    Serializer = type(
+        "DynamicFormWriteSerializer", (DynamicFormWriteSerializer,), fields
+    )
+
+    return Serializer(**kwargs)
