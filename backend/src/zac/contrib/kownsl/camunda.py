@@ -22,10 +22,10 @@ from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 
 @dataclass
 class AdviceApprovalContext(Context):
-    review_type: str
     title: str
-    zaak: Zaak
+    zaak_informatie: Zaak
     documents: List[Document]
+    review_type: str = ""
 
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):

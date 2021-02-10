@@ -63,10 +63,21 @@ class CamundaSerializersTests(APITestCase):
             "schemas/Zaak",
         )
 
+        cls.patch_get_zaak = patch(
+            "zac.contrib.kownsl.get_zaak", return_value=factory(Zaak, cls.zaak)
+        )
+        cls.patch_get_zaak_type = patch(
+            "zac.contrib.kownsl.fetch_zaaktype", return_value="some-type"
+        )
+        cls.patch_get_documents = patch(
+            "zac.contrib.kownsl.get_documenten", return_value
+        )
+
     def setUp(self):
         super().setUp()
 
     def test_document_user_task_serializer(self):
+        # Sanity check
         doc = factory(Document, self.document)
         serializer = DocumentUserTaskSerializer(doc)
         self.assertTrue(
@@ -91,8 +102,33 @@ class CamundaSerializersTests(APITestCase):
         )
 
     def test_zaak_informatie_task_serializer(self):
+        # Sanity check
         zaak = factory(Zaak, self.zaak)
         serializer = ZaakInformatieTaskSerializer(zaak)
         self.assertTrue(
             all([field in serializer.data for field in ["omschrijving", "toelichting"]])
+        )
+
+    def test_advice_approval_context_serializer(self):
+        # Sanity check
+        zaak = factory(Zaak, self.zaak)
+        obj = AdviceApprovalContext(
+            review_type="sometype",
+            title="some-title",
+            zaak_informatie=zaak,
+            documents=[factory(Document, self.document)],
+        )
+
+        serializer = AdviceApprovalContextSerializer(obj)
+        self.assertTrue(
+            all(
+                [
+                    field in serializer.data
+                    for field in [
+                        "documents",
+                        "title",
+                        "zaak_informatie",
+                    ]
+                ]
+            )
         )
