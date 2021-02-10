@@ -24,7 +24,8 @@ from .serializers import (
     ErrorSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
-    UserTaskSerializer,
+    SubmitUserTaskSerializer,
+    UserTaskContextSerializer,
 )
 from .utils import get_bptl_app_id_variable
 
@@ -67,18 +68,9 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class UserTaskView(APIView):
-    """
-    Get the user task context from Camunda and perform the user task on Camunda.
-
-    Given the task ID, retrieve the task details from Camunda and enrich this with
-    context for the UI. The shape of the context depends on the ``form`` value.
-
-    When submitting user task data, the shape of the payload also depends on the ``form`` value.
-    """
-
+class BaseUserTaskView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    serializer_class = UserTaskSerializer
+    serializer_class = SubmitUserTaskSerializer
     parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
@@ -94,10 +86,19 @@ class UserTaskView(APIView):
     def get_serializer(self, **kwargs):
         return self.serializer_class(**kwargs)
 
+
+class GetUserTaskContextView(BaseUserTaskView):
+    """
+    Get the user task context from Camunda and perform the user task on Camunda.
+
+    Given the task ID, retrieve the task details from Camunda and enrich this with
+    context for the UI. The shape of the context depends on the ``form`` value.
+    """
+
     @extend_schema(
         summary=_("Retrieve user task data and context"),
         responses={
-            200: UserTaskSerializer,
+            200: UserTaskContextSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
         },
@@ -111,12 +112,17 @@ class UserTaskView(APIView):
         )
         return Response(serializer.data)
 
+
+class SubmitUserTaskView(BaseUserTaskView):
+    """
+    When submitting user task data, the shape of the payload depends on the ``form`` value.
+    """
+
     @extend_schema(
         summary=_("Submit user task data"),
-        request=OpenApiTypes.OBJECT,
         responses={
-            200: OpenApiTypes.OBJECT,
-            400: OpenApiTypes.OBJECT,
+            200: SubmitUserTaskSerializer,
+            400: SubmitUserTaskSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
             500: ErrorSerializer,
@@ -145,6 +151,7 @@ class UserTaskView(APIView):
             context={"task": task},
         )
         serializer.is_valid(raise_exception=True)
+        serializer.on_task_submission()
 
         variables = {
             **get_bptl_app_id_variable(),
