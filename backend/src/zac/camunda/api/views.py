@@ -68,9 +68,15 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class BaseUserTaskView(APIView):
+class UserTaskView(APIView):
+    """
+    Get the user task context from Camunda and perform the user task on Camunda.
+
+    Given the task ID, retrieve the task details from Camunda and enrich this with
+    context for the UI. The shape of the context depends on the ``form`` value.
+    """
+
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    serializer_class = SubmitUserTaskSerializer
     parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
@@ -84,16 +90,10 @@ class BaseUserTaskView(APIView):
         return task
 
     def get_serializer(self, **kwargs):
-        return self.serializer_class(**kwargs)
-
-
-class GetUserTaskContextView(BaseUserTaskView):
-    """
-    Get the user task context from Camunda and perform the user task on Camunda.
-
-    Given the task ID, retrieve the task details from Camunda and enrich this with
-    context for the UI. The shape of the context depends on the ``form`` value.
-    """
+        if self.request.method == "GET":
+            return UserTaskContextSerializer(**kwargs)
+        elif self.request.method == "PUT":
+            return SubmitUserTaskSerializer(**kwargs)
 
     @extend_schema(
         summary=_("Retrieve user task data and context"),
@@ -112,16 +112,11 @@ class GetUserTaskContextView(BaseUserTaskView):
         )
         return Response(serializer.data)
 
-
-class SubmitUserTaskView(BaseUserTaskView):
-    """
-    When submitting user task data, the shape of the payload depends on the ``form`` value.
-    """
-
     @extend_schema(
         summary=_("Submit user task data"),
+        request=SubmitUserTaskSerializer,
         responses={
-            200: SubmitUserTaskSerializer,
+            204: None,
             400: SubmitUserTaskSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -160,7 +155,7 @@ class SubmitUserTaskView(BaseUserTaskView):
 
         complete_task(task.id, variables)
 
-        return Response(serializer.data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SendMessageView(APIView):
@@ -226,11 +221,3 @@ class SendMessageView(APIView):
             variables,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class PerformTaskView(APIView):
-    """
-    Implement polymorphic(?) perform task view
-    """
-
-    pass
