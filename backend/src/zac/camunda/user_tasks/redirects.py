@@ -23,7 +23,7 @@ class RedirectContextSerializer(APIModelSerializer):
         fields = ("redirect_to", "open_in_new_window")
 
 
-@register("zac:doRedirect", RedirectContextSerializer, RedirectContextSerializer)
+@register("zac:doRedirect", RedirectContextSerializer)
 def get_redirect_task_context(task: Task) -> RedirectContext:
     redirect_url = get_task_variable(task.id, "redirectTo")
     new_window = get_task_variable(task.id, "openInNewWindow", False)

@@ -61,7 +61,8 @@ class UserTaskSerializer(PolymorphicSerializer):
     def __init__(self, *args, **kwargs):
         for form_key, (callback, read_serializer, write_serializer) in REGISTRY.items():
             self.serializer_mapping[form_key] = read_serializer
-            self.serializer_mapping_for_write[form_key] = write_serializer
+            if isinstance(write_serializer, serializers.Serializer):
+                self.serializer_mapping_for_write[form_key] = write_serializer
 
         super().__init__(*args, **kwargs)
 

@@ -67,7 +67,7 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class UserTaskView(APIView): 
+class UserTaskView(APIView):
     """
     Get the user task context from Camunda and perform the user task on Camunda.
 
