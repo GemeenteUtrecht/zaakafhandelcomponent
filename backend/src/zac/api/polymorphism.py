@@ -43,9 +43,6 @@ Primitive = Union[str, int, float]
 class PolymorphicSerializer(serializers.Serializer):
     # mapping of discriminator value to serializer (instance or class)
     serializer_mapping: Optional[Dict[Primitive, SerializerClsOrInstance]] = None
-    serializer_mapping_for_write: Optional[
-        Dict[Primitive, SerializerClsOrInstance]
-    ] = None  # Optional serializer mapping for writing
 
     # the serializer field that holds the discriminator values
     discriminator_field = "object_type"
@@ -92,11 +89,9 @@ class PolymorphicSerializer(serializers.Serializer):
         extra = serializer.to_internal_value(data)
         return {**default, **extra}
 
-    def _check_discriminator_value(
-        discriminator_value: str, serializer_mapping: dict
-    ) -> str:
+    def _check_discriminator_value(discriminator_value: str) -> str:
         if (
-            discriminator_value not in serializer_mapping
+            discriminator_value not in self.serializer_mapping
             and self.fallback_distriminator_value is not None
         ):
             warnings.warn(
@@ -108,18 +103,16 @@ class PolymorphicSerializer(serializers.Serializer):
 
         return discriminator_value
 
-    def _discriminator_serializer(discriminator_value: str, serializer_mapping: dict):
+    def _discriminator_serializer(discriminator_value: str):
+        discriminator_value = _check_discriminator_value(discriminator_value)
         try:
-            return serializer_mapping[discriminator_value]
+            return self.serializer_mapping[discriminator_value]
         except KeyError as exc:
             if self.strict:
                 raise KeyError(
-                    "`{cls}.serializer_mapping{write}` is missing a corresponding serializer "
+                    "`{cls}.serializer_mapping` is missing a corresponding serializer "
                     "for the `{value}` key".format(
                         cls=self.__class__.__name__,
-                        write="_for_write"
-                        if isinstance(self.serializer_mapping_for_write, dict)
-                        else "",
                         value=discriminator_value,
                     )
                 ) from exc
@@ -127,30 +120,13 @@ class PolymorphicSerializer(serializers.Serializer):
                 return serializers.Serializer()
 
     def _get_serializer_from_data(self, data):
-        if isinstance(self.serializer_mapping_for_write, dict):
-            serializer_mapping = self.serializer_mapping_for_write
-        else:
-            serializer_mapping = self.serializer_mapping
-
         discriminator_value = self.fields[self.discriminator_field].get_value(data)
-        discriminator_value = self._check_discriminator_value(
-            discriminator_value,
-            serializer_mapping,
-        )
-        serializer = self._discriminator_serializer(
-            discriminator_value,
-            serializer_mapping,
-        )
+        serializer = self._discriminator_serializer(discriminator_value)
         return serializer
 
     def _get_serializer_from_instance(self, instance):
         discriminator_value = self.fields[self.discriminator_field].get_attribute(
             instance
         )
-        discriminator_value = self._check_discriminator_value(
-            discriminator_value, self.serializer_mapping
-        )
-        serializer = self._discriminator_serializer(
-            discriminator_value, self.serializer_mapping
-        )
+        serializer = self._discriminator_serializer(discriminator_value)
         return serializer

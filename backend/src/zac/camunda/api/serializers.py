@@ -39,10 +39,9 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class UserTaskSerializer(PolymorphicSerializer):
+class BaseUserTaskSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
-    serializer_mapping_for_write = {}
     fallback_distriminator_value = ""  # fall back to dynamic form
 
     form = serializers.ChoiceField(
@@ -55,20 +54,42 @@ class UserTaskSerializer(PolymorphicSerializer):
         allow_blank=True,
         choices=(),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["form"].choices = [
+            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
+        ]
+
+
+class UserTaskContextSerializer(BaseUserTaskSerializer):
     task = TaskSerializer(label=_("User task summary"))
     # the context is added by the serializer_mapping serializers
 
     def __init__(self, *args, **kwargs):
-        for form_key, (callback, read_serializer, write_serializer) in REGISTRY.items():
-            self.serializer_mapping[form_key] = read_serializer
-            if isinstance(write_serializer, serializers.Serializer):
-                self.serializer_mapping_for_write[form_key] = write_serializer
-
+        self.serializer_mapping = {
+            form_key: read_serializer
+            for form_key, (
+                callback,
+                read_serializer,
+                write_serializer,
+            ) in REGISTRY.items()
+        }
         super().__init__(*args, **kwargs)
 
-        self.fields["form"].choices = [
-            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
-        ]
+
+class SubmitUserTaskSerializer(BaseUserTaskSerializer):
+    def __init__(self, *args, **kwargs):
+        self.serializer_mapping = {
+            form_key: write_serializer
+            for form_key, (
+                callback,
+                read_serializer,
+                write_serializer,
+            ) in REGISTRY.items()
+            if write_serializer
+        }
+        super().__init__(*args, **kwargs)
 
 
 class MessageSerializer(serializers.Serializer):

@@ -4,5 +4,5 @@ from djchoices import ChoiceItem, DjangoChoices
 
 
 class KownslTypes(DjangoChoices):
-    advice = ChoiceItem("advice", _("Advice"))
-    approval = ChoiceItem("approval", _("Approval"))
+    advice = ChoiceItem("advice", _("Advies"))
+    approval = ChoiceItem("approval", _("Accordering"))
