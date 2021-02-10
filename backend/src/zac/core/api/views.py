@@ -413,6 +413,7 @@ class InformatieObjectTypeListView(generics.ListAPIView):
     """
 
     serializer_class = InformatieObjectTypeSerializer
+    filter_backends = ()
 
     def get_queryset(self):
         zaak_url = self.request.query_params.get("zaak")
