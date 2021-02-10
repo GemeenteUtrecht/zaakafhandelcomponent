@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, NoReturn, Optional
+from typing import List, NoReturn
 
 from django.urls import reverse
 
@@ -9,8 +9,11 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
 from zac.camunda.data import Task
+from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
+from zac.core.camunda import get_process_zaak_url
+from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 
 
 class ValidSignDocumentSerializer(APIModelSerializer):

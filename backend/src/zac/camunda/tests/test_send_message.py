@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from django.urls import reverse
 
-import jwt
 import requests_mock
 from django_camunda.utils import serialize_variable
 from rest_framework import exceptions, status
@@ -18,7 +17,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
 from zac.core.models import CoreConfig
-from zac.core.permissions import zaakproces_send_message, zaken_inzien
+from zac.core.permissions import zaakproces_send_message
 from zac.tests.utils import paginated_response
 
 from ..api.serializers import MessageSerializer
