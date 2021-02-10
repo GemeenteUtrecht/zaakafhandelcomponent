@@ -14,7 +14,6 @@ from zac.core.camunda import get_process_zaak_url
 from zac.core.services import get_zaak
 
 from ..data import Task
-from ..dynamic_forms.context import build_dynamic_form_serializer
 from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
@@ -92,7 +91,7 @@ class UserTaskView(APIView):
     def get_serializer(self, **kwargs):
         if self.request.method == "GET":
             return UserTaskContextSerializer(**kwargs)
-        elif self.request.method == "PUT":
+        else:
             return SubmitUserTaskSerializer(**kwargs)
 
     @extend_schema(

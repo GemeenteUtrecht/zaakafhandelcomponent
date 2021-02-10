@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Dict, List, NoReturn
 
 from django.core.validators import URLValidator
@@ -16,8 +16,11 @@ from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.constants import KownslTypes
-from zac.core.camunda import get_process_zaak_url, get_task
+from zac.core.camunda import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
+from zac.core.utils import get_ui_url
+
+from .api import create_review_request
 
 
 @dataclass
@@ -189,7 +192,6 @@ class BaseConfigureReviewRequestSerializer(APIModelSerializer):
             ]
 
         assert self.fields["review_type"], "Subclasses must have a 'review_type' field"
-        assert self.fields["toelichting"], "Subclasses must have a 'toelichting' field"
 
     def get_process_variables(self) -> Dict[str, List]:
         # Assert is_valid has been called so that we can access validated data.
@@ -243,7 +245,7 @@ class BaseConfigureReviewRequestSerializer(APIModelSerializer):
         self.review_request = create_review_request(
             self.zaak_url,
             documents=self.validated_data["selected_documents"],
-            review_type=self._review_type,
+            review_type=self.validated_data["review_type"],
             num_assigned_users=count_users,
             toelichting=self.validated_data["toelichting"],
             user_deadlines=user_deadlines,

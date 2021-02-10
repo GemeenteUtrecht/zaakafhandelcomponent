@@ -3,10 +3,6 @@ from zac.core.permissions import zaakproces_send_message, zaakproces_usertasks
 
 
 class CanPerformTasks(RulesPermission):
-    """
-    TODO: Write tests.
-    """
-
     permission = zaakproces_usertasks
 
 
