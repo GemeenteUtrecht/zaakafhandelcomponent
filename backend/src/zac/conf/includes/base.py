@@ -442,6 +442,7 @@ SPECTACULAR_SETTINGS = {
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
+        "zac.api.drf_spectacular.djangorestframework_camel_case.camelize_discriminators",
     ],
     "TOS": None,
     # Optional: MAY contain "name", "url", "email"

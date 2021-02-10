@@ -127,6 +127,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
         expected = [
             {
                 "url": eigenschap["url"],
+                "formaat": "tekst",
                 "value": "bar",
                 "eigenschap": {
                     "url": self.eigenschap["url"],

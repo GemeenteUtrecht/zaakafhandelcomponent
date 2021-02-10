@@ -1,5 +1,3 @@
-from typing import Any
-
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
@@ -20,6 +18,7 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
@@ -80,7 +79,8 @@ class DocumentInfoSerializer(serializers.Serializer):
     read_url = serializers.SerializerMethodField(
         label=_("ZAC document read URL"),
         help_text=_(
-            "The document URL for the end user that opens a document to be read. Will serve the file from a WebDAV server."
+            "The document URL for the end user that opens a document to be read. Will "
+            "serve the file from a WebDAV server."
         ),
     )
 
@@ -274,10 +274,70 @@ class EigenschapSerializer(APIModelSerializer):
         )
 
 
-class ZaakEigenschapSerializer(APIModelSerializer):
-    value = serializers.SerializerMethodField(
+class CharValueSerializer(APIModelSerializer):
+    value = serializers.CharField(
         label=_("property value"),
-        help_text=_("The backing data type depens on the eigenschap format."),
+        source="get_waarde",
+    )
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = ("value",)
+
+
+class NumberValueSerializer(APIModelSerializer):
+    value = serializers.DecimalField(
+        label=_("property value"),
+        source="get_waarde",
+        max_digits=100,
+        decimal_places=20,
+    )
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = ("value",)
+
+
+class DateValueSerializer(APIModelSerializer):
+    value = serializers.DateField(
+        label=_("property value"),
+        source="get_waarde",
+    )
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = ("value",)
+
+
+class DateTimeValueSerializer(APIModelSerializer):
+    value = serializers.DateTimeField(
+        label=_("property value"),
+        source="get_waarde",
+    )
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = ("value",)
+
+
+class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
+    serializer_mapping = {
+        "tekst": CharValueSerializer,
+        "getal": NumberValueSerializer,
+        "datum": DateValueSerializer,
+        "datum_tijd": DateTimeValueSerializer,
+    }
+    discriminator_field = "value_type"
+
+    value_type = serializers.ChoiceField(
+        label=_("Data type of the value"),
+        read_only=True,
+        source="eigenschap.specificatie.formaat",
+        choices=list(serializer_mapping.keys()),
+        help_text=_(
+            "Matches `eigenschap.specificatie.formaat` - used as API schema "
+            "discriminator."
+        ),
     )
     eigenschap = EigenschapSerializer()
 
@@ -285,12 +345,9 @@ class ZaakEigenschapSerializer(APIModelSerializer):
         model = ZaakEigenschap
         fields = (
             "url",
+            "value_type",
             "eigenschap",
-            "value",
         )
-
-    def get_value(self, obj) -> Any:
-        return obj.get_waarde()
 
 
 class DocumentTypeSerializer(APIModelSerializer):
