@@ -46,7 +46,7 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
     return field_definition
 
 
-@register("", DynamicFormSerializer, DynamicFormWriteSerializer)
+@register("", DynamicFormSerializer)
 def get_context(task: Task) -> DynamicFormContext:
     from ..forms import extract_task_form_fields
 
