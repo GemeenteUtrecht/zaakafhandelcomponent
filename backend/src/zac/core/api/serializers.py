@@ -327,9 +327,9 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
         "datum": DateValueSerializer,
         "datum_tijd": DateTimeValueSerializer,
     }
-    discriminator_field = "value_type"
+    discriminator_field = "formaat"
 
-    value_type = serializers.ChoiceField(
+    formaat = serializers.ChoiceField(
         label=_("Data type of the value"),
         read_only=True,
         source="eigenschap.specificatie.formaat",
@@ -345,7 +345,7 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
         model = ZaakEigenschap
         fields = (
             "url",
-            "value_type",
+            "formaat",
             "eigenschap",
         )
 

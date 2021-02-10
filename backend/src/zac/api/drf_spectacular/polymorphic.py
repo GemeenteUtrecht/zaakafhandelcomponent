@@ -38,6 +38,7 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             resolved = auto_schema.resolve_serializer(sub_serializer, direction)
             if not resolved.name:
                 continue
+
             combined = ResolvedComponent(
                 name=f"{base_name}{resolved.name}",
                 type=ResolvedComponent.SCHEMA,
