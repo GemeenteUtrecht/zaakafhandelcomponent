@@ -89,7 +89,7 @@ class PolymorphicSerializer(serializers.Serializer):
         extra = serializer.to_internal_value(data)
         return {**default, **extra}
 
-    def _check_discriminator_value(discriminator_value: str) -> str:
+    def _check_discriminator_value(self, discriminator_value: str) -> str:
         if (
             discriminator_value not in self.serializer_mapping
             and self.fallback_distriminator_value is not None
@@ -103,8 +103,8 @@ class PolymorphicSerializer(serializers.Serializer):
 
         return discriminator_value
 
-    def _discriminator_serializer(discriminator_value: str):
-        discriminator_value = _check_discriminator_value(discriminator_value)
+    def _discriminator_serializer(self, discriminator_value: str):
+        discriminator_value = self._check_discriminator_value(discriminator_value)
         try:
             return self.serializer_mapping[discriminator_value]
         except KeyError as exc:
