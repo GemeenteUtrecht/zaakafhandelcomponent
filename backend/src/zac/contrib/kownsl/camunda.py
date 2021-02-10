@@ -29,7 +29,6 @@ class AdviceApprovalContext(Context):
 
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):
-    # TODO: Write tests.
     class Meta:
         model = Zaak
         fields = (
@@ -39,7 +38,6 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
 
 
 class DocumentUserTaskSerializer(APIModelSerializer):
-    # TODO: Write tests.
     read_url = serializers.SerializerMethodField(
         label=_("ZAC document read URL"),
         help_text=_(
@@ -57,7 +55,7 @@ class DocumentUserTaskSerializer(APIModelSerializer):
         )
 
     def get_read_url(self, obj) -> str:
-        path = reverse(
+        return reverse(
             "dowc:request-doc",
             kwargs={
                 "bronorganisatie": obj.bronorganisatie,
@@ -65,11 +63,9 @@ class DocumentUserTaskSerializer(APIModelSerializer):
                 "purpose": DocFileTypes.read,
             },
         )
-        return self.context["request"].build_absolute_uri(path)
 
 
 class AdviceApprovalContextSerializer(APIModelSerializer):
-    # TODO: Write tests.
     documents = DocumentUserTaskSerializer(many=True)
     zaak_informatie = ZaakInformatieTaskSerializer()
 
