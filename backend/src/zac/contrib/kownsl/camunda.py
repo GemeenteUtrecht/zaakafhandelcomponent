@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Dict, List
+from typing import Dict, List, NoReturn
 
 from django.core.validators import URLValidator
 from django.urls import reverse
@@ -229,7 +229,7 @@ class BaseConfigureReviewRequestSerializer(APIModelSerializer):
 
         return True
 
-    def on_task_submission(self):
+    def on_task_submission(self) -> NoReturn:
         count_users = sum(
             [
                 len(data["users"])
