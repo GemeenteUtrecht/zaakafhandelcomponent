@@ -175,15 +175,13 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         super().__init__(*args, **kwargs)
 
         # Get zaak documents to verify valid document selection
-        task = self.context.get("task")
+        task = self.context["task"]
         process_instance = get_process_instance(task.process_instance_id)
         self.zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, rest = get_documenten(zaak)
 
-        self.fields["selected_documents"].choices = [
-            (doc.url, doc.url) for doc in documenten
-        ]
+        self.fields["selected_documents"].choices = [doc.url for doc in documenten]
 
     def validate_deadlines_monotonic_increasing(self) -> bool:
         """
@@ -194,53 +192,47 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         for data in self.validated_data["assigned_users"]:
             deadline_new = data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
-                errors.append(
-                    serializers.ValidationError(
-                        _(
-                            "Deadlines are not allowed to be equal in a serial review request "
-                            "process but need to have at least 1 day in between them. "
-                            "Please select a date greater than {minimum_date}."
-                        ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
-                        code="date-not-valid",
-                    )
+                raise serializers.ValidationError(
+                    _(
+                        "Deadlines are not allowed to be equal in a serial review request "
+                        "process but need to have at least 1 day in between them. "
+                        "Please select a date greater than {minimum_date}."
+                    ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
+                    code="invalid-date",
                 )
             deadline_old = deadline_new
         return errors
 
-    def validate_users_are_unique(self) -> bool:
+    def validate_assigned_users(self, assigned_users) -> List:
         """
         Validate that users are unique and that at least 1 user is selected per step.
         """
         users_list = []
         errors = []
-        for data in self.validated_data["assigned_users"]:
+        for data in assigned_users:
             users = data["users"]
             if not users:
-                errors.append(
-                    serializers.ValidationError(
-                        _("Please select at least 1 user."),
-                        code="empty-user",
-                    )
+                raise serializers.ValidationError(
+                    _("Please select at least 1 user."),
+                    code="empty-users",
                 )
 
             if any([user in users_list for user in users]):
-                errors.append(
-                    serializers.ValidationError(
-                        _(
-                            "Users in a serial review request process need to be unique. Please select unique users."
-                        ),
-                        code="unique-user",
-                    )
+                raise serializers.ValidationError(
+                    _(
+                        "Users in a serial review request process need to be unique. Please select unique users."
+                    ),
+                    code="unique-users",
                 )
 
             users_list.extend(users)
-        return errors
+
+        return assigned_users
 
     def is_valid(self, raise_exception=True):
         super().is_valid(raise_exception=raise_exception)
         errors = self.validate_deadlines_monotonic_increasing()
-        errors.extend(self.validate_users_are_unique())
-        if errors:
+        if errors and raise_exception:
             raise serializers.ValidationError(errors)
 
         return True
@@ -319,7 +311,7 @@ def get_advice_approval_context(task: Task) -> dict:
     zaak_url = get_process_zaak_url(process_instance)
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype)
-    documents = get_documenten(zaak)
+    documents, rest = get_documenten(zaak)
     return {
         "zaak_informatie": process_instance,
         "title": f"{zaaktype.omschrijving} - {zaaktype.versiedatum}",

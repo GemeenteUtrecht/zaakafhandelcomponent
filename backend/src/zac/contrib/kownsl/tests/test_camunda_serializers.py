@@ -68,14 +68,15 @@ class GetContextSerializersTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        cls.document = generate_oas_component(
+        document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
         )
-        cls.doc = factory(Document, cls.document)
+        cls.document = factory(Document, document)
 
-        cls.patch_get_documents = patch(
-            "zac.contrib.kownsl.camunda.get_documenten", return_value=[cls.doc]
+        cls.patch_get_documenten = patch(
+            "zac.contrib.kownsl.camunda.get_documenten",
+            return_value=([cls.document], None),
         )
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -124,8 +125,8 @@ class GetContextSerializersTests(APITestCase):
         self.patch_fetch_zaaktype.start()
         self.addCleanup(self.patch_fetch_zaaktype.stop)
 
-        self.patch_get_documents.start()
-        self.addCleanup(self.patch_get_documents.stop)
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
         self.patch_get_process_instance.start()
         self.addCleanup(self.patch_get_process_instance.stop)
@@ -135,7 +136,7 @@ class GetContextSerializersTests(APITestCase):
 
     def test_document_user_task_serializer(self):
         # Sanity check
-        serializer = DocumentUserTaskSerializer(self.doc)
+        serializer = DocumentUserTaskSerializer(self.document)
         self.assertTrue(
             all(
                 [
@@ -150,8 +151,8 @@ class GetContextSerializersTests(APITestCase):
             reverse(
                 "dowc:request-doc",
                 kwargs={
-                    "bronorganisatie": self.doc.bronorganisatie,
-                    "identificatie": self.doc.identificatie,
+                    "bronorganisatie": self.document.bronorganisatie,
+                    "identificatie": self.document.identificatie,
                     "purpose": DocFileTypes.read,
                 },
             ),
@@ -380,7 +381,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-            self.assertEqual(err.exception.code, "date-not-valid")
+        self.assertEqual(err.exception.detail[0].code, "invalid-date")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_unique_users(self):
@@ -407,7 +408,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-            self.assertEqual(err.exception.code, "unique-user")
+
+        self.assertEqual(err.exception.detail["assigned_users"][0].code, "unique-users")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_empty_users(self):
@@ -427,7 +429,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-            self.assertEqual(err.exception.code, "empty-user")
+
+        self.assertEqual(err.exception.detail["assigned_users"][0].code, "empty-users")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_get_process_variables(self):
@@ -493,10 +496,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             data=payload, context={"task": task, "request": request}
         )
         serializer.is_valid(raise_exception=True)
-        with self.assertRaises(AssertionError) as err:
+        with self.assertRaisesMessage(
+            AssertionError,
+            "Must call on_task_submission before getting process variables.",
+        ) as err:
             serializer.get_process_variables()
-
-            self.assertEqual(
-                err.exception.message,
-                "Must call on_task_submission before getting process variables.",
-            )
