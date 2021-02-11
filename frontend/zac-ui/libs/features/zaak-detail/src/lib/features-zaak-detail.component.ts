@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ReviewRequest } from '../../../kownsl/src/models/review-request';
+import { Zaak } from '../models/zaak';
 
 @Component({
   selector: 'gu-features-zaak-detail',
@@ -11,7 +10,7 @@ import { ReviewRequest } from '../../../kownsl/src/models/review-request';
   styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
-  data: any;
+  data: Zaak;
   bronorganisatie: string;
   identificatie: string;
   mainZaakUrl: string;
@@ -20,9 +19,16 @@ export class FeaturesZaakDetailComponent implements OnInit {
   hasError: boolean;
   errorMessage: string;
 
+  isNotLoggedIn: boolean;
+  readonly NOT_LOGGED_IN_MESSAGE = "Authenticatiegegevens zijn niet opgegeven.";
+
+  loginUrl: string;
+
+
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -43,13 +49,22 @@ export class FeaturesZaakDetailComponent implements OnInit {
     }, errorResponse => {
       this.hasError = true;
       this.errorMessage = errorResponse.error.detail;
+      if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
+        this.setLoginUrl()
+        this.isNotLoggedIn = true;
+      }
       this.isLoading = false;
     })
   }
 
-  getInformation(): Observable<HttpResponse<any>> {
+  getInformation(): Observable<Zaak> {
     const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}`);
-    return this.http.Get<any>(endpoint);
+    return this.http.Get<Zaak>(endpoint);
+  }
+
+  setLoginUrl(): void {
+    const currentPath = this.router.url;
+    this.loginUrl = `/accounts/login/?next=/ui${currentPath}`
   }
 
 }

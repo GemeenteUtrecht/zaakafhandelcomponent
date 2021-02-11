@@ -12,7 +12,8 @@
 
           <!-- Error -->
           <ng-template [ngIf]="hasError && !isLoading">
-            <p>{{errorMessage}}</p>
+            <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+            <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
           </ng-template>
 
           <!-- Main content -->
@@ -92,7 +93,7 @@
                 </gu-button>
               </div>
               <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
-                <p>{{errorMessage}}</p>
+                <gu-message [message]="errorMessage"></gu-message>
               </div>
             </form>
           </ng-template>
@@ -107,7 +108,7 @@
 
         <!-- Error: no uuid -->
         <ng-template [ngIf]="!uuid">
-          <p>{{errorMessage}}</p>
+          <gu-message [message]="errorMessage"></gu-message>
         </ng-template>
       </div>
     </div>
