@@ -2,7 +2,7 @@ from typing import Dict
 
 from django.http import HttpRequest
 
-from .serializers import UserSerializer
+from .api.serializers import UserSerializer
 
 
 def user_serializer(request: HttpRequest) -> Dict[str, UserSerializer]:

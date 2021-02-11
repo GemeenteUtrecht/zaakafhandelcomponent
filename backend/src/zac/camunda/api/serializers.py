@@ -2,11 +2,9 @@ from typing import List, NoReturn
 
 from django.utils.translation import gettext_lazy as _
 
-from drf_spectacular.openapi import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from zac.accounts.serializers import UserSerializer
+from zac.accounts.api.serializers import UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
