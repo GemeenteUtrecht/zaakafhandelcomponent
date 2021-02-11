@@ -3,6 +3,7 @@
 a.anchor {
   font-size: 0.875rem;
   color: $color-blue;
+  text-decoration: none;
   &--back {
     color: $color-text;
     display: inline-block;
@@ -18,5 +19,9 @@ a.anchor {
       margin-right: 5px;
       margin-bottom: -1px;
     }
+  }
+  &:hover {
+    text-decoration: underline;
+    cursor: pointer;
   }
 }

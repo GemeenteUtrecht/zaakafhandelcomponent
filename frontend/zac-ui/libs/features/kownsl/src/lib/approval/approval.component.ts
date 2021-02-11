@@ -6,7 +6,7 @@ import { ApprovalService } from './approval.service';
 import { RowData, Table } from '@gu/models';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApprovalForm } from '../../models/approval-form';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'gu-features-kownsl-approval',
@@ -27,6 +27,11 @@ export class ApprovalComponent implements OnInit {
   hasError: boolean;
   errorMessage: string;
 
+  isNotLoggedIn: boolean;
+  readonly NOT_LOGGED_IN_MESSAGE = "Authenticatiegegevens zijn niet opgegeven.";
+
+  loginUrl: string;
+
   tableData: Table = {
     headData: [],
     bodyData: []
@@ -39,7 +44,8 @@ export class ApprovalComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private approvalService: ApprovalService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -70,13 +76,22 @@ export class ApprovalComponent implements OnInit {
       this.isLoading = false;
     }, res => {
       this.errorMessage = res.error.detail;
+      if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
+        this.setLoginUrl()
+        this.isNotLoggedIn = true;
+      }
       this.hasError = true;
       this.isLoading = false;
     })
   }
 
-  setZaakUrl(zaakData: Zaak) {
+  setZaakUrl(zaakData: Zaak): void {
     this.zaakUrl = `/zaken/${zaakData.bronorganisatie}/${zaakData.identificatie}`;
+  }
+
+  setLoginUrl(): void {
+    const currentPath = this.router.url;
+    this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
   }
 
   createTableData(approvalData: ReviewRequest): Table {
