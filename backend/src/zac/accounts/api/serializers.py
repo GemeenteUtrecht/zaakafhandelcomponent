@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from ..constants import AccessRequestResult
+from ..email import send_email_to_requester
 from ..models import AccessRequest, User
 
 
@@ -92,4 +93,6 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
                 comment=f"Automatically approved after access request #{access_request.id}",
             )
 
+        # send email
+        transaction.on_commit(lambda: send_email_to_requester(access_request, request))
         return access_request
