@@ -14,6 +14,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from .constants import AccessRequestResult
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
+from .query import AccessRequestQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -242,6 +243,8 @@ class AccessRequest(models.Model):
     )
     start_date = models.DateField(_("start date"), blank=True, null=True)
     end_date = models.DateField(_("end date"), blank=True, null=True)
+
+    objects = AccessRequestQuerySet.as_manager()
 
     def clean(self):
         super().clean()
