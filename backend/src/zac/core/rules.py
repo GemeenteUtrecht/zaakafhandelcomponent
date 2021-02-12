@@ -2,6 +2,8 @@ import logging
 from datetime import date
 from typing import Optional, Set, Union
 
+from django.db.models import Q
+
 import rules
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -158,9 +160,13 @@ def can_read_zaak_by_zaaktype(user: User, zaak: Optional[Zaak]):
 def has_temporary_access(user: User, zaak: Optional[Zaak]):
     if zaak is None:
         return False
-    return user.initiated_requests.filter(
-        zaak=zaak.url, result=AccessRequestResult.approve, end_date__gte=date.today()
-    ).exists()
+    return (
+        user.initiated_requests.filter(
+            zaak=zaak.url, result=AccessRequestResult.approve
+        )
+        .actual()
+        .exists()
+    )
 
 
 @rules.predicate
