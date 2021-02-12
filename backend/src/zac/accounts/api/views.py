@@ -5,9 +5,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from zac.accounts.api.serializers import CatalogusURLSerializer
-from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_informatieobjecttypen
 
+from .permissions import CanHandleAccess
 from .serializers import ZaakAccessSerializer
 
 
@@ -44,5 +44,5 @@ class InformatieobjecttypenJSONView(views.APIView):
 
 class GrantZaakAccessView(generics.CreateAPIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanHandleAccess]
     serializer_class = ZaakAccessSerializer
