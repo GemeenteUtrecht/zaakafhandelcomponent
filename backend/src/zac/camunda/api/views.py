@@ -84,8 +84,6 @@ class UserTaskView(APIView):
             raise exceptions.NotFound(
                 _("The task with given task ID does not exist (anymore).")
             )
-        # May raise a permission denied
-        self.check_object_permissions(self.request, task)
         return task
 
     def get_serializer(self, **kwargs):

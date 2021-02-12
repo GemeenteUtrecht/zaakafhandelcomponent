@@ -21,6 +21,7 @@ from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.utils import get_dowc_url
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
@@ -88,14 +89,7 @@ class DocumentInfoSerializer(serializers.Serializer):
         return filesizeformat(obj.bestandsomvang)
 
     def get_read_url(self, obj) -> str:
-        return reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-                "purpose": DocFileTypes.read,
-            },
-        )
+        return get_dowc_url(obj, purpose=DocFileTypes.read)
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -343,24 +337,10 @@ class ZaakDocumentSerializer(APIModelSerializer):
         }
 
     def get_read_url(self, obj) -> str:
-        return reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-                "purpose": DocFileTypes.read,
-            },
-        )
+        return get_dowc_url(obj, purpose=DocFileTypes.read)
 
     def get_write_url(self, obj) -> str:
-        return reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-                "purpose": DocFileTypes.write,
-            },
-        )
+        return get_dowc_url(obj, purpose=DocFileTypes.write)
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):

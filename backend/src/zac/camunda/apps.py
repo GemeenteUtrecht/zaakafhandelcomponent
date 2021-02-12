@@ -6,4 +6,5 @@ class CamundaConfig(AppConfig):
 
     def ready(self):
         from .dynamic_forms import context  # noqa
+        from .select_documents import context  # noqa
         from .user_tasks import redirects  # noqa

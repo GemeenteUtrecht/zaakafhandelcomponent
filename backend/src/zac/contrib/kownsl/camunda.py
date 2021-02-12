@@ -14,6 +14,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.camunda.data import Task
 from zac.camunda.process_instances import get_process_instance
+from zac.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.constants import KownslTypes
@@ -41,14 +42,7 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
         )
 
 
-class DocumentUserTaskSerializer(APIModelSerializer):
-    read_url = serializers.SerializerMethodField(
-        label=_("ZAC document read URL"),
-        help_text=_(
-            "A URL that on POST request returns a magicUrl to the document on a webdav server."
-        ),
-    )
-
+class DocumentUserTaskSerializer(DocumentSerializer):
     class Meta:
         model = Document
         fields = (
@@ -56,20 +50,6 @@ class DocumentUserTaskSerializer(APIModelSerializer):
             "bestandsnaam",
             "read_url",
             "url",
-        )
-
-    def get_read_url(self, obj) -> str:
-        """
-        Create the document read url to facilitate opening the document
-        in a MS WebDAV client.
-        """
-        return reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-                "purpose": DocFileTypes.read,
-            },
         )
 
 
@@ -313,7 +293,7 @@ def get_advice_approval_context(task: Task) -> dict:
     zaaktype = fetch_zaaktype(zaak.zaaktype)
     documents, rest = get_documenten(zaak)
     return {
-        "zaak_informatie": process_instance,
+        "zaak_informatie": zaak,
         "title": f"{zaaktype.omschrijving} - {zaaktype.versiedatum}",
         "documents": documents,
     }

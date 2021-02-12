@@ -23,7 +23,6 @@ from zgw.models.zrc import Zaak
 
 from ..camunda import (
     ValidSignContextSerializer,
-    ValidSignDocumentSerializer,
     ValidSignTaskSerializer,
     ValidSignUserSerializer,
 )
@@ -117,46 +116,13 @@ class GetContextSerializersTests(APITestCase):
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
 
-    def test_valid_sign_document_serializer(self):
-        # Sanity check
-        serializer = ValidSignDocumentSerializer(self.document)
-        self.assertTrue(
-            all(
-                [
-                    field in serializer.data
-                    for field in [
-                        "beschrijving",
-                        "bestandsnaam",
-                        "bestandsomvang",
-                        "drc_url",
-                        "read_url",
-                        "versie",
-                    ]
-                ]
-            )
-        )
-
-        self.assertEqual(
-            serializer.data["read_url"],
-            reverse(
-                "dowc:request-doc",
-                kwargs={
-                    "bronorganisatie": self.document.bronorganisatie,
-                    "identificatie": self.document.identificatie,
-                    "purpose": DocFileTypes.read,
-                },
-            ),
-        )
-
-        self.assertEqual(serializer.data["drc_url"], self.document.url)
-
     def test_valid_sign_context_serializer(self):
         task = _get_task(**{"formKey": "zac:validSign:configurePackage"})
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = ValidSignContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
-        self.assertIn("documenten", serializer.data["context"])
-        self.assertEqual(len(serializer.data["context"]["documenten"]), 1)
+        self.assertIn("documents", serializer.data["context"])
+        self.assertEqual(len(serializer.data["context"]["documents"]), 1)
 
 
 class ValidSignTaskSerializerTests(APITestCase):
