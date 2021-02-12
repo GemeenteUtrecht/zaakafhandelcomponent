@@ -1,11 +1,14 @@
 from django.http import JsonResponse
 
-from rest_framework import views
+from rest_framework import generics, views
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from zac.accounts.api.serializers import CatalogusURLSerializer
+from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_informatieobjecttypen
+
+from .serializers import ZaakAccessSerializer
 
 
 class InformatieobjecttypenJSONView(views.APIView):
@@ -37,3 +40,9 @@ class InformatieobjecttypenJSONView(views.APIView):
                 }
             )
         return JsonResponse(response_data)
+
+
+class GrantZaakAccessView(generics.CreateAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ZaakAccessSerializer
