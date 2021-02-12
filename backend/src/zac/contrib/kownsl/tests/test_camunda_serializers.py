@@ -24,7 +24,6 @@ from zgw.models.zrc import Zaak
 from ..camunda import (
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
-    DocumentUserTaskSerializer,
     SelectUsersRevReqSerializer,
     ZaakInformatieTaskSerializer,
 )
@@ -133,30 +132,6 @@ class GetContextSerializersTests(APITestCase):
 
         self.patch_get_process_zaak_url.start()
         self.addCleanup(self.patch_get_process_zaak_url.stop)
-
-    def test_document_user_task_serializer(self):
-        # Sanity check
-        serializer = DocumentUserTaskSerializer(self.document)
-        self.assertTrue(
-            all(
-                [
-                    field in serializer.data
-                    for field in ["beschrijving", "bestandsnaam", "read_url", "url"]
-                ]
-            )
-        )
-
-        self.assertEqual(
-            serializer.data["read_url"],
-            reverse(
-                "dowc:request-doc",
-                kwargs={
-                    "bronorganisatie": self.document.bronorganisatie,
-                    "identificatie": self.document.identificatie,
-                    "purpose": DocFileTypes.read,
-                },
-            ),
-        )
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check

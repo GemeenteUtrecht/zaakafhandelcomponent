@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List, NoReturn
 
-from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -11,49 +10,24 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.camunda.data import Task
 from zac.camunda.process_instances import get_process_instance
+from zac.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
-from zac.contrib.dowc.constants import DocFileTypes
 from zac.core.camunda import get_process_zaak_url
-from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
-
-
-class ValidSignDocumentSerializer(APIModelSerializer):
-    drc_url = serializers.SerializerMethodField()
-    read_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Document
-        fields = (
-            "beschrijving",
-            "bestandsnaam",
-            "bestandsomvang",
-            "drc_url",
-            "read_url",
-            "versie",
-        )
-
-    def get_drc_url(self, obj) -> str:
-        return obj.url
-
-    def get_read_url(self, obj) -> str:
-        return reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-                "purpose": DocFileTypes.read,
-            },
-        )
+from zac.core.services import get_documenten, get_zaak
 
 
 @dataclass
 class ValidSignContext(Context):
-    documenten: List[Document]
+    documents: List[Document]
 
 
 @usertask_context_serializer
-class ValidSignContextSerializer(serializers.Serializer):
-    documenten = ValidSignDocumentSerializer(many=True)
+class ValidSignContextSerializer(APIModelSerializer):
+    documents = DocumentSerializer(many=True)
+
+    class Meta:
+        model = ValidSignContext
+        fields = ("documents",)
 
 
 #
@@ -215,5 +189,5 @@ def get_context(task: Task) -> ValidSignContext:
     zaak = get_zaak(zaak_url=zaak_url)
     documents, rest = get_documenten(zaak)
     return ValidSignContext(
-        documenten=documents,
+        documents=documents,
     )
