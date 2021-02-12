@@ -237,12 +237,31 @@ class AccessRequest(models.Model):
         max_length=1000,
         help_text=_("URL reference to the zaak in its API"),
     )
-    comment = models.CharField(_("comment"), max_length=1000, blank=True)
-    result = models.CharField(
-        _("result"), max_length=50, choices=AccessRequestResult.choices, blank=True
+    comment = models.CharField(
+        _("comment"),
+        max_length=1000,
+        blank=True,
+        help_text=_("Comment provided by the handler"),
     )
-    start_date = models.DateField(_("start date"), blank=True, null=True)
-    end_date = models.DateField(_("end date"), blank=True, null=True)
+    result = models.CharField(
+        _("result"),
+        max_length=50,
+        choices=AccessRequestResult.choices,
+        blank=True,
+        help_text=_("Result of the access request"),
+    )
+    start_date = models.DateField(
+        _("start date"),
+        blank=True,
+        null=True,
+        help_text=_("Start date of the granted access"),
+    )
+    end_date = models.DateField(
+        _("end date"),
+        blank=True,
+        null=True,
+        help_text=_("End date of the granted access"),
+    )
 
     objects = AccessRequestQuerySet.as_manager()
 

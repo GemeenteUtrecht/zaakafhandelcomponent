@@ -29,9 +29,15 @@ class CatalogusURLSerializer(serializers.Serializer):
 
 class ZaakAccessSerializer(serializers.ModelSerializer):
     requester = serializers.SlugRelatedField(
-        slug_field="username", queryset=User.objects.all()
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Username of access requester/grantee"),
     )
-    handler = serializers.SlugRelatedField(slug_field="username", read_only=True)
+    handler = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        help_text=_("Username of access handler/granter"),
+    )
 
     class Meta:
         model = AccessRequest
@@ -69,7 +75,7 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         request = self.context["request"]
-        start_date = date.today()
+        start_date = validated_data.get("start_date", date.today())
 
         validated_data.update(
             {
