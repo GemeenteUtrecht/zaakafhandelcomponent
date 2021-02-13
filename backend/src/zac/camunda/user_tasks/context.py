@@ -79,7 +79,6 @@ def register(
 EmptySerializer = usertask_context_serializer(serializers.JSONField)
 
 
-@register("zac:documentSelectie", EmptySerializer)
 @register("zac:gebruikerSelectie", EmptySerializer)
 def noop(task) -> None:
     return None

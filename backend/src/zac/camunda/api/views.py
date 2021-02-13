@@ -1,4 +1,5 @@
 import uuid
+from typing import Dict, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -86,11 +87,23 @@ class UserTaskView(APIView):
             )
         return task
 
-    def get_serializer(self, **kwargs):
-        if self.request.method == "GET":
-            return UserTaskContextSerializer(**kwargs)
-        else:
-            return SubmitUserTaskSerializer(**kwargs)
+    def get_serializer(
+        self,
+        instance: Optional[Task] = None,
+        data: Optional[Dict] = None,
+        context: Optional[Dict] = None,
+    ):
+        if instance:
+            return UserTaskContextSerializer(
+                instance=instance,
+                context=context,
+            )
+        if data:
+            serializer = SubmitUserTaskSerializer(
+                data=data,
+                context=context,
+            )
+            return serializer
 
     @extend_schema(
         summary=_("Retrieve user task data and context"),
@@ -134,24 +147,22 @@ class UserTaskView(APIView):
         This endpoint is only available if you have permissions to perform user tasks.
         """
         task = self.get_object()
-        # TODO: properly abstract away with Daniël's work
+
         serializer = self.get_serializer(
             data={
                 **request.data,
-                "form": task.form,
+                "form": task.form_key,
             },
-            context={"task": task},
+            context={"task": task, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.on_task_submission()
-
         variables = {
             **get_bptl_app_id_variable(),
             **serializer.get_process_variables(),
         }
 
         complete_task(task.id, variables)
-
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

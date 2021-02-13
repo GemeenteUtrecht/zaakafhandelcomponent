@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
@@ -18,7 +19,9 @@ from zac.accounts.tests.factories import UserFactory
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.utils import get_dowc_url
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
+from zac.core.utils import get_ui_url
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -62,7 +65,7 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class GetContextSerializersTests(APITestCase):
+class GetConfigureReviewRequestContextSerializersTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -136,8 +139,16 @@ class GetContextSerializersTests(APITestCase):
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
         serializer = ZaakInformatieTaskSerializer(self.zaak)
-        self.assertTrue(
-            all([field in serializer.data for field in ["omschrijving", "toelichting"]])
+        self.assertEqual(
+            sorted(list(serializer.data.keys())),
+            sorted(["omschrijving", "toelichting"]),
+        )
+        self.assertEqual(
+            serializer.data,
+            {
+                "omschrijving": self.zaak.omschrijving,
+                "toelichting": self.zaak.toelichting,
+            },
         )
 
     def test_advice_context_serializer(self):
@@ -145,41 +156,75 @@ class GetContextSerializersTests(APITestCase):
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(serializer.data["context"].keys())),
+            sorted(
                 [
-                    field in serializer.data["context"]
-                    for field in [
-                        "documents",
-                        "title",
-                        "zaak_informatie",
-                        "review_type",
-                    ]
+                    "documents",
+                    "title",
+                    "zaak_informatie",
+                    "review_type",
                 ]
-            )
+            ),
         )
-        self.assertEqual(serializer.data["context"]["review_type"], KownslTypes.advice)
+        self.assertEqual(
+            serializer.data["context"],
+            {
+                "documents": [
+                    {
+                        "beschrijving": self.document.beschrijving,
+                        "bestandsnaam": self.document.bestandsnaam,
+                        "url": self.document.url,
+                        "read_url": get_dowc_url(
+                            self.document, purpose=DocFileTypes.read
+                        ),
+                    }
+                ],
+                "zaak_informatie": {
+                    "omschrijving": self.zaak.omschrijving,
+                    "toelichting": self.zaak.toelichting,
+                },
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "review_type": KownslTypes.advice,
+            },
+        )
 
     def test_approval_context_serializer(self):
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(serializer.data["context"])),
+            sorted(
                 [
-                    field in serializer.data["context"]
-                    for field in [
-                        "documents",
-                        "title",
-                        "zaak_informatie",
-                        "review_type",
-                    ]
+                    "documents",
+                    "title",
+                    "zaak_informatie",
+                    "review_type",
                 ]
-            )
+            ),
         )
         self.assertEqual(
-            serializer.data["context"]["review_type"], KownslTypes.approval
+            serializer.data["context"],
+            {
+                "documents": [
+                    {
+                        "beschrijving": self.document.beschrijving,
+                        "bestandsnaam": self.document.bestandsnaam,
+                        "url": self.document.url,
+                        "read_url": get_dowc_url(
+                            self.document, purpose=DocFileTypes.read
+                        ),
+                    }
+                ],
+                "zaak_informatie": {
+                    "omschrijving": self.zaak.omschrijving,
+                    "toelichting": self.zaak.toelichting,
+                },
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "review_type": KownslTypes.approval,
+            },
         )
 
 
@@ -277,8 +322,16 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         }
         serializer = SelectUsersRevReqSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
-        self.assertTrue(
-            all([field in serializer.data for field in ["users", "deadline"]])
+        self.assertEqual(
+            sorted(list(serializer.validated_data.keys())),
+            sorted(["users", "deadline"]),
+        )
+        self.assertEqual(
+            serializer.validated_data,
+            {
+                "users": [user.username for user in self.users_1],
+                "deadline": date(2020, 1, 1),
+            },
         )
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -330,6 +383,23 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             data=payload, context={"task": task}
         )
         self.assertTrue(serializer.is_valid(raise_exception=True))
+        self.assertEqual(
+            serializer.validated_data["assigned_users"],
+            [
+                {
+                    "users": [user.username for user in self.users_1],
+                    "deadline": date(2020, 1, 1),
+                },
+                {
+                    "users": [user.username for user in self.users_2],
+                    "deadline": date(2020, 1, 2),
+                },
+            ],
+        )
+        self.assertEqual(
+            serializer.validated_data["selected_documents"], [self.document.url]
+        )
+        self.assertEqual(serializer.validated_data["toelichting"], "some-toelichting")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_invalid_deadlines(self):
@@ -356,7 +426,30 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail[0].code, "invalid-date")
+        self.assertEqual(err.exception.detail["assigned_users"][0].code, "invalid-date")
+
+    @freeze_time("1999-12-31T23:59:59Z")
+    def test_configure_review_request_serializer_empty_document(self):
+        assigned_users = [
+            {
+                "users": [user.username for user in self.users_1],
+                "deadline": "2020-01-01",
+            },
+        ]
+        payload = {
+            "assigned_users": assigned_users,
+            "toelichting": "some-toelichting",
+            "selected_documents": [""],
+        }
+
+        task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
+
+        serializer = ConfigureReviewRequestSerializer(
+            data=payload, context={"task": task}
+        )
+        with self.assertRaises(exceptions.ValidationError) as err:
+            serializer.is_valid(raise_exception=True)
+        self.assertEqual(err.exception.detail["selected_documents"][0][0].code, "blank")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_unique_users(self):
@@ -383,7 +476,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-
         self.assertEqual(err.exception.detail["assigned_users"][0].code, "unique-users")
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -404,7 +496,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-
         self.assertEqual(err.exception.detail["assigned_users"][0].code, "empty-users")
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -433,19 +524,33 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         serializer.on_task_submission()
         self.assertTrue(hasattr(serializer, "review_request"))
         variables = serializer.get_process_variables()
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(variables.keys())),
+            sorted(
                 [
-                    field
-                    in [
-                        "kownslDocuments",
-                        "kownslUsersList",
-                        "kownslReviewRequestId",
-                        "kownslFrontendUrl",
-                    ]
-                    for field in variables.keys()
+                    "kownslDocuments",
+                    "kownslUsersList",
+                    "kownslReviewRequestId",
+                    "kownslFrontendUrl",
                 ]
-            )
+            ),
+        )
+        self.assertEqual(
+            variables,
+            {
+                "kownslDocuments": serializer.validated_data["selected_documents"],
+                "kownslUsersList": [user.username for user in self.users_1],
+                "kownslReviewRequestId": str(self.review_request.id),
+                "kownslFrontendUrl": get_ui_url(
+                    [
+                        "ui",
+                        "kownsl",
+                        "review-request",
+                        self.review_request.review_type,
+                    ],
+                    params={"uuid": self.review_request.id},
+                ),
+            },
         )
 
     @freeze_time("1999-12-31T23:59:59Z")

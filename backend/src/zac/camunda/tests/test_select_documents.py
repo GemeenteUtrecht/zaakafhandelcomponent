@@ -62,7 +62,7 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class GetContextSerializersTests(APITestCase):
+class GetSelectDocumentContextSerializersTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -116,28 +116,31 @@ class GetContextSerializersTests(APITestCase):
     def test_select_document_serializer(self):
         # Sanity check
         serializer = DocumentSerializer(self.document)
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(serializer.data.keys())),
+            sorted(
                 [
-                    field in serializer.data
-                    for field in [
-                        "beschrijving",
-                        "bestandsnaam",
-                        "bestandsomvang",
-                        "url",
-                        "read_url",
-                        "versie",
-                    ]
+                    "beschrijving",
+                    "bestandsnaam",
+                    "bestandsomvang",
+                    "url",
+                    "read_url",
+                    "versie",
                 ]
-            )
+            ),
         )
 
         self.assertEqual(
-            serializer.data["read_url"],
-            get_dowc_url(self.document, purpose=DocFileTypes.read),
+            serializer.data,
+            {
+                "beschrijving": self.document.beschrijving,
+                "bestandsnaam": self.document.bestandsnaam,
+                "bestandsomvang": self.document.bestandsomvang,
+                "url": self.document.url,
+                "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
+                "versie": self.document.versie,
+            },
         )
-
-        self.assertEqual(serializer.data["url"], self.document.url)
 
     def test_select_documents_context_serializer(self):
         task = _get_task(**{"formKey": "zac:documentSelectie"})
@@ -145,7 +148,19 @@ class GetContextSerializersTests(APITestCase):
         serializer = DocumentSelectContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
         self.assertIn("documents", serializer.data["context"])
-        self.assertEqual(len(serializer.data["context"]["documents"]), 1)
+        self.assertEqual(
+            serializer.data["context"]["documents"],
+            [
+                {
+                    "beschrijving": self.document.beschrijving,
+                    "bestandsnaam": self.document.bestandsnaam,
+                    "bestandsomvang": self.document.bestandsomvang,
+                    "url": self.document.url,
+                    "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
+                    "versie": self.document.versie,
+                }
+            ],
+        )
 
 
 class SelectDocumentsTaskSerializerTests(APITestCase):
@@ -212,15 +227,11 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
         serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
-        self.assertEqual(
-            serializer.fields["selected_documents"].choices,
-            {
-                self.document_1.url: self.document_1.url,
-                self.document_2.url: self.document_2.url,
-            },
-        )
         serializer.is_valid(raise_exception=True)
-        self.assertIn("selected_documents", serializer.data)
+        self.assertIn("selected_documents", serializer.validated_data)
+        self.assertEqual(
+            serializer.validated_data["selected_documents"], [self.document_1.url]
+        )
 
     def test_document_select_task_serializer_invalid_document(self):
         payload = {
@@ -244,6 +255,4 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(
-            err.exception.detail["selected_documents"][0].code, "invalid_choice"
-        )
+        self.assertEqual(err.exception.detail["selected_documents"][0][0].code, "blank")

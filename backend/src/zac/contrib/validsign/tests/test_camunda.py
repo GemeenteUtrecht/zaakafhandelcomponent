@@ -61,7 +61,7 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class GetContextSerializersTests(APITestCase):
+class GetValidSignContextSerializersTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -201,18 +201,25 @@ class ValidSignTaskSerializerTests(APITestCase):
         }
         serializer = ValidSignUserSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(serializer.validated_data.keys())),
+            sorted(
                 [
-                    field in serializer.data
-                    for field in [
-                        "username",
-                        "email",
-                        "first_name",
-                        "last_name",
-                    ]
+                    "username",
+                    "email",
+                    "first_name",
+                    "last_name",
                 ]
-            )
+            ),
+        )
+        self.assertEqual(
+            serializer.validated_data,
+            {
+                "username": self.users[0].username,
+                "email": self.users[0].email,
+                "first_name": self.users[0].first_name,
+                "last_name": self.users[0].last_name,
+            },
         )
 
     def test_valid_sign_task_serializer(self):
@@ -231,28 +238,46 @@ class ValidSignTaskSerializerTests(APITestCase):
 
         task = _get_task(**{"formKey": "zac:validSign:configurePackage"})
         serializer = ValidSignTaskSerializer(data=payload, context={"task": task})
-        self.assertEqual(
-            serializer.fields["selected_documents"].choices,
-            {
-                self.document_1.url: self.document_1.url,
-                self.document_2.url: self.document_2.url,
-            },
-        )
         serializer.is_valid(raise_exception=True)
-        self.assertTrue(
-            all(
+        self.assertEqual(
+            sorted(list(serializer.validated_data.keys())),
+            sorted(
                 [
-                    field in serializer.data
-                    for field in [
-                        "assigned_users",
-                        "selected_documents",
-                    ]
+                    "assigned_users",
+                    "selected_documents",
                 ]
-            )
+            ),
+        )
+        self.assertEqual(
+            serializer.validated_data["assigned_users"],
+            [
+                {
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                }
+                for user in self.users
+            ],
+        )
+
+        self.assertEqual(
+            serializer.validated_data["selected_documents"], [self.document_1.url]
         )
 
         variables = serializer.get_process_variables()
         self.assertIn("signers", variables)
+        self.assertEqual(
+            variables["signers"],
+            [
+                {
+                    "email": user.email,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                }
+                for user in self.users
+            ],
+        )
 
     def test_valid_sign_task_serializer_duplicate_users(self):
         payload = {
@@ -342,6 +367,4 @@ class ValidSignTaskSerializerTests(APITestCase):
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
 
-        self.assertEqual(
-            err.exception.detail["selected_documents"][0].code, "invalid_choice"
-        )
+        self.assertEqual(err.exception.detail["selected_documents"][0][0].code, "blank")
