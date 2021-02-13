@@ -150,7 +150,6 @@ INSTALLED_APPS = [
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
     "zac.contrib.dowc",
-    "django_extensions",
 ]
 
 MIDDLEWARE = [

@@ -66,19 +66,18 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
     Requires ``task`` to be in serializer ``context``.
     """
 
-    selected_documents = serializers.MultipleChoiceField(
-        choices=(),
-        validators=[URLValidator],
+    selected_documents = serializers.ListField(
+        child=serializers.URLField(),
         label=_("Selecteer de relevante documenten"),
         help_text=_(
             "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
             "documenten."
         ),
-        allow_blank=False,
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def validate_selected_documents(self, selected_documents):
+        # Make sure selected documents are unique
+        selected_documents = list(dict.fromkeys(selected_documents))
 
         # Get zaak documents to verify valid document selection
         task = self.context["task"]
@@ -86,7 +85,19 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         self.zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, rest = get_documenten(zaak)
-        self.fields["selected_documents"].choices = [doc.url for doc in documenten]
+        valid_docs = [doc.url for doc in documenten]
+
+        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
+        if invalid_docs:
+            raise serializers.ValidationError(
+                _(
+                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
+                    "following documents: {valid_docs}."
+                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
+                code="invalid_choice",
+            )
+
+        return selected_documents
 
     def get_process_variables(self) -> Dict:
         """

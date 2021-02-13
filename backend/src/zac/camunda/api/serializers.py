@@ -1,4 +1,4 @@
-from typing import List, NoReturn
+from typing import Any, Dict, List, NoReturn
 
 from django.utils.translation import gettext_lazy as _
 
@@ -90,6 +90,24 @@ class SubmitUserTaskSerializer(BaseUserTaskSerializer):
             if write_serializer
         }
         super().__init__(*args, **kwargs)
+
+    def on_task_submission(self) -> Any:
+        if hasattr(
+            self.serializer_mapping[self.context["task"].form_key], "on_task_submission"
+        ):
+            return self.serializer_mapping[
+                self.context["task"].form_key
+            ].on_task_submission()
+
+    def get_process_variables(self) -> Dict:
+        if hasattr(
+            self.serializer_mapping[self.context["task"].form_key],
+            "get_process_variables",
+        ):
+            return self.serializer_mapping[
+                self.context["task"].form_key
+            ].get_process_variables()
+        return {}
 
 
 class MessageSerializer(serializers.Serializer):

@@ -125,17 +125,16 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     This serializes configure review requests such as
     advice and approval review requests.
 
-    Must have a ``task`` in its ``context``.
+    Must have a ``task`` and ``request`` in its ``context``.
     """
 
     assigned_users = SelectUsersRevReqSerializer(many=True)
-    selected_documents = serializers.MultipleChoiceField(
-        choices=(),
-        validators=[URLValidator],
+    selected_documents = serializers.ListField(
+        child=serializers.URLField(),
         label=_("Selecteer de relevante documenten"),
         help_text=_(
             "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
-            "documenten voor het vervolg van het proces."
+            "documenten."
         ),
     )
     toelichting = serializers.CharField(
@@ -151,8 +150,9 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "toelichting",
         )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def validate_selected_documents(self, selected_documents):
+        # Make sure selected documents are unique
+        selected_documents = list(dict.fromkeys(selected_documents))
 
         # Get zaak documents to verify valid document selection
         task = self.context["task"]
@@ -160,35 +160,28 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         self.zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, rest = get_documenten(zaak)
+        valid_docs = [doc.url for doc in documenten]
 
-        self.fields["selected_documents"].choices = [doc.url for doc in documenten]
+        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
+        if invalid_docs:
+            raise serializers.ValidationError(
+                _(
+                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
+                    "following documents: {valid_docs}."
+                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
+                code="invalid_choice",
+            )
 
-    def validate_deadlines_monotonic_increasing(self) -> bool:
-        """
-        Validate that deadlines per step are monotonic increasing.
-        """
-        deadline_old = date.today() - timedelta(days=1)
-        errors = []
-        for data in self.validated_data["assigned_users"]:
-            deadline_new = data["deadline"]
-            if deadline_new and not deadline_new > deadline_old:
-                raise serializers.ValidationError(
-                    _(
-                        "Deadlines are not allowed to be equal in a serial review request "
-                        "process but need to have at least 1 day in between them. "
-                        "Please select a date greater than {minimum_date}."
-                    ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
-                    code="invalid-date",
-                )
-            deadline_old = deadline_new
-        return errors
+        return selected_documents
 
     def validate_assigned_users(self, assigned_users) -> List:
         """
-        Validate that users are unique and that at least 1 user is selected per step.
+        Validate that:
+            assigned users are unique,
+            at least 1 user is selected per step, and
+            deadlines monotonically increase per step.
         """
         users_list = []
-        errors = []
         for data in assigned_users:
             users = data["users"]
             if not users:
@@ -207,15 +200,21 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
             users_list.extend(users)
 
+        deadline_old = date.today() - timedelta(days=1)
+        for data in assigned_users:
+            deadline_new = data["deadline"]
+            if deadline_new and not deadline_new > deadline_old:
+                raise serializers.ValidationError(
+                    _(
+                        "Deadlines are not allowed to be equal in a serial review request "
+                        "process but need to have at least 1 day in between them. "
+                        "Please select a date greater than {minimum_date}."
+                    ).format(minimum_date=deadline_old.strftime("%Y-%m-%d")),
+                    code="invalid-date",
+                )
+            deadline_old = deadline_new
+
         return assigned_users
-
-    def is_valid(self, raise_exception=True):
-        super().is_valid(raise_exception=raise_exception)
-        errors = self.validate_deadlines_monotonic_increasing()
-        if errors and raise_exception:
-            raise serializers.ValidationError(errors)
-
-        return True
 
     def on_task_submission(self) -> NoReturn:
         """
@@ -285,7 +284,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
 def get_advice_approval_context(task: Task) -> dict:
     """
-    Creates the part of the context that advices and approvals have in common.
+    Retrieves the context that advices and approvals have in common.
     """
     process_instance = get_process_instance(task.process_instance_id)
     zaak_url = get_process_zaak_url(process_instance)

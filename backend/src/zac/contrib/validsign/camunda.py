@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, NoReturn
+from typing import Dict, List, NoReturn, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -65,14 +65,18 @@ class ValidSignTaskSerializer(serializers.Serializer):
     """
 
     assigned_users = ValidSignUserSerializer(many=True)
-    selected_documents = serializers.MultipleChoiceField(
-        choices=(),
-        label=_("Selected documents"),
-        help_text=_("Documents selected to be signed."),
+    selected_documents = serializers.ListField(
+        child=serializers.URLField(),
+        label=_("Selecteer de relevante documenten"),
+        help_text=_(
+            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
+            "documenten."
+        ),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def validate_selected_documents(self, selected_documents):
+        # Make sure selected documents are unique
+        selected_documents = list(dict.fromkeys(selected_documents))
 
         # Get zaak documents to verify valid document selection
         task = self.context["task"]
@@ -80,10 +84,21 @@ class ValidSignTaskSerializer(serializers.Serializer):
         self.zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=self.zaak_url)
         documenten, rest = get_documenten(zaak)
+        valid_docs = [doc.url for doc in documenten]
 
-        self.fields["selected_documents"].choices = [doc.url for doc in documenten]
+        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
+        if invalid_docs:
+            raise serializers.ValidationError(
+                _(
+                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
+                    "following documents: {valid_docs}."
+                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
+                code="invalid_choice",
+            )
 
-    def validate_assigned_users(self, assigned_users) -> List:
+        return selected_documents
+
+    def validate_assigned_users(self, assigned_users) -> Optional[Dict]:
         if not assigned_users:
             raise serializers.ValidationError(
                 _("Please select at least one signer."), code="empty-signers"
@@ -101,7 +116,6 @@ class ValidSignTaskSerializer(serializers.Serializer):
                     _("Please select a set of unique signers."), code="unique-signers"
                 )
 
-        errors = []
         all_users = {
             user["username"]: user
             for user in User.objects.all().values(
@@ -124,39 +138,40 @@ class ValidSignTaskSerializer(serializers.Serializer):
                     )
             else:
                 user_in_db = all_users[au["username"]]
-                if not user_in_db["email"]:
-                    errors.append(
-                        serializers.ValidationError(
-                            _(
-                                "Email address for user with username: {username} is unknown. Please provide their email address."
-                            ).format(username=au["username"]),
-                            code="unknown-email",
-                        )
+                if not user_in_db["email"] and not au["email"]:
+                    raise serializers.ValidationError(
+                        _(
+                            "Email address for user with username: {username} is unknown. Please provide their email address."
+                        ).format(username=au["username"]),
+                        code="unknown-email",
                     )
+                else:
+                    au["email"] = user_in_db["email"]
 
-                if not user_in_db["first_name"]:
-                    errors.append(
-                        serializers.ValidationError(
-                            _(
-                                "First name for user with username: {username} is unknown. Please provide their first name."
-                            ).format(username=au["username"]),
-                            code="unknown-first-name",
-                        )
+                if not user_in_db["first_name"] and not au["first_name"]:
+                    raise serializers.ValidationError(
+                        _(
+                            "First name for user with username: {username} is unknown. Please provide their first name."
+                        ).format(username=au["username"]),
+                        code="unknown-first-name",
                     )
+                else:
+                    au["first_name"] = user_in_db["first_name"]
 
-                if not user_in_db["last_name"]:
-                    errors.append(
-                        serializers.ValidationError(
-                            _(
-                                "Last name for user with username: {username} is unknown. Please provide their last name."
-                            ).format(username=au["username"]),
-                            code="unknown-last-name",
-                        )
+                if not user_in_db["last_name"] and not au["last_name"]:
+                    raise serializers.ValidationError(
+                        _(
+                            "Last name for user with username: {username} is unknown. Please provide their last name."
+                        ).format(username=au["username"]),
+                        code="unknown-last-name",
                     )
+                else:
+                    au["last_name"] = user_in_db["last_name"]
 
-        return errors
+        return assigned_users
 
     def get_process_variables(self) -> dict:
+        assert self.is_valid(), "serializer must be valid"
         signers = []
         for signer_data in self.validated_data["assigned_users"]:
             if not signer_data:  # empty form
