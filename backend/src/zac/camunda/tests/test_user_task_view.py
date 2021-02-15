@@ -16,6 +16,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.kownsl.constants import KownslTypes
 from zac.contrib.kownsl.data import ReviewRequest
@@ -102,6 +103,14 @@ class GetUserTaskContextViewTests(APITestCase):
 
         cls.zaak = factory(Zaak, zaak)
 
+        cls.zaak_context = ZaakContext(
+            zaak=cls.zaak,
+            zaaktype=cls.zaaktype_obj,
+            documents=[
+                cls.document,
+            ],
+        )
+
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -114,36 +123,21 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
     )
-    @patch(
-        "zac.camunda.select_documents.context.get_process_instance", return_value=None
-    )
-    @patch(
-        "zac.camunda.select_documents.context.get_process_zaak_url", return_value=None
-    )
-    def test_get_context_no_permission(self, m, gt, gpi, gpzu):
+    def test_get_context_no_permission(self, m, gt):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         with patch(
-            "zac.camunda.select_documents.context.get_zaak", return_value=self.zaak
+            "zac.camunda.select_documents.context.get_zaak_context",
+            return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.camunda.select_documents.context.get_documenten",
-                return_value=[[self.document], None],
-            ):
-                response = self.client.get(self.task_endpoint)
+            response = self.client.get(self.task_endpoint)
         self.assertEqual(response.status_code, 403)
 
     @patch(
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
     )
-    @patch(
-        "zac.camunda.select_documents.context.get_process_instance", return_value=None
-    )
-    @patch(
-        "zac.camunda.select_documents.context.get_process_zaak_url", return_value=None
-    )
-    def test_get_select_document_context(self, m, gt, gpi, gpzu):
+    def test_get_select_document_context(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -157,14 +151,10 @@ class GetUserTaskContextViewTests(APITestCase):
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
         with patch(
-            "zac.camunda.select_documents.context.get_zaak", return_value=self.zaak
+            "zac.camunda.select_documents.context.get_zaak_context",
+            return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.camunda.select_documents.context.get_documenten",
-                return_value=[[self.document], None],
-            ):
-
-                response = self.client.get(self.task_endpoint)
+            response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -189,9 +179,7 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
     )
-    @patch("zac.contrib.kownsl.camunda.get_process_instance", return_value=None)
-    @patch("zac.contrib.kownsl.camunda.get_process_zaak_url", return_value=None)
-    def test_get_configure_advice_review_request_context(self, m, gt, gpi, gpzu):
+    def test_get_configure_advice_review_request_context(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -204,16 +192,11 @@ class GetUserTaskContextViewTests(APITestCase):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
-        with patch("zac.contrib.kownsl.camunda.get_zaak", return_value=self.zaak):
-            with patch(
-                "zac.contrib.kownsl.camunda.get_documenten",
-                return_value=[[self.document], None],
-            ):
-                with patch(
-                    "zac.contrib.kownsl.camunda.fetch_zaaktype",
-                    return_value=self.zaaktype_obj,
-                ):
-                    response = self.client.get(self.task_endpoint)
+        with patch(
+            "zac.contrib.kownsl.camunda.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -234,9 +217,7 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
-    @patch("zac.contrib.kownsl.camunda.get_process_instance", return_value=None)
-    @patch("zac.contrib.kownsl.camunda.get_process_zaak_url", return_value=None)
-    def test_get_configure_approval_review_request_context(self, m, gt, gpi, gpzu):
+    def test_get_configure_approval_review_request_context(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -249,16 +230,11 @@ class GetUserTaskContextViewTests(APITestCase):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
-        with patch("zac.contrib.kownsl.camunda.get_zaak", return_value=self.zaak):
-            with patch(
-                "zac.contrib.kownsl.camunda.get_documenten",
-                return_value=[[self.document], None],
-            ):
-                with patch(
-                    "zac.contrib.kownsl.camunda.fetch_zaaktype",
-                    return_value=self.zaaktype_obj,
-                ):
-                    response = self.client.get(self.task_endpoint)
+        with patch(
+            "zac.contrib.kownsl.camunda.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -283,9 +259,7 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:validSign:configurePackage"}),
     )
-    @patch("zac.contrib.validsign.camunda.get_process_instance", return_value=None)
-    @patch("zac.contrib.validsign.camunda.get_process_zaak_url", return_value=None)
-    def test_get_validsign_context(self, m, gt, gpi, gpzu):
+    def test_get_validsign_context(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -298,12 +272,11 @@ class GetUserTaskContextViewTests(APITestCase):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
-        with patch("zac.contrib.validsign.camunda.get_zaak", return_value=self.zaak):
-            with patch(
-                "zac.contrib.validsign.camunda.get_documenten",
-                return_value=[[self.document], None],
-            ):
-                response = self.client.get(self.task_endpoint)
+        with patch(
+            "zac.contrib.validsign.camunda.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -368,6 +341,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         cls.zaak = factory(Zaak, zaak)
 
+        cls.zaak_context = ZaakContext(
+            zaak=cls.zaak,
+            zaaktype=cls.zaaktype_obj,
+            documents=[
+                cls.document,
+            ],
+        )
+
         cls.review_request_data = {
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
@@ -420,28 +401,18 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
-    @patch(
-        "zac.camunda.select_documents.serializers.get_process_instance",
-        return_value=None,
-    )
-    @patch(
-        "zac.camunda.select_documents.serializers.get_process_zaak_url",
-        return_value=None,
-    )
-    def test_put_select_document_user_task(self, m, gt, ct, gpi, gpzu):
+    def test_put_select_document_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         payload = {
             "selected_documents": [self.document.url],
         }
 
         with patch(
-            "zac.camunda.select_documents.serializers.get_zaak", return_value=self.zaak
+            "zac.camunda.select_documents.serializers.get_zaak_context",
+            return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.camunda.select_documents.serializers.get_documenten",
-                return_value=[[self.document], None],
-            ):
-                response = self.client.put(self.task_endpoint, payload)
+            response = self.client.put(self.task_endpoint, payload)
+
         self.assertEqual(response.status_code, 204)
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -450,15 +421,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
-    @patch(
-        "zac.contrib.kownsl.camunda.get_process_instance",
-        return_value=None,
-    )
-    @patch(
-        "zac.contrib.kownsl.camunda.get_process_zaak_url",
-        return_value=None,
-    )
-    def test_put_configure_advice_review_request_user_task(self, m, gt, ct, gpi, gpzu):
+    def test_put_configure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
         payload = {
@@ -474,10 +437,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         review_request = factory(ReviewRequest, self.review_request_data)
 
-        with patch("zac.contrib.kownsl.camunda.get_zaak", return_value=self.zaak):
+        with patch(
+            "zac.camunda.select_documents.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_documenten",
-                return_value=[[self.document], None],
+                "zac.contrib.kownsl.camunda.get_zaak_context",
+                return_value=self.zaak_context,
             ):
                 with patch(
                     "zac.contrib.kownsl.camunda.create_review_request",
@@ -492,15 +458,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
-    @patch(
-        "zac.contrib.kownsl.camunda.get_process_instance",
-        return_value=None,
-    )
-    @patch(
-        "zac.contrib.kownsl.camunda.get_process_zaak_url",
-        return_value=None,
-    )
-    def test_put_configure_advice_review_request_user_task(self, m, gt, ct, gpi, gpzu):
+    def test_put_configure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
         payload = {
@@ -519,10 +477,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
         review_request = factory(ReviewRequest, revreq_data)
 
-        with patch("zac.contrib.kownsl.camunda.get_zaak", return_value=self.zaak):
+        with patch(
+            "zac.camunda.select_documents.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_documenten",
-                return_value=[[self.document], None],
+                "zac.contrib.kownsl.camunda.get_zaak_context",
+                return_value=self.zaak_context,
             ):
                 with patch(
                     "zac.contrib.kownsl.camunda.create_review_request",
@@ -533,28 +494,10 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
 
     @patch(
         "zac.camunda.api.views.get_task",
-        return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
-    )
-    def test_put_user_task_no_permission(self, m, gt):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
-        response = self.client.get(self.task_endpoint)
-        self.assertEqual(response.status_code, 403)
-
-    @patch(
-        "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:validSign:configurePackage"}),
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
-    @patch(
-        "zac.contrib.validsign.camunda.get_process_instance",
-        return_value=None,
-    )
-    @patch(
-        "zac.contrib.validsign.camunda.get_process_zaak_url",
-        return_value=None,
-    )
-    def test_put_validsign_user_task(self, m, gt, ct, gpi, gpzu):
+    def test_put_validsign_user_task(self, m, gt, ct):
         self._mock_permissions(m)
 
         user = UserFactory.create(
@@ -567,10 +510,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "selected_documents": [self.document.url],
         }
 
-        with patch("zac.contrib.validsign.camunda.get_zaak", return_value=self.zaak):
+        with patch(
+            "zac.camunda.select_documents.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
             with patch(
-                "zac.contrib.validsign.camunda.get_documenten",
-                return_value=[[self.document], None],
+                "zac.contrib.validsign.camunda.get_zaak_context",
+                return_value=self.zaak_context,
             ):
                 response = self.client.put(self.task_endpoint, payload)
 

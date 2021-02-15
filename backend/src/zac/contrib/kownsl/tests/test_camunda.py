@@ -16,6 +16,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
+from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
@@ -69,17 +70,13 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
+
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document = factory(Document, document)
-
-        cls.patch_get_documenten = patch(
-            "zac.contrib.kownsl.camunda.get_documenten",
-            return_value=([cls.document], None),
-        )
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
@@ -89,9 +86,6 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         )
 
         cls.zaaktype = factory(ZaakType, zaaktype)
-        cls.patch_fetch_zaaktype = patch(
-            "zac.contrib.kownsl.camunda.fetch_zaaktype", return_value=cls.zaaktype
-        )
 
         zaak = generate_oas_component(
             "zrc",
@@ -101,17 +95,18 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         )
 
         cls.zaak = factory(Zaak, zaak)
-        cls.patch_get_zaak = patch(
-            "zac.contrib.kownsl.camunda.get_zaak", return_value=cls.zaak
+
+        cls.zaak_context = ZaakContext(
+            zaak=cls.zaak,
+            zaaktype=cls.zaaktype,
+            documents=[
+                cls.document,
+            ],
         )
 
-        cls.patch_get_process_instance = patch(
-            "zac.contrib.kownsl.camunda.get_process_instance",
-            return_value=None,
-        )
-        cls.patch_get_process_zaak_url = patch(
-            "zac.contrib.kownsl.camunda.get_process_zaak_url",
-            return_value=None,
+        cls.patch_get_zaak_context = patch(
+            "zac.contrib.kownsl.camunda.get_zaak_context",
+            return_value=cls.zaak_context,
         )
 
         cls.task_endpoint = reverse(
@@ -121,20 +116,8 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.patch_get_zaak.start()
-        self.addCleanup(self.patch_get_zaak.stop)
-
-        self.patch_fetch_zaaktype.start()
-        self.addCleanup(self.patch_fetch_zaaktype.stop)
-
-        self.patch_get_documenten.start()
-        self.addCleanup(self.patch_get_documenten.stop)
-
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
-
-        self.patch_get_process_zaak_url.start()
-        self.addCleanup(self.patch_get_process_zaak_url.stop)
+        self.patch_get_zaak_context.start()
+        self.addCleanup(self.patch_get_zaak_context.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
@@ -235,39 +218,36 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.users_1 = UserFactory.create_batch(3)
         cls.users_2 = UserFactory.create_batch(3)
 
-        # Patch get_process_instance
-        cls.patch_get_process_instance = patch(
-            "zac.contrib.kownsl.camunda.get_process_instance",
-            return_value=None,
-        )
-
-        # Patch get_process_zaak_url
-        cls.patch_get_process_zaak_url = patch(
-            "zac.contrib.kownsl.camunda.get_process_zaak_url",
-            return_value="",
-        )
-
-        # Patch get_zaak
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-        )
-        cls.zaak = factory(Zaak, zaak)
-        cls.patch_get_zaak = patch(
-            "zac.contrib.kownsl.camunda.get_zaak", return_value=cls.zaak
-        )
-
-        # Patch get_documenten
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document = factory(Document, document)
-        cls.patch_get_documenten = patch(
-            "zac.contrib.kownsl.camunda.get_documenten",
-            return_value=([cls.document], None),
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+        )
+
+        cls.zaak = factory(Zaak, zaak)
+
+        cls.zaak_context = ZaakContext(
+            zaak=cls.zaak,
+            documents=[
+                cls.document,
+            ],
+        )
+
+        cls.patch_get_zaak_context = patch(
+            "zac.contrib.kownsl.camunda.get_zaak_context",
+            return_value=cls.zaak_context,
+        )
+
+        cls.patch_get_zaak_context_doc_ser = patch(
+            "zac.camunda.select_documents.serializers.get_zaak_context",
+            return_value=cls.zaak_context,
         )
 
         review_request_data = {
@@ -298,17 +278,11 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
+        self.patch_get_zaak_context.start()
+        self.addCleanup(self.patch_get_zaak_context.stop)
 
-        self.patch_get_process_zaak_url.start()
-        self.addCleanup(self.patch_get_process_zaak_url.stop)
-
-        self.patch_get_zaak.start()
-        self.addCleanup(self.patch_get_zaak.stop)
-
-        self.patch_get_documenten.start()
-        self.addCleanup(self.patch_get_documenten.stop)
+        self.patch_get_zaak_context_doc_ser.start()
+        self.addCleanup(self.patch_get_zaak_context_doc_ser.stop)
 
         self.patch_create_review_request.start()
         self.addCleanup(self.patch_create_review_request.stop)

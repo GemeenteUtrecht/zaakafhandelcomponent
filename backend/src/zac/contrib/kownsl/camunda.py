@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Dict, List, NoReturn
+from typing import Dict, List
 
-from django.core.validators import URLValidator
-from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -12,17 +10,17 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
+from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
-from zac.camunda.process_instances import get_process_instance
-from zac.camunda.select_documents.serializers import DocumentSerializer
+from zac.camunda.select_documents.serializers import (
+    DocumentSelectTaskSerializer,
+    DocumentSerializer,
+)
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.kownsl.constants import KownslTypes
-from zac.core.camunda import get_process_zaak_url
-from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 from zac.core.utils import get_ui_url
 
 from .api import create_review_request
+from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 
 
 @dataclass
@@ -120,7 +118,9 @@ class ConfigureReviewRequest:
     toelichting: str
 
 
-class ConfigureReviewRequestSerializer(APIModelSerializer):
+class ConfigureReviewRequestSerializer(
+    APIModelSerializer, DocumentSelectTaskSerializer
+):
     """
     This serializes configure review requests such as
     advice and approval review requests.
@@ -129,14 +129,6 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     """
 
     assigned_users = SelectUsersRevReqSerializer(many=True)
-    selected_documents = serializers.ListField(
-        child=serializers.URLField(),
-        label=_("Selecteer de relevante documenten"),
-        help_text=_(
-            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
-            "documenten."
-        ),
-    )
     toelichting = serializers.CharField(
         label=_("Toelichting"),
         allow_blank=True,
@@ -149,30 +141,6 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "selected_documents",
             "toelichting",
         )
-
-    def validate_selected_documents(self, selected_documents):
-        # Make sure selected documents are unique
-        selected_documents = list(dict.fromkeys(selected_documents))
-
-        # Get zaak documents to verify valid document selection
-        task = self.context["task"]
-        process_instance = get_process_instance(task.process_instance_id)
-        self.zaak_url = get_process_zaak_url(process_instance)
-        zaak = get_zaak(zaak_url=self.zaak_url)
-        documenten, rest = get_documenten(zaak)
-        valid_docs = [doc.url for doc in documenten]
-
-        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
-        if invalid_docs:
-            raise serializers.ValidationError(
-                _(
-                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
-                    "following documents: {valid_docs}."
-                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
-                code="invalid_choice",
-            )
-
-        return selected_documents
 
     def validate_assigned_users(self, assigned_users) -> List:
         """
@@ -216,7 +184,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
         return assigned_users
 
-    def on_task_submission(self) -> NoReturn:
+    def on_task_submission(self) -> None:
         """
         On task submission create the review request in the kownsl.
         """
@@ -236,13 +204,11 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             for user in data["users"]
         }
 
-        if KownslTypes.advice.lower() in self.context["task"].form_key.lower():
-            review_type = KownslTypes.advice
-        else:
-            review_type = KownslTypes.approval
-
+        # Derive review_type from task.form_key
+        review_type = FORM_KEY_REVIEW_TYPE_MAPPING[self.context["task"].form_key]
+        zaak_context = get_zaak_context(self.context["task"])
         self.review_request = create_review_request(
-            self.zaak_url,
+            zaak_context.zaak.url,
             documents=self.validated_data["selected_documents"],
             review_type=review_type,
             num_assigned_users=count_users,
@@ -282,32 +248,19 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         }
 
 
-def get_advice_approval_context(task: Task) -> dict:
-    """
-    Retrieves the context that advices and approvals have in common.
-    """
-    process_instance = get_process_instance(task.process_instance_id)
-    zaak_url = get_process_zaak_url(process_instance)
-    zaak = get_zaak(zaak_url=zaak_url)
-    zaaktype = fetch_zaaktype(zaak.zaaktype)
-    documents, rest = get_documenten(zaak)
-    return {
-        "zaak_informatie": zaak,
-        "title": f"{zaaktype.omschrijving} - {zaaktype.versiedatum}",
-        "documents": documents,
-    }
-
-
-# Refactoring get_context and nesting the decorators does not produce the desired outcome
 @register(
     "zac:configureAdviceRequest",
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
 )
 def get_context(task: Task) -> AdviceApprovalContext:
-    context = get_advice_approval_context(task)
-    context["review_type"] = KownslTypes.advice
-    return AdviceApprovalContext(**context)
+    zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
+    return AdviceApprovalContext(
+        documents=zaak_context.documents,
+        review_type=KownslTypes.advice,
+        title=f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
+        zaak_informatie=zaak_context.zaak,
+    )
 
 
 @register(
@@ -316,6 +269,10 @@ def get_context(task: Task) -> AdviceApprovalContext:
     ConfigureReviewRequestSerializer,
 )
 def get_context(task: Task) -> AdviceApprovalContext:
-    context = get_advice_approval_context(task)
-    context["review_type"] = KownslTypes.approval
-    return AdviceApprovalContext(**context)
+    zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
+    return AdviceApprovalContext(
+        documents=zaak_context.documents,
+        review_type=KownslTypes.approval,
+        title=f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
+        zaak_informatie=zaak_context.zaak,
+    )

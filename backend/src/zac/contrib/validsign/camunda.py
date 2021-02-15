@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -8,12 +8,13 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
+from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
-from zac.camunda.process_instances import get_process_instance
-from zac.camunda.select_documents.serializers import DocumentSerializer
+from zac.camunda.select_documents.serializers import (
+    DocumentSelectTaskSerializer,
+    DocumentSerializer,
+)
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
-from zac.core.camunda import get_process_zaak_url
-from zac.core.services import get_documenten, get_zaak
 
 
 @dataclass
@@ -58,45 +59,13 @@ class ValidSignUserSerializer(serializers.Serializer):
     )
 
 
-class ValidSignTaskSerializer(serializers.Serializer):
+class ValidSignTaskSerializer(DocumentSelectTaskSerializer):
     """
     Serialize assigned users and selected documents.
     Must have a ``task`` in its ``context``.
     """
 
     assigned_users = ValidSignUserSerializer(many=True)
-    selected_documents = serializers.ListField(
-        child=serializers.URLField(),
-        label=_("Selecteer de relevante documenten"),
-        help_text=_(
-            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
-            "documenten."
-        ),
-    )
-
-    def validate_selected_documents(self, selected_documents):
-        # Make sure selected documents are unique
-        selected_documents = list(dict.fromkeys(selected_documents))
-
-        # Get zaak documents to verify valid document selection
-        task = self.context["task"]
-        process_instance = get_process_instance(task.process_instance_id)
-        self.zaak_url = get_process_zaak_url(process_instance)
-        zaak = get_zaak(zaak_url=self.zaak_url)
-        documenten, rest = get_documenten(zaak)
-        valid_docs = [doc.url for doc in documenten]
-
-        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
-        if invalid_docs:
-            raise serializers.ValidationError(
-                _(
-                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
-                    "following documents: {valid_docs}."
-                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
-                code="invalid_choice",
-            )
-
-        return selected_documents
 
     def validate_assigned_users(self, assigned_users) -> Optional[Dict]:
         if not assigned_users:
@@ -189,7 +158,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
             "signers": signers,
         }
 
-    def on_task_submission(self) -> NoReturn:
+    def on_task_submission(self) -> None:
         pass
 
 
@@ -199,10 +168,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
     ValidSignTaskSerializer,
 )
 def get_context(task: Task) -> ValidSignContext:
-    process_instance = get_process_instance(task.process_instance_id)
-    zaak_url = get_process_zaak_url(process_instance)
-    zaak = get_zaak(zaak_url=zaak_url)
-    documents, rest = get_documenten(zaak)
+    zaak_context = get_zaak_context(task, require_documents=True)
     return ValidSignContext(
-        documents=documents,
+        documents=zaak_context.documents,
     )

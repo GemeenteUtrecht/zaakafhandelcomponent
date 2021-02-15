@@ -1,21 +1,16 @@
 from dataclasses import dataclass
-from typing import Dict, List, NoReturn
+from typing import Dict, List
 
-from django.core.validators import URLValidator
-from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.camunda.data import Task
-from zac.camunda.process_instances import get_process_instance
+from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
-from zac.core.camunda import get_process_zaak_url
-from zac.core.services import get_documenten, get_zaak
 
 
 class DocumentSerializer(APIModelSerializer):
@@ -80,13 +75,8 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         selected_documents = list(dict.fromkeys(selected_documents))
 
         # Get zaak documents to verify valid document selection
-        task = self.context["task"]
-        process_instance = get_process_instance(task.process_instance_id)
-        self.zaak_url = get_process_zaak_url(process_instance)
-        zaak = get_zaak(zaak_url=self.zaak_url)
-        documenten, rest = get_documenten(zaak)
-        valid_docs = [doc.url for doc in documenten]
-
+        zaak_context = get_zaak_context(self.context["task"], require_documents=True)
+        valid_docs = [doc.url for doc in zaak_context.documents]
         invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
         if invalid_docs:
             raise serializers.ValidationError(
@@ -105,7 +95,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         """
         return {}
 
-    def on_task_submission(self) -> NoReturn:
+    def on_task_submission(self) -> None:
         """
         #TODO: ?
         """

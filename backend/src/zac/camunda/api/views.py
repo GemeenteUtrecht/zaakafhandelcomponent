@@ -127,7 +127,7 @@ class UserTaskView(APIView):
         request=SubmitUserTaskSerializer,
         responses={
             204: None,
-            400: SubmitUserTaskSerializer,
+            400: OpenApiTypes.OBJECT,
             403: ErrorSerializer,
             404: ErrorSerializer,
             500: ErrorSerializer,
