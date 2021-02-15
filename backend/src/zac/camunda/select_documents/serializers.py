@@ -1,16 +1,15 @@
 from dataclasses import dataclass
 from typing import Dict, List
 
-from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
-from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
+from zac.core.api.fields import SelectDocumentsField
 
 
 class DocumentSerializer(APIModelSerializer):
@@ -61,33 +60,11 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
     Requires ``task`` to be in serializer ``context``.
     """
 
-    selected_documents = serializers.ListField(
-        child=serializers.URLField(),
-        label=_("Selecteer de relevante documenten"),
-        help_text=_(
-            "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
-            "documenten."
-        ),
-    )
+    selected_documents = SelectDocumentsField()
 
-    def validate_selected_documents(self, selected_documents):
-        # Make sure selected documents are unique
-        selected_documents = list(dict.fromkeys(selected_documents))
-
-        # Get zaak documents to verify valid document selection
-        zaak_context = get_zaak_context(self.context["task"], require_documents=True)
-        valid_docs = [doc.url for doc in zaak_context.documents]
-        invalid_docs = [doc for doc in selected_documents if not doc in valid_docs]
-        if invalid_docs:
-            raise serializers.ValidationError(
-                _(
-                    "Selected documents: {invalid_docs} are invalid. Please choose one of the "
-                    "following documents: {valid_docs}."
-                ).format(invalid_docs=invalid_docs, valid_docs=valid_docs),
-                code="invalid_choice",
-            )
-
-        return selected_documents
+    def get_zaak_from_context(self):
+        zaak_context = get_zaak_context(self.context["task"])
+        return zaak_context.zaak
 
     def get_process_variables(self) -> Dict:
         """

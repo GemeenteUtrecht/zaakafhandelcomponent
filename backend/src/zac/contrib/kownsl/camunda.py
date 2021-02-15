@@ -12,11 +12,9 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
-from zac.camunda.select_documents.serializers import (
-    DocumentSelectTaskSerializer,
-    DocumentSerializer,
-)
+from zac.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.core.api.fields import SelectDocumentsField
 from zac.core.utils import get_ui_url
 
 from .api import create_review_request
@@ -118,9 +116,7 @@ class ConfigureReviewRequest:
     toelichting: str
 
 
-class ConfigureReviewRequestSerializer(
-    APIModelSerializer, DocumentSelectTaskSerializer
-):
+class ConfigureReviewRequestSerializer(APIModelSerializer):
     """
     This serializes configure review requests such as
     advice and approval review requests.
@@ -129,6 +125,7 @@ class ConfigureReviewRequestSerializer(
     """
 
     assigned_users = SelectUsersRevReqSerializer(many=True)
+    selected_documents = SelectDocumentsField()
     toelichting = serializers.CharField(
         label=_("Toelichting"),
         allow_blank=True,
@@ -141,6 +138,10 @@ class ConfigureReviewRequestSerializer(
             "selected_documents",
             "toelichting",
         )
+
+    def get_zaak_from_context(self):
+        zaak_context = get_zaak_context(self.context["task"])
+        return zaak_context.zaak
 
     def validate_assigned_users(self, assigned_users) -> List:
         """

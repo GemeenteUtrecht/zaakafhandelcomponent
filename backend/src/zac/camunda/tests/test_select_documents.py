@@ -186,11 +186,19 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             return_value=cls.zaak_context,
         )
 
+        cls.patch_get_documenten = patch(
+            "zac.core.api.validators.get_documenten",
+            return_value=([cls.document_1, cls.document_2], []),
+        )
+
     def setUp(self):
         super().setUp()
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
+
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
     def test_document_select_task_serializer(self):
         payload = {

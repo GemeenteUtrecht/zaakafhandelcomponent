@@ -10,11 +10,9 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
-from zac.camunda.select_documents.serializers import (
-    DocumentSelectTaskSerializer,
-    DocumentSerializer,
-)
+from zac.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.core.api.fields import SelectDocumentsField
 
 
 @dataclass
@@ -59,13 +57,18 @@ class ValidSignUserSerializer(serializers.Serializer):
     )
 
 
-class ValidSignTaskSerializer(DocumentSelectTaskSerializer):
+class ValidSignTaskSerializer(serializers.Serializer):
     """
     Serialize assigned users and selected documents.
     Must have a ``task`` in its ``context``.
     """
 
+    selected_documents = SelectDocumentsField()
     assigned_users = ValidSignUserSerializer(many=True)
+
+    def get_zaak_from_context(self):
+        zaak_context = get_zaak_context(self.context["task"])
+        return zaak_context.zaak
 
     def validate_assigned_users(self, assigned_users) -> Optional[Dict]:
         if not assigned_users:

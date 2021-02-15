@@ -250,6 +250,11 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
 
+        cls.patch_get_documenten = patch(
+            "zac.core.api.validators.get_documenten",
+            return_value=([cls.document], []),
+        )
+
         review_request_data = {
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
@@ -286,6 +291,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
         self.patch_create_review_request.start()
         self.addCleanup(self.patch_create_review_request.stop)
+
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_select_users_rev_req_serializer(self):

@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -364,6 +364,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "requester": "some-henkie",
         }
 
+        cls.patch_get_documenten = patch(
+            "zac.core.api.validators.get_documenten",
+            return_value=([cls.document], []),
+        )
+
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -371,6 +376,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
+
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
     def _mock_permissions(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -413,43 +421,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.put(self.task_endpoint, payload)
 
-        self.assertEqual(response.status_code, 204)
-
-    @freeze_time("1999-12-31T23:59:59Z")
-    @patch(
-        "zac.camunda.api.views.get_task",
-        return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
-    )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
-    def test_put_configure_advice_review_request_user_task(self, m, gt, ct):
-        self._mock_permissions(m)
-        users = UserFactory.create_batch(3)
-        payload = {
-            "assigned_users": [
-                {
-                    "users": [user.username for user in users],
-                    "deadline": "2020-01-01",
-                },
-            ],
-            "selected_documents": [self.document.url],
-            "toelichting": "some-toelichting",
-        }
-
-        review_request = factory(ReviewRequest, self.review_request_data)
-
-        with patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
-            return_value=self.zaak_context,
-        ):
-            with patch(
-                "zac.contrib.kownsl.camunda.get_zaak_context",
-                return_value=self.zaak_context,
-            ):
-                with patch(
-                    "zac.contrib.kownsl.camunda.create_review_request",
-                    return_value=review_request,
-                ):
-                    response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
 
     @freeze_time("1999-12-31T23:59:59Z")

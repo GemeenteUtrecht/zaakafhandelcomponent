@@ -1,14 +1,11 @@
-import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 
 from django_camunda.utils import underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -18,8 +15,6 @@ from zac.accounts.tests.factories import UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -152,13 +147,13 @@ class ValidSignTaskSerializerTests(APITestCase):
         )
 
         cls.patch_get_zaak_context = patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.contrib.validsign.camunda.get_zaak_context",
             return_value=cls.zaak_context,
         )
 
-        cls.patch_get_zaak_context_doc_ser = patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
-            return_value=cls.zaak_context,
+        cls.patch_get_documenten = patch(
+            "zac.core.api.validators.get_documenten",
+            return_value=([cls.document_1, cls.document_2], []),
         )
 
     def setUp(self):
@@ -167,8 +162,8 @@ class ValidSignTaskSerializerTests(APITestCase):
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
 
-        self.patch_get_zaak_context_doc_ser.start()
-        self.addCleanup(self.patch_get_zaak_context_doc_ser.stop)
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
     def test_valid_sign_user_serializer(self):
         # Sanity check
@@ -217,7 +212,10 @@ class ValidSignTaskSerializerTests(APITestCase):
 
         task = _get_task(**{"formKey": "zac:validSign:configurePackage"})
         serializer = ValidSignTaskSerializer(data=payload, context={"task": task})
-        serializer.is_valid(raise_exception=True)
+
+        valid = serializer.is_valid()
+
+        self.assertTrue(valid)
         self.assertEqual(
             sorted(list(serializer.validated_data.keys())),
             sorted(
