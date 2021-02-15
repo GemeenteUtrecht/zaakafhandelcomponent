@@ -1,10 +1,3 @@
-==========
-Developers
-==========
-
-This section of the documentation is aimed at developers working on improving the ZAC
-itself.
-
 Backend
 =======
 
@@ -88,32 +81,3 @@ mutated, so refreshing the zaken list will not reflect the up-to-date state. Cur
 the best effort is to manually re-index.
 
 We're working on improving the dev-tooling to make this faster.
-
-Frontend
-========
-
-The frontend is mostly React-driven at the moment.
-
-Installing dependencies
------------------------
-
-Install the NodeJS dependencies:
-
-.. code-block:: bash
-
-    $ npm i
-
-Running the dev-build
----------------------
-
-The dev-build will watch for file changes and recompile the sass/JS:
-
-.. code-block:: bash
-
-    $ npm start
-
-Alternatively, if you want a one-off production build:
-
-.. code-block:: bash
-
-    $ npm run build
