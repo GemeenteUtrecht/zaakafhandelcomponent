@@ -156,10 +156,12 @@ class DynamicFormWriteSerializer(serializers.Serializer):
         """
         Inject the derived serializer fields from the task form definition.
         """
-        task = kwargs["context"]["task"]
-
         serializer = super().__new__(cls, *args, **kwargs)
 
+        if "context" not in kwargs or "task" not in kwargs["context"]:
+            return serializer
+
+        task = kwargs["context"]["task"]
         fields = BindingDict(serializer)
         for key, value in get_dynamic_form_serializer_fields(task).items():
             fields[key] = value
