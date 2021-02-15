@@ -17,6 +17,6 @@ urlpatterns = router.urls + [
         name="informatieobjecttypen",
     ),
     path(
-        "zaak-accesses/create", GrantZaakAccessView.as_view(), name="grant-zaak-access"
+        "cases/access", GrantZaakAccessView.as_view(), name="grant-zaak-access"
     ),
 ]
