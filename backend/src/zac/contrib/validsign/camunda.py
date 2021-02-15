@@ -10,9 +10,9 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
-from zac.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.core.api.fields import SelectDocumentsField
+from zac.core.camunda.select_documents.serializers import DocumentSerializer
 
 
 @dataclass

@@ -16,7 +16,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zgw.models.zrc import Zaak
 
-from ..select_documents.serializers import (
+from ..camunda.select_documents.serializers import (
     DocumentSelectContextSerializer,
     DocumentSelectTaskSerializer,
     DocumentSerializer,
@@ -84,12 +84,12 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         )
 
         cls.patch_get_zaak_context = patch(
-            "zac.camunda.select_documents.context.get_zaak_context",
+            "zac.core.camunda.select_documents.context.get_zaak_context",
             return_value=cls.zaak_context,
         )
 
         cls.patch_get_zaak_context_serializers = patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=cls.zaak_context,
         )
 
@@ -182,7 +182,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         )
 
         cls.patch_get_zaak_context = patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=cls.zaak_context,
         )
 

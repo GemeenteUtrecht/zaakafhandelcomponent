@@ -246,7 +246,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
 
         cls.patch_get_zaak_context_doc_ser = patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=cls.zaak_context,
         )
 

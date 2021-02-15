@@ -127,7 +127,7 @@ class GetUserTaskContextViewTests(APITestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         with patch(
-            "zac.camunda.select_documents.context.get_zaak_context",
+            "zac.core.camunda.select_documents.context.get_zaak_context",
             return_value=self.zaak_context,
         ):
             response = self.client.get(self.task_endpoint)
@@ -151,7 +151,7 @@ class GetUserTaskContextViewTests(APITestCase):
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
         with patch(
-            "zac.camunda.select_documents.context.get_zaak_context",
+            "zac.core.camunda.select_documents.context.get_zaak_context",
             return_value=self.zaak_context,
         ):
             response = self.client.get(self.task_endpoint)
@@ -416,7 +416,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
 
         with patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
             response = self.client.put(self.task_endpoint, payload)
@@ -449,7 +449,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         review_request = factory(ReviewRequest, revreq_data)
 
         with patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
             with patch(
@@ -482,7 +482,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
 
         with patch(
-            "zac.camunda.select_documents.serializers.get_zaak_context",
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
             with patch(
