@@ -7,12 +7,13 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.camunda.data import Task
 from zac.camunda.process_instances import get_process_instance
+from zac.camunda.user_tasks import Context
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 
 
 @dataclass
-class ZaakContext:
+class ZaakContext(Context):
     zaak: Zaak
     documents: Optional[List[Document]] = None
     zaaktype: Optional[ZaakType] = None
