@@ -34,6 +34,7 @@ from typing import Dict, Optional, Type, Union
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 SerializerCls = Type[serializers.Serializer]
 SerializerClsOrInstance = Union[serializers.Serializer, SerializerCls]
@@ -88,6 +89,19 @@ class PolymorphicSerializer(serializers.Serializer):
         serializer = self._get_serializer_from_data(data)
         extra = serializer.to_internal_value(data)
         return {**default, **extra}
+
+    def is_valid(self, *args, **kwargs):
+        valid = super().is_valid(*args, **kwargs)
+        extra_serializer = self._get_serializer_from_data(self.validated_data)
+        extra_valid = extra_serializer.is_valid(*args, **kwargs)
+        self._errors.update(extra_serializer.errors)
+        return valid and extra_valid
+
+    def run_validation(self, data=empty):
+        value = super().run_validation(data=data)
+        extra_serializer = self._get_serializer_from_data(data)
+        validated_data = extra_serializer.run_validation(data)
+        return {**value, **validated_data}
 
     def _check_discriminator_value(self, discriminator_value: str) -> str:
         if (
