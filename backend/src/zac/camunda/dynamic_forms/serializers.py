@@ -1,9 +1,13 @@
+from typing import Dict
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import fields, serializers
+from rest_framework.utils.serializer_helpers import BindingDict
 
 from zac.api.polymorphism import PolymorphicSerializer
 
+from ..data import Task
 from ..user_tasks import usertask_context_serializer
 
 
@@ -130,7 +134,39 @@ class DynamicFormSerializer(serializers.Serializer):
 # Write serializers
 
 
+def get_dynamic_form_serializer_fields(task: Task) -> Dict[str, fields.Field]:
+    from ..forms import extract_task_form_fields
+    from .context import get_field_definition
+
+    formfields = extract_task_form_fields(task) or []
+
+    fields = {}
+    for field in formfields:
+        field_type = field.attrib["type"]
+        field_definition = get_field_definition(field)
+        field_cls, get_kwargs = FIELD_TYPE_MAP[field_type]
+        name = field_definition.pop("name")
+        fields[name] = field_cls(**get_kwargs(field_definition))
+
+    return fields
+
+
 class DynamicFormWriteSerializer(serializers.Serializer):
+    def __new__(cls, *args, **kwargs):
+        """
+        Inject the derived serializer fields from the task form definition.
+        """
+        task = kwargs["context"]["task"]
+
+        serializer = super().__new__(cls, *args, **kwargs)
+
+        fields = BindingDict(serializer)
+        for key, value in get_dynamic_form_serializer_fields(task).items():
+            fields[key] = value
+        serializer.fields = fields
+
+        return serializer
+
     def on_submission(self):
         pass
 
