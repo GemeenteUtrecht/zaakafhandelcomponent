@@ -3,7 +3,8 @@ from typing import Optional
 from django_camunda.api import get_task as _get_task
 from django_camunda.types import CamundaId
 
-from zac.core.camunda import FORM_KEYS, _resolve_assignee, extract_task_form
+from zac.camunda.forms import extract_task_form
+from zac.core.camunda.utils import FORM_KEYS, _resolve_assignee
 
 from ..data import Task
 

@@ -10,7 +10,7 @@ from django_camunda.client import get_client
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
 
-from .forms import (
+from ..forms import (
     ConfigureAdviceRequestForm,
     ConfigureApprovalRequestForm,
     SelectDocumentsForm,
