@@ -15,7 +15,7 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
 
    config
    forms
-   developers
+   developers/index
 
 
 Indices and tables

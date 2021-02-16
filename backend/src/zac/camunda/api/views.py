@@ -14,7 +14,6 @@ from zac.core.camunda import get_process_zaak_url
 from zac.core.services import get_zaak
 
 from ..data import Task
-from ..dynamic_forms.context import build_dynamic_form_serializer
 from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
@@ -24,6 +23,7 @@ from .serializers import (
     ErrorSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
+    SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
 from .utils import get_bptl_app_id_variable
@@ -67,16 +67,15 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class GetTaskContextView(APIView):
+class UserTaskView(APIView):
     """
-    Retrieve the user task context from Camunda.
+    Get the user task context from Camunda and perform the user task on Camunda.
 
     Given the task ID, retrieve the task details from Camunda and enrich this with
     context for the UI. The shape of the context depends on the ``form`` value.
     """
 
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    serializer_class = UserTaskContextSerializer
     parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
@@ -85,12 +84,14 @@ class GetTaskContextView(APIView):
             raise exceptions.NotFound(
                 _("The task with given task ID does not exist (anymore).")
             )
-        # May raise a permission denied
-        self.check_object_permissions(self.request, task)
         return task
 
     def get_serializer(self, **kwargs):
-        return self.serializer_class(**kwargs)
+        mapping = {
+            "PUT": SubmitUserTaskSerializer,
+            "GET": UserTaskContextSerializer,
+        }
+        return mapping[self.request.method](**kwargs)
 
     @extend_schema(
         summary=_("Retrieve user task data and context"),
@@ -111,9 +112,8 @@ class GetTaskContextView(APIView):
 
     @extend_schema(
         summary=_("Submit user task data"),
-        request=OpenApiTypes.OBJECT,
         responses={
-            200: OpenApiTypes.OBJECT,
+            204: None,
             400: OpenApiTypes.OBJECT,
             403: ErrorSerializer,
             404: ErrorSerializer,
@@ -134,18 +134,23 @@ class GetTaskContextView(APIView):
         This endpoint is only available if you have permissions to perform user tasks.
         """
         task = self.get_object()
-        # TODO: properly abstract away with Daniël's work
-        serializer = build_dynamic_form_serializer(task, data=request.data)
-        serializer.is_valid(raise_exception=True)
 
+        serializer = self.get_serializer(
+            data={
+                **request.data,
+                "form": task.form_key,
+            },
+            context={"task": task, "request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.on_task_submission()
         variables = {
             **get_bptl_app_id_variable(),
             **serializer.get_process_variables(),
         }
 
         complete_task(task.id, variables)
-
-        return Response(serializer.data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SendMessageView(APIView):
@@ -211,11 +216,3 @@ class SendMessageView(APIView):
             variables,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class PerformTaskView(APIView):
-    """
-    Implement polymorphic(?) perform task view
-    """
-
-    pass

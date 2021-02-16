@@ -10,7 +10,7 @@ from zac.api.polymorphism import SerializerCls
 from ..data import Task
 from .drf import usertask_context_serializer
 
-REGISTRY: Dict[str, Tuple[callable, SerializerCls]] = {}
+REGISTRY: Dict[str, Tuple[callable, SerializerCls, Optional[SerializerCls]]] = {}
 
 
 class Context(ABC):
@@ -51,7 +51,11 @@ class DuplicateFormKeyWarning(Warning):
     pass
 
 
-def register(form_key: str, serializer_cls: Type[serializers.Serializer]):
+def register(
+    form_key: str,
+    read_serializer_cls: Type[serializers.Serializer],
+    write_serializer_cls: Optional[Type[serializers.Serializer]] = None,
+):
     """
     Register the form key with the given callback and serializer class.
     """
@@ -63,7 +67,7 @@ def register(form_key: str, serializer_cls: Type[serializers.Serializer]):
                 DuplicateFormKeyWarning,
             )
 
-        REGISTRY[form_key] = (func, serializer_cls)
+        REGISTRY[form_key] = (func, read_serializer_cls, write_serializer_cls)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -75,7 +79,6 @@ def register(form_key: str, serializer_cls: Type[serializers.Serializer]):
 EmptySerializer = usertask_context_serializer(serializers.JSONField)
 
 
-@register("zac:documentSelectie", EmptySerializer)
 @register("zac:gebruikerSelectie", EmptySerializer)
 def noop(task) -> None:
     return None

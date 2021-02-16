@@ -67,7 +67,7 @@ def mock_bpmn_response(
 
 
 class DynamicFormTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("get-task-data", kwargs={"task_id": TASK_DATA["id"]})
+    endpoint = reverse_lazy("user-task-data", kwargs={"task_id": TASK_DATA["id"]})
 
     @classmethod
     def setUpTestData(cls):
@@ -213,7 +213,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
         with patch("zac.camunda.api.views.complete_task") as mock_complete:
             response = self.client.put(self.endpoint, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mock_complete.assert_called_once_with(
             uuid.UUID("598347ee-62fc-46a2-913a-6e0788bc1b8c"),
             {

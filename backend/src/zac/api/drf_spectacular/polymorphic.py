@@ -1,5 +1,5 @@
 from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.plumbing import ResolvedComponent
+from drf_spectacular.plumbing import ResolvedComponent, build_object_type
 
 from ..polymorphism import PolymorphicSerializer
 
@@ -36,8 +36,20 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
             sub_serializer,
         ) in serializer.serializer_mapping.items():
             resolved = auto_schema.resolve_serializer(sub_serializer, direction)
+
             if not resolved.name:
-                continue
+                # serializer didn't have any declared properties
+                generic = ResolvedComponent(
+                    name="GenericObject",
+                    type=ResolvedComponent.SCHEMA,
+                    object=sub_serializer,
+                )
+                generic.schema = build_object_type(
+                    description="Generic object",
+                    additionalProperties=True,  # displays 'property name * - any' in ReDoc
+                )
+                auto_schema.registry.register_on_missing(generic)
+                resolved = generic
 
             combined = ResolvedComponent(
                 name=f"{base_name}{resolved.name}",

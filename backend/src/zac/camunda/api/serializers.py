@@ -1,4 +1,4 @@
-from typing import List, NoReturn
+from typing import Any, Dict, List, NoReturn
 
 from django.utils.translation import gettext_lazy as _
 
@@ -39,7 +39,7 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class UserTaskContextSerializer(PolymorphicSerializer):
+class BaseUserTaskSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
     fallback_distriminator_value = ""  # fall back to dynamic form
@@ -54,21 +54,60 @@ class UserTaskContextSerializer(PolymorphicSerializer):
         allow_blank=True,
         choices=(),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["form"].choices = [
+            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
+        ]
+
+
+class UserTaskContextSerializer(BaseUserTaskSerializer):
     task = TaskSerializer(label=_("User task summary"))
     # the context is added by the serializer_mapping serializers
 
     def __init__(self, *args, **kwargs):
-
         self.serializer_mapping = {
-            form_key: serializer
-            for form_key, (callback, serializer) in REGISTRY.items()
+            form_key: read_serializer
+            for form_key, (
+                callback,
+                read_serializer,
+                write_serializer,
+            ) in REGISTRY.items()
         }
-
         super().__init__(*args, **kwargs)
 
-        self.fields["form"].choices = [
-            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
-        ]
+
+class SubmitUserTaskSerializer(BaseUserTaskSerializer):
+    def __init__(self, *args, **kwargs):
+        self.serializer_mapping = {
+            form_key: write_serializer
+            for form_key, (
+                callback,
+                read_serializer,
+                write_serializer,
+            ) in REGISTRY.items()
+            if write_serializer
+        }
+        super().__init__(*args, **kwargs)
+
+    def on_task_submission(self) -> Any:
+        if hasattr(
+            self.serializer_mapping[self.context["task"].form_key], "on_task_submission"
+        ):
+            return self.serializer_mapping[
+                self.context["task"].form_key
+            ].on_task_submission()
+
+    def get_process_variables(self) -> Dict:
+        if hasattr(
+            self.serializer_mapping[self.context["task"].form_key],
+            "get_process_variables",
+        ):
+            return self.serializer_mapping[
+                self.context["task"].form_key
+            ].get_process_variables()
+        return {}
 
 
 class MessageSerializer(serializers.Serializer):

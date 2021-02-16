@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import GetTaskContextView, ProcessInstanceFetchView, SendMessageView
+from .views import ProcessInstanceFetchView, SendMessageView, UserTaskView
 
 urlpatterns = [
     path(
@@ -9,7 +9,9 @@ urlpatterns = [
         name="fetch-process-instances",
     ),
     path(
-        "task-data/<uuid:task_id>", GetTaskContextView.as_view(), name="get-task-data"
+        "task-data/<uuid:task_id>",
+        UserTaskView.as_view(),
+        name="user-task-data",
     ),
     path("send-message", SendMessageView.as_view(), name="send-message"),
 ]

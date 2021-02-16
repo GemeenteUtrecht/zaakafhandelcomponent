@@ -13,7 +13,7 @@ from .messages import get_messages
 def get_process_definitions(definition_ids: list) -> List[ProcessDefinition]:
     client = get_client()
     response = client.get(
-        f"process-definition", {"processDefinitionIdIn": ",".join(definition_ids)}
+        "process-definition", {"processDefinitionIdIn": ",".join(definition_ids)}
     )
     return factory(ProcessDefinition, response)
 

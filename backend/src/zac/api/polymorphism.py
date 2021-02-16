@@ -34,6 +34,7 @@ from typing import Dict, Optional, Type, Union
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 SerializerCls = Type[serializers.Serializer]
 SerializerClsOrInstance = Union[serializers.Serializer, SerializerCls]
@@ -43,6 +44,7 @@ Primitive = Union[str, int, float]
 class PolymorphicSerializer(serializers.Serializer):
     # mapping of discriminator value to serializer (instance or class)
     serializer_mapping: Optional[Dict[Primitive, SerializerClsOrInstance]] = None
+
     # the serializer field that holds the discriminator values
     discriminator_field = "object_type"
     fallback_distriminator_value = None
@@ -82,11 +84,26 @@ class PolymorphicSerializer(serializers.Serializer):
         extra = serializer.to_representation(instance)
         return {**default, **extra}
 
-    def _get_serializer_from_instance(self, instance):
-        discriminator_value = self.fields[self.discriminator_field].get_attribute(
-            instance
-        )
+    def to_internal_value(self, data):
+        default = super().to_internal_value(data)
+        serializer = self._get_serializer_from_data(data)
+        extra = serializer.to_internal_value(data)
+        return {**default, **extra}
 
+    def is_valid(self, *args, **kwargs):
+        valid = super().is_valid(*args, **kwargs)
+        extra_serializer = self._get_serializer_from_data(self.validated_data)
+        extra_valid = extra_serializer.is_valid(*args, **kwargs)
+        self._errors.update(extra_serializer.errors)
+        return valid and extra_valid
+
+    def run_validation(self, data=empty):
+        value = super().run_validation(data=data)
+        extra_serializer = self._get_serializer_from_data(data)
+        validated_data = extra_serializer.run_validation(data)
+        return {**value, **validated_data}
+
+    def _check_discriminator_value(self, discriminator_value: str) -> str:
         if (
             discriminator_value not in self.serializer_mapping
             and self.fallback_distriminator_value is not None
@@ -96,8 +113,12 @@ class PolymorphicSerializer(serializers.Serializer):
                 f"falling back to {self.fallback_distriminator_value}",
                 RuntimeWarning,
             )
-            discriminator_value = self.fallback_distriminator_value
+            return self.fallback_distriminator_value
 
+        return discriminator_value
+
+    def _discriminator_serializer(self, discriminator_value: str):
+        discriminator_value = self._check_discriminator_value(discriminator_value)
         try:
             return self.serializer_mapping[discriminator_value]
         except KeyError as exc:
@@ -111,3 +132,15 @@ class PolymorphicSerializer(serializers.Serializer):
                 ) from exc
             else:
                 return serializers.Serializer()
+
+    def _get_serializer_from_data(self, data):
+        discriminator_value = self.fields[self.discriminator_field].get_value(data)
+        serializer = self._discriminator_serializer(discriminator_value)
+        return serializer
+
+    def _get_serializer_from_instance(self, instance):
+        discriminator_value = self.fields[self.discriminator_field].get_attribute(
+            instance
+        )
+        serializer = self._discriminator_serializer(discriminator_value)
+        return serializer
