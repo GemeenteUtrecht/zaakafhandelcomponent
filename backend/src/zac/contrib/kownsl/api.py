@@ -3,7 +3,6 @@ from typing import List, Optional
 from django.http import Http404
 
 from zds_client.client import ClientError
-from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
@@ -24,7 +23,12 @@ def get_client(user: Optional[User] = None) -> ZGWClient:
     # aware of the actual end user
     if user is not None:
         service.user_id = user.username
-    return service.build_client()
+    client = service.build_client()
+    client.operation_suffix_mapping = {
+        **client.operation_suffix_mapping,
+        "retrieve": "_retrieve",
+    }
+    return client
 
 
 def create_review_request(
@@ -82,11 +86,8 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
     # operation_id in the schema (yet?). Building the url and doing the request
     # manually for now.
-    operation_id = "review_requests_retrieve"
     try:
-        url = get_operation_url(client.schema, operation_id, **{"uuid": uuid})
-        result = client.request(url, operation_id)
-
+        result = client.retrieve("review_requests", uuid=uuid)
     except ClientError:
         raise Http404(f"Review request with id {uuid} does not exist.")
 

@@ -11,7 +11,6 @@ from rest_framework import authentication, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zds_client.client import get_operation_url
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
@@ -96,13 +95,9 @@ class BaseRequestView(APIView):
 
     def get_object(self):
         client = get_client(self.request.user)
-        operation_id = "reviewrequest_retrieve"
-        url = get_operation_url(
-            client.schema,
-            operation_id,
-            uuid=self.kwargs["request_uuid"],
+        review_request = client.retrieve(
+            "review_requests", uuid=self.kwargs["request_uuid"]
         )
-        review_request = client.request(url, operation_id)
         self.check_object_permissions(self.request, review_request)
         return review_request
 
@@ -130,14 +125,10 @@ class BaseRequestView(APIView):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
         client = get_client(request.user)
-        operation_id = self._operation_id
-        url = get_operation_url(
-            client.schema,
-            operation_id,
+        response = client.create(
+            self._operation_resource,
+            data=request.data,
             request__uuid=request_uuid,
-        )
-        response = client.request(
-            url, operation_id, method="POST", expected_status=201, json=request.data
         )
         return Response(response, status=status.HTTP_201_CREATED)
 
@@ -150,7 +141,7 @@ class BaseRequestView(APIView):
     ),
 )
 class AdviceRequestView(BaseRequestView):
-    _operation_id = "advice_create"
+    _operation_resource = "review_requests_advices"
 
 
 @extend_schema_view(
@@ -161,7 +152,7 @@ class AdviceRequestView(BaseRequestView):
     ),
 )
 class ApprovalRequestView(BaseRequestView):
-    _operation_id = "approval_create"
+    _operation_resource = "review_requests_approvals"
 
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
