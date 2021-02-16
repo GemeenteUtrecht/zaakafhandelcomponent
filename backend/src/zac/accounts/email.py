@@ -7,13 +7,14 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from zac.core.services import get_zaak
+from zac.core.utils import build_absolute_url, get_ui_url
 
 from .models import AccessRequest
 
 logger = logging.getLogger(__name__)
 
 
-def send_email_to_requester(access_request: AccessRequest, request=None):
+def send_email_to_requester(access_request: AccessRequest, request=None, ui=False):
     user = access_request.requester
 
     if not user.email:
@@ -21,17 +22,18 @@ def send_email_to_requester(access_request: AccessRequest, request=None):
         return
 
     zaak = get_zaak(zaak_url=access_request.zaak)
-    zaak_url = reverse(
-        "core:zaak-detail",
-        kwargs={
-            "bronorganisatie": zaak.bronorganisatie,
-            "identificatie": zaak.identificatie,
-        },
+    zaak_url = (
+        get_ui_url(["ui", "zaken", zaak.bronorganisatie, zaak.identificatie])
+        if ui
+        else reverse(
+            "core:zaak-detail",
+            kwargs={
+                "bronorganisatie": zaak.bronorganisatie,
+                "identificatie": zaak.identificatie,
+            },
+        )
     )
-    if request:
-        zaak_url = request.build_absolute_uri(zaak_url)
-
-    zaak.absolute_url = zaak_url
+    zaak.absolute_url = build_absolute_url(zaak_url, request)
 
     email_template = get_template("core/emails/access_request_result.txt")
     email_context = {

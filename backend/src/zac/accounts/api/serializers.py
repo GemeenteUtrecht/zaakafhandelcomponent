@@ -100,5 +100,7 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
             )
 
         # send email
-        transaction.on_commit(lambda: send_email_to_requester(access_request, request))
+        transaction.on_commit(
+            lambda: send_email_to_requester(access_request, request, ui=True)
+        )
         return access_request

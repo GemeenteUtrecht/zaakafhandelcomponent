@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.sites.models import Site
 from django.core import mail
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -65,31 +66,13 @@ class AccessRequestPermissionsTests(APITestCase):
             "comment": "some comment",
         }
 
-    @requests_mock.Mocker()
-    def test_has_permission(self, m):
-        # mock ZTC and ZRC data
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([self.zaaktype]),
-        )
-        m.get(ZAAK_URL, json=self.zaak)
-
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
-            for_user=self.handler,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
-
+    def test_no_permissions(self):
         response = self.client.post(self.endpoint, self.data)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_permission_but_for_other_zaaktype(self, m):
+    def test_has_permission_not_behandelaar(self, m):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -104,6 +87,29 @@ class AccessRequestPermissionsTests(APITestCase):
             permissions=[zaken_handle_access.name],
             for_user=self.handler,
             catalogus=CATALOGUS_URL,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
+        response = self.client.post(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_permission_but_for_other_zaaktype(self, m):
+        # mock ZTC and ZRC data
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(ZAAK_URL, json=self.zaak)
+
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.handler,
+            catalogus=CATALOGUS_URL,
             zaaktype_identificaties=["ZT2"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
@@ -113,7 +119,7 @@ class AccessRequestPermissionsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_zaak_behandelaar(self, m):
+    def test_zaak_has_permission_and_behandelaar(self, m):
         # mock ZTC and ZRC data
         rol = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -139,14 +145,17 @@ class AccessRequestPermissionsTests(APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
+        PermissionSetFactory.create(
+            permissions=[zaken_handle_access.name],
+            for_user=self.handler,
+            catalogus=CATALOGUS_URL,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+
         response = self.client.post(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_no_permissions(self):
-        response = self.client.post(self.endpoint, self.data)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 @freeze_time("2020-01-01")
@@ -160,6 +169,10 @@ class AccessRequestAPITests(APITransactionTestCase):
 
         self.handler = SuperUserFactory.create()
         self.requester = UserFactory.create()
+
+        site = Site.objects.get_current()
+        site.domain = "testserver"
+        site.save()
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         self.zaak = generate_oas_component(
@@ -223,13 +236,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(email.subject, subject)
         self.assertEqual(email.to, [self.requester.email])
 
-        zaak_detail_path = reverse(
-            "core:zaak-detail",
-            kwargs={
-                "bronorganisatie": BRONORGANISATIE,
-                "identificatie": IDENTIFICATIE,
-            },
-        )
+        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
 
@@ -302,6 +309,10 @@ class AccessRequestAPITests(APITransactionTestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.requester.email])
 
+        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
+        url = f"http://testserver{zaak_detail_path}"
+        self.assertIn(url, email.body)
+
     @requests_mock.Mocker()
     def test_grant_access_with_existing_pending_request(self, m):
         # mock ZRC data
@@ -341,3 +352,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.requester.email])
+
+        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
+        url = f"http://testserver{zaak_detail_path}"
+        self.assertIn(url, email.body)

@@ -16,7 +16,5 @@ urlpatterns = router.urls + [
         InformatieobjecttypenJSONView.as_view(),
         name="informatieobjecttypen",
     ),
-    path(
-        "cases/access", GrantZaakAccessView.as_view(), name="grant-zaak-access"
-    ),
+    path("cases/access", GrantZaakAccessView.as_view(), name="grant-zaak-access"),
 ]
