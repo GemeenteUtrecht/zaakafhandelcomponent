@@ -134,7 +134,7 @@ class BaseRequestView(APIView):
         url = get_operation_url(
             client.schema,
             operation_id,
-            parent_lookup_request__uuid=request_uuid,
+            request__uuid=request_uuid,
         )
         response = client.request(
             url, operation_id, method="POST", expected_status=201, json=request.data
@@ -145,7 +145,7 @@ class BaseRequestView(APIView):
 @extend_schema_view(
     get=extend_schema(summary=_("Retrieve advice review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/advices",
+        "/api/v1/review-requests/{request__uuid}/advices",
         summary=_("Register advice for review request"),
     ),
 )
@@ -156,7 +156,7 @@ class AdviceRequestView(BaseRequestView):
 @extend_schema_view(
     get=extend_schema(summary=_("Retrieve approval review request")),
     post=remote_kownsl_create_schema(
-        "/api/v1/review-requests/{parent_lookup_request__uuid}/approvals",
+        "/api/v1/review-requests/{request__uuid}/approvals",
         summary=_("Register approval for review request"),
     ),
 )
