@@ -45,7 +45,7 @@ elasticsearch==7.9.1      # via elasticsearch-dsl
 et-xmlfile==1.0.1         # via openpyxl
 faker==5.0.2              # via zgw-consumers
 furl==2.1.0               # via -r requirements/base.in
-gemma-zds-client==0.13.3  # via -r requirements/base.in, zgw-consumers
+gemma-zds-client==0.14.1  # via -r requirements/base.in, zgw-consumers
 idna==2.8                 # via requests, yarl
 importlib-metadata==0.23  # via kombu
 inflection==0.3.1         # via django-camunda, drf-spectacular
