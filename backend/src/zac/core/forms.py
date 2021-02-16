@@ -5,9 +5,7 @@ from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
-from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
@@ -19,6 +17,7 @@ from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult
+from zac.accounts.email import send_email_to_requester
 from zac.accounts.models import AccessRequest, User
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
@@ -539,38 +538,6 @@ class AccessRequestHandleForm(forms.ModelForm):
 
         return self.cleaned_data
 
-    def send_email(self):
-        user = self.instance.requester
-
-        if not user.email:
-            logger.warning("Email to %s can't be sent - no known e-mail", user)
-            return
-
-        zaak = get_zaak(zaak_url=self.instance.zaak)
-        zaak_url = reverse(
-            "core:zaak-detail",
-            kwargs={
-                "bronorganisatie": zaak.bronorganisatie,
-                "identificatie": zaak.identificatie,
-            },
-        )
-        zaak.absolute_url = self.request.build_absolute_uri(zaak_url)
-
-        email_template = get_template("core/emails/access_request_result.txt")
-        email_context = {
-            "zaak": zaak,
-            "access_request": self.instance,
-            "user": user,
-        }
-
-        message = email_template.render(email_context)
-        send_mail(
-            subject=_("Access Request to %(zaak)s") % {"zaak": zaak.identificatie},
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-        )
-
     @transaction.atomic
     def save(self, **kwargs):
         checked = self.cleaned_data["checked"]
@@ -585,7 +552,9 @@ class AccessRequestHandleForm(forms.ModelForm):
         instance = super().save(**kwargs)
 
         # send email
-        transaction.on_commit(self.send_email)
+        transaction.on_commit(
+            lambda: send_email_to_requester(self.instance, self.request)
+        )
 
         return instance
 

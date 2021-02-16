@@ -317,6 +317,28 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_user_has_temp_auth_with_no_end_date(self, m):
+        self._setUpMocks(m)
+
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=self.user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        AccessRequestFactory.create(
+            requester=self.user,
+            zaak=self.zaak["url"],
+            result=AccessRequestResult.approve,
+            end_date=None,
+        )
+
+        with mock_zaak_detail_context():
+            response = self.app.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, 200)
+
     def test_user_has_temp_auth_expired(self, m):
         self._setUpMocks(m)
 

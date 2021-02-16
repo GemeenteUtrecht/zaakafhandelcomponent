@@ -17,6 +17,7 @@ BASE_DIR = os.path.abspath(
 #
 # Core Django settings
 #
+SITE_ID = config("SITE_ID", default=1)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
@@ -106,7 +107,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.sessions",
     # Note: If enabled, at least one Site object is required
-    # 'django.contrib.sites',
+    "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Optional applications.
