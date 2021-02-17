@@ -17,7 +17,6 @@ from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.camunda.api.serializers import TaskSerializer
 from zac.core.api.permissions import CanHandleAccessRequests
-from zac.core.api.serializers import ZaakSerializer
 from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_behandelaar_zaken, get_zaak
 from zgw.models.zrc import Zaak
@@ -26,6 +25,7 @@ from .data import AccessRequestGroup, ActivityGroup
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
+    WorkStackAssigneeCasesSerializer,
 )
 
 
@@ -77,7 +77,7 @@ class WorkStackAssigneeCasesView(drf_views.APIView):
     schema_summary = _("List active cases")
 
     def get_serializer(self, **kwargs):
-        return ZaakSerializer(many=True, **kwargs)
+        return WorkStackAssigneeCasesSerializer(many=True, **kwargs)
 
     def get(self, request: Request) -> Response:
         zaken = get_behandelaar_zaken_unfinished(request.user)

@@ -5,6 +5,7 @@ from django.urls import reverse
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
@@ -15,6 +16,7 @@ from zgw.models.zrc import Zaak
 from ..views import get_behandelaar_zaken_unfinished
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 class AssigneeCasesTests(APITestCase):
@@ -27,6 +29,16 @@ class AssigneeCasesTests(APITestCase):
         super().setUpTestData()
 
         cls.user = UserFactory.create()
+        Service.objects.create(
+            label="Catalogi API",
+            api_type=APITypes.ztc,
+            api_root=CATALOGI_ROOT,
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+        )
+
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak_unfinished = generate_oas_component(
             "zrc",
@@ -40,6 +52,7 @@ class AssigneeCasesTests(APITestCase):
             uiterlijkeEinddatumAfdoening="2021-02-17",
         )
         cls.zaak_unfinished = factory(Zaak, zaak_unfinished)
+        cls.zaak_unfinished.zaaktype = factory(ZaakType, zaaktype)
 
         zaak_finished = generate_oas_component(
             "zrc",
@@ -103,6 +116,13 @@ class AssigneeCasesTests(APITestCase):
                     "identificatie": self.zaak_unfinished.identificatie,
                     "bronorganisatie": self.zaak_unfinished.bronorganisatie,
                     "url": self.zaak_unfinished.url,
+                    "zaaktype": {
+                        "omschrijving": self.zaak_unfinished.zaaktype.omschrijving
+                    },
+                    "startdatum": str(self.zaak_unfinished.startdatum),
+                    "einddatum": self.zaak_unfinished.einddatum,
+                    "einddatumGepland": self.zaak_unfinished.einddatum_gepland,
+                    "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
                 }
             ],
             data,

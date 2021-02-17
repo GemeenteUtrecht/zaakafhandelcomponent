@@ -64,8 +64,6 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
         )
 
-        zaaktype_obj = factory(ZaakType, zaaktype)
-
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
