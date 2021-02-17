@@ -88,7 +88,7 @@ class AdhocActivitiesTests(APITestCase):
             activity_group, context={"request": request}
         )
         self.assertEqual(
-            sorted(["activities", "zaak_url", "zaak"]),
+            sorted(["activities", "url", "zaak"]),
             sorted(list(serializer.data.keys())),
         )
 
@@ -97,5 +97,5 @@ class AdhocActivitiesTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
-            sorted(["activities", "zaakUrl", "zaak"]), sorted(list(data[0].keys()))
+            sorted(["activities", "url", "zaak"]), sorted(list(data[0].keys()))
         )

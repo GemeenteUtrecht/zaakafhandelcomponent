@@ -113,16 +113,21 @@ class AssigneeCasesTests(APITestCase):
         self.assertEqual(
             [
                 {
+                    "einddatum": self.zaak_unfinished.einddatum,
+                    "einddatumGepland": self.zaak_unfinished.einddatum_gepland,
                     "identificatie": self.zaak_unfinished.identificatie,
-                    "bronorganisatie": self.zaak_unfinished.bronorganisatie,
-                    "url": self.zaak_unfinished.url,
+                    "startdatum": str(self.zaak_unfinished.startdatum),
+                    "url": reverse(
+                        "core:zaak-detail",
+                        kwargs={
+                            "bronorganisatie": self.zaak_unfinished.bronorganisatie,
+                            "identificatie": self.zaak_unfinished.identificatie,
+                        },
+                    ),
+                    "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
                     "zaaktype": {
                         "omschrijving": self.zaak_unfinished.zaaktype.omschrijving
                     },
-                    "startdatum": str(self.zaak_unfinished.startdatum),
-                    "einddatum": self.zaak_unfinished.einddatum,
-                    "einddatumGepland": self.zaak_unfinished.einddatum_gepland,
-                    "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
                 }
             ],
             data,

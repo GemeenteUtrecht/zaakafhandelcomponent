@@ -26,6 +26,7 @@ from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
     WorkStackAssigneeCasesSerializer,
+    WorkStackUserTaskSerializer,
 )
 
 
@@ -71,17 +72,20 @@ def get_access_requests_groups(user: User):
     return requested_zaken
 
 
-class WorkStackAssigneeCasesView(drf_views.APIView):
+class WorkStackAccessRequestsView(drf_views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
-    schema_summary = _("List active cases")
+    permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
+    schema_summary = _("List access requests")
 
     def get_serializer(self, **kwargs):
-        return WorkStackAssigneeCasesSerializer(many=True, **kwargs)
+        return WorkStackAccessRequestsSerializer(many=True, **kwargs)
 
     def get(self, request: Request) -> Response:
-        zaken = get_behandelaar_zaken_unfinished(request.user)
-        serializer = self.get_serializer(instance=zaken)
+        access_requests_groups = get_access_requests_groups(request.user)
+        access_requests_groups = [
+            AccessRequestGroup(**group) for group in access_requests_groups
+        ]
+        serializer = self.get_serializer(instance=access_requests_groups)
         return Response(serializer.data)
 
 
@@ -115,34 +119,31 @@ class WorkStackAdhocActivitiesView(drf_views.APIView):
         return Response(serializer.data)
 
 
+class WorkStackAssigneeCasesView(drf_views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    schema_summary = _("List active cases")
+
+    def get_serializer(self, **kwargs):
+        return WorkStackAssigneeCasesSerializer(many=True, **kwargs)
+
+    def get(self, request: Request) -> Response:
+        zaken = get_behandelaar_zaken_unfinished(request.user)
+        serializer = self.get_serializer(instance=zaken)
+        return Response(serializer.data)
+
+
 class WorkStackUserTasksView(drf_views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     schema_summary = _("List user tasks")
 
     def get_serializer(self, **kwargs):
-        return TaskSerializer(many=True, **kwargs)
+        return WorkStackUserTaskSerializer(many=True, **kwargs)
 
     def get(self, request: Request) -> Response:
         user_tasks = get_camunda_user_tasks(request.user)
         serializer = self.get_serializer(instance=user_tasks)
-        return Response(serializer.data)
-
-
-class WorkStackAccessRequestsView(drf_views.APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
-    schema_summary = _("List access requests")
-
-    def get_serializer(self, **kwargs):
-        return WorkStackAccessRequestsSerializer(many=True, **kwargs)
-
-    def get(self, request: Request) -> Response:
-        access_requests_groups = get_access_requests_groups(request.user)
-        access_requests_groups = [
-            AccessRequestGroup(**group) for group in access_requests_groups
-        ]
-        serializer = self.get_serializer(instance=access_requests_groups)
         return Response(serializer.data)
 
 

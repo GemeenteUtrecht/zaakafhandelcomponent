@@ -82,6 +82,16 @@ class UserTasksTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
-            sorted(["assignee", "created", "executeUrl", "hasForm", "id", "name"]),
-            sorted(list(data[0].keys())),
+            data,
+            [
+                {
+                    "name": TASK_DATA["name"],
+                    "url": reverse(
+                        "core:zaak-task",
+                        kwargs={
+                            "task_id": TASK_DATA["id"],
+                        },
+                    ),
+                },
+            ],
         )

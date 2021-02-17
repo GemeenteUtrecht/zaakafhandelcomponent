@@ -96,5 +96,5 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(
-            sorted(list(data[0].keys())), sorted(["requesters", "zaak", "zaakUrl"])
+            sorted(list(data[0].keys())), sorted(["requesters", "url", "zaak"])
         )
