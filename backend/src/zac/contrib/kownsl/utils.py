@@ -13,7 +13,9 @@ from drf_spectacular.utils import extend_schema
 
 from zac.api.utils import remote_schema_ref
 
-KOWNSL_OAS = "https://kownsl.utrechtproeftuin.nl/api/v1"
+from .serializers import KownslReviewRequestSerializer
+
+KOWNSL_OAS = KownslReviewRequestSerializer.PROXY_SCHEMA_BASE
 
 
 def remote_kownsl_create_schema(
@@ -25,7 +27,7 @@ def remote_kownsl_create_schema(
     method_path = ["paths", url, "post"]
     schema_path = ["content", media_type, "schema"]
     request_schema = [*method_path, "requestBody", *schema_path]
-    response_schema = [*method_path, "responses", "200", *schema_path]
+    response_schema = [*method_path, "responses", "201", *schema_path]
     return extend_schema(
         request={
             media_type: remote_schema_ref(KOWNSL_OAS, request_schema),

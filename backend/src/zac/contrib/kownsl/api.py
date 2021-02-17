@@ -3,7 +3,6 @@ from typing import List, Optional
 from django.http import Http404
 
 from zds_client.client import ClientError
-from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
@@ -24,7 +23,12 @@ def get_client(user: Optional[User] = None) -> ZGWClient:
     # aware of the actual end user
     if user is not None:
         service.user_id = user.username
-    return service.build_client()
+    client = service.build_client()
+    client.operation_suffix_mapping = {
+        **client.operation_suffix_mapping,
+        "retrieve": "_retrieve",
+    }
+    return client
 
 
 def create_review_request(
@@ -46,7 +50,7 @@ def create_review_request(
         "user_deadlines": user_deadlines,
         "requester": requester,
     }
-    resp = client.create("reviewrequest", data=data)
+    resp = client.create("review_requests", data=data)
     return factory(ReviewRequest, resp)
 
 
@@ -59,7 +63,7 @@ def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     :return: an list of advice object
     """
     client = get_client()
-    result = client.list("advice", parent_lookup_request__uuid=review_request.id)
+    result = client.list("review_requests_advices", request__uuid=review_request.id)
     return factory(Advice, result)
 
 
@@ -72,7 +76,7 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     :return: an approval-collection object
     """
     client = get_client()
-    result = client.list("approval", parent_lookup_request__uuid=review_request.id)
+    result = client.list("review_requests_approvals", request__uuid=review_request.id)
     return factory(Approval, result)
 
 
@@ -82,11 +86,8 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
     # operation_id in the schema (yet?). Building the url and doing the request
     # manually for now.
-    operation_id = "reviewrequest_retrieve"
     try:
-        url = get_operation_url(client.schema, operation_id, **{"uuid": uuid})
-        result = client.request(url, operation_id)
-
+        result = client.retrieve("review_requests", uuid=uuid)
     except ClientError:
         raise Http404(f"Review request with id {uuid} does not exist.")
 
@@ -97,7 +98,7 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
 @optional_service
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
-    result = client.list("reviewrequest", query_params={"for_zaak": zaak.url})
+    result = client.list("review_requests", query_params={"for_zaak": zaak.url})
     review_requests = factory(ReviewRequest, result)
 
     # fix relation reference
