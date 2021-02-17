@@ -74,7 +74,7 @@ def optional_service(func: callable):
     )
 
     # .__origin__() is... tricky
-    default = None if is_optional else ret_type.__origin__()
+    default = None if (is_optional or ret_type is None) else ret_type.__origin__()
 
     # figure out the default value from the type hint
     def decorator(*args, **kwargs):

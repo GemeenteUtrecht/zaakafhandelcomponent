@@ -1,15 +1,12 @@
 import uuid
 from unittest.mock import patch
 
-from django.conf import settings
-from django.test import TestCase
 from django.urls import reverse
 
 import jwt
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
@@ -17,18 +14,10 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.models import User
-from zac.accounts.tests.factories import (
-    InformatieobjecttypePermissionFactory,
-    PermissionSetFactory,
-    SuperUserFactory,
-    UserFactory,
-)
-from zac.core.permissions import zaken_download_documents
+from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..api import get_client
-from ..data import DowcResponse
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -40,7 +29,7 @@ IDENTIFICATIE = "DOC-001"
 
 
 @requests_mock.Mocker()
-class DOCAPITests(APITestCase):
+class DOCAPITests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()

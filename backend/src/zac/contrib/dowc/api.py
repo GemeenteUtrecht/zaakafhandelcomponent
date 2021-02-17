@@ -1,4 +1,4 @@
-from typing import Dict, NoReturn, Optional, Tuple
+from typing import Optional, Tuple
 
 from django.http import Http404
 
@@ -24,7 +24,12 @@ def get_client(user: User) -> Client:
     # aware of the actual end user
     if user is not None:
         service.user_id = user.username
-    return service.build_client()
+    client = service.build_client()
+    client.operation_suffix_mapping = {
+        **client.operation_suffix_mapping,
+        "delete": "_destroy",
+    }
+    return client
 
 
 @optional_service
@@ -34,7 +39,7 @@ def get_doc_info(
     client = get_client(user)
     try:
         response = client.create(
-            "v1_documenten",
+            "documenten",
             data={
                 "drc_url": drc_url,
                 "purpose": purpose,
@@ -43,7 +48,7 @@ def get_doc_info(
         return factory(DowcResponse, response), status.HTTP_201_CREATED
     except ClientError:
         response = client.list(
-            "v1_documenten",
+            "documenten",
             query_params={
                 "drc_url": drc_url,
                 "purpose": purpose,
@@ -53,12 +58,12 @@ def get_doc_info(
 
 
 @optional_service
-def patch_and_destroy_doc(user: User, uuid: str) -> Optional[NoReturn]:
+def patch_and_destroy_doc(user: User, uuid: str) -> None:
     client = get_client(user)
-    operation_id = "v1_documenten_destroy"
+    operation_id = "documenten_destroy"
     try:
-        url = get_operation_url(client.schema, operation_id, **{"uuid": uuid})
-        client.request(url, operation_id, method="DELETE", expected_status=204)
+        url = get_operation_url(client.schema, operation_id, uuid=uuid)
+        client.delete(url, operation_id, method="DELETE", expected_status=200)
 
     except ClientError:
         raise Http404(f"DocumentFile with id {uuid} does not exist.")

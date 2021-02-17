@@ -10,8 +10,13 @@ info:
 paths:
   /api/v1/documenten:
     get:
-      operationId: v1_documenten_list
-      description: ''
+      operationId: documenten_list
+      description: |-
+        List the files available for local editing or viewing via WebDAV.
+
+        Each file has a 'magic URL' pointing to the relevant MS Office protocol to
+        open the file in a local MS Office client.
+      summary: List available Documenten API files
       parameters:
       - in: query
         name: drc_url
@@ -31,9 +36,10 @@ paths:
           description: Purpose of requesting the document.
         description: purpose
       tags:
-      - v1
+      - documenten
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
         '200':
           content:
@@ -44,10 +50,15 @@ paths:
                   $ref: '#/components/schemas/DocumentFile'
           description: ''
     post:
-      operationId: v1_documenten_create
-      description: ''
+      operationId: documenten_create
+      description: |-
+        Make a file available for local editing or viewing via WebDAV.
+
+        The response contains a 'magic URL' understood by MS Office to view or edit
+        the file in a local client.
+      summary: Make Documenten API file available
       tags:
-      - v1
+      - documenten
       requestBody:
         content:
           application/json:
@@ -62,6 +73,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
         '201':
           content:
@@ -71,8 +83,9 @@ paths:
           description: ''
   /api/v1/documenten/{uuid}:
     get:
-      operationId: v1_documenten_retrieve
+      operationId: documenten_retrieve
       description: ''
+      summary: Get local file details
       parameters:
       - in: path
         name: uuid
@@ -82,9 +95,10 @@ paths:
           description: A unique UUID for the DocumentFile object.
         required: true
       tags:
-      - v1
+      - documenten
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
         '200':
           content:
@@ -93,7 +107,7 @@ paths:
                 $ref: '#/components/schemas/DocumentFile'
           description: ''
     put:
-      operationId: v1_documenten_update
+      operationId: documenten_update
       description: ''
       parameters:
       - in: path
@@ -104,7 +118,7 @@ paths:
           description: A unique UUID for the DocumentFile object.
         required: true
       tags:
-      - v1
+      - documenten
       requestBody:
         content:
           application/json:
@@ -119,6 +133,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
         '200':
           content:
@@ -127,7 +142,7 @@ paths:
                 $ref: '#/components/schemas/DocumentFile'
           description: ''
     patch:
-      operationId: v1_documenten_partial_update
+      operationId: documenten_partial_update
       description: ''
       parameters:
       - in: path
@@ -138,7 +153,7 @@ paths:
           description: A unique UUID for the DocumentFile object.
         required: true
       tags:
-      - v1
+      - documenten
       requestBody:
         content:
           application/json:
@@ -152,6 +167,7 @@ paths:
               $ref: '#/components/schemas/PatchedDocumentFile'
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
         '200':
           content:
@@ -160,8 +176,12 @@ paths:
                 $ref: '#/components/schemas/DocumentFile'
           description: ''
     delete:
-      operationId: v1_documenten_destroy
-      description: ''
+      operationId: documenten_destroy
+      description: |-
+        Check in local edits and/or delete local WebDAV file.
+
+        The response contains the URL and version of the resulting checked in document.
+      summary: Check in/delete Documenten API file.
       parameters:
       - in: path
         name: uuid
@@ -171,18 +191,23 @@ paths:
           description: A unique UUID for the DocumentFile object.
         required: true
       tags:
-      - v1
+      - documenten
       security:
       - tokenAuth: []
+      - ZGWAuthentication: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlockedDocument'
+          description: ''
 components:
   schemas:
     DocumentFile:
       type: object
       properties:
-        drc_url:
+        drcUrl:
           type: string
           format: uri
           writeOnly: true
@@ -193,7 +218,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/PurposeEnum'
           description: Purpose of requesting the document.
-        magic_url:
+        magicUrl:
           type: string
           readOnly: true
         uuid:
@@ -202,14 +227,14 @@ components:
           readOnly: true
           description: A unique UUID for the DocumentFile object.
       required:
-      - drc_url
-      - magic_url
+      - drcUrl
+      - magicUrl
       - purpose
       - uuid
     PatchedDocumentFile:
       type: object
       properties:
-        drc_url:
+        drcUrl:
           type: string
           format: uri
           writeOnly: true
@@ -220,7 +245,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/PurposeEnum'
           description: Purpose of requesting the document.
-        magic_url:
+        magicUrl:
           type: string
           readOnly: true
         uuid:
@@ -233,9 +258,29 @@ components:
       - write
       - read
       type: string
+    UnlockedDocument:
+      type: object
+      properties:
+        url:
+          type: string
+        versie:
+          type: integer
+        versionedUrl:
+          type: string
+          readOnly: true
+      required:
+      - url
+      - versie
+      - versionedUrl
   securitySchemes:
+    ZGWAuthentication:
+      type: http
+      in: beader
+      bearerFormat: JWT
     tokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: Token-based authentication with required prefix "Token"
+servers:
+- url: https://dowc.utrechtproeftuin.nl
