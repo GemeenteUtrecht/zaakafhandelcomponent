@@ -190,6 +190,19 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
 
 
 @rules.predicate
+def is_zaak_adviser(user: User, zaak: Optional[Zaak]):
+    from zac.contrib.kownsl.api import get_review_requests
+
+    if zaak is None:
+        return False
+
+    rr_assignees = [list(rr.user_deadlines.keys()) for rr in get_review_requests(zaak)]
+    rr_assignees = sum(rr_assignees, [])
+
+    return user.username in rr_assignees
+
+
+@rules.predicate
 def can_download_document(user: User, document: Optional[Document]) -> bool:
     if document is None:
         return _has_permission_key(zaken_download_documents.name)
@@ -217,7 +230,10 @@ def can_download_document(user: User, document: Optional[Document]) -> bool:
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
 rules.add_rule(
     zaken_inzien.name,
-    can_read_zaak_by_zaaktype | has_temporary_access | is_zaak_behandelaar,
+    can_read_zaak_by_zaaktype
+    | has_temporary_access
+    | is_zaak_behandelaar
+    | is_zaak_adviser,
 )
 rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
