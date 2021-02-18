@@ -9,7 +9,7 @@ import { getUserName } from '../../utils/users';
 import { SubmitRow } from '../../components/forms/Utils';
 
 
-const ENDPOINT = '/accounts/api/users';  // TODO: use context provider for this?
+const ENDPOINT = '/api/accounts/users';
 
 const getUsers = async (inputValue) => {
     const response = await get(ENDPOINT, {search: inputValue});

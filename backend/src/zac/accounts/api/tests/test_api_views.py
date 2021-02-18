@@ -11,14 +11,14 @@ from zac.accounts.tests.factories import UserFactory
 @requests_mock.Mocker()
 class InformatieobjecttypeViewTest(APITestCase):
     def test_login_required(self, m):
-        response = self.client.get("/accounts/api/informatieobjecttypen")
+        response = self.client.get("/api/accounts/informatieobjecttypen")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_no_catalogus_parameter_gives_error(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         response = self.client.get(
-            "/accounts/api/informatieobjecttypen",
+            "/api/accounts/informatieobjecttypen",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -63,7 +63,7 @@ class InformatieobjecttypeViewTest(APITestCase):
         self.client.force_authenticate(user)
 
         response = self.client.get(
-            "/accounts/api/informatieobjecttypen", {"catalogus": catalog_url}
+            "/api/accounts/informatieobjecttypen", {"catalogus": catalog_url}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

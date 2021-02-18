@@ -8,8 +8,6 @@ from .viewsets import UserViewSet
 router = DefaultRouter(trailing_slash=False)
 router.register("users", UserViewSet, basename="users")
 
-app_name = "accounts"
-
 urlpatterns = router.urls + [
     path(
         "informatieobjecttypen",

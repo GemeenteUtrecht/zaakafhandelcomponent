@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django_filters import rest_framework as django_filter
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, viewsets
+from rest_framework.decorators import action
 
 from zac.core.api.pagination import BffPagination
 
@@ -25,3 +26,9 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     )
     search_fields = ["username", "first_name", "last_name"]
     filterset_class = UserFilter
+
+    @extend_schema(summary=_("Current logged in user"))
+    @action(detail=False)
+    def me(self, request, *args, **kwargs):
+        self.kwargs["pk"] = self.request.user.id
+        return self.retrieve(request, *args, **kwargs)
