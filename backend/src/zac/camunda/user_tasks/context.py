@@ -37,6 +37,18 @@ class Context(ABC):
     pass
 
 
+def get_registry_item(task: Task) -> RegistryItem:
+    lookup = task.form_key
+    if task.form_key not in REGISTRY:
+        warnings.warn(
+            f"Unknown task registry key: '{lookup}'. Falling back to dynamic form.",
+            RuntimeWarning,
+        )
+        lookup = ""
+
+    return REGISTRY.get(lookup)
+
+
 def get_context(task: Task) -> Optional[Context]:
     """
     Retrieve the task-specific context for a given user task.
@@ -48,15 +60,7 @@ def get_context(task: Task) -> Optional[Context]:
     ``REGISTRY`` constant and registering their form key with the appropriote callback
     callable.
     """
-    lookup = task.form_key
-    if task.form_key not in REGISTRY:
-        warnings.warn(
-            f"Unknown task registry key: '{lookup}'. Falling back to dynamic form.",
-            RuntimeWarning,
-        )
-        lookup = ""
-
-    item = REGISTRY.get(lookup)
+    item = get_registry_item(task)
     if item.callback is None:
         return None
     return item.callback(task)
