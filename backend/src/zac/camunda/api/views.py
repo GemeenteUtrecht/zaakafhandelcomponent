@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.utils.translation import gettext_lazy as _
@@ -134,7 +135,6 @@ class UserTaskView(APIView):
         This endpoint is only available if you have permissions to perform user tasks.
         """
         task = self.get_object()
-
         serializer = self.get_serializer(
             data={
                 **request.data,
@@ -149,6 +149,13 @@ class UserTaskView(APIView):
             **serializer.get_process_variables(),
         }
 
+        # Make sure variables are rendered in preferred format
+        # before being passed on to complete_task.
+        if not getattr(request, "accepted_renderer", None):
+            neg = self.perform_content_negotiation(request, force=True)
+            request.accepted_renderer, request.accepted_media_type = neg
+
+        variables = json.loads(request.accepted_renderer.render(variables))
         complete_task(task.id, variables)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

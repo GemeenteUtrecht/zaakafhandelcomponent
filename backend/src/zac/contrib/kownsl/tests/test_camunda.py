@@ -510,20 +510,20 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             sorted(list(variables.keys())),
             sorted(
                 [
-                    "kownslDocuments",
-                    "kownslUsersList",
-                    "kownslReviewRequestId",
-                    "kownslFrontendUrl",
+                    "kownsl_documents",
+                    "kownsl_users_list",
+                    "kownsl_review_request_id",
+                    "kownsl_frontend_url",
                 ]
             ),
         )
         self.assertEqual(
             variables,
             {
-                "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslUsersList": [user.username for user in self.users_1],
-                "kownslReviewRequestId": str(self.review_request.id),
-                "kownslFrontendUrl": get_ui_url(
+                "kownsl_documents": serializer.validated_data["selected_documents"],
+                "kownsl_users_list": [user.username for user in self.users_1],
+                "kownsl_review_request_id": str(self.review_request.id),
+                "kownsl_frontend_url": get_ui_url(
                     [
                         "ui",
                         "kownsl",

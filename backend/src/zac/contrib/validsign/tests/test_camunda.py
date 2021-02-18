@@ -249,8 +249,8 @@ class ValidSignTaskSerializerTests(APITestCase):
             [
                 {
                     "email": user.email,
-                    "firstName": user.first_name,
-                    "lastName": user.last_name,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
                 }
                 for user in self.users
             ],

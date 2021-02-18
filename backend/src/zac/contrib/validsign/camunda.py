@@ -152,8 +152,8 @@ class ValidSignTaskSerializer(serializers.Serializer):
             signers.append(
                 {
                     "email": signer_data["email"],
-                    "firstName": signer_data["first_name"],
-                    "lastName": signer_data["last_name"],
+                    "first_name": signer_data["first_name"],
+                    "last_name": signer_data["last_name"],
                 }
             )
 
