@@ -1,16 +1,30 @@
 import functools
 import warnings
 from abc import ABC
+from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Type
 
-from rest_framework import serializers
+from rest_framework import parsers, renderers, serializers
 
 from zac.api.polymorphism import SerializerCls
 
 from ..data import Task
 from .drf import usertask_context_serializer
 
-REGISTRY: Dict[str, Tuple[callable, SerializerCls, Optional[SerializerCls]]] = {}
+Parsers = Tuple[Type[parsers.BaseParser]]
+Renderers = Tuple[Type[renderers.BaseRenderer]]
+
+
+@dataclass
+class RegistryItem:
+    callback: callable
+    read_serializer: SerializerCls
+    write_serializer: Optional[SerializerCls] = None
+    parsers: Optional[Parsers] = None
+    renderers: Optional[Renderers] = None
+
+
+REGISTRY: Dict[str, RegistryItem] = {}
 
 
 class Context(ABC):
@@ -41,10 +55,11 @@ def get_context(task: Task) -> Optional[Context]:
             RuntimeWarning,
         )
         lookup = ""
-    (callback, *rest) = REGISTRY.get(lookup)
-    if callback is None:
+
+    item = REGISTRY.get(lookup)
+    if item.callback is None:
         return None
-    return callback(task)
+    return item.callback(task)
 
 
 class DuplicateFormKeyWarning(Warning):
@@ -53,8 +68,10 @@ class DuplicateFormKeyWarning(Warning):
 
 def register(
     form_key: str,
-    read_serializer_cls: Type[serializers.Serializer],
-    write_serializer_cls: Optional[Type[serializers.Serializer]] = None,
+    read_serializer_cls: SerializerCls,
+    write_serializer_cls: Optional[SerializerCls] = None,
+    parsers: Optional[Parsers] = None,
+    renderers: Optional[Renderers] = None,
 ):
     """
     Register the form key with the given callback and serializer class.
@@ -67,18 +84,21 @@ def register(
                 DuplicateFormKeyWarning,
             )
 
-        REGISTRY[form_key] = (func, read_serializer_cls, write_serializer_cls)
+        REGISTRY[form_key] = RegistryItem(
+            callback=func,
+            read_serializer=read_serializer_cls,
+            write_serializer=write_serializer_cls,
+            parsers=parsers,
+            renderers=renderers,
+        )
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
+        return wrapper
+
     return decorator
 
 
 EmptySerializer = usertask_context_serializer(serializers.JSONField)
-
-
-@register("zac:gebruikerSelectie", EmptySerializer)
-def noop(task) -> None:
-    return None
