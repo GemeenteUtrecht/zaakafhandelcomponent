@@ -133,6 +133,12 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
                     ["second", "second"],
                 ],
             },
+            {
+                "inputType": "string",
+                "label": "snake_case",
+                "name": "snake_case",
+                "value": None,
+            },
         ]
         self.assertEqual(data["context"]["formFields"], expected_formfields)
 
@@ -195,6 +201,12 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
                     ["second", "second"],
                 ],
             },
+            {
+                "inputType": "string",
+                "label": "snake_case",
+                "name": "snake_case",
+                "value": None,
+            },
         ]
         self.assertEqual(data["context"]["formFields"], expected_formfields)
 
@@ -208,6 +220,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
             "boolField": True,
             "dateField": "2021-02-09T00:00Z",
             "enumField": "second",
+            "snake_case": "snek",
         }
 
         with patch("zac.camunda.api.views.complete_task") as mock_complete:
@@ -223,6 +236,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
                 "boolField": True,
                 "dateField": datetime.fromisoformat("2021-02-09T00:00:00+00:00"),
                 "enumField": "second",
+                "snake_case": "snek",
             },
         )
 
@@ -236,6 +250,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
             "boolField": "not-a-bool",
             "dateField": "not-a-timestamp",
             "enumField": "third",
+            "snake_case": "",
         }
 
         with patch("zac.camunda.api.views.complete_task") as mock_complete:
