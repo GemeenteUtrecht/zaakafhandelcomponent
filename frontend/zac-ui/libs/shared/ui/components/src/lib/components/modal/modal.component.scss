@@ -29,7 +29,9 @@ gu-modal {
     }
     .gu-modal-header {
       display: flex;
-      margin-bottom: 1.875rem;
+      &--mb {
+        margin-bottom: 1.875rem;
+      }
       mat-icon {
         align-self: flex-start;
         margin-left: auto;

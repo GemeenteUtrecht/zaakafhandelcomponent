@@ -1,4 +1,9 @@
-<div class="gu-textfield-container">
-  <label class="textfield-label">{{label}}</label>
-  <input required="" type="text" class="input__control input__control--text">
-</div>
+<label class="has-float-label">
+  <input type="text"
+         [required]="required"
+         [formControl]="control"
+         [attr.placeholder]="placeholder ? placeholder : ''"
+         class="form-control"
+         [id]="id">
+  <span>{{label}}</span>
+</label>

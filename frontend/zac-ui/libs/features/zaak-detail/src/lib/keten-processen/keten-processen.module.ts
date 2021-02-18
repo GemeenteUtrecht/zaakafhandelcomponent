@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { KetenProcessenComponent } from './keten-processen.component';
 
 import { AdviserenAccorderenComponent } from './configuration-components/adviseren-accorderen/adviseren-accorderen.component';
@@ -26,6 +26,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
   ],
   exports: [
     KetenProcessenComponent
+  ],
+  providers: [
+    DatePipe
   ]
 })
 export class KetenProcessenModule { }

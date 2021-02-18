@@ -1,17 +1,6 @@
 @import './base/colors/colors';
 
 .checkbox {
-  //display: block;
-  //font-size: 0.875rem;
-  //vertical-align: middle;
-  //input {
-  //  margin-right: 0.625rem;
-  //  vertical-align: middle;
-  //}
-  //.checkbox-label {
-  //  vertical-align: middle;
-  //}
-
   height: 1px;
   opacity: 0;
   position: absolute;
@@ -19,7 +8,6 @@
   z-index: 1;
   &-label {
     line-height: 1.625rem;
-    margin-bottom: 1.25rem;
     background-color: $background-lightgrey;
     border: 0.0625rem solid $background-lightgrey;
     cursor: pointer;

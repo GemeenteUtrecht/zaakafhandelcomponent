@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { ControlContainer, FormControl, FormGroup, FormGroupDirective } from '@angular/forms';
+import { AbstractControl, ControlContainer, FormControl, FormGroup, FormGroupDirective } from '@angular/forms';
 
 @Component({
   selector: 'gu-multiselect',
@@ -13,7 +13,8 @@ export class MultiselectComponent implements OnInit {
   @Input() bindLabel = 'name';
   @Input() bindValue = 'id'
   @Input() multiple: boolean;
-  @Input() customFormControl: string;
+  @Input() control: FormControl;
+  @Input() required: boolean
 
   @Output() typeOutput: EventEmitter<any> = new EventEmitter<any>();
 
@@ -24,10 +25,10 @@ export class MultiselectComponent implements OnInit {
   constructor(private parentForm: FormGroupDirective) {}
 
   ngOnInit() {
-    if (this.customFormControl) {
-      this.childForm = this.parentForm.form;
-      this.childForm.addControl(this.customFormControl, new FormControl(''))
-    }
+    // if (this.controlName) {
+    //   this.childForm = this.parentForm.form;
+    //   this.childForm.addControl(this.controlName, new FormControl(''))
+    // }
   }
 
   onSearch(value){

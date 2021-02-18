@@ -68,29 +68,48 @@
 <!--<gu-button (click)="openModal('custom-modal-1')">-->
 <!--  Uitvoeren-->
 <!--</gu-button>-->
-<gu-modal
-  id="custom-modal-1"
-  [closeIcon]="true"
-  title="Adviesvraag configureren"
->
-  <gu-config-adviseren-accorderen
-  ></gu-config-adviseren-accorderen>
-</gu-modal>
+<!--<gu-modal-->
+<!--  id="custom-modal-1"-->
+<!--  [closeIcon]="true"-->
+<!--  title="Adviesvraag configureren"-->
+<!--&gt;-->
+<!--  <gu-config-adviseren-accorderen-->
+<!--  ></gu-config-adviseren-accorderen>-->
+<!--</gu-modal>-->
 <gu-modal
   id="custom-modal-2"
   [closeIcon]="true"
-  title="Selecteer documenten bijdragezaak"
-><gu-document-select></gu-document-select>
+>
+  <ng-container *ngIf="isLoadingContext">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+
+  <ng-container *ngIf="!isLoadingContext && taskContextData" [ngSwitch]="taskContextData.form">
+    <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
+                                    [taskContextData]="taskContextData"
+    ></gu-config-adviseren-accorderen>
+
+    <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData">
+
+    </gu-document-select>
+
+    <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'"  [taskContextData]="taskContextData">
+
+    </gu-sign-document>
+
+    <gu-dynamic-form *ngSwitchDefault></gu-dynamic-form>
+  </ng-container>
+
 </gu-modal>
-<gu-modal
-  id="custom-modal-3"
-  [closeIcon]="true"
-  title="Digitale ondertekening"
-><gu-sign-document></gu-sign-document>
-</gu-modal>
-<gu-modal
-  id="custom-modal-4"
-  [closeIcon]="true"
-  title="Dynamische form"
-><gu-dynamic-form></gu-dynamic-form>
-</gu-modal>
+<!--<gu-modal-->
+<!--  id="custom-modal-3"-->
+<!--  [closeIcon]="true"-->
+<!--  title="Digitale ondertekening"-->
+<!--&gt;<gu-sign-document></gu-sign-document>-->
+<!--</gu-modal>-->
+<!--<gu-modal-->
+<!--  id="custom-modal-4"-->
+<!--  [closeIcon]="true"-->
+<!--  title="Dynamische form"-->
+<!--&gt;<gu-dynamic-form></gu-dynamic-form>-->
+<!--</gu-modal>-->

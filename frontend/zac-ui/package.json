@@ -46,6 +46,7 @@
     "@vaadin/vaadin-date-picker": "^4.4.1",
     "bootstrap": "^4.6.0",
     "ng-multiselect-dropdown": "^0.3.0",
+    "ngx-bootstrap": "^6.2.0",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
     "zone.js": "^0.10.2"

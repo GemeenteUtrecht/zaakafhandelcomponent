@@ -6,8 +6,9 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 // Material Icons
 import { MatIconModule } from '@angular/material/icon';
 
-// Angular material components
+// External Components
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { BsDatepickerModule, BsLocaleService  } from 'ngx-bootstrap/datepicker';
 
 // UI Elements
 import { ButtonComponent } from './elements/button/button.component';
@@ -30,7 +31,6 @@ import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
 import { TableComponent } from './components/table/table.component';
 import { MessageComponent } from './elements/message/message.component';
-import { Message } from '@angular/compiler/src/i18n/i18n_ast';
 
 @NgModule({
   imports: [
@@ -39,8 +39,7 @@ import { Message } from '@angular/compiler/src/i18n/i18n_ast';
     ReactiveFormsModule,
     MatIconModule,
     NgbModule,
-    // MultiselectModule
-    // ModalModule
+    BsDatepickerModule.forRoot()
   ],
   declarations: [
     ButtonComponent,
@@ -82,6 +81,9 @@ import { Message } from '@angular/compiler/src/i18n/i18n_ast';
     TextFieldComponent,
     DropdownComponent,
     MessageComponent
+  ],
+  providers: [
+    BsLocaleService
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

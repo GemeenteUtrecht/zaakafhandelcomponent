@@ -1,25 +1,27 @@
-<div class="configuration-component">
-  <section class="card card--blue col-md-6 mb-4">
-    <h2>Testdossier</h2>
-    <p>Dit is een toelichting</p>
-  </section>
-  <section class="card configuration-form">
+<div class="configuration-component" *ngIf="taskContextData">
+  <h1>{{taskContextData.task.name}}</h1>
+  <form class="configuration-form" [formGroup]="signDocumentForm" *ngIf="signDocumentForm.controls['documents'].value">
     <article class="configuration-details">
       <label class="h4 d-inline-block mr-2">Te ondertekenen documenten</label>
-      <gu-tooltip type="primary" inline="true">Dit zijn de documenten die bij de zaak horen. Selecteer de documenten die digitaal ondertekend moeten worden.</gu-tooltip>
+      <p>Dit zijn de documenten die bij de zaak horen. Selecteer de documenten die digitaal ondertekend moeten worden.</p>
       <div class="configuration-files">
-        <gu-checkbox id="3" value="true" checkboxFormControl="approved">
-          <span><a>text.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
-        <gu-checkbox id="4" value="true" checkboxFormControl="approved">
-          <span><a href="google.com">text.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
+        <div class="configuration-files" formArrayName="documents">
+          <div class="row">
+            <div class="col-md-6 form-group" *ngFor="let document of documents.controls; let i = index">
+              <gu-checkbox id="kp-sign-docs-{{i}}"
+                           [value]="taskContextData.context.documents[i].url"
+                           [control]="document">
+                <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+              </gu-checkbox>
+            </div>
+          </div>
+        </div>
       </div>
     </article>
 
     <article class="configuration-details">
       <label class="h4 d-inline-block" for="textarea_config">Ondertekenaars</label>
-      <div class="step-container mb-5"
+      <div class="step-container mb-4"
            id="configuration-select--{{i}}"
            *ngFor="let step of [].constructor(steps); let i = index"
       >
@@ -27,13 +29,43 @@
           <span class="step-label">Stap {{i + 1}}</span>
           <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep(i)">delete</gu-icon>
         </div>
-        <gu-multiselect
-          placeholder="Selecteer ondertekenaar">
-        </gu-multiselect>
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <gu-multiselect *ngIf="assignedUsers.value[i].controls['username']"
+                            (typeOutput)="onSearch($event)"
+                            [items]="items"
+                            [multiple]="false"
+                            [control]="assignedUsers.value[i].controls['username']"
+                            bindLabel="username"
+                            bindValue="username"
+                            required
+                            placeholder="Selecteer ondertekenaar">
+            </gu-multiselect>
+          </div>
+          <div class="col-md-6 form-group">
+            <gu-text-field *ngIf="assignedUsers.value[i].controls['email']"
+                           [control] = "assignedUsers.value[i].controls['email']"
+                           label="E-mail (optioneel)"
+                           id="sign-doc-email--{{i}}"
+            ></gu-text-field>
+          </div>
+          <div class="col-md-6 form-group">
+            <gu-text-field *ngIf="assignedUsers.value[i].controls['firstName']"
+                           [control] = "assignedUsers.value[i].controls['firstName']"
+                           label="Voornaam (optioneel)"
+                           id="sign-doc-firstname--{{i}}"
+            ></gu-text-field>
+          </div>
+          <div class="col-md-6 form-group">
+            <gu-text-field *ngIf="assignedUsers.value[i].controls['lastName']"
+                           [control] = "assignedUsers.value[i].controls['lastName']"
+                           label="Achternaam (optioneel)"
+                           id="sign-doc-lastname--{{i}}"
+            ></gu-text-field>
+          </div>
+        </div>
       </div>
       <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
-      <div class="d-flex justify-content-end">
-      </div>
     </article>
     <article class="configuration-details">
       <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
@@ -43,5 +75,5 @@
     <div class="d-flex justify-content-end">
       <gu-button size="large" (click)="addStep()">Voltooien</gu-button>
     </div>
-  </section>
+  </form>
 </div>

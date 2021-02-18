@@ -1,17 +1,15 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'gu-text-field',
   templateUrl: './text-field.component.html',
   styleUrls: ['./text-field.component.scss']
 })
-export class TextFieldComponent implements OnInit {
-
+export class TextFieldComponent {
+  @Input() control: FormControl;
   @Input() label: string;
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
+  @Input() id: string;
+  @Input() placeholder: string;
+  @Input() required: boolean;
 }

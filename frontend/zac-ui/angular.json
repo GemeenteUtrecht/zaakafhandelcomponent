@@ -24,6 +24,7 @@
             "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
             "styles": [
               "node_modules/@ng-select/ng-select/themes/default.theme.css",
+              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
               "apps/zac-ui/src/styles.scss"
             ],
             "stylePreprocessorOptions": {

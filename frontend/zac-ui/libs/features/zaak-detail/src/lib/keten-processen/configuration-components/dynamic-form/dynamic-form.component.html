@@ -1,14 +1,16 @@
-<div class="configuration-component">
-  <section class="card card--blue col-md-6 mb-4">
-    <h2>Testdossier</h2>
-    <p>Dit is een toelichting</p>
-  </section>
+<div class="configuration-component" *ngIf="taskContextData">
+  <h1>{{taskContextData.task.name}}</h1>
   <form class="card configuration-form" [formGroup]="dynamicForm">
-    <h2>Elementen</h2>
     <article class="configuration-details">
       <label class="h4 d-inline-block mr-2">Textfield (string/number)</label>
-      <div class="col-md-6">
-        <gu-text-field label="label"></gu-text-field>
+      <div class="col-md-6 form-group" *ngFor="let formField of formFields; let i = index">
+        <ng-container [ngSwitch]="formField.inputType">
+          <gu-text-field *ngSwitchCase="'string'"
+                         [control]="formFields[formField.name]"
+                         [label]="formField.label"
+                         id="dyn-form-str-{{formField.name}}{{i}}"
+          ></gu-text-field>
+        </ng-container>
       </div>
     </article>
     <article class="configuration-details">

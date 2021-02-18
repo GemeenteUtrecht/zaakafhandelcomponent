@@ -1,11 +1,9 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpHeaders, HttpResponse } from '@angular/common/http';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { ModalService } from '@gu/components';
-import { convertBlobToString } from '@gu/utils';
-import { FileUpload } from '@gu/models';
 
 @Component({
   selector: 'gu-document-toevoegen',
@@ -25,15 +23,18 @@ export class DocumentToevoegenComponent implements OnInit {
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private modalService: ModalService
-  ) {
+  ) { }
+
+  ngOnInit() {
     this.addDocumentForm = this.fb.group({
       documentType: this.fb.control("", Validators.required),
       documentFile: this.fb.control("", Validators.required),
     })
+    this.fetchDocumentTypes()
   }
 
-  ngOnInit() {
-    this.fetchDocumentTypes()
+  get documentTypeControl(): FormControl {
+    return this.addDocumentForm.controls['documentType'] as FormControl;
   }
 
   fetchDocumentTypes() {
