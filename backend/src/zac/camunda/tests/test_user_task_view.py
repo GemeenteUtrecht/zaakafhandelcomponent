@@ -412,7 +412,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_select_document_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         payload = {
-            "selected_documents": [self.document.url],
+            "selectedDocuments": [self.document.url],
         }
 
         with patch(
@@ -433,13 +433,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
         payload = {
-            "assigned_users": [
+            "assignedUsers": [
                 {
                     "users": [user.username for user in users],
                     "deadline": "2020-01-01",
                 },
             ],
-            "selected_documents": [self.document.url],
+            "selectedDocuments": [self.document.url],
             "toelichting": "some-toelichting",
         }
         revreq_data = {
@@ -477,8 +477,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             email="some@email.com",
         )
         payload = {
-            "assigned_users": [{"username": user.username}],
-            "selected_documents": [self.document.url],
+            "assignedUsers": [{"username": user.username}],
+            "selectedDocuments": [self.document.url],
         }
 
         with patch(

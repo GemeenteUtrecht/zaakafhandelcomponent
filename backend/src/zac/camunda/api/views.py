@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.api import complete_task, send_message
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework import exceptions, parsers, permissions, status
+from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -76,7 +76,6 @@ class UserTaskView(APIView):
     """
 
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
         task = get_task(self.kwargs["task_id"], check_history=False)
