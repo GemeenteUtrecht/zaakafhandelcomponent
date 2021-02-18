@@ -242,10 +242,10 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             for user in data["users"]
         ]
         return {
-            "kownsl_documents": self.validated_data["selected_documents"],
-            "kownsl_users_list": kownsl_users_list,
-            "kownsl_review_request_id": str(self.review_request.id),
-            "kownsl_frontend_url": kownsl_frontend_url,
+            "kownslDocuments": self.validated_data["selected_documents"],
+            "kownslUsersList": kownsl_users_list,
+            "kownslReviewRequestId": str(self.review_request.id),
+            "kownslFrontendUrl": kownsl_frontend_url,
         }
 
 

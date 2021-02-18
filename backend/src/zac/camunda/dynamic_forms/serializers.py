@@ -2,7 +2,6 @@ from typing import Dict
 
 from django.utils.translation import gettext_lazy as _
 
-import inflection
 from rest_framework import fields, serializers
 from rest_framework.utils.serializer_helpers import BindingDict
 
@@ -147,7 +146,6 @@ def get_dynamic_form_serializer_fields(task: Task) -> Dict[str, fields.Field]:
         field_definition = get_field_definition(field)
         field_cls, get_kwargs = FIELD_TYPE_MAP[field_type]
         name = field_definition.pop("name")
-        name = inflection.underscore(name)
         fields[name] = field_cls(**get_kwargs(field_definition))
 
     return fields

@@ -221,7 +221,7 @@ class DynamicFormTests(ClearCachesMixin, APITestCase):
                 "stringField": "Some string",
                 "intField": 42,
                 "boolField": True,
-                "dateField": "2021-02-09T00:00:00Z",
+                "dateField": datetime.fromisoformat("2021-02-09T00:00:00+00:00"),
                 "enumField": "second",
             },
         )

@@ -1,4 +1,3 @@
-import json
 import uuid
 
 from django.utils.translation import gettext_lazy as _
@@ -6,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.api import complete_task, send_message
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework import exceptions, permissions, status
+from rest_framework import exceptions, parsers, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,6 +76,7 @@ class UserTaskView(APIView):
     """
 
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
+    parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
         task = get_task(self.kwargs["task_id"], check_history=False)
@@ -149,13 +149,6 @@ class UserTaskView(APIView):
             **serializer.get_process_variables(),
         }
 
-        # Make sure variables are rendered in preferred format
-        # before being passed on to complete_task.
-        if not getattr(request, "accepted_renderer", None):
-            neg = self.perform_content_negotiation(request, force=True)
-            request.accepted_renderer, request.accepted_media_type = neg
-
-        variables = json.loads(request.accepted_renderer.render(variables))
         complete_task(task.id, variables)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
