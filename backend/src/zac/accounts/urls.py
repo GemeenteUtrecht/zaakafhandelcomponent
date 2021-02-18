@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import path
 
 from .views import (
     AuthorizationProfileCreateView,
@@ -15,7 +15,6 @@ from .views import (
 app_name = "accounts"
 
 urlpatterns = [
-    path("api/", include("zac.accounts.api.urls")),
     path("login/", LoginView.as_view(), name="login"),
     path(
         "auth-profiles/",

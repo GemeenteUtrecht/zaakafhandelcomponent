@@ -21,7 +21,7 @@ const getAssignee = async (userId) => {
         return USER_CACHE[userId];
     }
 
-    const user = await get(`/accounts/api/users/${userId}`);
+    const user = await get(`/api/accounts/users/${userId}`);
     return user;
 };
 

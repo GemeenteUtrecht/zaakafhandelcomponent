@@ -47,7 +47,7 @@ const InformatieobjectTypePermissions = ({ configuration, catalogChoices, existi
         if (!catalogus) {
             return [];
         }
-        const informatieobjecttypen = await get('/accounts/api/informatieobjecttypen', {catalogus: catalogus});
+        const informatieobjecttypen = await get('/api/accounts/informatieobjecttypen', {catalogus: catalogus});
         dispatch({
             type: 'INFORMATIEOBJECTTYPEN_LOADED',
             payload: informatieobjecttypen.emptyFormData.map(fd => fd.omschrijving),

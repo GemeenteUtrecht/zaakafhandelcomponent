@@ -9,7 +9,7 @@ import DeleteButton from '../forms/DeleteButton';
 import { ErrorList, Wrapper } from '../forms/Utils';
 import { TitleContext } from '../forms/context';
 
-const ENDPOINT = '/accounts/api/users';
+const ENDPOINT = '/api/accounts/users';
 
 const getUsers = (inputValue) => {
     const selectedUserInputs = Array.from(document.getElementsByClassName('input--kownsl_user'));
