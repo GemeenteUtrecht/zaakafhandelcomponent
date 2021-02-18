@@ -215,7 +215,10 @@ def can_download_document(user: User, document: Optional[Document]) -> bool:
 
 
 rules.add_rule("zaken:afhandelen", can_close_zaken | can_set_results)
-rules.add_rule(zaken_inzien.name, can_read_zaak_by_zaaktype | has_temporary_access)
+rules.add_rule(
+    zaken_inzien.name,
+    can_read_zaak_by_zaaktype | has_temporary_access | is_zaak_behandelaar,
+)
 rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
 )
