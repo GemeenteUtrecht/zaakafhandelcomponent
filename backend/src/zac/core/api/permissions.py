@@ -48,8 +48,3 @@ class CanReadZaken(RulesPermission):
 
 class CanHandleAccessRequests(RulesPermission):
     permission = zaken_handle_access
-
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        if request.method not in permissions.SAFE_METHODS:
-            return False
-        return super().has_permission(request, view)

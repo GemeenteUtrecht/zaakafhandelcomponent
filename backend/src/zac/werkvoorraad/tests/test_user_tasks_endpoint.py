@@ -14,7 +14,7 @@ TASK_DATA = {
     "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
     "name": "aName",
     "assignee": None,
-    "created": "2013-01-23T13:42:42.000+0200",
+    "created": "2013-01-23T13:42:42Z",
     "due": "2013-01-23T13:49:42.576+0200",
     "followUp": "2013-01-23T13:44:42.437+0200",
     "delegationState": "RESOLVED",
@@ -64,7 +64,7 @@ class UserTasksTests(APITestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         with patch(
-            "zac.werkvoorraad.views.get_camunda_user_tasks",
+            "zac.werkvoorraad.api.views.get_camunda_user_tasks",
             return_value=[],
         ):
             response = self.client.get(self.endpoint)
@@ -73,25 +73,35 @@ class UserTasksTests(APITestCase):
         self.assertEqual(response.json(), [])
 
     def test_user_tasks_endpoint(self):
+        self.maxDiff = None
         # Sanity check
         with patch(
-            "zac.werkvoorraad.views.get_camunda_user_tasks",
+            "zac.werkvoorraad.api.views.get_camunda_user_tasks",
             return_value=[_get_task(**{"assignee": self.user})],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
-            data,
-            [
-                {
-                    "name": TASK_DATA["name"],
-                    "url": reverse(
-                        "core:zaak-task",
-                        kwargs={
-                            "task_id": TASK_DATA["id"],
-                        },
-                    ),
+            data[0],
+            {
+                "name": TASK_DATA["name"],
+                "assignee": {
+                    "email": self.user.email,
+                    "firstName": self.user.first_name,
+                    "id": self.user.id,
+                    "isStaff": self.user.is_staff,
+                    "lastName": self.user.last_name,
+                    "username": self.user.username,
                 },
-            ],
+                "created": TASK_DATA["created"],
+                "executeUrl": reverse(
+                    "core:zaak-task",
+                    kwargs={
+                        "task_id": TASK_DATA["id"],
+                    },
+                ),
+                "hasForm": False,
+                "id": TASK_DATA["id"],
+            },
         )

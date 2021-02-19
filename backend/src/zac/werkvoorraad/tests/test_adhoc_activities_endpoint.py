@@ -13,8 +13,8 @@ from zac.accounts.tests.factories import UserFactory
 from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zgw.models.zrc import Zaak
 
-from ..data import ActivityGroup
-from ..serializers import WorkStackAdhocActivitiesSerializer
+from ..api.data import ActivityGroup
+from ..api.serializers import WorkStackAdhocActivitiesSerializer
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
@@ -56,7 +56,7 @@ class AdhocActivitiesTests(APITestCase):
         )
 
         cls.patch_get_zaak = patch(
-            "zac.werkvoorraad.views.get_zaak", return_value=cls.zaak
+            "zac.werkvoorraad.api.views.get_zaak", return_value=cls.zaak
         )
 
     def setUp(self):

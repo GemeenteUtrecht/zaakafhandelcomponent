@@ -15,6 +15,6 @@ class ActivityGroup:
 
 @dataclass
 class AccessRequestGroup:
-    requesters: List[AccessRequest]
+    access_requests: List[AccessRequest]
     zaak: Zaak
     zaak_url: str

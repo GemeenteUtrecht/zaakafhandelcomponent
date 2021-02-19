@@ -1,23 +1,17 @@
-from django.core.validators import URLValidator
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.accounts.api.serializers import ZaakAccessSerializer
 from zac.accounts.models import AccessRequest, User
-from zac.activities.api.serializers import ActivitySerializer
 from zac.activities.models import Activity
-from zac.camunda.data import Task
 from zac.core.api.serializers import ZaakSerializer
-from zgw.models.zrc import Zaak
 
 from .data import AccessRequestGroup, ActivityGroup
 
 
-class AccessRequesterSerializer(APIModelSerializer):
+class AccessRequestSerializer(APIModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -30,14 +24,16 @@ class AccessRequesterSerializer(APIModelSerializer):
 
 
 class WorkStackAccessRequestsSerializer(APIModelSerializer):
-    requesters = AccessRequesterSerializer(many=True)
-    url = serializers.SerializerMethodField()
+    access_requests = AccessRequestSerializer(many=True)
+    url = serializers.SerializerMethodField(
+        help_text=_("This URL points to the case access requests."),
+    )
     zaak = ZaakSerializer()
 
     class Meta:
         model = AccessRequestGroup
         fields = (
-            "requesters",
+            "access_requests",
             "url",
             "zaak",
         )
@@ -60,7 +56,9 @@ class ActivityNameSerializer(serializers.ModelSerializer):
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
     activities = ActivityNameSerializer(many=True)
-    url = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField(
+        help_text=_("This URL points to the case adhoc activities."),
+    )
     zaak = ZaakSerializer()
 
     class Meta:
@@ -77,56 +75,5 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
             kwargs={
                 "bronorganisatie": obj.zaak.bronorganisatie,
                 "identificatie": obj.zaak.identificatie,
-            },
-        )
-
-
-class CaseTypeDescriptionSerializer(APIModelSerializer):
-    class Meta:
-        model = ZaakType
-        fields = ("omschrijving",)
-
-
-class WorkStackAssigneeCasesSerializer(APIModelSerializer):
-    url = serializers.SerializerMethodField()
-    zaaktype = CaseTypeDescriptionSerializer()
-
-    class Meta:
-        model = Zaak
-        fields = (
-            "einddatum",
-            "einddatum_gepland",
-            "identificatie",
-            "startdatum",
-            "url",
-            "vertrouwelijkheidaanduiding",
-            "zaaktype",
-        )
-
-    def get_url(self, obj) -> str:
-        return reverse(
-            "core:zaak-detail",
-            kwargs={
-                "bronorganisatie": obj.bronorganisatie,
-                "identificatie": obj.identificatie,
-            },
-        )
-
-
-class WorkStackUserTaskSerializer(APIModelSerializer):
-    url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Task
-        fields = (
-            "name",
-            "url",
-        )
-
-    def get_url(self, obj) -> str:
-        return reverse(
-            "core:zaak-task",
-            kwargs={
-                "task_id": obj.id,
             },
         )

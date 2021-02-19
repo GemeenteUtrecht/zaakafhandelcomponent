@@ -5,7 +5,6 @@ from django.urls import reverse
 import requests_mock
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -96,5 +95,5 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(
-            sorted(list(data[0].keys())), sorted(["requesters", "url", "zaak"])
+            sorted(list(data[0].keys())), sorted(["accessRequests", "url", "zaak"])
         )

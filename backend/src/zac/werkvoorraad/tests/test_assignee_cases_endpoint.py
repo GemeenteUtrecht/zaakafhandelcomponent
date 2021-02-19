@@ -34,7 +34,7 @@ class AssigneeCasesTests(APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-        zaaktype = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
         )
@@ -52,7 +52,7 @@ class AssigneeCasesTests(APITestCase):
             uiterlijkeEinddatumAfdoening="2021-02-17",
         )
         cls.zaak_unfinished = factory(Zaak, zaak_unfinished)
-        cls.zaak_unfinished.zaaktype = factory(ZaakType, zaaktype)
+        cls.zaak_unfinished.zaaktype = factory(ZaakType, cls.zaaktype)
 
         zaak_finished = generate_oas_component(
             "zrc",
@@ -111,24 +111,28 @@ class AssigneeCasesTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
-            [
-                {
-                    "einddatum": self.zaak_unfinished.einddatum,
-                    "einddatumGepland": self.zaak_unfinished.einddatum_gepland,
-                    "identificatie": self.zaak_unfinished.identificatie,
-                    "startdatum": str(self.zaak_unfinished.startdatum),
-                    "url": reverse(
-                        "core:zaak-detail",
-                        kwargs={
-                            "bronorganisatie": self.zaak_unfinished.bronorganisatie,
-                            "identificatie": self.zaak_unfinished.identificatie,
-                        },
-                    ),
-                    "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
-                    "zaaktype": {
-                        "omschrijving": self.zaak_unfinished.zaaktype.omschrijving
-                    },
-                }
-            ],
-            data,
+            {
+                "bronorganisatie": self.zaak_unfinished.bronorganisatie,
+                "einddatum": self.zaak_unfinished.einddatum,
+                "einddatumGepland": self.zaak_unfinished.einddatum_gepland,
+                "identificatie": self.zaak_unfinished.identificatie,
+                "startdatum": str(self.zaak_unfinished.startdatum),
+                "url": self.zaak_unfinished.url,
+                "zaaktype": {
+                    "url": self.zaaktype["url"],
+                    "catalogus": self.zaaktype["catalogus"],
+                    "omschrijving": self.zaaktype["omschrijving"],
+                    "versiedatum": self.zaaktype["versiedatum"],
+                },
+                "omschrijving": self.zaak_unfinished.omschrijving,
+                "toelichting": self.zaak_unfinished.toelichting,
+                "registratiedatum": str(self.zaak_unfinished.registratiedatum),
+                "uiterlijkeEinddatumAfdoening": str(
+                    self.zaak_unfinished.uiterlijke_einddatum_afdoening
+                ),
+                "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
+                "deadline": str(self.zaak_unfinished.deadline),
+                "deadlineProgress": self.zaak_unfinished.deadline_progress(),
+            },
+            data[0],
         )
