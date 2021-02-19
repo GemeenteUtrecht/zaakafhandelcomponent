@@ -1,7 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // Material Icons
 import { MatIconModule } from '@angular/material/icon';
@@ -19,8 +18,7 @@ import { TooltipComponent } from './elements/tooltip/tooltip.component';
 import { CollapsibleComponent } from './elements/collapsible/collapsible.component';
 import { ProgressBarComponent } from './elements/progress-bar/progress-bar.component';
 import { CheckboxComponent } from './elements/checkbox/checkbox.component';
-import { TextFieldComponent } from './elements/text-field/text-field.component';
-import { DropdownComponent } from './elements/dropdown/dropdown.component';
+import { InputFieldComponent } from './elements/input-field/input-field.component';
 
 // UI Components
 import { FileComponent } from './components/file/file.component';
@@ -57,8 +55,7 @@ import { MessageComponent } from './elements/message/message.component';
     CheckboxComponent,
     IconComponent,
     DatepickerComponent,
-    TextFieldComponent,
-    DropdownComponent,
+    InputFieldComponent,
     MessageComponent,
   ],
   exports: [
@@ -78,8 +75,7 @@ import { MessageComponent } from './elements/message/message.component';
     IconComponent,
     DatepickerComponent,
     MatIconModule,
-    TextFieldComponent,
-    DropdownComponent,
+    InputFieldComponent,
     MessageComponent
   ],
   providers: [

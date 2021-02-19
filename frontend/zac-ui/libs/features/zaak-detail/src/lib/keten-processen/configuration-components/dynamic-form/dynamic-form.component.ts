@@ -1,5 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { FormField, TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
@@ -10,10 +10,12 @@ import { DatePipe } from '@angular/common';
   templateUrl: './dynamic-form.component.html',
   styleUrls: ['../configuration-components.scss']
 })
-export class DynamicFormComponent implements OnInit {
+export class DynamicFormComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
   formFields: FormField[];
+  formattedEnumItems = {};
+  formattedBooleanItems = {};
 
   //Form
   dynamicForm: FormGroup;
@@ -23,17 +25,71 @@ export class DynamicFormComponent implements OnInit {
     private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private datePipe: DatePipe
-  ) { }
+  ) {}
 
-  ngOnInit(): void {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.taskContextData.previousValue !== this.taskContextData ) {
+      this.addDynamicFormControls()
+    }
+  }
+
+  addDynamicFormControls() {
     this.dynamicForm = this.fb.group({});
     this.formFields = this.taskContextData.context.formFields;
     this.formFields.forEach(formField => {
-      this.dynamicForm.addControl(formField.name, this.fb.control('', Validators.required));
+      switch (formField.inputType) {
+        case 'enum': this.formatEnumItems(formField.name, formField.enum); break;
+        case 'boolean': this.formatBooleanItems(formField.name); break;
+      }
+      this.dynamicForm.addControl(formField.name, this.fb.control(formField.value, Validators.required));
     })
+  }
+
+  formatEnumItems(name: string, enumArray: Array<string[]>) {
+    const formattedEnumArray = []
+    enumArray.forEach(value => {
+      formattedEnumArray.push({
+        id: value[0]
+      });
+    });
+    this.formattedEnumItems[name] = formattedEnumArray;
+  }
+
+  submitForm() {
+    const formData = {
+      form: this.taskContextData.form
+    }
+    Object.keys(this.dynamicForm.controls).forEach((control, i) => {
+      const inputType = this.formFields[i].inputType;
+      let value = this.dynamicForm.get(control).value;
+      switch (inputType) {
+        case 'date':
+          value = this.datePipe.transform(value, "yyyy-MM-dd hh:mm:ss");
+          break;
+        case 'int': value = parseInt(value, 10); break;
+      }
+      formData[control] = value;
+    })
+    this.putForm(formData);
+  }
+
+  putForm(formData) {
+    this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
+    })
+  }
+
+  formatBooleanItems(groupName: string) {
+    this.formattedBooleanItems[groupName] = [
+      {id: true, name: "Ja"},
+      {id: false, name: "Nee"}
+    ];
   }
 
   get formField() {
     return this.dynamicForm.controls;
   };
+
+  dynamicFormField(name: string): FormControl {
+    return this.dynamicForm.get(name) as FormControl;
+  }
 }

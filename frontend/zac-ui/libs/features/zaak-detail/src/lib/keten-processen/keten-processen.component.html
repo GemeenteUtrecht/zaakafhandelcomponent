@@ -14,68 +14,54 @@
     </div>
     <p class="p--error" *ngIf="sendMessageHasError">{{sendMessageErrorMessage}}</p>
     <div class="keten-processen__taken">
-      <h3>Taken</h3>
-      <div class="taak" *ngFor="let task of data[0].tasks">
-        <p class="p--marginsmall p--bold d-inline-block">{{task.name}}</p>
-        <label class="label label--date">{{task.created | date:'fullDate'}}</label>
-        <div class="taak__buttons">
-          <gu-button type="secondary" size="small">Claimen</gu-button>
-          <gu-button type="secondary" size="small" (click)="executeTask(task.id, task.hasForm, task.executeUrl)">Uitvoeren</gu-button>
-        </div>
-      </div>
-      <ng-container *ngFor="let subProcess of data[0].subProcesses">
-        <div class="taak" *ngFor="let task of subProcess.tasks">
-          <p class="p--marginsmall p--bold d-inline-block" *ngIf="task.name">{{task.name}}</p>
-          <label class="label label--date">{{task.created | date:'fullDate'}}</label>
-          <gu-chip
-            *ngIf="!!task.assignee"
-            type="primary"
-            class="d-inline-block mb-3">
-            {{task.assignee.username}}
-          </gu-chip>
-          <div class="taak__buttons">
-            <gu-button type="secondary">Claimen</gu-button>
-            <gu-button type="secondary" (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">Uitvoeren</gu-button>
+      <div class="row">
+        <div class="col-md-6 mb-4 mb-md-0">
+          <h3>Taken</h3>
+          <div class="taak d-flex justify-content-between" *ngFor="let task of data[0].tasks">
+            <div class="taak__detail mr-md-2">
+              <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+              <p class="p--marginsmall p--bold">{{task.name}}</p>
+            </div>
+            <gu-button class="align-self-center"
+                       type="secondary"
+                       size="small"
+                       (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+              Uitvoeren
+            </gu-button>
           </div>
         </div>
-      </ng-container>
+        <div class="col-md-6">
+          <h3>Deeltaken</h3>
+          <ng-container *ngFor="let subProcess of data[0].subProcesses">
+            <div class="taak d-flex justify-content-between" *ngFor="let task of subProcess.tasks">
+              <div class="taak__detail mr-md-2">
+                <label class="label label--date">{{task.created | date:'fullDate'}}</label>
+                <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
+                <gu-chip
+                  *ngIf="!!task.assignee"
+                  type="primary"
+                  class="d-inline-block mb-2">
+                  {{task.assignee.username}}
+                </gu-chip>
+              </div>
+              <ng-container *ngIf="currentUser && task.assignee">
+                <gu-button *ngIf="currentUser === task.assignee.username"
+                           class="align-self-center"
+                           type="secondary"
+                           (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">
+                  Uitvoeren
+                </gu-button>
+              </ng-container>
+            </div>
+          </ng-container>
+        </div>
+      </div>
     </div>
-    <gu-button
-      type="secondary"
-      (click)="openModal('custom-modal-1')">
-      Configureer adviseren/accorderen
-    </gu-button>
-    <gu-button
-      type="secondary"
-      (click)="openModal('custom-modal-2')">
-      Document selecteren
-    </gu-button>
-    <gu-button
-      type="secondary"
-      (click)="openModal('custom-modal-3')">
-      Document ondertekenen
-    </gu-button>
-    <gu-button
-      type="secondary"
-      (click)="openModal('custom-modal-4')">
-      Dynamische form
-    </gu-button>
   </ng-container>
   <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
     <p>Er zijn geen actieve (keten)processen.</p>
   </ng-container>
 </div>
-<!--<gu-button (click)="openModal('custom-modal-1')">-->
-<!--  Uitvoeren-->
-<!--</gu-button>-->
-<!--<gu-modal-->
-<!--  id="custom-modal-1"-->
-<!--  [closeIcon]="true"-->
-<!--  title="Adviesvraag configureren"-->
-<!--&gt;-->
-<!--  <gu-config-adviseren-accorderen-->
-<!--  ></gu-config-adviseren-accorderen>-->
-<!--</gu-modal>-->
 <gu-modal
   id="custom-modal-2"
   [closeIcon]="true"
@@ -93,23 +79,11 @@
 
     </gu-document-select>
 
-    <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'"  [taskContextData]="taskContextData">
+    <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData">
 
     </gu-sign-document>
 
-    <gu-dynamic-form *ngSwitchDefault></gu-dynamic-form>
+    <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData"></gu-dynamic-form>
   </ng-container>
 
 </gu-modal>
-<!--<gu-modal-->
-<!--  id="custom-modal-3"-->
-<!--  [closeIcon]="true"-->
-<!--  title="Digitale ondertekening"-->
-<!--&gt;<gu-sign-document></gu-sign-document>-->
-<!--</gu-modal>-->
-<!--<gu-modal-->
-<!--  id="custom-modal-4"-->
-<!--  [closeIcon]="true"-->
-<!--  title="Dynamische form"-->
-<!--&gt;<gu-dynamic-form></gu-dynamic-form>-->
-<!--</gu-modal>-->

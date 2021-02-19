@@ -1,8 +1,9 @@
 <label class="has-float-label">
-  <input type="text"
+  <input [attr.type]="type"
+         [attr.placeholder]="placeholder ? placeholder : ''"
          [required]="required"
          [formControl]="control"
-         [attr.placeholder]="placeholder ? placeholder : ''"
+         [value]="value ? value : null"
          class="form-control"
          [id]="id">
   <span>{{label}}</span>

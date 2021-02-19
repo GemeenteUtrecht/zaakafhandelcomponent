@@ -3,7 +3,11 @@
 .configuration-component {
   .step-container {
     border-bottom: 1px solid $border-grey;
-    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    &:last-child {
+      border: none;
+      margin: 0;
+    }
   }
   .configuration-form {
     margin-bottom: 1.25rem;

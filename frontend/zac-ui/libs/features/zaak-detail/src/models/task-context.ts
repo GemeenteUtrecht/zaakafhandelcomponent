@@ -23,7 +23,7 @@ export interface Task {
   id: string;
   executeUrl: string;
   name: string;
-  created: Date;
+  created: string;
   hasForm: boolean;
   assignee: Assignee;
 }
@@ -31,24 +31,17 @@ export interface Task {
 export interface FormField {
   name: string;
   label: string;
-  inputType: any;
-  value: 0
+  inputType: 'enum' | 'string' | 'int' | 'boolean' | 'date';
+  value: string | number | boolean;
+  enum?: Array<string[]>;
 }
 
 export interface Context {
-  documents: Document[];
+  documents?: Document[];
   title?: string;
   zaakInformatie?: ZaakInformatie;
   reviewType?: 'advice' | 'approval';
   formFields?: FormField[]
-}
-
-export interface DocumentSelectie {
-  documents: Document[]
-}
-
-export interface ValidSign {
-  documents: Document[]
 }
 
 export interface TaskContextData {
@@ -58,6 +51,6 @@ export interface TaskContextData {
     'zac:documentSelectie' |
     'zac:gebruikerSelectie' |
     'zac:validSign:configurePackage' |
-    '';
+    any;
   task: Task;
 }

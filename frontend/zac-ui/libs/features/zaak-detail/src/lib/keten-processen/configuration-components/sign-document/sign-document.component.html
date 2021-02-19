@@ -2,40 +2,38 @@
   <h1>{{taskContextData.task.name}}</h1>
   <form class="configuration-form" [formGroup]="signDocumentForm" *ngIf="signDocumentForm.controls['documents'].value">
     <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Te ondertekenen documenten</label>
+      <label class="h4 d-inline-block">Te ondertekenen documenten</label>
       <p>Dit zijn de documenten die bij de zaak horen. Selecteer de documenten die digitaal ondertekend moeten worden.</p>
       <div class="configuration-files">
-        <div class="configuration-files" formArrayName="documents">
-          <div class="row">
-            <div class="col-md-6 form-group" *ngFor="let document of documents.controls; let i = index">
-              <gu-checkbox id="kp-sign-docs-{{i}}"
-                           [value]="taskContextData.context.documents[i].url"
-                           [control]="document">
-                <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
-              </gu-checkbox>
-            </div>
+        <div class="row">
+          <div class="col-md-6 form-group" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
+            <gu-checkbox id="kp-sign-docs-{{i}}"
+                         [value]="taskContextData.context.documents[i].url"
+                         [control]="document">
+              <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+            </gu-checkbox>
           </div>
         </div>
       </div>
     </article>
 
     <article class="configuration-details">
-      <label class="h4 d-inline-block" for="textarea_config">Ondertekenaars</label>
-      <div class="step-container mb-4"
+      <label class="h4 d-inline-block">Ondertekenaar(s)</label>
+      <div class="steps-wrapper">
+        <div class="step-container"
            id="configuration-select--{{i}}"
-           *ngFor="let step of [].constructor(steps); let i = index"
-      >
+           formArrayName="assignedUsers"
+           *ngFor="let step of [].constructor(steps); let i = index">
         <div class="d-flex">
-          <span class="step-label">Stap {{i + 1}}</span>
-          <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep(i)">delete</gu-icon>
+          <span class="step-label"  *ngIf="steps > 1">Ondertekenaar {{i + 1}}</span>
+          <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep()">delete</gu-icon>
         </div>
-        <div class="row">
+        <div class="row" [formGroupName]="i">
           <div class="col-md-6 form-group">
-            <gu-multiselect *ngIf="assignedUsers.value[i].controls['username']"
-                            (typeOutput)="onSearch($event)"
+            <gu-multiselect (typeOutput)="onSearch($event)"
                             [items]="items"
                             [multiple]="false"
-                            [control]="assignedUsers.value[i].controls['username']"
+                            [control]="assignedUsersUsername(i)"
                             bindLabel="username"
                             bindValue="username"
                             required
@@ -43,37 +41,38 @@
             </gu-multiselect>
           </div>
           <div class="col-md-6 form-group">
-            <gu-text-field *ngIf="assignedUsers.value[i].controls['email']"
-                           [control] = "assignedUsers.value[i].controls['email']"
-                           label="E-mail (optioneel)"
-                           id="sign-doc-email--{{i}}"
-            ></gu-text-field>
+            <gu-input-field [control] = "assignedUsersEmail(i)"
+                            type="text"
+                            label="E-mail (optioneel)"
+                            id="sign-doc-email--{{i}}">
+            </gu-input-field>
+            <p class="form-control-error" *ngIf="assignedUsersEmail(i).value !== '' && assignedUsersEmail(i).invalid">Geen geldige e-mail</p>
           </div>
           <div class="col-md-6 form-group">
-            <gu-text-field *ngIf="assignedUsers.value[i].controls['firstName']"
-                           [control] = "assignedUsers.value[i].controls['firstName']"
-                           label="Voornaam (optioneel)"
-                           id="sign-doc-firstname--{{i}}"
-            ></gu-text-field>
+            <gu-input-field [control] = "assignedUsersFirstname(i)"
+                            type="text"
+                            label="Voornaam (optioneel)"
+                            id="sign-doc-firstname--{{i}}">
+            </gu-input-field>
           </div>
           <div class="col-md-6 form-group">
-            <gu-text-field *ngIf="assignedUsers.value[i].controls['lastName']"
-                           [control] = "assignedUsers.value[i].controls['lastName']"
-                           label="Achternaam (optioneel)"
-                           id="sign-doc-lastname--{{i}}"
-            ></gu-text-field>
+            <gu-input-field [control] = "assignedUsersLastname(i)"
+                            type="text"
+                            label="Achternaam (optioneel)"
+                            id="sign-doc-lastname--{{i}}">
+            </gu-input-field>
           </div>
         </div>
       </div>
-      <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
-    </article>
-    <article class="configuration-details">
-      <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
-      <span class="label label--optional">optioneel</span>
-      <textarea id="textarea_config"></textarea>
+      </div>
+      <gu-button type="secondary" size="small" (click)="addStep()">Ondertekenaar toevoegen</gu-button>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large" (click)="addStep()">Voltooien</gu-button>
+      <gu-button size="large"
+                 [disabled]="!signDocumentForm.valid"
+                 (click)="submitForm()">
+        Voltooien
+      </gu-button>
     </div>
   </form>
 </div>

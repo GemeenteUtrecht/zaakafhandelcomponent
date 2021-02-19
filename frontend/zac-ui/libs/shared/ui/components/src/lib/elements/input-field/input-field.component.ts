@@ -2,14 +2,16 @@ import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
 @Component({
-  selector: 'gu-text-field',
-  templateUrl: './text-field.component.html',
-  styleUrls: ['./text-field.component.scss']
+  selector: 'gu-input-field',
+  templateUrl: './input-field.component.html',
+  styleUrls: ['./input-field.component.scss']
 })
-export class TextFieldComponent {
+export class InputFieldComponent {
+  @Input() type: 'text' | 'number'
   @Input() control: FormControl;
   @Input() label: string;
   @Input() id: string;
   @Input() placeholder: string;
   @Input() required: boolean;
+  @Input() value: string | number;
 }

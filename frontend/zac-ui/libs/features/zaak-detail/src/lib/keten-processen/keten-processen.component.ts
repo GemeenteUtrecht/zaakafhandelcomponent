@@ -17,6 +17,7 @@ export class KetenProcessenComponent implements OnInit {
 
   data: KetenProcessen[];
   processInstanceId: string;
+  currentUser: string;
 
   isLoading = true;
   hasError: boolean;
@@ -47,7 +48,14 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchCurrentUser();
     this.fetchProcesses();
+  }
+
+  fetchCurrentUser(): void {
+    this.ketenProcessenService.getCurrentUser().subscribe( res => {
+      this.currentUser = res.username;
+    })
   }
 
   fetchProcesses(): void {
@@ -97,9 +105,5 @@ export class KetenProcessenComponent implements OnInit {
 
   openModal(id: string) {
     this.modalService.open(id);
-  }
-
-  closeModal(id: string) {
-    this.modalService.close(id);
   }
 }

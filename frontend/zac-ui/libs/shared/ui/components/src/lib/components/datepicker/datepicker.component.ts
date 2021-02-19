@@ -17,6 +17,7 @@ export class DatepickerComponent {
   @Input() placeholder: string;
   @Input() minDate: Date = new Date();
   @Input() required: boolean;
+  @Input() value: Date;
 
   bsConfig: Partial<BsDatepickerConfig>;
 
@@ -32,7 +33,7 @@ export class DatepickerComponent {
   }
 
   clearValue() {
-    this.control.patchValue(undefined)
+    this.control.patchValue(null)
   }
 }
 

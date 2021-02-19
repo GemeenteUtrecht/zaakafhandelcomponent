@@ -1,47 +1,61 @@
 <div class="configuration-component" *ngIf="taskContextData">
   <h1>{{taskContextData.task.name}}</h1>
-  <form class="card configuration-form" [formGroup]="dynamicForm">
-    <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Textfield (string/number)</label>
-      <div class="col-md-6 form-group" *ngFor="let formField of formFields; let i = index">
+  <form class="configuration-form" [formGroup]="dynamicForm">
+    <article class="configuration-details" *ngFor="let formField of formFields">
+      <div class="col-md-6 form-group">
+        <label class="h4 d-inline-block" >{{formField.label}}</label>
         <ng-container [ngSwitch]="formField.inputType">
-          <gu-text-field *ngSwitchCase="'string'"
-                         [control]="formFields[formField.name]"
-                         [label]="formField.label"
-                         id="dyn-form-str-{{formField.name}}{{i}}"
-          ></gu-text-field>
+<!--          enum-->
+          <ng-container *ngSwitchCase="'enum'">
+            <gu-multiselect [searchable]="false"
+                            [selectedValue]="formField.value"
+                            [items]="formattedEnumItems[formField.name]"
+                            [multiple]="false"
+                            [control]="dynamicFormField(formField.name)"
+                            bindLabel="id"
+                            bindValue="id">
+            </gu-multiselect>
+          </ng-container>
+<!--          string-->
+          <gu-input-field *ngSwitchCase="'string'"
+                          type="text"
+                          [control]="dynamicFormField(formField.name)"
+                          [value]="formField.value"
+                          id="dyn-form-str-{{formField.name}}"
+          ></gu-input-field>
+<!--          number-->
+          <gu-input-field *ngSwitchCase="'int'"
+                          type="number"
+                          [control]="dynamicFormField(formField.name)"
+                          [value]="formField.value"
+                          id="dyn-form-int-{{formField.name}}"
+          ></gu-input-field>
+<!--          boolean-->
+          <ng-container *ngSwitchCase="'boolean'">
+            <gu-multiselect [searchable]="false"
+                            [selectedValue]="formField.value"
+                            [items]="formattedBooleanItems[formField.name]"
+                            [multiple]="false"
+                            [control]="dynamicFormField(formField.name)"
+                            bindLabel="name"
+                            bindValue="id">
+            </gu-multiselect>
+          </ng-container>
+<!--          date-->
+          <ng-container *ngSwitchCase="'date'">
+            <gu-datepicker
+              [control]="dynamicFormField(formField.name)"
+              placeholder="Datum"></gu-datepicker>
+          </ng-container>
         </ng-container>
       </div>
     </article>
-    <article class="configuration-details">
-      <label class="h4 mr-2">Datum</label>
-      <div class="col-md-6">
-        <gu-datepicker></gu-datepicker>
-      </div>
-    </article>
-    <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Dropdown (enum)</label>
-      <div class="col-md-6">
-        <gu-dropdown></gu-dropdown>
-      </div>
-    </article>
-    <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Checkbox</label>
-      <div class="col-md-6">
-        <gu-checkbox id="30" value="true" checkboxFormControl="approved">
-          <span><a href="google.com">test1.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
-        <gu-checkbox id="40" value="true" checkboxFormControl="approved">
-          <span><a href="google.com">test2.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
-      </div>
-    </article>
-    <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Boolean</label>
-      <div class="col-md-6">
-        <gu-radio id="10" label="Akkoord" value="true" radioFormControl="test"></gu-radio>
-        <gu-radio id="21" label="Niet akkoord" value="false" radioFormControl="test"></gu-radio>
-      </div>
-    </article>
+    <div class="d-flex justify-content-end">
+      <gu-button size="large"
+                 [disabled]="!dynamicForm.valid"
+                 (click)="submitForm()">
+        Voltooien
+      </gu-button>
+    </div>
   </form>
 </div>

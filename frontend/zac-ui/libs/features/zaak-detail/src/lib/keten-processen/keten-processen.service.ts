@@ -3,6 +3,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
+import { User } from '@gu/models';
 
 export interface SendMessageForm {
   processInstanceId: string;
@@ -32,8 +33,13 @@ export class KetenProcessenService {
   }
 
   getAccounts(searchInput: string): Observable<UserSearch>{
-    const endpoint = encodeURI(`/accounts/api/users?search=${searchInput}`);
+    const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
     return this.http.Get<UserSearch>(endpoint);
+  }
+
+  getCurrentUser(): Observable<User> {
+    const endpoint = encodeURI("/api/accounts/users/me");
+    return this.http.Get<User>(endpoint);
   }
 
   putTaskData(taskId: string, formData) {

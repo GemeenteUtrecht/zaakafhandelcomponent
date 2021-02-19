@@ -2,7 +2,7 @@
 @import '../colors/colors';
 
 .form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-control {
@@ -20,9 +20,16 @@
   }
 }
 
+.form-control-error {
+  font-size: 75%;
+  color: $color-warn;
+  margin: 0.1rem 0 0 0.75rem;
+}
+
 .has-float-label {
   display: block;
   position: relative;
+  margin-bottom: 0;
   label, >span {
     position: absolute;
     cursor: text;
