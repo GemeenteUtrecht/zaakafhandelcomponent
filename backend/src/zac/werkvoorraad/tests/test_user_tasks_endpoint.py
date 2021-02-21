@@ -42,7 +42,7 @@ def _get_task(**overrides):
 
 class UserTasksTests(APITestCase):
     """
-    Test the adhoc activities API endpoint.
+    Test the user tasks workstack API endpoint.
     """
 
     @classmethod
