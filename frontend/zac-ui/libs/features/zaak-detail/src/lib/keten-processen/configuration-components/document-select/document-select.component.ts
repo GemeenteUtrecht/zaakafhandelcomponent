@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { TaskContextData } from '../../../../models/task-context';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApplicationHttpClient } from '@gu/services';
@@ -13,7 +13,14 @@ import { atleastOneValidator } from '@gu/utils';
 export class DocumentSelectComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
+  @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   selectDocumentsForm: FormGroup
+
+  isSubmitting: boolean;
+  submitSuccess: boolean;
+  submitHasError: boolean;
+  submitErrorMessage: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -56,6 +63,13 @@ export class DocumentSelectComponent implements OnChanges {
 
   putForm(formData) {
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
+      this.isSubmitting = false;
+      this.submitSuccess = true;
+      this.successReload.emit(true);
+    }, error => {
+      this.isSubmitting = false;
+      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.submitHasError = true;
     })
   }
 

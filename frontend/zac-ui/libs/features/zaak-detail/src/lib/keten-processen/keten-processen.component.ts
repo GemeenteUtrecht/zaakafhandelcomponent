@@ -35,6 +35,8 @@ export class KetenProcessenComponent implements OnInit {
   // Task context data
   taskContextData: TaskContextData;
   isLoadingContext: boolean;
+  contextHasError: boolean;
+  contextErrorMessage: string;
 
   constructor(
     private route: ActivatedRoute,
@@ -96,9 +98,13 @@ export class KetenProcessenComponent implements OnInit {
 
   fetchFormLayout(taskId): void {
     this.isLoadingContext = true;
-    this.modalService.open('custom-modal-2');
+    this.modalService.open('ketenprocessenModal');
     this.ketenProcessenService.getFormLayout(taskId).subscribe(res => {
       this.taskContextData = res;
+      this.isLoadingContext = false;
+    }, errorRes => {
+      this.contextErrorMessage = "Er is een fout opgetreden bij het laden van de taak."
+      this.contextHasError = true;
       this.isLoadingContext = false;
     })
   }

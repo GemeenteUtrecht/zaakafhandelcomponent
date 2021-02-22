@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -15,6 +15,8 @@ import { atleastOneValidator } from '@gu/utils';
 export class AdviserenAccorderenComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
+  @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   readonly assignedUsersTitle = {
     advice: 'Adviseur(s)',
     approval: 'Accordeur(s)'
@@ -27,6 +29,11 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   // Form
   assignUsersForm: FormGroup;
+
+  isSubmitting: boolean;
+  submitSuccess: boolean;
+  submitHasError: boolean;
+  submitErrorMessage: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -86,7 +93,15 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   putForm(formData) {
+    this.isSubmitting = true;
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
+      this.isSubmitting = false;
+      this.submitSuccess = true;
+      this.successReload.emit(true);
+    }, error => {
+      this.isSubmitting = false;
+      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.submitHasError = true;
     })
   }
 

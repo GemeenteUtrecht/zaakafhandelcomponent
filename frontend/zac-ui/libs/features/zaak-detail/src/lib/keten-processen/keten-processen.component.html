@@ -12,7 +12,7 @@
         {{message}}
       </gu-button>
     </div>
-    <p class="p--error" *ngIf="sendMessageHasError">{{sendMessageErrorMessage}}</p>
+    <gu-message *ngIf="sendMessageHasError" type="warn" message="{{sendMessageErrorMessage}}"></gu-message>
     <div class="keten-processen__taken">
       <div class="row">
         <div class="col-md-6 mb-4 mb-md-0">
@@ -63,27 +63,28 @@
   </ng-container>
 </div>
 <gu-modal
-  id="custom-modal-2"
+  id="ketenprocessenModal"
   [closeIcon]="true"
 >
   <ng-container *ngIf="isLoadingContext">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
+  <ng-container *ngIf="contextHasError">
+    <gu-message type="warn" [message]="contextErrorMessage"></gu-message>
+  </ng-container>
+
   <ng-container *ngIf="!isLoadingContext && taskContextData" [ngSwitch]="taskContextData.form">
     <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                     [taskContextData]="taskContextData"
+                                    (successReload)="fetchProcesses()"
     ></gu-config-adviseren-accorderen>
 
-    <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData">
+    <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-document-select>
 
-    </gu-document-select>
+    <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-sign-document>
 
-    <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData">
-
-    </gu-sign-document>
-
-    <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData"></gu-dynamic-form>
+    <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
   </ng-container>
 
 </gu-modal>

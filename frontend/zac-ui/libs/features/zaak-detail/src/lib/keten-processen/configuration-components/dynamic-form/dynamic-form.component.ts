@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { FormField, TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -13,12 +13,18 @@ import { DatePipe } from '@angular/common';
 export class DynamicFormComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
+  @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   formFields: FormField[];
   formattedEnumItems = {};
   formattedBooleanItems = {};
 
-  //Form
   dynamicForm: FormGroup;
+
+  isSubmitting: boolean;
+  submitSuccess: boolean;
+  submitHasError: boolean;
+  submitErrorMessage: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -75,6 +81,13 @@ export class DynamicFormComponent implements OnChanges {
 
   putForm(formData) {
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
+      this.isSubmitting = false;
+      this.submitSuccess = true;
+      this.successReload.emit(true);
+    }, error => {
+      this.isSubmitting = false;
+      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.submitHasError = true;
     })
   }
 

@@ -1,4 +1,4 @@
-<div class="configuration-component" *ngIf="taskContextData">
+<div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h1>{{taskContextData.context.title}}</h1>
   <div class="card card--blue col-md-6 mb-4">
     <h2>{{taskContextData.context.zaakInformatie.omschrijving}}</h2>
@@ -63,10 +63,17 @@
     </article>
     <div class="d-flex justify-content-end">
       <gu-button size="large"
-                 [disabled]="!assignUsersForm.valid"
-                 (click)="submitForm()">
+                 (click)="submitForm()"
+                 [disabled]="!assignUsersForm.valid || isSubmitting"
+                 [loading]="isSubmitting">
         Voltooien
       </gu-button>
     </div>
   </form>
+  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
+  </gu-message>
 </div>
+<!-- Success screen -->
+<gu-success *ngIf="submitSuccess">
+  <h3 class="mb-4">Voltooid</h3>
+</gu-success>

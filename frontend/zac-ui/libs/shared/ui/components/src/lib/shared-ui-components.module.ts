@@ -6,7 +6,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 
 // External Components
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { BsDatepickerModule, BsLocaleService  } from 'ngx-bootstrap/datepicker';
 
 // UI Elements
@@ -36,7 +35,6 @@ import { MessageComponent } from './elements/message/message.component';
     FormsModule,
     ReactiveFormsModule,
     MatIconModule,
-    NgbModule,
     BsDatepickerModule.forRoot()
   ],
   declarations: [

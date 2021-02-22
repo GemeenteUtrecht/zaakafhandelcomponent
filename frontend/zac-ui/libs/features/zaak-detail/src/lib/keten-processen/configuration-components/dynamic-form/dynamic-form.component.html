@@ -1,4 +1,4 @@
-<div class="configuration-component" *ngIf="taskContextData">
+<div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h1>{{taskContextData.task.name}}</h1>
   <form class="configuration-form" [formGroup]="dynamicForm">
     <article class="configuration-details" *ngFor="let formField of formFields">
@@ -52,10 +52,18 @@
     </article>
     <div class="d-flex justify-content-end">
       <gu-button size="large"
-                 [disabled]="!dynamicForm.valid"
-                 (click)="submitForm()">
+                 (click)="submitForm()"
+                 [disabled]="!dynamicForm.valid || isSubmitting"
+                 [loading]="isSubmitting">
         Voltooien
       </gu-button>
     </div>
   </form>
+  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
+  </gu-message>
 </div>
+<!-- Success screen -->
+<gu-success *ngIf="submitSuccess">
+  <h3 class="mb-4">Voltooid</h3>
+</gu-success>
+

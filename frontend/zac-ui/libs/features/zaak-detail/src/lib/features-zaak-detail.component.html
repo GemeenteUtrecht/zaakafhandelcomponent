@@ -6,8 +6,9 @@
       <gu-loading-indicator *ngIf="!data && isLoading"></gu-loading-indicator>
       <div class="row">
         <div class="col-md-6">
-          <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
-          <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
+          <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage">
+            <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
+          </gu-message>
         </div>
       </div>
       <div class="card-container">
