@@ -12,8 +12,9 @@
 
           <!-- Error -->
           <ng-template [ngIf]="hasError && !isLoading">
-            <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
-            <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
+            <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage">
+              <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
+            </gu-message>
           </ng-template>
 
           <!-- Main content -->
@@ -78,7 +79,7 @@
               </section>
               <div class="d-flex justify-content-end">
                 <gu-button
-                  [disabled]="!adviceForm.valid"
+                  [disabled]="!adviceForm.valid || isSubmitting"
                   [loading]="isSubmitting"
                   type="primary"
                   size="large"

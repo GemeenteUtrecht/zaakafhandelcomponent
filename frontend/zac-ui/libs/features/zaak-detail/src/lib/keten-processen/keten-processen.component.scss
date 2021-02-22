@@ -9,13 +9,6 @@
       padding-bottom: 1rem;
       margin-bottom: 1rem;
       border-bottom: 1px solid $border-grey;
-      &:last-child {
-        margin-bottom: 0;
-        border: none;
-      }
-    }
-    .taak__buttons * {
-      margin-right: 0.625rem;
     }
   }
 }

@@ -1,4 +1,8 @@
 // UI models
-export { ExtensiveCell, CellData, RowData, Table } from './ui/table';
-export { FileUpload } from './ui/file-upload';
-export { ModalConfig } from './ui/modal';
+export * from './ui/table';
+export * from './ui/file-upload';
+export * from './ui/modal';
+
+//Acounts
+
+export * from './accounts/user';

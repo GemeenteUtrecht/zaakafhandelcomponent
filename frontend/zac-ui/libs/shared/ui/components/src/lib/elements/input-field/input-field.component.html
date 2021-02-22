@@ -1,0 +1,10 @@
+<label class="has-float-label">
+  <input [attr.type]="type"
+         [attr.placeholder]="placeholder ? placeholder : ''"
+         [required]="required"
+         [formControl]="control"
+         [value]="value ? value : null"
+         class="form-control"
+         [id]="id">
+  <span>{{label}}</span>
+</label>

@@ -1,8 +1,9 @@
 // Import with specific order
-@import 'normalize/import-now';
+@import '~bootstrap/scss/bootstrap-reboot';
 @import 'colors/colors';
 @import 'space/space';
 @import 'typography/typography';
 @import 'grid/grid';
 @import 'layout/layout';
 @import 'layout/container';
+@import 'forms/forms';

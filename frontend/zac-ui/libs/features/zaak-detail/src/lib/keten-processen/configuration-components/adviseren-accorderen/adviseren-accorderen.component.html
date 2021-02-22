@@ -1,50 +1,79 @@
-<div class="configuration-component">
-  <section class="card card--blue col-md-6 mb-4">
-    <h2>Testdossier</h2>
-    <p>Dit is een toelichting</p>
-  </section>
-  <section class="card configuration-form">
+<div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
+  <h1>{{taskContextData.context.title}}</h1>
+  <div class="card card--blue col-md-6 mb-4">
+    <h2>{{taskContextData.context.zaakInformatie.omschrijving}}</h2>
+    <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : "Geen toelichting"}}</p>
+  </div>
+  <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">
     <h2>Gegevens</h2>
     <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Selecteer relevante documenten</label>
-      <gu-tooltip type="primary" inline="true">Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</gu-tooltip>
-      <div class="configuration-files col-md-6">
-        <gu-checkbox id="1" value="true" checkboxFormControl="approved">
-          <span><a href="google.com">test1.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
-        <gu-checkbox id="2" value="true" checkboxFormControl="approved">
-          <span><a href="google.com">test2.txt</a> (Collegevoorstel, Openbaar)</span>
-        </gu-checkbox>
+      <label class="h4 d-inline-block">Selecteer relevante documenten</label>
+      <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
+      <div class="configuration-files">
+        <div class="row">
+          <div class="col-md-6 form-group" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
+            <gu-checkbox id="kp-adv-acc-docs-{{i}}"
+                         [value]="taskContextData.context.documents[i].url"
+                         [control]="document">
+              <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+            </gu-checkbox>
+          </div>
+        </div>
       </div>
     </article>
     <article class="configuration-details">
-      <label class="h4 d-inline-block" for="textarea_config">Adviseur(s)</label>
-      <div class="step-container mb-5"
-           id="configuration-multiselect--{{i}}"
-           *ngFor="let step of [].constructor(steps); let i = index"
-      >
-        <div class="d-flex">
-          <span class="step-label">Stap {{i + 1}}</span>
-          <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep(i)">delete</gu-icon>
+      <label class="h4 d-inline-block">{{assignedUsersTitle[reviewType]}}</label>
+      <div class="steps-wrapper">
+        <div class="step-container"
+             id="kp-adv-acc-user--{{i}}"
+             formArrayName="assignedUsers"
+             *ngFor="let step of [].constructor(steps); let i = index">
+          <div class="d-flex">
+            <span class="step-label" *ngIf="steps > 1">Stap {{i + 1}}</span>
+            <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep()">delete</gu-icon>
+          </div>
+          <div class="row" [formGroupName]="i">
+            <div class="col-md-6 form-group">
+              <gu-multiselect (typeOutput)="onSearch($event)"
+                              [items]="items"
+                              [multiple]="true"
+                              [control]="assignedUsersUsers(i)"
+                              bindLabel="username"
+                              bindValue="username"
+                              required
+                              placeholder="Selecteer {{assignedUsersTitle[reviewType] | lowercase}}">
+              </gu-multiselect>
+            </div>
+            <div class="col-md-6 form-group">
+              <gu-datepicker [control]="assignedUsersDeadline(i)"
+                             label="Uiterste datum"
+                             required
+                             id="kp-adv-acc-deadline--{{i}}"
+              ></gu-datepicker>
+            </div>
+          </div>
         </div>
-
-        <gu-multiselect
-          [items]="items"
-          [multiple]="true"
-          placeholder="Selecteer adviseur(s)"></gu-multiselect>
-        <span class="datepicker-label">Uiterste datum:</span><gu-datepicker></gu-datepicker>
       </div>
       <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
-      <div class="d-flex justify-content-end">
-      </div>
     </article>
     <article class="configuration-details">
       <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
       <span class="label label--optional">optioneel</span>
-      <textarea id="textarea_config"></textarea>
+      <textarea id="textarea_config" [formControl]="toelichting"></textarea>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large" (click)="addStep()">Voltooien</gu-button>
+      <gu-button size="large"
+                 (click)="submitForm()"
+                 [disabled]="!assignUsersForm.valid || isSubmitting"
+                 [loading]="isSubmitting">
+        Voltooien
+      </gu-button>
     </div>
-  </section>
+  </form>
+  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
+  </gu-message>
 </div>
+<!-- Success screen -->
+<gu-success *ngIf="submitSuccess">
+  <h3 class="mb-4">Voltooid</h3>
+</gu-success>

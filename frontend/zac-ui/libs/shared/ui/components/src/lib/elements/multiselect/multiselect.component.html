@@ -2,12 +2,13 @@
            (search)="onSearch($event)"
            [multiple]="multiple"
            [bindLabel]="bindLabel"
-           autofocus
            [bindValue]="bindValue"
            [placeholder]="placeholder"
            notFoundText="Niets gevonden"
            loadingText="Zoeken"
            [(ngModel)]="selectedItems"
-           [formControlName]="customFormControl"
+           [formControl]="control"
+           [required]="required"
+           [searchable]="searchable"
 >
 </ng-select>

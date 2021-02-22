@@ -1,13 +1,12 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // Material Icons
 import { MatIconModule } from '@angular/material/icon';
 
-// Angular material components
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+// External Components
+import { BsDatepickerModule, BsLocaleService  } from 'ngx-bootstrap/datepicker';
 
 // UI Elements
 import { ButtonComponent } from './elements/button/button.component';
@@ -18,8 +17,7 @@ import { TooltipComponent } from './elements/tooltip/tooltip.component';
 import { CollapsibleComponent } from './elements/collapsible/collapsible.component';
 import { ProgressBarComponent } from './elements/progress-bar/progress-bar.component';
 import { CheckboxComponent } from './elements/checkbox/checkbox.component';
-import { TextFieldComponent } from './elements/text-field/text-field.component';
-import { DropdownComponent } from './elements/dropdown/dropdown.component';
+import { InputFieldComponent } from './elements/input-field/input-field.component';
 
 // UI Components
 import { FileComponent } from './components/file/file.component';
@@ -30,7 +28,6 @@ import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
 import { TableComponent } from './components/table/table.component';
 import { MessageComponent } from './elements/message/message.component';
-import { Message } from '@angular/compiler/src/i18n/i18n_ast';
 
 @NgModule({
   imports: [
@@ -38,9 +35,7 @@ import { Message } from '@angular/compiler/src/i18n/i18n_ast';
     FormsModule,
     ReactiveFormsModule,
     MatIconModule,
-    NgbModule,
-    // MultiselectModule
-    // ModalModule
+    BsDatepickerModule.forRoot()
   ],
   declarations: [
     ButtonComponent,
@@ -58,8 +53,7 @@ import { Message } from '@angular/compiler/src/i18n/i18n_ast';
     CheckboxComponent,
     IconComponent,
     DatepickerComponent,
-    TextFieldComponent,
-    DropdownComponent,
+    InputFieldComponent,
     MessageComponent,
   ],
   exports: [
@@ -79,9 +73,11 @@ import { Message } from '@angular/compiler/src/i18n/i18n_ast';
     IconComponent,
     DatepickerComponent,
     MatIconModule,
-    TextFieldComponent,
-    DropdownComponent,
+    InputFieldComponent,
     MessageComponent
+  ],
+  providers: [
+    BsLocaleService
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

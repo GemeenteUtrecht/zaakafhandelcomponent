@@ -2,7 +2,7 @@ import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { ApplicationHttpClient } from '@gu/services';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Form, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ModalService } from '@gu/components';
 
 @Component({
@@ -31,7 +31,6 @@ export class RelatieToevoegenComponent implements OnInit {
   ];
 
   zaken: any = []
-  aardRelaties = this.AARD_RELATIES;
   addRelationForm: FormGroup;
 
   isSubmitting: boolean;
@@ -40,14 +39,21 @@ export class RelatieToevoegenComponent implements OnInit {
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private modalService: ModalService
-  ) {
+  ) { }
+
+  ngOnInit(): void {
     this.addRelationForm = this.fb.group({
       identificatie: this.fb.control("", Validators.required),
       aard_relaties: this.fb.control("", Validators.required),
     })
   }
 
-  ngOnInit(): void {
+  get identificatieControl(): FormControl {
+    return this.addRelationForm.controls['identificatie'] as FormControl;
+  }
+
+  get aardRelatiesControl(): FormControl {
+    return this.addRelationForm.controls['aard_relaties'] as FormControl;
   }
 
   handleSearch(searchValue) {

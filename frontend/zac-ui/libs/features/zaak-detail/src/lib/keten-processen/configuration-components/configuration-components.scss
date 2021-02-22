@@ -3,7 +3,11 @@
 .configuration-component {
   .step-container {
     border-bottom: 1px solid $border-grey;
-    padding-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    &:last-child {
+      border: none;
+      margin: 0;
+    }
   }
   .configuration-form {
     margin-bottom: 1.25rem;
@@ -18,7 +22,7 @@
     display: inline-block;
     font-size: 0.875rem;
     font-weight: bold;
-    margin-bottom: 0.625rem;
+    margin-bottom: 1rem;
     margin-right: 5px;
     color: $color-text;
     vertical-align: top;
@@ -29,7 +33,6 @@
   }
   gu-multiselect {
     display: block;
-    width: 70%;
     margin-bottom: 10px;
   }
   gu-icon {

@@ -1,26 +1,35 @@
-<div class="configuration-component">
-  <section class="card card--blue col-md-6 mb-4">
-    <h2>Testdossier</h2>
-    <p>Dit is een toelichting</p>
-  </section>
-  <section class="card configuration-form">
-    <h2>Documenten</h2>
+<div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
+  <h1>{{taskContextData.context.title}}</h1>
+  <form class="configuration-form" [formGroup]="selectDocumentsForm" *ngIf="selectDocumentsForm.controls['documents'].value">
+    <h2>{{taskContextData.task.name}}</h2>
     <article class="configuration-details">
-      <label class="h4 d-inline-block mr-2">Selecteer relevante documenten</label>
-      <gu-tooltip type="primary" inline="true">Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</gu-tooltip>
-      <div class="configuration-files">
-        <div class="col-md-6">
-          <gu-checkbox id="5" value="true" checkboxFormControl="approved">
-            <span><a href="google.com">test1.txt</a> (Collegevoorstel, Openbaar)</span>
-          </gu-checkbox>
-          <gu-checkbox id="6" value="true" checkboxFormControl="approved">
-            <span><a href="google.com">test2.txt</a> (Collegevoorstel, Openbaar)</span>
-          </gu-checkbox>
+      <label class="h4 d-inline-block mr-2">Documenten</label>
+      <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
+      <div class="configuration-files" formArrayName="documents">
+        <div class="row">
+          <div class="col-md-6 form-group" *ngFor="let document of documents.controls; let i = index">
+            <gu-checkbox id="kp-docs-select-{{i}}"
+                         [value]="taskContextData.context.documents[i].url"
+                         [control]="document">
+              <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+            </gu-checkbox>
+          </div>
         </div>
       </div>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large">Voltooien</gu-button>
+      <gu-button size="large"
+                 (click)="submitForm()"
+                 [disabled]="!selectDocumentsForm.valid || isSubmitting"
+                 [loading]="isSubmitting">
+        Voltooien
+      </gu-button>
     </div>
-  </section>
+  </form>
+  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
+  </gu-message>
 </div>
+<!-- Success screen -->
+<gu-success *ngIf="submitSuccess">
+  <h3 class="mb-4">Voltooid</h3>
+</gu-success>

@@ -1,11 +1,18 @@
-<dom-module id="custom-input-field-style" theme-for="vaadin-text-field">
-  <template>
-    <style>
-      :host([theme~="custom-input-field-style"]) [part="input-field"] {
-        border: 1px solid black;
-        background-color: white;
-      }
-    </style>
-  </template>
-</dom-module>
-<vaadin-date-picker theme="custom-input-field-style"></vaadin-date-picker>
+<label class="has-float-label">
+  <input type="text"
+         autocomplete="false"
+         readonly
+         [required]="required"
+         [formControl]="control"
+         [placeholder]="placeholder ? placeholder : 'Datum'"
+         class="form-control form-control--datepicker"
+         [id]="id"
+         bsDatepicker [container]="'html'"
+         [bsValue]="value"
+         [bsConfig]="bsConfig">
+  <span>{{label}}</span>
+  <span *ngIf="(control.value !== null)"
+    class="dp-clear-wrapper" title="Alles verwijderen" (click)="clearValue()">
+    <span aria-hidden="true" class="dp-clear">×</span>
+  </span>
+</label>

@@ -1,31 +1,10 @@
-@import './base/colors/colors';
-
-.dp-clear-wrapper {
-  cursor: pointer;
-  position: absolute;
-  user-select: none;
-  width: 17px;
-  right: 0.5rem;
-  left: auto;
-  top: 0.5rem;
-  color: $color-text;
-  &:hover {
-    color: $color-warn;
-  }
-  .dp-clear {
-    display: inline-block;
-    font-size: 18px;
-    line-height: 1;
-    pointer-events: none;
-  }
-}
-
 .bs-datepicker-head {
   button {
     color: $color-blue;
     font-size: 0.8rem;
     span {
       text-align: center !important;
+      color: $color-blue;
     }
   }
   background-color: transparent !important;
@@ -34,8 +13,8 @@
 .bs-datepicker {
   box-shadow: initial !important;
   border: 1px solid $border-grey;
-  border-radius: 4px;
-  background-color: $background-grey !important;
+  border-radius: 10px;
+  background-color: $background-white !important;
 }
 .bs-datepicker-body {
   background-color: transparent !important;
@@ -45,6 +24,10 @@
       text-align: center !important;
       span {
         text-align: center !important;
+        color: $color-text;
+      }
+      span.selected {
+        background-color: $color-blue !important;
       }
       span.disabled {
         color: rgba($color-blue, 0.4);
@@ -61,6 +44,11 @@
     td.is-other-month {
       span {
         color: rgba($color-blue, 0.2);
+      }
+    }
+    td.week {
+      span {
+        color: $color-blue !important;
       }
     }
   }
@@ -81,12 +69,5 @@
   }
   .bs-datepicker-container {
     padding: 0;
-  }
-}
-.bs-datepicker-body {
-  table {
-    td {
-      color: $color-blue;
-    }
   }
 }

@@ -3,7 +3,11 @@
        [ngClass]="{
         'gu-modal-body--small': size == 'small'
         }">
-    <div class="gu-modal-header">
+    <div class="gu-modal-header"
+         [ngClass]="{
+        'gu-modal-header--mb': title
+        }"
+    >
       <h1 *ngIf="title" class="mb-0">{{title}}</h1>
       <mat-icon role="button" (click)="close()">close</mat-icon>
     </div>

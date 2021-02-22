@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components'
+import { TaskContextData } from '../../models/task-context';
+import { KetenProcessenService } from './keten-processen.service';
+import { KetenProcessen } from '../../models/keten-processen';
 
 @Component({
   selector: 'gu-keten-processen',
@@ -15,8 +15,9 @@ import { ModalService } from '@gu/components'
 export class KetenProcessenComponent implements OnInit {
   @Input() mainZaakUrl: string;
 
-  data: any;
+  data: KetenProcessen[];
   processInstanceId: string;
+  currentUser: string;
 
   isLoading = true;
   hasError: boolean;
@@ -27,15 +28,20 @@ export class KetenProcessenComponent implements OnInit {
 
   pipe = new DatePipe("nl-NL");
 
+  // Send Message
   sendMessageErrorMessage: string;
   sendMessageHasError: boolean;
 
-  uitvoerenType: 'advice-approve' | 'document-select' | 'dynamic-form' | 'sign-document' = "advice-approve"
+  // Task context data
+  taskContextData: TaskContextData;
+  isLoadingContext: boolean;
+  contextHasError: boolean;
+  contextErrorMessage: string;
 
   constructor(
-    private http: ApplicationHttpClient,
     private route: ActivatedRoute,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private ketenProcessenService: KetenProcessenService,
   ) {
     this.route.paramMap.subscribe( params => {
       this.bronorganisatie = params.get('bronorganisatie');
@@ -44,12 +50,19 @@ export class KetenProcessenComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.fetchCurrentUser();
     this.fetchProcesses();
   }
 
-  fetchProcesses() {
+  fetchCurrentUser(): void {
+    this.ketenProcessenService.getCurrentUser().subscribe( res => {
+      this.currentUser = res.username;
+    })
+  }
+
+  fetchProcesses(): void {
     this.isLoading = true;
-    this.getProcesses().subscribe( data => {
+    this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe( data => {
       this.data = data;
       this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
@@ -60,19 +73,13 @@ export class KetenProcessenComponent implements OnInit {
     })
   }
 
-  getProcesses(): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${this.mainZaakUrl}`);
-    return this.http.Get(endpoint);
-  }
-
-  sendMessage(value) {
+  sendMessage(value): void {
     this.isLoading = true
-    const endpoint = encodeURI("/api/camunda/send-message");
     const formData = {
       processInstanceId: this.processInstanceId,
       message: value
     }
-    this.http.Post(endpoint, formData).subscribe( res => {
+    this.ketenProcessenService.sendMessage(formData).subscribe( () => {
       this.fetchProcesses();
     }, errorRes => {
       this.sendMessageErrorMessage = errorRes.error.detail;
@@ -81,7 +88,7 @@ export class KetenProcessenComponent implements OnInit {
     })
   }
 
-  executeTask(taskId, hasForm, executeUrl) {
+  executeTask(taskId, hasForm, executeUrl): void {
     if (!hasForm) {
       window.location = executeUrl;
     } else {
@@ -89,22 +96,20 @@ export class KetenProcessenComponent implements OnInit {
     }
   }
 
-  fetchFormLayout(taskId) {
-    this.getFormLayout(taskId).subscribe(res => {
-      console.log(res);
+  fetchFormLayout(taskId): void {
+    this.isLoadingContext = true;
+    this.modalService.open('ketenprocessenModal');
+    this.ketenProcessenService.getFormLayout(taskId).subscribe(res => {
+      this.taskContextData = res;
+      this.isLoadingContext = false;
+    }, errorRes => {
+      this.contextErrorMessage = "Er is een fout opgetreden bij het laden van de taak."
+      this.contextHasError = true;
+      this.isLoadingContext = false;
     })
-  }
-
-  getFormLayout(taskId): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
-    return this.http.Get(endpoint);
   }
 
   openModal(id: string) {
     this.modalService.open(id);
-  }
-
-  closeModal(id: string) {
-    this.modalService.close(id);
   }
 }

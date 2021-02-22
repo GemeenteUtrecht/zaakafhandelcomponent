@@ -14,6 +14,7 @@ import { HomeComponent } from './home/home.component';
 
 import { KownslModule } from './kownsl/kownsl.module';
 import { ZaakDetailModule } from './zaak-detail/zaak-detail.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 registerLocaleData(localeNL);
 
@@ -24,6 +25,7 @@ registerLocaleData(localeNL);
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
     HttpClientXsrfModule.withOptions({

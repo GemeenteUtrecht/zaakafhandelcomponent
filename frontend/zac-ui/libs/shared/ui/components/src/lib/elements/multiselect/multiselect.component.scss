@@ -1,6 +1,34 @@
-@import "~@ng-select/ng-select/themes/default.theme.css";
+@import './base/colors/colors';
+@import "~@ng-select/ng-select/scss/default.theme";
 
 :host {
   font-size: 0.875rem;
   display: block;
+}
+
+::ng-deep {
+  .ng-select {
+    .ng-select-container {
+      border-color: $border-input;
+    }
+    .ng-placeholder {
+      color: $color-text !important;
+      font-size: 0.875rem;
+      opacity: 0.6;
+    }
+    &.ng-select-focused {
+      border-color: $color-blue !important;
+      box-shadow: none;
+      &:not(.ng-select-opened) > .ng-select-container {
+        border-color: $color-blue !important;
+        box-shadow: none;
+      }
+    }
+    .ng-clear-wrapper {
+      color: $color-text;
+      &:hover {
+        color: $color-warn;
+      }
+    }
+  }
 }

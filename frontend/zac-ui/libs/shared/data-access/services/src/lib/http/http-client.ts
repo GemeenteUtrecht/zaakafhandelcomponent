@@ -33,14 +33,13 @@ export class ApplicationHttpClient {
     return this.http.post<T>(endPoint, params, mergedOptions);
   }
 
-  public Put<T>(endPoint: string, params: object, options?: IRequestOptions): Observable<T> {
+  public Put<T>(endPoint: string, params?: any, options?: IRequestOptions): Observable<T> {
+    options = { withCredentials: true }
     return this.http.put<T>(endPoint, params, options);
   }
 
   public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<T> {
-    options = {
-      withCredentials: true
-    }
+    options = { withCredentials: true }
     return this.http.delete<T>(endPoint, options);
   }
 }
