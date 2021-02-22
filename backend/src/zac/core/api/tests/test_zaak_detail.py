@@ -236,7 +236,18 @@ class ZaakDetailPermissionTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_zaaktype(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
+            json=[],
+        )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         PermissionSetFactory.create(
@@ -255,9 +266,19 @@ class ZaakDetailPermissionTests(APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
             json=paginated_response([self._zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
+            json=[],
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA

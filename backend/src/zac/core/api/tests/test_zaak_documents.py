@@ -20,6 +20,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -28,6 +29,7 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
+KOWNSL_ROOT = "https://kownsl.nl/"
 
 
 @requests_mock.Mocker()
@@ -188,6 +190,11 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+
+        config = KownslConfig.get_solo()
+        config.service = kownsl
+        config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -256,7 +263,18 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_zaaktype(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         PermissionSetFactory.create(
@@ -274,10 +292,20 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA

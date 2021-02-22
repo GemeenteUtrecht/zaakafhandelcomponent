@@ -196,6 +196,15 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_auth_no_perms_can_request(self, m):
         self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
         PermissionSetFactory.create(
             permissions=[zaken_request_access.name],
             for_user=self.user,
@@ -220,6 +229,15 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):
         self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
 
         # gives them access to the page, but no catalogus specified -> nothing visible
         PermissionSetFactory.create(
@@ -236,6 +254,15 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_has_perm_but_not_for_va(self, m):
         self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
 
         # gives them access to the page and zaaktype, but insufficient VA
         PermissionSetFactory.create(
@@ -349,6 +376,15 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_has_temp_auth_expired(self, m):
         self._setUpMocks(m)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
 
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
@@ -937,6 +973,11 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+
+        config = KownslConfig.get_solo()
+        config.service = kownsl
+        config.save()
 
         self.zaaktype = generate_oas_component(
             "ztc",
@@ -958,6 +999,7 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_oo_restriction_no_related_rol(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json=paginated_response([self.zaak]),
@@ -973,6 +1015,10 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
         )
 
         # gives them access to the page, zaaktype and VA specified -> visible
@@ -1045,6 +1091,7 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_oo_restriction_with_unrelated_rollen(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json=paginated_response([self.zaak]),
@@ -1078,6 +1125,10 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([rol1, rol2]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
         )
 
         # gives them access to the page, zaaktype and VA specified -> visible
@@ -1215,6 +1266,7 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         # set up the mocks
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
             json=paginated_response([self.zaak]),
@@ -1239,6 +1291,10 @@ class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([rol1]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
         )
 
         # set up the permissions
