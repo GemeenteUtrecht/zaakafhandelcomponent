@@ -2,6 +2,7 @@ from itertools import groupby
 from typing import List
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
 from django_camunda.camunda_models import Task, factory
@@ -51,7 +52,7 @@ def get_access_requests_groups(user: User):
         requested_zaken.append(
             {
                 "zaak_url": zaak_url,
-                "requesters": list(group),
+                "access_requests": list(group),
                 "zaak": behandelaar_zaken[zaak_url],
             }
         )
