@@ -1,10 +1,8 @@
 from django.utils.translation import gettext as _
 
 from drf_spectacular.utils import extend_schema
-from rest_framework import authentication, permissions, views
+from rest_framework import authentication, permissions
 from rest_framework.generics import ListAPIView
-from rest_framework.request import Request
-from rest_framework.response import Response
 from zds_client import ClientError
 from zgw_consumers.concurrent import parallel
 
@@ -31,24 +29,22 @@ class WorkStackAccessRequestsView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
     serializer_class = WorkStackAccessRequestsSerializer
+    filter_backends = ()
 
     def get_queryset(self):
         access_requests_groups = get_access_requests_groups(self.request.user)
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
-class WorkStackAdhocActivitiesView(views.APIView):
+@extend_schema(summary=_("List adhoc activities"))
+class WorkStackAdhocActivitiesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = WorkStackAdhocActivitiesSerializer
+    filter_backends = ()
 
-    def get_serializer(self, **kwargs):
-        return WorkStackAdhocActivitiesSerializer(many=True, **kwargs)
-
-    @extend_schema(
-        summary=_("List adhoc activities"),
-    )
-    def get(self, request: Request) -> Response:
-        activity_groups = Activity.objects.as_werkvoorraad(user=request.user)
+    def get_queryset(self):
+        activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
 
         def set_zaak(group):
             try:
@@ -65,37 +61,26 @@ class WorkStackAdhocActivitiesView(views.APIView):
         groups = [
             ActivityGroup(**group) for group in activity_groups if "zaak" in group
         ]
-        serializer = self.get_serializer(instance=groups, context={"request": request})
-        return Response(serializer.data)
+        return groups
 
 
-class WorkStackAssigneeCasesView(views.APIView):
+@extend_schema(summary=_("List active cases"))
+class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ZaakDetailSerializer
+    filter_backends = ()
 
-    @extend_schema(
-        summary=_("List active cases"),
-    )
-    def get_serializer(self, **kwargs):
-        return ZaakDetailSerializer(many=True, **kwargs)
-
-    def get(self, request: Request) -> Response:
-        zaken = get_behandelaar_zaken_unfinished(request.user)
-        serializer = self.get_serializer(instance=zaken)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return get_behandelaar_zaken_unfinished(self.request.user)
 
 
-class WorkStackUserTasksView(views.APIView):
+@extend_schema(summary=_("List user tasks"))
+class WorkStackUserTasksView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = TaskSerializer
+    filter_backends = ()
 
-    @extend_schema(
-        summary=_("List user tasks"),
-    )
-    def get_serializer(self, **kwargs):
-        return TaskSerializer(many=True, **kwargs)
-
-    def get(self, request: Request) -> Response:
-        user_tasks = get_camunda_user_tasks(request.user)
-        serializer = self.get_serializer(instance=user_tasks)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return get_camunda_user_tasks(self.request.user)
