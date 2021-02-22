@@ -7,5 +7,6 @@ module.exports = {
     '<rootDir>/libs/shared/data-access/services',
     '<rootDir>/libs/shared/utils',
     '<rootDir>/libs/features/zaak-detail',
+    '<rootDir>/libs/features/search',
   ],
 };

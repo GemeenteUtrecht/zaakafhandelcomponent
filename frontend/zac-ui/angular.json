@@ -346,6 +346,48 @@
           "style": "scss"
         }
       }
+    },
+    "features-search": {
+      "projectType": "library",
+      "root": "libs/features/search",
+      "sourceRoot": "libs/features/search/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/search/tsconfig.lib.json",
+            "project": "libs/features/search/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/search/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/search/tsconfig.lib.json",
+              "libs/features/search/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/features/search/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/search/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
     }
   },
   "cli": {

@@ -30,7 +30,7 @@
         </div>
         <div class="row" [formGroupName]="i">
           <div class="col-md-6 form-group">
-            <gu-multiselect (typeOutput)="onSearch($event)"
+            <gu-multiselect (search)="onSearch($event)"
                             [items]="items"
                             [multiple]="false"
                             [control]="assignedUsersUsername(i)"

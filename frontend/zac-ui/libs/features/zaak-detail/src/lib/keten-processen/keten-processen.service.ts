@@ -27,9 +27,9 @@ export class KetenProcessenService {
     return this.http.Get(endpoint);
   }
 
-  sendMessage(formData: SendMessageForm): Observable<any> {
+  sendMessage(formData: SendMessageForm): Observable<SendMessageForm> {
     const endpoint = encodeURI("/api/camunda/send-message");
-    return this.http.Post(endpoint, formData);
+    return this.http.Post<SendMessageForm>(endpoint, formData);
   }
 
   getAccounts(searchInput: string): Observable<UserSearch>{

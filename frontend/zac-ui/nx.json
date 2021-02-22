@@ -47,6 +47,9 @@
     },
     "features-zaak-detail": {
       "tags": []
+    },
+    "features-search": {
+      "tags": []
     }
   }
 }

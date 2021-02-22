@@ -1,13 +1,9 @@
 @import './base/colors/colors';
 @import "~@ng-select/ng-select/scss/default.theme";
 
-:host {
-  font-size: 0.875rem;
-  display: block;
-}
-
 ::ng-deep {
   .ng-select {
+    font-size: 0.875rem;
     .ng-select-container {
       border-color: $border-input;
     }
