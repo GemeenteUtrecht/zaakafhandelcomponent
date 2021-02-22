@@ -2,6 +2,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 from xml.etree.ElementTree import Element
 
+from djangorestframework_camel_case.render import CamelCaseJSONRenderer
+from rest_framework import parsers, renderers
+
 from ..data import Task
 from ..user_tasks import Context, register
 from .serializers import (
@@ -46,7 +49,31 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
     return field_definition
 
 
-@register("", DynamicFormSerializer, DynamicFormWriteSerializer)
+class DynamicFormRenderer(CamelCaseJSONRenderer):
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        renderer_context = renderer_context or {}
+        response = renderer_context.get("response")
+        if response and response.status_code == 400:
+            # On validation errors, do not camelize the keys (as they are the form field names)
+            return super(CamelCaseJSONRenderer, self).render(
+                data,
+                accepted_media_type=accepted_media_type,
+                renderer_context=renderer_context,
+            )
+        return super().render(
+            data,
+            accepted_media_type=accepted_media_type,
+            renderer_context=renderer_context,
+        )
+
+
+@register(
+    "",
+    DynamicFormSerializer,
+    DynamicFormWriteSerializer,
+    parsers=(parsers.JSONParser,),
+    renderers=(DynamicFormRenderer,),
+)
 def get_context(task: Task) -> DynamicFormContext:
     from ..forms import extract_task_form_fields
 

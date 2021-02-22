@@ -20,6 +20,7 @@
             <camunda:value id="first" name="First" />
             <camunda:value id="second" />
           </camunda:formField>
+          <camunda:formField id="snake_case" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1hrwhib</bpmn:incoming>

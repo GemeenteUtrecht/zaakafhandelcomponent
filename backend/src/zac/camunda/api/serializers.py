@@ -68,12 +68,7 @@ class UserTaskContextSerializer(BaseUserTaskSerializer):
 
     def __init__(self, *args, **kwargs):
         self.serializer_mapping = {
-            form_key: read_serializer
-            for form_key, (
-                callback,
-                read_serializer,
-                write_serializer,
-            ) in REGISTRY.items()
+            form_key: item.read_serializer for form_key, item in REGISTRY.items()
         }
         super().__init__(*args, **kwargs)
 
@@ -81,13 +76,9 @@ class UserTaskContextSerializer(BaseUserTaskSerializer):
 class SubmitUserTaskSerializer(BaseUserTaskSerializer):
     def __init__(self, *args, **kwargs):
         self.serializer_mapping = {
-            form_key: write_serializer
-            for form_key, (
-                callback,
-                read_serializer,
-                write_serializer,
-            ) in REGISTRY.items()
-            if write_serializer
+            form_key: item.write_serializer
+            for form_key, item in REGISTRY.items()
+            if item.write_serializer
         }
         super().__init__(*args, **kwargs)
 

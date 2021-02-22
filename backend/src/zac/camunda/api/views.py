@@ -17,7 +17,7 @@ from ..data import Task
 from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_process_instances
-from ..user_tasks import UserTaskData, get_context, get_task
+from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     ErrorSerializer,
@@ -76,15 +76,16 @@ class UserTaskView(APIView):
     """
 
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
-    parser_classes = (parsers.JSONParser,)
 
     def get_object(self) -> Task:
-        task = get_task(self.kwargs["task_id"], check_history=False)
-        if task is None:
-            raise exceptions.NotFound(
-                _("The task with given task ID does not exist (anymore).")
-            )
-        return task
+        if not hasattr(self, "_task"):
+            task = get_task(self.kwargs["task_id"], check_history=False)
+            if task is None:
+                raise exceptions.NotFound(
+                    _("The task with given task ID does not exist (anymore).")
+                )
+            self._task = task
+        return self._task
 
     def get_serializer(self, **kwargs):
         mapping = {
@@ -92,6 +93,22 @@ class UserTaskView(APIView):
             "GET": UserTaskContextSerializer,
         }
         return mapping[self.request.method](**kwargs)
+
+    def get_parsers(self):
+        default = super().get_parsers()
+        task = self.get_object()
+        item = get_registry_item(task)
+        if not item.parsers:
+            return default
+        return [parser() for parser in item.parsers]
+
+    def get_renderers(self):
+        default = super().get_renderers()
+        task = self.get_object()
+        item = get_registry_item(task)
+        if not item.renderers:
+            return default
+        return [renderer() for renderer in item.renderers]
 
     @extend_schema(
         summary=_("Retrieve user task data and context"),
@@ -135,7 +152,6 @@ class UserTaskView(APIView):
         This endpoint is only available if you have permissions to perform user tasks.
         """
         task = self.get_object()
-
         serializer = self.get_serializer(
             data={
                 **request.data,
