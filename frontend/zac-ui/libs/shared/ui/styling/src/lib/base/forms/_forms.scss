@@ -41,6 +41,7 @@
     z-index: 3;
     line-height: 1;
     padding: 0 1px;
+    color: $color-text--darkgray;
     &::after {
       content: " ";
       display: block;

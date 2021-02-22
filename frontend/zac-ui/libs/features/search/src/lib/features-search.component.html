@@ -6,7 +6,7 @@
         <div class="form-group">
           <div class="col-md-6">
             <gu-input-field type="text"
-                            [control]="zaaknummer"
+                            [control]="identificatie"
                             label="Zaaknummer"
                             autocomplete="off"
             ></gu-input-field>
@@ -15,6 +15,7 @@
         <div class="form-group">
           <div class="col-md-8">
             <gu-multiselect *ngIf="zaaktypenData"
+                            [control]="zaaktype"
                             (change)="onZaaktypeSelect($event)"
                             [searchable]="true"
                             [items]="zaaktypenData"
@@ -34,32 +35,33 @@
             ></gu-input-field>
           </div>
         </div>
-        <ng-container *ngIf="zaaktypeEigenschappenData">
+        <ng-container *ngIf="zaaktypeEigenschappenData.length > 0">
           <h4 class="mb-4">Eigenschappen</h4>
           <div class="col-md-8">
             <div class="form-group">
               <gu-multiselect (change)="onPropertySelect($event)"
+                              [control]="eigenschapnaam"
                               [searchable]="true"
                               [items]="zaaktypeEigenschappenData"
                               [multiple]="false"
                               bindLabel="name"
-                              bindValue="identificatie"
+                              bindValue="name"
                               label="Eigenschapnaam">
               </gu-multiselect>
             </div>
           </div>
-          <div class="col-md-6" *ngIf="selectedPropertyValue">
+          <div class="col-md-6" *ngIf="selectedPropertyValue && eigenschapnaam.value">
             <div class="form-group" *ngIf="eigenschapwaarde">
               <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
                 <ng-container *ngSwitchCase="'string'">
-                  <ng-container *ngIf="selectedPropertyValue.spec.format === 'string'">
+                  <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date-time'">
                     <gu-input-field type="text"
                                     [control]="eigenschapwaarde"
                                     label="Eigenschapwaarde"
                                     autocomplete="off"
                     ></gu-input-field>
                   </ng-container>
-                  <ng-container *ngIf="selectedPropertyValue.spec.format === 'date'">
+                  <ng-container *ngIf="selectedPropertyValue.spec.format === 'date-time'">
                     <gu-datepicker
                       [control]="eigenschapwaarde"
                       placeholder="Datum">
@@ -79,12 +81,14 @@
         </ng-container>
         <div class="d-flex justify-content-end">
           <gu-button size="large"
-                     [disabled]="!searchForm.valid"
+                     [disabled]="!searchForm.valid || isSubmitting"
+                     [loading]="isSubmitting"
                      (click)="submitForm()">
             Zoeken
           </gu-button>
         </div>
       </form>
+      <gu-message *ngIf="hasError" type="warn" [message]="errorMessage"></gu-message>
     </div>
   </div>
 </div>
