@@ -178,7 +178,7 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
     from .services import get_rollen
 
     if zaak is None:
-        return True
+        return False
     user_rollen = [
         rol
         for rol in get_rollen(zaak)
