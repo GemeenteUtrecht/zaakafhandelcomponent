@@ -26,9 +26,9 @@ def get_zaak_context(
     zaak_url = get_process_zaak_url(process_instance)
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype) if require_zaaktype else None
-    documents, rest = get_documenten(zaak) if require_documents else None, None
+    docs_context = get_documenten(zaak) if require_documents else (None, None)
     return ZaakContext(
-        documents=documents,
+        documents=docs_context[0],
         zaak=zaak,
         zaaktype=zaaktype,
     )

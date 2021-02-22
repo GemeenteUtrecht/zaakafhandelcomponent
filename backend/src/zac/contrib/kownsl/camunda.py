@@ -254,7 +254,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
 )
-def get_context(task: Task) -> AdviceApprovalContext:
+def get_advice_context(task: Task) -> AdviceApprovalContext:
     zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
     return AdviceApprovalContext(
         documents=zaak_context.documents,
@@ -269,7 +269,7 @@ def get_context(task: Task) -> AdviceApprovalContext:
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
 )
-def get_context(task: Task) -> AdviceApprovalContext:
+def get_approval_context(task: Task) -> AdviceApprovalContext:
     zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
     return AdviceApprovalContext(
         documents=zaak_context.documents,
