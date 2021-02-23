@@ -521,7 +521,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             variables,
             {
                 "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslUsersList": [user.username for user in self.users_1],
+                "kownslUsersList": [[user.username for user in self.users_1]],
                 "kownslReviewRequestId": str(self.review_request.id),
                 "kownslFrontendUrl": get_ui_url(
                     [

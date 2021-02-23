@@ -237,9 +237,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             params={"uuid": self.review_request.id},
         )
         kownsl_users_list = [
-            user
-            for data in self.validated_data["assigned_users"]
-            for user in data["users"]
+            data["users"] for data in self.validated_data["assigned_users"]
         ]
         return {
             "kownslDocuments": self.validated_data["selected_documents"],
