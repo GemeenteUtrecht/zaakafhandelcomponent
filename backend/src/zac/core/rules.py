@@ -233,7 +233,7 @@ rules.add_rule(
     can_read_zaak_by_zaaktype
     | has_temporary_access
     | is_zaak_behandelaar
-    | is_zaak_adviser,
+    | is_zaak_reviewer,
 )
 rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar

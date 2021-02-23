@@ -460,16 +460,6 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_rr_detail_authenticated_no_permissions(self):
-        # mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        # mock_service_oas_get(m, KOWNSL_ROOT, "kownsl", oas_url=f"{KOWNSL_ROOT}api/v1")
-        # m.get(
-        #     f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-        #     json=paginated_response([]),
-        # )
-        # m.get(
-        #     f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-        #     json=[],
-        # )
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
