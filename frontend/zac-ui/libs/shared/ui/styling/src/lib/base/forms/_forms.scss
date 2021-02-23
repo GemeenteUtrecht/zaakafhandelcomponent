@@ -9,6 +9,7 @@
   border-color: $border-input;
   border-radius: 4px;
   font-size: 0.875rem;
+  color: $color-text;
   &:focus {
     background-color: $background-white;
     border-color: $color-blue;
@@ -41,6 +42,7 @@
     z-index: 3;
     line-height: 1;
     padding: 0 1px;
+    color: $color-text--darkgray;
     &::after {
       content: " ";
       display: block;

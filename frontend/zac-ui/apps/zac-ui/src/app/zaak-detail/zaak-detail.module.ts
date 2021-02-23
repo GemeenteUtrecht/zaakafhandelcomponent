@@ -4,6 +4,8 @@ import { ZaakDetailComponent } from './zaak-detail.component'
 import { FeaturesZaakDetailModule } from '@gu/zaak-detail';
 import { ZaakDetailRoutingModule } from './zaak-detail-routing.module';
 
+
+
 @NgModule({
   declarations: [
     ZaakDetailComponent,

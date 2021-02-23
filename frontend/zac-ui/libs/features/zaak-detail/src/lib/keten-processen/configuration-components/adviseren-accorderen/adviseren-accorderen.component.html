@@ -34,7 +34,7 @@
           </div>
           <div class="row" [formGroupName]="i">
             <div class="col-md-6 form-group">
-              <gu-multiselect (typeOutput)="onSearch($event)"
+              <gu-multiselect (search)="onSearch($event)"
                               [items]="items"
                               [multiple]="true"
                               [control]="assignedUsersUsers(i)"
@@ -53,6 +53,7 @@
             </div>
           </div>
         </div>
+        <p class="p--error" *ngIf="assignedUsersErrorMessage">{{assignedUsersErrorMessage}}</p>
       </div>
       <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
     </article>

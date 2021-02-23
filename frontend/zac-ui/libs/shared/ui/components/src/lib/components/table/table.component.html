@@ -9,8 +9,8 @@
     <ng-template ngFor let-element [ngForOf]="tableData.bodyData">
       <tr
         class="parent-row"
-        [ngClass]="element.clickOutput || (expandable && element.expandData) ? 'parent-row--clickable' : ''"
-        (click)="handleRowClickOutput(element.clickOutput); expandRow($event)"
+        [ngClass]="element.clickOutput || (expandable && element.expandData.length > 0) ? 'parent-row--clickable' : ''"
+        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData.length > 0)"
         [attr.role]="element.clickOutput || (expandable && element.expandData) ? 'button' : ''"
       >
         <!-- Expand icon -->
@@ -42,8 +42,7 @@
                   [type]=" cell.value['buttonType'] ? cell.value['buttonType'] : 'tertiary'"
                   size="extrasmall"
                   noPadding
-                  (click)="
-                  handleButtonClick(cell.key, cell.value['value'])">
+                  (click)="handleButtonClick(cell.key, cell.value['value'])">
                   {{ cell.value['label'] }}
                 </gu-button>
               </ng-container>

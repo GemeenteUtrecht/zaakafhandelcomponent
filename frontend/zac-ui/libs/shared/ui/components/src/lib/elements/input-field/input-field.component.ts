@@ -14,4 +14,5 @@ export class InputFieldComponent {
   @Input() placeholder: string;
   @Input() required: boolean;
   @Input() value: string | number;
+  @Input() autocomplete: 'off';
 }
