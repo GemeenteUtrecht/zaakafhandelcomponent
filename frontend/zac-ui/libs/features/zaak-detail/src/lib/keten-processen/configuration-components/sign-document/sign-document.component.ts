@@ -84,9 +84,9 @@ export class SignDocumentComponent implements OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
-    }, error => {
+    }, res => {
       this.isSubmitting = false;
-      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";
       this.submitHasError = true;
     })
   }

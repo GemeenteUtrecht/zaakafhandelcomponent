@@ -51,6 +51,7 @@ export class DocumentSelectComponent implements OnChanges {
   };
 
   submitForm() {
+    this.isSubmitting = true;
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
       .filter(v => v !== null);
@@ -66,9 +67,9 @@ export class DocumentSelectComponent implements OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
-    }, error => {
+    }, res => {
       this.isSubmitting = false;
-      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";
       this.submitHasError = true;
     })
   }

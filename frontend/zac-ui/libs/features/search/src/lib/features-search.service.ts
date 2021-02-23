@@ -4,6 +4,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { ZaaktypeEigenschap } from '../models/zaaktype-eigenschappen';
 import { Zaaktype } from '../models/zaaktype';
 import { Search } from '../models/search';
+import { Zaak } from '@gu/models';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,8 @@ export class FeaturesSearchService {
     return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
   }
 
-  postSearchZaken(formData: Search): Observable<Search> {
+  postSearchZaken(formData: Search): Observable<Zaak[]> {
     const endpoint = encodeURI("/api/search/zaken");
-    return this.http.Post<Search>(endpoint, formData);
+    return this.http.Post<Zaak[]>(endpoint, formData);
   }
 }

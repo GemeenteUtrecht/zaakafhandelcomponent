@@ -5,6 +5,8 @@ import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/f
 import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 
 import { FeaturesSearchComponent } from './features-search.component';
+import { SearchFormComponent } from './search-form/search-form.component';
+import { SearchResultsComponent } from './search-results/search-results.component';
 
 @NgModule({
   imports: [
@@ -20,7 +22,7 @@ import { FeaturesSearchComponent } from './features-search.component';
     MultiselectModule,
   ],
   exports: [FeaturesSearchComponent],
-  declarations: [FeaturesSearchComponent],
+  declarations: [FeaturesSearchComponent, SearchFormComponent, SearchResultsComponent],
   providers: [FormGroupDirective]
 })
 export class FeaturesSearchModule {}

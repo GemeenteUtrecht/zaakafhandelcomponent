@@ -34,6 +34,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
   submitSuccess: boolean;
   submitHasError: boolean;
   submitErrorMessage: string;
+  assignedUsersErrorMessage: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -100,6 +101,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.successReload.emit(true);
     }, error => {
       this.isSubmitting = false;
+      this.assignedUsersErrorMessage = error.assignedUsers[0];
       this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
       this.submitHasError = true;
     })

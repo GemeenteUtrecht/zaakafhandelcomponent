@@ -1,0 +1,6 @@
+<ng-container *ngIf="resultData && tableData">
+  <h3 class="mb-4">Resultaten ({{resultData.length}})</h3>
+  <section *ngIf="resultData.length > 0">
+    <gu-table [tableData]="tableData" [expandable]="true"></gu-table>
+  </section>
+</ng-container>

@@ -32,8 +32,8 @@ export class TableComponent {
     }
   }
 
-  expandRow(event) {
-    if (this.expandable) {
+  expandRow(event, hasData: boolean) {
+    if (this.expandable && hasData) {
       const clickedElement = event.target;
       const parentRow = clickedElement.closest('tr.parent-row')
       const arrowElement = parentRow.querySelector('.arrow');
