@@ -190,7 +190,7 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
 
 
 @rules.predicate
-def is_zaak_adviser(user: User, zaak: Optional[Zaak]):
+def is_zaak_reviewer(user: User, zaak: Optional[Zaak]):
     from zac.contrib.kownsl.api import get_review_requests
 
     if zaak is None:
