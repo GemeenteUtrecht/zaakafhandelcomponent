@@ -352,15 +352,15 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.review_request_data = {
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
-            "for_zaak": cls.zaak.url,
-            "review_type": KownslTypes.advice,
+            "forZaak": cls.zaak.url,
+            "reviewType": KownslTypes.advice,
             "documents": [cls.document],
-            "frontend_url": "http://some.kownsl.com/frontendurl/",
-            "num_advices": 0,
-            "num_approvals": 1,
-            "num_assigned_users": 1,
+            "frontendUrl": "http://some.kownsl.com/frontendurl/",
+            "numAdvices": 0,
+            "numApprovals": 1,
+            "numAssignedUsers": 1,
             "toelichting": "some-toelichting",
-            "user_deadlines": {},
+            "userDeadlines": {},
             "requester": "some-henkie",
         }
 

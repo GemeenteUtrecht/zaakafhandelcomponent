@@ -76,13 +76,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         response = {
             "id": str(_uuid),
             "created": "2020-12-16T14:15:22Z",
-            "for_zaak": "https://zaken.nl/api/v1/zaak/123",
-            "review_type": "advice",
+            "forZaak": "https://zaken.nl/api/v1/zaak/123",
+            "reviewType": "advice",
             "documents": ["https://doc.nl/123"],
-            "frontend_url": "",
-            "num_advices": 0,
-            "num_approvals": 0,
-            "num_assigned_users": 0,
+            "frontendUrl": "",
+            "numAdvices": 0,
+            "numApprovals": 0,
+            "numAssignedUsers": 0,
             "toelichting": "",
         }
         m.post(
@@ -103,13 +103,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         _review_request = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
             "created": "2020-12-16T14:15:22Z",
-            "for_zaak": "https://zaken.nl/api/v1/zaak/123",
-            "review_type": "advice",
+            "forZaak": "https://zaken.nl/api/v1/zaak/123",
+            "reviewType": "advice",
             "documents": [],
-            "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
-            "num_advices": 1,
-            "num_approvals": 0,
-            "num_assigned_users": 1,
+            "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
+            "numAdvices": 1,
+            "numApprovals": 0,
+            "numAssignedUsers": 1,
             "toelichting": "Longing for the past but dreading the future",
         }
         review_request = factory(ReviewRequest, _review_request)
@@ -118,8 +118,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                 "created": "2020-06-17T10:21:16Z",
                 "author": {
                     "username": "foo",
-                    "first_name": "",
-                    "last_name": "",
+                    "firstName": "",
+                    "lastName": "",
                 },
                 "advice": "dummy",
                 "documents": [],
@@ -151,13 +151,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         _review_request = {
             "id": "45638aa6-e177-46cc-b580-43339795d5b5",
             "created": "2020-12-16T14:15:22Z",
-            "for_zaak": "https://zaken.nl/api/v1/zaak/123",
-            "review_type": "approval",
+            "forZaak": "https://zaken.nl/api/v1/zaak/123",
+            "reviewType": "approval",
             "documents": [],
-            "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
-            "num_advices": 0,
-            "num_approvals": 1,
-            "num_assigned_users": 1,
+            "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
+            "numAdvices": 0,
+            "numApprovals": 1,
+            "numAssignedUsers": 1,
             "toelichting": "Are a thousand tears worth a single smile?",
         }
         review_request = factory(ReviewRequest, _review_request)
@@ -166,8 +166,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                 "created": "2020-06-17T10:21:16Z",
                 "author": {
                     "username": "foo",
-                    "first_name": "",
-                    "last_name": "",
+                    "firstName": "",
+                    "lastName": "",
                 },
                 "approved": True,
                 "toelichting": "When you give an inch, will they take a mile?",
@@ -210,13 +210,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         response = {
             "id": str(_uuid),
             "created": "2020-12-16T14:15:22Z",
-            "for_zaak": "https://zaken.nl/api/v1/zaak/123",
-            "review_type": "advice",
+            "forZaak": "https://zaken.nl/api/v1/zaak/123",
+            "reviewType": "advice",
             "documents": [],
-            "frontend_url": "",
-            "num_advices": 0,
-            "num_approvals": 0,
-            "num_assigned_users": 0,
+            "frontendUrl": "",
+            "numAdvices": 0,
+            "numApprovals": 0,
+            "numAssignedUsers": 0,
             "toelichting": "",
         }
         m.get(

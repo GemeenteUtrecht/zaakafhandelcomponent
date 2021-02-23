@@ -21,20 +21,20 @@ from ..models import KownslConfig
 REVIEW_REQUEST = {
     "created": "2020-12-16T14:15:22Z",
     "id": "45638aa6-e177-46cc-b580-43339795d5b5",
-    "for_zaak": "https://zaken.nl/api/v1/zaak/123",
-    "review_type": "advice",
+    "forZaak": "https://zaken.nl/api/v1/zaak/123",
+    "reviewType": "advice",
     "documents": [],
     "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
-    "num_advices": 1,
-    "num_approvals": 0,
-    "num_assigned_users": 1,
+    "numAdvices": 1,
+    "numApprovals": 0,
+    "numAssignedUsers": 1,
     "toelichting": "Longing for the past but dreading the future",
-    "user_deadlines": {
+    "userDeadlines": {
         "some-user": "2020-12-20",
     },
     "requester": "other-user",
     "metadata": {},
-    "zaak_documents": [],
+    "zaakDocuments": [],
     "reviews": [],
 }
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"

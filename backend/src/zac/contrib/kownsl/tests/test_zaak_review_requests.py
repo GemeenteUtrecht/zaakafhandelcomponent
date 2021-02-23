@@ -118,15 +118,15 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         review_request = {
             "id": cls._uuid,
             "created": "2021-01-07T12:00:00Z",
-            "for_zaak": zaak.url,
-            "review_type": KownslTypes.advice,
+            "forZaak": zaak.url,
+            "reviewType": KownslTypes.advice,
             "documents": [cls.document["url"]],
-            "frontend_url": "http://some-kownsl-url.com/frontend-stuff",
-            "num_advices": 1,
-            "num_approvals": 0,
-            "num_assigned_users": 2,
+            "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
+            "numAdvices": 1,
+            "numApprovals": 0,
+            "numAssignedUsers": 2,
             "toelichting": "",
-            "user_deadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
             "requester": "some-other-user",
         }
         review_request = factory(ReviewRequest, review_request)
@@ -142,14 +142,14 @@ class ZaakReviewRequestsResponseTests(APITestCase):
 
         advice_document = {
             "document": cls.document["url"],
-            "source_version": 1,
-            "advice_version": 1,
+            "sourceVersion": 1,
+            "adviceVersion": 1,
         }
 
         author = {
             "username": cls.user.username,
-            "first_name": "some-first-name",
-            "last_name": "some-last-name",
+            "firstName": "some-first-name",
+            "lastName": "some-last-name",
         }
 
         advices = [
@@ -367,29 +367,29 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         cls.review_request_data = {
             "id": str(cls._uuid),
             "created": "2021-01-07T12:00:00Z",
-            "for_zaak": zaak.url,
-            "review_type": KownslTypes.advice,
+            "forZaak": zaak.url,
+            "reviewType": KownslTypes.advice,
             "documents": [cls.document["url"]],
-            "frontend_url": "http://some-kownsl-url.com/frontend-stuff",
-            "num_advices": 1,
-            "num_approvals": 0,
-            "num_assigned_users": 2,
+            "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
+            "numAdvices": 1,
+            "numApprovals": 0,
+            "numAssignedUsers": 2,
             "toelichting": "",
-            "user_deadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
             "requester": "some-other-user",
         }
         cls.review_request = factory(ReviewRequest, cls.review_request_data)
 
         advice_document = {
             "document": cls.document["url"],
-            "source_version": 1,
-            "advice_version": 1,
+            "sourceVersion": 1,
+            "adviceVersion": 1,
         }
 
         author = {
             "username": "some-user-name",
-            "first_name": "some-first-name",
-            "last_name": "some-last-name",
+            "firstName": "some-first-name",
+            "lastName": "some-last-name",
         }
 
         advices = [

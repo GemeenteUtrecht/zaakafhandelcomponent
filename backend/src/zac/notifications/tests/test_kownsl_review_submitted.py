@@ -22,15 +22,15 @@ NOTIFICATION = {
 
 REVIEW_REQUEST = {
     "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "for_zaak": "http://example.com",
-    "review_type": "advice",
+    "forZaak": "http://example.com",
+    "reviewType": "advice",
     "documents": [],
-    "frontend_url": "string",
-    "num_advices": 1,
-    "num_approvals": 0,
-    "num_assigned_users": 2,
+    "frontendUrl": "string",
+    "numAdvices": 1,
+    "numApprovals": 0,
+    "numAssignedUsers": 2,
     "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "user_deadlines": {"bob": "2020-11-05"},
+    "userDeadlines": {"bob": "2020-11-05"},
     "requester": "alice",
     "metadata": {
         "processInstanceId": "fa962a23-ff20-4184-ba98-b390f2407353",

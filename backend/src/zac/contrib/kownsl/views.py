@@ -111,7 +111,7 @@ class BaseRequestView(APIView):
             if request.user.username in review_users
             else "false"
         }
-        zaak_url = review_request["for_zaak"]
+        zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
                 **review_request,
