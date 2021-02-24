@@ -34,6 +34,9 @@ class CanWritePermission(permissions.BasePermission):
         return request.user.has_perm(activiteiten_schrijven.name, zaak)
 
     def has_permission(self, request: Request, view: ModelViewSet):
+        if view.action == "destroy":
+            return True  # object-level permission check handles this
+
         if view.action not in ("create", "update", "partial_update"):
             return False
 
@@ -53,7 +56,7 @@ class CanWritePermission(permissions.BasePermission):
         return self._has_zaak_permission(request, zaak_url)
 
     def has_object_permission(self, request: Request, view: ModelViewSet, obj):
-        if view.action not in ("update", "partial_update"):
+        if view.action not in ("update", "partial_update", "destroy"):
             return False
 
         # determine the relevant zaak

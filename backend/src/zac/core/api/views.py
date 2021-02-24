@@ -355,7 +355,7 @@ class CreateZaakDocumentView(views.APIView):
             # TODO: take user input
             "auteur": request.user.get_full_name() or request.user.username,
             "taal": "nld",
-            "inhoud": str(inhoud),  # it's base64, so ascii compatible
+            "inhoud": inhoud.decode("ascii"),  # it's base64, so ascii compatible
             "formaat": uploaded_file.content_type,
             "bestandsnaam": uploaded_file.name,
             "ontvangstdatum": date.today().isoformat(),
