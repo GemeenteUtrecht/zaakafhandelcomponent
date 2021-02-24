@@ -1,7 +1,7 @@
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List
+from typing import Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -18,18 +18,18 @@ class KownslTypes(DjangoChoices):
 
 @dataclass
 class ReviewRequest(Model):
-    created: datetime
     id: uuid.UUID
-    for_zaak: str
     review_type: str
-    documents: List[str]
-    frontend_url: str
     num_advices: int
     num_approvals: int
     num_assigned_users: int
-    toelichting: str = ""
-    user_deadlines: dict = dict
+    created: datetime = datetime.now()
+    documents: List[str] = field(default_factory=list)
+    for_zaak: str = ""
+    frontend_url: str = ""
     requester: str = ""
+    toelichting: str = ""
+    user_deadlines: Dict = field(default_factory=dict)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
