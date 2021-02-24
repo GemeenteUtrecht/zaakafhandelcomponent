@@ -72,6 +72,7 @@ from .serializers import (
     ZaakObjectGroupSerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
+    ZaakVASerializer,
 )
 from .utils import (
     convert_eigenschap_spec_to_json_schema,
@@ -312,6 +313,35 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
+
+
+class ChangeZaakVAView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    schema_summary = _("Change the confidentiality level of a case.")
+
+    def get_serializer(self, *args, **kwargs):
+        return ZaakVASerializer(*args, **kwargs)
+
+    def patch(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        zaak_url = serializer.validated_data["zaak_url"]
+
+        service = Service.get_service(zaak_url)
+        client = service.build_client()
+        # TODO: Implement reasoning ("reden") into audit trail
+
+        client.partial_update(
+            "zaak",
+            {
+                "vertrouwelijkheidsaanduiding": serializer.validated_data[
+                    "vertrouwelijkheidsaanduiding"
+                ]
+            },
+            url=zaak_url,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 ###############################

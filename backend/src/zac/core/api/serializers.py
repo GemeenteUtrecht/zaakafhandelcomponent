@@ -13,7 +13,11 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
-from zgw_consumers.api_models.constants import AardRelatieChoices, RolTypes
+from zgw_consumers.api_models.constants import (
+    AardRelatieChoices,
+    RolTypes,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -220,6 +224,28 @@ class ZaakStatusSerializer(APIModelSerializer):
             "datum_status_gezet",
             "statustoelichting",
             "statustype",
+        )
+
+
+class ZaakVASerializer(APIModelSerializer):
+    reden = serializers.CharField(
+        help_text=_("Reason for changing the confidentiality level."),
+        allow_blank=True,
+    )
+    zaak_url = serializers.URLField(
+        help_text=_("The URL that uniquely identifies the case.")
+    )
+    vertrouwelijkheidsaanduiding = serializers.ChoiceField(
+        VertrouwelijkheidsAanduidingen.choices,
+        help_text=_("The confidentiality level of the case."),
+    )
+
+    class Meta:
+        model = Zaak
+        fields = (
+            "reden",
+            "zaak_url",
+            "vertrouwelijkheidsaanduiding",
         )
 
 
