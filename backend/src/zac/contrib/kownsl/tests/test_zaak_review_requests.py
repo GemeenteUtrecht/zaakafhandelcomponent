@@ -31,6 +31,7 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
+KOWNSL_ROOT = "https://kownsl.nl/"
 
 
 @requests_mock.Mocker()
@@ -300,11 +301,11 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         cls.kownsl_service = Service.objects.create(
             label="Kownsl",
             api_type=APITypes.orc,
-            api_root="https://kownsl.nl",
+            api_root=KOWNSL_ROOT,
             auth_type=AuthTypes.zgw,
             client_id="zac",
             secret="supersecret",
-            oas="https://kownsl.nl/api/v1",
+            oas=f"{KOWNSL_ROOT}api/v1",
             user_id="zac",
         )
 
@@ -440,7 +441,18 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_rr_summary_authenticated_no_permissions(self):
+    @requests_mock.Mocker()
+    def test_rr_summary_authenticated_no_permissions(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl", oas_url=f"{KOWNSL_ROOT}api/v1")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
@@ -454,7 +466,18 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_zaaktype(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl", oas_url=f"{KOWNSL_ROOT}api/v1")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         PermissionSetFactory.create(
@@ -483,9 +506,19 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl", oas_url=f"{KOWNSL_ROOT}api/v1")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA

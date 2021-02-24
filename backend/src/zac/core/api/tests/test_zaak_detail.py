@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -13,11 +14,14 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import AccessRequestResult
 from zac.accounts.tests.factories import (
+    AccessRequestFactory,
     PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
@@ -26,6 +30,7 @@ from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+KOWNSL_ROOT = "https://kownsl.nl/"
 
 
 @requests_mock.Mocker()
@@ -170,6 +175,11 @@ class ZaakDetailPermissionTests(APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+
+        config = KownslConfig.get_solo()
+        config.service = kownsl
+        config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -226,7 +236,18 @@ class ZaakDetailPermissionTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_zaaktype(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
+            json=[],
+        )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         PermissionSetFactory.create(
@@ -245,9 +266,19 @@ class ZaakDetailPermissionTests(APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
             json=paginated_response([self._zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
+            json=[],
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
@@ -279,6 +310,95 @@ class ZaakDetailPermissionTests(APITestCase):
             catalogus=self.zaaktype.catalogus,
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_has_temp_access(self, m):
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        AccessRequestFactory.create(
+            requester=user,
+            zaak=self.zaak.url,
+            result=AccessRequestResult.approve,
+            end_date=datetime.date.today(),
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_user_is_zaak_behandelaar(self, m):
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak.url,
+            betrokkeneType="medewerker",
+            omschrijvingGeneriek="behandelaar",
+            betrokkeneIdentificatie={
+                "identificatie": user.username,
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([rol]),
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_user_is_adviser(self, m):
+        user = UserFactory.create(username="someuser")
+        PermissionSetFactory.create(
+            permissions=[zaken_inzien.name],
+            for_user=user,
+            catalogus="",
+            zaaktype_identificaties=[],
+            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
+            json=paginated_response([]),
+        )
+        review_request = generate_oas_component(
+            "kownsl",
+            "schemas/ReviewRequest",
+            id="1b864f55-0880-4207-9246-9b454cb69cca",
+            forZaak=self.zaak.url,
+            userDeadlines={user.username: "2099-01-01"},
+            metadata={},
+            zaakDocuments={},
+            reviews={},
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
+            json=[review_request],
         )
         self.client.force_authenticate(user=user)
 

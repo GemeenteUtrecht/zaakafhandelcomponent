@@ -12,6 +12,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.contrib.kownsl.models import KownslConfig
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 
@@ -20,6 +21,7 @@ from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+KOWNSL_ROOT = "https://kownsl.nl/"
 
 BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-001"
@@ -43,6 +45,11 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+
+        config = KownslConfig.get_solo()
+        config.service = kownsl
+        config.save()
 
         mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
         mock_allowlist.start()
@@ -125,6 +132,15 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_logged_in_either_permission_all_zaaktypen_ok(self, m):
         self._setUpMocks(m)
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
 
         permissions = [zaken_close, zaken_set_result]
         for permission in permissions:
@@ -149,6 +165,15 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_logged_in_both_permissions_all_zaaktypen_ok(self, m):
         self._setUpMocks(m)
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
 
         PermissionSetFactory.create(
             permissions=[zaken_close.name, zaken_set_result.name],
