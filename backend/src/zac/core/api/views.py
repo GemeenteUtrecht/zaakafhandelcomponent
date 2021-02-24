@@ -326,8 +326,8 @@ class ChangeZaakVAView(views.APIView):
     def patch(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        zaak_url = serializer.validated_data["zaak_url"]
 
+        zaak_url = serializer.validated_data["zaak_url"]
         service = Service.get_service(zaak_url)
         client = service.build_client()
         # TODO: Implement reasoning ("reden") into audit trail
