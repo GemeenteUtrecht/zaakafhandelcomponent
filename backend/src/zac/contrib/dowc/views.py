@@ -1,6 +1,4 @@
-from typing import Any, NoReturn, Optional
-
-from django.http import HttpResponse
+from typing import Any, Optional
 
 from rest_framework import authentication, permissions, status
 from rest_framework.response import Response
@@ -29,7 +27,6 @@ class OpenDowcView(APIView):
     def get_object(self) -> Document:
         bronorganisatie = self.kwargs["bronorganisatie"]
         identificatie = self.kwargs["identificatie"]
-        purpose = self.kwargs["purpose"]
 
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
@@ -41,8 +38,7 @@ class OpenDowcView(APIView):
         This will create a dowc object in the dowc API and exposes the document through a URL.
         """
         document = self.get_object()
-        drc_url = self.document.url
-        dowc_response, status_code = get_doc_info(request.user, drc_url, purpose)
+        dowc_response, status_code = get_doc_info(request.user, document.url, purpose)
         serializer = self.serializer_class(dowc_response)
         return Response(serializer.data, status=status_code)
 
