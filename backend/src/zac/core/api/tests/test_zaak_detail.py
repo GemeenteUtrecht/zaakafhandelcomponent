@@ -196,9 +196,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+        self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "because")
 
     @freeze_time("2020-12-26T12:00:00Z")
-    def test_change_va_invalid(self, m):
+    def test_change_invalid(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -213,18 +214,15 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             self.detail_url,
             {
                 "vertrouwelijkheidaanduiding": "zo-geheim-dit",
-                "reden": "because",
             },
         )
         self.assertEqual(response.status_code, 400)
+        response = response.json()
         self.assertEqual(
-            response.json(),
-            {
-                "vertrouwelijkheidaanduiding": [
-                    '"zo-geheim-dit" is een ongeldige keuze.'
-                ]
-            },
+            response["vertrouwelijkheidaanduiding"],
+            ['"zo-geheim-dit" is een ongeldige keuze.'],
         )
+        self.assertEqual(response["reden"], ["Dit veld is vereist."])
 
 
 class ZaakDetailPermissionTests(APITestCase):

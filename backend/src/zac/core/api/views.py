@@ -182,6 +182,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
             "zaak",
             data,
             url=zaak.url,
+            request_kwargs={"headers": {"X-Audit-Toelichting": reden}},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
