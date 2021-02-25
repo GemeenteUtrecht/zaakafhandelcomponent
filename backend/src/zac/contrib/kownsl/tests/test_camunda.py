@@ -22,7 +22,6 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
-from zac.core.utils import build_absolute_url, get_ui_url
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
