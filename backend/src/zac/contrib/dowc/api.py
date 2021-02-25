@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from django.http import Http404
 
@@ -58,12 +58,12 @@ def get_doc_info(
 
 
 @optional_service
-def patch_and_destroy_doc(user: User, uuid: str) -> None:
+def patch_and_destroy_doc(user: User, uuid: str) -> Dict[str, str]:
     client = get_client(user)
     operation_id = "documenten_destroy"
     try:
         url = get_operation_url(client.schema, operation_id, uuid=uuid)
-        client.delete(url, operation_id, method="DELETE", expected_status=200)
+        return client.delete(url, operation_id, method="DELETE", expected_status=200)
 
     except ClientError:
         raise Http404(f"DocumentFile with id {uuid} does not exist.")

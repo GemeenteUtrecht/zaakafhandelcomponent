@@ -1,15 +1,21 @@
 from typing import Any, Optional
 
-from rest_framework import authentication, permissions, status
+from django.utils.translation import gettext_lazy as _
+
+from drf_spectacular.utils import extend_schema
+from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zgw_consumers.api_models.documenten import Document
 
+from zac.api.utils import remote_schema_ref
 from zac.core.services import find_document
 
 from .api import get_doc_info, patch_and_destroy_doc
 from .permissions import CanOpenDocuments
 from .serializers import DowcResponseSerializer, DowcSerializer
+
+DOWC_BASE = "https://dowc.utrechtproeftuin.nl/api/v1"
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -18,6 +24,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     return type_(value)
 
 
+@extend_schema(summary=_("Open document for viewing or editing"))
 class OpenDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
@@ -43,6 +50,24 @@ class OpenDowcView(APIView):
         return Response(serializer.data, status=status_code)
 
 
+@extend_schema(
+    summary=_("Finalize opened document"),
+    responses={
+        (200, "application/json"): remote_schema_ref(
+            DOWC_BASE,
+            [
+                "paths",
+                "/api/v1/documenten/{uuid}",
+                "delete",
+                "responses",
+                "200",
+                "content",
+                "application/json",
+                "schema",
+            ],
+        ),
+    },
+)
 class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
@@ -56,5 +81,5 @@ class DeleteDowcView(APIView):
         """
         serializer = self.serializer_class(data={"uuid": dowc_uuid})
         serializer.is_valid(raise_exception=True)
-        patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        data = patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
+        return Response(data)
