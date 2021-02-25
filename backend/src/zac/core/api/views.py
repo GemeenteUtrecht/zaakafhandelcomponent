@@ -53,7 +53,12 @@ from ..views.utils import filter_documenten_for_permissions, get_source_doc_vers
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
-from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
+from .permissions import (
+    CanAddDocuments,
+    CanAddRelations,
+    CanReadOrUpdateZaken,
+    CanReadZaken,
+)
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
@@ -151,13 +156,18 @@ class GetZaakMixin:
 
 class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    schema_summary = _("Retrieve and update case details")
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
         return mapping[self.request.method](**kwargs)
 
+    @extend_schema(
+        summary=_("Retrieve case details"),
+        responses={
+            200: ZaakDetailSerializer,
+        },
+    )
     def get(
         self, request: Request, bronorganisatie: str, identificatie: str
     ) -> Response:
@@ -165,6 +175,13 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         serializer = self.get_serializer(instance=zaak)
         return Response(serializer.data)
 
+    @extend_schema(
+        summary=_("Update case details"),
+        request=UpdateZaakDetailSerializer,
+        responses={
+            204: None,
+        },
+    )
     def patch(self, request: Request, bronorganisatie: str, identificatie) -> Response:
         zaak = self.get_object()
         service = Service.get_service(zaak.url)
@@ -174,7 +191,6 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
 
         # If no errors are raised - data is valid too.
-        # TODO: Implement reasoning ("reden") into audit trail
         data = {**serializer.data}
         reden = data.pop("reden")
 

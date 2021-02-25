@@ -203,7 +203,7 @@ class ZaakDetailSerializer(APIModelSerializer):
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
     reden = serializers.CharField(
-        help_text=_("Reason for changing the confidentiality level."),
+        help_text=_("Reason for the edit, used in audit trail."),
     )
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         VertrouwelijkheidsAanduidingen.choices,

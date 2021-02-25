@@ -22,6 +22,7 @@ from .permissions import (
     zaken_inzien,
     zaken_request_access,
     zaken_set_result,
+    zaken_wijzigen,
 )
 
 logger = logging.getLogger(__name__)
@@ -190,6 +191,13 @@ def is_zaak_behandelaar(user: User, zaak: Optional[Zaak]):
 
 
 @rules.predicate
+def can_update_zaak(user: User, zaak: Optional[Zaak]):
+    if zaak is None:
+        return False
+    return _has_permission_key(zaken_wijzigen.name, user)
+
+
+@rules.predicate
 def is_zaak_reviewer(user: User, zaak: Optional[Zaak]):
     from zac.contrib.kownsl.api import get_review_requests
 
@@ -239,3 +247,4 @@ rules.add_rule(
     zaken_handle_access.name, can_handle_zaak_by_zaaktype & is_zaak_behandelaar
 )
 rules.add_rule(zaken_download_documents.name, can_download_document)
+rules.add_rule(zaken_wijzigen.name, can_update_zaak)
