@@ -66,13 +66,13 @@ from .serializers import (
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
+    UpdateZaakDetailSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
     ZaakObjectGroupSerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
-    ZaakVASerializer,
 )
 from .utils import (
     convert_eigenschap_spec_to_json_schema,
@@ -152,13 +152,38 @@ class GetZaakMixin:
 class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakDetailSerializer
-    schema_summary = _("Retrieve case details")
+    schema_summary = _("Retrieve and update case details")
 
-    def get(self, request, *args, **kwargs):
+    def get_serializer(self, **kwargs):
+        mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
+        return mapping[self.request.method](**kwargs)
+
+    def get(
+        self, request: Request, bronorganisatie: str, identificatie: str
+    ) -> Response:
         zaak = self.get_object()
-        serializer = self.serializer_class(instance=zaak)
+        serializer = self.get_serializer(instance=zaak)
         return Response(serializer.data)
+
+    def patch(self, request: Request, bronorganisatie: str, identificatie) -> Response:
+        zaak = self.get_object()
+        service = Service.get_service(zaak.url)
+        client = service.build_client()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # If no errors are raised - data is valid too.
+        # TODO: Implement reasoning ("reden") into audit trail
+        data = {**serializer.data}
+        reden = data.pop("reden")
+
+        client.partial_update(
+            "zaak",
+            data,
+            url=zaak.url,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):
@@ -313,35 +338,6 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
-
-
-class ChangeZaakVAView(views.APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    schema_summary = _("Change the confidentiality level of a case.")
-
-    def get_serializer(self, *args, **kwargs):
-        return ZaakVASerializer(*args, **kwargs)
-
-    def patch(self, request: Request) -> Response:
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        zaak_url = serializer.validated_data["zaak_url"]
-        service = Service.get_service(zaak_url)
-        client = service.build_client()
-        # TODO: Implement reasoning ("reden") into audit trail
-
-        client.partial_update(
-            "zaak",
-            {
-                "vertrouwelijkheidsaanduiding": serializer.validated_data[
-                    "vertrouwelijkheidsaanduiding"
-                ]
-            },
-            url=zaak_url,
-        )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 ###############################

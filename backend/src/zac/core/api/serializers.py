@@ -201,6 +201,48 @@ class ZaakDetailSerializer(APIModelSerializer):
         )
 
 
+class UpdateZaakDetailSerializer(APIModelSerializer):
+    reden = serializers.CharField(
+        help_text=_("Reason for changing the confidentiality level."),
+    )
+    vertrouwelijkheidaanduiding = serializers.ChoiceField(
+        VertrouwelijkheidsAanduidingen.choices,
+        help_text=_("The confidentiality level of the case."),
+    )
+
+    class Meta:
+        model = Zaak
+        fields = (
+            "einddatum",
+            "einddatum_gepland",
+            "omschrijving",
+            "reden",
+            "toelichting",
+            "uiterlijke_einddatum_afdoening",
+            "vertrouwelijkheidaanduiding",
+        )
+        extra_kwargs = {
+            "einddatum": {
+                "required": False,
+            },
+            "einddatum_gepland": {
+                "required": False,
+            },
+            "omschrijving": {
+                "required": False,
+            },
+            "toelichting": {
+                "required": False,
+            },
+            "uiterlijke_einddatum_afdoening": {
+                "required": False,
+            },
+            "vertrouwelijkheidaanduiding": {
+                "required": False,
+            },
+        }
+
+
 class StatusTypeSerializer(APIModelSerializer):
     class Meta:
         model = StatusType
@@ -224,28 +266,6 @@ class ZaakStatusSerializer(APIModelSerializer):
             "datum_status_gezet",
             "statustoelichting",
             "statustype",
-        )
-
-
-class ZaakVASerializer(APIModelSerializer):
-    reden = serializers.CharField(
-        help_text=_("Reason for changing the confidentiality level."),
-        allow_blank=True,
-    )
-    zaak_url = serializers.URLField(
-        help_text=_("The URL that uniquely identifies the case.")
-    )
-    vertrouwelijkheidsaanduiding = serializers.ChoiceField(
-        VertrouwelijkheidsAanduidingen.choices,
-        help_text=_("The confidentiality level of the case."),
-    )
-
-    class Meta:
-        model = Zaak
-        fields = (
-            "reden",
-            "zaak_url",
-            "vertrouwelijkheidsaanduiding",
         )
 
 

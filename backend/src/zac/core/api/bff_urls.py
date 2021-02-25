@@ -1,7 +1,6 @@
 from django.urls import path
 
 from .views import (
-    ChangeZaakVAView,
     CreateZaakDocumentView,
     CreateZaakRelationView,
     EigenschappenView,
@@ -60,11 +59,6 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/objects",
         ZaakObjectsView.as_view(),
         name="zaak-objects",
-    ),
-    path(
-        "cases/confidentiality",
-        ChangeZaakVAView.as_view(),
-        name="change-case-confidentiality",
     ),
     # meta
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),
