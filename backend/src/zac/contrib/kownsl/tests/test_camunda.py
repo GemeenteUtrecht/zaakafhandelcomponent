@@ -22,7 +22,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
-from zac.core.utils import get_ui_url
+from zac.core.utils import build_absolute_url, get_ui_url
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -523,15 +523,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
                 "kownslDocuments": serializer.validated_data["selected_documents"],
                 "kownslUsersList": [[user.username for user in self.users_1]],
                 "kownslReviewRequestId": str(self.review_request.id),
-                "kownslFrontendUrl": get_ui_url(
-                    [
-                        "ui",
-                        "kownsl",
-                        "review-request",
-                        self.review_request.review_type,
-                    ],
-                    params={"uuid": self.review_request.id},
-                ),
+                "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
             },
         )
 

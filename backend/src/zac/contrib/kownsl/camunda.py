@@ -15,7 +15,7 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.select_documents.serializers import DocumentSerializer
-from zac.core.utils import get_ui_url
+from zac.core.utils import build_absolute_url, get_ui_url
 
 from .api import create_review_request
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
@@ -243,7 +243,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "kownslDocuments": self.validated_data["selected_documents"],
             "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
-            "kownslFrontendUrl": kownsl_frontend_url,
+            "kownslFrontendUrl": build_absolute_url(kownsl_frontend_url),
         }
 
 
