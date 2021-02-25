@@ -55,16 +55,7 @@ class OpenDowcView(APIView):
     responses={
         (200, "application/json"): remote_schema_ref(
             DOWC_BASE,
-            [
-                "paths",
-                "/api/v1/documenten/{uuid}",
-                "delete",
-                "responses",
-                "200",
-                "content",
-                "application/json",
-                "schema",
-            ],
+            ["components", "schemas", "UnlockedDocument"],
         ),
     },
 )
