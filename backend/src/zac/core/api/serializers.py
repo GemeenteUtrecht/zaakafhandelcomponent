@@ -509,19 +509,9 @@ class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
         return result
 
 
-class SearchEigenschapSerializer(APIModelSerializer):
+class SearchEigenschapSerializer(serializers.Serializer):
+    name = serializers.CharField(help_text=_("Name of EIGENSCHAP"))
     spec = SearchEigenschapSpecificatieSerializer(
         label=_("property definition"),
         help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values"),
     )
-
-    class Meta:
-        model = Eigenschap
-        fields = (
-            "url",
-            "name",
-            "spec",
-        )
-        extra_kwargs = {
-            "name": {"source": "naam", "help_text": _("Name of EIGENSCHAP")}
-        }
