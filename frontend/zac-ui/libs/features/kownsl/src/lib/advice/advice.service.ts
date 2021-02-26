@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { AdviceForm } from '../../models/advice-form';
-import { ReviewRequest } from '../../models/review-request';
 import { HttpResponse } from '@angular/common/http';
-import { Document, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
+import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
+import { CloseDocument } from '../../models/close-document';
 
 @Injectable({
   providedIn: 'root'
@@ -35,9 +35,13 @@ export class AdviceService {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }
 
-  closeDocumentEdit(endpoint: string): Observable<any> {
-    endpoint = encodeURI(endpoint);
-    return this.http.Delete<any>(endpoint);
+  closeDocumentEdit(deleteUrls: DocumentUrls[]): Observable<any> {
+    const observables = [];
+    deleteUrls.forEach(doc => {
+      const endpoint = encodeURI(doc.deleteUrl);
+      observables.push(this.http.Delete<CloseDocument>(endpoint));
+    });
+    return forkJoin(observables)
   }
 
 }

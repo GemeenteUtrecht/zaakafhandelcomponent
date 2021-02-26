@@ -6,12 +6,13 @@ import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
 import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
-import { RowData, FileUpload, Table } from '@gu/models';
-import { convertBlobToString } from '@gu/utils';
+import { RowData, Table } from '@gu/models';
 import { Review } from '../../models/review';
 import { ZaakDocument } from '../../models/zaak-document';
 import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
-import { forkJoin } from 'rxjs';
+import { CloseDocument } from '../../models/close-document';
+import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -47,7 +48,6 @@ export class AdviceComponent implements OnInit {
     bodyData: []
   }
 
-
   pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
@@ -57,12 +57,6 @@ export class AdviceComponent implements OnInit {
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
 
-  readonly documentFormGroup = {
-    "content": this.fb.control(""),
-    "size": this.fb.control(""),
-    "name": this.fb.control(""),
-    "document": this.fb.control("")
-  }
 
   get documents(): AbstractControl { return this.adviceForm.get('documents'); }
 
@@ -79,10 +73,9 @@ export class AdviceComponent implements OnInit {
       this.fetchAdvice()
       this.adviceForm = this.fb.group({
         advice: this.fb.control(""),
-        documents: this.fb.group({})
       })
     } else {
-      this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
+      this.errorMessage = "Er is geen geldig zaaknummer gevonden."
     }
   }
 
@@ -102,7 +95,7 @@ export class AdviceComponent implements OnInit {
       }
       this.isLoading = false;
     }, res => {
-      this.errorMessage = res.error.detail
+      this.errorMessage = res.error.detail;
       if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
         this.setLoginUrl()
         this.isNotLoggedIn = true;
@@ -205,12 +198,8 @@ export class AdviceComponent implements OnInit {
   }
 
   addDeleteUrlsMapping(id, deleteUrl) {
-    console.log('1')
-    console.log(this.deleteUrls);
     // Check if mapping already exists
     this.deleteUrls = this.deleteUrls.filter( item => item.id !== id)
-    console.log('2')
-    console.log(this.deleteUrls);
     const urlMapping = {
       id: id,
       deleteUrl: deleteUrl
@@ -218,102 +207,34 @@ export class AdviceComponent implements OnInit {
     this.deleteUrls.push(urlMapping);
   }
 
-  closeDocumentEdit() {
-    console.log(this.deleteUrls);
-    this.deleteUrls.forEach(doc => {
-    })
-
-    const observables = [];
-
-    this.deleteUrls.forEach(doc => {
-      // just create the Observable here but don't subscribe yet
-      observables.push(this.adviceService.closeDocumentEdit(doc.deleteUrl));
-    });
-
-    forkJoin(observables)
-      .subscribe(results => {
-        console.log(results);
-      }, errorRes => {
-
-      });
-    // return this.adviceService.closeDocumentEdit(this.bronorganisatie, endpoint).subscribe( res => {
-    //   // Remove deleteUrl mapping from local array
-    //   this.deleteUrls.forEach( (document, index) => {
-    //     if (document.deleteUrl === deleteUrl) {
-    //       this.deleteUrls.splice(index, 1);
-    //     }
-    //   })
-    // }, errorResponse => {
-    //
-    // })
-  }
-
-  // old
-
-  async handleFileSelect(file: File, fileName: string, downloadUrl: string): Promise<void> {
-    if (file) {
-      const fileData: FileUpload = await this.createFileData(file, fileName, downloadUrl);
-      const namedDocumentFormGroup = this.createDocumentFormGroup(fileData);
-      // Check if Form Control already exists
-      const fileFormControl = (this.documents as FormGroup).controls[fileName]
-      if (!fileFormControl) {
-        (this.documents as FormGroup).addControl(fileName, this.fb.group(namedDocumentFormGroup));
-      } else {
-        fileFormControl.patchValue(fileData);
-      }
-    } else {
-      (this.documents as FormGroup).removeControl(fileName);
-    }
-  }
-
-  async createFileData(file: File, fileName: string, downloadUrl: string): Promise<FileUpload> {
-    return {
-      content: await convertBlobToString(file),
-      size: file.size,
-      name: fileName,
-      document: downloadUrl
-    }
-  }
-
-  createDocumentFormGroup(fileData: FileUpload) {
-    const namedDocumentFormGroup = this.documentFormGroup;
-    namedDocumentFormGroup['content'] = this.fb.control(fileData.content);
-    namedDocumentFormGroup['size'] = this.fb.control(fileData.size);
-    namedDocumentFormGroup['name'] = this.fb.control(fileData.name);
-    namedDocumentFormGroup['document'] = this.fb.control(fileData.document);
-    return namedDocumentFormGroup;
-  }
-
   // submit
-
   submitForm(): void {
+    this.isSubmitting = true;
 
-    this.closeDocumentEdit()
-
-/*    let formData: AdviceForm;
-
-    const documentGroupControls = (this.documents as FormGroup).controls;
-    const documentsData: AdviceDocument[] = [];
-    Object.keys(documentGroupControls).forEach(documentKey => {
-      const documentData: AdviceDocument = documentGroupControls[documentKey].value;
-      documentsData.push(documentData)
-    })
-    formData = {
+    let adviceFormData: AdviceForm;
+    const documentsData: Array<AdviceDocument> = [];
+    adviceFormData = {
       advice: this.adviceForm.controls['advice'].value,
       documents: documentsData
     }
-    this.postAdvice(formData)*/
-  }
 
-  postAdvice(formData: AdviceForm): void {
-    this.isSubmitting = true;
-    this.adviceService.postAdvice(formData, this.uuid).subscribe(data => {
+    this.adviceService.closeDocumentEdit(this.deleteUrls)
+      .pipe(
+        switchMap( (closedDocs: CloseDocument[]) => {
+          adviceFormData.documents = closedDocs.map( doc =>({document: doc.versionedUrl}))
+          return of(adviceFormData);
+        }),
+        switchMap((formData: AdviceForm) => {
+          return this.adviceService.postAdvice(formData, this.uuid)
+        })
+      ).subscribe( () => {
       this.isSubmitting = false;
       this.submitSuccess = true;
-    }, error => {
-      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens..."
+    }, errorRes => {
+      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens."
       this.submitFailed = true;
       this.isSubmitting = false;
     })
+
   }
 }

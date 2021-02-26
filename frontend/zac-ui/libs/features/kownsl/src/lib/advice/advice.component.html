@@ -59,19 +59,6 @@
                     [tableData]="documentTableData"
                     (buttonOutput)="handleTableButtonOutput($event)"
                   ></gu-table>
-                  <div class="document-row" *ngFor="let file of adviceData.zaakDocuments">
-                    <div class="mb-4">
-                      <gu-file
-                        fileName="{{file.name}} ({{file.title}})"
-                        [downloadUrl]="file.downloadUrl"
-                        class="d-inline-block"
-                      ></gu-file>
-                      <gu-chip type="tertiary" class="d-inline-block">
-                        {{file.extra}}
-                      </gu-chip>
-                    </div>
-                    <gu-file-upload (selectedFileOutput)="handleFileSelect($event, (file.name), (file.downloadUrl))"></gu-file-upload>
-                  </div>
                 </section>
               </ng-template>
 
@@ -93,7 +80,7 @@
                 </gu-button>
               </div>
               <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
-                <gu-message [message]="errorMessage"></gu-message>
+                <gu-message [message]="errorMessage" type="warn"></gu-message>
               </div>
             </form>
           </ng-template>
@@ -108,7 +95,7 @@
 
         <!-- Error: no uuid -->
         <ng-template [ngIf]="!uuid">
-          <gu-message [message]="errorMessage"></gu-message>
+          <gu-message [message]="errorMessage" type="warn"></gu-message>
         </ng-template>
       </div>
     </div>
