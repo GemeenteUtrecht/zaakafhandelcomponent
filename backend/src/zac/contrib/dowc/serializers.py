@@ -44,4 +44,4 @@ class DowcResponseSerializer(APIModelSerializer):
 class DowcSerializer(APIModelSerializer):
     class Meta:
         model = DowcResponse
-        fields = "uuid"
+        fields = ("uuid",)
