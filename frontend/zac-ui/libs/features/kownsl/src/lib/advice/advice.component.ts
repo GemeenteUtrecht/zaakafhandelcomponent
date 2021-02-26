@@ -8,6 +8,10 @@ import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
 import { RowData, FileUpload, Table } from '@gu/models';
 import { convertBlobToString } from '@gu/utils';
+import { Review } from '../../models/review';
+import { ZaakDocument } from '../../models/zaak-document';
+import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -17,6 +21,7 @@ import { convertBlobToString } from '@gu/utils';
 export class AdviceComponent implements OnInit {
   uuid: string;
   zaakUrl: string;
+  bronorganisatie: string;
 
   adviceData: ReviewRequest;
   isLoading: boolean;
@@ -34,13 +39,24 @@ export class AdviceComponent implements OnInit {
   loginUrl: string;
 
   tableData: Table = {
-    headData: [],
+    headData: ['Adviseur', 'Gedaan op'],
     bodyData: []
   }
+  documentTableData: Table = {
+    headData: ['Acties', '', 'Documentnaam'],
+    bodyData: []
+  }
+
 
   pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
+
+  documentsData: any;
+
+  docsInEditMode: string[] = [];
+  deleteUrls: DocumentUrls[] = [];
+
   readonly documentFormGroup = {
     "content": this.fb.control(""),
     "size": this.fb.control(""),
@@ -74,10 +90,12 @@ export class AdviceComponent implements OnInit {
     this.isLoading = true;
     this.adviceService.getAdvice(this.uuid).subscribe(res => {
       this.setZaakUrl(res.body.zaak);
+      this.bronorganisatie = res.body.zaak.bronorganisatie;
       const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
       if (isSubmittedBefore === "false") {
         this.adviceData = res.body;
-        this.tableData = this.createTableData(res.body);
+        this.tableData.bodyData = this.createTableData(res.body.reviews);
+        this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
       } else {
         this.hasError = true;
         this.errorMessage = "U heeft deze aanvraag al beantwoord.";
@@ -103,14 +121,10 @@ export class AdviceComponent implements OnInit {
     this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
   }
 
-  createTableData(adviceData: ReviewRequest): Table {
-    const tableData: Table = {
-      headData: ['Adviseur', 'Gedaan op'],
-      bodyData: []
-    }
+  createTableData(reviews: Review[]): RowData[] {
 
     // Add table body data
-    tableData.bodyData = adviceData.reviews.map( review => {
+    return reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
       const rowData: RowData = {
@@ -122,9 +136,119 @@ export class AdviceComponent implements OnInit {
       }
       return rowData
     });
-
-    return tableData
   }
+
+  // Document Edit
+
+  createDocumentTableData(documents: ZaakDocument[]): RowData[] {
+
+    return documents.map( document => {
+      const docName = `${document.name} (${document.title})`;
+      const rowData: RowData = {
+        cellData: {
+          lezen: {
+            type: 'button',
+            label: 'Lezen',
+            value: document.identificatie
+          },
+          bewerken: {
+            type: 'button',
+            label: 'Bewerken',
+            value: document.identificatie
+          },
+          docName: docName
+        }
+      }
+      return rowData
+    });
+  }
+
+  handleTableButtonOutput(action: object) {
+    const actionType = Object.keys(action)[0];
+    const id = action[actionType];
+
+    switch (actionType) {
+      case 'lezen':
+        this.readDocument(id);
+        break;
+      case 'bewerken':
+        this.editDocument(id);
+        break;
+    }
+  }
+
+  readDocument(id) {
+    this.adviceService.readDocument(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    }, errorResponse => {
+
+    })
+  }
+
+  editDocument(id) {
+    if (!this.docsInEditMode.includes(id)) {
+      this.docsInEditMode.push(id);
+    }
+    this.openDocumentEdit(id);
+  }
+
+  openDocumentEdit(id) {
+    this.adviceService.openDocumentEdit(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+      // Open document
+      window.open(res.magicUrl, "_blank");
+
+      // Map received deleteUrl to the id
+      this.addDeleteUrlsMapping(id, res.deleteUrl);
+    }, errorResponse => {
+
+    })
+  }
+
+  addDeleteUrlsMapping(id, deleteUrl) {
+    console.log('1')
+    console.log(this.deleteUrls);
+    // Check if mapping already exists
+    this.deleteUrls = this.deleteUrls.filter( item => item.id !== id)
+    console.log('2')
+    console.log(this.deleteUrls);
+    const urlMapping = {
+      id: id,
+      deleteUrl: deleteUrl
+    }
+    this.deleteUrls.push(urlMapping);
+  }
+
+  closeDocumentEdit() {
+    console.log(this.deleteUrls);
+    this.deleteUrls.forEach(doc => {
+    })
+
+    const observables = [];
+
+    this.deleteUrls.forEach(doc => {
+      // just create the Observable here but don't subscribe yet
+      observables.push(this.adviceService.closeDocumentEdit(doc.deleteUrl));
+    });
+
+    forkJoin(observables)
+      .subscribe(results => {
+        console.log(results);
+      }, errorRes => {
+
+      });
+    // return this.adviceService.closeDocumentEdit(this.bronorganisatie, endpoint).subscribe( res => {
+    //   // Remove deleteUrl mapping from local array
+    //   this.deleteUrls.forEach( (document, index) => {
+    //     if (document.deleteUrl === deleteUrl) {
+    //       this.deleteUrls.splice(index, 1);
+    //     }
+    //   })
+    // }, errorResponse => {
+    //
+    // })
+  }
+
+  // old
 
   async handleFileSelect(file: File, fileName: string, downloadUrl: string): Promise<void> {
     if (file) {
@@ -160,8 +284,13 @@ export class AdviceComponent implements OnInit {
     return namedDocumentFormGroup;
   }
 
+  // submit
+
   submitForm(): void {
-    let formData: AdviceForm;
+
+    this.closeDocumentEdit()
+
+/*    let formData: AdviceForm;
 
     const documentGroupControls = (this.documents as FormGroup).controls;
     const documentsData: AdviceDocument[] = [];
@@ -173,7 +302,7 @@ export class AdviceComponent implements OnInit {
       advice: this.adviceForm.controls['advice'].value,
       documents: documentsData
     }
-    this.postAdvice(formData)
+    this.postAdvice(formData)*/
   }
 
   postAdvice(formData: AdviceForm): void {
