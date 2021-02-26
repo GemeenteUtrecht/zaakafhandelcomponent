@@ -6,8 +6,13 @@ import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
 import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
-import { RowData, FileUpload, Table } from '@gu/models';
-import { convertBlobToString } from '@gu/utils';
+import { RowData, Table } from '@gu/models';
+import { Review } from '../../models/review';
+import { ZaakDocument } from '../../models/zaak-document';
+import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
+import { CloseDocument } from '../../models/close-document';
+import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -17,6 +22,7 @@ import { convertBlobToString } from '@gu/utils';
 export class AdviceComponent implements OnInit {
   uuid: string;
   zaakUrl: string;
+  bronorganisatie: string;
 
   adviceData: ReviewRequest;
   isLoading: boolean;
@@ -34,19 +40,23 @@ export class AdviceComponent implements OnInit {
   loginUrl: string;
 
   tableData: Table = {
-    headData: [],
+    headData: ['Adviseur', 'Gedaan op'],
+    bodyData: []
+  }
+  documentTableData: Table = {
+    headData: ['Acties', '', 'Documentnaam'],
     bodyData: []
   }
 
   pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
-  readonly documentFormGroup = {
-    "content": this.fb.control(""),
-    "size": this.fb.control(""),
-    "name": this.fb.control(""),
-    "document": this.fb.control("")
-  }
+
+  documentsData: any;
+
+  docsInEditMode: string[] = [];
+  deleteUrls: DocumentUrls[] = [];
+
 
   get documents(): AbstractControl { return this.adviceForm.get('documents'); }
 
@@ -63,10 +73,9 @@ export class AdviceComponent implements OnInit {
       this.fetchAdvice()
       this.adviceForm = this.fb.group({
         advice: this.fb.control(""),
-        documents: this.fb.group({})
       })
     } else {
-      this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
+      this.errorMessage = "Er is geen geldig zaaknummer gevonden."
     }
   }
 
@@ -74,17 +83,19 @@ export class AdviceComponent implements OnInit {
     this.isLoading = true;
     this.adviceService.getAdvice(this.uuid).subscribe(res => {
       this.setZaakUrl(res.body.zaak);
+      this.bronorganisatie = res.body.zaak.bronorganisatie;
       const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
       if (isSubmittedBefore === "false") {
         this.adviceData = res.body;
-        this.tableData = this.createTableData(res.body);
+        this.tableData.bodyData = this.createTableData(res.body.reviews);
+        this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
       } else {
         this.hasError = true;
         this.errorMessage = "U heeft deze aanvraag al beantwoord.";
       }
       this.isLoading = false;
     }, res => {
-      this.errorMessage = res.error.detail
+      this.errorMessage = res.error.detail;
       if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
         this.setLoginUrl()
         this.isNotLoggedIn = true;
@@ -103,14 +114,10 @@ export class AdviceComponent implements OnInit {
     this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
   }
 
-  createTableData(adviceData: ReviewRequest): Table {
-    const tableData: Table = {
-      headData: ['Adviseur', 'Gedaan op'],
-      bodyData: []
-    }
+  createTableData(reviews: Review[]): RowData[] {
 
     // Add table body data
-    tableData.bodyData = adviceData.reviews.map( review => {
+    return reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
       const rowData: RowData = {
@@ -122,69 +129,112 @@ export class AdviceComponent implements OnInit {
       }
       return rowData
     });
-
-    return tableData
   }
 
-  async handleFileSelect(file: File, fileName: string, downloadUrl: string): Promise<void> {
-    if (file) {
-      const fileData: FileUpload = await this.createFileData(file, fileName, downloadUrl);
-      const namedDocumentFormGroup = this.createDocumentFormGroup(fileData);
-      // Check if Form Control already exists
-      const fileFormControl = (this.documents as FormGroup).controls[fileName]
-      if (!fileFormControl) {
-        (this.documents as FormGroup).addControl(fileName, this.fb.group(namedDocumentFormGroup));
-      } else {
-        fileFormControl.patchValue(fileData);
+  // Document Edit
+
+  createDocumentTableData(documents: ZaakDocument[]): RowData[] {
+
+    return documents.map( document => {
+      const docName = `${document.name} (${document.title})`;
+      const rowData: RowData = {
+        cellData: {
+          lezen: {
+            type: 'button',
+            label: 'Lezen',
+            value: document.identificatie
+          },
+          bewerken: {
+            type: 'button',
+            label: 'Bewerken',
+            value: document.identificatie
+          },
+          docName: docName
+        }
       }
-    } else {
-      (this.documents as FormGroup).removeControl(fileName);
+      return rowData
+    });
+  }
+
+  handleTableButtonOutput(action: object) {
+    const actionType = Object.keys(action)[0];
+    const id = action[actionType];
+
+    switch (actionType) {
+      case 'lezen':
+        this.readDocument(id);
+        break;
+      case 'bewerken':
+        this.editDocument(id);
+        break;
     }
   }
 
-  async createFileData(file: File, fileName: string, downloadUrl: string): Promise<FileUpload> {
-    return {
-      content: await convertBlobToString(file),
-      size: file.size,
-      name: fileName,
-      document: downloadUrl
-    }
-  }
+  readDocument(id) {
+    this.adviceService.readDocument(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    }, errorResponse => {
 
-  createDocumentFormGroup(fileData: FileUpload) {
-    const namedDocumentFormGroup = this.documentFormGroup;
-    namedDocumentFormGroup['content'] = this.fb.control(fileData.content);
-    namedDocumentFormGroup['size'] = this.fb.control(fileData.size);
-    namedDocumentFormGroup['name'] = this.fb.control(fileData.name);
-    namedDocumentFormGroup['document'] = this.fb.control(fileData.document);
-    return namedDocumentFormGroup;
-  }
-
-  submitForm(): void {
-    let formData: AdviceForm;
-
-    const documentGroupControls = (this.documents as FormGroup).controls;
-    const documentsData: AdviceDocument[] = [];
-    Object.keys(documentGroupControls).forEach(documentKey => {
-      const documentData: AdviceDocument = documentGroupControls[documentKey].value;
-      documentsData.push(documentData)
     })
-    formData = {
+  }
+
+  editDocument(id) {
+    if (!this.docsInEditMode.includes(id)) {
+      this.docsInEditMode.push(id);
+    }
+    this.openDocumentEdit(id);
+  }
+
+  openDocumentEdit(id) {
+    this.adviceService.openDocumentEdit(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+      // Open document
+      window.open(res.magicUrl, "_blank");
+
+      // Map received deleteUrl to the id
+      this.addDeleteUrlsMapping(id, res.deleteUrl);
+    }, errorResponse => {
+
+    })
+  }
+
+  addDeleteUrlsMapping(id, deleteUrl) {
+    // Check if mapping already exists
+    this.deleteUrls = this.deleteUrls.filter( item => item.id !== id)
+    const urlMapping = {
+      id: id,
+      deleteUrl: deleteUrl
+    }
+    this.deleteUrls.push(urlMapping);
+  }
+
+  // submit
+  submitForm(): void {
+    this.isSubmitting = true;
+
+    let adviceFormData: AdviceForm;
+    const documentsData: Array<AdviceDocument> = [];
+    adviceFormData = {
       advice: this.adviceForm.controls['advice'].value,
       documents: documentsData
     }
-    this.postAdvice(formData)
-  }
 
-  postAdvice(formData: AdviceForm): void {
-    this.isSubmitting = true;
-    this.adviceService.postAdvice(formData, this.uuid).subscribe(data => {
+    this.adviceService.closeDocumentEdit(this.deleteUrls)
+      .pipe(
+        switchMap( (closedDocs: CloseDocument[]) => {
+          adviceFormData.documents = closedDocs.map( doc =>({document: doc.versionedUrl}))
+          return of(adviceFormData);
+        }),
+        switchMap((formData: AdviceForm) => {
+          return this.adviceService.postAdvice(formData, this.uuid)
+        })
+      ).subscribe( () => {
       this.isSubmitting = false;
       this.submitSuccess = true;
-    }, error => {
-      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens..."
+    }, errorRes => {
+      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens."
       this.submitFailed = true;
       this.isSubmitting = false;
     })
+
   }
 }

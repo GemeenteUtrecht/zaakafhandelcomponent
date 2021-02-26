@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { AdviceForm } from '../../models/advice-form';
-import { ReviewRequest } from '../../models/review-request';
 import { HttpResponse } from '@angular/common/http';
+import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
+import { CloseDocument } from '../../models/close-document';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,25 @@ export class AdviceService {
 
   postAdvice(formData: AdviceForm, uuid: string): Observable<AdviceForm> {
     return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/advice`), formData);
+  }
+
+  readDocument(bronorganisatie: string, identificatie: string): Observable<ReadWriteDocument> {
+    const endpoint = encodeURI(`/api/dowc/${bronorganisatie}/${identificatie}/read`);
+    return this.http.Post<ReadWriteDocument>(endpoint);
+  }
+
+  openDocumentEdit(bronorganisatie: string, identificatie: string): Observable<ReadWriteDocument> {
+    const endpoint = encodeURI(`/api/dowc/${bronorganisatie}/${identificatie}/write`);
+    return this.http.Post<ReadWriteDocument>(endpoint);
+  }
+
+  closeDocumentEdit(deleteUrls: DocumentUrls[]): Observable<any> {
+    const observables = [];
+    deleteUrls.forEach(doc => {
+      const endpoint = encodeURI(doc.deleteUrl);
+      observables.push(this.http.Delete<CloseDocument>(endpoint));
+    });
+    return forkJoin(observables)
   }
 
 }

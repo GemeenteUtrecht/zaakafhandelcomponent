@@ -10,7 +10,7 @@
       <tr
         class="parent-row"
         [ngClass]="element.clickOutput || (expandable && element.expandData.length > 0) ? 'parent-row--clickable' : ''"
-        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData.length > 0)"
+        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData)"
         [attr.role]="element.clickOutput || (expandable && element.expandData) ? 'button' : ''"
       >
         <!-- Expand icon -->

@@ -94,7 +94,7 @@
                 </gu-button>
               </div>
               <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
-                <gu-message [message]="errorMessage"></gu-message>
+                <gu-message [message]="errorMessage" type="warn"></gu-message>
               </div>
             </form>
           </ng-template>
@@ -109,7 +109,7 @@
 
         <!-- Error: no uuid -->
         <ng-template [ngIf]="!uuid">
-          <gu-message [message]="errorMessage"></gu-message>
+          <gu-message [message]="errorMessage" type="warn"></gu-message>
         </ng-template>
       </div>
     </div>

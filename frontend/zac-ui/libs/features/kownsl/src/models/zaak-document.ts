@@ -1,6 +1,8 @@
 export interface ZaakDocument {
+  bronorganisatie: string;
+  identificatie: string;
   downloadUrl: string;
-  extra: string;
   name: string;
+  extra: string;
   title: string;
 }

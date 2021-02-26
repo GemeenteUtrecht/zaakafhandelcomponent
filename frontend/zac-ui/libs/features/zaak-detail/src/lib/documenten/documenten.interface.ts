@@ -19,8 +19,9 @@ interface InformatieObjectType {
 }
 
 export interface DocumentUrls {
-  writeUrl: string;
-  deleteUrl: string;
+  writeUrl?: string;
+  deleteUrl?: string;
+  id?: string;
 }
 
 export interface ReadWriteDocument {

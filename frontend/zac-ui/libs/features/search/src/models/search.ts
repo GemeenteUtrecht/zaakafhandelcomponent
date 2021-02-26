@@ -4,7 +4,9 @@ export interface Zaaktype {
 }
 
 export interface Eigenschappen {
-  [key: string]: any
+  [key: string]: {
+    value: any;
+  }
 }
 
 export interface Search {

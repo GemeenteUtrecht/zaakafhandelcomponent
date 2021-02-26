@@ -4,8 +4,5 @@ export interface AdviceForm {
 }
 
 export interface AdviceDocument {
-  content: string | ArrayBuffer;
-  size: number;
-  name: string;
   document: string;
 }
