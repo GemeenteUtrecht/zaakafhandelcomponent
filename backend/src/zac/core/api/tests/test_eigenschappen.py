@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import requests_mock
@@ -244,7 +246,6 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             data,
             [
                 {
-                    "url": eigenschap1["url"],
                     "name": "some-property",
                     "spec": {
                         "type": "string",
@@ -304,7 +305,6 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             data,
             [
                 {
-                    "url": eigenschap["url"],
                     "name": "some-property",
                     "spec": {
                         "type": "number",
@@ -333,3 +333,165 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"catalogus": ["Voer een geldige URL in."]})
+
+    @requests_mock.Mocker()
+    def test_get_eigenschappen_with_same_name_and_spec(self, m):
+        zaaktype1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT",
+        )
+        eigenschap1 = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype1["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": ["aaa", "bbb"],
+            },
+        )
+        zaaktype2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/741c9d1e-de1c-46c6-9ae0-5696f7994ab6",
+            identificatie="ZT",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT",
+        )
+        eigenschap2 = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype2["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": ["aaa", "bbb"],
+            },
+        )
+
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, zaaktype1)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
+            json=paginated_response([zaaktype1, zaaktype2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype1['url']}",
+            json=paginated_response([eigenschap1]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype2['url']}",
+            json=paginated_response([eigenschap2]),
+        )
+
+        response = self.client.get(
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    "name": "some-property",
+                    "spec": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3,
+                        "enum": ["aaa", "bbb"],
+                    },
+                }
+            ],
+        )
+
+    @patch("zac.core.api.views.logger")
+    @requests_mock.Mocker()
+    def test_get_eigenschappen_with_same_name_but_different_spec(self, m_logger, m_req):
+        zaaktype1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT",
+        )
+        eigenschap1 = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype1["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": ["aaa", "bbb"],
+            },
+        )
+        zaaktype2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/741c9d1e-de1c-46c6-9ae0-5696f7994ab6",
+            identificatie="ZT",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT",
+        )
+        eigenschap2 = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype2["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "1",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+
+        mock_service_oas_get(m_req, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m_req, zaaktype1)
+        m_req.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
+            json=paginated_response([zaaktype1, zaaktype2]),
+        )
+        m_req.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype1['url']}",
+            json=paginated_response([eigenschap1]),
+        )
+        m_req.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype2['url']}",
+            json=paginated_response([eigenschap2]),
+        )
+
+        response = self.client.get(
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        # can't assert spec since it's value is uncertain
+        self.assertEqual(data[0]["name"], "some-property")
+        m_logger.warning.assert_called_with(
+            "Eigenschappen 'some-property' which belong to zaaktype 'ZT' have different specs"
+        )

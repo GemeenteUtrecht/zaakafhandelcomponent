@@ -1,4 +1,5 @@
 import base64
+import logging
 from datetime import date
 from itertools import groupby
 from typing import List
@@ -77,6 +78,8 @@ from .utils import (
     convert_eigenschap_spec_to_json_schema,
     get_informatieobjecttypen_for_zaak,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class GetDocumentInfoView(views.APIView):
@@ -513,9 +516,34 @@ class EigenschappenView(ListAPIView):
 
         eigenschappen = sum(list(_eigenschappen), [])
 
+        # transform values and remove duplicates
+        eigenschappen_aggregated = []
         for eigenschap in eigenschappen:
-            eigenschap.spec = convert_eigenschap_spec_to_json_schema(
-                eigenschap.specificatie
-            )
+            eigenschap_data = {
+                "name": eigenschap.naam,
+                "spec": convert_eigenschap_spec_to_json_schema(eigenschap.specificatie),
+            }
 
-        return eigenschappen
+            existing_eigenschappen = [
+                e
+                for e in eigenschappen_aggregated
+                if e["name"] == eigenschap_data["name"]
+            ]
+            if existing_eigenschappen:
+                if eigenschap_data["spec"] != existing_eigenschappen[0]["spec"]:
+                    logger.warning(
+                        "Eigenschappen '%(name)s' which belong to zaaktype '%(zaaktype)s' have different specs"
+                        % {
+                            "name": eigenschap.naam,
+                            "zaaktype": eigenschap.zaaktype.omschrijving,
+                        }
+                    )
+                continue
+
+            eigenschappen_aggregated.append(eigenschap_data)
+
+        eigenschappen_aggregated = sorted(
+            eigenschappen_aggregated, key=lambda e: e["name"]
+        )
+
+        return eigenschappen_aggregated
