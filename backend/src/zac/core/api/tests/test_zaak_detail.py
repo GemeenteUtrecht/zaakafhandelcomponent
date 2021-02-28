@@ -22,7 +22,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -167,6 +167,63 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @freeze_time("2020-12-26T12:00:00Z")
+    def test_update_zaak_detail(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "einddatum": "2021-01-01",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "reden": "because",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(m.last_request.url, self.zaak["url"])
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "einddatum": "2021-01-01",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "because")
+
+    @freeze_time("2020-12-26T12:00:00Z")
+    def test_change_invalid(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "vertrouwelijkheidaanduiding": "zo-geheim-dit",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        response = response.json()
+        self.assertEqual(
+            response["vertrouwelijkheidaanduiding"],
+            ['"zo-geheim-dit" is een ongeldige keuze.'],
+        )
+        self.assertEqual(response["reden"], ["Dit veld is vereist."])
+
 
 class ZaakDetailPermissionTests(APITestCase):
     @classmethod
@@ -225,7 +282,9 @@ class ZaakDetailPermissionTests(APITestCase):
 
     def test_not_authenticated(self):
         response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        response = self.client.patch(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_authenticated_no_permissions(self):
@@ -233,7 +292,9 @@ class ZaakDetailPermissionTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        response = self.client.patch(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -296,7 +357,7 @@ class ZaakDetailPermissionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_perm(self, m):
+    def test_has_perm_to_retrieve(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
@@ -316,6 +377,38 @@ class ZaakDetailPermissionTests(APITestCase):
         response = self.client.get(self.detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_update(self, m):
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
+        user = UserFactory.create()
+
+        # allows them to update details on the case
+        PermissionSetFactory.create(
+            permissions=[zaken_wijzigen.name],
+            for_user=user,
+            catalogus=self.zaaktype.catalogus,
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+        self.client.force_authenticate(user=user)
+
+        m.patch(self.zaak.url, status_code=status.HTTP_200_OK)
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "einddatum": "2021-01-01",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "reden": "because",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     @requests_mock.Mocker()
     def test_has_temp_access(self, m):

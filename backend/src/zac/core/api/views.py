@@ -54,7 +54,12 @@ from ..views.utils import filter_documenten_for_permissions, get_source_doc_vers
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
-from .permissions import CanAddDocuments, CanAddRelations, CanReadZaken
+from .permissions import (
+    CanAddDocuments,
+    CanAddRelations,
+    CanReadOrUpdateZaken,
+    CanReadZaken,
+)
 from .serializers import (
     AddDocumentResponseSerializer,
     AddDocumentSerializer,
@@ -67,6 +72,7 @@ from .serializers import (
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
+    UpdateZaakDetailSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -153,14 +159,51 @@ class GetZaakMixin:
 
 class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakDetailSerializer
-    schema_summary = _("Retrieve case details")
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
 
-    def get(self, request, *args, **kwargs):
+    def get_serializer(self, **kwargs):
+        mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
+        return mapping[self.request.method](**kwargs)
+
+    @extend_schema(
+        summary=_("Retrieve case details"),
+        responses={
+            200: ZaakDetailSerializer,
+        },
+    )
+    def get(
+        self, request: Request, bronorganisatie: str, identificatie: str
+    ) -> Response:
         zaak = self.get_object()
-        serializer = self.serializer_class(instance=zaak)
+        serializer = self.get_serializer(instance=zaak)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Update case details"),
+        request=UpdateZaakDetailSerializer,
+        responses={
+            204: None,
+        },
+    )
+    def patch(self, request: Request, bronorganisatie: str, identificatie) -> Response:
+        zaak = self.get_object()
+        service = Service.get_service(zaak.url)
+        client = service.build_client()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # If no errors are raised - data is valid too.
+        data = {**serializer.data}
+        reden = data.pop("reden")
+
+        client.partial_update(
+            "zaak",
+            data,
+            url=zaak.url,
+            request_kwargs={"headers": {"X-Audit-Toelichting": reden}},
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):

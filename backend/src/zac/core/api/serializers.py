@@ -13,7 +13,11 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
-from zgw_consumers.api_models.constants import AardRelatieChoices, RolTypes
+from zgw_consumers.api_models.constants import (
+    AardRelatieChoices,
+    RolTypes,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -195,6 +199,48 @@ class ZaakDetailSerializer(APIModelSerializer):
             "deadline",
             "deadline_progress",
         )
+
+
+class UpdateZaakDetailSerializer(APIModelSerializer):
+    reden = serializers.CharField(
+        help_text=_("Reason for the edit, used in audit trail."),
+    )
+    vertrouwelijkheidaanduiding = serializers.ChoiceField(
+        VertrouwelijkheidsAanduidingen.choices,
+        help_text=_("The confidentiality level of the case."),
+    )
+
+    class Meta:
+        model = Zaak
+        fields = (
+            "einddatum",
+            "einddatum_gepland",
+            "omschrijving",
+            "reden",
+            "toelichting",
+            "uiterlijke_einddatum_afdoening",
+            "vertrouwelijkheidaanduiding",
+        )
+        extra_kwargs = {
+            "einddatum": {
+                "required": False,
+            },
+            "einddatum_gepland": {
+                "required": False,
+            },
+            "omschrijving": {
+                "required": False,
+            },
+            "toelichting": {
+                "required": False,
+            },
+            "uiterlijke_einddatum_afdoening": {
+                "required": False,
+            },
+            "vertrouwelijkheidaanduiding": {
+                "required": False,
+            },
+        }
 
 
 class StatusTypeSerializer(APIModelSerializer):

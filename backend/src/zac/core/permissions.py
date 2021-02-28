@@ -5,6 +5,10 @@ zaken_inzien = Permission(
     description="Laat toe om zaken/zaakdossiers in te zien.",
 )
 
+zaken_wijzigen = Permission(
+    name="zaken:wijzigen", description="Laat het wijzigen toe van zaakattributen."
+)
+
 zaakproces_usertasks = Permission(
     name="zaakproces:usertasks-uitvoeren",
     description="Usertasks claimen en/of uitvoeren als onderdeel van het zaakproces.",
