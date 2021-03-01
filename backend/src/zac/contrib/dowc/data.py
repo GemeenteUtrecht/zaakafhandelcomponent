@@ -6,6 +6,7 @@ from zgw_consumers.api_models.base import Model
 
 @dataclass
 class DowcResponse(Model):
+    drc_url: str
+    magic_url: str
     purpose: str
     uuid: UUID
-    magic_url: str

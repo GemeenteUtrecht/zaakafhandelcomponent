@@ -5,6 +5,7 @@ from django.urls import reverse
 
 import jwt
 import requests_mock
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -18,6 +19,7 @@ from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..api import get_client
+from ..constants import DocFileTypes
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -71,14 +73,18 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             informatieobjecttype=cls.documenttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsomvang=10,
+            versie=10,
         )
 
         document = factory(Document, cls.document)
 
-        cls.dowc_request = {
-            "uuid": str(uuid.uuid4()),
-            "magic_url": "webdav-stuff:http://some-url.com/to-a-document/",
-            "purpose": "write",
+        cls.uuid = str(uuid.uuid4())
+        cls.purpose = DocFileTypes.write
+        cls.dowc_response = {
+            "drcUrl": furl(document.url).add({"versie": document.versie}).url,
+            "purpose": cls.purpose,
+            "magicUrl": "webdav-stuff:http://some-url.com/to-a-document/",
+            "uuid": cls.uuid,
         }
 
         cls.find_document_patcher = patch(
@@ -90,7 +96,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             kwargs={
                 "bronorganisatie": BRONORGANISATIE,
                 "identificatie": IDENTIFICATIE,
-                "purpose": cls.dowc_request["purpose"],
+                "purpose": cls.purpose,
             },
         )
 
@@ -130,20 +136,23 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten",
             status_code=201,
-            json=self.dowc_request,
+            json=self.dowc_response,
         )
 
         with patch(
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
             response = self.client.post(self.zac_dowc_url)
-            response = response.json()
-            self.assertEqual(response["purpose"], self.dowc_request["purpose"])
-            self.assertEqual(response["magicUrl"], self.dowc_request["magic_url"])
-            self.assertEqual(
-                response["deleteUrl"],
-                reverse(
+
+        self.assertEqual(
+            response.json(),
+            {
+                "drcUrl": self.dowc_response["drcUrl"],
+                "purpose": self.dowc_response["purpose"],
+                "magicUrl": self.dowc_response["magicUrl"],
+                "deleteUrl": reverse(
                     "dowc:patch-destroy-doc",
-                    kwargs={"dowc_uuid": self.dowc_request["uuid"]},
+                    kwargs={"dowc_uuid": self.dowc_response["uuid"]},
                 ),
-            )
+            },
+        )

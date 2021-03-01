@@ -21,11 +21,13 @@ interface InformatieObjectType {
 export interface DocumentUrls {
   writeUrl?: string;
   deleteUrl?: string;
+  drcUrl?: string;
   id?: string;
 }
 
 export interface ReadWriteDocument {
   magicUrl: string;
   deleteUrl: string;
+  drcUrl: string;
   purpose: string;
 }

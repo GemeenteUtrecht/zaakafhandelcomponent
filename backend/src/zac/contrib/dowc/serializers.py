@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
@@ -21,6 +19,7 @@ class DowcResponseSerializer(APIModelSerializer):
     class Meta:
         model = DowcResponse
         fields = (
+            "drc_url",
             "purpose",
             "magic_url",
             "delete_url",

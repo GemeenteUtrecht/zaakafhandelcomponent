@@ -31,8 +31,6 @@ export class TableComponent {
 
   handleButtonClick(key, value) {
     if (key && value) {
-      console.log(key);
-      console.log(value);
       this.buttonOutput.emit(
         {[key]: value}
       )

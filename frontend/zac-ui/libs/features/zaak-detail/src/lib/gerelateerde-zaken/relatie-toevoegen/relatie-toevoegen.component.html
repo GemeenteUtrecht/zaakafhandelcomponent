@@ -1,30 +1,33 @@
 <div class="relatie-toevoegen">
   <form class="" [formGroup]="addRelationForm">
-    <label class="h4 d-inline-block mr-2">Identificatie</label>
-    <gu-tooltip type="primary" inline="true">Voeg de identificatie toe van de zaak die u wilt relateren.</gu-tooltip>
-    <gu-multiselect
-      [control]="identificatieControl"
-      (search)="handleSearch($event)"
-      [multiple]="false"
-      [items]="zaken"
-      placeholder="Zoek een zaak..."
-      bindLabel="identificatie"
-      bindValue="url"
-      class="mb-4">
-    </gu-multiselect>
+    <div class="form-group">
+      <label class="h4 d-inline-block mr-2">Identificatie</label>
+      <gu-tooltip type="primary" inline="true">Voeg de identificatie toe van de zaak die u wilt relateren.</gu-tooltip>
+      <gu-multiselect
+        [control]="identificatieControl"
+        (search)="handleSearch($event)"
+        [multiple]="false"
+        [items]="zaken"
+        placeholder="Zoek een zaak..."
+        bindLabel="identificatie"
+        bindValue="url"
+        class="mb-4">
+      </gu-multiselect>
+    </div>
 
-    <label class="h4 d-inline-block mr-2">Aard relatie</label>
-    <gu-tooltip type="primary" inline="true">Aard van de relatie tussen de zaken.</gu-tooltip>
-
-    <gu-multiselect
-      [control]="aardRelatiesControl"
-      [multiple]="false"
-      [items]="AARD_RELATIES"
-      placeholder="Aard relatie"
-      bindLabel="label"
-      bindValue="value"
-      class="mb-4">
-    </gu-multiselect>
+    <div class="form-group">
+      <label class="h4 d-inline-block mr-2">Aard relatie</label>
+      <gu-tooltip type="primary" inline="true">Aard van de relatie tussen de zaken.</gu-tooltip>
+      <gu-multiselect
+        [control]="aardRelatiesControl"
+        [multiple]="false"
+        [items]="AARD_RELATIES"
+        placeholder="Aard relatie"
+        bindLabel="label"
+        bindValue="value"
+        class="mb-4">
+      </gu-multiselect>
+    </div>
     <div class="d-flex justify-content-end">
       <gu-button
         [disabled]="!addRelationForm.valid"
