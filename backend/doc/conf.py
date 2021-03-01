@@ -22,7 +22,7 @@ copyright = "2020, Maykin Media, Gemeente Utrecht"
 author = "Maykin Media, Gemeente Utrecht"
 
 # The full version, including alpha/beta/rc tags
-release = "0.32.1"
+release = "0.33.0"
 
 
 # -- General configuration ---------------------------------------------------
