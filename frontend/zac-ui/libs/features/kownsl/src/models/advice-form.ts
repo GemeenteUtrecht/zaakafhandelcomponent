@@ -5,4 +5,5 @@ export interface AdviceForm {
 
 export interface AdviceDocument {
   document: string;
+  editedDocument: string;
 }

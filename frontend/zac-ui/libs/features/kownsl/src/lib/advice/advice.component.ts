@@ -52,8 +52,6 @@ export class AdviceComponent implements OnInit {
 
   adviceForm: FormGroup;
 
-  documentsData: any;
-
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
 
@@ -191,18 +189,19 @@ export class AdviceComponent implements OnInit {
       window.open(res.magicUrl, "_blank");
 
       // Map received deleteUrl to the id
-      this.addDeleteUrlsMapping(id, res.deleteUrl);
+      this.addDeleteUrlsMapping(id, res.deleteUrl, res.drcUrl);
     }, errorResponse => {
 
     })
   }
 
-  addDeleteUrlsMapping(id, deleteUrl) {
+  addDeleteUrlsMapping(id, deleteUrl, drcUrl) {
     // Check if mapping already exists
     this.deleteUrls = this.deleteUrls.filter( item => item.id !== id)
     const urlMapping = {
       id: id,
-      deleteUrl: deleteUrl
+      deleteUrl: deleteUrl,
+      drcUrl: drcUrl
     }
     this.deleteUrls.push(urlMapping);
   }
@@ -213,6 +212,7 @@ export class AdviceComponent implements OnInit {
 
     let adviceFormData: AdviceForm;
     const documentsData: Array<AdviceDocument> = [];
+
     adviceFormData = {
       advice: this.adviceForm.controls['advice'].value,
       documents: documentsData
@@ -221,7 +221,12 @@ export class AdviceComponent implements OnInit {
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
-          adviceFormData.documents = closedDocs.map( doc =>({document: doc.versionedUrl}))
+          adviceFormData.documents = closedDocs.map( (doc, i) => {
+            return {
+              document: this.deleteUrls[i].drcUrl,
+              editedDocument: doc.versionedUrl
+            }
+          })
           return of(adviceFormData);
         }),
         switchMap((formData: AdviceForm) => {
