@@ -2,10 +2,12 @@ from typing import Dict, Optional, Tuple
 
 from django.http import Http404
 
+from furl import furl
 from rest_framework import status
 from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.documenten import Document
 
 from zac.accounts.models import User
 from zac.client import Client
@@ -34,8 +36,10 @@ def get_client(user: User) -> Client:
 
 @optional_service
 def get_doc_info(
-    user: User, drc_url: str, purpose: str
-) -> Optional[Tuple[DowcResponse, int]]:
+    user: User, document: Document, purpose: str
+) -> Tuple[DowcResponse, int]:
+
+    drc_url = furl(document.url).add({"versie": document.versie}).url
     client = get_client(user)
     try:
         response = client.create(
