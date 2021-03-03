@@ -22,7 +22,7 @@ export class DetailModalComponent implements OnChanges {
     headData: [],
     bodyData: []
   }
-  tableHeadApproval = ['Akkoord', 'Van', 'Gegeven op', 'Toelichting'];
+  tableHeadApproval = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
   tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
 
   isLoading: boolean;
