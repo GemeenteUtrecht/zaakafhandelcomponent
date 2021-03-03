@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { AdviceForm } from '../../models/advice-form';
 import { HttpResponse } from '@angular/common/http';
 import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
@@ -36,12 +36,16 @@ export class AdviceService {
   }
 
   closeDocumentEdit(deleteUrls: DocumentUrls[]): Observable<any> {
-    const observables = [];
-    deleteUrls.forEach(doc => {
-      const endpoint = encodeURI(doc.deleteUrl);
-      observables.push(this.http.Delete<CloseDocument>(endpoint));
-    });
-    return forkJoin(observables)
+    if (deleteUrls.length > 0) {
+      const observables = [];
+      deleteUrls.forEach(doc => {
+        const endpoint = encodeURI(doc.deleteUrl);
+        observables.push(this.http.Delete<CloseDocument>(endpoint));
+      });
+      return forkJoin(observables)
+    } else {
+      return of([]);
+    }
   }
 
 }
