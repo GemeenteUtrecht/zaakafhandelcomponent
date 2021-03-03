@@ -3,9 +3,8 @@ import { Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ReviewRequest } from '../../../../kownsl/src/models/review-request';
 import { ModalService } from '@gu/components';
+import { RelatedCase } from '../../models/related-case';
 
 @Component({
   selector: 'gu-gerelateerde-zaken',
@@ -16,7 +15,7 @@ export class GerelateerdeZakenComponent implements OnInit {
   @Input() mainZaakUrl: string;
 
   tableData: Table = {
-    headData: ['Status', 'Zaak ID', 'Resultaat', 'Aard'],
+    headData: ['Resultaat', 'Status', 'Zaak ID', 'Zaaktype', 'Aard'],
     bodyData: []
   }
 
@@ -52,22 +51,23 @@ export class GerelateerdeZakenComponent implements OnInit {
     })
   }
 
-  getRelatedCases(): Observable<ReviewRequest> {
+  getRelatedCases(): Observable<RelatedCase[]> {
     const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
-    return this.http.Get<ReviewRequest>(endpoint);
+    return this.http.Get<RelatedCase[]>(endpoint);
   }
 
   formatTableData(data){
     return data.map( element => {
       return {
         cellData: {
+          resultaat: element.zaak.resultaat ? element.zaak.resultaat : '-',
           status: element.zaak.status ? element.zaak.status.statustype.omschrijving : '-',
           zaakId: {
             type: 'link',
             label: element.zaak.identificatie,
             url: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
-          resultaat: element.zaak.resultaat ? element.zaak.resultaat : '-',
+          zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-',
           aard: element.aardRelatie ? element.aardRelatie : '-',
         }
       }
