@@ -66,7 +66,13 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   onSearch(searchInput) {
     this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-      this.items = res.results;
+      this.items = res.results.map(result => ({
+        ...result,
+        name: (result.firstName && result.lastName) ?
+          `${result.firstName} ${result.lastName}` :
+          (result.firstName && !result.lastName) ?
+          result.firstName : result.username
+      }))
     })
   }
 
