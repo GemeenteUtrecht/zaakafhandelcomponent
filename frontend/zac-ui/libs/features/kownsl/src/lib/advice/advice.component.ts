@@ -221,12 +221,14 @@ export class AdviceComponent implements OnInit {
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
-          adviceFormData.documents = closedDocs.map( (doc, i) => {
-            return {
-              document: this.deleteUrls[i].drcUrl,
-              editedDocument: doc.versionedUrl
-            }
-          })
+          if (closedDocs.length > 0) {
+            adviceFormData.documents = closedDocs.map( (doc, i) => {
+              return {
+                document: this.deleteUrls[i].drcUrl,
+                editedDocument: doc.versionedUrl
+              }
+            })
+          }
           return of(adviceFormData);
         }),
         switchMap((formData: AdviceForm) => {
