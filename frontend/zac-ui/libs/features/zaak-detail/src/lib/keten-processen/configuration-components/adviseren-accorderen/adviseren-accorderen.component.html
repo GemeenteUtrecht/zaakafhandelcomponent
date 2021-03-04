@@ -46,6 +46,7 @@
             </div>
             <div class="col-md-6 form-group">
               <gu-datepicker [control]="assignedUsersDeadline(i)"
+                             [minDate]="assignedUsersMinDate(i)"
                              label="Uiterste datum"
                              required
                              id="kp-adv-acc-deadline--{{i}}"
