@@ -1,11 +1,13 @@
-from typing import List, Optional
-
 from django.utils.translation import gettext as _
 
+from furl import furl
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
+from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.utils import get_dowc_url
 from zac.core.api.serializers import ZaakSerializer
 
 from .constants import KownslTypes
@@ -55,10 +57,49 @@ class ApprovalSerializer(APIModelSerializer):
             return _("Niet Akkoord")
 
 
-class DocumentSerializer(APIModelSerializer):
+class AdviceDocumentSerializer(APIModelSerializer):
+    advice_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL that points to the advice version of the document on the DoWC."
+        )
+    )
+    source_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL that points to the advice version of the document on the DoWC."
+        )
+    )
+    title = serializers.CharField(
+        source="document.bestandsnaam", help_text=_("The name of the document.")
+    )
+
     class Meta:
         model = AdviceDocument
-        fields = ("document", "source_version", "advice_version")
+        fields = (
+            "advice_url",
+            "advice_version",
+            "source_url",
+            "source_version",
+            "title",
+        )
+        extra_kwargs = {
+            "source_version": {
+                "help_text": _("The version of the document before advice is given"),
+            },
+            "advice_version": {
+                "help_text": _("The version of the document after advice is given.")
+            },
+        }
+
+    def get_url(self, obj, args) -> str:
+        url = furl(get_dowc_url(obj.document, purpose=DocFileTypes.read))
+        url.args = args
+        return url.url
+
+    def get_advice_url(self, obj) -> str:
+        return self.get_url(obj, {"versie": obj.advice_version})
+
+    def get_source_url(self, obj) -> str:
+        return self.get_url(obj, {"versie": obj.source_version})
 
 
 class AdviceSerializer(APIModelSerializer):
@@ -66,8 +107,8 @@ class AdviceSerializer(APIModelSerializer):
         label=_("author"),
         help_text=_("Author of review."),
     )
-    documents = DocumentSerializer(
-        label=_("Advice documents"),
+    documents = AdviceDocumentSerializer(
+        label=_("advice documents"),
         help_text=_("Documents relevant to the advice."),
         many=True,
     )
@@ -77,15 +118,22 @@ class AdviceSerializer(APIModelSerializer):
         fields = ("created", "author", "advice", "documents")
 
 
-class ZaakRevReqDetailSerializer(APIModelSerializer):
-    reviews = serializers.SerializerMethodField()
+class AdviceReviewsSerializer(serializers.Serializer):
+    advices = AdviceSerializer(many=True)
 
-    class Meta:
-        model = ReviewRequest
-        fields = ("id", "review_type", "reviews")
 
-    def get_reviews(self, obj) -> Optional[List[dict]]:
-        if obj.review_type == KownslTypes.advice:
-            return AdviceSerializer(obj.advices, many=True).data
-        else:
-            return ApprovalSerializer(obj.approvals, many=True).data
+class ApprovalReviewsSerializer(serializers.Serializer):
+    approvals = ApprovalSerializer(many=True)
+
+
+class ZaakRevReqDetailSerializer(PolymorphicSerializer):
+    serializer_mapping = {
+        KownslTypes.advice: AdviceReviewsSerializer,
+        KownslTypes.approval: ApprovalReviewsSerializer,
+    }
+    discriminator_field = "review_type"
+
+    id = serializers.UUIDField(help_text=_("The uuid of the review request."))
+    review_type = serializers.ChoiceField(
+        choices=KownslTypes.choices, help_text=_("The review type.")
+    )

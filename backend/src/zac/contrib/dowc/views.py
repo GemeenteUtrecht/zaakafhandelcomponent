@@ -26,15 +26,16 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 @extend_schema(summary=_("Open document for viewing or editing"))
 class OpenDowcView(APIView):
+    """
+    You can pass the "versie" as a query parameter to specify the document version.
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
 
-    def get_object(self) -> Document:
-        bronorganisatie = self.kwargs["bronorganisatie"]
-        identificatie = self.kwargs["identificatie"]
-
+    def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
             self.document = find_document(bronorganisatie, identificatie, versie=versie)
@@ -42,9 +43,9 @@ class OpenDowcView(APIView):
 
     def post(self, request, bronorganisatie, identificatie, purpose):
         """
-        This will create a dowc object in the dowc API and exposes the document through a URL.
+        Create a dowc object in the dowc API and expose the document through a URL.
         """
-        document = self.get_object()
+        document = self.get_object(bronorganisatie, identificatie)
         dowc_response, status_code = get_doc_info(request.user, document, purpose)
         serializer = self.serializer_class(dowc_response)
         return Response(serializer.data, status=status_code)
@@ -66,9 +67,8 @@ class DeleteDowcView(APIView):
 
     def delete(self, request, dowc_uuid):
         """
-        This will attempt to delete the dowc object in the dowc API.
-        This implies that the dowc will attempt to patch the document in the
-        DRC API.
+        Delete the dowc object in the dowc API. This implies that the dowc will
+        attempt to patch the document in the DRC API.
         """
         serializer = self.serializer_class(data={"uuid": dowc_uuid})
         serializer.is_valid(raise_exception=True)
