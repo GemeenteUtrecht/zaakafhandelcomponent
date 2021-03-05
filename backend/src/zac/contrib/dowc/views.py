@@ -38,10 +38,6 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     ],
 )
 class OpenDowcView(APIView):
-    """
-    You can pass the "versie" as a query parameter to specify the document version.
-    """
-
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     document = None
