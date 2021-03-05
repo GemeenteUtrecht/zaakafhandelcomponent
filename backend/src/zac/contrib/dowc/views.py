@@ -11,7 +11,7 @@ from zgw_consumers.api_models.documenten import Document
 from zac.api.utils import remote_schema_ref
 from zac.core.services import find_document
 
-from .api import get_doc_info, patch_and_destroy_doc
+from .api import create_doc, patch_and_destroy_doc
 from .permissions import CanOpenDocuments
 from .serializers import DowcResponseSerializer, DowcSerializer
 
@@ -45,8 +45,9 @@ class OpenDowcView(APIView):
         This will create a dowc object in the dowc API and exposes the document through a URL.
         """
         document = self.get_object()
-        dowc_response, status_code = get_doc_info(request.user, document, purpose)
-        serializer = self.serializer_class(dowc_response)
+        referer = request.META.get("HTTP_REFERER", "")
+        response, status_code = create_doc(request.user, document, purpose, referer)
+        serializer = self.serializer_class(response)
         return Response(serializer.data, status=status_code)
 
 

@@ -142,7 +142,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         with patch(
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
-            response = self.client.post(self.zac_dowc_url)
+            response = self.client.post(
+                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+            )
 
         self.assertEqual(
             response.json(),
@@ -154,5 +156,14 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
                     "dowc:patch-destroy-doc",
                     kwargs={"dowc_uuid": self.dowc_response["uuid"]},
                 ),
+            },
+        )
+
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "drc_url": self.dowc_response["drcUrl"],
+                "purpose": DocFileTypes.write,
+                "info_url": "http://www.some-referer-url.com/",
             },
         )
