@@ -8,11 +8,8 @@
     margin-bottom: 0.625rem;
     p {
       margin: 0;
-      &.p--bold {
-        margin-bottom: 0.6rem;
-      }
       &.p--grey {
-        color: dimgray;
+        color: $color-text--gray;
       }
     }
   }
