@@ -2,7 +2,8 @@ from typing import Any, Optional
 
 from django.utils.translation import gettext_lazy as _
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,7 +25,18 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     return type_(value)
 
 
-@extend_schema(summary=_("Open document for viewing or editing"))
+@extend_schema(
+    summary=_("Open document for viewing or editing"),
+    parameters=[
+        OpenApiParameter(
+            name="versie",
+            required=False,
+            type=OpenApiTypes.URI,
+            description=_("Version of the document."),
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
+)
 class OpenDowcView(APIView):
     """
     You can pass the "versie" as a query parameter to specify the document version.
