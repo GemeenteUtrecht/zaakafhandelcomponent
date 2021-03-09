@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from .constants import AccessRequestResult
+from .constants import AccessRequestResult, PermissionObjectType
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
 from .query import AccessRequestQuerySet
@@ -272,3 +272,56 @@ class AccessRequest(models.Model):
             raise ValidationError(
                 _("The result can't be specified without its handler")
             )
+
+
+class PermissionDefinition(models.Model):
+    object_type = models.CharField(
+        _("object type"),
+        max_length=50,
+        choices=PermissionObjectType.choices,
+        help_text=_("Type of the objects this permission applies to"),
+    )
+    permission = models.CharField(
+        _("Permission"), max_length=255, help_text=_("Name of the permission")
+    )
+    object_url = models.CharField(
+        _("object URL"),
+        max_length=1000,
+        blank=True,
+        help_text=_("URL of the object in one of ZGW APIs this permission applies to"),
+    )
+    policy = JSONField(_("policy"), null=True, blank=True, default=dict)
+    start_date = models.DateTimeField(
+        _("start date"),
+        blank=True,
+        null=True,
+        default=timezone.now,
+        help_text=_("Start date of the permission"),
+    )
+    end_date = models.DateTimeField(
+        _("end date"),
+        blank=True,
+        null=True,
+        help_text=_("End date of the permission"),
+    )
+
+    class Meta:
+        verbose_name = _("permission definition")
+        verbose_name_plural = _("permission definitions")
+
+    def clean(self):
+        super().clean()
+
+        if not (bool(self.object_url) ^ bool(self.policy)):
+            raise ValidationError(
+                _("object_url and policy should be mutually exclusive")
+            )
+
+        # policy data should be validated against the serializer which is connected to this permission
+        if self.policy:
+            from .permissions import registry
+
+            permission = registry[self.permission]
+            serializer = permission.policy.serializer(data=self.policy)
+            if not serializer.is_valid():
+                raise ValidationError(serializer.errors)
