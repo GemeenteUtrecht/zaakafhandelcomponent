@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
@@ -8,10 +9,12 @@ from .models import (
     AccessRequest,
     AuthorizationProfile,
     InformatieobjecttypePermission,
+    PermissionDefinition,
     PermissionSet,
     User,
     UserAuthorizationProfile,
 )
+from .permissions import registry
 
 
 class UserAuthorizationProfileInline(admin.TabularInline):
@@ -72,3 +75,28 @@ class AccessRequestAdmin(admin.ModelAdmin):
     list_filter = ("requester", "result")
     search_fields = ("requester__username", "zaak")
     raw_id_fields = ("requester", "handler")
+
+
+@admin.register(PermissionDefinition)
+class PermissionDefinitionAdmin(admin.ModelAdmin):
+    list_display = ("permission", "object_type", "start_date", "display_is_atomic")
+    list_filter = ("permission", "object_type")
+    search_fields = ("object_url",)
+
+    def display_is_atomic(self, obj):
+        return bool(obj.object_url)
+
+    display_is_atomic.boolean = True
+    display_is_atomic.short_description = _("is atomic")
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "permission":
+            permission_choices = [(name, name) for name, permission in registry.items()]
+            return forms.ChoiceField(
+                label=db_field.verbose_name.capitalize(),
+                widget=forms.Select,
+                choices=permission_choices,
+                help_text=db_field.help_text,
+            )
+
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
