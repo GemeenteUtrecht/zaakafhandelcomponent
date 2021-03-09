@@ -1,10 +1,11 @@
 import functools
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from django.core.exceptions import ImproperlyConfigured
 
 import rules
+from rest_framework.serializers import Serializer
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from .datastructures import ZaakPermissionCollection
@@ -14,9 +15,22 @@ registry = {}
 
 
 @dataclass(frozen=True)
+class Policy:
+    """
+    class to manage blueprint permissions
+    """
+
+    serializer: Serializer
+
+    def access_request(self, obj):
+        raise NotImplementedError("This method must be implemented by a subclass")
+
+
+@dataclass(frozen=True)
 class Permission:
     name: str
     description: str
+    policy: Optional[Policy] = None
 
     def __post_init__(self):
         if self.name in registry:
