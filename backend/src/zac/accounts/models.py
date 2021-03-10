@@ -309,6 +309,12 @@ class PermissionDefinition(models.Model):
         verbose_name = _("permission definition")
         verbose_name_plural = _("permission definitions")
 
+    def get_blueprint_class(self):
+        from .permissions import registry
+
+        permission = registry[self.permission]
+        return permission.blueprint_class
+
     def clean(self):
         super().clean()
 
@@ -318,10 +324,16 @@ class PermissionDefinition(models.Model):
             )
 
         # policy data should be validated against the serializer which is connected to this permission
+        blueprint_class = self.get_blueprint_class()
         if self.policy:
-            from .permissions import registry
+            blueprint = blueprint_class(data=self.policy)
+            if not blueprint.is_valid():
+                raise ValidationError(blueprint.errors)
 
-            permission = registry[self.permission]
-            serializer = permission.policy.serializer(data=self.policy)
-            if not serializer.is_valid():
-                raise ValidationError(serializer.errors)
+    def has_policy_access(self, obj):
+        if not self.policy:
+            return False
+
+        blueprint_class = self.get_blueprint_class()
+        blueprint = blueprint_class(self.policy)
+        return blueprint.has_access(obj)
