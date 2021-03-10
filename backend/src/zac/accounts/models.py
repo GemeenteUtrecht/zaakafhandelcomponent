@@ -14,7 +14,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from .constants import AccessRequestResult, PermissionObjectType
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
-from .query import AccessRequestQuerySet
+from .query import AccessRequestQuerySet, PermissionDefinitionQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -52,6 +52,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         "AuthorizationProfile",
         blank=True,
         through="UserAuthorizationProfile",
+    )
+    permission_definitions = models.ManyToManyField(
+        "PermissionDefinition",
+        verbose_name=_("permission definitions"),
+        related_name="users",
     )
 
     objects = UserManager()
@@ -95,6 +100,7 @@ class AuthorizationProfile(models.Model):
             "Use an easily recognizable name that maps to the function of users."
         ),
     )
+    # deprecated
     permission_sets = models.ManyToManyField(
         "PermissionSet",
         verbose_name=_("permission sets"),
@@ -102,6 +108,12 @@ class AuthorizationProfile(models.Model):
             "Selecting multiple sets makes them add/merge all the permissions together."
         ),
     )
+    permission_definitions = models.ManyToManyField(
+        "PermissionDefinition",
+        verbose_name=_("permission definitions"),
+        related_name="auth_profiles",
+    )
+    # deprecated
     oo = models.ForeignKey(
         "organisatieonderdelen.OrganisatieOnderdeel",
         null=True,
@@ -122,6 +134,7 @@ class AuthorizationProfile(models.Model):
         return self.name
 
 
+# Deprecated
 class PermissionSet(models.Model):
     """
     A collection of permissions that belong to a zaaktype.
@@ -176,6 +189,7 @@ class PermissionSet(models.Model):
         )
 
 
+# Deprecated
 class InformatieobjecttypePermission(models.Model):
     permission_set = models.ForeignKey(
         PermissionSet,
@@ -220,6 +234,7 @@ class UserAuthorizationProfile(models.Model):
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
+# Deprecated
 class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
@@ -304,6 +319,7 @@ class PermissionDefinition(models.Model):
         null=True,
         help_text=_("End date of the permission"),
     )
+    objects = PermissionDefinitionQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("permission definition")
