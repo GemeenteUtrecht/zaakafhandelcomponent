@@ -1,10 +1,13 @@
 import functools
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.html import format_html
 
 import rules
+import yaml
+from drf_spectacular.openapi import AutoSchema
 from rest_framework.serializers import Serializer
 from zgw_consumers.api_models.catalogi import ZaakType
 
@@ -15,22 +18,28 @@ registry = {}
 
 
 @dataclass(frozen=True)
-class Policy:
+class Blueprint(Serializer):
     """
-    class to manage blueprint permissions
+    class to validate and manage blueprint permissions
     """
 
-    serializer: Serializer
-
-    def access_request(self, obj):
+    def has_access(self, obj):
         raise NotImplementedError("This method must be implemented by a subclass")
+
+    @classmethod
+    def display_as_yaml(cls):
+        auto_schema = AutoSchema()
+        auto_schema.method = "GET"
+        schema = auto_schema._map_serializer(cls, "")
+        schema_yaml = yaml.dump(schema)
+        return format_html("<pre>{}</pre>", schema_yaml)
 
 
 @dataclass(frozen=True)
 class Permission:
     name: str
     description: str
-    policy: Optional[Policy] = None
+    blueprint_class: Optional[Type[Blueprint]] = None
 
     def __post_init__(self):
         if self.name in registry:

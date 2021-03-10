@@ -82,6 +82,7 @@ class PermissionDefinitionAdmin(admin.ModelAdmin):
     list_display = ("permission", "object_type", "start_date", "display_is_atomic")
     list_filter = ("permission", "object_type")
     search_fields = ("object_url",)
+    readonly_fields = ("display_policy_schema",)
 
     def display_is_atomic(self, obj):
         return bool(obj.object_url)
@@ -89,9 +90,19 @@ class PermissionDefinitionAdmin(admin.ModelAdmin):
     display_is_atomic.boolean = True
     display_is_atomic.short_description = _("is atomic")
 
+    def display_policy_schema(self, obj):
+        if obj.permission:
+            blueprint_class = obj.get_blueprint_class()
+            if blueprint_class:
+                return blueprint_class.display_as_yaml()
+        return ""
+
+    display_policy_schema.short_description = _("policy schema")
+
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "permission":
             permission_choices = [(name, name) for name, permission in registry.items()]
+            permission_choices.insert(0, ("", "---------"))
             return forms.ChoiceField(
                 label=db_field.verbose_name.capitalize(),
                 widget=forms.Select,
