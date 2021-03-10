@@ -11,6 +11,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
+from zac.utils.exceptions import get_error_list
+
 from .constants import AccessRequestResult, PermissionObjectType
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
@@ -326,6 +328,8 @@ class PermissionDefinition(models.Model):
         verbose_name_plural = _("permission definitions")
 
     def get_blueprint_class(self):
+        # TODO after burning all deprecated code this import should be moved to the top of the file
+        # it will help testing a lot
         from .permissions import registry
 
         permission = registry[self.permission]
@@ -344,7 +348,7 @@ class PermissionDefinition(models.Model):
         if self.policy:
             blueprint = blueprint_class(data=self.policy)
             if not blueprint.is_valid():
-                raise ValidationError(blueprint.errors)
+                raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
     def has_policy_access(self, obj):
         if not self.policy:
