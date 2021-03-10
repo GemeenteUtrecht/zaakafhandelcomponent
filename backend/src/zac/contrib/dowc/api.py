@@ -22,11 +22,14 @@ def get_client(user: User) -> Client:
     assert config.service, "A service must be configured first"
     service = config.service
 
-    # override the actual logged in user in the `user_id` claim, so that D.O.C. is
+    # override the actual logged in user in the `user_id` claim, so that Do.W.C. is
     # aware of the actual end user
+    claims = {}
     if user is not None:
         service.user_id = user.username
-    client = service.build_client()
+        claims["user_email"] = user.email
+
+    client = service.build_client(**claims)
     client.operation_suffix_mapping = {
         **client.operation_suffix_mapping,
         "delete": "_destroy",

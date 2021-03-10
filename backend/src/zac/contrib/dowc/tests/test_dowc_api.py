@@ -122,7 +122,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         token = header.split(" ")[1]
         claims = jwt.decode(token, verify=False)
         self.assertEqual(claims["user_id"], self.user.username)
-
+        self.assertEqual(claims["zds"], {"user_email": self.user.email})
         self.assertEqual(len(m.request_history), 1)
         self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
 
