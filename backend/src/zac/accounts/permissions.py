@@ -17,7 +17,6 @@ from .models import User
 registry = {}
 
 
-@dataclass(frozen=True)
 class Blueprint(Serializer):
     """
     class to validate and manage blueprint permissions
