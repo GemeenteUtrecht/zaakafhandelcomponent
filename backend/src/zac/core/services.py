@@ -902,7 +902,7 @@ def find_document(
     return result
 
 
-@cache_result("get_document:{url}", timeout=AN_HOUR)
+# @cache_result("get_document:{url}", timeout=AN_HOUR)
 def get_document(url: str) -> Document:
     """
     Retrieve document by URL.

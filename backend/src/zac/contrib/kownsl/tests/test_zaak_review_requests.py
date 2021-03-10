@@ -11,6 +11,7 @@ from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -20,6 +21,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.api import get_client
 from zac.contrib.kownsl.data import Advice, KownslTypes, ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
@@ -112,6 +114,10 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
+        document = factory(Document, cls.document)
+        cls.get_document_patcher = patch(
+            "zac.contrib.kownsl.views.get_document", return_value=document
+        )
 
         # can't use generate_oas_component because Kownsl API schema doesn't have components
         # so manually creating review request, author, advicedocument, advice
@@ -144,7 +150,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         advice_document = {
             "document": cls.document["url"],
             "sourceVersion": 1,
-            "adviceVersion": 1,
+            "adviceVersion": 2,
         }
 
         author = {
@@ -202,6 +208,9 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.get_approvals_patcher.start()
         self.addCleanup(self.get_approvals_patcher.stop)
 
+        self.get_document_patcher.start()
+        self.addCleanup(self.get_document_patcher.stop)
+
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
@@ -227,12 +236,22 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
 
+        doc_url = reverse(
+            "dowc:request-doc",
+            kwargs={
+                "bronorganisatie": self.document["bronorganisatie"],
+                "identificatie": self.document["identificatie"],
+                "purpose": DocFileTypes.read,
+            },
+        )
+        advice_url = doc_url + "?versie=2"
+        source_url = doc_url + "?versie=1"
         self.assertEqual(
             response_data,
             {
                 "id": str(self._uuid),
                 "reviewType": KownslTypes.advice,
-                "reviews": [
+                "advices": [
                     {
                         "created": "2021-01-07T12:00:00Z",
                         "author": {
@@ -243,9 +262,11 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                         "advice": "some-advice",
                         "documents": [
                             {
-                                "document": self.document["url"],
+                                "adviceVersion": 2,
+                                "adviceUrl": advice_url,
+                                "sourceUrl": source_url,
                                 "sourceVersion": 1,
-                                "adviceVersion": 1,
+                                "title": self.document["bestandsnaam"],
                             }
                         ],
                     }
@@ -410,6 +431,11 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.api.retrieve_approvals", return_value=[]
         )
 
+        document = factory(Document, cls.document)
+        cls.get_document_patcher = patch(
+            "zac.contrib.kownsl.views.get_document", return_value=document
+        )
+
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
             kwargs={
@@ -432,6 +458,9 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.get_zaak_patcher.start()
         self.addCleanup(self.get_zaak_patcher.stop)
+
+        self.get_document_patcher.start()
+        self.addCleanup(self.get_document_patcher.stop)
 
     def test_rr_summary_not_authenticated(self):
         response = self.client.get(self.endpoint_summary)
