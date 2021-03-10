@@ -16,7 +16,7 @@ from zgw_consumers.models import Service
 
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
-from zac.core.services import get_zaak
+from zac.core.services import get_document, get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import (
@@ -158,11 +158,11 @@ class ApprovalRequestView(BaseRequestView):
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    schema_summary = _("List review requests summary for a case")
 
     def get_serializer(self, **kwargs):
         return ZaakRevReqSummarySerializer(many=True, **kwargs)
 
+    @extend_schema(summary=_("List review requests summary for a case"))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         review_requests = get_review_requests(zaak)
@@ -174,8 +174,13 @@ class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakRevReqDetailSerializer
-    schema_summary = _("Retrieve review request details")
 
+    @extend_schema(
+        summary=_("Retrieve review request details"),
+        responses={
+            "200": ZaakRevReqDetailSerializer,
+        },
+    )
     def get(self, request, request_uuid, *args, **kwargs):
         review_request = get_review_request(request_uuid)
 
@@ -188,7 +193,6 @@ class ZaakReviewRequestDetailView(APIView):
         self.check_object_permissions(self.request, zaak)
 
         with parallel() as executor:
-
             review_request.advices = []
             if review_request.num_advices:
                 _advices = executor.submit(retrieve_advices, review_request)
@@ -199,5 +203,26 @@ class ZaakReviewRequestDetailView(APIView):
                 _approvals = executor.submit(retrieve_approvals, review_request)
                 review_request.approvals = _approvals.result()
 
+        documents = set()
+        for advice in review_request.advices:
+            for document in advice.documents:
+                documents.add(document.document)
+
+        with parallel() as executor:
+            _documents = executor.map(get_document, documents)
+
+        documents = {doc.url: doc for doc in _documents}
+
+        advices = []
+        for advice in review_request.advices:
+            advice_documents = []
+            for advice_document in advice.documents:
+                advice_document.document = documents[advice_document.document]
+                advice_documents.append(advice_document)
+
+            advice.documents = advice_documents
+            advices.append(advice)
+
+        review_request.advices = advices
         serializer = self.serializer_class(instance=review_request)
         return Response(serializer.data)

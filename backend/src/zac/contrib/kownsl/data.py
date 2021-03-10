@@ -59,9 +59,9 @@ class Author(Model):
 
 @dataclass
 class AdviceDocument(Model):
-    document: str
-    source_version: int
     advice_version: int
+    source_version: int
+    document: str
 
 
 @dataclass
