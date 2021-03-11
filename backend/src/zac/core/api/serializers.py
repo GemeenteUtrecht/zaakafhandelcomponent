@@ -198,6 +198,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "vertrouwelijkheidaanduiding",
             "deadline",
             "deadline_progress",
+            "resultaat",
         )
 
 
