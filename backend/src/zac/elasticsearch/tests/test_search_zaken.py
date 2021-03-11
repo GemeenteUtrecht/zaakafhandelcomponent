@@ -42,7 +42,12 @@ class SearchZakenTests(ESMixin, TestCase):
                     },
                 },
             ],
-            eigenschappen={"tekst": {"Beleidsveld": "Asiel en Integratie"}},
+            eigenschappen={
+                "tekst": {
+                    "Beleidsveld": "Asiel en Integratie",
+                    "Bedrag incl  BTW": "aaa",
+                }
+            },
         )
         self.zaak_document1.save()
 
@@ -115,6 +120,12 @@ class SearchZakenTests(ESMixin, TestCase):
 
     def test_search_eigenschappen(self):
         result = search(eigenschappen={"Beleidsveld": "Asiel en Integratie"})
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
+    def test_search_eigenschappen_with_point(self):
+        result = search(eigenschappen={"Bedrag incl. BTW": "aaa"})
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
