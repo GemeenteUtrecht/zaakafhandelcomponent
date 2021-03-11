@@ -43,7 +43,7 @@ class Permission:
     def __post_init__(self):
         if self.name in registry:
             raise ImproperlyConfigured(
-                "Permission with name '{self.name}' already exists"
+                "Permission with name '%s' already exists" % self.name
             )
         registry[self.name] = self
 

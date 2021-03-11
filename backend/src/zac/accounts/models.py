@@ -307,7 +307,16 @@ class PermissionDefinition(models.Model):
         blank=True,
         help_text=_("URL of the object in one of ZGW APIs this permission applies to"),
     )
-    policy = JSONField(_("policy"), null=True, blank=True, default=dict)
+    policy = JSONField(
+        _("policy"),
+        null=True,
+        blank=True,
+        default=dict,
+        help_text=_(
+            "Blueprint permission definitions, used to check the access to objects based "
+            "on their properties i.e. zaaktype, informatieobjecttype"
+        ),
+    )
     start_date = models.DateTimeField(
         _("start date"),
         blank=True,

@@ -53,7 +53,14 @@ class Migration(migrations.Migration):
                 (
                     "policy",
                     django.contrib.postgres.fields.jsonb.JSONField(
-                        blank=True, default=dict, null=True, verbose_name="policy"
+                        blank=True,
+                        default=dict,
+                        null=True,
+                        verbose_name="policy",
+                        help_text=(
+                            "Blueprint permission definitions, used to check the access to objects based "
+                            "on their properties i.e. zaaktype, informatieobjecttype"
+                        ),
                     ),
                 ),
                 (
