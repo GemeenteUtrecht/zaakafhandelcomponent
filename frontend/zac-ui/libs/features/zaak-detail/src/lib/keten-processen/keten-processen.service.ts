@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
 import { User } from '@gu/models';
+import { ReadWriteDocument } from '../documenten/documenten.interface';
 
 export interface SendMessageForm {
   processInstanceId: string;
@@ -46,4 +47,9 @@ export class KetenProcessenService {
     const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
     return this.http.Put(endpoint, formData);
   }
+
+  readDocument(endpoint) {
+    return this.http.Post<ReadWriteDocument>(endpoint);
+  }
+
 }

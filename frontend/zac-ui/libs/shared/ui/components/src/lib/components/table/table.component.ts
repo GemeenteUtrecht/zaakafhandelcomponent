@@ -15,6 +15,7 @@ export class TableComponent {
 
   @Input() expandable = false;
   @Input() tableData: Table;
+  @Input() headColor: 'gray';
 
   @Output() tableOutput = new EventEmitter<any>();
   @Output() buttonOutput = new EventEmitter<any>();
@@ -37,6 +38,10 @@ export class TableComponent {
     }
   }
 
+  handleNestedButtonClick(event) {
+    this.buttonOutput.emit(event);
+  }
+
   expandRow(event, expandData: string) {
     if (this.expandable && expandData) {
       const clickedElement = event.target;
@@ -51,6 +56,12 @@ export class TableComponent {
       }
 
       this.rotateArrow(arrowElement);
+    }
+  }
+
+  expandNestedTable(event, tableData: Table) {
+    if (this.expandable && tableData) {
+      this.expandRow(event, 'expand')
     }
   }
 

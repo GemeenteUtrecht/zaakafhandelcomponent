@@ -6,6 +6,7 @@ import { Result } from '../../../../models/user-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
+import { ReadWriteDocument } from '../../../documenten/documenten.interface';
 
 @Component({
   selector: 'gu-config-adviseren-accorderen',
@@ -61,6 +62,12 @@ export class AdviserenAccorderenComponent implements OnChanges {
   deleteStep() {
     this.steps--
     this.assignedUsers.removeAt(this.assignedUsers.length - 1);
+  }
+
+  handleDocumentClick(url) {
+    this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    });
   }
 
   onSearch(searchInput) {

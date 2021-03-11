@@ -30,6 +30,11 @@
       }
     }
   }
+  .table-head {
+    &--gray {
+      background-color: $background-lightgrey;
+    }
+  }
   .parent-row {
     border-top: 1px solid $background-grey;
     &--clickable:hover {
@@ -44,6 +49,12 @@
     &--expanded {
       visibility: visible;
       opacity: 1;
+    }
+  }
+
+  .nested-table-row {
+    td {
+      padding-left: 2.5rem;
     }
   }
 
