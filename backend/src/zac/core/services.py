@@ -751,7 +751,7 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     return behandelaar_zaken
 
 
-def get_rollen_all() -> List[Rol]:
+def get_rollen_all(**query_params) -> List[Rol]:
     """
     Retrieve all available rollen for ES indexing
     """
@@ -761,7 +761,7 @@ def get_rollen_all() -> List[Rol]:
     for zrc in zrcs:
         client = zrc.build_client()
 
-        _rollen = get_paginated_results(client, "rol")
+        _rollen = get_paginated_results(client, "rol", query_params=query_params)
 
         all_rollen += factory(Rol, _rollen)
 
