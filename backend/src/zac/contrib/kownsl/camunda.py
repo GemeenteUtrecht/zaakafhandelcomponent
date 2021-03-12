@@ -10,6 +10,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
+from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
@@ -217,6 +218,8 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             user_deadlines=user_deadlines,
             requester=self.context["request"].user.username,
         )
+        # add permission for advisors to see the zaak-detail page
+        add_permissions_for_advisors(self.review_request)
 
     def get_process_variables(self) -> Dict[str, List]:
         """
