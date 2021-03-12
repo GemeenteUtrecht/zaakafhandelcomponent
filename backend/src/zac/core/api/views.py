@@ -43,6 +43,7 @@ from ..services import (
     get_eigenschappen,
     get_informatieobjecttype,
     get_related_zaken,
+    get_resultaat,
     get_rollen,
     get_statussen,
     get_zaak,
@@ -175,6 +176,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         self, request: Request, bronorganisatie: str, identificatie: str
     ) -> Response:
         zaak = self.get_object()
+        zaak.resultaat = get_resultaat(zaak)
         serializer = self.get_serializer(instance=zaak)
         return Response(serializer.data)
 
