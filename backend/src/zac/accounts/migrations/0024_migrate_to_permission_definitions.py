@@ -1,8 +1,11 @@
-from django.db import migrations
-from ..constants import AccessRequestResult, PermissionObjectType
-from zac.core.services import get_zaaktypen
 from datetime import datetime
+
+from django.db import migrations
 from django.utils import timezone
+
+from zac.core.services import get_zaaktypen
+
+from ..constants import AccessRequestResult, PermissionObjectType
 
 
 def migrate_to_permission_definitions(apps, _):
