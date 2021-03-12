@@ -677,6 +677,15 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     return rollen
 
 
+@cache_result("rol:{rol_url}", timeout=AN_HOUR)
+def fetch_rol(rol_url: str) -> Rol:
+    client = _client_from_url(rol_url)
+    rol = client.retrieve("rol", url=rol_url)
+
+    rol = factory(Rol, rol)
+    return rol
+
+
 def get_zaak_informatieobjecten(zaak: Zaak) -> list:
     client = _client_from_object(zaak)
     zaak_informatieobjecten = client.list(
