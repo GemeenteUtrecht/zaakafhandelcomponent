@@ -19,6 +19,7 @@ from zgw_consumers.api_models.zaken import Zaak
 from zac.accounts.constants import AccessRequestResult
 from zac.accounts.email import send_email_to_requester
 from zac.accounts.models import AccessRequest, User
+from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
@@ -450,6 +451,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             user_deadlines=self.get_user_deadlines(),
             requester=self.user.username,
         )
+        add_permissions_for_advisors(self.review_request)
 
 
 UsersReviewRequestFormSet = forms.formset_factory(
