@@ -129,8 +129,10 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak):
     eigenschappen_doc = defaultdict(dict)
     for zaak_eigenschap in get_zaak_eigenschappen(zaak):
         spec_format = zaak_eigenschap.eigenschap.specificatie.formaat
+        # replace points in the field name because ES can't process them
+        # see https://discuss.elastic.co/t/class-cast-exception-for-dynamic-field-with-in-its-name/158819/5
         eigenschappen_doc[spec_format].update(
-            {zaak_eigenschap.naam: zaak_eigenschap.waarde}
+            {zaak_eigenschap.naam.replace(".", " "): zaak_eigenschap.waarde}
         )
 
     zaak_document.eigenschappen = eigenschappen_doc

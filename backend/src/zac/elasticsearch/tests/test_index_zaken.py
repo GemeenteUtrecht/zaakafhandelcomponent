@@ -448,3 +448,86 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             ]["type"],
             "date",
         )
+
+    def test_index_zaken_with_eigenschap_with_point(self, m):
+        # mock API requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        )
+        eigenschap_tekst = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            url=f"{CATALOGI_ROOT}eigenschappen/e3af6a57-4411-4fee-a57f-9f598c3f9d49",
+            zaaktype=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+        zaak_url = f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8"
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK1",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[
+                f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a"
+            ],
+        )
+        zaak_eigenschap_tekst = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
+            zaak=zaak_url,
+            eigenschap=eigenschap_tekst["url"],
+            naam="Bedrag incl. BTW",
+            waarde="aaa",
+        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            json=paginated_response([eigenschap_tekst]),
+        )
+
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
+        m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
+
+        call_command("index_zaken")
+
+        # check zaak_document exists
+        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+
+        self.assertEqual(zaak_document.identificatie, "ZAAK1")
+        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.zaaktype, zaaktype["url"])
+
+        # check zaak eigenschappen
+        zaak_eigenschappen = zaak_document.eigenschappen
+        self.assertEqual(zaak_eigenschappen, {"tekst": {"Bedrag incl  BTW": "aaa"}})
+
+        # check zaak eigenschap mappings
+        self.refresh_index()
+        index = zaak_document._index
+        eigenschap_mappings = index.get_field_mapping(fields="eigenschappen.*")[
+            settings.ES_INDEX_ZAKEN
+        ]["mappings"]
+
+        self.assertEqual(len(eigenschap_mappings.keys()), 1)
+        self.assertEqual(
+            eigenschap_mappings["eigenschappen.tekst.Bedrag incl  BTW"]["mapping"][
+                "Bedrag incl  BTW"
+            ]["type"],
+            "keyword",
+        )

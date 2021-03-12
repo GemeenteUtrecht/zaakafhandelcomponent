@@ -69,9 +69,11 @@ def search(
         )
     if eigenschappen:
         for eigenschap_name, eigenschap_value in eigenschappen.items():
+            # replace points in the field name because ES can't process them
+            # see https://discuss.elastic.co/t/class-cast-exception-for-dynamic-field-with-in-its-name/158819/5
             s = s.query(
                 QueryString(
-                    fields=[f"eigenschappen.*.{eigenschap_name}"],
+                    fields=[f"eigenschappen.*.{eigenschap_name.replace('.', ' ')}"],
                     query=eigenschap_value,
                 )
             )
