@@ -248,6 +248,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
                     "deadline": zaak1_model.deadline.isoformat(),
                     "deadlineProgress": zaak1_model.deadline_progress(),
+                    "resultaat": None,
                 }
             ],
         )
@@ -368,6 +369,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
                     "deadline": zaak1_model.deadline.isoformat(),
                     "deadlineProgress": zaak1_model.deadline_progress(),
+                    "resultaat": None,
                 }
             ],
         )
