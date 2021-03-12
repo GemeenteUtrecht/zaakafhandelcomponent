@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, Type
 from unittest.mock import patch
 
-from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext
+from django.urls import reverse_lazy
 
 from django_webtest import WebTest
 from rest_framework import serializers
