@@ -8,6 +8,7 @@ from zac.accounts.api.serializers import UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
+from .validators import UserValidator
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -112,5 +113,22 @@ class MessageSerializer(serializers.Serializer):
         help_text=_("The message that is sent to the process instance."),
     )
 
-    def set_message_choices(self, message_names: List[str]) -> NoReturn:
+    def set_message_choices(self, message_names: List[str]):
         self.fields["message"].choices = [(name, name) for name in message_names]
+
+
+class SetTaskAssigneeSerializer(serializers.Serializer):
+    task_id = serializers.UUIDField(
+        label=_("Task ID"),
+        help_text=_("The ID of the task which assignee/delegate is to be set."),
+    )
+    assignee = serializers.CharField(
+        label=_("assignee"),
+        help_text=_("User assigned to the task."),
+        validators=(UserValidator,),
+    )
+    delegate = serializers.CharField(
+        label=_("delegate"),
+        help_text=_("User delegated to the task."),
+        validators=(UserValidator,),
+    )

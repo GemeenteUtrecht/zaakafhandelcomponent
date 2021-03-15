@@ -3,6 +3,7 @@ import uuid
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, send_message
+from django_camunda.client import get_client
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, permissions, status
@@ -10,8 +11,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from zac.accounts.models import User
 from zac.core.camunda import get_process_zaak_url
-from zac.core.services import get_zaak
+from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
+from zgw.models import Zaak
 
 from ..data import Task
 from ..messages import get_messages
@@ -23,6 +26,7 @@ from .serializers import (
     ErrorSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
+    SetTaskAssigneeSerializer,
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
@@ -233,3 +237,86 @@ class SendMessageView(APIView):
             variables,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SetTaskAssigneeView(APIView):
+    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
+    serializer_class = SetTaskAssigneeSerializer
+
+    def get_object(self, task_id: str) -> Task:
+        if not hasattr(self, "_task"):
+            task = get_task(task_id, check_history=False)
+            if task is None:
+                raise exceptions.NotFound(
+                    _("The task with given task ID does not exist (anymore).")
+                )
+            self._task = task
+        return self._task
+
+    def _create_rol(self, zaak: Zaak, user: User):
+        # fetch roltype
+        roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
+        if not roltypen:
+            return
+        roltype = roltypen[0]
+
+        zrc_client = _client_from_url(zaak.url)
+        voorletters = " ".join([part[0] for part in user.first_name.split()])
+
+        # check if the betrokkene already exists
+        existing = zrc_client.list(
+            "rol",
+            query_params={
+                "zaak": zaak.url,
+                "betrokkeneIdentificatie__medewerker__identificatie": user.username,
+            },
+        )
+        if existing["count"]:
+            return
+
+        data = {
+            "zaak": zaak.url,
+            "betrokkeneType": "medewerker",
+            "roltype": roltype.url,
+            "roltoelichting": "task claiming",
+            "betrokkeneIdentificatie": {
+                "identificatie": user.username,
+                "achternaam": user.last_name,
+                "voorletters": voorletters,
+            },
+        }
+        zrc_client.create("rol", data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        task_id = serializer.validated_data["task_id"]
+        task = self.get_object(task_id)
+        process_instance = get_process_instance(task.process_instance_id)
+        zaak_url = get_process_zaak_url(process_instance)
+        zaak = get_zaak(zaak_url=zaak_url)
+        self.check_object_permissions(zaak)
+        zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
+        camunda_client = get_client()
+
+        # If assignee is given, set assignee.
+        assignee = serializer.validated_data["assignee"]
+        if assignee:
+            assignee = User.objects.get(username=assignee)
+            camunda_client.post(
+                f"task/{task.id}/assignee", json={"userId": assignee.username}
+            )
+            self._create_rol(zaak, assignee)
+
+        # If delegate is given, set delegate.
+        delegate = serializer.validated_data["delegate"]
+        if delegate:
+            delegate = User.objects.get(username=delegate)
+            camunda_client.post(
+                f"task/{task.id}/delegate", json={"userId": delegate.username}
+            )
+            self._create_rol(zaak, delegate)
+
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
