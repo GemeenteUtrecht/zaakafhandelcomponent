@@ -54,7 +54,7 @@ class OpenDowcView(APIView):
         Create a dowc object in the dowc API and expose the document through a URL.
         """
         document = self.get_object(bronorganisatie, identificatie)
-        referer = request.META.get("HTTP_REFERER", "")
+        referer = request.headers.get("referer", "")
         response, status_code = create_doc(request.user, document, purpose, referer)
         serializer = self.serializer_class(response)
         return Response(serializer.data, status=status_code)

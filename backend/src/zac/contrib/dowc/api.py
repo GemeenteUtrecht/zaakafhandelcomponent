@@ -27,7 +27,7 @@ def get_client(user: User) -> Client:
     claims = {}
     if user is not None:
         service.user_id = user.username
-        claims["user_email"] = user.email
+        claims["email"] = user.email
 
     client = service.build_client(**claims)
     client.operation_suffix_mapping = {
