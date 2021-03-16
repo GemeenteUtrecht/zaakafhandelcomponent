@@ -6,7 +6,7 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.constants import PermissionObjectType
@@ -15,8 +15,16 @@ from zac.core.permissions import zaken_inzien
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zgw.models import Zaak
 
-from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, mock_service_oas_get
+from .utils import (
+    BRONORGANISATIE,
+    ZAAK,
+    ZAAK_RESPONSE,
+    ZAAKTYPE,
+    ZAAKTYPE_RESPONSE,
+    mock_service_oas_get,
+)
 
 ROL = "https://some.zrc.nl/api/v1/rollen/69e98129-1f0d-497f-bbfb-84b88137edbc"
 NOTIFICATION = {
@@ -57,6 +65,7 @@ class RolCreatedTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.rollen, [])
 
@@ -96,6 +105,7 @@ class RolCreatedTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         create_zaak_document(zaak)
         # set up mocks
         rol = {

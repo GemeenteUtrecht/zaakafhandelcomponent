@@ -4,6 +4,9 @@ from django.test import TestCase
 from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.core.permissions import zaken_inzien
+
 from ..documents import ZaakDocument
 from ..searches import search
 from .utils import ESMixin
@@ -19,7 +22,11 @@ class SearchZakenTests(ESMixin, TestCase):
         self.zaak_document1 = ZaakDocument(
             meta={"id": "a522d30c-6c10-47fe-82e3-e9f524c14ca8"},
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            zaaktype={
+                "url": f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "omschrijving": "zaaktype1",
+            },
             identificatie="ZAAK1",
             bronorganisatie="123456",
             omschrijving="Some zaak description",
@@ -49,7 +56,11 @@ class SearchZakenTests(ESMixin, TestCase):
         self.zaak_document2 = ZaakDocument(
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013aa"},
             url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
-            zaaktype="https://api.catalogi.nl/api/v1/zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            zaaktype={
+                "url": f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "omschrijving": "zaaktype2",
+            },
             identificatie="ZAAK2",
             bronorganisatie="7890",
             omschrijving="Other description",
@@ -67,60 +78,90 @@ class SearchZakenTests(ESMixin, TestCase):
         result = search(
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
-            ]
+            ],
+            only_allowed=False,
         )
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_identificatie(self):
-        result = search(identificatie="ZAAK1")
+        result = search(identificatie="ZAAK1", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_bronorg(self):
-        result = search(bronorganisatie="123456")
+        result = search(bronorganisatie="123456", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_behandelaar(self):
-        result = search(behandelaar="some_username")
+        result = search(behandelaar="some_username", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
-    def test_search_allowed(self):
-        allowed = [
-            {
-                "zaaktypen": [
-                    "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
-                ],
+    def test_search_only_allowed_blueprint(self):
+        user = UserFactory.create()
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
+            policy={
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "zaaktype_omschrijving": "zaaktype1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-                "oo": "123456",
-            }
-        ]
+            },
+            for_user=user,
+        )
 
-        result = search(allowed=allowed)
+        result = search(user=user, only_allowed=True)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.zaak_document1.url)
+
+    def test_search_only_allowed_atomic(self):
+        user = UserFactory.create()
+        PermissionDefinitionFactory.create(
+            object_url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            permission=zaken_inzien.name,
+            for_user=user,
+        )
+
+        result = search(user=user, only_allowed=True)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_omschrijving(self):
-        result = search(omschrijving="some")
+        result = search(omschrijving="some", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_eigenschappen(self):
-        result = search(eigenschappen={"Beleidsveld": "Asiel en Integratie"})
+        result = search(
+            eigenschappen={"Beleidsveld": "Asiel en Integratie"}, only_allowed=False
+        )
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_combined(self):
+        user = UserFactory.create()
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
+            policy={
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "zaaktype_omschrijving": "zaaktype1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            for_user=user,
+        )
         result = search(
+            user=user,
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
             ],
@@ -128,15 +169,6 @@ class SearchZakenTests(ESMixin, TestCase):
             identificatie="ZAAK1",
             omschrijving="some",
             eigenschappen={"Beleidsveld": "Asiel en Integratie"},
-            allowed=[
-                {
-                    "zaaktypen": [
-                        "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
-                    ],
-                    "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-                    "oo": "123456",
-                }
-            ],
         )
 
         self.assertEqual(len(result), 1)
