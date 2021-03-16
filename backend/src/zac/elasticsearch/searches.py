@@ -8,13 +8,16 @@ from elasticsearch_dsl.query import (
     Exists,
     Match,
     Nested,
+    Query,
     QueryString,
-    Range,
     Regexp,
     Term,
     Terms,
 )
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+
+from zac.accounts.constants import PermissionObjectType
+from zac.accounts.models import PermissionDefinition, User
+from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
 
@@ -28,7 +31,43 @@ SUPPORTED_QUERY_PARAMS = (
 )
 
 
+def query_allowed_for_user(
+    user: User,
+    object_type: str = PermissionObjectType.zaak,
+    permission: str = zaken_inzien.name,
+) -> Query:
+    """
+    construct query part to display only allowed zaken
+    """
+    if user.is_superuser:
+        return Q("match_all")
+
+    permission_definitions = (
+        PermissionDefinition.objects.for_user(user)
+        .actual()
+        .filter(object_type=object_type, permission=permission)
+    )
+    allowed = []
+
+    # atomic permissions
+    object_urls = permission_definitions.filter(policy={}).values_list(
+        "object_url", flat=True
+    )
+    if object_urls.count():
+        allowed.append(Terms(url=list(object_urls)))
+
+    # blueprint permissions
+    for permission_definition in permission_definitions.exclude(policy={}):
+        allowed.append(permission_definition.get_policy_query())
+
+    if not allowed:
+        return Q("match_none")
+
+    return reduce(operator.or_, allowed)
+
+
 def search(
+    user=None,
     size=None,
     identificatie=None,
     bronorganisatie=None,
@@ -36,7 +75,7 @@ def search(
     zaaktypen=None,
     behandelaar=None,
     eigenschappen=None,
-    allowed=(),
+    only_allowed=True,
     include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
 ) -> List[str]:
@@ -81,38 +120,9 @@ def search(
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))
 
-    # construct query part to display only allowed zaken
-    _filters = []
-    for filter in allowed:
-        combined = Q("match_all")
-
-        if filter["zaaktypen"]:
-            combined = combined & Terms(zaaktype=filter["zaaktypen"])
-
-        if filter["max_va"]:
-            max_va_order = VertrouwelijkheidsAanduidingen.get_choice(
-                filter["max_va"]
-            ).order
-            combined = combined & Range(va_order={"lte": max_va_order})
-
-        if filter["oo"]:
-            combined = combined & Nested(
-                path="rollen",
-                query=Bool(
-                    filter=[
-                        Term(rollen__betrokkene_type="organisatorische_eenheid"),
-                        Term(
-                            rollen__betrokkene_identificatie__identificatie=filter["oo"]
-                        ),
-                    ]
-                ),
-            )
-
-        _filters.append(combined)
-
-    if _filters:
-        combined_filter = reduce(operator.or_, _filters)
-        s = s.filter(combined_filter)
+    # display only allowed zaken
+    if only_allowed:
+        s = s.filter(query_allowed_for_user(user))
 
     if ordering:
         s = s.sort(*ordering)

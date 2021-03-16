@@ -77,5 +77,5 @@ class SearchViewSet(views.APIView):
             )
             data["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
 
-        zaken = get_zaken_es(user_perms, size=50, query_params=data)
+        zaken = get_zaken_es(user=self.request.user, size=50, query_params=data)
         return zaken
