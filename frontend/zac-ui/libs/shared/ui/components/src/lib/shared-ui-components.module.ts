@@ -28,6 +28,8 @@ import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
 import { TableComponent } from './components/table/table.component';
 import { MessageComponent } from './elements/message/message.component';
+import { SidenavComponent } from './components/sidenav/sidenav.component';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
   imports: [
@@ -35,7 +37,8 @@ import { MessageComponent } from './elements/message/message.component';
     FormsModule,
     ReactiveFormsModule,
     MatIconModule,
-    BsDatepickerModule.forRoot()
+    BsDatepickerModule.forRoot(),
+    RouterModule
   ],
   declarations: [
     ButtonComponent,
@@ -55,6 +58,7 @@ import { MessageComponent } from './elements/message/message.component';
     DatepickerComponent,
     InputFieldComponent,
     MessageComponent,
+    SidenavComponent,
   ],
   exports: [
     ButtonComponent,
@@ -74,7 +78,8 @@ import { MessageComponent } from './elements/message/message.component';
     DatepickerComponent,
     MatIconModule,
     InputFieldComponent,
-    MessageComponent
+    MessageComponent,
+    SidenavComponent,
   ],
   providers: [
     BsLocaleService

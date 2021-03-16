@@ -1,3 +1,10 @@
 <!--<gu-home></gu-home>-->
-<router-outlet></router-outlet>
+<div class="gu-dashboard">
+  <gu-sidenav [menuItems]="menuItems"
+              [bottomMenuItems]="bottomMenuItems"
+              [selectedParentMenu]="selectedMenu"></gu-sidenav>
+  <div class="main-content-outer-wrapper">
+    <router-outlet></router-outlet>
+  </div>
+</div>
 

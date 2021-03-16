@@ -1,0 +1,49 @@
+<div class="gu-sidenav">
+  <div class="backdrop"
+       [ngClass]="{
+         'expanded': expanded === true
+         }"
+       (click)="expanded = !expanded"
+  ></div>
+  <header class="navigation-header">
+    <div class="wrapper">
+      <button class="hamburger" aria-label="Menuknop" (click)="expanded = !expanded">
+        <gu-icon>menu</gu-icon>
+      </button>
+    </div>
+  </header>
+  <nav class="vertical-nav"
+       [ngClass]="{
+         'expanded': expanded === true
+         }">
+    <a class="mobile-menu-back menu-item menu-link" aria-label="Menuknop" (click)="expanded = !expanded">
+      <gu-icon fontSize="50">arrow_back</gu-icon>
+      Ga terug
+    </a>
+    <div class="logo">
+
+    </div>
+    <div class="menu-container scrollable-area" *ngIf="menuItems">
+      <a *ngFor="let item of menuItems"
+         (click)="toggle()"
+         [routerLink]="item.to"
+         class="menu-item menu-link"
+         [ngClass]="{
+         'selected': selectedParentMenu === subtractParentRoute(item.to),
+         'mb-2': item.marginBottom === true
+         }">
+        <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
+      <div class="bottom-navigation">
+        <a *ngFor="let item of bottomMenuItems"
+           (click)="toggle()"
+           href="{{item.to}}"
+           class="menu-item menu-link"
+           [ngClass]="{
+         'selected': selectedParentMenu === subtractParentRoute(item.to),
+         'mb-2': item.marginBottom === true
+         }">
+          <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
+      </div>
+    </div>
+  </nav>
+</div>

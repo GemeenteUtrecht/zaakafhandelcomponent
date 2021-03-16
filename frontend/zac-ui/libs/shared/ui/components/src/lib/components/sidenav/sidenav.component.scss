@@ -1,0 +1,142 @@
+@import 'base/colors/colors';
+@import 'base/grid/grid';
+
+.gu-sidenav {
+  .navigation-header {
+    display: none;
+    position: static;
+    width: 100%;
+    transform: translate(0);
+    @include media-breakpoint-down(md) {
+      display: block
+    }
+    .wrapper {
+      box-sizing: border-box;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      height: 56px;
+      border: 1px solid #d2d3d6;
+      border-left: none;
+      border-right: none;
+    }
+  }
+  .vertical-nav {
+    letter-spacing: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    max-width: 100%;
+    background: $background-lightgrey;
+    color: $color-text;
+    z-index: 2;
+    @include media-breakpoint-down(md) {
+      position: absolute;
+      display: block;
+      transform: translateX(-100%);
+      pointer-events: all;
+      background: $background-white;
+      transition: transform 0.3s;
+      &.expanded {
+        transform: translateX(0);
+      }
+    }
+    .logo {
+      height: 103px;
+    }
+    .menu-container {
+      box-sizing: border-box;
+      position: relative;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: calc(100vh - 103px);
+      padding: 8px 0 24px 0;
+    }
+    .bottom-navigation {
+      flex: 1 0 auto;
+      display: flex;
+      justify-content: flex-end;
+      flex-direction: column;
+    }
+    .menu-item {
+      box-sizing: border-box;
+      position: relative;
+      color: $color-text;
+      word-break: break-word;
+      &:hover {
+        outline: none;
+        background: $background-grey;
+      }
+      gu-icon {
+        display: flex;
+        align-items: center;
+        margin-right: 8px;
+        text-align: center;
+        vertical-align: middle;
+        pointer-events: none;
+        .mat-icon {
+          font-size: 50px;
+        }
+      }
+
+    }
+    .menu-link {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      justify-content: flex-start;
+      color: var(--text-default, #141416);
+      text-decoration: none;
+      min-height: 3.6rem;
+      padding: 0 12px;
+      &.selected {
+        background-color: $color-lightblue;
+        color: $color-blue;
+      }
+    }
+    .mobile-menu-back {
+      display: none;
+      cursor: pointer;
+      @include media-breakpoint-down(md) {
+        display: flex;
+      }
+    }
+  }
+  .backdrop {
+    @include media-breakpoint-down(md) {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      background: #90909054;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      &.expanded {
+        opacity: 1;
+        pointer-events: all;
+        z-index: 1;
+      }
+    }
+  }
+  .hamburger {
+    pointer-events: all;
+    display: none;
+    border:none;
+    background-color:transparent;
+    outline:none;
+    padding: 1rem 1.2rem;
+    ::ng-deep .mat-icon {
+      font-size: 2.2rem;
+      height: 2.2rem;
+      width: 2.2rem;
+    }
+    @include media-breakpoint-down(md) {
+      display: block
+    }
+  }
+}
