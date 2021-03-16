@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, NoReturn
+from typing import Any, Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -125,10 +125,12 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
     assignee = serializers.CharField(
         label=_("assignee"),
         help_text=_("User assigned to the task."),
-        validators=(UserValidator,),
+        allow_blank=True,
+        validators=(UserValidator(),),
     )
     delegate = serializers.CharField(
         label=_("delegate"),
         help_text=_("User delegated to the task."),
-        validators=(UserValidator,),
+        allow_blank=True,
+        validators=(UserValidator(),),
     )

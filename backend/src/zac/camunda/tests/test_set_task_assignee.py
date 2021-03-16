@@ -1,0 +1,241 @@
+import uuid
+from unittest.mock import MagicMock, patch
+
+from django.urls import reverse
+
+import requests_mock
+from django_camunda.utils import serialize_variable
+from rest_framework import exceptions, status
+from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
+
+from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.camunda.data import Task
+from zac.core.models import CoreConfig
+from zac.core.permissions import zaakproces_usertasks
+from zac.tests.utils import paginated_response
+
+from ..api.serializers import SetTaskAssigneeSerializer
+
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
+ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+
+
+class SetTaskAssigneeSerializerTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls._uuid = uuid.uuid4()
+        cls.data = {
+            "task_id": cls._uuid,
+            "assignee": "some-user",
+            "delegate": "some-delegate",
+        }
+
+    def test_serializer_fail_validation(self):
+        serializer = SetTaskAssigneeSerializer(data=self.data)
+        with self.assertRaises(exceptions.ValidationError) as exc:
+            serializer.is_valid(raise_exception=True)
+
+        self.assertEqual(
+            exc.exception.detail["assignee"][0],
+            "A user with username some-user does not exist.",
+        )
+        self.assertEqual(
+            exc.exception.detail["delegate"][0],
+            "A user with username some-delegate does not exist.",
+        )
+
+    def test_serializer_success(self):
+        users = UserFactory.create_batch(2)
+        data = {
+            **self.data,
+            **{"assignee": users[0].username, "delegate": users[1].username},
+        }
+        serializer = SetTaskAssigneeSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+
+class SetTaskAssigneePermissionAndResponseTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
+        TASK_DATA = {
+            "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
+            "name": "aName",
+            "assignee": None,
+            "created": "2013-01-23T13:42:42.000+0200",
+            "due": "2013-01-23T13:49:42.576+0200",
+            "follow_up": "2013-01-23T13:44:42.437+0200",
+            "delegation_state": "RESOLVED",
+            "description": "aDescription",
+            "execution_id": "anExecution",
+            "owner": "anOwner",
+            "parent_task_id": None,
+            "priority": 42,
+            "process_definition_id": "aProcDefId",
+            "process_instance_id": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+            "case_definition_id": "aCaseDefId",
+            "case_instance_id": "aCaseInstId",
+            "case_execution_id": "aCaseExecution",
+            "task_definition_key": "aTaskDefinitionKey",
+            "suspended": False,
+            "form_key": "",
+            "tenant_id": "aTenantId",
+        }
+        cls.task = factory(Task, TASK_DATA)
+
+        cls.patch_get_task = patch(
+            "zac.camunda.api.views.get_task",
+            return_value=cls.task,
+        )
+
+        cls.patch_get_process_instance = patch(
+            "zac.camunda.api.views.get_process_instance",
+            return_value=None,
+        )
+
+        cls.patch_get_process_zaak_url = patch(
+            "zac.camunda.api.views.get_process_zaak_url",
+            return_value=None,
+        )
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=cls.zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            startdatum="2020-12-25",
+            uiterlijkeEinddatumAfdoening="2021-01-04",
+        )
+
+        cls.patch_get_zaak = patch(
+            "zac.camunda.api.views.get_zaak",
+            return_value=factory(Zaak, zaak),
+        )
+
+        cls.patch_fetch_zaaktype = patch(
+            "zac.camunda.api.views.fetch_zaaktype",
+            return_value=factory(ZaakType, cls.zaaktype),
+        )
+
+        cls.endpoint = reverse("claim-task")
+
+        cls.core_config = CoreConfig.get_solo()
+        cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
+        cls.core_config.save()
+
+    def setUp(self):
+        super().setUp()
+        self.patch_get_task.start()
+        self.addCleanup(self.patch_get_task.stop)
+
+        self.patch_get_process_instance.start()
+        self.addCleanup(self.patch_get_process_instance.stop)
+
+        self.patch_get_process_zaak_url.start()
+        self.addCleanup(self.patch_get_process_zaak_url.stop)
+
+        self.patch_get_zaak.start()
+        self.addCleanup(self.patch_get_zaak.stop)
+
+        self.patch_fetch_zaaktype.start()
+        self.addCleanup(self.patch_fetch_zaaktype.stop)
+
+    def test_not_authenticated(self):
+        response = self.client.post(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_authenticated_no_permissions(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_set_assignee(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaakproces_usertasks.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+
+        self.client.force_authenticate(user=user)
+
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{self.task.id}/assignee",
+            status_code=204,
+        )
+
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{self.task.id}/delegate",
+            status_code=204,
+        )
+
+        data = {
+            "task_id": self.task.id,
+            "assignee": user.username,
+            "delegate": "",
+        }
+
+        with patch(
+            "zac.camunda.api.views.SetTaskAssigneeView._create_rol", return_value=None
+        ):
+            # data with assignee
+            response = self.client.post(
+                self.endpoint,
+                data=data,
+            )
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+            expected_payload = {"userId": "user-1"}
+            self.assertEqual(m.last_request.json(), expected_payload)
+            self.assertIn("assignee", m.last_request.url)
+
+            # data with delegate
+            data.update({"assignee": "", "delegate": user.username})
+            response = self.client.post(
+                self.endpoint,
+                data=data,
+            )
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+            expected_payload = {"userId": "user-1"}
+            self.assertEqual(m.last_request.json(), expected_payload)
+            self.assertIn("delegate", m.last_request.url)

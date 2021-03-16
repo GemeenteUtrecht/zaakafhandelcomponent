@@ -243,15 +243,13 @@ class SetTaskAssigneeView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = SetTaskAssigneeSerializer
 
-    def get_object(self, task_id: str) -> Task:
-        if not hasattr(self, "_task"):
-            task = get_task(task_id, check_history=False)
-            if task is None:
-                raise exceptions.NotFound(
-                    _("The task with given task ID does not exist (anymore).")
-                )
-            self._task = task
-        return self._task
+    def _get_task(self, task_id: str) -> Task:
+        task = get_task(task_id, check_history=False)
+        if task is None:
+            raise exceptions.NotFound(
+                _("The task with given task ID does not exist (anymore).")
+            )
+        return task
 
     def _create_rol(self, zaak: Zaak, user: User):
         # fetch roltype
@@ -287,16 +285,22 @@ class SetTaskAssigneeView(APIView):
         }
         zrc_client.create("rol", data)
 
+    @extend_schema(
+        summary=_("Set task assignee or delegate"),
+        responses={
+            204: None,
+        },
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         task_id = serializer.validated_data["task_id"]
-        task = self.get_object(task_id)
+        task = self._get_task(task_id)
         process_instance = get_process_instance(task.process_instance_id)
         zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)
-        self.check_object_permissions(zaak)
+        self.check_object_permissions(request, zaak)
         zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
         camunda_client = get_client()
@@ -306,7 +310,8 @@ class SetTaskAssigneeView(APIView):
         if assignee:
             assignee = User.objects.get(username=assignee)
             camunda_client.post(
-                f"task/{task.id}/assignee", json={"userId": assignee.username}
+                f"task/{task.id}/assignee",
+                json={"userId": assignee.username},
             )
             self._create_rol(zaak, assignee)
 
@@ -315,8 +320,9 @@ class SetTaskAssigneeView(APIView):
         if delegate:
             delegate = User.objects.get(username=delegate)
             camunda_client.post(
-                f"task/{task.id}/delegate", json={"userId": delegate.username}
+                f"task/{task.id}/delegate",
+                json={"userId": delegate.username},
             )
             self._create_rol(zaak, delegate)
 
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
