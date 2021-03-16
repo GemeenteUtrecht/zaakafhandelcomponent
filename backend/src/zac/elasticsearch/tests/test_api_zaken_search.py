@@ -11,6 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    PermissionDefinitionFactory,
     PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
@@ -55,7 +56,11 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
-        self.create_zaak_document(self.zaak)
+        zaaktype_model = factory(ZaakType, self.zaaktype)
+        zaak_model = factory(Zaak, self.zaak)
+        zaak_model.zaaktype = zaaktype_model
+
+        self.create_zaak_document(zaak_model)
         self.refresh_index()
 
         self.endpoint = reverse("search")
@@ -136,12 +141,18 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(self.zaak["url"], json=self.zaak)
 
         user = UserFactory.create()
+        # todo remove after auth refactoring
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=user,
             catalogus=CATALOGUS_URL,
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        PermissionDefinitionFactory.create(
+            object_url=self.zaak["url"],
+            permission=zaken_inzien.name,
+            for_user=user,
         )
         self.client.force_authenticate(user=user)
 
@@ -190,8 +201,9 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
+        zaaktype_model = factory(ZaakType, zaaktype)
         zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak1_model.zaaktype = zaaktype_model
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -202,6 +214,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
         )
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = zaaktype_model
 
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -210,8 +224,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(zaak1["url"], json=zaak1)
 
         # index documents in es
-        self.create_zaak_document(zaak1)
-        self.create_zaak_document(zaak2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
         self.refresh_index()
 
         data = {
@@ -337,8 +351,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(f"{zaak2['url']}/zaakeigenschappen", json=[zaak_eigenschap2])
 
         # index documents in es
-        self.create_zaak_document(zaak1)
-        self.create_zaak_document(zaak2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
         update_eigenschappen_in_zaak_document(zaak1_model)
         update_eigenschappen_in_zaak_document(zaak2_model)
         self.refresh_index()

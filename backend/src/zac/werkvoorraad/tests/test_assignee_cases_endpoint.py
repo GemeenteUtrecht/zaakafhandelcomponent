@@ -11,6 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
+from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
 from ..views import get_behandelaar_zaken_unfinished
@@ -19,7 +20,7 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
-class AssigneeCasesTests(APITestCase):
+class AssigneeCasesTests(ESMixin, APITestCase):
     """
     Test the assignee cases API endpoint.
     """

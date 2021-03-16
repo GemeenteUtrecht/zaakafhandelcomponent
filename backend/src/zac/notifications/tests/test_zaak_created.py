@@ -8,6 +8,7 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import _find_zaken
@@ -20,7 +21,7 @@ from .utils import (
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
-    mock_service_oas_get,
+    ZAAKTYPE_RESPONSE,
 )
 
 NOTIFICATION = {
@@ -61,8 +62,10 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_zaak_created_invalidate_list_cache(self, rm):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         zrc_client = self.zrc.build_client()
         path = reverse("notifications:callback")
 
@@ -97,8 +100,10 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                     self.assertEqual(m.call_count, 2)
 
     def test_max_va_cache_key(self, rm):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         zrc_client = self.zrc.build_client()
         path = reverse("notifications:callback")
 
@@ -123,8 +128,10 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                     self.assertEqual(m.call_count, 2)
 
     def test_zaak_created_indexed_in_es(self, rm):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
 
         zaak_document = ZaakDocument.get(
@@ -138,4 +145,4 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         zaak_document = ZaakDocument.get(id="f3ff2713-2f53-42ff-a154-16842309ad60")
         self.assertIsNotNone(zaak_document)
         self.assertEqual(zaak_document.bronorganisatie, BRONORGANISATIE)
-        self.assertEqual(zaak_document.zaaktype, ZAAKTYPE)
+        self.assertEqual(zaak_document.zaaktype["url"], ZAAKTYPE)

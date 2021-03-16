@@ -1,18 +1,27 @@
+from unittest import skip
+
 from django.conf import settings
 from django.urls import reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import (
+    PermissionDefinitionFactory,
+    PermissionSetFactory,
+    UserFactory,
+)
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zgw.models.zrc import Zaak
 
 from ..permissions import zaken_inzien
 from .utils import ClearCachesMixin
@@ -83,6 +92,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             catalogus=catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         zt2 = generate_oas_component(
             "ztc",
@@ -90,6 +100,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             catalogus=catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/ce05e9c7-b9cd-42d1-ba0e-e0b3d2001be9",
             identificatie="ZT2",
+            omschrijving="ZT2",
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
@@ -108,6 +119,15 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
+            for_user=self.user,
+            policy={
+                "catalogus": catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         # set up zaken API data
         zaak1 = generate_oas_component(
             "zrc",
@@ -123,9 +143,13 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaaktype=zt2["url"],
             vertrouwelijkheidaanduiding=zt1["vertrouwelijkheidaanduiding"],
         )
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zt1)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zt2)
         m.get(zaak1["url"], json=zaak1)
-        self.create_zaak_document(zaak1)
-        self.create_zaak_document(zaak2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
 
         response = self.app.get(self.url, user=self.user)
 
@@ -164,6 +188,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             catalogus=catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
@@ -182,6 +207,15 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.openbaar,
         )
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
+            for_user=self.user,
+            policy={
+                "catalogus": catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
         # set up zaken API data
         zaak1 = generate_oas_component(
             "zrc",
@@ -197,9 +231,13 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
         m.get(zaak1["url"], json=zaak1)
-        self.create_zaak_document(zaak1)
-        self.create_zaak_document(zaak2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
 
         response = self.app.get(self.url, user=self.user)
 
@@ -244,7 +282,9 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             },
         )
         m.get(zaak1["url"], json=zaak1)
-        self.create_zaak_document(zaak1)
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zt1)
+        self.create_zaak_document(zaak1_model)
 
         response = self.app.get(self.url, {"zaaktypen": zt1["url"]}, user=superuser)
 
@@ -255,6 +295,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self.assertEqual(zaken[0].url, zaak1["url"])
 
 
+@skip("OO restriction is deprecated")
 @requests_mock.Mocker()
 class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     """
