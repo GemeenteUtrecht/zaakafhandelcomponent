@@ -8,6 +8,7 @@ from django.utils.html import format_html
 import rules
 import yaml
 from drf_spectacular.openapi import AutoSchema
+from elasticsearch_dsl.query import Query
 from rest_framework.serializers import Serializer
 from zgw_consumers.api_models.catalogi import ZaakType
 
@@ -22,9 +23,6 @@ class Blueprint(Serializer):
     class to validate and manage blueprint permissions
     """
 
-    def has_access(self, obj):
-        raise NotImplementedError("This method must be implemented by a subclass")
-
     @classmethod
     def display_as_yaml(cls):
         auto_schema = AutoSchema()
@@ -32,6 +30,12 @@ class Blueprint(Serializer):
         schema = auto_schema._map_serializer(cls, "")
         schema_yaml = yaml.dump(schema)
         return format_html("<pre>{}</pre>", schema_yaml)
+
+    def has_access(self, obj):
+        raise NotImplementedError("This method must be implemented by a subclass")
+
+    def search_query(self) -> Query:
+        raise NotImplementedError("This method must be implemented by a subclass")
 
 
 @dataclass(frozen=True)

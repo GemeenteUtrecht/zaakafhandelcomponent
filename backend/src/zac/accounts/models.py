@@ -377,3 +377,8 @@ class PermissionDefinition(models.Model):
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy, context={"request": request})
         return blueprint.has_access(obj)
+
+    def get_policy_query(self):
+        blueprint_class = self.get_blueprint_class()
+        blueprint = blueprint_class(self.policy)
+        return blueprint.search_query()
