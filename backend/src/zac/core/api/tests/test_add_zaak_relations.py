@@ -3,16 +3,23 @@ from django.urls import reverse_lazy
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import (
+    PermissionDefinitionFactory,
+    PermissionSetFactory,
+    UserFactory,
+)
 from zac.core.permissions import zaken_add_relations, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
+from zgw.models.zrc import Zaak
 
 
 @requests_mock.Mocker()
@@ -75,8 +82,9 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-
-        self.create_zaak_document(zaak)
+        zaak_model = factory(Zaak, zaak)
+        zaak_model.zaaktype = factory(ZaakType, zaaktype)
+        self.create_zaak_document(zaak_model)
 
         response = self.client.get(self.endpoint, {"identificatie": zaak_identificatie})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -100,6 +108,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
 
         # Set up zaken mocks
@@ -114,8 +123,9 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-
-        self.create_zaak_document(zaak)
+        zaak_model = factory(Zaak, zaak)
+        zaak_model.zaaktype = factory(ZaakType, zaaktype)
+        self.create_zaak_document(zaak_model)
         self.refresh_index()
 
         PermissionSetFactory.create(
@@ -124,6 +134,15 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             catalogus=catalogus_url,
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
+            for_user=user,
+            policy={
+                "catalogus": catalogus_url,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
 
         response = self.client.get(self.endpoint, {"identificatie": zaak_identificatie})

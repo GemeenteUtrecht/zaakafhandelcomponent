@@ -5,6 +5,8 @@ from django.urls import reverse, reverse_lazy
 
 import requests_mock
 from django_webtest import TransactionWebTest
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -12,6 +14,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
+    PermissionDefinitionFactory,
     PermissionSetFactory,
     UserFactory,
 )
@@ -19,6 +22,7 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
+from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
@@ -56,6 +60,7 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}/catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
         )
+        zaaktype_object = factory(ZaakType, self.zaaktype)
         self.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -64,6 +69,8 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             identificatie=IDENTIFICATIE,
             zaaktype=self.zaaktype["url"],
         )
+        zaak_object = factory(Zaak, self.zaak)
+        zaak_object.zaaktype = zaaktype_object
         # can't use generate_oas_component because of polymorphism
         rol = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -80,8 +87,9 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
                 "identificatie": self.user.username,
             },
         }
-        self.create_zaak_document(self.zaak)
+        self.create_zaak_document(zaak_object)
         self.add_rol_to_document(rol)
+        self.refresh_index()
         self.access_request1 = AccessRequestFactory.create(zaak=self.zaak["url"])
         self.access_request2 = AccessRequestFactory.create()
 
@@ -99,12 +107,18 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_display_access_requests_no_handle_permission(self, m):
         self._setUpMocks(m)
 
+        # todo remove after auth refactoring
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name],
             for_user=self.user,
             catalogus=self.zaaktype["catalogus"],
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+        )
+        PermissionDefinitionFactory.create(
+            permission=[zaken_inzien.name],
+            object_url=self.zaak["url"],
+            for_user=self.user,
         )
 
         # mock out all the other calls - we're testing access request part here
@@ -121,6 +135,7 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_display_access_requests_with_handle_permission(self, m):
         self._setUpMocks(m)
 
+        # todo remove after auth refactoring
         PermissionSetFactory.create(
             permissions=[zaken_inzien.name, zaken_handle_access.name],
             for_user=self.user,
@@ -128,6 +143,10 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaaktype_identificaties=["ZT1"],
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
+        for permission in [zaken_inzien.name, zaken_handle_access.name]:
+            PermissionDefinitionFactory.create(
+                permission=permission, object_url=self.zaak["url"], for_user=self.user
+            )
 
         # mock out all the other calls - we're testing access request part here
         with mock_dashboard_context():

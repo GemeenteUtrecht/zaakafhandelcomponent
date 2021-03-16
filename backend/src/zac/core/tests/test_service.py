@@ -166,6 +166,6 @@ class GetZakenTests(ESMixin, ClearCachesMixin, TestCase):
         self.assertRaises(
             ValueError,
             get_zaken_es,
-            user_perms=UserPermissions(self.user),
+            user=self.user,
             query_params=query_params,
         )
