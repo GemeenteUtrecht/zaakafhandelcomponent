@@ -31,6 +31,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
+from zac.accounts.models import User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
@@ -327,9 +328,10 @@ def get_allowed_kwargs(user_perms: UserPermissions) -> list:
 
 
 def get_zaken_es(
-    user_perms: UserPermissions,
+    user: Optional[User] = None,
     size=None,
     query_params=None,
+    only_allowed=True,
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
@@ -346,16 +348,14 @@ def get_zaken_es(
             )
         )
 
-    allowed_kwargs = get_allowed_kwargs(user_perms)
-    if not user_perms.user.is_superuser and not allowed_kwargs:
-        return []
-
-    find_kwargs["allowed"] = allowed_kwargs
-
-    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+    if only_allowed and not user:
+        raise ValueError("'user' parameter is required when 'only_allowed=True'")
 
     # ES search
-    zaak_urls = search(size=size, **find_kwargs)
+    zaak_urls = search(user=user, size=size, only_allowed=only_allowed, **find_kwargs)
+
+    if not zaak_urls:
+        return []
 
     def _get_zaak(zaak_url):
         return get_zaak(zaak_url=zaak_url)
@@ -365,8 +365,10 @@ def get_zaken_es(
         zaken = list(results)
 
     # resolve zaaktype reference
+    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
     for zaak in zaken:
-        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
+        zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
     return zaken
 
@@ -480,7 +482,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # try local search index first
-    results = search(size=1, **query)
+    results = search(size=1, only_allowed=False, **query)
     if results:
         zaak = get_zaak(zaak_url=results[0])
     else:
@@ -753,9 +755,8 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     Retrieve zaken where `user` is a medewerker in the role of behandelaar.
     """
     medewerker_id = user.username
-    user_perms = UserPermissions(user)
     behandelaar_zaken = get_zaken_es(
-        user_perms, query_params={"behandelaar": medewerker_id}
+        user=user, query_params={"behandelaar": medewerker_id}
     )
     return behandelaar_zaken
 

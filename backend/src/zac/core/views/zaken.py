@@ -84,8 +84,7 @@ class Index(PermissionRequiredMixin, BaseListView):
             filters = filter_form.as_filters()
         else:
             filters = {}
-        user_perms = UserPermissions(self.request.user)
-        zaken = get_zaken_es(user_perms, size=50, query_params=filters)
+        zaken = get_zaken_es(user=self.request.user, size=50, query_params=filters)
 
         return zaken
 
