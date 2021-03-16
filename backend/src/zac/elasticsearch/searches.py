@@ -51,7 +51,7 @@ def search(
     if omschrijving:
         s = s.query(Match(omschrijving=omschrijving))
     if zaaktypen:
-        s = s.filter(Terms(zaaktype=zaaktypen))
+        s = s.filter(Terms(zaaktype__url=zaaktypen))
     if behandelaar:
         s = s.filter(
             Nested(
