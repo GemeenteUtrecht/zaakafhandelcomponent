@@ -85,17 +85,18 @@ class DefinitionBasePermission(permissions.BasePermission):
         permission_definitions = (
             PermissionDefinition.objects.for_user(request.user)
             .actual()
-            .filter(permission=self.permission)
+            .filter(permission=self.permission.name)
         )
 
-        # first check atomic permissions
+        # first check atomic permissions - this checks both atomic permissions directly attached to the user
+        # and atomic permissions defined to authorization profiles
         if permission_definitions.filter(object_url=obj.url).exists():
             return True
 
         # then check blueprint permissions
         for permission in (
             permission_definitions.filter(object_type=self.object_type)
-            .exclude(policy={})
+            .filter(object_url="")
             .all()
         ):
             if permission.has_policy_access(obj, request):
