@@ -343,6 +343,10 @@ class PermissionDefinition(models.Model):
             )
         ]
 
+    def __str__(self):
+        object_desc = self.object_url.split("/")[-1] if self.object_url else "blueprint"
+        return f"{self.permission} ({self.object_type} {object_desc})"
+
     def get_blueprint_class(self):
         # TODO after burning all deprecated code this import should be moved to the top of the file
         # it will help testing a lot
