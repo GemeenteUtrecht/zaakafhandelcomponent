@@ -169,6 +169,20 @@ class ZaakTypeSerializer(APIModelSerializer):
         )
 
 
+class ResultaatTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = ResultaatType
+        fields = ("url", "omschrijving")
+
+
+class ResultaatSerializer(APIModelSerializer):
+    resultaattype = ResultaatTypeSerializer()
+
+    class Meta:
+        model = Resultaat
+        fields = ("url", "resultaattype", "toelichting")
+
+
 class ZaakDetailSerializer(APIModelSerializer):
     zaaktype = ZaakTypeSerializer()
     deadline = serializers.DateField(read_only=True)
@@ -180,6 +194,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "has been reached or exceeded."
         ),
     )
+    resultaat = ResultaatSerializer()
 
     class Meta:
         model = Zaak
@@ -198,6 +213,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "vertrouwelijkheidaanduiding",
             "deadline",
             "deadline_progress",
+            "resultaat",
         )
 
 
@@ -267,20 +283,6 @@ class ZaakStatusSerializer(APIModelSerializer):
             "statustoelichting",
             "statustype",
         )
-
-
-class ResultaatTypeSerializer(APIModelSerializer):
-    class Meta:
-        model = ResultaatType
-        fields = ("url", "omschrijving")
-
-
-class ResultaatSerializer(APIModelSerializer):
-    resultaattype = ResultaatTypeSerializer()
-
-    class Meta:
-        model = Resultaat
-        fields = ("url", "resultaattype", "toelichting")
 
 
 class EigenschapSpecificatieSerializer(APIModelSerializer):
@@ -448,10 +450,9 @@ class ZaakDocumentSerializer(APIModelSerializer):
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
     status = ZaakStatusSerializer()
-    resultaat = ResultaatSerializer()
 
     class Meta(ZaakDetailSerializer.Meta):
-        fields = ZaakDetailSerializer.Meta.fields + ("status", "resultaat")
+        fields = ZaakDetailSerializer.Meta.fields + ("status",)
 
 
 class RelatedZaakSerializer(serializers.Serializer):

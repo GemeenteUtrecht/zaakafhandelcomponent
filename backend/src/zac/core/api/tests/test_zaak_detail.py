@@ -8,8 +8,9 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import ResultaatType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import Resultaat
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -71,6 +72,36 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             uiterlijkeEinddatumAfdoening="2021-01-04",
         )
 
+        resultaattype = generate_oas_component(
+            "ztc",
+            "schemas/ResultaatType",
+            url=f"{CATALOGI_ROOT}resultaattypen/362b23eb-d8a9-486f-b236-8adb58ebc18f",
+            zaaktype=cls.zaaktype["url"],
+            omschrijving="geannuleerd",
+        )
+        cls.resultaat = generate_oas_component(
+            "zrc",
+            "schemas/Resultaat",
+            url=f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
+            zaak=cls.zaak["url"],
+            resultaattype=resultaattype["url"],
+        )
+
+        resultaat = factory(Resultaat, cls.resultaat)
+        resultaat.resultaattype = factory(ResultaatType, resultaattype)
+        cls.resultaat = {
+            "url": cls.resultaat["url"],
+            "resultaattype": {
+                "url": resultaattype["url"],
+                "omschrijving": resultaattype["omschrijving"],
+            },
+            "toelichting": cls.resultaat["toelichting"],
+        }
+
+        cls.patch_get_resultaat = patch(
+            "zac.core.api.views.get_resultaat", return_value=resultaat
+        )
+
         cls.detail_url = reverse(
             "zaak-detail",
             kwargs={
@@ -81,6 +112,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
+        self.maxDiff = None
+
+        self.patch_get_resultaat.start()
+        self.addCleanup(self.patch_get_resultaat.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
@@ -117,6 +152,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "vertrouwelijkheidaanduiding": "openbaar",
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
+            "resultaat": self.resultaat,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -153,6 +189,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "vertrouwelijkheidaanduiding": "openbaar",
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
+            "resultaat": self.resultaat,
         }
         self.assertEqual(response.json(), expected_response)
 

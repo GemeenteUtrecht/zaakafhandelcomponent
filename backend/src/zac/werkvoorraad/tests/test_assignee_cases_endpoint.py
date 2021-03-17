@@ -133,6 +133,7 @@ class AssigneeCasesTests(APITestCase):
                 "vertrouwelijkheidaanduiding": self.zaak_unfinished.vertrouwelijkheidaanduiding,
                 "deadline": str(self.zaak_unfinished.deadline),
                 "deadlineProgress": self.zaak_unfinished.deadline_progress(),
+                "resultaat": None,
             },
             data[0],
         )
