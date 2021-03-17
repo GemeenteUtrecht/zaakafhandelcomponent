@@ -84,8 +84,8 @@ class DefinitionBasePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         permission_definitions = (
             PermissionDefinition.objects.for_user(request.user)
+            .filter(permission=self.permission.name, object_type=self.object_type)
             .actual()
-            .filter(permission=self.permission)
         )
 
         # first check atomic permissions
@@ -93,12 +93,59 @@ class DefinitionBasePermission(permissions.BasePermission):
             return True
 
         # then check blueprint permissions
-        for permission in (
-            permission_definitions.filter(object_type=self.object_type)
-            .exclude(policy={})
-            .all()
-        ):
+        for permission in permission_definitions.filter(object_url=""):
             if permission.has_policy_access(obj, request):
                 return True
 
         return False
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        # check if the user has permissions for any object
+        if (
+            not PermissionDefinition.objects.for_user(request.user)
+            .filter(permission=self.permission.name, object_type=self.object_type)
+            .actual()
+            .exists()
+        ):
+            return False
+
+        return super().has_permission(request, view)
+
+
+class ObjectDefinitionBasePermission(DefinitionBasePermission):
+    object_attr: str
+
+    def get_object(self, request: Request, obj_url: str):
+        raise NotImplementedError("This method must be implemented by a subclass")
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.user.is_superuser:
+            return True
+
+        # first check  if the user has permissions for any object
+        if super().has_permission(request, view) is False:
+            return False
+
+        serializer = view.get_serializer(data=request.data)
+        # if the serializer is not valid, we want to see validation errors -> permission is granted
+        if not serializer.is_valid():
+            return True
+
+        object_url = serializer.validated_data[self.object_attr]
+        obj = self.get_object(request, object_url)
+        if not obj:
+            return False
+        return self.has_object_permission(request, view, obj)
+
+
+class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
+    object_attr = "zaak"
+
+    def get_object(self, request: Request, obj_url: str):
+        try:
+            zaak = get_zaak(zaak_url=obj_url)
+        except ClientError:
+            logger.info("Invalid Zaak specified", exc_info=True)
+            return None
+
+        return zaak
