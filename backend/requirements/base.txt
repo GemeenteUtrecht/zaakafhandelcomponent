@@ -193,6 +193,7 @@ pytz==2019.2
     #   django
 pyyaml==5.1.2
     # via
+    #   -r requirements/base.in
     #   drf-spectacular
     #   gemma-zds-client
     #   tablib

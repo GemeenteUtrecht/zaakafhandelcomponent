@@ -59,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         "PermissionDefinition",
         verbose_name=_("permission definitions"),
         related_name="users",
+        limit_choices_to={"policy": {}},
     )
 
     objects = UserManager()
@@ -309,7 +310,6 @@ class PermissionDefinition(models.Model):
     )
     policy = JSONField(
         _("policy"),
-        null=True,
         blank=True,
         default=dict,
         help_text=_(
@@ -319,8 +319,6 @@ class PermissionDefinition(models.Model):
     )
     start_date = models.DateTimeField(
         _("start date"),
-        blank=True,
-        null=True,
         default=timezone.now,
         help_text=_("Start date of the permission"),
     )
@@ -335,6 +333,15 @@ class PermissionDefinition(models.Model):
     class Meta:
         verbose_name = _("permission definition")
         verbose_name_plural = _("permission definitions")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(
+                    models.Q(~models.Q(policy={}), object_url="")
+                    | models.Q(~models.Q(object_url=""), policy={})
+                ),
+                name="check_permission_type",
+            )
+        ]
 
     def get_blueprint_class(self):
         # TODO after burning all deprecated code this import should be moved to the top of the file
