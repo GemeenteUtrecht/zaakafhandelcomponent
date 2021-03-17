@@ -9,7 +9,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    PermissionSetFactory,
+    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -36,6 +36,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
         cls.zaaktype_2 = generate_oas_component(
             "ztc",
@@ -44,6 +45,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             identificatie="ZT2",
             catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT2",
         )
 
         cls.endpoint = reverse("zaaktypen")
@@ -75,13 +77,17 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT3"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT3",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
+
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
@@ -96,12 +102,15 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -136,13 +145,17 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1", "ZT2"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
+        for zaaktype_omschrijving in ["ZT1", "ZT2"]:
+            PermissionDefinitionFactory.create(
+                permission=zaken_inzien.name,
+                for_user=user,
+                object_url="",
+                policy={
+                    "catalogus": CATALOGUS_URL,
+                    "zaaktype_omschrijving": zaaktype_omschrijving,
+                    "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+                },
+            )
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
