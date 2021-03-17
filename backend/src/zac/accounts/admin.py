@@ -26,6 +26,14 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 class _UserAdmin(HijackUserAdminMixin, UserAdmin):
     list_display = UserAdmin.list_display + ("hijack_field",)
     inlines = [UserAuthorizationProfileInline]
+    filter_horizontal = ("groups", "user_permissions", "permission_definitions")
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+
+        return fieldsets + (
+            (_("Object permissions"), {"fields": ("permission_definitions",)}),
+        )
 
 
 @admin.register(PermissionSet)
