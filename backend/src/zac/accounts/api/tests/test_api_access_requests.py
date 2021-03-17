@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.contrib.sites.models import Site
 from django.core import mail
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 import requests_mock
@@ -14,14 +15,15 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.permissions import zaken_handle_access
+from zac.core.permissions import zaken_handle_access, zaken_inzien
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult
-from ...models import AccessRequest
+from ...constants import AccessRequestResult, PermissionObjectType
+from ...models import AccessRequest, PermissionDefinition
 from ...tests.factories import (
     AccessRequestFactory,
-    PermissionSetFactory,
+    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -34,7 +36,7 @@ BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-001"
 
 
-class AccessRequestPermissionsTests(APITestCase):
+class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -49,6 +51,7 @@ class AccessRequestPermissionsTests(APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             identificatie="ZT1",
             catalogus=CATALOGUS_URL,
+            omschrijving="ZT1",
         )
         self.zaak = generate_oas_component(
             "zrc",
@@ -76,19 +79,19 @@ class AccessRequestPermissionsTests(APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([self.zaaktype]),
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_handle_access.name,
             for_user=self.handler,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.client.post(self.endpoint, self.data)
@@ -100,18 +103,18 @@ class AccessRequestPermissionsTests(APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([self.zaaktype]),
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
 
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_handle_access.name,
             for_user=self.handler,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT2"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.client.post(self.endpoint, self.data)
@@ -138,19 +141,19 @@ class AccessRequestPermissionsTests(APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([self.zaaktype]),
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_handle_access.name,
             for_user=self.handler,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.client.post(self.endpoint, self.data)
@@ -203,6 +206,9 @@ class AccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AccessRequest.objects.count(), 1)
+        self.assertEqual(
+            PermissionDefinition.objects.for_user(self.requester).count(), 1
+        )
 
         access_request = AccessRequest.objects.get()
 
@@ -213,6 +219,16 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.comment, "some comment")
         self.assertEqual(access_request.start_date, date(2020, 1, 1))
         self.assertIsNone(access_request.end_date)
+
+        permission_definition = PermissionDefinition.objects.for_user(
+            self.requester
+        ).get()
+
+        self.assertEqual(permission_definition.object_url, ZAAK_URL)
+        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
+        self.assertEqual(permission_definition.permission, zaken_inzien.name)
+        self.assertEqual(permission_definition.start_date.date(), date(2020, 1, 1))
+        self.assertIsNone(permission_definition.end_date)
 
         data = response.json()
 
@@ -252,12 +268,12 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("requester" in response.json())
 
-    def test_grant_access_with_existing_approved_request(self):
-        AccessRequestFactory.create(
-            requester=self.requester,
-            result=AccessRequestResult.approve,
-            zaak=ZAAK_URL,
-            end_date=None,
+    def test_grant_access_with_existing_permission(self):
+        PermissionDefinitionFactory.create(
+            object_url=ZAAK_URL,
+            object_type=PermissionObjectType.zaak,
+            permission=zaken_inzien.name,
+            for_user=self.requester,
         )
         data = {
             "requester": self.requester.username,
@@ -276,16 +292,17 @@ class AccessRequestAPITests(APITransactionTestCase):
         )
 
     @requests_mock.Mocker()
-    def test_grant_access_with_existing_approved_request_expired(self, m):
+    def test_grant_access_with_existing_permission_expired(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        AccessRequestFactory.create(
-            requester=self.requester,
-            result=AccessRequestResult.approve,
-            zaak=ZAAK_URL,
-            end_date=date(2019, 12, 31),
+        PermissionDefinitionFactory.create(
+            object_url=ZAAK_URL,
+            object_type=PermissionObjectType.zaak,
+            permission=zaken_inzien.name,
+            for_user=self.requester,
+            end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
         data = {
             "requester": self.requester.username,
@@ -297,12 +314,24 @@ class AccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.requester.initiated_requests.actual().count(), 1)
+        self.assertEqual(
+            PermissionDefinition.objects.for_user(self.requester).actual().count(), 1
+        )
 
         actual_access_request = self.requester.initiated_requests.actual().get()
 
         self.assertIsNone(actual_access_request.end_date)
         self.assertEqual(actual_access_request.result, AccessRequestResult.approve)
         self.assertEqual(actual_access_request.comment, "some comment")
+
+        permission_definition = (
+            PermissionDefinition.objects.for_user(self.requester).actual().get()
+        )
+
+        self.assertEqual(permission_definition.object_url, ZAAK_URL)
+        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
+        self.assertEqual(permission_definition.permission, zaken_inzien.name)
+        self.assertIsNone(permission_definition.end_date)
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
@@ -347,6 +376,15 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(new_request.result, AccessRequestResult.approve)
         self.assertEqual(new_request.end_date, date(2021, 1, 1))
         self.assertEqual(new_request.comment, "some comment")
+
+        permission_definition = (
+            PermissionDefinition.objects.for_user(self.requester).actual().get()
+        )
+
+        self.assertEqual(permission_definition.object_url, ZAAK_URL)
+        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
+        self.assertEqual(permission_definition.permission, zaken_inzien.name)
+        self.assertEqual(permission_definition.end_date.date(), date(2021, 1, 1))
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
