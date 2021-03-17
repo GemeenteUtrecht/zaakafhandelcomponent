@@ -1,10 +1,10 @@
 import logging
 
-from zac.api.permissions import ZaakBasedPermission
+from zac.api.permissions import ZaakDefinitionPermission
 from zac.core.rules import zaken_handle_access
 
 logger = logging.getLogger(__name__)
 
 
-class CanHandleAccess(ZaakBasedPermission):
+class CanHandleAccess(ZaakDefinitionPermission):
     permission = zaken_handle_access
