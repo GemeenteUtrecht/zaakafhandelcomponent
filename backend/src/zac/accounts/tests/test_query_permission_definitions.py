@@ -33,9 +33,11 @@ class PermissionDefinitionQueryTests(TestCase):
         user = UserFactory.create()
         user.permission_definitions.add(permission)
 
-        auth_profile = AuthorizationProfileFactory.create()
-        auth_profile.permission_definitions.add(permission)
-        user.auth_profiles.add(auth_profile)
+        # add two auth profiles for 1 user with the same permission_definition
+        auth_profiles = AuthorizationProfileFactory.create_batch(2)
+        for auth_profile in auth_profiles:
+            auth_profile.permission_definitions.add(permission)
+            user.auth_profiles.add(auth_profile)
 
         query_for_user = PermissionDefinition.objects.for_user(user)
 
