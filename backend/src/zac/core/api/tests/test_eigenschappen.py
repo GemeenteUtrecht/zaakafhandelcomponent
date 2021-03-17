@@ -11,7 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    PermissionSetFactory,
+    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -94,12 +94,15 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             json=paginated_response([self.zaaktype, zaaktype2]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT2"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -144,12 +147,15 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             json=paginated_response([self.eigenschap]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            object_url="",
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
