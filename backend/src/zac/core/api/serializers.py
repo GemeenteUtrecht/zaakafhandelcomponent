@@ -1,6 +1,7 @@
+from decimal import ROUND_05UP
+
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
-from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -326,11 +327,13 @@ class CharValueSerializer(APIModelSerializer):
 
 
 class NumberValueSerializer(APIModelSerializer):
+    #TODO: Ideally this should be dynamic based on eigenschapsspecificatie
     value = serializers.DecimalField(
         label=_("property value"),
         source="get_waarde",
         max_digits=100,
-        decimal_places=20,
+        decimal_places=2,
+        rounding=ROUND_05UP,
     )
 
     class Meta:
