@@ -13,7 +13,9 @@ class AccessRequestQuerySet(models.QuerySet):
 
 class PermissionDefinitionQuerySet(models.QuerySet):
     def for_user(self, user) -> models.QuerySet:
-        return self.filter(models.Q(users=user) | models.Q(auth_profiles__user=user))
+        return self.filter(
+            models.Q(users=user) | models.Q(auth_profiles__user=user)
+        ).distinct()
 
     def actual(self) -> models.QuerySet:
         return self.filter(
