@@ -17,7 +17,7 @@ elasticsearch-dsl
 aiodns
 aiohttp
 
-gemma-zds-client
+gemma-zds-client>=1.0.0
 zgw-consumers[drf]~=0.15.0
 
 # Framework libraries
