@@ -327,7 +327,7 @@ class CharValueSerializer(APIModelSerializer):
 
 
 class NumberValueSerializer(APIModelSerializer):
-    #TODO: Ideally this should be dynamic based on eigenschapsspecificatie
+    # TODO: Ideally this should be dynamic based on eigenschapsspecificatie
     value = serializers.DecimalField(
         label=_("property value"),
         source="get_waarde",
