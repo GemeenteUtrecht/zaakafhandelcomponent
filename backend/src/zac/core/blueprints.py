@@ -74,11 +74,12 @@ class ZaakHandleBlueprint(ZaakTypeBlueprint):
             return False
 
         # check if user is the behandelaar
-        request = self.context.get("request")
-        if not request or not request.user:
+        user = self.context.get("user")
+
+        if not user:
             return False
 
-        return self.is_zaak_behandelaar(request.user, zaak)
+        return self.is_zaak_behandelaar(user, zaak)
 
 
 class InformatieObjectTypeBlueprint(Blueprint):
