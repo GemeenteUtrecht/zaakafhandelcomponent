@@ -2,11 +2,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
-import rules
-
-from zac.utils.decorators import cache
-
-from .datastructures import ZaakPermissionCollection
+from zac.accounts.constants import PermissionObjectType
+from zac.accounts.models import PermissionDefinition
 
 
 class UserModelEmailBackend(ModelBackend):
@@ -24,42 +21,35 @@ class UserModelEmailBackend(ModelBackend):
             return None
 
 
-# TODO: invalidate cache on permission changes!
-@cache("user:permission-codes:{user.id}", timeout=60 * 5)
-def _get_user_permission_codes(user):
-    # inventory of non-object level permissions
-    qs = user.auth_profiles.values_list("permission_sets__permissions", flat=True)
-    return set(sum(qs, []))
-
-
+# Deprecated
+# this class is used only to support legacy SSR views
+# All DRF views should use zac.api.permissions.DefinitionBasePermission and its subclasses
 class PermissionsBackend:
     def authenticate(self, request):
         return None
 
-    def set_user_permissions(self, user):
-        """
-        Fetch the (zaaktype) permissions for the user and cache them…
-        """
-        if not hasattr(user, "_zaaktype_perms"):
-            user._zaaktype_perms = ZaakPermissionCollection.for_user(user)
-        return user._zaaktype_perms
-
-    def has_perm(self, user_obj, perm: str, obj=None) -> bool:
+    def has_perm(
+        self, user_obj, perm: str, obj=None, object_type=PermissionObjectType.zaak
+    ) -> bool:
         if not user_obj.is_active:
             return False
 
-        self.set_user_permissions(user_obj)
+        user_permissions = (
+            PermissionDefinition.objects.for_user(user_obj)
+            .filter(permission=perm, object_type=object_type)
+            .actual()
+        )
 
-        # inventory of non-object level permissions
-        permission_codes = _get_user_permission_codes(user_obj)
-        if not obj and perm not in permission_codes:
-            if not rules.rule_exists(perm):
-                return False
-            return rules.test_rule(perm, user_obj)
-
-        # "does the user have the permission at all?" -> yes
+        # similar to DefinitionBasePermission.has_permission
         if not obj:
+            return user_permissions.exists()
+
+        # similar to DefinitionBasePermission.has_object_permission
+        if user_permissions.filter(object_url=obj.url).exists():
             return True
 
-        # defer object-level permission checks to the rules setup
-        return rules.test_rule(perm, user_obj, obj)
+        for permission in user_permissions.filter(object_url=""):
+            if permission.has_policy_access(obj):
+                return True
+
+        return False
