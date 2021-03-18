@@ -10,7 +10,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
@@ -63,6 +63,7 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            omschrijving="ZT1",
         )
         informatieobjecttype = generate_oas_component(
             "ztc",
@@ -126,12 +127,15 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user)
         # set up user permissions
         catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        PermissionSetFactory.create(
-            permissions=[zaken_add_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_add_documents.name,
             for_user=user,
-            catalogus=catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self._setupMocks(m)
         m.post(
