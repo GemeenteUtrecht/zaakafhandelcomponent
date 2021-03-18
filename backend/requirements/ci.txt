@@ -6,7 +6,7 @@
 #
 aiodns==2.0.0
     # via -r requirements/base.txt
-aiohttp==3.6.1
+aiohttp==3.7.4
     # via -r requirements/base.txt
 amqp==2.5.1
     # via
