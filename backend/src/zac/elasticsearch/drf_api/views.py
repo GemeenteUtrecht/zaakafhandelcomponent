@@ -64,7 +64,7 @@ class SearchViewSet(views.APIView):
 
     def perform_search(self, data) -> List[Zaak]:
         user_perms = UserPermissions(self.request.user)
-
+        # TODO search on zaaktype attributes instead of urls
         if data.get("zaaktype"):
             zaaktype_data = data.pop("zaaktype")
             zaaktypen = get_zaaktypen(
@@ -74,5 +74,5 @@ class SearchViewSet(views.APIView):
             )
             data["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
 
-        zaken = get_zaken_es(user_perms, size=50, query_params=data)
+        zaken = get_zaken_es(user=self.request.user, size=50, query_params=data)
         return zaken

@@ -11,6 +11,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import get_zaak
@@ -18,7 +19,7 @@ from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import RolDocument, ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 
-from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, mock_service_oas_get
+from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, ZAAKTYPE_RESPONSE
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -47,6 +48,9 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         cls.zrc = Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
+        cls.ztc = Service.objects.create(
+            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
+        )
 
     def setUp(self):
         super().setUp()
@@ -56,8 +60,10 @@ class ZaakUpdateTests(ESMixin, APITestCase):
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
     def test_get_zaak_resultaat_created(self, rm, mock_zaaktype):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
 
         matrix = [
@@ -86,6 +92,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
                 self.assertEqual(len(rm.request_history), num_calls_before + 1)
 
     def test_zaak_updated_indexed_in_es(self, rm):
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
         #  create zaak_document in ES
         old_response = ZAAK_RESPONSE.copy()
@@ -103,7 +111,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         new_response[
             "vertrouwelijkheidaanduiding"
         ] = VertrouwelijkheidsAanduidingen.confidentieel
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         rm.get(ZAAK, json=new_response)
 
         response = self.client.post(path, NOTIFICATION)
@@ -119,6 +127,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         self.assertEqual(zaak_document.meta.version, 2)
 
     def test_zaak_with_rollen_updated_indexed_in_es(self, rm):
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
         #  create zaak_document
         old_response = ZAAK_RESPONSE.copy()
@@ -148,7 +158,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         new_response[
             "vertrouwelijkheidaanduiding"
         ] = VertrouwelijkheidsAanduidingen.confidentieel
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         rm.get(ZAAK, json=new_response)
 
         response = self.client.post(path, NOTIFICATION)

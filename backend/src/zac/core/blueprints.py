@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
+from elasticsearch_dsl.query import Q, Query, Range, Term
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
@@ -40,6 +41,16 @@ class ZaakTypeBlueprint(Blueprint):
             and zaaktype.omschrijving == self.data["zaaktype_omschrijving"]
             and current_va_order <= max_va_order
         )
+
+    def search_query(self) -> Query:
+        max_va_order = VA_ORDER[self.data["max_va"]]
+
+        query = (
+            Term(zaaktype__catalogus=self.data["catalogus"])
+            & Term(zaaktype__omschrijving=self.data["zaaktype_omschrijving"])
+            & Range(va_order={"lte": max_va_order})
+        )
+        return query
 
 
 class ZaakHandleBlueprint(ZaakTypeBlueprint):
