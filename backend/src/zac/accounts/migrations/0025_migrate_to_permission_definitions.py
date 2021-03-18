@@ -87,7 +87,7 @@ def migrate_to_permission_definitions(apps, _):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("accounts", "0023_auto_20210309_1810"),
+        ("accounts", "0024_auto_20210317_1100"),
         ("zgw_consumers", "0012_auto_20210104_1039"),
     ]
 
