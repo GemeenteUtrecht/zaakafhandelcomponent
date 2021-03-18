@@ -120,6 +120,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
         PermissionDefinitionFactory.create(
+            object_url="",
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -208,6 +209,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             max_va=VertrouwelijkheidsAanduidingen.openbaar,
         )
         PermissionDefinitionFactory.create(
+            object_url="",
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={

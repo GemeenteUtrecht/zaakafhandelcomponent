@@ -154,7 +154,7 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(result[0], self.zaak_document1.url)
 
     def test_search_eigenschappen_with_point(self):
-        result = search(eigenschappen={"Bedrag incl. BTW": "aaa"})
+        result = search(eigenschappen={"Bedrag incl. BTW": "aaa"}, only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
