@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -11,10 +11,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from .constants import AccessRequestResult
+from zac.utils.exceptions import get_error_list
+
+from .constants import AccessRequestResult, PermissionObjectType
 from .datastructures import ZaaktypeCollection
 from .managers import UserManager
-from .query import AccessRequestQuerySet
+from .query import AccessRequestQuerySet, PermissionDefinitionQuerySet
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -52,6 +54,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         "AuthorizationProfile",
         blank=True,
         through="UserAuthorizationProfile",
+    )
+    permission_definitions = models.ManyToManyField(
+        "PermissionDefinition",
+        verbose_name=_("permission definitions"),
+        related_name="users",
+        limit_choices_to={"policy": {}},
     )
 
     objects = UserManager()
@@ -95,6 +103,7 @@ class AuthorizationProfile(models.Model):
             "Use an easily recognizable name that maps to the function of users."
         ),
     )
+    # deprecated
     permission_sets = models.ManyToManyField(
         "PermissionSet",
         verbose_name=_("permission sets"),
@@ -102,6 +111,12 @@ class AuthorizationProfile(models.Model):
             "Selecting multiple sets makes them add/merge all the permissions together."
         ),
     )
+    permission_definitions = models.ManyToManyField(
+        "PermissionDefinition",
+        verbose_name=_("permission definitions"),
+        related_name="auth_profiles",
+    )
+    # deprecated
     oo = models.ForeignKey(
         "organisatieonderdelen.OrganisatieOnderdeel",
         null=True,
@@ -122,6 +137,7 @@ class AuthorizationProfile(models.Model):
         return self.name
 
 
+# Deprecated
 class PermissionSet(models.Model):
     """
     A collection of permissions that belong to a zaaktype.
@@ -176,6 +192,7 @@ class PermissionSet(models.Model):
         )
 
 
+# Deprecated
 class InformatieobjecttypePermission(models.Model):
     permission_set = models.ForeignKey(
         PermissionSet,
@@ -220,6 +237,7 @@ class UserAuthorizationProfile(models.Model):
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
+# Deprecated
 class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
@@ -272,3 +290,90 @@ class AccessRequest(models.Model):
             raise ValidationError(
                 _("The result can't be specified without its handler")
             )
+
+
+class PermissionDefinition(models.Model):
+    object_type = models.CharField(
+        _("object type"),
+        max_length=50,
+        choices=PermissionObjectType.choices,
+        help_text=_("Type of the objects this permission applies to"),
+    )
+    permission = models.CharField(
+        _("Permission"), max_length=255, help_text=_("Name of the permission")
+    )
+    object_url = models.CharField(
+        _("object URL"),
+        max_length=1000,
+        blank=True,
+        help_text=_("URL of the object in one of ZGW APIs this permission applies to"),
+    )
+    policy = JSONField(
+        _("policy"),
+        blank=True,
+        default=dict,
+        help_text=_(
+            "Blueprint permission definitions, used to check the access to objects based "
+            "on their properties i.e. zaaktype, informatieobjecttype"
+        ),
+    )
+    start_date = models.DateTimeField(
+        _("start date"),
+        default=timezone.now,
+        help_text=_("Start date of the permission"),
+    )
+    end_date = models.DateTimeField(
+        _("end date"),
+        blank=True,
+        null=True,
+        help_text=_("End date of the permission"),
+    )
+    objects = PermissionDefinitionQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _("permission definition")
+        verbose_name_plural = _("permission definitions")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(
+                    models.Q(~models.Q(policy={}), object_url="")
+                    | models.Q(~models.Q(object_url=""), policy={})
+                ),
+                name="check_permission_type",
+            )
+        ]
+
+    def __str__(self):
+        object_desc = self.object_url.split("/")[-1] if self.object_url else "blueprint"
+        return f"{self.permission} ({self.object_type} {object_desc})"
+
+    def get_blueprint_class(self):
+        # TODO after burning all deprecated code this import should be moved to the top of the file
+        # it will help testing a lot
+        from .permissions import registry
+
+        permission = registry[self.permission]
+        return permission.blueprint_class
+
+    def clean(self):
+        super().clean()
+
+        if not (bool(self.object_url) ^ bool(self.policy)):
+            raise ValidationError(
+                _("object_url and policy should be mutually exclusive")
+            )
+
+        # policy data should be validated against the serializer which is connected to this permission
+        blueprint_class = self.get_blueprint_class()
+        if self.policy:
+            blueprint = blueprint_class(data=self.policy)
+            if not blueprint.is_valid():
+                raise ValidationError({"policy": get_error_list(blueprint.errors)})
+
+    def has_policy_access(self, obj):
+        if not self.policy:
+            return False
+
+        blueprint_class = self.get_blueprint_class()
+        blueprint = blueprint_class(self.policy)
+        return blueprint.has_access(obj)

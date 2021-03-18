@@ -2,6 +2,7 @@ import factory
 import factory.fuzzy
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
+from ..constants import PermissionObjectType
 from ..models import InformatieobjecttypePermission, UserAuthorizationProfile
 
 
@@ -61,3 +62,12 @@ class AccessRequestFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.AccessRequest"
+
+
+class PermissionDefinitionFactory(factory.django.DjangoModelFactory):
+    object_type = PermissionObjectType.zaak
+    permission = factory.Faker("word")
+    object_url = factory.Faker("url")
+
+    class Meta:
+        model = "accounts.PermissionDefinition"
