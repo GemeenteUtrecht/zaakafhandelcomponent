@@ -10,3 +10,10 @@ activiteiten_schrijven = Permission(
     ),
     blueprint_class=ZaakTypeBlueprint,
 )
+
+
+activities_read = Permission(
+    name="activities:read",
+    description="",
+    blueprint_class=ZaakTypeBlueprint,
+)
