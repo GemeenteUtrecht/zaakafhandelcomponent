@@ -136,6 +136,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             max_va=VertrouwelijkheidsAanduidingen.openbaar,
         )
         PermissionDefinitionFactory.create(
+            object_url="",
             permission=zaken_inzien.name,
             for_user=user,
             policy={

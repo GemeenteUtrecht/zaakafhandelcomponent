@@ -541,8 +541,14 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
 
         self.assertEqual(zaak_document.identificatie, "ZAAK1")
         self.assertEqual(zaak_document.bronorganisatie, "002220647")
-        self.assertEqual(zaak_document.zaaktype, zaaktype["url"])
-
+        self.assertEqual(
+            zaak_document.zaaktype,
+            {
+                "url": zaaktype["url"],
+                "omschrijving": zaaktype["omschrijving"],
+                "catalogus": zaaktype["catalogus"],
+            },
+        )
         # check zaak eigenschappen
         zaak_eigenschappen = zaak_document.eigenschappen
         self.assertEqual(zaak_eigenschappen, {"tekst": {"Bedrag incl  BTW": "aaa"}})
