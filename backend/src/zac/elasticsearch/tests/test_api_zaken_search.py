@@ -12,7 +12,6 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     PermissionDefinitionFactory,
-    PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -103,12 +102,15 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             json=paginated_response([self.zaaktype, zaaktype2]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT2"],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -142,17 +144,15 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         user = UserFactory.create()
         # todo remove after auth refactoring
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus=CATALOGUS_URL,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
         PermissionDefinitionFactory.create(
-            object_url=self.zaak["url"],
+            object_url="",
             permission=zaken_inzien.name,
             for_user=user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
