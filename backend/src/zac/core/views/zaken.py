@@ -75,7 +75,7 @@ class Index(PermissionRequiredMixin, BaseListView):
 
     def get_filter_form_kwargs(self):
         kwargs = super().get_filter_form_kwargs()
-        kwargs["zaaktypen"] = get_zaaktypen(UserPermissions(self.request.user))
+        kwargs["zaaktypen"] = get_zaaktypen(self.request.user)
         return kwargs
 
     def get_object_list(self):
