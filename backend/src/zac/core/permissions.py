@@ -6,7 +6,6 @@ from .blueprints import (
     ZaakTypeBlueprint,
 )
 
-# TODO migrate dynamic rules as atomic permissions
 zaken_inzien = Permission(
     name="zaken:inzien",
     description="Laat toe om zaken/zaakdossiers in te zien.",

@@ -371,12 +371,12 @@ class PermissionDefinition(models.Model):
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
-    def has_policy_access(self, obj, request=None) -> bool:
+    def has_policy_access(self, obj, user=None) -> bool:
         if not self.policy:
             return False
 
         blueprint_class = self.get_blueprint_class()
-        blueprint = blueprint_class(self.policy, context={"request": request})
+        blueprint = blueprint_class(self.policy, context={"user": user})
         return blueprint.has_access(obj)
 
     def get_policy_query(self) -> Query:
