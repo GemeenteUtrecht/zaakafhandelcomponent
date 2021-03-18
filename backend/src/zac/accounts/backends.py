@@ -29,7 +29,12 @@ class PermissionsBackend:
         return None
 
     def has_perm(
-        self, user_obj, perm: str, obj=None, object_type=PermissionObjectType.zaak
+        self,
+        user_obj,
+        perm: str,
+        obj=None,
+        object_type=PermissionObjectType.zaak,
+        request=None,
     ) -> bool:
         if not user_obj.is_active:
             return False
@@ -49,7 +54,7 @@ class PermissionsBackend:
             return True
 
         for permission in user_permissions.filter(object_url=""):
-            if permission.has_policy_access(obj):
+            if permission.has_policy_access(obj, user=user_obj):
                 return True
 
         return False

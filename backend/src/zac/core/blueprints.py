@@ -2,7 +2,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Q, Query, Range, Term
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
@@ -75,11 +74,12 @@ class ZaakHandleBlueprint(ZaakTypeBlueprint):
             return False
 
         # check if user is the behandelaar
-        request = self.context.get("request")
-        if not request or not request.user:
+        user = self.context.get("user")
+
+        if not user:
             return False
 
-        return self.is_zaak_behandelaar(request.user, zaak)
+        return self.is_zaak_behandelaar(user, zaak)
 
 
 class InformatieObjectTypeBlueprint(Blueprint):
