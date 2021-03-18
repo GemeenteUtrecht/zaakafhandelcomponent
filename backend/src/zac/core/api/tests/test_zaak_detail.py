@@ -1,4 +1,3 @@
-import datetime
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -15,9 +14,8 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.constants import AccessRequestResult
 from zac.accounts.tests.factories import (
-    AccessRequestFactory,
+    PermissionDefinitionFactory,
     PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
@@ -285,6 +283,7 @@ class ZaakDetailPermissionTests(APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
         cls.zaaktype = factory(ZaakType, cls._zaaktype)
         zaak = generate_oas_component(
@@ -348,12 +347,15 @@ class ZaakDetailPermissionTests(APITestCase):
         )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -380,12 +382,15 @@ class ZaakDetailPermissionTests(APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -402,12 +407,15 @@ class ZaakDetailPermissionTests(APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -427,12 +435,15 @@ class ZaakDetailPermissionTests(APITestCase):
         user = UserFactory.create()
 
         # allows them to update details on the case
-        PermissionSetFactory.create(
-            permissions=[zaken_wijzigen.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_wijzigen.name,
             for_user=user,
-            catalogus=self.zaaktype.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -448,87 +459,12 @@ class ZaakDetailPermissionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     @requests_mock.Mocker()
-    def test_has_temp_access(self, m):
+    def test_has_atomic_access(self, m):
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url=self.zaak.url,
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        AccessRequestFactory.create(
-            requester=user,
-            zaak=self.zaak.url,
-            result=AccessRequestResult.approve,
-            end_date=datetime.date.today(),
-        )
-        self.client.force_authenticate(user=user)
-
-        response = self.client.get(self.detail_url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    @requests_mock.Mocker()
-    def test_user_is_zaak_behandelaar(self, m):
-        user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        rol = generate_oas_component(
-            "zrc",
-            "schemas/Rol",
-            zaak=self.zaak.url,
-            betrokkeneType="medewerker",
-            omschrijvingGeneriek="behandelaar",
-            betrokkeneIdentificatie={
-                "identificatie": user.username,
-            },
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
-            json=paginated_response([rol]),
-        )
-        self.client.force_authenticate(user=user)
-
-        response = self.client.get(self.detail_url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    @requests_mock.Mocker()
-    def test_user_is_adviser(self, m):
-        user = UserFactory.create(username="someuser")
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
-            json=paginated_response([]),
-        )
-        review_request = generate_oas_component(
-            "kownsl",
-            "schemas/ReviewRequest",
-            id="1b864f55-0880-4207-9246-9b454cb69cca",
-            forZaak=self.zaak.url,
-            userDeadlines={user.username: "2099-01-01"},
-            metadata={},
-            zaakDocuments={},
-            reviews={},
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
-            json=[review_request],
         )
         self.client.force_authenticate(user=user)
 

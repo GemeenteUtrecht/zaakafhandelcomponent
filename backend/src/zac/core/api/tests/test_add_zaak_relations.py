@@ -10,11 +10,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import (
-    PermissionDefinitionFactory,
-    PermissionSetFactory,
-    UserFactory,
-)
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
 from zac.core.permissions import zaken_add_relations, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
@@ -128,14 +124,8 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         self.create_zaak_document(zaak_model)
         self.refresh_index()
 
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=user,
-            catalogus=catalogus_url,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
         PermissionDefinitionFactory.create(
+            object_url="",
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -228,9 +218,10 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
 
-        m.get(url=f"{catalogus_root}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(zaaktype["url"], json=zaaktype)
 
         # Mock zaak
         zaak_root = "http://zaken.nl/api/v1/"
@@ -264,13 +255,17 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
         m.patch(url=main_zaak["url"], json=main_zaak)
 
         # Give permissions to the user
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_add_relations.name],
-            for_user=user,
-            zaaktype_identificaties=["ZT1"],
-            catalogus=catalogus_url,
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+        for permission_name in [zaken_inzien.name, zaken_add_relations.name]:
+            PermissionDefinitionFactory.create(
+                object_url="",
+                permission=permission_name,
+                for_user=user,
+                policy={
+                    "catalogus": catalogus_url,
+                    "zaaktype_omschrijving": "ZT1",
+                    "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+                },
+            )
 
         response = self.client.post(
             self.endpoint,
@@ -302,6 +297,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
 
         m.get(url=f"{catalogus_root}zaaktypen", json=paginated_response([zaaktype]))
@@ -338,12 +334,15 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
         m.patch(url=main_zaak["url"], json=main_zaak)
 
         # Give permissions to the zaken, but not to create relations
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            zaaktype_identificaties=["ZT1"],
-            catalogus=catalogus_url,
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            policy={
+                "catalogus": catalogus_url,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
 
         response = self.client.post(

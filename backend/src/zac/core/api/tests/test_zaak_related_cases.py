@@ -16,6 +16,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    PermissionDefinitionFactory,
     PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
@@ -259,6 +260,7 @@ class RelatedCasesPermissionTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -324,12 +326,15 @@ class RelatedCasesPermissionTests(ClearCachesMixin, APITestCase):
         )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -356,12 +361,15 @@ class RelatedCasesPermissionTests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -378,12 +386,15 @@ class RelatedCasesPermissionTests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
         self.client.force_authenticate(user=user)
 
