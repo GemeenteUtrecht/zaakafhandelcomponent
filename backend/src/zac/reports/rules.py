@@ -1,6 +1,5 @@
 import rules
 
-from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_zaaktypen
 
 from .models import Report
@@ -8,7 +7,7 @@ from .models import Report
 
 @rules.predicate
 def has_access_to_report_zaaktypen(user, report: Report):
-    zaaktypen = get_zaaktypen(UserPermissions(user))
+    zaaktypen = get_zaaktypen(user)
     identificaties = {zt.identificatie for zt in zaaktypen}
     return set(report.zaaktypen).issubset(identificaties)
 

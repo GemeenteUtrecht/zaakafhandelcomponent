@@ -142,28 +142,27 @@ def get_zaaktypen(
             zaaktype for zaaktype in zaaktypen if zaaktype.omschrijving == omschrijving
         ]
 
-    if user is not None and not user.is_superuser:
-        # filter out zaaktypen from permissions
-        permission_definitions = (
-            PermissionDefinition.objects.for_user(user)
-            .filter(object_url="", object_type=PermissionObjectType.zaak)
-            .actual()
-        )
-        order_case = VertrouwelijkheidsAanduidingen.get_order_expression(
-            "policy__max_va"
-        )
-        zaaktypen = [
-            zaaktype
-            for zaaktype in zaaktypen
-            if permission_definitions.annotate(max_va_order=order_case)
-            .filter(
-                policy__catalogus=zaaktype.catalogus,
-                policy__zaaktype_omschrijving=zaaktype.omschrijving,
-                max_va_order__gte=VA_ORDER[zaaktype.vertrouwelijkheidaanduiding],
-            )
-            .exists()
-        ]
+    if user is None or user.is_superuser:
+        return zaaktypen
 
+    # filter out zaaktypen from permissions
+    permission_definitions = (
+        PermissionDefinition.objects.for_user(user)
+        .filter(object_url="", object_type=PermissionObjectType.zaak)
+        .actual()
+    )
+    order_case = VertrouwelijkheidsAanduidingen.get_order_expression("policy__max_va")
+    zaaktypen = [
+        zaaktype
+        for zaaktype in zaaktypen
+        if permission_definitions.annotate(max_va_order=order_case)
+        .filter(
+            policy__catalogus=zaaktype.catalogus,
+            policy__zaaktype_omschrijving=zaaktype.omschrijving,
+            max_va_order__gte=VA_ORDER[zaaktype.vertrouwelijkheidaanduiding],
+        )
+        .exists()
+    ]
     return zaaktypen
 
 
