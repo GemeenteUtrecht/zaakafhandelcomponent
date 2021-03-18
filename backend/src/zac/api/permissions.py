@@ -82,6 +82,9 @@ class DefinitionBasePermission(permissions.BasePermission):
         return super().__new__(cls, *args, **kwargs)
 
     def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
         permission_definitions = (
             PermissionDefinition.objects.for_user(request.user)
             .filter(permission=self.permission.name, object_type=self.object_type)
@@ -101,6 +104,9 @@ class DefinitionBasePermission(permissions.BasePermission):
         return False
 
     def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.user.is_superuser:
+            return True
+
         # check if the user has permissions for any object
         if (
             not PermissionDefinition.objects.for_user(request.user)
@@ -123,14 +129,14 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
         if request.user.is_superuser:
             return True
 
-        # first check  if the user has permissions for any object
-        if super().has_permission(request, view) is False:
-            return False
-
         serializer = view.get_serializer(data=request.data)
         # if the serializer is not valid, we want to see validation errors -> permission is granted
         if not serializer.is_valid():
             return True
+
+        # first check  if the user has permissions for any object
+        if super().has_permission(request, view) is False:
+            return False
 
         object_url = serializer.validated_data[self.object_attr]
         obj = self.get_object(request, object_url)
