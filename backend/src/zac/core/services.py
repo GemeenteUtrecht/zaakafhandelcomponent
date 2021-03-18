@@ -365,6 +365,7 @@ def get_zaken_es(
         zaken = list(results)
 
     # resolve zaaktype reference
+    # todo only fetch zaaktypen from search results
     zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
 
     for zaak in zaken:
