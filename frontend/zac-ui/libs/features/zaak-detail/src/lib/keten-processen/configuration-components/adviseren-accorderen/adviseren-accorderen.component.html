@@ -15,7 +15,7 @@
             <gu-checkbox id="kp-adv-acc-docs-{{i}}"
                          [value]="taskContextData.context.documents[i].url"
                          [control]="document">
-              <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+              <span><a class="anchor" (click)="handleDocumentClick(taskContextData.context.documents[i].readUrl)">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
             </gu-checkbox>
           </div>
         </div>
@@ -38,7 +38,7 @@
                               [items]="items"
                               [multiple]="true"
                               [control]="assignedUsersUsers(i)"
-                              bindLabel="username"
+                              bindLabel="name"
                               bindValue="username"
                               required
                               placeholder="Selecteer {{assignedUsersTitle[reviewType] | lowercase}}">
@@ -46,6 +46,7 @@
             </div>
             <div class="col-md-6 form-group">
               <gu-datepicker [control]="assignedUsersDeadline(i)"
+                             [minDate]="assignedUsersMinDate(i)"
                              label="Uiterste datum"
                              required
                              id="kp-adv-acc-deadline--{{i}}"

@@ -6,6 +6,7 @@ import { Result } from '../../../../models/user-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
+import { ReadWriteDocument } from '../../../documenten/documenten.interface';
 
 @Component({
   selector: 'gu-config-adviseren-accorderen',
@@ -27,7 +28,6 @@ export class AdviserenAccorderenComponent implements OnChanges {
   minDate = new Date();
   items: Result[] = [];
 
-  // Form
   assignUsersForm: FormGroup;
 
   isSubmitting: boolean;
@@ -64,9 +64,21 @@ export class AdviserenAccorderenComponent implements OnChanges {
     this.assignedUsers.removeAt(this.assignedUsers.length - 1);
   }
 
+  handleDocumentClick(url) {
+    this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    });
+  }
+
   onSearch(searchInput) {
     this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-      this.items = res.results;
+      this.items = res.results.map(result => ({
+        ...result,
+        name: (result.firstName && result.lastName) ?
+          `${result.firstName} ${result.lastName}` :
+          (result.firstName && !result.lastName) ?
+          result.firstName : result.username
+      }))
     })
   }
 
@@ -139,5 +151,16 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   assignedUsersDeadline(index: number): FormControl {
     return this.assignedUsers.at(index).get('deadline') as FormControl;
+  }
+
+  assignedUsersMinDate(index: number): Date {
+    if (this.assignedUsers.at(index - 1)) {
+      const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value;
+      const dayAfterDeadline = new Date(previousDeadline);
+      dayAfterDeadline.setDate(previousDeadline.getDate() + 1);
+      return previousDeadline ? dayAfterDeadline : new Date();
+    } else {
+      return new Date();
+    }
   }
 }

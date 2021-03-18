@@ -5,11 +5,10 @@
   </ng-template>
   <ng-template [ngIf]="data">
     <div class="betrokkenen__role" *ngFor="let role of data;">
-      <p class="p--bold">{{role.name}}</p>
       <div class="role-description">
         <p class="p--grey">{{role.omschrijving}}</p>
-        <p class="p--grey">({{role.betrokkeneTypeDisplay}})</p>
       </div>
+      <p class="p--bold p--nomargin">{{role.name}}</p>
     </div>
   </ng-template>
 </div>

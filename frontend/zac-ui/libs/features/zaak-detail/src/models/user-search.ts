@@ -5,6 +5,7 @@ export interface Result {
   lastName: string;
   isStaff: boolean;
   email: string;
+  name?: string;
 }
 
 export interface UserSearch {

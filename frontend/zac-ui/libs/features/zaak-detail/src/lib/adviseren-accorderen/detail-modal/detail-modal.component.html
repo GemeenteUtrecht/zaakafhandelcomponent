@@ -6,7 +6,10 @@
   <ng-container *ngIf="data && !isLoading">
     <gu-table
       *ngIf="(data.length > 0) && tableData"
-      [tableData]="tableData">
+      [tableData]="tableData"
+      [expandable]="true"
+      [headColor]="'gray'"
+      (buttonOutput)="handleTableButtonOutput($event)">
     </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gegevens.</p>
   </ng-container>

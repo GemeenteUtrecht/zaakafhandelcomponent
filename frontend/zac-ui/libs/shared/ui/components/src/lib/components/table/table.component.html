@@ -1,5 +1,5 @@
 <table class="table">
-  <thead>
+  <thead [ngClass]="headColor === 'gray' ? 'table-head--gray' : ''">
     <tr>
       <th *ngIf="expandable"></th>
       <th *ngFor="let head of tableData.headData">{{ head }}</th>
@@ -9,16 +9,16 @@
     <ng-template ngFor let-element [ngForOf]="tableData.bodyData">
       <tr
         class="parent-row"
-        [ngClass]="element.clickOutput || (expandable && element.expandData.length > 0) ? 'parent-row--clickable' : ''"
-        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData)"
+        [ngClass]="element.clickOutput || (expandable && element.expandData?.length > 0) || (expandable && element.nestedTableData) ? 'parent-row--clickable' : ''"
+        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData); expandNestedTable($event, element.nestedTableData)"
         [attr.role]="element.clickOutput || (expandable && element.expandData) ? 'button' : ''"
       >
         <!-- Expand icon -->
         <ng-container>
-          <td *ngIf="expandable && element.expandData" class="table-expand">
+          <td *ngIf="(expandable && element.expandData) || (expandable && element.nestedTableData)" class="table-expand">
             <mat-icon class="arrow" aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
           </td>
-          <td *ngIf="expandable && !element.expandData"></td>
+          <td *ngIf="(expandable && (!element.expandData  && !element.nestedTableData))"></td>
         </ng-container>
 
         <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
@@ -62,7 +62,15 @@
 
       <!-- Expand row -->
       <tr *ngIf="expandable && element.expandData" class="child-row">
-        <td colspan="10">{{ element.expandData }}</td>
+        <td colspan="10">{{element.expandData}}</td>
+      </tr>
+
+      <!-- Table -->
+      <tr *ngIf="expandable && element.nestedTableData" class="child-row nested-table-row">
+        <td colspan="10">
+          <gu-table [tableData]="element.nestedTableData"
+                    (buttonOutput)="handleNestedButtonClick($event)"></gu-table>
+        </td>
       </tr>
     </ng-template>
   </tbody>

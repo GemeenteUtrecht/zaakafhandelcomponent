@@ -1,9 +1,10 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
-import { Review, ReviewDetail } from './detail-modal.interface';
+import { Review, ReviewDetail, ReviewDocument } from './detail-modal.interface';
 import { RowData, Table } from '@gu/models';
 import { DatePipe } from '@angular/common';
+import { ReadWriteDocument } from '../../documenten/documenten.interface';
 
 @Component({
   selector: 'gu-detail-modal',
@@ -22,7 +23,7 @@ export class DetailModalComponent implements OnChanges {
     headData: [],
     bodyData: []
   }
-  tableHeadApproval = ['Akkoord', 'Van', 'Gegeven op', 'Toelichting'];
+  tableHeadApproval = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
   tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
 
   isLoading: boolean;
@@ -44,13 +45,14 @@ export class DetailModalComponent implements OnChanges {
         case 'approval':
           this.formatTableDataApproval(res);
           this.title = this.ACCORDERINGEN;
+          this.data = res.approvals;
           break;
         case 'advice':
           this.formatTableDataAdvice(res);
           this.title = this.ADVIEZEN;
+          this.data = res.advices;
           break;
       }
-      this.data = res.reviews;
       this.isLoading = false;
     }, errorRes => {
 
@@ -59,12 +61,14 @@ export class DetailModalComponent implements OnChanges {
 
   formatTableDataAdvice(data): void {
     this.tableData.headData = this.tableHeadAdvice;
-    this.tableData.bodyData = data.reviews.map( (review: Review) => {
+    this.tableData.bodyData = data.advices.map( (review: Review) => {
       const author = review.author['firstName']
         ? `${review.author['firstName']} ${review.author['lastName']}`
         : review.author['username'];
       const date = this.pipe.transform(review.created, 'short');
       const docAdviezen = review.documents ? review.documents.length.toString() : '-';
+
+      const reviewDocumentTableData = this.formatTableReviewDoc(review.documents);
 
       const cellData: RowData = {
         cellData: {
@@ -72,15 +76,44 @@ export class DetailModalComponent implements OnChanges {
           van: author,
           datum: date,
           docAdviezen: docAdviezen
-        }
+        },
+        nestedTableData: reviewDocumentTableData,
+        expandData: ''
       }
       return cellData;
     })
   }
 
+  formatTableReviewDoc(reviewDocuments: ReviewDocument[]): Table {
+    const reviewDocumentTable = {
+      headData: ['Document', 'Originele versie', 'Aangepaste versie'],
+      bodyData: []
+    };
+
+    reviewDocumentTable.bodyData = reviewDocuments.map( (doc: ReviewDocument) => {
+      return {
+        cellData: {
+          title: doc.title,
+          source: {
+            type: 'button',
+            label: doc.sourceVersion.toString(10),
+            value: doc.sourceUrl
+          },
+          advice: {
+            type: 'button',
+            label: doc.adviceVersion.toString(10),
+            value: doc.adviceUrl
+          },
+        }
+      }
+    })
+
+    return reviewDocumentTable
+  }
+
   formatTableDataApproval(data): void {
     this.tableData.headData = this.tableHeadApproval;
-    this.tableData.bodyData = data.reviews.map( (review: Review) => {
+    this.tableData.bodyData = data.approvals.map( (review: Review) => {
       const icon = review.status === 'Akkoord' ? 'done' : 'close'
       const iconColor = review.status === 'Akkoord' ? 'green' : 'red'
       const author = review.author['firstName']
@@ -103,6 +136,19 @@ export class DetailModalComponent implements OnChanges {
       return cellData;
     })
   }
+
+  handleTableButtonOutput(action: object) {
+    const actionType = Object.keys(action)[0];
+    const endpoint = action[actionType];
+    this.readDocument(endpoint).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    });
+  }
+
+  readDocument(endpoint) {
+    return this.http.Post<ReadWriteDocument>(endpoint);
+  }
+
 
   getReviewRequestDetail(uuid): Observable<ReviewDetail> {
     const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${uuid}/detail`);

@@ -41,7 +41,12 @@
                   *ngIf="!!task.assignee"
                   type="primary"
                   class="d-inline-block mb-2">
-                  {{task.assignee.username}}
+                  <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
+                    {{task.assignee.firstName}} {{task.assignee.lastName}}
+                  </ng-container>
+                  <ng-template #username>
+                    {{task.assignee.username}}
+                  </ng-template>
                 </gu-chip>
               </div>
               <ng-container *ngIf="currentUser && task.assignee">

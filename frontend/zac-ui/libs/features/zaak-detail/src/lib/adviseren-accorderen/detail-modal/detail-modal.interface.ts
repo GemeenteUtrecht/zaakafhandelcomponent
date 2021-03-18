@@ -1,7 +1,8 @@
 export interface ReviewDetail {
   id: string;
   reviewType: 'approval' | 'advice';
-  reviews: any;
+  approvals?: any;
+  advices?: any;
 }
 
 export interface Review {
@@ -18,7 +19,9 @@ export interface Review {
 }
 
 export interface ReviewDocument {
+  adviceUrl: string;
   adviceVersion: number;
-  document: string;
+  sourceUrl: string;
   sourceVersion: number;
+  title: string;
 }
