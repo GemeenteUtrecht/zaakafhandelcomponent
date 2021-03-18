@@ -29,10 +29,11 @@
     <div class="logo">
       <img [src]="logoUrl"/>
     </div>
-    <div class="menu-container scrollable-area" *ngIf="menuItems">
+    <div class="menu-container" *ngIf="menuItems">
       <a *ngFor="let item of menuItems"
          (click)="toggle()"
-         [routerLink]="item.to"
+         [routerLink]="!item.external ? [item.to] : null"
+         [href]="item.external ? item.to : null"
          class="menu-item menu-link"
          [ngClass]="{
          'selected': selectedParentMenu === subtractParentRoute(item.to),
@@ -40,15 +41,30 @@
          }">
         <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
       <div class="bottom-navigation">
-        <a *ngFor="let item of bottomMenuItems"
-           (click)="toggle()"
-           href="{{item.to}}"
-           class="menu-item menu-link"
-           [ngClass]="{
-         'selected': selectedParentMenu === subtractParentRoute(item.to),
-         'mb-3': item.marginBottom === true
-         }">
-          <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
+        <ng-container *ngFor="let bottomItem of bottomMenuItems">
+          <a *ngIf="bottomItem.external"
+             (click)="toggle()"
+             href="{{bottomItem.to}}"
+             class="menu-item menu-link"
+             [ngClass]="{
+             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'mb-3': bottomItem.marginBottom === true
+             }"
+          >
+            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+          </a>
+          <a *ngIf="!bottomItem.external"
+             (click)="toggle()"
+             [routerLink]="!bottomItem.external ? [bottomItem.to] : null"
+             class="menu-item menu-link"
+             [ngClass]="{
+             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'mb-3': bottomItem.marginBottom === true
+             }"
+          >
+            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+          </a>
+        </ng-container>
       </div>
     </div>
   </nav>

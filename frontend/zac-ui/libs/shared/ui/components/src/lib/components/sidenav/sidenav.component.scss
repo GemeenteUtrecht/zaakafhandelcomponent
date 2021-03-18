@@ -92,6 +92,10 @@
       @include media-breakpoint-down(md) {
         height: calc(100vh - calc(100px + 3.6rem));
       }
+      &::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+      }
     }
     .bottom-navigation {
       flex: 1 0 auto;
