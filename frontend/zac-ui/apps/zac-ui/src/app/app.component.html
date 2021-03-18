@@ -2,7 +2,10 @@
 <div class="gu-dashboard">
   <gu-sidenav [menuItems]="menuItems"
               [bottomMenuItems]="bottomMenuItems"
-              [selectedParentMenu]="selectedMenu"></gu-sidenav>
+              [selectedParentMenu]="selectedMenu"
+              [logoUrl]="logoUrl"
+              [mobileLogoUrl]="mobileLogoUrl"
+              [currentUser]="currentUser"></gu-sidenav>
   <div class="main-content-outer-wrapper">
     <router-outlet></router-outlet>
   </div>

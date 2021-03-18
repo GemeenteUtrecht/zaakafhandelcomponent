@@ -10,6 +10,9 @@ export class SidenavComponent {
   @Input() menuItems: MenuItem[];
   @Input() bottomMenuItems: MenuItem[];
   @Input() selectedParentMenu: string;
+  @Input() logoUrl: string;
+  @Input() mobileLogoUrl: string;
+  @Input() currentUser: string;
 
   expanded = false;
 

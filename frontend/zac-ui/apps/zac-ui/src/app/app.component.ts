@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { menuItems, bottomMenuItems, MenuItem } from './constants/menu';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, first, share } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { User } from '@gu/models';
+import { ApplicationHttpClient } from '@gu/services';
 
 @Component({
   selector: 'zac-ui-root',
@@ -10,12 +13,17 @@ import { filter } from 'rxjs/operators';
 })
 export class AppComponent implements OnInit {
   title = 'zac-ui';
+  logoUrl = 'assets/gemeente-utrecht-logo.svg';
+  mobileLogoUrl = 'assets/schild.png';
+  currentUser: string;
+
   menuItems: MenuItem[] = menuItems;
   bottomMenuItems: MenuItem[] = bottomMenuItems;
   selectedMenu: string;
 
   constructor(
     private router: Router,
+    private http: ApplicationHttpClient
   ) {
   }
 
@@ -27,5 +35,15 @@ export class AppComponent implements OnInit {
         this.selectedMenu = `${parentRoute}`;
         window.scrollTo(0, 0);
       });
+    this.getCurrentUser()
+      .pipe(first())
+      .subscribe(res => {
+        this.currentUser = `${res.firstName} ${res.lastName}`;
+      });
+  }
+
+  getCurrentUser(): Observable<User> {
+    const endpoint = encodeURI("/api/accounts/users/me");
+    return this.http.Get<User>(endpoint);
   }
 }

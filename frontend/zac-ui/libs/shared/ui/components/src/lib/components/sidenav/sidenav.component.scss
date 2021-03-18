@@ -3,22 +3,53 @@
 
 .gu-sidenav {
   .navigation-header {
-    display: none;
     position: static;
     width: 100%;
     transform: translate(0);
-    @include media-breakpoint-down(md) {
-      display: block
-    }
-    .wrapper {
-      box-sizing: border-box;
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
+    height: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid $border-color;
+    @include media-breakpoint-down(sm) {
       height: 56px;
-      border: 1px solid #d2d3d6;
-      border-left: none;
-      border-right: none;
+    }
+    .navbar-left {
+      flex-basis: 40%;
+      display: flex;
+      padding-left: 1rem;
+      .hamburger {
+        pointer-events: all;
+        border: none;
+        background-color: transparent;
+        outline: none;
+        ::ng-deep .mat-icon {
+          font-size: 2.2rem;
+          height: 2.2rem;
+          width: 2.2rem;
+        }
+      }
+    }
+    .navbar-logo {
+      .logo {
+        flex-basis: 10%;
+        display: block;
+        width: 110px;
+        height: 40px;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        margin: 0 auto;
+        background-size: contain;
+        @include media-breakpoint-down(sm) {
+          width: 48px;
+        }
+      }
+    }
+    .navbar-right {
+      text-align: right;
+      flex-basis: 40%;
+      padding-right: 2rem;
     }
   }
   .vertical-nav {
@@ -43,7 +74,11 @@
       }
     }
     .logo {
-      height: 103px;
+      padding: 2rem 2rem 1.2rem;
+      height: 100px;
+      img {
+        height: 3rem;
+      }
     }
     .menu-container {
       box-sizing: border-box;
@@ -52,8 +87,11 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      height: calc(100vh - 103px);
-      padding: 8px 0 24px 0;
+      padding: 8px 0;
+      height: calc(100vh - 100px);
+      @include media-breakpoint-down(md) {
+        height: calc(100vh - calc(100px + 3.6rem));
+      }
     }
     .bottom-navigation {
       flex: 1 0 auto;
@@ -98,11 +136,8 @@
       }
     }
     .mobile-menu-back {
-      display: none;
+      display: flex;
       cursor: pointer;
-      @include media-breakpoint-down(md) {
-        display: flex;
-      }
     }
   }
   .backdrop {
@@ -121,22 +156,6 @@
         pointer-events: all;
         z-index: 1;
       }
-    }
-  }
-  .hamburger {
-    pointer-events: all;
-    display: none;
-    border:none;
-    background-color:transparent;
-    outline:none;
-    padding: 1rem 1.2rem;
-    ::ng-deep .mat-icon {
-      font-size: 2.2rem;
-      height: 2.2rem;
-      width: 2.2rem;
-    }
-    @include media-breakpoint-down(md) {
-      display: block
     }
   }
 }

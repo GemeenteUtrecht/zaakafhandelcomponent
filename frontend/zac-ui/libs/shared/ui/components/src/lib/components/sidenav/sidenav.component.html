@@ -5,23 +5,29 @@
          }"
        (click)="expanded = !expanded"
   ></div>
-  <header class="navigation-header">
-    <div class="wrapper">
+  <header class="navigation-header d-lg-none">
+    <div class="navbar-left">
       <button class="hamburger" aria-label="Menuknop" (click)="expanded = !expanded">
         <gu-icon>menu</gu-icon>
       </button>
+    </div>
+    <div class="navbar-logo">
+      <span class="logo" [ngStyle]="{'background-image': 'url(' + mobileLogoUrl + ')'}"></span>
+    </div>
+    <div class="navbar-right">
+      <p class="p--nomargin d-none d-sm-block">{{currentUser}}</p>
     </div>
   </header>
   <nav class="vertical-nav"
        [ngClass]="{
          'expanded': expanded === true
          }">
-    <a class="mobile-menu-back menu-item menu-link" aria-label="Menuknop" (click)="expanded = !expanded">
+    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="expanded = !expanded">
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug
     </a>
     <div class="logo">
-
+      <img [src]="logoUrl"/>
     </div>
     <div class="menu-container scrollable-area" *ngIf="menuItems">
       <a *ngFor="let item of menuItems"
@@ -30,7 +36,7 @@
          class="menu-item menu-link"
          [ngClass]="{
          'selected': selectedParentMenu === subtractParentRoute(item.to),
-         'mb-2': item.marginBottom === true
+         'mb-3': item.marginBottom === true
          }">
         <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
       <div class="bottom-navigation">
@@ -40,7 +46,7 @@
            class="menu-item menu-link"
            [ngClass]="{
          'selected': selectedParentMenu === subtractParentRoute(item.to),
-         'mb-2': item.marginBottom === true
+         'mb-3': item.marginBottom === true
          }">
           <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
       </div>
