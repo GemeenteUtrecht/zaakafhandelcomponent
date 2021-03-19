@@ -1,9 +1,11 @@
 import contextlib
 import datetime
+from unittest import skip
 from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 
 import requests_mock
 from django_webtest import TransactionWebTest
@@ -15,10 +17,9 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.constants import AccessRequestResult
+from zac.accounts.constants import PermissionObjectType
 from zac.accounts.tests.factories import (
-    AccessRequestFactory,
-    PermissionSetFactory,
+    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -153,6 +154,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
+            omschrijving="ZT1",
         )
         self.zaak = generate_oas_component(
             "zrc",
@@ -175,10 +177,6 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             json=self.zaaktype,
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
 
     def test_login_required(self, m):
         response = self.app.get(self.url)
@@ -196,21 +194,16 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_auth_no_perms_can_request(self, m):
         self._setUpMocks(m)
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
-        PermissionSetFactory.create(
-            permissions=[zaken_request_access.name],
+
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         with patch("zac.core.rules.test_oo_allowlist", return_value=True):
@@ -229,23 +222,17 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_has_perm_but_not_for_zaaktype(self, m):
         self._setUpMocks(m)
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
 
         # gives them access to the page, but no catalogus specified -> nothing visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
 
         response = self.app.get(self.url, user=self.user, status=403)
@@ -254,23 +241,17 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
     def test_user_has_perm_but_not_for_va(self, m):
         self._setUpMocks(m)
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
 
         # gives them access to the page and zaaktype, but insufficient VA
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
         )
 
         response = self.app.get(self.url, user=self.user, status=403)
@@ -281,12 +262,15 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         # mock out all the other calls - we're testing auth here
@@ -295,16 +279,20 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
+    @skip("Adding one permissions to all zaaktypen is deprecated")
     def test_user_has_all_zaaktype_perms(self, m):
         self._setUpMocks(m)
 
         # gives them access to the page, catalogus and VA specified -> all zaaktypen visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         # mock out all the other calls - we're testing auth here
@@ -318,54 +306,28 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
         with mock_zaak_detail_context():
             response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
 
-    def test_user_has_temp_auth(self, m):
+    def test_user_has_atomic_auth_with_no_end_date(self, m):
         self._setUpMocks(m)
 
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url=self.zaak["url"],
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        AccessRequestFactory.create(
-            requester=self.user,
-            zaak=self.zaak["url"],
-            result=AccessRequestResult.approve,
-            end_date=datetime.date.today(),
-        )
-
-        with mock_zaak_detail_context():
-            response = self.app.get(self.url, user=self.user)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_user_has_temp_auth_with_no_end_date(self, m):
-        self._setUpMocks(m)
-
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        AccessRequestFactory.create(
-            requester=self.user,
-            zaak=self.zaak["url"],
-            result=AccessRequestResult.approve,
             end_date=None,
         )
 
@@ -374,30 +336,14 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_user_has_temp_auth_expired(self, m):
+    def test_user_has_atomic_auth_expired(self, m):
         self._setUpMocks(m)
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
 
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url=self.zaak["url"],
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        AccessRequestFactory.create(
-            requester=self.user,
-            zaak=self.zaak["url"],
-            result=AccessRequestResult.approve,
-            end_date=datetime.date.today() - datetime.timedelta(days=1),
+            end_date=timezone.now() - datetime.timedelta(days=1),
         )
 
         with mock_zaak_detail_context():
@@ -405,6 +351,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.assertEqual(response.status_code, 403)
 
+    @skip("for behandelaars atomic permissions are used now")
     def test_user_is_behandelaar(self, m):
         self._setUpMocks(m)
         rol = generate_oas_component(
@@ -421,19 +368,13 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([rol]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
 
         with mock_zaak_detail_context():
             response = self.app.get(self.url, user=self.user)
 
         self.assertEqual(response.status_code, 200)
 
+    @skip("for behandelaars atomic permissions are used now")
     def test_user_is_adviser(self, m):
         self._setUpMocks(m)
         m.get(
@@ -441,13 +382,6 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             json=paginated_response([]),
         )
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
         review_request = generate_oas_component(
             "kownsl",
             "schemas/ReviewRequest",
@@ -490,7 +424,7 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     zaaktype_data = {
         "url": f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
         "identificatie": "ZT1",
-        "omschrijving": "QpCMmqhZBUGXliSZSgbhxKfEQYOGGLnkGdtokEJXhOC",
+        "omschrijving": "ZT1",
         "vertrouwelijkheidaanduiding": "openbaar",
         "catalogus": f"{CATALOGI_ROOT}catalogussen/4bf4d9e1-65f6-45a9-a008-f402de922b33",
     }
@@ -594,14 +528,15 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-
-        # No informatieobjecttype_catalogus in the permission
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_download_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         with mock_zaak_detail_context(
@@ -615,26 +550,13 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self.assertNotIn("Test Document 1", response.html.text)
         self.assertNotIn("Test Document 2", response.html.text)
 
+    @skip("Adding one permissions to all iotypen is deprecated")
     def test_catalogus_but_no_informatieobjecttype(self, m):
         """Test that all the informatieobjecttypes within the catalogus are allowed"""
         self._set_up_mocks(m)
 
         user = UserFactory.create()
         self.app.set_user(user)
-
-        # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_download_documents.name],
-            for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-        )
-        InformatieobjecttypePermission.objects.create(
-            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
-            max_va=VertrouwelijkheidsAanduidingen.geheim,
-            permission_set=permission,
-        )
 
         with mock_zaak_detail_context(
             documents=make_document_objects(
@@ -647,6 +569,7 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self.assertIn("Test Document 1", response.html.text)
         self.assertIn("Test Document 2", response.html.text)
 
+    @skip("Adding one permissions to all iotypen is deprecated")
     def test_catalogus_with_va_but_no_informatieobjecttype(self, m):
         """
         Test that all the informatieobjecttypes within the catalogus are allowed, but the
@@ -658,18 +581,6 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self.app.set_user(user)
 
         # informatieobjecttype_catalogus in the permission, without informatieobjecttype_omschriving
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_download_documents.name],
-            for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-        )
-        InformatieobjecttypePermission.objects.create(
-            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-            permission_set=permission,
-        )
 
         with mock_zaak_detail_context(
             documents=make_document_objects(
@@ -689,19 +600,26 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
         self.app.set_user(user)
 
-        # informatieobjecttype_omschriving is specified
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_download_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
-        InformatieobjecttypePermission.objects.create(
-            catalogus=self.iot_1["catalogus"],  # Same catalogus as iot_2
-            max_va=VertrouwelijkheidsAanduidingen.geheim,
-            omschrijving="Test Omschrijving 1",
-            permission_set=permission,
+        PermissionDefinitionFactory.create(
+            object_type=PermissionObjectType.document,
+            object_url="",
+            permission=zaken_download_documents.name,
+            for_user=user,
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "Test Omschrijving 1",
+                "max_va": VertrouwelijkheidsAanduidingen.geheim,
+            },
         )
 
         with mock_zaak_detail_context(
@@ -740,6 +658,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             catalogus=f"{CATALOGI_ROOT}catalogi/2fa14cce-12d0-4f57-8d5d-ecbdfbe06a5e",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         zaak = generate_oas_component(
             "zrc",
@@ -785,12 +704,15 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(f"{zaak['url']}/zaakeigenschappen", json=[])
 
     def test_no_process_permissions(self):
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         url = reverse(
@@ -810,17 +732,21 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self.assertFalse(react_div)
 
     def test_process_permissions(self):
-        PermissionSetFactory.create(
-            permissions=[
-                zaken_inzien.name,
-                zaakproces_usertasks.name,
-                zaakproces_send_message.name,
-            ],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
+        for permission_name in [
+            zaken_inzien.name,
+            zaakproces_usertasks.name,
+            zaakproces_send_message.name,
+        ]:
+            PermissionDefinitionFactory.create(
+                object_url="",
+                permission=permission_name,
+                for_user=self.user,
+                policy={
+                    "catalogus": self.zaaktype["catalogus"],
+                    "zaaktype_omschrijving": "ZT1",
+                    "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                },
+            )
 
         url = reverse(
             "core:zaak-detail",
@@ -877,16 +803,17 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             },
         )
         self.mocker.get(zaak["url"], json=zaak)
-        PermissionSetFactory.create(
-            permissions=[
-                zaken_inzien.name,
-                zaakproces_usertasks.name,
-            ],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+        for permission_name in [zaken_inzien.name, zaakproces_usertasks.name]:
+            PermissionDefinitionFactory.create(
+                object_url="",
+                permission=permission_name,
+                for_user=self.user,
+                policy={
+                    "catalogus": self.zaaktype["catalogus"],
+                    "zaaktype_omschrijving": "ZT1",
+                    "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+                },
+            )
         url = reverse("core:claim-task")
 
         with patch("zac.camunda.user_tasks.api.extract_task_form", return_value=None):
@@ -900,16 +827,17 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_claim_task_with_permission(self):
         task = get_camunda_task_mock()
         zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
-        PermissionSetFactory.create(
-            permissions=[
-                zaken_inzien.name,
-                zaakproces_usertasks.name,
-            ],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
+        for permission_name in [zaken_inzien.name, zaakproces_usertasks.name]:
+            PermissionDefinitionFactory.create(
+                object_url="",
+                permission=permission_name,
+                for_user=self.user,
+                policy={
+                    "catalogus": self.zaaktype["catalogus"],
+                    "zaaktype_omschrijving": "ZT1",
+                    "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                },
+            )
 
         url = reverse("core:claim-task")
 
@@ -956,6 +884,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m_client.return_value.post.assert_called_once()
 
 
+@skip("OO restriction is deprecated")
 @requests_mock.Mocker()
 class OORestrictionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     url = reverse_lazy(

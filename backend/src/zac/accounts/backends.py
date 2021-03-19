@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
-from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import PermissionDefinition
 
 
@@ -28,20 +27,13 @@ class PermissionsBackend:
     def authenticate(self, request):
         return None
 
-    def has_perm(
-        self,
-        user_obj,
-        perm: str,
-        obj=None,
-        object_type=PermissionObjectType.zaak,
-        request=None,
-    ) -> bool:
+    def has_perm(self, user_obj, perm: str, obj=None) -> bool:
         if not user_obj.is_active:
             return False
 
         user_permissions = (
             PermissionDefinition.objects.for_user(user_obj)
-            .filter(permission=perm, object_type=object_type)
+            .filter(permission=perm)
             .actual()
         )
 

@@ -1,4 +1,5 @@
 from datetime import date
+from unittest import skip
 from unittest.mock import patch
 
 from django.core import mail
@@ -9,16 +10,18 @@ from django.utils.translation import gettext as _
 import requests_mock
 from django_webtest import TransactionWebTest
 from freezegun import freeze_time
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import AccessRequestResult
-from zac.accounts.models import AccessRequest
+from zac.accounts.models import AccessRequest, PermissionDefinition
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
-    PermissionSetFactory,
+    PermissionDefinitionFactory,
     UserFactory,
 )
 from zac.contrib.organisatieonderdelen.tests.factories import (
@@ -26,6 +29,7 @@ from zac.contrib.organisatieonderdelen.tests.factories import (
 )
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
+from zgw.models import Zaak
 
 from ..permissions import zaken_handle_access, zaken_request_access
 from .utils import ClearCachesMixin
@@ -78,6 +82,7 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
+            omschrijving="ZT1",
         )
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
@@ -102,12 +107,15 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_create_success(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_request_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         # can't use generate_oas_component because of polymorphism
@@ -149,12 +157,15 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_create_fail_other_access_request(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_request_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         # can't use generate_oas_component because of polymorphism
@@ -213,7 +224,9 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
+            omschrijving="ZT1",
         )
+        cls.zaaktype_model = factory(ZaakType, cls.zaaktype)
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -222,11 +235,13 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             identificatie=IDENTIFICATIE,
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
         )
+        cls.zaak_model = factory(Zaak, cls.zaak)
+        cls.zaak_model.zaaktype = cls.zaaktype_model
 
     def test_user_has_no_permission_at_all(self):
         user = UserFactory.create()
 
-        result = user.has_perm(zaken_request_access.name, self.zaak)
+        result = user.has_perm(zaken_request_access.name, self.zaak_model)
 
         self.assertFalse(result)
 
@@ -238,15 +253,18 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             json=paginated_response([self.zaaktype]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
-        result = user.has_perm(zaken_request_access.name, self.zaak)
+        result = user.has_perm(zaken_request_access.name, self.zaak_model)
 
         self.assertFalse(result)
 
@@ -258,18 +276,22 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             json=paginated_response([self.zaaktype]),
         )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_request_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
-        result = user.has_perm(zaken_request_access.name, self.zaak)
+        result = user.has_perm(zaken_request_access.name, self.zaak_model)
 
         self.assertTrue(result)
 
+    @skip("OO restriction is deprecated")
     @requests_mock.Mocker()
     def test_has_permission_with_oo_restriction(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -282,19 +304,22 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
         )
         user = UserFactory.create()
-        permisson_set = PermissionSetFactory.create(
-            permissions=[zaken_request_access.name],
+        permission_definition = PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_request_access.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         oo = OrganisatieOnderdeelFactory.create()
-        auth_profile = permisson_set.authorizationprofile_set.get()
+        auth_profile = permission_definition.authorizationprofile_set.get()
         auth_profile.oo = oo
         auth_profile.save()
 
-        result = user.has_perm(zaken_request_access.name, self.zaak)
+        result = user.has_perm(zaken_request_access.name, self.zaak_model)
 
         self.assertFalse(result)
 
@@ -346,6 +371,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
@@ -388,12 +414,15 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_handle_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.app.get(self.url, status=403)
@@ -408,12 +437,15 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_handle_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.app.get(self.url)
@@ -428,12 +460,15 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_handle_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         get_response = self.app.get(self.url)
@@ -473,6 +508,11 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
 
+        permission_definition = PermissionDefinition.objects.for_user(
+            approved_request.requester
+        ).get()
+        self.assertEqual(permission_definition.object_url, approved_request.zaak)
+
     def test_approve_access_requests_without_end_date_fail(self, m):
         self._setUpMocks(m)
         m.get(
@@ -481,12 +521,15 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_handle_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         get_response = self.app.get(self.url)
@@ -510,12 +553,15 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionSetFactory.create(
-            permissions=[zaken_handle_access.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_handle_access.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         get_response = self.app.get(self.url)

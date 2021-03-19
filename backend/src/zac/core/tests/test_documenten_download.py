@@ -1,3 +1,5 @@
+from unittest import skip
+
 from django.conf import settings
 from django.urls import reverse_lazy
 
@@ -9,11 +11,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import (
-    InformatieobjecttypePermissionFactory,
-    PermissionSetFactory,
-    UserFactory,
-)
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -99,30 +97,26 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         response = self.app.get(self.download_url, user=user, status=403)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_no_permission_to_catalog(self, m):
+    def test_no_permission_to_iotype(self, m):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
 
-        # No informatieobjecttype permissions
-        permission_set = PermissionSetFactory.create(
-            permissions=[zaken_download_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_download_documents.name,
             for_user=user,
-            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
-        )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission_set.catalogus}",
-            json={
-                "count": 0,
-                "next": "",
-                "previous": "",
-                "results": [],
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
 
         response = self.app.get(self.download_url, user=user, status=403)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @skip("Adding one permissions to all iotypen is deprecated")
     def test_permission_to_catalog_and_all_informatieobjecttypes(self, m):
         self._set_up_mocks(m)
 
@@ -130,26 +124,6 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
 
         # Permissions to an informatieobjecttype catalogus in the permission and enough confidentiality
         # All informatieobjecttypes allowed as they are not specified
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_download_documents.name],
-            for_user=user,
-            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
-        )
-        InformatieobjecttypePermissionFactory.create(
-            catalogus=self.iot_1["catalogus"],
-            max_va=VertrouwelijkheidsAanduidingen.geheim,
-            permission_set=permission,
-        )
-
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission.catalogus}",
-            json={
-                "count": 0,
-                "next": "",
-                "previous": "",
-                "results": [],
-            },
-        )
 
         response = self.app.get(self.download_url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -159,26 +133,14 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-
-        # Correct catalogus and iot omschrijving specified, but insufficient VA
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_download_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_download_documents.name,
             for_user=user,
-            catalogus=f"{CATALOGI_ROOT}catalogussen/6f7f6312-8197-417a-b989-7c09f8cd416e",
-        )
-        InformatieobjecttypePermissionFactory.create(
-            catalogus=self.iot_1["catalogus"],
-            omschrijving="Test Omschrijving 1",
-            permission_set=permission,
-        )
-
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={permission.catalogus}",
-            json={
-                "count": 0,
-                "next": "",
-                "previous": "",
-                "results": [],
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "Test Omschrijving 1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )
 
@@ -189,27 +151,14 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-
-        # All required permissions available
-        permission = PermissionSetFactory.create(
-            permissions=[zaken_download_documents.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_download_documents.name,
             for_user=user,
-            catalogus=self.iot_1["catalogus"],
-        )
-        InformatieobjecttypePermissionFactory.create(
-            catalogus=self.iot_1["catalogus"],
-            omschrijving="Test Omschrijving 1",
-            max_va=VertrouwelijkheidsAanduidingen.geheim,
-            permission_set=permission,
-        )
-
-        m.get(
-            url=f"{CATALOGI_ROOT}zaaktypen?catalogus={self.iot_1['catalogus']}",
-            json={
-                "count": 0,
-                "next": "",
-                "previous": "",
-                "results": [],
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "Test Omschrijving 1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
 
