@@ -1,6 +1,4 @@
 from datetime import date
-from unittest import skip
-from unittest.mock import patch
 
 from django.core import mail
 from django.test import TestCase
@@ -23,9 +21,6 @@ from zac.accounts.tests.factories import (
     AccessRequestFactory,
     PermissionDefinitionFactory,
     UserFactory,
-)
-from zac.contrib.organisatieonderdelen.tests.factories import (
-    OrganisatieOnderdeelFactory,
 )
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
@@ -286,38 +281,6 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
         result = user.has_perm(zaken_request_access.name, self.zaak_model)
 
         self.assertTrue(result)
-
-    @skip("OO restriction is deprecated")
-    @requests_mock.Mocker()
-    def test_has_permission_with_oo_restriction(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
-        )
-        user = UserFactory.create()
-        permission_definition = PermissionDefinitionFactory.create(
-            object_url="",
-            permission=zaken_request_access.name,
-            for_user=user,
-            policy={
-                "catalogus": self.zaaktype["catalogus"],
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-        oo = OrganisatieOnderdeelFactory.create()
-        auth_profile = permission_definition.authorizationprofile_set.get()
-        auth_profile.oo = oo
-        auth_profile.save()
-
-        result = user.has_perm(zaken_request_access.name, self.zaak_model)
-
-        self.assertFalse(result)
 
 
 @freeze_time("2020-01-01")
