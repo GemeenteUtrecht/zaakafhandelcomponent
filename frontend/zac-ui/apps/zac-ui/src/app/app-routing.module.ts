@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { HomeComponent } from './home/home.component';
+import { HomeComponent } from './components/home/home.component';
+import { ZaakDetailModule } from './components/zaak-detail/zaak-detail.module';
 
 const routes: Routes = [
   {
@@ -10,17 +11,17 @@ const routes: Routes = [
   },
   {
     path: 'kownsl',
-    loadChildren: () => import('./kownsl/kownsl.module')
+    loadChildren: () => import('./components/kownsl/kownsl.module')
       .then(m => m.KownslModule)
   },
   {
-    path: 'zaken/:bronorganisatie/:identificatie',
-    loadChildren: () => import('./zaak-detail/zaak-detail.module')
+    path: 'zaken',
+    loadChildren: () => import('./components/zaak-detail/zaak-detail.module')
       .then(m => m.ZaakDetailModule)
   },
   {
     path: 'zoeken',
-    loadChildren: () => import('./search/search.module')
+    loadChildren: () => import('./components/search/search.module')
       .then(m => m.SearchModule)
   },
 ];

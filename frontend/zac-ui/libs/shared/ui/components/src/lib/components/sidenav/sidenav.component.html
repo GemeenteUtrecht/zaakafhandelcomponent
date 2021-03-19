@@ -1,0 +1,71 @@
+<div class="gu-sidenav">
+  <div class="backdrop"
+       [ngClass]="{
+         'expanded': expanded === true
+         }"
+       (click)="expanded = !expanded"
+  ></div>
+  <header class="navigation-header d-lg-none">
+    <div class="navbar-left">
+      <button class="hamburger" aria-label="Menuknop" (click)="expanded = !expanded">
+        <gu-icon>menu</gu-icon>
+      </button>
+    </div>
+    <div class="navbar-logo">
+      <span class="logo" [ngStyle]="{'background-image': 'url(' + mobileLogoUrl + ')'}"></span>
+    </div>
+    <div class="navbar-right">
+      <p class="p--nomargin d-none d-sm-block">{{currentUser}}</p>
+    </div>
+  </header>
+  <nav class="vertical-nav"
+       [ngClass]="{
+         'expanded': expanded === true
+         }">
+    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="expanded = !expanded">
+      <gu-icon fontSize="50">arrow_back</gu-icon>
+      Ga terug
+    </a>
+    <div class="logo">
+      <img [src]="logoUrl"/>
+    </div>
+    <div class="menu-container" *ngIf="menuItems">
+      <a *ngFor="let item of menuItems"
+         (click)="toggle()"
+         [routerLink]="!item.external ? [item.to] : null"
+         [href]="item.external ? item.to : null"
+         class="menu-item menu-link"
+         [ngClass]="{
+         'selected': selectedParentMenu === subtractParentRoute(item.to),
+         'mb-3': item.marginBottom === true
+         }">
+        <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
+      <div class="bottom-navigation">
+        <ng-container *ngFor="let bottomItem of bottomMenuItems">
+          <a *ngIf="bottomItem.external"
+             (click)="toggle()"
+             href="{{bottomItem.to}}"
+             class="menu-item menu-link"
+             [ngClass]="{
+             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'mb-3': bottomItem.marginBottom === true
+             }"
+          >
+            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+          </a>
+          <a *ngIf="!bottomItem.external"
+             (click)="toggle()"
+             [routerLink]="!bottomItem.external ? [bottomItem.to] : null"
+             class="menu-item menu-link"
+             [ngClass]="{
+             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'mb-3': bottomItem.marginBottom === true
+             }"
+          >
+            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+          </a>
+        </ng-container>
+      </div>
+    </div>
+  </nav>
+</div>

@@ -1,0 +1,165 @@
+@import 'base/colors/colors';
+@import 'base/grid/mixins';
+
+.gu-sidenav {
+  .navigation-header {
+    position: static;
+    width: 100%;
+    transform: translate(0);
+    height: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid $border-color;
+    @include media-breakpoint-down(sm) {
+      height: 56px;
+    }
+    .navbar-left {
+      flex-basis: 40%;
+      display: flex;
+      padding-left: 1rem;
+      .hamburger {
+        pointer-events: all;
+        border: none;
+        background-color: transparent;
+        outline: none;
+        ::ng-deep .mat-icon {
+          font-size: 2.2rem;
+          height: 2.2rem;
+          width: 2.2rem;
+        }
+      }
+    }
+    .navbar-logo {
+      .logo {
+        flex-basis: 10%;
+        display: block;
+        width: 110px;
+        height: 40px;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        margin: 0 auto;
+        background-size: contain;
+        @include media-breakpoint-down(sm) {
+          width: 48px;
+        }
+      }
+    }
+    .navbar-right {
+      text-align: right;
+      flex-basis: 40%;
+      padding-right: 2rem;
+    }
+  }
+  .vertical-nav {
+    letter-spacing: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    max-width: 100%;
+    background: $background-lightgrey;
+    color: $color-text;
+    z-index: 2;
+    @include media-breakpoint-down(md) {
+      position: absolute;
+      display: block;
+      transform: translateX(-100%);
+      pointer-events: all;
+      background: $background-white;
+      transition: transform 0.3s;
+      &.expanded {
+        transform: translateX(0);
+      }
+    }
+    .logo {
+      padding: 2rem 2rem 1.2rem;
+      height: 100px;
+      img {
+        height: 3rem;
+      }
+    }
+    .menu-container {
+      box-sizing: border-box;
+      position: relative;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 8px 0;
+      height: calc(100vh - 100px);
+      @include media-breakpoint-down(md) {
+        height: calc(100vh - calc(100px + 3.6rem));
+      }
+      &::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+      }
+    }
+    .bottom-navigation {
+      flex: 1 0 auto;
+      display: flex;
+      justify-content: flex-end;
+      flex-direction: column;
+    }
+    .menu-item {
+      box-sizing: border-box;
+      position: relative;
+      color: $color-text;
+      word-break: break-word;
+      &:hover {
+        outline: none;
+        background: $background-grey;
+      }
+      gu-icon {
+        display: flex;
+        align-items: center;
+        margin-right: 8px;
+        text-align: center;
+        vertical-align: middle;
+        pointer-events: none;
+        .mat-icon {
+          font-size: 50px;
+        }
+      }
+
+    }
+    .menu-link {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      justify-content: flex-start;
+      color: var(--text-default, #141416);
+      text-decoration: none;
+      min-height: 3.6rem;
+      padding: 0 12px;
+      &.selected {
+        background-color: $color-lightblue;
+        color: $color-blue;
+      }
+    }
+    .mobile-menu-back {
+      display: flex;
+      cursor: pointer;
+    }
+  }
+  .backdrop {
+    @include media-breakpoint-down(md) {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      background: #90909054;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      &.expanded {
+        opacity: 1;
+        pointer-events: all;
+        z-index: 1;
+      }
+    }
+  }
+}

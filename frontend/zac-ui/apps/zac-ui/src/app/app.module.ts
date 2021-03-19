@@ -10,10 +10,10 @@ import localeNL from '@angular/common/locales/nl';
 import { SharedUiComponentsModule } from '@gu/components';
 
 import { AppComponent } from './app.component';
-import { HomeComponent } from './home/home.component';
+import { HomeComponent } from './components/home/home.component';
 
-import { KownslModule } from './kownsl/kownsl.module';
-import { ZaakDetailModule } from './zaak-detail/zaak-detail.module';
+import { KownslModule } from './components/kownsl/kownsl.module';
+import { ZaakDetailModule } from './components/zaak-detail/zaak-detail.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 registerLocaleData(localeNL);

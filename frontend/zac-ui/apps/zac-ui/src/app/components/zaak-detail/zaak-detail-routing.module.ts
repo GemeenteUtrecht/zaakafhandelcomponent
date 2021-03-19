@@ -5,6 +5,10 @@ import { ZaakDetailComponent } from './zaak-detail.component';
 const routes: Routes = [
   {
     path: '',
+    component: ZaakDetailComponent
+  },
+  {
+    path: ':bronorganisatie/:identificatie',
     component: ZaakDetailComponent,
   },
 ];
