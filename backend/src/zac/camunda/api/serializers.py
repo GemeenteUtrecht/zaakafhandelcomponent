@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Dict, List, NoReturn
 
 from django.utils.translation import gettext_lazy as _
@@ -39,12 +40,18 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
+class ChoiceFieldNoValidation(serializers.ChoiceField):
+    def to_internal_value(self, data):
+        if not isinstance(data, str):
+            raise serializers.ValidationError("Form needs to be a string.")
+
+
 class BaseUserTaskSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
     fallback_distriminator_value = ""  # fall back to dynamic form
 
-    form = serializers.ChoiceField(
+    form = ChoiceFieldNoValidation(
         label=_("Form to render"),
         source="task.form_key",
         help_text=_(
@@ -58,7 +65,7 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["form"].choices = [
-            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
+            (key, key or _("(camunda form)")) for key in self.serializer_mapping.keys()
         ]
 
 
@@ -76,28 +83,37 @@ class UserTaskContextSerializer(BaseUserTaskSerializer):
 class SubmitUserTaskSerializer(BaseUserTaskSerializer):
     def __init__(self, *args, **kwargs):
         self.serializer_mapping = {
-            form_key: item.write_serializer
+            form_key: item.write_serializer(**kwargs)
             for form_key, item in REGISTRY.items()
             if item.write_serializer
         }
         super().__init__(*args, **kwargs)
 
+    def get_mapped_serializer(self):
+        form_key = self.context["task"].form_key
+        lookup = (
+            form_key
+            if form_key in self.serializer_mapping
+            else self.fallback_distriminator_value
+        )
+        return self.serializer_mapping[lookup]
+
+    def is_valid(self, raise_exception=True):
+        super().is_valid(raise_exception=raise_exception)
+        self.get_mapped_serializer().is_valid(raise_exception=raise_exception)
+
     def on_task_submission(self) -> Any:
-        if hasattr(
-            self.serializer_mapping[self.context["task"].form_key], "on_task_submission"
-        ):
-            return self.serializer_mapping[
-                self.context["task"].form_key
-            ].on_task_submission()
+        mapped_serializer = self.get_mapped_serializer()
+        if hasattr(mapped_serializer, "on_task_submission"):
+            return mapped_serializer.on_task_submission()
 
     def get_process_variables(self) -> Dict:
+        mapped_serializer = self.get_mapped_serializer()
         if hasattr(
-            self.serializer_mapping[self.context["task"].form_key],
+            mapped_serializer,
             "get_process_variables",
         ):
-            return self.serializer_mapping[
-                self.context["task"].form_key
-            ].get_process_variables()
+            return mapped_serializer.get_process_variables()
         return {}
 
 
