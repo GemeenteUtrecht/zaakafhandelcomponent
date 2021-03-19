@@ -1,22 +1,19 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
-from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Query
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.utils.exceptions import get_error_list
 
 from .constants import AccessRequestResult, PermissionObjectType
-from .datastructures import ZaaktypeCollection
 from .managers import UserManager
+from .permissions import registry
 from .query import AccessRequestQuerySet, PermissionDefinitionQuerySet
 
 
@@ -85,8 +82,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 # Permissions
-
-
 class AuthorizationProfile(models.Model):
     """
     Model a set of permission groups that can be assigned to a user.
@@ -104,30 +99,10 @@ class AuthorizationProfile(models.Model):
             "Use an easily recognizable name that maps to the function of users."
         ),
     )
-    # deprecated
-    permission_sets = models.ManyToManyField(
-        "PermissionSet",
-        verbose_name=_("permission sets"),
-        help_text=_(
-            "Selecting multiple sets makes them add/merge all the permissions together."
-        ),
-    )
     permission_definitions = models.ManyToManyField(
         "PermissionDefinition",
         verbose_name=_("permission definitions"),
         related_name="auth_profiles",
-    )
-    # deprecated
-    oo = models.ForeignKey(
-        "organisatieonderdelen.OrganisatieOnderdeel",
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        verbose_name=_("organisatieonderdeel"),
-        help_text=_(
-            "Limit access to data belonging to this OO. Leaving this blank means that "
-            "there is no restriction on OO in place."
-        ),
     )
 
     class Meta:
@@ -138,98 +113,6 @@ class AuthorizationProfile(models.Model):
         return self.name
 
 
-# Deprecated
-class PermissionSet(models.Model):
-    """
-    A collection of permissions that belong to a zaaktype.
-    """
-
-    name = models.CharField(_("naam"), max_length=255, unique=True)
-    description = models.TextField(_("description"), blank=True)
-    permissions = ArrayField(
-        models.CharField(max_length=255, blank=False),
-        blank=True,
-        default=list,
-        verbose_name=_("permissions"),
-    )
-    catalogus = models.URLField(
-        _("catalogus"),
-        help_text=_("Zaaktypencatalogus waarin de zaaktypen voorkomen."),
-        blank=True,
-    )
-    zaaktype_identificaties = ArrayField(
-        models.CharField(max_length=100),
-        blank=True,
-        default=list,
-        help_text=(
-            "All permissions selected are scoped to these zaaktypen. "
-            "If left empty, this applies to all zaaktypen."
-        ),
-    )
-    max_va = models.CharField(
-        _("maximale vertrouwelijkheidaanduiding"),
-        max_length=100,
-        choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
-        help_text=_(
-            "Spans Zaken until and including this vertrouwelijkheidaanduiding."
-        ),
-    )
-
-    class Meta:
-        verbose_name = _("permission set")
-        verbose_name_plural = _("permission sets")
-
-    def __str__(self):
-        return f"{self.name} ({self.get_max_va_display()})"
-
-    def get_absolute_url(self):
-        return reverse("accounts:permission-set-detail", args=[self.id])
-
-    @cached_property
-    def zaaktypen(self) -> ZaaktypeCollection:
-        return ZaaktypeCollection(
-            catalogus=self.catalogus, identificaties=self.zaaktype_identificaties
-        )
-
-
-# Deprecated
-class InformatieobjecttypePermission(models.Model):
-    permission_set = models.ForeignKey(
-        PermissionSet,
-        on_delete=models.CASCADE,
-        verbose_name=_("permission set"),
-        help_text=_("Associated set of permissions for a zaaktype."),
-    )
-    catalogus = models.URLField(
-        verbose_name=_("catalogus"),
-        max_length=1000,
-        help_text=_(
-            "Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen."
-        ),
-    )
-    omschrijving = models.CharField(
-        max_length=100,
-        verbose_name=_("omschrijving"),
-        help_text=_("Informatieobjecttype omschrijving."),
-        blank=True,
-    )
-    max_va = models.CharField(
-        verbose_name=_("maximaal vertrouwelijkheidaanduiding"),
-        max_length=100,
-        choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
-        help_text=_("Maximaal vertrouwelijkheidaanduiding."),
-    )
-
-    class Meta:
-        verbose_name = _("informatieobjecttype permission")
-        verbose_name_plural = _("informatieobjecttype permissions")
-
-    def __str__(self):
-        return f"{self.catalogus} - {self.omschrijving} ({self.max_va})"
-
-
 class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
@@ -238,7 +121,6 @@ class UserAuthorizationProfile(models.Model):
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
-# Deprecated
 class AccessRequest(models.Model):
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
@@ -349,10 +231,6 @@ class PermissionDefinition(models.Model):
         return f"{self.permission} ({self.object_type} {object_desc})"
 
     def get_blueprint_class(self):
-        # TODO after burning all deprecated code this import should be moved to the top of the file
-        # it will help testing a lot
-        from .permissions import registry
-
         permission = registry[self.permission]
         return permission.blueprint_class
 

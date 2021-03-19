@@ -8,9 +8,7 @@ from hijack_admin.admin import HijackUserAdminMixin
 from .models import (
     AccessRequest,
     AuthorizationProfile,
-    InformatieobjecttypePermission,
     PermissionDefinition,
-    PermissionSet,
     User,
     UserAuthorizationProfile,
 )
@@ -36,38 +34,15 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
         )
 
 
-@admin.register(PermissionSet)
-class PermissionSetAdmin(admin.ModelAdmin):
-    list_display = ("name", "permissions", "zaaktype_identificaties", "max_va")
-    list_filter = ("max_va",)
-    search_fields = ("name",)
-
-
-@admin.register(InformatieobjecttypePermission)
-class InformatieobjecttypePermissionAdmin(admin.ModelAdmin):
-    list_display = ("omschrijving", "catalogus", "max_va")
-    list_filter = ("omschrijving", "catalogus", "max_va", "permission_set")
-    search_fields = ("omschrijving", "catalogus", "max_va")
-    raw_id_fields = ("permission_set",)
-
-
 @admin.register(AuthorizationProfile)
 class AuthorizationProfileAdmin(admin.ModelAdmin):
-    list_display = ("name", "display_permission_sets", "oo")
-    list_filter = ("permission_sets", "oo")
+    list_display = ("name",)
     search_fields = ("name", "uuid")
-    filter_horizontal = ("permission_sets",)
-    autocomplete_fields = ("oo",)
+    filter_horizontal = ("permission_definitions",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.prefetch_related("permission_sets")
-
-    def display_permission_sets(self, obj):
-        perm_sets = obj.permission_sets.all()
-        return ", ".join([perm_set.name for perm_set in perm_sets])
-
-    display_permission_sets.short_description = _("permission sets")
+        return qs.prefetch_related("permission_definitions")
 
 
 @admin.register(UserAuthorizationProfile)

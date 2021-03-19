@@ -1,9 +1,7 @@
 import factory
 import factory.fuzzy
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from ..constants import PermissionObjectType
-from ..models import InformatieobjecttypePermission, UserAuthorizationProfile
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -20,33 +18,6 @@ class StaffUserFactory(UserFactory):
 
 class SuperUserFactory(StaffUserFactory):
     is_superuser = True
-
-
-class PermissionSetFactory(factory.django.DjangoModelFactory):
-    name = factory.Sequence(lambda n: f"perms-{n}")
-    catalogus = factory.Faker("url")
-
-    class Meta:
-        model = "accounts.PermissionSet"
-
-    @factory.post_generation
-    def for_user(obj, create, extracted, **kwargs):
-        assert create, "PermissionSet must be saved in the DB"
-
-        auth_profile = AuthorizationProfileFactory.create()
-        auth_profile.permission_sets.add(obj)
-        UserAuthorizationProfile.objects.create(
-            user=extracted, auth_profile=auth_profile
-        )
-
-
-class InformatieobjecttypePermissionFactory(factory.django.DjangoModelFactory):
-    permission_set = factory.SubFactory(PermissionSetFactory)
-    catalogus = factory.Faker("url")
-    max_va = VertrouwelijkheidsAanduidingen.openbaar
-
-    class Meta:
-        model = InformatieobjecttypePermission
 
 
 class AuthorizationProfileFactory(factory.django.DjangoModelFactory):
