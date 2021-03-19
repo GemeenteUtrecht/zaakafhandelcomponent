@@ -1,6 +1,7 @@
 from itertools import groupby
 from typing import Any, Dict, List
 
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -257,7 +258,23 @@ class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
-    permission_required = "zaken:afhandelen"
+    # permission_required = zaken_close | zaken_set_result
+
+    def has_permission(self):
+        user = self.request.user
+        # user should have any of these permissions
+        for perm in [zaken_close, zaken_set_result]:
+            if user.has_perms([perm.name]):
+                return True
+        return False
+
+    def check_object_permissions(self, obj):
+        user = self.request.user
+        # user should have any of these permissions
+        for perm in [zaken_close, zaken_set_result]:
+            if user.has_perms([perm.name], obj=obj):
+                return
+        raise PermissionDenied(self.get_permission_denied_message())
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
