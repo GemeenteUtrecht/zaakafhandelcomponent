@@ -34,7 +34,16 @@ class DownloadReportView(
     LoginRequiredMixin, PermissionRequiredMixin, SingleObjectMixin, View
 ):
     model = Report
-    permission_required = "reports:download"
+
+    def has_permission(self):
+        # move logic from "reports:download" rule
+        report = self.get_object()
+        if not report:
+            return True
+
+        zaaktypen = get_zaaktypen(self.request.user)
+        identificaties = {zt.identificatie for zt in zaaktypen}
+        return set(report.zaaktypen).issubset(identificaties)
 
     def get(self, request, *args, **kwargs):
         report = self.get_object()
