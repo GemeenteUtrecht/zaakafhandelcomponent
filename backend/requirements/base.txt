@@ -212,8 +212,6 @@ requests==2.22.0
     #   gemma-zds-client
     #   requests-mock
     #   zgw-consumers
-rules==2.2
-    # via -r requirements/base.in
 six==1.12.0
     # via
     #   django-appconf
