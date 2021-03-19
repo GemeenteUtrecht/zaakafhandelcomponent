@@ -52,10 +52,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
         config.service = kownsl
         config.save()
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -276,10 +272,6 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

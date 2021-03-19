@@ -15,28 +15,6 @@ from zac.core.services import get_zaak
 logger = logging.getLogger(__name__)
 
 
-class RulesPermission(permissions.BasePermission):
-    """
-    Wrap the rules-based permissions.
-    """
-
-    permission: Permission
-
-    def __new__(cls, *args, **kwargs):
-        permission = getattr(cls, "permission", None)
-        if permission is None:
-            raise ImproperlyConfigured(
-                "%s is missing the 'permission' attribute" % cls.__name__
-            )
-        return super().__new__(cls, *args, **kwargs)
-
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        return request.user.has_perm(self.permission.name)
-
-    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
-        return request.user.has_perm(self.permission.name, obj)
-
-
 class ZaakBasedPermission(permissions.BasePermission):
     permission: Permission
     zaak_attr = "zaak"

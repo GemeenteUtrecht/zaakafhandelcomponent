@@ -1,12 +1,10 @@
 from io import BytesIO
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import FileResponse
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
-
-from rules.contrib.views import PermissionRequiredMixin
 
 from zac.core.services import get_zaaktypen
 
