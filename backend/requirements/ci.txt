@@ -307,8 +307,6 @@ requests==2.22.0
     #   gemma-zds-client
     #   requests-mock
     #   zgw-consumers
-rules==2.2
-    # via -r requirements/base.txt
 six==1.12.0
     # via
     #   -r requirements/base.txt
