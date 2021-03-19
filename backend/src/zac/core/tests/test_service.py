@@ -12,7 +12,6 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.permissions import UserPermissions
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.tests.utils import ESMixin

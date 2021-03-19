@@ -12,15 +12,12 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import (
-    PermissionDefinitionFactory,
-    PermissionSetFactory,
-    UserFactory,
-)
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
 from zac.contrib.organisatieonderdelen.tests.factories import (
     OrganisatieOnderdeelFactory,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ..permissions import zaken_inzien
@@ -51,22 +48,17 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_list_zaken_no_zaaktype_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         zaaktype = generate_oas_component("ztc", "schemas/ZaakType")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [zaaktype],
-            },
-        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         # gives them access to the page, but no zaaktypen specified -> nothing visible
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        PermissionDefinitionFactory.create(
+            object_url="",
+            permission=zaken_inzien.name,
             for_user=self.user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
         response = self.app.get(self.url, user=self.user)
@@ -102,23 +94,8 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             identificatie="ZT2",
             omschrijving="ZT2",
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zt1, zt2],
-            },
-        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zt1, zt2]))
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus=catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
         PermissionDefinitionFactory.create(
             object_url="",
             permission=zaken_inzien.name,
@@ -167,11 +144,10 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         # verify API calls
         self.assertEqual(
             len(m.request_history),
-            5,
+            4,
         )
         (
             req_ztc_schema,
-            req_zaaktypen_catalogus,
             req_zaaktypen,
             req_zrc_schema,
             req_zaak,
@@ -191,23 +167,8 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             identificatie="ZT1",
             omschrijving="ZT1",
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [zaaktype],
-            },
-        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus=catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.openbaar,
-        )
         PermissionDefinitionFactory.create(
             object_url="",
             permission=zaken_inzien.name,
@@ -274,15 +235,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             zaaktype=zt1["url"],
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 2,
-                "previous": None,
-                "next": None,
-                "results": [zt1, zt2],
-            },
-        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zt1, zt2]))
         m.get(zaak1["url"], json=zaak1)
         zaak1_model = factory(Zaak, zaak1)
         zaak1_model.zaaktype = factory(ZaakType, zt1)
