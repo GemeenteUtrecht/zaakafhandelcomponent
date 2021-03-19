@@ -35,7 +35,6 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.constants import PermissionObjectType
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import PermissionDefinition, User
-from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
@@ -43,7 +42,6 @@ from zgw.models import Zaak
 
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
-from .permissions import zaken_inzien
 from .rollen import Rol
 
 logger = logging.getLogger(__name__)
@@ -324,28 +322,6 @@ def _find_zaken(
         minimum=minimum,
     )
     return _zaken
-
-
-def get_allowed_kwargs(user_perms: UserPermissions) -> list:
-    if user_perms.user.is_superuser:
-        return []
-
-    relevant_perms = [
-        perm
-        for perm in user_perms.zaaktype_permissions
-        if perm.permission == zaken_inzien.name
-    ]
-
-    find_kwargs = [
-        {
-            "zaaktypen": [zaaktype.url for zaaktype in perm.zaaktypen],
-            "max_va": perm.max_va,
-            "oo": perm.oo,
-        }
-        for perm in relevant_perms
-    ]
-
-    return find_kwargs
 
 
 def get_zaken_es(
