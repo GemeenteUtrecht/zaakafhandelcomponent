@@ -65,7 +65,7 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["form"].choices = [
-            (key, key or _("(camunda form)")) for key in self.serializer_mapping.keys()
+            (key, key or _("(camunda form)")) for key in REGISTRY.keys()
         ]
 
 
