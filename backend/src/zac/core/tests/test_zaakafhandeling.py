@@ -149,14 +149,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionSetFactory.create(
-                    permissions=[permission.name],
-                    for_user=self.user,
-                    catalogus=self.zaaktype["catalogus"],
-                    zaaktype_identificaties=[],
-                    max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-                )
-
                 response = self.app.get(self.url, user=self.user)
 
                 # object level permission check should fail
@@ -176,14 +168,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
             json=[],
-        )
-
-        PermissionSetFactory.create(
-            permissions=[zaken_close.name, zaken_set_result.name],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
         response = self.app.get(self.url, user=self.user)

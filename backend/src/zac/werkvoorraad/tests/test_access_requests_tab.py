@@ -15,7 +15,6 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
     PermissionDefinitionFactory,
-    PermissionSetFactory,
     UserFactory,
 )
 from zac.core.permissions import zaken_handle_access, zaken_inzien
@@ -107,14 +106,6 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_display_access_requests_no_handle_permission(self, m):
         self._setUpMocks(m)
 
-        # todo remove after auth refactoring
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
         PermissionDefinitionFactory.create(
             permission=[zaken_inzien.name],
             object_url=self.zaak["url"],
@@ -135,14 +126,6 @@ class AccessRequestsTabTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_display_access_requests_with_handle_permission(self, m):
         self._setUpMocks(m)
 
-        # todo remove after auth refactoring
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name, zaken_handle_access.name],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
         for permission in [zaken_inzien.name, zaken_handle_access.name]:
             PermissionDefinitionFactory.create(
                 permission=permission, object_url=self.zaak["url"], for_user=self.user
