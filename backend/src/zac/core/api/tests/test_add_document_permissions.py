@@ -43,10 +43,6 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         config.primary_drc = drc
         config.save()
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
         self.post_data = {
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
             "zaak": f"{ZAKEN_ROOT}zaken/456",

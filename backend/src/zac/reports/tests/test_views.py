@@ -44,8 +44,7 @@ class DownloadViewTests(ClearCachesMixin, TestCase):
         self.assertIsInstance(response, FileResponse)
 
     @patch("zac.reports.views.export_zaken", return_value=Dataset())
-    @patch("zac.reports.rules.get_zaaktypen")
-    def test_permissions(self, mock_get_zaaktypen, *args):
+    def test_permissions(self, *args):
         user = UserFactory.create()
         self.client.force_login(user)
         report1 = ReportFactory.create(zaaktypen=["zt1", "zt2"])

@@ -206,8 +206,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             },
         )
 
-        with patch("zac.core.rules.test_oo_allowlist", return_value=True):
-            response = self.app.get(self.url, user=self.user, status=403)
+        response = self.app.get(self.url, user=self.user, status=403)
 
         self.assertEqual(response.status_code, 403)
         # show url to request access

@@ -61,10 +61,6 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
 
         self.app.set_user(self.user)
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
     def _setUpMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -344,10 +340,6 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         self.app.set_user(self.user)
-
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
 
     def _setUpMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
