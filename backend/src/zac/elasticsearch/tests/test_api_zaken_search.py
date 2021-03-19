@@ -223,6 +223,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # index documents in es
         self.create_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
+        self.refresh_index()
 
         data = {
             "identificatie": "zaak1",
