@@ -149,7 +149,7 @@ django==2.2.16
     #   zgw-consumers
 djangorestframework-camel-case==1.2.0
     # via -r requirements/base.txt
-djangorestframework==3.11.0
+djangorestframework==3.11.2
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
