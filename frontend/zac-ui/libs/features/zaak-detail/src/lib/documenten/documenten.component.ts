@@ -17,10 +17,7 @@ import { ModalService } from '@gu/components';
 export class DocumentenComponent implements OnInit {
   @Input() mainZaakUrl: string;
 
-  tableData: Table = {
-    headData: ['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'],
-    bodyData: []
-  }
+  tableData: Table = new Table(['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
 
   documentsData: any;
 

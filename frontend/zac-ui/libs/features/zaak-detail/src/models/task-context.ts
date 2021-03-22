@@ -1,3 +1,5 @@
+import { Task } from '@gu/models';
+
 export interface Document {
   beschrijving: string;
   bestandsnaam: string;
@@ -10,22 +12,6 @@ export interface Document {
 export interface ZaakInformatie {
   omschrijving: string;
   toelichting: string;
-}
-
-export interface Assignee {
-  username: string;
-  firstName: string;
-  lastName: string;
-  id: number;
-}
-
-export interface Task {
-  id: string;
-  executeUrl: string;
-  name: string;
-  created: string;
-  hasForm: boolean;
-  assignee: Assignee;
 }
 
 export interface FormField {

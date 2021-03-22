@@ -14,10 +14,7 @@ import { RelatedCase } from '../../models/related-case';
 export class GerelateerdeZakenComponent implements OnInit {
   @Input() mainZaakUrl: string;
 
-  tableData: Table = {
-    headData: ['Resultaat', 'Status', 'Zaak ID', 'Zaaktype', 'Aard'],
-    bodyData: []
-  }
+  tableData: Table = new Table(['Resultaat', 'Status', 'Zaak ID', 'Zaaktype', 'Aard'], []);
 
   data: any;
   isLoading = true;

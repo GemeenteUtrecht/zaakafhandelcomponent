@@ -8,4 +8,6 @@ export * from './ui/menu';
 export * from './accounts/user';
 
 // Zaken
+export * from './zaken/assignee'
+export * from './zaken/task'
 export * from './zaken/zaak'

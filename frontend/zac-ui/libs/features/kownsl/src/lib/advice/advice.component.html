@@ -1,7 +1,7 @@
-<a class="anchor anchor--back" *ngIf="zaakUrl" [routerLink]="[zaakUrl]">Terug naar zaak</a>
 <div class="kownsl feature-container">
   <div class="content-background">
     <div class="content">
+      <a class="anchor anchor--back mb-3" *ngIf="zaakUrl" [routerLink]="[zaakUrl]">Terug naar zaak</a>
       <div class="kownsl__container">
         <h1 class="">Advies gevraagd</h1>
         <ng-template [ngIf]="uuid && !submitSuccess">

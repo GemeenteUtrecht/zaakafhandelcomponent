@@ -12,10 +12,7 @@ import { ModalService } from '@gu/components';
   styleUrls: ['./adviseren-accorderen.component.scss']
 })
 export class AdviserenAccorderenComponent implements OnInit {
-  tableData: Table = {
-    headData: ['', 'Type', 'Opgehaald'],
-    bodyData: []
-  }
+  tableData: Table = new Table(['', 'Type', 'Opgehaald'], []);
 
   data: any;
   isLoading = true;

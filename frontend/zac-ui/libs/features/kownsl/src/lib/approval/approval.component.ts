@@ -32,10 +32,7 @@ export class ApprovalComponent implements OnInit {
 
   loginUrl: string;
 
-  tableData: Table = {
-    headData: [],
-    bodyData: []
-  }
+  tableData: Table = new Table ([], []);
 
   approvalForm: FormGroup;
 
@@ -95,10 +92,7 @@ export class ApprovalComponent implements OnInit {
   }
 
   createTableData(approvalData: ReviewRequest): Table {
-    const tableData: Table = {
-      headData: ['Accordeur', 'Gedaan op', 'Akkoord'],
-      bodyData: []
-    }
+    const tableData: Table = new Table(['Accordeur', 'Gedaan op', 'Akkoord'], []);
 
     // Add table body data
     tableData.bodyData = approvalData.reviews.map( review => {

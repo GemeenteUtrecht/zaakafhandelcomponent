@@ -1,6 +1,14 @@
-export interface Table {
+export class Table {
   headData: string[];
   bodyData: RowData[];
+
+  constructor(
+    headData: string[],
+    bodyData: RowData[]
+  ) {
+    this.headData = headData;
+    this.bodyData = bodyData;
+  }
 }
 
 export interface RowData {

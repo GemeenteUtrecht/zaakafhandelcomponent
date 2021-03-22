@@ -39,14 +39,9 @@ export class AdviceComponent implements OnInit {
 
   loginUrl: string;
 
-  tableData: Table = {
-    headData: ['Adviseur', 'Gedaan op'],
-    bodyData: []
-  }
-  documentTableData: Table = {
-    headData: ['Acties', '', 'Documentnaam'],
-    bodyData: []
-  }
+  tableData: Table = new Table(['Adviseur', 'Gedaan op'], []);
+
+  documentTableData: Table = new Table(['Acties', '', 'Documentnaam'], []);
 
   pipe = new DatePipe("nl-NL");
 
