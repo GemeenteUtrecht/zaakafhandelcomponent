@@ -42,8 +42,7 @@ class ProcessInstanceSerializer(serializers.Serializer):
 
 class ChoiceFieldNoValidation(serializers.ChoiceField):
     def to_internal_value(self, data):
-        if not isinstance(data, str):
-            raise serializers.ValidationError("Form needs to be a string.")
+        return data
 
 
 class BaseUserTaskSerializer(PolymorphicSerializer):
@@ -97,10 +96,6 @@ class SubmitUserTaskSerializer(BaseUserTaskSerializer):
             else self.fallback_distriminator_value
         )
         return self.serializer_mapping[lookup]
-
-    def is_valid(self, raise_exception=True):
-        super().is_valid(raise_exception=raise_exception)
-        self.get_mapped_serializer().is_valid(raise_exception=raise_exception)
 
     def on_task_submission(self) -> Any:
         mapped_serializer = self.get_mapped_serializer()
