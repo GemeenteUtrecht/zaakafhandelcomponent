@@ -55,7 +55,6 @@ class DocumentSelectContextSerializer(APIModelSerializer):
 
 class SelectedDocumentSerializer(serializers.Serializer):
     document = serializers.ChoiceField(
-        child=serializers.URLField,
         label=_("Selected document"),
         help_text=_("The URL of the selected document from the relevant case."),
         choices=(),
