@@ -5,13 +5,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
-from django_camunda.camunda_models import Task, factory
+from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 from zds_client import ClientError
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
+from zac.camunda.data import Task
 from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_behandelaar_zaken, get_zaak
 from zgw.models.zrc import Zaak
