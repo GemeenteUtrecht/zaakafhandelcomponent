@@ -60,8 +60,7 @@ class SelectedDocumentSerializer(serializers.Serializer):
         choices=(),
     )
 
-    document_type = serializers.URLField(
-        child=serializers.URLField,
+    document_type = serializers.ChoiceField(
         label=_("Selected document type"),
         help_text=_("The URL of the selected document type."),
         choices=(),
