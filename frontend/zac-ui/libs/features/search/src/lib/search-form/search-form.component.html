@@ -2,78 +2,88 @@
 <h1 class="mb-5">Zoeken via zaakgegevens</h1>
 <form class="search-form" [formGroup]="searchForm">
   <div class="form-group">
-    <div class="col-lg-4">
-      <gu-input-field type="text"
-                      [control]="identificatie"
-                      label="Zaaknummer"
-                      autocomplete="off"
-      ></gu-input-field>
+    <div class="row">
+      <div class="col-lg-4">
+        <gu-input-field type="text"
+                        [control]="identificatie"
+                        label="Zaaknummer"
+                        autocomplete="off"
+        ></gu-input-field>
+      </div>
     </div>
   </div>
   <div class="form-group">
-    <div class="col-lg-6">
-      <gu-multiselect *ngIf="zaaktypenData"
-                      [control]="zaaktype"
-                      (change)="onZaaktypeSelect($event)"
-                      [searchable]="true"
-                      [items]="zaaktypenData"
-                      [multiple]="false"
-                      bindLabel="omschrijving"
-                      bindValue="identificatie"
-                      label="Zaaktype">
-      </gu-multiselect>
+    <div class="row">
+      <div class="col-lg-6">
+        <gu-multiselect *ngIf="zaaktypenData"
+                        [control]="zaaktype"
+                        (change)="onZaaktypeSelect($event)"
+                        [searchable]="true"
+                        [items]="zaaktypenData"
+                        [multiple]="false"
+                        bindLabel="omschrijving"
+                        bindValue="identificatie"
+                        label="Zaaktype">
+        </gu-multiselect>
+      </div>
     </div>
   </div>
   <div class="form-group">
-    <div class="col-lg-4">
-      <gu-input-field type="text"
-                      [control]="omschrijving"
-                      label="Omschrijving"
-                      autocomplete="off"
-      ></gu-input-field>
+    <div class="row">
+      <div class="col-lg-4">
+        <gu-input-field type="text"
+                        [control]="omschrijving"
+                        label="Omschrijving"
+                        autocomplete="off"
+        ></gu-input-field>
+      </div>
     </div>
   </div>
   <ng-container *ngIf="zaaktypeEigenschappenData.length > 0">
     <h4 class="mb-4">Eigenschappen</h4>
-    <div class="col-lg-6">
-      <div class="form-group">
-        <gu-multiselect (change)="onPropertySelect($event)"
-                        [control]="eigenschapnaam"
-                        [searchable]="true"
-                        [items]="zaaktypeEigenschappenData"
-                        [multiple]="false"
-                        bindLabel="name"
-                        bindValue="name"
-                        label="Eigenschapnaam">
-        </gu-multiselect>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="form-group">
+          <gu-multiselect (change)="onPropertySelect($event)"
+                          [control]="eigenschapnaam"
+                          [searchable]="true"
+                          [items]="zaaktypeEigenschappenData"
+                          [multiple]="false"
+                          bindLabel="name"
+                          bindValue="name"
+                          label="Eigenschapnaam">
+          </gu-multiselect>
+        </div>
       </div>
     </div>
-    <div class="col-lg-4" *ngIf="selectedPropertyValue && eigenschapnaam.value">
-      <div class="form-group" *ngIf="eigenschapwaarde">
-        <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
-          <ng-container *ngSwitchCase="'string'">
-            <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date-time'">
-              <gu-input-field type="text"
+    <div class="row">
+      <div class="col-lg-4" *ngIf="selectedPropertyValue && eigenschapnaam.value">
+        <div class="form-group" *ngIf="eigenschapwaarde">
+          <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
+            <ng-container *ngSwitchCase="'string'">
+              <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date-time'">
+                <gu-input-field type="text"
+                                [control]="eigenschapwaarde"
+                                label="Eigenschapwaarde"
+                                autocomplete="off"
+                ></gu-input-field>
+              </ng-container>
+              <ng-container *ngIf="selectedPropertyValue.spec.format === 'date-time'">
+                <gu-datepicker
+                  [control]="eigenschapwaarde"
+                  placeholder="Datum">
+                </gu-datepicker>
+              </ng-container>
+            </ng-container>
+            <ng-container *ngSwitchCase="'number'">
+              <gu-input-field type="number"
                               [control]="eigenschapwaarde"
                               label="Eigenschapwaarde"
                               autocomplete="off"
               ></gu-input-field>
             </ng-container>
-            <ng-container *ngIf="selectedPropertyValue.spec.format === 'date-time'">
-              <gu-datepicker
-                [control]="eigenschapwaarde"
-                placeholder="Datum">
-              </gu-datepicker>
-            </ng-container>
           </ng-container>
-          <ng-container *ngSwitchCase="'number'">
-            <gu-input-field type="number"
-                            [control]="eigenschapwaarde"
-                            label="Eigenschapwaarde"
-                            autocomplete="off"
-            ></gu-input-field>
-          </ng-container>
-        </ng-container>
+        </div>
       </div>
     </div>
   </ng-container>

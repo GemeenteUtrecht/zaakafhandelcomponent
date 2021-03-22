@@ -15,6 +15,11 @@ const routes: Routes = [
       .then(m => m.KownslModule)
   },
   {
+    path: 'werkvoorraad',
+    loadChildren: () => import('./components/workstack/workstack.module')
+      .then(m => m.WorkstackModule)
+  },
+  {
     path: 'zaken',
     loadChildren: () => import('./components/zaak-detail/zaak-detail.module')
       .then(m => m.ZaakDetailModule)

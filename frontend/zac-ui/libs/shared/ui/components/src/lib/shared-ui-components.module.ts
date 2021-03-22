@@ -1,6 +1,7 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 // Material Icons
 import { MatIconModule } from '@angular/material/icon';
@@ -18,18 +19,17 @@ import { CollapsibleComponent } from './elements/collapsible/collapsible.compone
 import { ProgressBarComponent } from './elements/progress-bar/progress-bar.component';
 import { CheckboxComponent } from './elements/checkbox/checkbox.component';
 import { InputFieldComponent } from './elements/input-field/input-field.component';
+import { MessageComponent } from './elements/message/message.component';
+import { IconComponent } from './elements/icon/icon.component';
 
 // UI Components
 import { FileComponent } from './components/file/file.component';
 import { FileUploadComponent } from './components/file-upload/file-upload.component';
 import { SuccessComponent } from './components/success/success.component';
 import { ModalComponent } from './components/modal/modal.component';
-import { IconComponent } from './elements/icon/icon.component';
 import { DatepickerComponent } from './components/datepicker/datepicker.component';
 import { TableComponent } from './components/table/table.component';
-import { MessageComponent } from './elements/message/message.component';
 import { SidenavComponent } from './components/sidenav/sidenav.component';
-import { RouterModule } from '@angular/router';
 
 @NgModule({
   imports: [

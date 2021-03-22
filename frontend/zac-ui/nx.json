@@ -50,6 +50,9 @@
     },
     "features-search": {
       "tags": []
+    },
+    "features-workstack": {
+      "tags": []
     }
   }
 }

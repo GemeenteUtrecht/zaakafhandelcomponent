@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { menuItems, bottomMenuItems, MenuItem } from './constants/menu';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { filter, first, share } from 'rxjs/operators';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, first } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { User } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';

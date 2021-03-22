@@ -1,6 +1,4 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
-import { FeaturesSearchService } from './features-search.service';
+import { Component } from '@angular/core';
 import { Zaak } from '@gu/models';
 
 @Component({
@@ -8,17 +6,11 @@ import { Zaak } from '@gu/models';
   templateUrl: './features-search.component.html',
   styleUrls: ['./features-search.component.scss']
 })
-export class FeaturesSearchComponent implements OnInit {
+export class FeaturesSearchComponent {
 
   resultData: Zaak[];
 
-  constructor(
-    private fb: FormBuilder,
-    private searchService: FeaturesSearchService
-  ) { }
-
-  ngOnInit(): void {
-  }
+  constructor() { }
 
   setResult(resultData: Zaak[]) {
     this.resultData = resultData;

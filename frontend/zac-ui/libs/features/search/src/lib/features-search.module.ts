@@ -22,7 +22,11 @@ import { SearchResultsComponent } from './search-results/search-results.componen
     MultiselectModule,
   ],
   exports: [FeaturesSearchComponent],
-  declarations: [FeaturesSearchComponent, SearchFormComponent, SearchResultsComponent],
+  declarations: [
+    FeaturesSearchComponent,
+    SearchFormComponent,
+    SearchResultsComponent
+  ],
   providers: [FormGroupDirective]
 })
 export class FeaturesSearchModule {}
