@@ -8,7 +8,7 @@ from django_camunda.utils import underscoreize
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -67,13 +67,6 @@ class GetUserTaskContextViewTests(APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-        )
-        cls.document = factory(Document, document)
-
         Service.objects.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
@@ -83,6 +76,25 @@ class GetUserTaskContextViewTests(APITestCase):
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
+        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+        )
+        cls.document = factory(Document, document)
+
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
+
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -168,6 +180,7 @@ class GetUserTaskContextViewTests(APITestCase):
                     "beschrijving",
                     "bestandsnaam",
                     "bestandsomvang",
+                    "documentType",
                     "url",
                     "readUrl",
                     "versie",
@@ -290,6 +303,7 @@ class GetUserTaskContextViewTests(APITestCase):
                     "readUrl",
                     "bestandsnaam",
                     "bestandsomvang",
+                    "documentType",
                     "url",
                     "beschrijving",
                     "versie",
@@ -321,6 +335,18 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
+
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus,
+        )
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
+
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -412,14 +438,23 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_select_document_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         payload = {
-            "selectedDocuments": [self.document.url],
+            "selectedDocuments": [
+                {
+                    "document": self.document.url,
+                    "document_type": self.document.informatieobjecttype.url,
+                },
+            ],
         }
 
         with patch(
             "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.put(self.task_endpoint, payload)
+            with patch(
+                "zac.core.camunda.select_documents.serializers.get_paginated_results",
+                return_value=[self.documenttype],
+            ):
+                response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
 

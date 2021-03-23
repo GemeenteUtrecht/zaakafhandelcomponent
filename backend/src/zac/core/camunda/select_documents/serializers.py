@@ -5,16 +5,15 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.constants import APITypes
 from zgw_consumers.drf.serializers import APIModelSerializer
-from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
 from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
-from zac.core.services import get_documenten
+from zac.core.api.validators import validate_zaak_documents
+from zac.core.services import _client_from_url
 
 
 class DocumentSerializer(APIModelSerializer):
@@ -54,17 +53,15 @@ class DocumentSelectContextSerializer(APIModelSerializer):
 
 
 class SelectedDocumentSerializer(serializers.Serializer):
-    document = serializers.ChoiceField(
+    document = serializers.URLField(
         label=_("Selected document"),
         help_text=_("The URL of the selected document from the relevant case."),
-        choices=(),
         allow_blank=False,
     )
 
-    document_type = serializers.ChoiceField(
+    document_type = serializers.URLField(
         label=_("Selected document type"),
         help_text=_("The URL of the selected document type."),
-        choices=(),
         allow_blank=False,
     )
 
@@ -78,27 +75,31 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
 
     selected_documents = SelectedDocumentSerializer(many=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Set valid choices for selecting documents
+    def validate_selected_documents(self, selected_docs):
         zaak = self.get_zaak_from_context()
-        documents, _gone = get_documenten(zaak)
-        self.fields["selected_documents"].child.fields["document"].choices = [
-            doc.url for doc in documents
+
+        # Validate selected documents
+        doc_urls = [doc["document"] for doc in selected_docs]
+        validate_zaak_documents(doc_urls, zaak)
+
+        # Validated selected document types according to case type
+        ztc_client = _client_from_url(zaak.zaaktype)
+        results = get_paginated_results(ztc_client, "informatieobjecttype")
+        valid_eiots = [iot["url"] for iot in results]
+
+        selected_doc_types = [doc["document_type"] for doc in selected_docs]
+        invalid_doc_types = [
+            doc_type for doc_type in selected_doc_types if doc_type not in valid_eiots
         ]
-
-        # Set valid choices for selecting document types
-        ztcs = Service.objects.filter(api_type=APITypes.ztc)
-        eiots = []
-        for ztc in ztcs:
-            client = ztc.build_client()
-            results = get_paginated_results(client, "informatieobjecttype")
-            eiots += [iot["url"] for iot in results]
-
-        self.fields["selected_documents"].child.fields["document_type"].choices = list(
-            set(eiots)
-        )
+        if invalid_doc_types:
+            raise serializers.ValidationError(
+                _(
+                    "Selected document types: {invalid_doc_types} are invalid choices."
+                ).format(
+                    invalid_doc_types=invalid_doc_types,
+                ),
+                code="invalid-choice",
+            )
 
     def get_zaak_from_context(self):
         zaak_context = get_zaak_context(self.context["task"])

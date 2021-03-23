@@ -6,6 +6,7 @@ from django_camunda.utils import underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -23,6 +24,7 @@ from ..camunda import (
     ValidSignUserSerializer,
 )
 
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
@@ -62,13 +64,27 @@ class GetValidSignContextSerializersTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=catalogus_url,
+        )
+
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document = factory(Document, document)
-
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
