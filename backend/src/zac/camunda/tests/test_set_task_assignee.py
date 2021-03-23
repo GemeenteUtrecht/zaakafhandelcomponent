@@ -236,6 +236,6 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
                 data=data,
             )
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-            expected_payload = {"userId": "user-1"}
+            expected_payload = {"userId": user.username}
             self.assertEqual(m.last_request.json(), expected_payload)
             self.assertIn("delegate", m.last_request.url)
