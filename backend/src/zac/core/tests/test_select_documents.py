@@ -4,6 +4,8 @@ from django_camunda.utils import underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import InformatieObjectType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -22,6 +24,7 @@ from ..camunda.select_documents.serializers import (
     DocumentSerializer,
 )
 
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
@@ -75,6 +78,21 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document = factory(Document, document)
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        cls.document.informatieobjecttype = factory(InformatieObjectType, documenttype)
 
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
@@ -106,25 +124,12 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         # Sanity check
         serializer = DocumentSerializer(self.document)
         self.assertEqual(
-            sorted(list(serializer.data.keys())),
-            sorted(
-                [
-                    "beschrijving",
-                    "bestandsnaam",
-                    "bestandsomvang",
-                    "url",
-                    "read_url",
-                    "versie",
-                ]
-            ),
-        )
-
-        self.assertEqual(
             serializer.data,
             {
                 "beschrijving": self.document.beschrijving,
                 "bestandsnaam": self.document.bestandsnaam,
                 "bestandsomvang": self.document.bestandsomvang,
+                "document_type": self.document.informatieobjecttype.omschrijving,
                 "url": self.document.url,
                 "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
                 "versie": self.document.versie,
@@ -144,6 +149,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                     "beschrijving": self.document.beschrijving,
                     "bestandsnaam": self.document.bestandsnaam,
                     "bestandsomvang": self.document.bestandsomvang,
+                    "document_type": self.document.informatieobjecttype.omschrijving,
                     "url": self.document.url,
                     "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
                     "versie": self.document.versie,
@@ -176,6 +182,23 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document_2 = factory(Document, document)
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        cls.document_1.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
+        cls.document_2.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
 
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak, documents=[cls.document_1, cls.document_2]
@@ -187,7 +210,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         )
 
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten",
+            "zac.core.camunda.select_documents.serializers.get_documenten",
             return_value=([cls.document_1, cls.document_2], []),
         )
 
@@ -200,39 +223,78 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
 
-    def test_document_select_task_serializer(self):
+    def test_document_select_task_serializer_no_catalogi(self):
         payload = {
-            "selected_documents": [self.document_1.url],
+            "selected_documents": [
+                {
+                    "document": self.document_1.url,
+                    "document_type": self.document_1.informatieobjecttype.omschrijving,
+                }
+            ]
         }
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
         serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
+        with self.assertRaises(exceptions.ValidationError):
+            serializer.is_valid(raise_exception=True)
+
+    def test_document_select_task_serializer(self):
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        payload = {
+            "selected_documents": [
+                {
+                    "document": self.document_1.url,
+                    "document_type": self.document_1.informatieobjecttype.url,
+                }
+            ]
+        }
+
+        task = _get_task(**{"formKey": "zac:documentSelectie"})
+        with patch(
+            "zac.core.camunda.select_documents.serializers.get_paginated_results",
+            return_value=[self.documenttype],
+        ):
+            serializer = DocumentSelectTaskSerializer(
+                data=payload, context={"task": task}
+            )
+
         serializer.is_valid(raise_exception=True)
         self.assertIn("selected_documents", serializer.validated_data)
         self.assertEqual(
-            serializer.validated_data["selected_documents"], [self.document_1.url]
+            serializer.validated_data["selected_documents"],
+            [
+                {
+                    "document": self.document_1.url,
+                    "document_type": self.document_1.informatieobjecttype.url,
+                }
+            ],
         )
 
     def test_document_select_task_serializer_invalid_document(self):
         payload = {
-            "selected_documents": ["http://some.drc.nl/unknown/document"],
+            "selected_documents": [
+                {
+                    "document": "",
+                    "document_type": self.document_1.informatieobjecttype.url,
+                }
+            ],
         }
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
-        serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
-        with self.assertRaises(exceptions.ValidationError) as err:
-            serializer.is_valid(raise_exception=True)
+
+        with patch(
+            "zac.core.camunda.select_documents.serializers.get_paginated_results",
+            return_value=[self.documenttype],
+        ):
+            serializer = DocumentSelectTaskSerializer(
+                data=payload, context={"task": task}
+            )
+
+            with self.assertRaises(exceptions.ValidationError) as err:
+                serializer.is_valid(raise_exception=True)
+
         self.assertEqual(
-            err.exception.detail["selected_documents"][0].code, "invalid_choice"
+            err.exception.detail["selected_documents"][0]["document"][0].code,
+            "invalid_choice",
         )
-
-    def test_document_select_task_serializer_empty_document(self):
-        payload = {
-            "selected_documents": [""],
-        }
-
-        task = _get_task(**{"formKey": "zac:documentSelectie"})
-        serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
-        with self.assertRaises(exceptions.ValidationError) as err:
-            serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail["selected_documents"][0][0].code, "blank")

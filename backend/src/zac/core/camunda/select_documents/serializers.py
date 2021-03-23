@@ -58,12 +58,14 @@ class SelectedDocumentSerializer(serializers.Serializer):
         label=_("Selected document"),
         help_text=_("The URL of the selected document from the relevant case."),
         choices=(),
+        allow_blank=False,
     )
 
     document_type = serializers.ChoiceField(
         label=_("Selected document type"),
         help_text=_("The URL of the selected document type."),
         choices=(),
+        allow_blank=False,
     )
 
 
@@ -82,7 +84,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         # Set valid choices for selecting documents
         zaak = self.get_zaak_from_context()
         documents, _gone = get_documenten(zaak)
-        self.fields["selected_documents"].fields["document"].choices = [
+        self.fields["selected_documents"].child.fields["document"].choices = [
             doc.url for doc in documents
         ]
 
@@ -94,7 +96,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
             results = get_paginated_results(client, "informatieobjecttype")
             eiots += [iot["url"] for iot in results]
 
-        self.fields["selected_documents"].fields["document_type"].choices = list(
+        self.fields["selected_documents"].child.fields["document_type"].choices = list(
             set(eiots)
         )
 
