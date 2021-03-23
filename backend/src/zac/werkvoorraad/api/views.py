@@ -7,7 +7,7 @@ from zds_client import ClientError
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
-from zac.camunda.api.serializers import TaskSerializer
+from zac.api.context import get_zaak_context
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.core.api.serializers import ZaakDetailSerializer
 from zac.core.services import get_zaak
@@ -17,10 +17,11 @@ from ..views import (
     get_behandelaar_zaken_unfinished,
     get_camunda_user_tasks,
 )
-from .data import AccessRequestGroup, ActivityGroup
+from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
+    WorkStackTaskSerializer,
 )
 
 
@@ -79,8 +80,15 @@ class WorkStackAssigneeCasesView(ListAPIView):
 class WorkStackUserTasksView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = TaskSerializer
+    serializer_class = WorkStackTaskSerializer
     filter_backends = ()
 
     def get_queryset(self):
-        return get_camunda_user_tasks(self.request.user)
+        tasks = get_camunda_user_tasks(self.request.user)
+        with parallel() as executor:
+            zaken_context = executor.map(get_zaak_context, tasks)
+
+        return [
+            TaskAndCase(task=task, zaak=zaak_context.zaak)
+            for task, zaak_context in zip(tasks, zaken_context)
+        ]
