@@ -11,7 +11,6 @@ from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.models import AccessRequest
-from zac.accounts.permissions import UserPermissions
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.contrib.kownsl.api import (
@@ -75,7 +74,7 @@ class Index(PermissionRequiredMixin, BaseListView):
 
     def get_filter_form_kwargs(self):
         kwargs = super().get_filter_form_kwargs()
-        kwargs["zaaktypen"] = get_zaaktypen(UserPermissions(self.request.user))
+        kwargs["zaaktypen"] = get_zaaktypen(self.request.user)
         return kwargs
 
     def get_object_list(self):

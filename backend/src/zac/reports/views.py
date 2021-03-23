@@ -8,7 +8,6 @@ from django.views.generic.detail import SingleObjectMixin
 
 from rules.contrib.views import PermissionRequiredMixin
 
-from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_zaaktypen
 
 from .export import export_zaken
@@ -23,7 +22,7 @@ class ReportsListView(LoginRequiredMixin, ListView):
         qs = super().get_queryset()
 
         # filter on allowed zaaktypen
-        zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
+        zaaktypen = get_zaaktypen(self.request.user)
         identificaties = list({zt.identificatie for zt in zaaktypen})
 
         # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen

@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
+from elasticsearch_dsl.query import Query
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.utils.exceptions import get_error_list
@@ -370,7 +371,7 @@ class PermissionDefinition(models.Model):
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
-    def has_policy_access(self, obj, request=None):
+    def has_policy_access(self, obj, request=None) -> bool:
         if not self.policy:
             return False
 
@@ -378,7 +379,7 @@ class PermissionDefinition(models.Model):
         blueprint = blueprint_class(self.policy, context={"request": request})
         return blueprint.has_access(obj)
 
-    def get_policy_query(self):
+    def get_policy_query(self) -> Query:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
         return blueprint.search_query()

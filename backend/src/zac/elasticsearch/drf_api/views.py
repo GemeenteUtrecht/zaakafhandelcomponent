@@ -8,7 +8,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.zaken import Zaak
 
-from zac.accounts.permissions import UserPermissions
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
@@ -63,12 +62,11 @@ class SearchViewSet(views.APIView):
         return Response(zaak_serializer.data)
 
     def perform_search(self, data) -> List[Zaak]:
-        user_perms = UserPermissions(self.request.user)
         # TODO search on zaaktype attributes instead of urls
         if data.get("zaaktype"):
             zaaktype_data = data.pop("zaaktype")
             zaaktypen = get_zaaktypen(
-                user_perms,
+                self.request.user,
                 catalogus=zaaktype_data["catalogus"],
                 omschrijving=zaaktype_data["omschrijving"],
             )

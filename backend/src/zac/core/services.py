@@ -24,6 +24,7 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -31,14 +32,15 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.models import User
+from zac.accounts.constants import PermissionObjectType
+from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.models import PermissionDefinition, User
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from ..accounts.models import User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .permissions import zaken_inzien
@@ -129,19 +131,38 @@ def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]
 
 
 def get_zaaktypen(
-    user_perms: Optional[UserPermissions] = None,
+    user: Optional[User] = None,
     catalogus: str = "",
     omschrijving: str = "",
 ) -> List[ZaakType]:
     zaaktypen = _get_zaaktypen(catalogus=catalogus)
-    if user_perms is not None:
-        # filter out zaaktypen from permissions
-        zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
 
     if omschrijving:
         zaaktypen = [
             zaaktype for zaaktype in zaaktypen if zaaktype.omschrijving == omschrijving
         ]
+
+    if user is None or user.is_superuser:
+        return zaaktypen
+
+    # filter out zaaktypen from permissions
+    permission_definitions = (
+        PermissionDefinition.objects.for_user(user)
+        .filter(object_url="", object_type=PermissionObjectType.zaak)
+        .actual()
+    )
+    order_case = VertrouwelijkheidsAanduidingen.get_order_expression("policy__max_va")
+    zaaktypen = [
+        zaaktype
+        for zaaktype in zaaktypen
+        if permission_definitions.annotate(max_va_order=order_case)
+        .filter(
+            policy__catalogus=zaaktype.catalogus,
+            policy__zaaktype_omschrijving=zaaktype.omschrijving,
+            max_va_order__gte=VA_ORDER[zaaktype.vertrouwelijkheidaanduiding],
+        )
+        .exists()
+    ]
     return zaaktypen
 
 
