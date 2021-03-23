@@ -25,12 +25,9 @@ from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
-from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
@@ -449,7 +446,7 @@ class CreateZaakDocumentView(views.APIView):
     parameters=[
         OpenApiParameter(
             name="zaak",
-            required=False,
+            required=True,
             type=OpenApiTypes.URI,
             description=_("Zaak to list available document types for"),
             location=OpenApiParameter.QUERY,
@@ -458,9 +455,7 @@ class CreateZaakDocumentView(views.APIView):
 )
 class InformatieObjectTypeListView(generics.ListAPIView):
     """
-    List the available document types.
-
-    A zaak url can be provided to filter on available document types for a specific zaak.
+    List the available document types for a given zaak.
     TODO: permissions checks on zaak - can this user read/mutate the zaak?
     """
 
@@ -469,17 +464,9 @@ class InformatieObjectTypeListView(generics.ListAPIView):
 
     def get_queryset(self):
         zaak_url = self.request.query_params.get("zaak")
-        if zaak_url:
-            return get_informatieobjecttypen_for_zaak(zaak_url)
-
-        ztcs = Service.objects.filter(api_type=APITypes.ztc)
-        all_informatieobjecttypen = []
-        for ztc in ztcs:
-            client = ztc.build_client()
-            results = get_paginated_results(client, "informatieobjecttype")
-            all_informatieobjecttypen += [iot for iot in results]
-
-        return [factory(InformatieObjectType, iot) for iot in all_informatieobjecttypen]
+        if not zaak_url:
+            raise exceptions.ValidationError("'zaak' query parameter is required.")
+        return get_informatieobjecttypen_for_zaak(zaak_url)
 
 
 @extend_schema(summary=_("List zaaktypen"), tags=["meta"])

@@ -100,6 +100,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
                 ),
                 code="invalid-choice",
             )
+        return selected_docs
 
     def get_zaak_from_context(self):
         zaak_context = get_zaak_context(self.context["task"])

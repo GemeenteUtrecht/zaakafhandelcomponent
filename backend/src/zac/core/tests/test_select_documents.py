@@ -17,6 +17,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zgw.models.zrc import Zaak
+from zgw_consumers.api_models.catalogi import ZaakType
 
 from ..camunda.select_documents.serializers import (
     DocumentSelectContextSerializer,
@@ -162,14 +163,6 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-        )
-
-        cls.zaak = factory(Zaak, zaak)
 
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
@@ -200,6 +193,15 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             InformatieObjectType, cls.documenttype
         )
 
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+        )
+
+        cls.zaak = factory(Zaak, zaak)
+
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak, documents=[cls.document_1, cls.document_2]
         )
@@ -210,7 +212,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         )
 
         cls.patch_get_documenten = patch(
-            "zac.core.camunda.select_documents.serializers.get_documenten",
+            "zac.core.api.validators.get_documenten",
             return_value=([cls.document_1, cls.document_2], []),
         )
 
@@ -238,10 +240,11 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         with self.assertRaises(exceptions.ValidationError):
             serializer.is_valid(raise_exception=True)
 
-    def test_document_select_task_serializer(self):
+    @patch("zac.core.camunda.select_documents.serializers._client_from_url", return_value=None)
+    def test_document_select_task_serializer(self, *mocks):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
-        payload = {
+        data = {
             "selected_documents": [
                 {
                     "document": self.document_1.url,
@@ -251,15 +254,15 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         }
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
+        serializer = DocumentSelectTaskSerializer(
+            data=data, context={"task": task}
+        )
         with patch(
             "zac.core.camunda.select_documents.serializers.get_paginated_results",
             return_value=[self.documenttype],
         ):
-            serializer = DocumentSelectTaskSerializer(
-                data=payload, context={"task": task}
-            )
+            serializer.is_valid(raise_exception=True)
 
-        serializer.is_valid(raise_exception=True)
         self.assertIn("selected_documents", serializer.validated_data)
         self.assertEqual(
             serializer.validated_data["selected_documents"],
@@ -296,5 +299,5 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
 
         self.assertEqual(
             err.exception.detail["selected_documents"][0]["document"][0].code,
-            "invalid_choice",
+            "blank",
         )
