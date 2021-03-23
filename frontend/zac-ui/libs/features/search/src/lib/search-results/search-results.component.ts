@@ -20,7 +20,7 @@ export class SearchResultsComponent implements OnChanges {
   }
 
   createTableData(resultData: Zaak[]): Table {
-    const tableData: Table = new Table(['', 'Zaaknummer', 'Zaaktype', 'Omschrijving', 'Deadline'], []);
+    const tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Deadline'], []);
 
     // Add table body data
     tableData.bodyData = resultData.map( result => {
@@ -29,10 +29,9 @@ export class SearchResultsComponent implements OnChanges {
         cellData: {
           url: {
             type: 'link',
-            label: 'Naar zaak',
+            label: result.identificatie,
             url: url
           },
-          identificatie: result.identificatie,
           zaaktype: result.zaaktype.omschrijving,
           omschrijving: result.omschrijving,
           deadline: result.deadline,

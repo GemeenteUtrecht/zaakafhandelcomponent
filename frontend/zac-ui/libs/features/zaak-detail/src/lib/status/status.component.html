@@ -1,6 +1,6 @@
 <div class="status card">
   <h2>Status</h2>
-  <ng-container *ngIf="!data && isLoading">
+  <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <ng-container *ngIf="data && !isLoading">

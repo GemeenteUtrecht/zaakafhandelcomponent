@@ -37,6 +37,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
 }
 :host {
   width: fit-content;
+  vertical-align: middle;
 }
 .btn {
   @include button;
@@ -80,10 +81,21 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
       text-decoration: underline;
     }
   }
+  .mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+  }
   &--large {
     padding: 0.6rem 1.25rem;
     font-size: 1rem;
     font-weight: bold;
+    .mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
   }
   &:disabled,
   &[disabled]{

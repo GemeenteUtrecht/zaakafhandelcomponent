@@ -25,23 +25,23 @@ export class AdviserenAccorderenComponent implements OnInit {
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private modalService: ModalService
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.isLoading = true;
-    this.getSummary().subscribe( data => {
-      this.tableData.bodyData = this.formatTableData(data)
-      this.data = data;
-      this.isLoading = false;
-    }, error => {
-      console.log(error);
-      this.isLoading = false;
-    })
+    this.route.params.subscribe(params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.isLoading = true;
+      this.getSummary().subscribe(data => {
+        this.tableData.bodyData = this.formatTableData(data)
+        this.data = data;
+        this.isLoading = false;
+      }, error => {
+        console.log(error);
+        this.isLoading = false;
+      })
+    });
   }
 
   getSummary(): Observable<HttpResponse<any>> {

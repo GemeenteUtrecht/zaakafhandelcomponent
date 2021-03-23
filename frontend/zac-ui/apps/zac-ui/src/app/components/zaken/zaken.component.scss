@@ -1,0 +1,9 @@
+@import './base/colors/colors';
+
+.tab-content {
+  padding-top: 2rem;
+}
+.nav-pills .nav-link.active {
+  color: $color-white;
+  background-color: $color-blue;
+}

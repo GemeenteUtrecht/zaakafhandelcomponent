@@ -1,14 +1,12 @@
 <div class="betrokkenen card">
   <h2>Betrokkenen</h2>
-  <ng-template [ngIf]="(!data) && (isLoading)">
-    <gu-loading-indicator></gu-loading-indicator>
-  </ng-template>
-  <ng-template [ngIf]="data">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="data && !isLoading">
     <div class="betrokkenen__role" *ngFor="let role of data;">
       <div class="role-description">
         <p class="p--grey">{{role.omschrijving}}</p>
       </div>
       <p class="p--bold p--nomargin">{{role.name}}</p>
     </div>
-  </ng-template>
+  </ng-container>
 </div>

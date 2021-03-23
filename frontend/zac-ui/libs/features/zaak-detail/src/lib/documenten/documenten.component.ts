@@ -36,15 +36,15 @@ export class DocumentenComponent implements OnInit {
     private route: ActivatedRoute,
     private documentenService: DocumentenService,
     private modalService: ModalService
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.fetchDocuments()
+    this.route.params.subscribe(params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.fetchDocuments()
+    });
   }
 
   fetchDocuments() {

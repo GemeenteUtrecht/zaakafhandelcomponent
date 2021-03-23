@@ -25,15 +25,14 @@ export class GerelateerdeZakenComponent implements OnInit {
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private modalService: ModalService
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.fetchRelatedCases();
+    this.route.params.subscribe(params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+      this.fetchRelatedCases();
+    });
   }
 
   fetchRelatedCases() {

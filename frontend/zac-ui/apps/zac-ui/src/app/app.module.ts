@@ -14,8 +14,9 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 
 import { KownslModule } from './components/kownsl/kownsl.module';
-import { ZaakDetailModule } from './components/zaak-detail/zaak-detail.module';
+import { ZakenModule } from './components/zaken/zaken.module';
 import { WorkstackModule } from './components/workstack/workstack.module';
+import { ZakenComponent } from './components/zaken/zaken.component';
 
 registerLocaleData(localeNL);
 
@@ -35,7 +36,7 @@ registerLocaleData(localeNL);
     }),
     SharedUiComponentsModule,
     KownslModule,
-    ZaakDetailModule,
+    ZakenModule,
     WorkstackModule
   ],
   providers: [

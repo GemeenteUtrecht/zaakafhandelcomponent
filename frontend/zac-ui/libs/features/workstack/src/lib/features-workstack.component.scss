@@ -3,12 +3,12 @@
 .workstack {
   .tab-content {
     padding-top: 1rem;
-    .task-link {
-      font-size: 1rem;
-      display: block;
-      border: 1px solid $border-grey;
-      padding: 0.5rem;
-      border-radius: 5px;
-    }
+  }
+  .task-link {
+    font-size: 1rem;
+    display: block;
+    border: 1px solid $border-grey;
+    padding: 0.5rem;
+    border-radius: 5px;
   }
 }

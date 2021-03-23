@@ -24,22 +24,23 @@ export class StatusComponent implements OnInit {
   constructor(
     private http: ApplicationHttpClient,
     private route: ActivatedRoute
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.isLoading = true;
-    this.getStatuses().subscribe(data => {
-      this.data = data;
-      this.isLoading = false;
-    }, error => {
-      console.log(error);
-      this.isLoading = false;
-    })
+    this.route.params.subscribe(params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.isLoading = true;
+
+      this.getStatuses().subscribe(data => {
+        this.data = data;
+        this.isLoading = false;
+      }, error => {
+        console.log(error);
+        this.isLoading = false;
+      })
+    });
   }
 
   getStatuses(): Observable<HttpResponse<any>> {

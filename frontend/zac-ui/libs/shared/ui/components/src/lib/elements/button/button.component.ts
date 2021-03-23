@@ -8,10 +8,11 @@ import { Component, Input, OnInit } from '@angular/core';
 export class ButtonComponent implements OnInit {
 
   @Input() type: 'primary' | 'secondary' | 'tertiary' = 'primary';
-  @Input() size: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
-  @Input() noPadding: boolean;
-  @Input() disabled: boolean;
-  @Input() loading: boolean;
+  @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
+  @Input() noPadding?: boolean;
+  @Input() disabled?: boolean;
+  @Input() loading?: boolean;
+  @Input() icon?: string;
 
   constructor() { }
 

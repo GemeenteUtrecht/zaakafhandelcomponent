@@ -1,8 +1,4 @@
-<div class="search feature-container">
-  <div class="content-background">
-    <div class="content">
-      <gu-search-form class="d-block mb-4" (loadResult)="setResult($event)"></gu-search-form>
-      <gu-search-results [resultData]="resultData"></gu-search-results>
-    </div>
-  </div>
+<div class="gu-search">
+  <gu-search-form class="d-block mb-4" (loadResult)="setResult($event)"></gu-search-form>
+  <gu-search-results [resultData]="resultData"></gu-search-results>
 </div>

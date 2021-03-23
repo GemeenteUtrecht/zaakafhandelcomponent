@@ -42,16 +42,16 @@ export class KetenProcessenComponent implements OnInit {
     private route: ActivatedRoute,
     private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.fetchCurrentUser();
-    this.fetchProcesses();
+    this.route.params.subscribe( params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.fetchCurrentUser();
+      this.fetchProcesses();
+    });
   }
 
   fetchCurrentUser(): void {
