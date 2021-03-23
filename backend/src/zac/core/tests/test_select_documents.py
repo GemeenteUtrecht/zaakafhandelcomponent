@@ -4,7 +4,7 @@ from django_camunda.utils import underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -17,7 +17,6 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zgw.models.zrc import Zaak
-from zgw_consumers.api_models.catalogi import ZaakType
 
 from ..camunda.select_documents.serializers import (
     DocumentSelectContextSerializer,
@@ -240,7 +239,10 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         with self.assertRaises(exceptions.ValidationError):
             serializer.is_valid(raise_exception=True)
 
-    @patch("zac.core.camunda.select_documents.serializers._client_from_url", return_value=None)
+    @patch(
+        "zac.core.camunda.select_documents.serializers._client_from_url",
+        return_value=None,
+    )
     def test_document_select_task_serializer(self, *mocks):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
@@ -254,9 +256,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         }
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
-        serializer = DocumentSelectTaskSerializer(
-            data=data, context={"task": task}
-        )
+        serializer = DocumentSelectTaskSerializer(data=data, context={"task": task})
         with patch(
             "zac.core.camunda.select_documents.serializers.get_paginated_results",
             return_value=[self.documenttype],
