@@ -29,7 +29,6 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.utils.filters import ApiFilterBackend

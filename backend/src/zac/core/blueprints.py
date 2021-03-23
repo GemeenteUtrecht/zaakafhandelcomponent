@@ -1,8 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
-from elasticsearch_dsl.query import Q, Query, Range, Term
+from elasticsearch_dsl.query import Query, Range, Term
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Zaak
