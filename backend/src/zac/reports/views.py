@@ -8,7 +8,6 @@ from django.views.generic.detail import SingleObjectMixin
 
 from rules.contrib.views import PermissionRequiredMixin
 
-from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_zaaktypen
 
 from .export import export_zaken
