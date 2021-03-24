@@ -97,7 +97,7 @@ class DefinitionBasePermission(permissions.BasePermission):
             return True
 
         # then check blueprint permissions
-        for permission in permission_definitions.filter(object_url=""):
+        for permission in permission_definitions.blueprint():
             if permission.has_policy_access(obj, request):
                 return True
 
