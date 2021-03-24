@@ -16,7 +16,6 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     PermissionDefinitionFactory,
-    PermissionSetFactory,
     SuperUserFactory,
     UserFactory,
 )
