@@ -1,10 +1,9 @@
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.urls import reverse
 
 import requests_mock
-from django_camunda.utils import serialize_variable
 from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -153,8 +152,6 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.patch_get_task.start()
-        self.addCleanup(self.patch_get_task.stop)
 
         self.patch_get_process_instance.start()
         self.addCleanup(self.patch_get_process_instance.stop)
@@ -182,7 +179,46 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_perm_set_assignee(self, m):
+    def test_has_perm_task_not_found(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create()
+        PermissionSetFactory.create(
+            permissions=[zaakproces_usertasks.name],
+            for_user=user,
+            catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificaties=["ZT1"],
+            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+        )
+
+        self.client.force_authenticate(user=user)
+
+        data = {
+            "task_id": self.task.id,
+            "assignee": user.username,
+            "delegate": "",
+        }
+
+        with patch("zac.camunda.api.views.get_task", return_value=None):
+            response = self.client.post(
+                self.endpoint,
+                data=data,
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {"detail": "The task with given task ID does not exist (anymore)."},
+        )
+
+    @requests_mock.Mocker()
+    def test_has_perm_set_assignee_and_delegate(self, m):
+        self.patch_get_task.start()
+        self.addCleanup(self.patch_get_task.stop)
+
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",

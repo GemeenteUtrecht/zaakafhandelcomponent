@@ -245,8 +245,8 @@ class SetTaskAssigneeView(APIView):
 
     def _get_task(self, task_id: str) -> Task:
         task = get_task(task_id, check_history=False)
-        if task is None:
-            raise exceptions.NotFound(
+        if not task:
+            raise exceptions.ParseError(
                 _("The task with given task ID does not exist (anymore).")
             )
         return task
@@ -297,6 +297,7 @@ class SetTaskAssigneeView(APIView):
 
         task_id = serializer.validated_data["task_id"]
         task = self._get_task(task_id)
+        print("LOL")
         process_instance = get_process_instance(task.process_instance_id)
         zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)
