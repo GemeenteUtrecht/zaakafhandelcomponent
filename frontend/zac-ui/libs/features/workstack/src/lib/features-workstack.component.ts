@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesWorkstackService } from './features-workstack.service';
 import { tabs, Tab } from './constants/tabs';
-import { RowData, Zaak, Task, Table } from '@gu/models';
+import { RowData, Zaak, Table, UserTask, UserTaskZaak, Task } from '@gu/models';
 import { AccessRequests } from './models/access-request';
 import { AdHocActivities } from './models/activities';
 
@@ -17,7 +17,7 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   allData: any;
   zakenData: Zaak[];
-  taskData: Task[];
+  taskData: UserTask[];
   activitiesData: AdHocActivities[];
   accessRequestData: AccessRequests[];
 
@@ -70,6 +70,14 @@ export class FeaturesWorkstackComponent implements OnInit {
       }
       return cellData;
     })
+  }
+
+  createRouteLink(zaak: UserTaskZaak, task: Task) {
+    if (task.hasForm) {
+      return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
+    } else {
+      return task.executeUrl;
+    }
   }
 
 }

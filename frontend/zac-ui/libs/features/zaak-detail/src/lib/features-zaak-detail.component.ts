@@ -10,10 +10,11 @@ import { Zaak } from '../models/zaak';
   styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
-  data: Zaak;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  bronorganisatie: string;
+  identificatie: string;
   mainZaakUrl: string;
+
+  data: Zaak;
 
   isLoading: boolean;
   hasError: boolean;

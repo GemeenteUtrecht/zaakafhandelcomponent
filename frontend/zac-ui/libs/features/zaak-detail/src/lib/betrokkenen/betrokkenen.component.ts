@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -8,32 +7,24 @@ import { Observable } from 'rxjs';
   templateUrl: './betrokkenen.component.html',
   styleUrls: ['./betrokkenen.component.scss']
 })
-export class BetrokkenenComponent implements OnInit {
+export class BetrokkenenComponent implements OnChanges {
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
 
   data: any;
   isLoading = true;
-  bronorganisatie: string;
-  identificatie: string;
 
-  constructor(
-    private http: ApplicationHttpClient,
-    private route: ActivatedRoute
-  ) { }
+  constructor(private http: ApplicationHttpClient) { }
 
-  ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
-
-      this.isLoading = true;
-      this.getRoles().subscribe(data => {
-        this.data = data;
-        this.isLoading = false;
-      }, error => {
-        console.log(error);
-        this.isLoading = false;
-      })
-    });
+  ngOnChanges(): void {
+    this.isLoading = true;
+    this.getRoles().subscribe(data => {
+      this.data = data;
+      this.isLoading = false;
+    }, error => {
+      console.log(error);
+      this.isLoading = false;
+    })
   }
 
   getRoles(): Observable<any> {

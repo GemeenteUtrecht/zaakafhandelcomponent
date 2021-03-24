@@ -14,26 +14,40 @@
       <div class="col-12 col-md-4">
         <gu-informatie
           *ngIf="data"
+          [bronorganisatie]="bronorganisatie"
+          [identificatie]="identificatie"
           [infoData]="data"
           class="zaak-detail__section">
         </gu-informatie>
-        <gu-betrokkenen class="zaak-detail__section"></gu-betrokkenen>
-        <gu-adviseren-accorderen class="zaak-detail__section"></gu-adviseren-accorderen>
+        <gu-betrokkenen [bronorganisatie]="bronorganisatie"
+                        [identificatie]="identificatie"
+                        class="zaak-detail__section"></gu-betrokkenen>
+        <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
+                                 [identificatie]="identificatie"
+                                 class="zaak-detail__section"></gu-adviseren-accorderen>
       </div>
       <div class="col-12 col-md-8">
         <gu-status
+          [bronorganisatie]="bronorganisatie"
+          [identificatie]="identificatie"
           [progress]="data.deadlineProgress"
           [deadline]="data.deadline"
           class="zaak-detail__section">
         </gu-status>
         <gu-keten-processen [mainZaakUrl]="mainZaakUrl"
+                            [bronorganisatie]="bronorganisatie"
+                            [identificatie]="identificatie"
                             class="zaak-detail__section">
         </gu-keten-processen>
         <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
+                               [bronorganisatie]="bronorganisatie"
+                               [identificatie]="identificatie"
                                class="zaak-detail__section">
         </gu-gerelateerde-zaken>
         <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
         <gu-documenten [mainZaakUrl]="mainZaakUrl"
+                       [bronorganisatie]="bronorganisatie"
+                       [identificatie]="identificatie"
                        class="zaak-detail__section">
         </gu-documenten>
       </div>

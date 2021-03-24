@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute } from '@angular/router';
@@ -11,15 +11,15 @@ import { RelatedCase } from '../../models/related-case';
   templateUrl: './gerelateerde-zaken.component.html',
   styleUrls: ['./gerelateerde-zaken.component.scss']
 })
-export class GerelateerdeZakenComponent implements OnInit {
+export class GerelateerdeZakenComponent implements OnChanges {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
 
   tableData: Table = new Table(['Resultaat', 'Status', 'Zaak ID', 'Zaaktype', 'Aard'], []);
 
   data: any;
   isLoading = true;
-  bronorganisatie: string;
-  identificatie: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -27,12 +27,8 @@ export class GerelateerdeZakenComponent implements OnInit {
     private modalService: ModalService
   ) { }
 
-  ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
-      this.fetchRelatedCases();
-    });
+  ngOnChanges(): void {
+    this.fetchRelatedCases();
   }
 
   fetchRelatedCases() {

@@ -1,7 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Table, RowData } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
 import { convertKbToMb } from '@gu/utils';
 
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
@@ -14,8 +13,10 @@ import { ModalService } from '@gu/components';
   styleUrls: ['./documenten.component.scss']
 })
 
-export class DocumentenComponent implements OnInit {
+export class DocumentenComponent implements OnChanges {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
 
   tableData: Table = new Table(['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
 
@@ -25,26 +26,17 @@ export class DocumentenComponent implements OnInit {
   hasError: boolean;
   errorMessage: string;
 
-  bronorganisatie: string;
-  identificatie: string;
-
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute,
     private documentenService: DocumentenService,
     private modalService: ModalService
   ) { }
 
-  ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
-
-      this.fetchDocuments()
-    });
+  ngOnChanges(): void {
+    this.fetchDocuments()
   }
 
   fetchDocuments() {

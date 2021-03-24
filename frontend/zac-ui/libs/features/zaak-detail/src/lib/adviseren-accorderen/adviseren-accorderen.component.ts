@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { RowData, Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { ModalService } from '@gu/components';
@@ -12,36 +11,31 @@ import { ModalService } from '@gu/components';
   styleUrls: ['./adviseren-accorderen.component.scss']
 })
 export class AdviserenAccorderenComponent implements OnInit {
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
+
   tableData: Table = new Table(['', 'Type', 'Opgehaald'], []);
 
   data: any;
   isLoading = true;
-  bronorganisatie: string;
-  identificatie: string;
 
   selectedUuid: string;
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute,
     private modalService: ModalService
   ) { }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
-
-      this.isLoading = true;
-      this.getSummary().subscribe(data => {
-        this.tableData.bodyData = this.formatTableData(data)
-        this.data = data;
-        this.isLoading = false;
-      }, error => {
-        console.log(error);
-        this.isLoading = false;
-      })
-    });
+    this.isLoading = true;
+    this.getSummary().subscribe(data => {
+      this.tableData.bodyData = this.formatTableData(data)
+      this.data = data;
+      this.isLoading = false;
+    }, error => {
+      console.log(error);
+      this.isLoading = false;
+    })
   }
 
   getSummary(): Observable<HttpResponse<any>> {
@@ -76,13 +70,8 @@ export class AdviserenAccorderenComponent implements OnInit {
   }
 
   handleTableClickOutput(value) {
-    this.openDetailModal(value);
     this.selectedUuid = value;
     this.modalService.open('adviseren-accorderen-detail-modal')
-  }
-
-  openDetailModal(uuid) {
-
   }
 
   getReviewRequestDetail(uuid): Observable<HttpResponse<any>> {
