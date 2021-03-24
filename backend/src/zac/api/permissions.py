@@ -135,7 +135,7 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
             return True
 
         # first check  if the user has permissions for any object
-        if super().has_permission(request, view) is False:
+        if not super().has_permission(request, view):
             return False
 
         object_url = serializer.validated_data[self.object_attr]
