@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import ProcessInstanceFetchView, SendMessageView, UserTaskView
+from .views import (
+    ProcessInstanceFetchView,
+    SendMessageView,
+    SetTaskAssigneeView,
+    UserTaskView,
+)
 
 urlpatterns = [
     path(
@@ -14,4 +19,5 @@ urlpatterns = [
         name="user-task-data",
     ),
     path("send-message", SendMessageView.as_view(), name="send-message"),
+    path("claim-task", SetTaskAssigneeView.as_view(), name="claim-task"),
 ]

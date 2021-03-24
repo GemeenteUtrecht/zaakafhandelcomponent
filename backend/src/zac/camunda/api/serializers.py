@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, NoReturn
+from typing import Any, Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +8,8 @@ from zac.accounts.api.serializers import UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
+from .fields import TaskField
+from .validators import UserValidator
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -112,5 +114,24 @@ class MessageSerializer(serializers.Serializer):
         help_text=_("The message that is sent to the process instance."),
     )
 
-    def set_message_choices(self, message_names: List[str]) -> NoReturn:
+    def set_message_choices(self, message_names: List[str]):
         self.fields["message"].choices = [(name, name) for name in message_names]
+
+
+class SetTaskAssigneeSerializer(serializers.Serializer):
+    task = TaskField(
+        label=_("Task ID"),
+        help_text=_("The ID of the task which assignee/delegate is to be set."),
+    )
+    assignee = serializers.CharField(
+        label=_("assignee"),
+        help_text=_("User assigned to the task."),
+        allow_blank=True,
+        validators=(UserValidator(),),
+    )
+    delegate = serializers.CharField(
+        label=_("delegate"),
+        help_text=_("User delegated to the task."),
+        allow_blank=True,
+        validators=(UserValidator(),),
+    )
