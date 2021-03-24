@@ -243,14 +243,6 @@ class SetTaskAssigneeView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = SetTaskAssigneeSerializer
 
-    def _get_task(self, task_id: str) -> Task:
-        task = get_task(task_id, check_history=False)
-        if not task:
-            raise exceptions.ParseError(
-                _("The task with given task ID does not exist (anymore).")
-            )
-        return task
-
     def _create_rol(self, zaak: Zaak, user: User):
         # fetch roltype
         roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
@@ -295,9 +287,7 @@ class SetTaskAssigneeView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        task_id = serializer.validated_data["task_id"]
-        task = self._get_task(task_id)
-        print("LOL")
+        task = serializer.validated_data["task"]
         process_instance = get_process_instance(task.process_instance_id)
         zaak_url = get_process_zaak_url(process_instance)
         zaak = get_zaak(zaak_url=zaak_url)

@@ -8,6 +8,7 @@ from zac.accounts.api.serializers import UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
+from .fields import TaskField
 from .validators import UserValidator
 
 
@@ -118,7 +119,7 @@ class MessageSerializer(serializers.Serializer):
 
 
 class SetTaskAssigneeSerializer(serializers.Serializer):
-    task_id = serializers.UUIDField(
+    task = TaskField(
         label=_("Task ID"),
         help_text=_("The ID of the task which assignee/delegate is to be set."),
     )

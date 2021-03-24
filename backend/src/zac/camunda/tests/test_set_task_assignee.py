@@ -25,6 +25,30 @@ from ..api.serializers import SetTaskAssigneeSerializer
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
+TASK_DATA = {
+    "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
+    "name": "aName",
+    "assignee": None,
+    "created": "2013-01-23T13:42:42.000+0200",
+    "due": "2013-01-23T13:49:42.576+0200",
+    "follow_up": "2013-01-23T13:44:42.437+0200",
+    "delegation_state": "RESOLVED",
+    "description": "aDescription",
+    "execution_id": "anExecution",
+    "owner": "anOwner",
+    "parent_task_id": None,
+    "priority": 42,
+    "process_definition_id": "aProcDefId",
+    "process_instance_id": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+    "case_definition_id": "aCaseDefId",
+    "case_instance_id": "aCaseInstId",
+    "case_execution_id": "aCaseExecution",
+    "task_definition_key": "aTaskDefinitionKey",
+    "suspended": False,
+    "form_key": "",
+    "tenant_id": "aTenantId",
+}
+
 
 class SetTaskAssigneeSerializerTests(APITestCase):
     @classmethod
@@ -33,16 +57,23 @@ class SetTaskAssigneeSerializerTests(APITestCase):
 
         cls._uuid = uuid.uuid4()
         cls.data = {
-            "task_id": cls._uuid,
+            "task": cls._uuid,
             "assignee": "some-user",
             "delegate": "some-delegate",
         }
 
-    def test_serializer_fail_validation(self):
+        cls.task = factory(Task, TASK_DATA)
+
+    @patch("zac.camunda.api.fields.get_task", return_value=None)
+    def test_serializer_fail_validation(self, *mocks):
         serializer = SetTaskAssigneeSerializer(data=self.data)
         with self.assertRaises(exceptions.ValidationError) as exc:
             serializer.is_valid(raise_exception=True)
 
+        self.assertEqual(
+            exc.exception.detail["task"][0],
+            "The task with given task ID does not exist (anymore).",
+        )
         self.assertEqual(
             exc.exception.detail["assignee"][0],
             "A user with username some-user does not exist.",
@@ -58,8 +89,10 @@ class SetTaskAssigneeSerializerTests(APITestCase):
             **self.data,
             **{"assignee": users[0].username, "delegate": users[1].username},
         }
+
         serializer = SetTaskAssigneeSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
+        with patch("zac.camunda.api.fields.get_task", return_value=self.task):
+            serializer.is_valid(raise_exception=True)
 
 
 class SetTaskAssigneePermissionAndResponseTests(APITestCase):
@@ -67,34 +100,10 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
-        TASK_DATA = {
-            "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
-            "name": "aName",
-            "assignee": None,
-            "created": "2013-01-23T13:42:42.000+0200",
-            "due": "2013-01-23T13:49:42.576+0200",
-            "follow_up": "2013-01-23T13:44:42.437+0200",
-            "delegation_state": "RESOLVED",
-            "description": "aDescription",
-            "execution_id": "anExecution",
-            "owner": "anOwner",
-            "parent_task_id": None,
-            "priority": 42,
-            "process_definition_id": "aProcDefId",
-            "process_instance_id": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
-            "case_definition_id": "aCaseDefId",
-            "case_instance_id": "aCaseInstId",
-            "case_execution_id": "aCaseExecution",
-            "task_definition_key": "aTaskDefinitionKey",
-            "suspended": False,
-            "form_key": "",
-            "tenant_id": "aTenantId",
-        }
         cls.task = factory(Task, TASK_DATA)
 
         cls.patch_get_task = patch(
-            "zac.camunda.api.views.get_task",
+            "zac.camunda.api.fields.get_task",
             return_value=cls.task,
         )
 
@@ -197,12 +206,12 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         data = {
-            "task_id": self.task.id,
+            "task": self.task.id,
             "assignee": user.username,
             "delegate": "",
         }
 
-        with patch("zac.camunda.api.views.get_task", return_value=None):
+        with patch("zac.camunda.api.fields.get_task", return_value=None):
             response = self.client.post(
                 self.endpoint,
                 data=data,
@@ -211,7 +220,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"detail": "The task with given task ID does not exist (anymore)."},
+            {"task": ["The task with given task ID does not exist (anymore)."]},
         )
 
     @requests_mock.Mocker()
@@ -246,7 +255,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         )
 
         data = {
-            "task_id": self.task.id,
+            "task": self.task.id,
             "assignee": user.username,
             "delegate": "",
         }
