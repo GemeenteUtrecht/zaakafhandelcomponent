@@ -22,3 +22,11 @@ class PermissionDefinitionQuerySet(models.QuerySet):
             models.Q(end_date__gte=timezone.now()) | models.Q(end_date=None),
             start_date__lte=timezone.now(),
         )
+
+    def atomic(self) -> models.QuerySet:
+        """return only atomic permissions"""
+        return self.exclude(object_url="")
+
+    def blueprint(self) -> models.QuerySet:
+        """return only blueprint permissions"""
+        return self.filter(object_url="")
