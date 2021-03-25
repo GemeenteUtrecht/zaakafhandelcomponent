@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
-from zac.accounts.models import PermissionDefinition
+from zac.accounts.models import BlueprintPermission, PermissionDefinition
 
 
 class UserModelEmailBackend(ModelBackend):
@@ -31,22 +31,27 @@ class PermissionsBackend:
         if not user_obj.is_active:
             return False
 
-        user_permissions = (
-            PermissionDefinition.objects.for_user(user_obj)
+        blueprint_permissions = (
+            BlueprintPermission.objects.for_user(user_obj)
             .filter(permission=perm)
             .actual()
         )
 
         # similar to DefinitionBasePermission.has_permission
         if not obj:
-            return user_permissions.exists()
+            return blueprint_permissions.exists()
 
         # similar to DefinitionBasePermission.has_object_permission
-        if user_permissions.filter(object_url=obj.url).exists():
+        if (
+            PermissionDefinition.objects.for_user(user_obj)
+            .filter(permission=perm, object_url=obj.url)
+            .actual()
+            .exists()
+        ):
             return True
 
-        for permission in user_permissions.filter(object_url=""):
-            if permission.has_policy_access(obj, user=user_obj):
+        for permission in blueprint_permissions:
+            if permission.has_access(obj, user=user_obj):
                 return True
 
         return False
