@@ -242,7 +242,7 @@ kombu==4.6.4
     # via
     #   -r requirements/ci.txt
     #   celery
-lxml==4.6.2
+lxml==4.6.3
     # via
     #   -r requirements/ci.txt
     #   pyquery
