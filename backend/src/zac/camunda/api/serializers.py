@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Any, Dict, List, NoReturn
+from typing import Any, Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -82,7 +81,7 @@ class UserTaskContextSerializer(BaseUserTaskSerializer):
 class SubmitUserTaskSerializer(BaseUserTaskSerializer):
     def __init__(self, *args, **kwargs):
         self.serializer_mapping = {
-            form_key: item.write_serializer(**kwargs)
+            form_key: item.write_serializer
             for form_key, item in REGISTRY.items()
             if item.write_serializer
         }
@@ -123,5 +122,5 @@ class MessageSerializer(serializers.Serializer):
         help_text=_("The message that is sent to the process instance."),
     )
 
-    def set_message_choices(self, message_names: List[str]) -> NoReturn:
+    def set_message_choices(self, message_names: List[str]):
         self.fields["message"].choices = [(name, name) for name in message_names]
