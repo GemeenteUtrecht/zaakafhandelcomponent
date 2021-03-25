@@ -124,9 +124,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         """
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
-        original_documents, gone = get_documenten(
-            [doc["document"] for doc in self.validated_data["selected_documents"]]
-        )
+        original_documents, gone = get_documenten(self.get_zaak_from_context())
 
         upload = []
         for old, new in zip(

@@ -20,6 +20,7 @@ from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.kownsl.constants import KownslTypes
 from zac.contrib.kownsl.data import ReviewRequest
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -319,23 +320,23 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        document = generate_oas_component(
+        drc = Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        config = CoreConfig.get_solo()
+        config.primary_drc = drc
+        config.save()
+        cls.document_dict = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
         )
-        cls.document = factory(Document, document)
-
+        cls.document = factory(Document, cls.document_dict)
         Service.objects.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
-
         cls.documenttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
@@ -346,7 +347,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.document.informatieobjecttype = factory(
             InformatieObjectType, cls.documenttype
         )
-
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -354,9 +354,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
         )
-
         cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
-
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
@@ -364,9 +362,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
         )
-
         cls.zaak = factory(Zaak, zaak)
-
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
@@ -374,7 +370,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 cls.document,
             ],
         )
-
         cls.review_request_data = {
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
@@ -390,11 +385,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "requester": "some-henkie",
         }
 
-        cls.patch_get_documenten = patch(
+        cls.patch_get_documenten_validator = patch(
             "zac.core.api.validators.get_documenten",
             return_value=([cls.document], []),
         )
-
+        cls.patch_get_documenten = patch(
+            "zac.core.camunda.select_documents.serializers.get_documenten",
+            return_value=([cls.document], []),
+        )
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -402,6 +400,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
+
+        self.patch_get_documenten_validator.start()
+        self.addCleanup(self.patch_get_documenten_validator.stop)
 
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
@@ -435,7 +436,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
-    def test_put_select_document_user_task(self, m, gt, ct):
+    def test_put_select_document_user_task(self, m, *mocks):
+        mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
+
         self._mock_permissions(m)
         payload = {
             "selectedDocuments": [
@@ -445,6 +448,12 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 },
             ],
         }
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=[self.document_dict],
+            status_code=201,
+        )
 
         with patch(
             "zac.core.camunda.select_documents.serializers.get_zaak_context",
