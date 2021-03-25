@@ -232,7 +232,7 @@ jdcal==1.4.1
     # via
     #   -r requirements/ci.txt
     #   openpyxl
-jinja2==2.11.2
+jinja2==2.11.3
     # via sphinx
 jsonschema==3.2.0
     # via
