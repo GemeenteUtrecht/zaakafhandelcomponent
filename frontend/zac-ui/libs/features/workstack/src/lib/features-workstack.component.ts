@@ -22,7 +22,7 @@ export class FeaturesWorkstackComponent implements OnInit {
   accessRequestData: AccessRequests[];
 
   zakenTableData: Table = new Table(
-    ['Identificatie', 'Zaaktype', 'Startdatum', 'Geplande einddatum', 'Einddatum', 'Vertrouwelijkheid'],
+    ['Identificatie', 'Zaaktype', 'Startdatum', 'Geplande einddatum', 'Vertrouwelijkheid'],
     []
   );
 
@@ -64,7 +64,6 @@ export class FeaturesWorkstackComponent implements OnInit {
           zaaktype: element.zaaktype.omschrijving,
           startdate: element.startdatum,
           plannedEndDate: element.einddatumGepland,
-          endDate: element.einddatum,
           trust: element.vertrouwelijkheidaanduiding,
         },
       }
