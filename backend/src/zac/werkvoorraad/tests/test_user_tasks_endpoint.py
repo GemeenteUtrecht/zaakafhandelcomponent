@@ -5,9 +5,14 @@ from django.urls import reverse
 from django_camunda.utils import underscoreize
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
+from zac.api.context import ZaakContext
 from zac.camunda.data import Task
+from zgw.models.zrc import Zaak
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -34,6 +39,8 @@ TASK_DATA = {
     "tenantId": "aTenantId",
 }
 
+ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+
 
 def _get_task(**overrides):
     data = underscoreize({**TASK_DATA, **overrides})
@@ -53,6 +60,15 @@ class UserTasksTests(APITestCase):
         cls.endpoint = reverse(
             "werkvoorraad:user-tasks",
         )
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+        )
+
+        cls.zaak = factory(Zaak, zaak)
 
     def setUp(self):
         super().setUp()
@@ -74,34 +90,47 @@ class UserTasksTests(APITestCase):
 
     def test_user_tasks_endpoint(self):
         self.maxDiff = None
-        # Sanity check
+
         with patch(
-            "zac.werkvoorraad.api.views.get_camunda_user_tasks",
-            return_value=[_get_task(**{"assignee": self.user})],
+            "zac.werkvoorraad.api.views.get_zaak_context",
+            return_value=ZaakContext(zaak=self.zaak, zaaktype=None, documents=None),
         ):
-            response = self.client.get(self.endpoint)
+            with patch(
+                "zac.werkvoorraad.api.views.get_camunda_user_tasks",
+                return_value=[_get_task(**{"assignee": self.user})],
+            ):
+                response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
-            data[0],
-            {
-                "name": TASK_DATA["name"],
-                "assignee": {
-                    "email": self.user.email,
-                    "firstName": self.user.first_name,
-                    "id": self.user.id,
-                    "isStaff": self.user.is_staff,
-                    "lastName": self.user.last_name,
-                    "username": self.user.username,
-                },
-                "created": TASK_DATA["created"],
-                "executeUrl": reverse(
-                    "core:zaak-task",
-                    kwargs={
-                        "task_id": TASK_DATA["id"],
+            data,
+            [
+                {
+                    "task": {
+                        "name": TASK_DATA["name"],
+                        "assignee": {
+                            "email": self.user.email,
+                            "firstName": self.user.first_name,
+                            "id": self.user.id,
+                            "isStaff": self.user.is_staff,
+                            "lastName": self.user.last_name,
+                            "username": self.user.username,
+                        },
+                        "created": TASK_DATA["created"],
+                        "executeUrl": reverse(
+                            "core:zaak-task",
+                            kwargs={
+                                "task_id": TASK_DATA["id"],
+                            },
+                        ),
+                        "hasForm": False,
+                        "id": TASK_DATA["id"],
                     },
-                ),
-                "hasForm": False,
-                "id": TASK_DATA["id"],
-            },
+                    "zaak": {
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                        "url": self.zaak.url,
+                    },
+                },
+            ],
         )

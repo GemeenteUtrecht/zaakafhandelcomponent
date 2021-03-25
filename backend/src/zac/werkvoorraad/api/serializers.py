@@ -6,9 +6,10 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
+from zac.camunda.api.serializers import TaskSerializer
 from zac.core.api.serializers import ZaakSerializer
 
-from .data import AccessRequestGroup, ActivityGroup
+from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 
 
 class AccessRequestSerializer(APIModelSerializer):
@@ -76,4 +77,16 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
                 "bronorganisatie": obj.zaak.bronorganisatie,
                 "identificatie": obj.zaak.identificatie,
             },
+        )
+
+
+class WorkStackTaskSerializer(APIModelSerializer):
+    task = TaskSerializer()
+    zaak = ZaakSerializer()
+
+    class Meta:
+        model = TaskAndCase
+        fields = (
+            "task",
+            "zaak",
         )
