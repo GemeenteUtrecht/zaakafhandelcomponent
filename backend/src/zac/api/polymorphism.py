@@ -92,7 +92,7 @@ class PolymorphicSerializer(serializers.Serializer):
 
     def is_valid(self, *args, **kwargs):
         valid = super().is_valid(*args, **kwargs)
-        extra_serializer = self._get_serializer_from_data(self.validated_data)
+        extra_serializer = self._get_serializer_from_data(self.data)
         extra_valid = extra_serializer.is_valid(*args, **kwargs)
         self._errors.update(extra_serializer.errors)
         return valid and extra_valid
