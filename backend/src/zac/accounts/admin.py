@@ -8,6 +8,7 @@ from hijack_admin.admin import HijackUserAdminMixin
 from .models import (
     AccessRequest,
     AuthorizationProfile,
+    BlueprintPermission,
     PermissionDefinition,
     User,
     UserAuthorizationProfile,
@@ -38,11 +39,11 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
 class AuthorizationProfileAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name", "uuid")
-    filter_horizontal = ("permission_definitions",)
+    filter_horizontal = ("blueprint_permissions",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.prefetch_related("permission_definitions")
+        return qs.prefetch_related("blueprint_permissions")
 
 
 @admin.register(UserAuthorizationProfile)
@@ -60,28 +61,7 @@ class AccessRequestAdmin(admin.ModelAdmin):
     raw_id_fields = ("requester", "handler")
 
 
-@admin.register(PermissionDefinition)
-class PermissionDefinitionAdmin(admin.ModelAdmin):
-    list_display = ("permission", "object_type", "start_date", "display_is_atomic")
-    list_filter = ("permission", "object_type")
-    search_fields = ("object_url",)
-    readonly_fields = ("display_policy_schema",)
-
-    def display_is_atomic(self, obj):
-        return bool(obj.object_url)
-
-    display_is_atomic.boolean = True
-    display_is_atomic.short_description = _("is atomic")
-
-    def display_policy_schema(self, obj):
-        if obj.permission:
-            blueprint_class = obj.get_blueprint_class()
-            if blueprint_class:
-                return blueprint_class.display_as_yaml()
-        return ""
-
-    display_policy_schema.short_description = _("policy schema")
-
+class PermissionMixin:
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "permission":
             permission_choices = [(name, name) for name, permission in registry.items()]
@@ -94,3 +74,26 @@ class PermissionDefinitionAdmin(admin.ModelAdmin):
             )
 
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+@admin.register(PermissionDefinition)
+class PermissionDefinitionAdmin(PermissionMixin, admin.ModelAdmin):
+    list_display = ("permission", "object_type", "start_date")
+    list_filter = ("permission", "object_type")
+    search_fields = ("object_url",)
+
+
+@admin.register(BlueprintPermission)
+class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
+    list_display = ("permission", "object_type", "start_date")
+    list_filter = ("permission", "object_type")
+    readonly_fields = ("display_policy_schema",)
+
+    def display_policy_schema(self, obj):
+        if obj.permission:
+            blueprint_class = obj.get_blueprint_class()
+            if blueprint_class:
+                return blueprint_class.display_as_yaml()
+        return ""
+
+    display_policy_schema.short_description = _("policy schema")

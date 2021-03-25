@@ -14,7 +14,11 @@ from zac.utils.exceptions import get_error_list
 from .constants import AccessRequestResult, PermissionObjectType
 from .managers import UserManager
 from .permissions import registry
-from .query import AccessRequestQuerySet, PermissionDefinitionQuerySet
+from .query import (
+    AccessRequestQuerySet,
+    BlueprintPermissionQuerySet,
+    PermissionDefinitionQuerySet,
+)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -99,9 +103,9 @@ class AuthorizationProfile(models.Model):
             "Use an easily recognizable name that maps to the function of users."
         ),
     )
-    permission_definitions = models.ManyToManyField(
-        "PermissionDefinition",
-        verbose_name=_("permission definitions"),
+    blueprint_permissions = models.ManyToManyField(
+        "BlueprintPermission",
+        verbose_name=_("blueprint permissions"),
         related_name="auth_profiles",
     )
 
@@ -188,17 +192,7 @@ class PermissionDefinition(models.Model):
     object_url = models.CharField(
         _("object URL"),
         max_length=1000,
-        blank=True,
         help_text=_("URL of the object in one of ZGW APIs this permission applies to"),
-    )
-    policy = JSONField(
-        _("policy"),
-        blank=True,
-        default=dict,
-        help_text=_(
-            "Blueprint permission definitions, used to check the access to objects based "
-            "on their properties i.e. zaaktype, informatieobjecttype"
-        ),
     )
     start_date = models.DateTimeField(
         _("start date"),
@@ -216,19 +210,49 @@ class PermissionDefinition(models.Model):
     class Meta:
         verbose_name = _("permission definition")
         verbose_name_plural = _("permission definitions")
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(
-                    models.Q(~models.Q(policy={}), object_url="")
-                    | models.Q(~models.Q(object_url=""), policy={})
-                ),
-                name="check_permission_type",
-            )
-        ]
 
     def __str__(self):
-        object_desc = self.object_url.split("/")[-1] if self.object_url else "blueprint"
+        object_desc = self.object_url.split("/")[-1]
         return f"{self.permission} ({self.object_type} {object_desc})"
+
+
+class BlueprintPermission(models.Model):
+    object_type = models.CharField(
+        _("object type"),
+        max_length=50,
+        choices=PermissionObjectType.choices,
+        help_text=_("Type of the objects this permission applies to"),
+    )
+    permission = models.CharField(
+        _("Permission"), max_length=255, help_text=_("Name of the permission")
+    )
+    policy = JSONField(
+        _("policy"),
+        help_text=_(
+            "Blueprint permission definitions, used to check the access to objects based "
+            "on their properties i.e. zaaktype, informatieobjecttype"
+        ),
+    )
+    start_date = models.DateTimeField(
+        _("start date"),
+        default=timezone.now,
+        help_text=_("Start date of the permission"),
+    )
+    end_date = models.DateTimeField(
+        _("end date"),
+        blank=True,
+        null=True,
+        help_text=_("End date of the permission"),
+    )
+
+    objects = BlueprintPermissionQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _("blueprint definition")
+        verbose_name_plural = _("blueprint definitions")
+
+    def __str__(self):
+        return f"{self.permission} ({self.object_type})"
 
     def get_blueprint_class(self):
         permission = registry[self.permission]
@@ -237,11 +261,6 @@ class PermissionDefinition(models.Model):
     def clean(self):
         super().clean()
 
-        if not (bool(self.object_url) ^ bool(self.policy)):
-            raise ValidationError(
-                _("object_url and policy should be mutually exclusive")
-            )
-
         # policy data should be validated against the serializer which is connected to this permission
         blueprint_class = self.get_blueprint_class()
         if self.policy:
@@ -249,15 +268,12 @@ class PermissionDefinition(models.Model):
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
-    def has_policy_access(self, obj, user=None) -> bool:
-        if not self.policy:
-            return False
-
+    def has_access(self, obj, user=None) -> bool:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy, context={"user": user})
         return blueprint.has_access(obj)
 
-    def get_policy_query(self) -> Query:
+    def get_search_query(self) -> Query:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
         return blueprint.search_query()
