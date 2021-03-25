@@ -25,6 +25,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
@@ -510,6 +511,22 @@ class ZaakTypenView(ListAPIView):
             zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
         )
         return zaaktypen_aggregated
+
+
+@extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
+class VertrouwelijkheidsAanduidingenView(views.APIView):
+    """
+    List the available confidentiality classification.
+    """
+
+    def get(self, request):
+        return Response(
+            {
+                "classifications": [
+                    choice[0] for choice in VertrouwelijkheidsAanduidingen.choices
+                ]
+            }
+        )
 
 
 @extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
