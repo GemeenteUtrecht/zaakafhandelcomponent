@@ -42,7 +42,7 @@ registerLocaleData(localeNL);
     WorkstackModule
   ],
   providers: [
-    {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: false},
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: LOCALE_ID, useValue: "nl-NL" }
   ],
   bootstrap: [AppComponent],
