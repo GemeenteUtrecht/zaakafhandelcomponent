@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, AfterViewInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components'
@@ -12,8 +12,10 @@ import { KetenProcessen } from '../../models/keten-processen';
   styleUrls: ['./keten-processen.component.scss']
 })
 
-export class KetenProcessenComponent implements OnInit {
+export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
 
   data: KetenProcessen[];
   processInstanceId: string;
@@ -22,9 +24,6 @@ export class KetenProcessenComponent implements OnInit {
   isLoading = true;
   hasError: boolean;
   errorMessage: string;
-
-  bronorganisatie: string;
-  identificatie: string;
 
   pipe = new DatePipe("nl-NL");
 
@@ -42,16 +41,25 @@ export class KetenProcessenComponent implements OnInit {
     private route: ActivatedRoute,
     private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
+  ) { }
+
+  ngOnChanges(): void {
+    this.route.params.subscribe( params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.fetchCurrentUser();
+      this.fetchProcesses();
     });
   }
 
-  ngOnInit(): void {
-    this.fetchCurrentUser();
-    this.fetchProcesses();
+  ngAfterViewInit() {
+    this.route.queryParams.subscribe(params => {
+      const userTaskId = params['user-task'];
+      if (userTaskId) {
+        this.executeTask(userTaskId, true);
+      }
+    });
   }
 
   fetchCurrentUser(): void {
@@ -88,7 +96,7 @@ export class KetenProcessenComponent implements OnInit {
     })
   }
 
-  executeTask(taskId, hasForm, executeUrl): void {
+  executeTask(taskId, hasForm, executeUrl?): void {
     if (!hasForm) {
       window.location = executeUrl;
     } else {
@@ -107,9 +115,5 @@ export class KetenProcessenComponent implements OnInit {
       this.contextHasError = true;
       this.isLoadingContext = false;
     })
-  }
-
-  openModal(id: string) {
-    this.modalService.open(id);
   }
 }

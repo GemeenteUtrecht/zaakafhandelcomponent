@@ -4,12 +4,9 @@
   background: $background-white;
   margin-bottom: 1.25rem;
   .content {
-    padding: 1.25rem;
+    padding: 0.825rem;
     @include media-breakpoint-up(md) {
-      padding: 2.5rem 3.75rem;
-    }
-    &--wide {
-      padding: 1.25rem;
+      padding: 2rem;
     }
   }
 }

@@ -1,0 +1,11 @@
+<div class="zaken feature-container">
+  <div class="content-background">
+    <div class="content">
+      <a class="anchor anchor--back mb-4" routerLink="/zaken">Alle zaken</a>
+      <gu-features-zaak-detail *ngIf="bronorganisatie && identificatie"
+        [bronorganisatie]="bronorganisatie"
+        [identificatie]="identificatie">
+      </gu-features-zaak-detail>
+    </div>
+  </div>
+</div>

@@ -19,10 +19,8 @@ export class DetailModalComponent implements OnChanges {
   readonly ACCORDERINGEN = "Accorderingen";
   readonly ADVIEZEN = "Adviezen";
 
-  tableData: Table = {
-    headData: [],
-    bodyData: []
-  }
+  tableData: Table = new Table([], []);
+
   tableHeadApproval = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
   tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
 
@@ -85,10 +83,7 @@ export class DetailModalComponent implements OnChanges {
   }
 
   formatTableReviewDoc(reviewDocuments: ReviewDocument[]): Table {
-    const reviewDocumentTable = {
-      headData: ['Document', 'Originele versie', 'Aangepaste versie'],
-      bodyData: []
-    };
+    const reviewDocumentTable = new Table(['Document', 'Originele versie', 'Aangepaste versie'], []);
 
     reviewDocumentTable.bodyData = reviewDocuments.map( (doc: ReviewDocument) => {
       return {

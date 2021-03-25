@@ -1,9 +1,10 @@
 .card {
   min-height: 100px;
   background-color: white;
-  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0px 3px 3px rgba(0, 0, 0, 0.25));
   padding: 0.9rem;
   word-break: break-word;
+  border-radius: 4px;
 
   &.card--blue {
     background-color: $color-lightblue;

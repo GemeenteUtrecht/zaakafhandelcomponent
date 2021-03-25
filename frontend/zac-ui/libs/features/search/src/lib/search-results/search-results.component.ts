@@ -9,10 +9,7 @@ import { RowData, Table, Zaak } from '@gu/models';
 export class SearchResultsComponent implements OnChanges {
   @Input() resultData: Zaak[];
 
-  tableData: Table = {
-    headData: [],
-    bodyData: []
-  }
+  tableData: Table = new Table([], []);
 
   constructor() { }
 
@@ -23,10 +20,7 @@ export class SearchResultsComponent implements OnChanges {
   }
 
   createTableData(resultData: Zaak[]): Table {
-    const tableData: Table = {
-      headData: ['', 'Zaaknummer', 'Zaaktype', 'Omschrijving', 'Deadline'],
-      bodyData: []
-    }
+    const tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Deadline'], []);
 
     // Add table body data
     tableData.bodyData = resultData.map( result => {
@@ -35,10 +29,9 @@ export class SearchResultsComponent implements OnChanges {
         cellData: {
           url: {
             type: 'link',
-            label: 'Naar zaak',
+            label: result.identificatie,
             url: url
           },
-          identificatie: result.identificatie,
           zaaktype: result.zaaktype.omschrijving,
           omschrijving: result.omschrijving,
           deadline: result.deadline,

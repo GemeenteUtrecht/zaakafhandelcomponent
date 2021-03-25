@@ -10,6 +10,8 @@ export class ZaakDetailComponent implements OnInit {
   bronorganisatie: string;
   identificatie: string;
 
+  isCollapsed = true;
+
   constructor( private route: ActivatedRoute ) {}
 
   ngOnInit(): void {

@@ -2,20 +2,14 @@ import { MenuItem } from '@gu/models';
 
 const menuItems: MenuItem[] = [
   {
-    icon: 'search',
-    label: 'Zoeken',
-    to: '/zoeken',
-    marginBottom: true,
-  },
-  {
     icon: 'article',
     label: 'Werkvoorraad',
-    to: '/kownsl',
+    to: '/werkvoorraad',
   },
   {
-    icon: 'list',
-    label: 'Alle zaken',
-    to: '/zaken/002220647/ZAAK-2020-0000004839',
+    icon: 'search',
+    label: 'Zaken zoeken',
+    to: '/zaken',
   },
 ];
 

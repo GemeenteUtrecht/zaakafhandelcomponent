@@ -43,8 +43,6 @@
     "@ng-bootstrap/ng-bootstrap": "^8.0.0",
     "@ng-select/ng-select": "^6.0.0",
     "@nrwl/angular": "10.4.4",
-    "@vaadin/vaadin-date-picker": "^4.4.1",
-    "angular2-notifications": "^9.0.0",
     "bootstrap": "^4.6.0",
     "ng-multiselect-dropdown": "^0.3.0",
     "ngx-bootstrap": "^6.2.0",

@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
-import { ZaakDetailModule } from './components/zaak-detail/zaak-detail.module';
 
 const routes: Routes = [
   {
@@ -15,9 +14,14 @@ const routes: Routes = [
       .then(m => m.KownslModule)
   },
   {
+    path: 'werkvoorraad',
+    loadChildren: () => import('./components/workstack/workstack.module')
+      .then(m => m.WorkstackModule)
+  },
+  {
     path: 'zaken',
-    loadChildren: () => import('./components/zaak-detail/zaak-detail.module')
-      .then(m => m.ZaakDetailModule)
+    loadChildren: () => import('./components/zaken/zaken.module')
+      .then(m => m.ZakenModule)
   },
   {
     path: 'zoeken',

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -10,10 +10,11 @@ import { Zaak } from '../models/zaak';
   styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
-  data: Zaak;
   bronorganisatie: string;
   identificatie: string;
   mainZaakUrl: string;
+
+  data: Zaak;
 
   isLoading: boolean;
   hasError: boolean;
@@ -29,15 +30,15 @@ export class FeaturesZaakDetailComponent implements OnInit {
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private router: Router
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.fetchInformation();
+    this.route.params.subscribe(params => {
+      this.bronorganisatie = params['bronorganisatie'];
+      this.identificatie = params['identificatie'];
+
+      this.fetchInformation();
+    });
   }
 
   fetchInformation() {

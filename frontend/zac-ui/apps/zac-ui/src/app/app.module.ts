@@ -1,11 +1,14 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
-import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { LOCALE_ID } from '@angular/core';
 import localeNL from '@angular/common/locales/nl';
+
+import { AuthInterceptor } from './helpers/auth.interceptor';
 
 import { SharedUiComponentsModule } from '@gu/components';
 
@@ -13,15 +16,16 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 
 import { KownslModule } from './components/kownsl/kownsl.module';
-import { ZaakDetailModule } from './components/zaak-detail/zaak-detail.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ZakenModule } from './components/zaken/zaken.module';
+import { WorkstackModule } from './components/workstack/workstack.module';
+
 
 registerLocaleData(localeNL);
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
@@ -34,9 +38,11 @@ registerLocaleData(localeNL);
     }),
     SharedUiComponentsModule,
     KownslModule,
-    ZaakDetailModule,
+    ZakenModule,
+    WorkstackModule
   ],
   providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: LOCALE_ID, useValue: "nl-NL" }
   ],
   bootstrap: [AppComponent],

@@ -25,6 +25,7 @@
             "styles": [
               "node_modules/@ng-select/ng-select/themes/default.theme.css",
               "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
+              "node_modules/ngx-bootstrap/tabs/tabs.css",
               "apps/zac-ui/src/styles.scss"
             ],
             "stylePreprocessorOptions": {
@@ -379,6 +380,48 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/features/search/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "features-workstack": {
+      "projectType": "library",
+      "root": "libs/features/workstack",
+      "sourceRoot": "libs/features/workstack/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/workstack/tsconfig.lib.json",
+            "project": "libs/features/workstack/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/workstack/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/workstack/tsconfig.lib.json",
+              "libs/features/workstack/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/features/workstack/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/workstack/jest.config.js",
             "passWithNoTests": true
           }
         }

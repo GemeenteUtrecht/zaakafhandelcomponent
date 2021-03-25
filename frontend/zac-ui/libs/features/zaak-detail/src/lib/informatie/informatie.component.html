@@ -1,9 +1,9 @@
 <div class="informatie card">
   <h2>Zaak informatie</h2>
-  <ng-container *ngIf="(!infoData || !propertiesData) && (isLoading)">
+  <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <ng-container *ngIf="infoData && propertiesData">
+  <ng-container *ngIf="infoData && propertiesData && !isLoading">
     <div class="informatie__details">
       <p class="informatie__nummer p--marginsmall d-inline-block">{{identificatie}}</p>
       <gu-chip type="tertiary" class="d-inline-block">Zaakvertrouwelijk</gu-chip>

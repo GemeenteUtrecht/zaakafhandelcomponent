@@ -1,7 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Table, RowData } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
 import { convertKbToMb } from '@gu/utils';
 
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
@@ -14,13 +13,12 @@ import { ModalService } from '@gu/components';
   styleUrls: ['./documenten.component.scss']
 })
 
-export class DocumentenComponent implements OnInit {
+export class DocumentenComponent implements OnChanges {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
 
-  tableData: Table = {
-    headData: ['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'],
-    bodyData: []
-  }
+  tableData: Table = new Table(['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
 
   documentsData: any;
 
@@ -28,25 +26,16 @@ export class DocumentenComponent implements OnInit {
   hasError: boolean;
   errorMessage: string;
 
-  bronorganisatie: string;
-  identificatie: string;
-
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
 
   constructor(
     private http: ApplicationHttpClient,
-    private route: ActivatedRoute,
     private documentenService: DocumentenService,
     private modalService: ModalService
-  ) {
-    this.route.paramMap.subscribe( params => {
-      this.bronorganisatie = params.get('bronorganisatie');
-      this.identificatie = params.get('identificatie');
-    });
-  }
+  ) { }
 
-  ngOnInit(): void {
+  ngOnChanges(): void {
     this.fetchDocuments()
   }
 
