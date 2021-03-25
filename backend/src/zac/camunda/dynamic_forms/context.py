@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 from xml.etree.ElementTree import Element
 
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
-from rest_framework import parsers, renderers
+from rest_framework import parsers
 
 from ..data import Task
 from ..user_tasks import Context, register

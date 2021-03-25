@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -491,4 +492,32 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             ):
                 response = self.client.put(self.task_endpoint, payload)
 
+        self.assertEqual(response.status_code, 204)
+
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "keuze"}),
+    )
+    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    def test_put_named_camunda_form_user_task(
+        self, m, mock_get_task, mock_complete_task
+    ):
+        FILES_DIR = Path(__file__).parent / "files"
+
+        with open(FILES_DIR / "keuze-form.bpmn", "r") as bpmn:
+            response = {
+                "id": "aProcDefId",
+                "bpmn20Xml": bpmn.read(),
+            }
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-definition/aProcDefId/xml",
+            headers={"Content-Type": "application/json"},
+            json=response,
+        )
+
+        self._mock_permissions(m)
+        payload = {
+            "resultaat": "Vastgesteld",
+        }
+        response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)

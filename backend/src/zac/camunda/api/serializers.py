@@ -41,12 +41,17 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
+class ChoiceFieldNoValidation(serializers.ChoiceField):
+    def to_internal_value(self, data):
+        return data
+
+
 class BaseUserTaskSerializer(PolymorphicSerializer):
     discriminator_field = "form"
     serializer_mapping = {}  # set at run-time based on the REGISTRY
     fallback_distriminator_value = ""  # fall back to dynamic form
 
-    form = serializers.ChoiceField(
+    form = ChoiceFieldNoValidation(
         label=_("Form to render"),
         source="task.form_key",
         help_text=_(
@@ -84,22 +89,27 @@ class SubmitUserTaskSerializer(BaseUserTaskSerializer):
         }
         super().__init__(*args, **kwargs)
 
+    def get_mapped_serializer(self):
+        form_key = self.context["task"].form_key
+        lookup = (
+            form_key
+            if form_key in self.serializer_mapping
+            else self.fallback_distriminator_value
+        )
+        return self.serializer_mapping[lookup]
+
     def on_task_submission(self) -> Any:
-        if hasattr(
-            self.serializer_mapping[self.context["task"].form_key], "on_task_submission"
-        ):
-            return self.serializer_mapping[
-                self.context["task"].form_key
-            ].on_task_submission()
+        mapped_serializer = self.get_mapped_serializer()
+        if hasattr(mapped_serializer, "on_task_submission"):
+            return mapped_serializer.on_task_submission()
 
     def get_process_variables(self) -> Dict:
+        mapped_serializer = self.get_mapped_serializer()
         if hasattr(
-            self.serializer_mapping[self.context["task"].form_key],
+            mapped_serializer,
             "get_process_variables",
         ):
-            return self.serializer_mapping[
-                self.context["task"].form_key
-            ].get_process_variables()
+            return mapped_serializer.get_process_variables()
         return {}
 
 
