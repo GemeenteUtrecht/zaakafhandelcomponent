@@ -8,7 +8,6 @@ from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.camunda.api.serializers import TaskSerializer
 from zac.core.api.serializers import ZaakSerializer
-from zgw.models import Zaak
 
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 
@@ -81,19 +80,9 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
         )
 
 
-class CaseSerializer(APIModelSerializer):
-    class Meta:
-        model = Zaak
-        fields = (
-            "bronorganisatie",
-            "identificatie",
-            "url",
-        )
-
-
 class WorkStackTaskSerializer(APIModelSerializer):
     task = TaskSerializer()
-    zaak = CaseSerializer()
+    zaak = ZaakSerializer()
 
     class Meta:
         model = TaskAndCase
