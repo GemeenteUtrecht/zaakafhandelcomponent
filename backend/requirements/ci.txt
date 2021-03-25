@@ -211,7 +211,7 @@ kombu==4.6.4
     # via
     #   -r requirements/base.txt
     #   celery
-lxml==4.6.2
+lxml==4.6.3
     # via pyquery
 markuppy==1.14
     # via
