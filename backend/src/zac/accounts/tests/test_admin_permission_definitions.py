@@ -50,17 +50,16 @@ class PermissionDefinitionAdminTests(WebTest):
 
         self.app.set_user(self.user)
 
-        patcher_registry = patch("zac.accounts.admin.registry", new=test_registry)
-        self.mocked_register_admin = patcher_registry.start()
-        # local imports can't be patched without using sys.module, so we patch the whole method
-        patcher_blueprint = patch(
-            "zac.accounts.models.PermissionDefinition.get_blueprint_class",
-            return_value=TestBlueprint1,
+        patcher_registry_admin = patch("zac.accounts.admin.registry", new=test_registry)
+        patcher_registry_model = patch(
+            "zac.accounts.models.registry", new=test_registry
         )
-        self.mocked_get_blueprint_class = patcher_blueprint.start()
 
-        self.addCleanup(patcher_registry.stop)
-        self.addCleanup(patcher_blueprint.stop)
+        self.mocked_registry_admin = patcher_registry_admin.start()
+        self.mocked_registry_model = patcher_registry_model.start()
+
+        self.addCleanup(patcher_registry_admin.stop)
+        self.addCleanup(patcher_registry_model.stop)
 
     def test_get_permission_choices(self):
         response = self.app.get(self.url)
