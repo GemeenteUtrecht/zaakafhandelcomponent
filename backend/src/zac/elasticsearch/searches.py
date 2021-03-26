@@ -16,7 +16,7 @@ from elasticsearch_dsl.query import (
 )
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.models import PermissionDefinition, User
+from zac.accounts.models import BlueprintPermission, PermissionDefinition, User
 from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
@@ -42,21 +42,25 @@ def query_allowed_for_user(
     if user.is_superuser:
         return Q("match_all")
 
-    permission_definitions = (
-        PermissionDefinition.objects.for_user(user)
-        .actual()
-        .filter(object_type=object_type, permission=permission)
-    )
     allowed = []
 
     # atomic permissions
-    object_urls = permission_definitions.atomic().values_list("object_url", flat=True)
+    object_urls = (
+        PermissionDefinition.objects.for_user(user)
+        .actual()
+        .filter(object_type=object_type, permission=permission)
+        .values_list("object_url", flat=True)
+    )
     if object_urls.count():
         allowed.append(Terms(url=list(object_urls)))
 
     # blueprint permissions
-    for permission_definition in permission_definitions.blueprint():
-        allowed.append(permission_definition.get_policy_query())
+    for blueprint_permission in (
+        BlueprintPermission.objects.for_user(user)
+        .actual()
+        .filter(object_type=object_type, permission=permission)
+    ):
+        allowed.append(blueprint_permission.get_search_query())
 
     if not allowed:
         return Q("match_none")
