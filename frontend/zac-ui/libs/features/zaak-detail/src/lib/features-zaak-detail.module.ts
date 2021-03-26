@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 
-import { SharedUiComponentsModule } from '@gu/components';
+import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 
 import { FeaturesZaakDetailComponent } from './features-zaak-detail.component';
 import { InformatieComponent } from './informatie/informatie.component';
@@ -29,7 +29,8 @@ import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail
     SharedUiComponentsModule,
     KetenProcessenModule,
     GerelateerdeZakenModule,
-    DocumentenModule
+    DocumentenModule,
+    MultiselectModule
   ],
   declarations: [
     FeaturesZaakDetailComponent,

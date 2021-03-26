@@ -14,7 +14,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   identificatie: string;
   mainZaakUrl: string;
 
-  data: Zaak;
+  zaakData: Zaak;
 
   isLoading: boolean;
   hasError: boolean;
@@ -44,7 +44,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   fetchInformation() {
     this.isLoading = true;
     this.getInformation().subscribe(data => {
-      this.data = data;
+      this.zaakData = data;
       this.mainZaakUrl = data.url ? data.url : null;
       this.isLoading = false;
     }, errorResponse => {

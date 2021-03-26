@@ -44,7 +44,7 @@ export class AdviceService {
       });
       return forkJoin(observables)
     } else {
-      return of([]);
+      return of(true);
     }
   }
 

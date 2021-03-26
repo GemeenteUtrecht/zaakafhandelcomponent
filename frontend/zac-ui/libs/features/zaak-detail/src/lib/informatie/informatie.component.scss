@@ -5,4 +5,17 @@
   &__nummer {
     margin-right: 0.625rem;
   }
+  &__vertrouwelijkheid {
+    .edit-icon {
+      display: none;
+    }
+    &:hover {
+      .edit-icon {
+        display: block;
+      }
+      gu-chip {
+        cursor: pointer;
+      }
+    }
+  }
 }

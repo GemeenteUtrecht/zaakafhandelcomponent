@@ -1,4 +1,4 @@
-<h1 *ngIf="data">{{data.zaaktype.omschrijving}}</h1>
+<h1 *ngIf="zaakData">{{zaakData.zaaktype.omschrijving}}</h1>
 <h1 *ngIf="isNotLoggedIn">Zaak</h1>
 <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 <div class="row">
@@ -9,14 +9,14 @@
   </div>
 </div>
 <div class="card-container">
-  <div class="row" *ngIf="data">
+  <div class="row" *ngIf="zaakData">
     <ng-container>
       <div class="col-12 col-md-4">
         <gu-informatie
-          *ngIf="data"
+          *ngIf="zaakData"
           [bronorganisatie]="bronorganisatie"
           [identificatie]="identificatie"
-          [infoData]="data"
+          [zaakData]="zaakData"
           class="zaak-detail__section">
         </gu-informatie>
         <gu-betrokkenen [bronorganisatie]="bronorganisatie"
@@ -30,8 +30,8 @@
         <gu-status
           [bronorganisatie]="bronorganisatie"
           [identificatie]="identificatie"
-          [progress]="data.deadlineProgress"
-          [deadline]="data.deadline"
+          [progress]="zaakData.deadlineProgress"
+          [deadline]="zaakData.deadline"
           class="zaak-detail__section">
         </gu-status>
         <gu-keten-processen [mainZaakUrl]="mainZaakUrl"
