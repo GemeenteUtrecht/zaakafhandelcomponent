@@ -345,4 +345,4 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         self.assertTrue(serializer._documents)
 
         variables = serializer.get_process_variables()
-        self.assertEqual(variables, {"bijdragezaakBijlagen": [self.document["url"]]})
+        self.assertEqual(variables, {"documenten": [self.document["url"]]})

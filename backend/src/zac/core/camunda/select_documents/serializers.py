@@ -116,7 +116,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         """
         assert self._documents, "Please run self.on_task_submission() first."
 
-        return {"bijdragezaakBijlagen": [doc["url"] for doc in self._documents]}
+        return {"documenten": [doc["url"] for doc in self._documents]}
 
     def on_task_submission(self) -> None:
         """
