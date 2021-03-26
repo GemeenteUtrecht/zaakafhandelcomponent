@@ -189,7 +189,7 @@ pytz==2019.2
     #   -r requirements/base.in
     #   celery
     #   django
-pyyaml==5.1.2
+pyyaml==5.4.1
     # via
     #   drf-spectacular
     #   gemma-zds-client
