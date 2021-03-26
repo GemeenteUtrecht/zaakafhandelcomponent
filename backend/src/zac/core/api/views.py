@@ -54,6 +54,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
 from .permissions import (
@@ -75,6 +76,7 @@ from .serializers import (
     RolSerializer,
     SearchEigenschapSerializer,
     UpdateZaakDetailSerializer,
+    VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -514,20 +516,20 @@ class ZaakTypenView(ListAPIView):
 
 
 @extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
-class VertrouwelijkheidsAanduidingenView(views.APIView):
+class VertrouwelijkheidsAanduidingenView(ListAPIView):
     """
     List the available confidentiality classification.
     """
 
-    def get(self, request):
-        return Response(
-            {
-                "classifications": [
-                    {"label": choice[0], "value": choice[1]}
-                    for choice in VertrouwelijkheidsAanduidingen.choices
-                ]
-            }
-        )
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = VertrouwelijkheidsAanduidingSerializer
+
+    def get_queryset(self):
+        return [
+            VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
+            for choice in VertrouwelijkheidsAanduidingen.choices
+        ]
 
 
 @extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])

@@ -30,6 +30,7 @@ from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
+from .data import VertrouwelijkheidsAanduidingData
 from .utils import (
     CSMultipleChoiceField,
     TypeChoices,
@@ -565,3 +566,12 @@ class SearchEigenschapSerializer(serializers.Serializer):
         label=_("property definition"),
         help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values"),
     )
+
+
+class VertrouwelijkheidsAanduidingSerializer(APIModelSerializer):
+    label = serializers.CharField(help_text=_("Human readable label of classication"))
+    value = serializers.CharField(help_text=_("Value of classication"))
+
+    class Meta:
+        model = VertrouwelijkheidsAanduidingData
+        fields = ("label", "value")

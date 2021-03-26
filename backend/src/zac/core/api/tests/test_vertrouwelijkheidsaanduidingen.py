@@ -21,12 +21,8 @@ class VertrouwelijkheidsAanduidingenTests(APITransactionTestCase):
         self.client.force_authenticate(user=user)
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        choices = [choice for choice in VertrouwelijkheidsAanduidingen.choices]
         self.assertEqual(
             response.json(),
-            {
-                "classifications": [
-                    {"label": choice[0], "value": choice[1]}
-                    for choice in VertrouwelijkheidsAanduidingen.choices
-                ]
-            },
+            [{"label": choice[1], "value": choice[0]} for choice in choices],
         )
