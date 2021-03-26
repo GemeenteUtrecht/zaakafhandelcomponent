@@ -523,7 +523,8 @@ class VertrouwelijkheidsAanduidingenView(views.APIView):
         return Response(
             {
                 "classifications": [
-                    choice[0] for choice in VertrouwelijkheidsAanduidingen.choices
+                    {"label": choice[0], "value": choice[1]}
+                    for choice in VertrouwelijkheidsAanduidingen.choices
                 ]
             }
         )

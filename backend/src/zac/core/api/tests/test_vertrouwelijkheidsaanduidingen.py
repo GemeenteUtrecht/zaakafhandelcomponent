@@ -25,7 +25,8 @@ class VertrouwelijkheidsAanduidingenTests(APITransactionTestCase):
             response.json(),
             {
                 "classifications": [
-                    choice[0] for choice in VertrouwelijkheidsAanduidingen.choices
+                    {"label": choice[0], "value": choice[1]}
+                    for choice in VertrouwelijkheidsAanduidingen.choices
                 ]
             },
         )
