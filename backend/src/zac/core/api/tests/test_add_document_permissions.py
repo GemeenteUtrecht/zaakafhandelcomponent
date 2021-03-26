@@ -1,5 +1,4 @@
 from io import BytesIO
-from unittest.mock import patch
 
 from django.urls import reverse_lazy
 
@@ -10,7 +9,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
@@ -123,8 +122,7 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user)
         # set up user permissions
         catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_add_documents.name,
             for_user=user,
             policy={

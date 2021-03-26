@@ -23,6 +23,7 @@ from ...constants import AccessRequestResult, PermissionObjectType
 from ...models import AccessRequest, PermissionDefinition
 from ...tests.factories import (
     AccessRequestFactory,
+    BlueprintPermissionFactory,
     PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
@@ -83,10 +84,9 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.handler,
-            object_url="",
             policy={
                 "catalogus": CATALOGUS_URL,
                 "zaaktype_omschrijving": "ZT1",
@@ -106,10 +106,9 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
 
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.handler,
-            object_url="",
             policy={
                 "catalogus": CATALOGUS_URL,
                 "zaaktype_omschrijving": "ZT2",
@@ -145,10 +144,9 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.handler,
-            object_url="",
             policy={
                 "catalogus": CATALOGUS_URL,
                 "zaaktype_omschrijving": "ZT1",

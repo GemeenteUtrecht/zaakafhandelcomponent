@@ -9,7 +9,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..permissions import activiteiten_schrijven, activities_read
@@ -101,10 +101,9 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
         m.get(zaak["url"], json=zaak)
 
         # set up user permissions
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=activities_read.name,
             for_user=user,
-            object_url="",
             policy={
                 "catalogus": catalogus,
                 "zaaktype_omschrijving": "ZT1",
@@ -195,10 +194,9 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(self.user)
         # set up user permissions
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=activities_read.name,
             for_user=self.user,
-            object_url="",
             policy={
                 "catalogus": self.catalogus,
                 "zaaktype_omschrijving": "ZT1",
@@ -278,10 +276,9 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_logged_in_with_permissions(self, m):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=activiteiten_schrijven.name,
             for_user=self.user,
-            object_url="",
             policy={
                 "catalogus": self.catalogus,
                 "zaaktype_omschrijving": "ZT1",
@@ -332,10 +329,9 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=activiteiten_schrijven.name,
             for_user=self.user,
-            object_url="",
             policy={
                 "catalogus": self.catalogus,
                 "zaaktype_omschrijving": "ZT1",
@@ -426,10 +422,9 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=activiteiten_schrijven.name,
             for_user=self.user,
-            object_url="",
             policy={
                 "catalogus": self.catalogus,
                 "zaaktype_omschrijving": "ZT1",

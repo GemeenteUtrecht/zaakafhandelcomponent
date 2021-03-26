@@ -9,7 +9,7 @@ from django_webtest import WebTest
 from rest_framework import serializers
 
 from ..constants import PermissionObjectType
-from ..models import PermissionDefinition
+from ..models import BlueprintPermission
 from ..permissions import Blueprint
 from .factories import SuperUserFactory
 
@@ -36,8 +36,8 @@ permission1 = TestPermission(
 )
 
 
-class PermissionDefinitionAdminTests(WebTest):
-    url = reverse_lazy("admin:accounts_permissiondefinition_add")
+class BlueprintPermissionAdminTests(WebTest):
+    url = reverse_lazy("admin:accounts_blueprintpermission_add")
 
     @classmethod
     def setUpTestData(cls):
@@ -72,26 +72,6 @@ class PermissionDefinitionAdminTests(WebTest):
             [choice[0] for choice in permission_choices], ["", "permission1"]
         )
 
-    def test_add_perm_definition_with_object_url(self):
-        get_response = self.app.get(self.url)
-
-        form = get_response.form
-        form["object_type"] = PermissionObjectType.zaak
-        form["permission"] = "permission1"
-        form["object_url"] = "http://zrc.nl/api/v1/zaken/some-zaak"
-
-        response = form.submit()
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(PermissionDefinition.objects.count(), 1)
-
-        permission_definition = PermissionDefinition.objects.get()
-
-        self.assertEqual(permission_definition.permission, "permission1")
-        self.assertEqual(
-            permission_definition.object_url, "http://zrc.nl/api/v1/zaken/some-zaak"
-        )
-
     def test_add_perm_definition_with_policy(self):
         get_response = self.app.get(self.url)
 
@@ -103,32 +83,12 @@ class PermissionDefinitionAdminTests(WebTest):
         response = form.submit()
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(PermissionDefinition.objects.count(), 1)
+        self.assertEqual(BlueprintPermission.objects.count(), 1)
 
-        permission_definition = PermissionDefinition.objects.get()
+        blueprint_permission = BlueprintPermission.objects.get()
 
-        self.assertEqual(permission_definition.permission, "permission1")
-        self.assertEqual(permission_definition.policy, {"some_type": "new type"})
-
-    def test_add_perm_definition_no_policy_no_object_url(self):
-        get_response = self.app.get(self.url)
-
-        form = get_response.form
-        form["object_type"] = PermissionObjectType.zaak
-        form["permission"] = "permission1"
-
-        response = form.submit()
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(PermissionDefinition.objects.count(), 0)
-
-        errors = response.context["errors"]
-
-        self.assertEqual(len(errors), 1)
-        self.assertEqual(
-            str(errors[0].data[0].message),
-            "object_url and policy should be mutually exclusive",
-        )
+        self.assertEqual(blueprint_permission.permission, "permission1")
+        self.assertEqual(blueprint_permission.policy, {"some_type": "new type"})
 
     def test_add_perm_definition_with_policy_not_valid_for_blueprint(self):
         get_response = self.app.get(self.url)
@@ -141,7 +101,7 @@ class PermissionDefinitionAdminTests(WebTest):
         response = form.submit()
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(PermissionDefinition.objects.count(), 0)
+        self.assertEqual(BlueprintPermission.objects.count(), 0)
 
         errors = response.context["errors"]
 

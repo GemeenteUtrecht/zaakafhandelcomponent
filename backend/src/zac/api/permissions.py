@@ -62,6 +62,11 @@ class DefinitionBasePermission(permissions.BasePermission):
             .filter(permission=self.permission.name, object_type=self.object_type)
             .actual()
             .exists()
+        ) and (
+            not PermissionDefinition.objects.for_user(request.user)
+            .filter(permission=self.permission.name, object_type=self.object_type)
+            .actual()
+            .exists()
         ):
             return False
 

@@ -11,7 +11,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -102,8 +102,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
 
         user = UserFactory.create()
 
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_download_documents.name,
             for_user=user,
             policy={
@@ -133,8 +132,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_download_documents.name,
             for_user=user,
             policy={
@@ -151,8 +149,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_download_documents.name,
             for_user=user,
             policy={

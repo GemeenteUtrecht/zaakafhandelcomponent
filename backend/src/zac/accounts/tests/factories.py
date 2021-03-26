@@ -2,6 +2,7 @@ import factory
 import factory.fuzzy
 
 from ..constants import PermissionObjectType
+from ..models import UserAuthorizationProfile
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -49,3 +50,23 @@ class PermissionDefinitionFactory(factory.django.DjangoModelFactory):
 
         if extracted:
             extracted.permission_definitions.add(obj)
+
+
+class BlueprintPermissionFactory(factory.django.DjangoModelFactory):
+    object_type = PermissionObjectType.zaak
+    permission = factory.Faker("word")
+    policy = {"somefield": "somevalue"}
+
+    class Meta:
+        model = "accounts.BlueprintPermission"
+
+    @factory.post_generation
+    def for_user(obj, create, extracted, **kwargs):
+        assert create, "BlueprintPermission must be saved in the DB"
+
+        if extracted:
+            auth_profile = AuthorizationProfileFactory.create()
+            auth_profile.blueprint_permissions.add(obj)
+            UserAuthorizationProfile.objects.create(
+                user=extracted, auth_profile=auth_profile
+            )

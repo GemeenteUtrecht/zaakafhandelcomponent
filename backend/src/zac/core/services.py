@@ -34,7 +34,7 @@ from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.constants import PermissionObjectType
 from zac.accounts.datastructures import VA_ORDER
-from zac.accounts.models import PermissionDefinition, User
+from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
@@ -145,12 +145,9 @@ def get_zaaktypen(
 
     # filter out zaaktypen from permissions
     zaaktypen_policies = (
-        PermissionDefinition.objects.for_user(user)
-        .filter(
-            object_type=PermissionObjectType.zaak,
-        )
+        BlueprintPermission.objects.for_user(user)
+        .filter(object_type=PermissionObjectType.zaak)
         .actual()
-        .blueprint()
         .values_list("policy", flat=True)
         .distinct()
     )

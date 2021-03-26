@@ -10,7 +10,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.permissions import zaken_add_relations, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
@@ -124,8 +124,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         self.create_zaak_document(zaak_model)
         self.refresh_index()
 
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -256,8 +255,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
 
         # Give permissions to the user
         for permission_name in [zaken_inzien.name, zaken_add_relations.name]:
-            PermissionDefinitionFactory.create(
-                object_url="",
+            BlueprintPermissionFactory.create(
                 permission=permission_name,
                 for_user=user,
                 policy={
@@ -334,8 +332,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
         m.patch(url=main_zaak["url"], json=main_zaak)
 
         # Give permissions to the zaken, but not to create relations
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={

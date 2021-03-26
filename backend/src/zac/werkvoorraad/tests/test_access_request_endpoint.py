@@ -12,7 +12,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
-    PermissionDefinitionFactory,
+    BlueprintPermissionFactory,
     UserFactory,
 )
 from zac.core.permissions import zaken_handle_access
@@ -78,8 +78,7 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
             json=paginated_response([zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={

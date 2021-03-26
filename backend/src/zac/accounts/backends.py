@@ -37,17 +37,18 @@ class PermissionsBackend:
             .actual()
         )
 
+        atomic_permissions = (
+            PermissionDefinition.objects.for_user(user_obj)
+            .filter(permission=perm)
+            .actual()
+        )
+
         # similar to DefinitionBasePermission.has_permission
         if not obj:
-            return blueprint_permissions.exists()
+            return blueprint_permissions.exists() or atomic_permissions.exists()
 
         # similar to DefinitionBasePermission.has_object_permission
-        if (
-            PermissionDefinition.objects.for_user(user_obj)
-            .filter(permission=perm, object_url=obj.url)
-            .actual()
-            .exists()
-        ):
+        if atomic_permissions.filter(object_url=obj.url).exists():
             return True
 
         for permission in blueprint_permissions:

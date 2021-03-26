@@ -11,7 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    PermissionDefinitionFactory,
+    BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -102,8 +102,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             json=paginated_response([self.zaaktype, zaaktype2]),
         )
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -144,8 +143,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         user = UserFactory.create()
         # todo remove after auth refactoring
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={

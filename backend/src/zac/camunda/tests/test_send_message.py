@@ -15,7 +15,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
 from zac.tests.utils import paginated_response
@@ -163,8 +163,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         # gives them access to the page, zaaktype and VA specified -> visible
         # and allows them to send messages
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_send_message.name,
             for_user=user,
             policy={

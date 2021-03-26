@@ -16,7 +16,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import ProcessInstance, Task
 from zac.contrib.kownsl.constants import KownslTypes
@@ -159,8 +159,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=self.user,
             policy={
@@ -206,8 +205,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=self.user,
             policy={
@@ -247,8 +245,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=self.user,
             policy={
@@ -292,8 +289,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=self.user,
             policy={
@@ -432,8 +428,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=self.user,
             policy={

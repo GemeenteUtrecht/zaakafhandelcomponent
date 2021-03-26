@@ -19,7 +19,7 @@ from zac.accounts.constants import AccessRequestResult
 from zac.accounts.models import AccessRequest, PermissionDefinition
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
-    PermissionDefinitionFactory,
+    BlueprintPermissionFactory,
     UserFactory,
 )
 from zac.elasticsearch.tests.utils import ESMixin
@@ -98,8 +98,7 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_create_success(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_request_access.name,
             for_user=self.user,
             policy={
@@ -148,8 +147,7 @@ class CreateAccessRequestTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_create_fail_other_access_request(self, m):
         self._setUpMocks(m)
         handler = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_request_access.name,
             for_user=self.user,
             policy={
@@ -244,8 +242,7 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             json=paginated_response([self.zaaktype]),
         )
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_request_access.name,
             for_user=user,
             policy={
@@ -267,8 +264,7 @@ class CreateAccessRequestPermissionTests(ClearCachesMixin, TestCase):
             json=paginated_response([self.zaaktype]),
         )
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_request_access.name,
             for_user=user,
             policy={
@@ -369,8 +365,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={
@@ -392,8 +387,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={
@@ -415,8 +409,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={
@@ -476,8 +469,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={
@@ -508,8 +500,7 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         )
 
         AccessRequestFactory.create_batch(2, zaak=self.zaak["url"])
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_handle_access.name,
             for_user=self.user,
             policy={

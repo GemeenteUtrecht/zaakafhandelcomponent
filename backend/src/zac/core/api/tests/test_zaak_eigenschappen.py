@@ -14,7 +14,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    PermissionDefinitionFactory,
+    BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -249,8 +249,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
         )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -284,8 +283,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -309,8 +307,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={

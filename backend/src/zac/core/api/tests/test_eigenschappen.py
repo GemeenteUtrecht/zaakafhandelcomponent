@@ -11,7 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    PermissionDefinitionFactory,
+    BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -94,10 +94,9 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             json=paginated_response([self.zaaktype, zaaktype2]),
         )
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
-            object_url="",
             policy={
                 "catalogus": CATALOGUS_URL,
                 "zaaktype_omschrijving": "ZT2",
@@ -147,10 +146,9 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
             json=paginated_response([self.eigenschap]),
         )
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
-            object_url="",
             policy={
                 "catalogus": CATALOGUS_URL,
                 "zaaktype_omschrijving": "ZT1",

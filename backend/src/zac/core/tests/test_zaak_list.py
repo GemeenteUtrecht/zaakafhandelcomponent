@@ -10,7 +10,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -45,8 +45,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         zaaktype = generate_oas_component("ztc", "schemas/ZaakType")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         # gives them access to the page, but no zaaktypen specified -> nothing visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -91,8 +90,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zt1, zt2]))
         # set up user permissions
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -164,8 +162,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         # set up user permissions
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={

@@ -1,5 +1,4 @@
 from unittest import skip
-from unittest.mock import patch
 
 from django.conf import settings
 from django.db import transaction
@@ -12,7 +11,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    PermissionDefinitionFactory,
+    UserFactory,
+)
 from zac.contrib.kownsl.models import KownslConfig
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
@@ -113,8 +116,7 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
                 sid = transaction.savepoint()
 
                 # gives them access to the page, but no catalogus specified -> nothing visible
-                PermissionDefinitionFactory.create(
-                    object_url="",
+                BlueprintPermissionFactory.create(
                     permission=permission.name,
                     for_user=self.user,
                     policy={
@@ -184,8 +186,7 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionDefinitionFactory.create(
-                    object_url="",
+                BlueprintPermissionFactory.create(
                     permission=permission.name,
                     for_user=self.user,
                     policy={
@@ -215,8 +216,7 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionDefinitionFactory.create(
-                    object_url="",
+                BlueprintPermissionFactory.create(
                     permission=permission.name,
                     for_user=self.user,
                     policy={
@@ -332,8 +332,7 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_set_result_close_blocked(self, m):
         self._setUpMocks(m)
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_set_result.name,
             for_user=self.user,
             policy={
@@ -363,8 +362,7 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_close_set_result_blocked(self, m):
         self._setUpMocks(m)
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_close.name,
             for_user=self.user,
             policy={

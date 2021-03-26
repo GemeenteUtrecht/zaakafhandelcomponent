@@ -1,11 +1,4 @@
-from datetime import datetime
-
 from django.db import migrations
-from django.utils import timezone
-
-from zac.core.services import get_zaaktypen
-
-from ..constants import AccessRequestResult, PermissionObjectType
 
 
 def migrate_to_blueprint_permissions(apps, _):
@@ -13,7 +6,7 @@ def migrate_to_blueprint_permissions(apps, _):
     BlueprintPermission = apps.get_model("accounts", "BlueprintPermission")
 
     # migrate blueprint permission definitions
-    for permission_definition in PermissionDefinition.objects.blueprint():
+    for permission_definition in PermissionDefinition.objects.exclude(policy={}):
         blueprint_permission = BlueprintPermission.objects.create(
             permission=permission_definition.permission,
             object_type=permission_definition.object_type,

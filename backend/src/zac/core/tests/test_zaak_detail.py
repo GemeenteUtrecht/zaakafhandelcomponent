@@ -18,7 +18,11 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    PermissionDefinitionFactory,
+    UserFactory,
+)
 from zac.contrib.kownsl.data import Approval, ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
 from zac.elasticsearch.tests.utils import ESMixin
@@ -187,8 +191,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_user_auth_no_perms_can_request(self, m):
         self._setUpMocks(m)
 
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_request_access.name,
             for_user=self.user,
             policy={
@@ -215,8 +218,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, but no catalogus specified -> nothing visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -234,8 +236,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page and zaaktype, but insufficient VA
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -253,8 +254,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -275,8 +275,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, catalogus and VA specified -> all zaaktypen visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -297,8 +296,7 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._setUpMocks(m)
 
         # gives them access to the page, zaaktype and VA specified -> visible
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -519,8 +517,7 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         self._set_up_mocks(m)
 
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -591,8 +588,7 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         user = UserFactory.create()
         self.app.set_user(user)
 
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=user,
             policy={
@@ -601,9 +597,8 @@ class ZaakDetailsDocumentenTests(ESMixin, ClearCachesMixin, TransactionWebTest):
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
         )
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             object_type=PermissionObjectType.document,
-            object_url="",
             permission=zaken_download_documents.name,
             for_user=user,
             policy={
@@ -695,8 +690,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(f"{zaak['url']}/zaakeigenschappen", json=[])
 
     def test_no_process_permissions(self):
-        PermissionDefinitionFactory.create(
-            object_url="",
+        BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
             for_user=self.user,
             policy={
@@ -728,8 +722,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
             zaakproces_usertasks.name,
             zaakproces_send_message.name,
         ]:
-            PermissionDefinitionFactory.create(
-                object_url="",
+            BlueprintPermissionFactory.create(
                 permission=permission_name,
                 for_user=self.user,
                 policy={
@@ -795,8 +788,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         )
         self.mocker.get(zaak["url"], json=zaak)
         for permission_name in [zaken_inzien.name, zaakproces_usertasks.name]:
-            PermissionDefinitionFactory.create(
-                object_url="",
+            BlueprintPermissionFactory.create(
                 permission=permission_name,
                 for_user=self.user,
                 policy={
@@ -819,8 +811,7 @@ class ZaakProcessPermissionTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         task = get_camunda_task_mock()
         zaak_url = f"{ZAKEN_ROOT}zaken/5abd5f22-5317-4bf2-a750-7cf2f4910370"
         for permission_name in [zaken_inzien.name, zaakproces_usertasks.name]:
-            PermissionDefinitionFactory.create(
-                object_url="",
+            BlueprintPermissionFactory.create(
                 permission=permission_name,
                 for_user=self.user,
                 policy={
