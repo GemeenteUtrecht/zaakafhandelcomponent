@@ -50,14 +50,12 @@ def query_allowed_for_user(
     allowed = []
 
     # atomic permissions
-    object_urls = permission_definitions.filter(policy={}).values_list(
-        "object_url", flat=True
-    )
+    object_urls = permission_definitions.atomic().values_list("object_url", flat=True)
     if object_urls.count():
         allowed.append(Terms(url=list(object_urls)))
 
     # blueprint permissions
-    for permission_definition in permission_definitions.exclude(policy={}):
+    for permission_definition in permission_definitions.blueprint():
         allowed.append(permission_definition.get_policy_query())
 
     if not allowed:
