@@ -25,6 +25,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
@@ -53,6 +54,7 @@ from ..services import (
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
 from .permissions import (
@@ -74,6 +76,7 @@ from .serializers import (
     RolSerializer,
     SearchEigenschapSerializer,
     UpdateZaakDetailSerializer,
+    VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
     ZaakEigenschapSerializer,
@@ -510,6 +513,23 @@ class ZaakTypenView(ListAPIView):
             zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
         )
         return zaaktypen_aggregated
+
+
+@extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
+class VertrouwelijkheidsAanduidingenView(ListAPIView):
+    """
+    List the available confidentiality classification.
+    """
+
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = VertrouwelijkheidsAanduidingSerializer
+
+    def get_queryset(self):
+        return [
+            VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
+            for choice in VertrouwelijkheidsAanduidingen.choices
+        ]
 
 
 @extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
