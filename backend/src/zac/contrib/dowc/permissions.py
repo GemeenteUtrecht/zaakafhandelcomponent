@@ -4,5 +4,5 @@ from zac.core.permissions import zaken_download_documents
 
 
 class CanOpenDocuments(DefinitionBasePermission):
-    permission = zaken_download_documents.name
+    permission = zaken_download_documents
     object_type = PermissionObjectType.document
