@@ -144,24 +144,30 @@ def get_zaaktypen(
         return zaaktypen
 
     # filter out zaaktypen from permissions
-    permission_definitions = (
+    zaaktypen_policies = (
         PermissionDefinition.objects.for_user(user)
-        .filter(object_url="", object_type=PermissionObjectType.zaak)
+        .filter(
+            object_type=PermissionObjectType.zaak,
+        )
         .actual()
+        .blueprint()
+        .values_list("policy", flat=True)
+        .distinct()
     )
-    order_case = VertrouwelijkheidsAanduidingen.get_order_expression("policy__max_va")
-    zaaktypen = [
+    zaaktypen_policies = list(zaaktypen_policies)
+
+    return [
         zaaktype
         for zaaktype in zaaktypen
-        if permission_definitions.annotate(max_va_order=order_case)
-        .filter(
-            policy__catalogus=zaaktype.catalogus,
-            policy__zaaktype_omschrijving=zaaktype.omschrijving,
-            max_va_order__gte=VA_ORDER[zaaktype.vertrouwelijkheidaanduiding],
-        )
-        .exists()
+        if [
+            policy
+            for policy in zaaktypen_policies
+            if policy["catalogus"] == zaaktype.catalogus
+            and policy["zaaktype_omschrijving"] == zaaktype.omschrijving
+            and VA_ORDER[policy["max_va"]]
+            >= VA_ORDER[zaaktype.vertrouwelijkheidaanduiding]
+        ]
     ]
-    return zaaktypen
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
