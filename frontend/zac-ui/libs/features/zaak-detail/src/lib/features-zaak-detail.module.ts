@@ -15,6 +15,7 @@ import { KetenProcessenModule } from './keten-processen/keten-processen.module';
 import { GerelateerdeZakenModule } from './gerelateerde-zaken/gerelateerde-zaken.module';
 import { DocumentenModule } from './documenten/documenten.module';
 import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail-modal.component';
+import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.component';
 
 @NgModule({
   imports: [
@@ -39,7 +40,8 @@ import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail
     StatusComponent,
     GerelateerdeObjectenComponent,
     AdviserenAccorderenComponent,
-    DetailModalComponent
+    DetailModalComponent,
+    ToegangVerlenenComponent
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

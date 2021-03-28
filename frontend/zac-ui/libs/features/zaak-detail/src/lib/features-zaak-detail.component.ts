@@ -1,8 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Zaak } from '../models/zaak';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-features-zaak-detail',
@@ -29,7 +30,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
   constructor(
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private modalService: ModalService
   ) { }
 
   ngOnInit(): void {
@@ -66,6 +68,10 @@ export class FeaturesZaakDetailComponent implements OnInit {
   setLoginUrl(): void {
     const currentPath = this.router.url;
     this.loginUrl = `/accounts/login/?next=/ui${currentPath}`
+  }
+
+  openModal(id: string) {
+    this.modalService.open(id);
   }
 
 }

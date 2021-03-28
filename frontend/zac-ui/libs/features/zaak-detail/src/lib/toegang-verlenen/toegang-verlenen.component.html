@@ -1,0 +1,31 @@
+<div class="toegang-verlenen">
+  <form [formGroup]="grantAccessForm" *ngIf="!submitSuccess">
+    <div class="form-group">
+      <p>Selecteer een gebruiker die u toegang wilt verlenen tot deze zaak.</p>
+      <gu-multiselect (search)="onSearch($event)"
+                      [items]="users"
+                      [multiple]="false"
+                      [control]="requester"
+                      bindLabel="name"
+                      bindValue="username"
+                      required
+                      placeholder="Gebruiker zoeken">
+      </gu-multiselect>
+    </div>
+    <div class="d-flex justify-content-end">
+      <gu-button
+        [disabled]="!grantAccessForm.valid"
+        [loading]="isSubmitting"
+        type="primary"
+        size="large"
+        (click)="submitForm()">
+        Versturen
+      </gu-button>
+    </div>
+    <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
+  </form>
+  <gu-success *ngIf="submitSuccess">
+    <p class="mb-4">U heeft gebruiker {{requesterUser.name}} succesvol toegang verleend tot <strong>{{identificatie}}</strong></p>
+    <gu-button type="tertiary" size="small" (click)="submitSuccess=false">Sluiten</gu-button>
+  </gu-success>
+</div>

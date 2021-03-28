@@ -1,3 +1,5 @@
+@import './base/colors/colors';
+
 .informatie {
   &__details {
     margin-bottom: 1.25rem;
@@ -8,14 +10,22 @@
   &__vertrouwelijkheid {
     .edit-icon {
       display: none;
-    }
-    &:hover {
-      .edit-icon {
-        display: block;
+      ::ng-deep .mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px;
+        color: $color-blue;
       }
-      gu-chip {
-        cursor: pointer;
+    }
+    gu-chip {
+      cursor: pointer;
+      &:hover {
+        .edit-icon {
+          display: block;
+        }
       }
     }
+
   }
 }

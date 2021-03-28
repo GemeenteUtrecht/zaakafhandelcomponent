@@ -44,6 +44,7 @@
     "@ng-select/ng-select": "^6.0.0",
     "@nrwl/angular": "10.4.4",
     "bootstrap": "^4.6.0",
+    "material-icons": "^0.5.4",
     "ng-multiselect-dropdown": "^0.3.0",
     "ngx-bootstrap": "^6.2.0",
     "rxjs": "~6.5.5",
