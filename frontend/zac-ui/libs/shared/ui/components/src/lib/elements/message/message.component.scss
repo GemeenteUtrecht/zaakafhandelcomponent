@@ -4,8 +4,15 @@
   border: 1px solid;
   padding: 0.825rem;
   border-radius: 4px;
+  &--primary {
+    border-color: $color-blue;
+    background-color: $background-blue;
+  }
   &--warn {
     border-color: $color-warn;
     background-color: $background-red;
+  }
+  p {
+    word-break: break-word;
   }
 }

@@ -5,6 +5,17 @@ export interface Zaaktype {
   versiedatum: string;
 }
 
+export interface Resultaattype {
+  url: string;
+  omschrijving: string;
+}
+
+export interface Resultaat {
+  url: string;
+  resultaattype: Resultaattype;
+  toelichting: string;
+}
+
 export interface Zaak {
   url: string;
   identificatie: string;
@@ -20,4 +31,5 @@ export interface Zaak {
   vertrouwelijkheidaanduiding: string;
   deadline: string;
   deadlineProgress: number;
+  resultaat: Resultaat;
 }

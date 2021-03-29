@@ -77,7 +77,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   &--tertiary#{&}--extrasmall {
     padding: 0;
     min-width: unset;
-    &:hover {
+    &:hover span {
       text-decoration: underline;
     }
   }
@@ -86,6 +86,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
     width: 1rem;
     height: 1rem;
     margin-right: 0.5rem;
+    text-decoration: none !important;
   }
   &--large {
     padding: 0.6rem 1.25rem;

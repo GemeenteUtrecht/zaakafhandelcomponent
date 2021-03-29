@@ -3,13 +3,50 @@
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <ng-container *ngIf="infoData && propertiesData && !isLoading">
+  <ng-container *ngIf="zaakData && propertiesData && !isLoading">
     <div class="informatie__details">
-      <p class="informatie__nummer p--marginsmall d-inline-block">{{identificatie}}</p>
-      <gu-chip type="tertiary" class="d-inline-block">Zaakvertrouwelijk</gu-chip>
+      <p class="informatie__nummer p--marginsmall">{{identificatie}}</p>
+      <div class="informatie__vertrouwelijkheid" *ngIf="currentConfidentialityType">
+        <gu-chip type="tertiary" *ngIf="!confInEditMode" (click)="confInEditMode=true">
+          {{currentConfidentialityType.label}}
+          <gu-icon class="edit-icon">edit</gu-icon>
+        </gu-chip>
+        <form [formGroup]="confidentialityForm" [hidden]="!confInEditMode" class="mt-4">
+          <gu-multiselect
+            [multiple]="false"
+            [items]="confidentialityData"
+            [selectedValue]="currentConfidentialityType.value"
+            label="Vertrouwelijkheidsniveau"
+            bindLabel="label"
+            bindValue="value"
+            [control]="confidentialityTypeControl"
+            class="mb-4"
+          ></gu-multiselect>
+          <gu-input-field [control]="reasonControl"
+                          type="text"
+                          label="Reden"
+                          id="conf-reden"
+                          class="mb-2">
+          </gu-input-field>
+          <div class="d-flex justify-content-between">
+            <gu-button type="tertiary" size="small" (click)="confInEditMode=false">
+              Sluiten
+            </gu-button>
+            <gu-button type="primary"
+                       size="small"
+                       [loading]="isSubmitting"
+                       [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value"
+                       (click)="submitConfidentiality()">
+              Wijzigen
+            </gu-button>
+          </div>
+          <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage">
+          </gu-message>
+        </form>
+      </div>
     </div>
-    <p class="p--marginsmall p--bold">{{infoData.omschrijving}}</p>
-    <p>{{infoData.toelichting ? infoData.toelichting : '(geen toelichting)'}}</p>
+    <p class="p--marginsmall p--bold">{{zaakData.omschrijving}}</p>
+    <p>{{zaakData.toelichting ? zaakData.toelichting : '(geen toelichting)'}}</p>
     <div class="zaak-detail__contact-gegevens">
       <div class="row" *ngFor="let prop of propertiesData;">
         <div class="col-5">
@@ -22,4 +59,9 @@
     </div>
   </ng-container>
 </div>
+<gu-modal id="zaak-informatie-modal"
+          [closeIcon]="true"
+          title="Vertrouwelijkheidsniveau wijzigen"
+          size="small">
 
+</gu-modal>

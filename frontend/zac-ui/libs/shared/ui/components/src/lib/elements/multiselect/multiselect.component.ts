@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { AfterContentInit, AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 
 @Component({
@@ -6,7 +6,7 @@ import { FormBuilder, FormControl } from '@angular/forms';
   templateUrl: './multiselect.component.html',
   styleUrls: ['./multiselect.component.scss'],
 })
-export class MultiselectComponent implements OnInit {
+export class MultiselectComponent implements OnInit, AfterContentInit {
   @Input() placeholder: string;
   @Input() items = [];
   @Input() bindLabel = 'name';
@@ -26,11 +26,14 @@ export class MultiselectComponent implements OnInit {
   constructor(private fb: FormBuilder) {}
 
   ngOnInit() {
-    if (this.selectedValue) {
-      this.selectedItems = this.selectedValue
-    }
     if (!this.control) {
       this.control = this.fb.control('')
+    }
+  }
+
+  ngAfterContentInit() {
+    if (this.selectedValue) {
+      this.selectedItems = this.selectedValue
     }
   }
 

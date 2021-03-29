@@ -8,5 +8,5 @@ import { Component, Input, OnInit } from '@angular/core';
 export class MessageComponent {
   @Input() title: string;
   @Input() message: string;
-  @Input() type: 'normal' | 'success' | 'warn'
+  @Input() type: 'primary' | 'success' | 'warn'
 }
