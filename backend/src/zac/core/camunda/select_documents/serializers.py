@@ -176,7 +176,6 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
             raise RuntimeError("No DRC configured!")
 
         drc_client = service.build_client()
-
         with parallel() as executor:
             documents = executor.submit(
                 lambda doc: drc_client.create("enkelvoudiginformatieobject", doc),
