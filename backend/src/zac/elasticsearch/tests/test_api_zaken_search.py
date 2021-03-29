@@ -53,6 +53,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Some zaak 1",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
         self.create_zaak_document(self.zaak)
         self.refresh_index()
@@ -187,6 +188,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             identificatie="zaak1",
             omschrijving="Some zaak 1",
             eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
         zaak1_model = factory(Zaak, zaak1)
         zaak1_model.zaaktype = factory(ZaakType, zaaktype)
@@ -198,6 +200,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             identificatie="zaak2",
             omschrijving="Other zaak 2",
             eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
         )
 
         # mock requests
@@ -209,6 +212,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # index documents in es
         self.create_zaak_document(zaak1)
         self.create_zaak_document(zaak2)
+        self.refresh_index()
 
         data = {
             "identificatie": "zaak1",
@@ -373,3 +377,58 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 }
             ],
         )
+
+    def test_search_without_input(self, m):
+        # set up catalogi api data
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        # set up zaken API data
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak1",
+            omschrijving="Some zaak 1",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+        )
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak2",
+            omschrijving="Other zaak 2",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
+        )
+
+        # mock requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(zaak1["url"], json=zaak1)
+        m.get(zaak2["url"], json=zaak2)
+
+        # index documents in es
+        self.create_zaak_document(zaak1)
+        self.create_zaak_document(zaak2)
+        self.refresh_index()
+
+        response = self.client.post(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]["url"], zaak2["url"])
+        self.assertEqual(data[1]["url"], zaak1["url"])
