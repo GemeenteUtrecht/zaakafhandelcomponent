@@ -10,9 +10,9 @@
 </div>
 
 <div class="card-container">
-  <div class="row">
+  <div class="row" *ngIf="zaakData?.resultaat">
     <div class="col-md-4 mb-4">
-      <div class="card card--blue" *ngIf="zaakData?.resultaat">
+      <div class="card card--blue">
         <p class="p--marginsmall">Resultaat: </p>
         <h4>{{zaakData.resultaat.resultaattype.omschrijving}}</h4>
         <p class="p--marginsmall" *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
