@@ -1,11 +1,12 @@
-from unittest.mock import patch
+import uuid
+from unittest.mock import MagicMock, patch
 
 import requests_mock
-from django_camunda.utils import underscoreize
+from django_camunda.utils import serialize_variable, underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -13,7 +14,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.api.context import ZaakContext
-from zac.camunda.data import Task
+from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
@@ -29,6 +30,7 @@ from ..camunda.select_documents.serializers import (
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+PI_URL = "https://camunda.example.com/engine-rest/process-instance"
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -160,6 +162,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         )
 
 
+@requests_mock.Mocker()
 class SelectDocumentsTaskSerializerTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -196,6 +199,20 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         cls.document_2.informatieobjecttype = factory(
             InformatieObjectType, cls.documenttype
         )
+        cls.patch_get_documenten = patch(
+            "zac.core.camunda.select_documents.serializers.get_documenten",
+            return_value=([cls.document_1, cls.document_2], []),
+        )
+
+        process_instance = {
+            "id": "c6a5e447-c58e-4986-a30d-54fce7503bbf",
+            "definition_id": f"BBV_vragen:3:c6a5e447-ce95-4986-a36f-54fce7503bbf",
+        }
+        cls.process_instance = factory(ProcessInstance, process_instance)
+        cls.patch_get_process_instance = patch(
+            "zac.core.camunda.select_documents.serializers.get_process_instance",
+            return_value=cls.process_instance,
+        )
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
@@ -203,49 +220,48 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
         )
-
         cls.zaak = factory(Zaak, zaak)
-
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak, documents=[cls.document_1, cls.document_2]
         )
-
         cls.patch_get_zaak_context = patch(
             "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=cls.zaak_context,
         )
 
-        cls.patch_get_documenten = patch(
-            "zac.core.camunda.select_documents.serializers.get_documenten",
-            return_value=([cls.document_1, cls.document_2], []),
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
-
-        cls.patch_client_from_url = patch(
-            "zac.core.camunda.select_documents.serializers._client_from_url",
-            return_value=None,
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            informatieobjecttypen=[
+                cls.document_1.informatieobjecttype.url,
+                cls.document_2.informatieobjecttype.url,
+            ],
         )
-
-        cls.patch_get_paginated_results = patch(
-            "zac.core.camunda.select_documents.serializers.get_paginated_results",
-            return_value=[cls.documenttype],
+        cls.zaaktype = factory(ZaakType, zaaktype)
+        cls.patch_fetch_zaaktype = patch(
+            "zac.core.camunda.select_documents.serializers.fetch_zaaktype",
+            return_value=cls.zaaktype,
         )
 
     def setUp(self):
         super().setUp()
 
-        self.patch_get_zaak_context.start()
-        self.addCleanup(self.patch_get_zaak_context.stop)
-
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
 
-        self.patch_client_from_url.start()
-        self.addCleanup(self.patch_client_from_url.stop)
+        self.patch_get_process_instance.start()
+        self.addCleanup(self.patch_get_process_instance.stop)
 
-        self.patch_get_paginated_results.start()
-        self.addCleanup(self.patch_get_paginated_results.stop)
+        self.patch_get_zaak_context.start()
+        self.addCleanup(self.patch_get_zaak_context.stop)
 
-    def test_document_select_task_serializer_no_catalogi(self):
+        self.patch_fetch_zaaktype.start()
+        self.addCleanup(self.patch_fetch_zaaktype.stop)
+
+    def test_document_select_task_serializer_no_catalogi(self, m):
         payload = {
             "selected_documents": [
                 {
@@ -264,9 +280,8 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         "zac.core.camunda.select_documents.serializers.validate_zaak_documents",
         return_value=None,
     )
-    def test_document_select_task_serializer(self, *mocks):
+    def test_document_select_task_serializer(self, m, *mocks):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-
         data = {
             "selected_documents": [
                 {
@@ -278,6 +293,10 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
         serializer = DocumentSelectTaskSerializer(data=data, context={"task": task})
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/zaaktype?deserializeValues=false",
+            json=serialize_variable(self.zaaktype.url),
+        )
         serializer.is_valid(raise_exception=True)
 
         self.assertIn("selected_documents", serializer.validated_data)
@@ -291,7 +310,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             ],
         )
 
-    def test_document_select_task_serializer_invalid_document(self):
+    def test_document_select_task_serializer_invalid_document(self, m):
         payload = {
             "selected_documents": [
                 {
@@ -310,7 +329,6 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             "blank",
         )
 
-    @requests_mock.Mocker()
     @patch(
         "zac.core.camunda.select_documents.serializers.validate_zaak_documents",
         return_value=None,
@@ -328,6 +346,14 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
 
         task = _get_task(**{"formKey": "zac:documentSelectie"})
         serializer = DocumentSelectTaskSerializer(data=payload, context={"task": task})
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/zaaktype?deserializeValues=false",
+            json=serialize_variable(self.zaaktype.url),
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/bronorganisatie?deserializeValues=false",
+            json=serialize_variable("123456789"),
+        )
         serializer.is_valid(raise_exception=True)
 
         m.post(

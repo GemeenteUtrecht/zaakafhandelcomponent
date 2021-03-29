@@ -456,6 +456,7 @@ class CreateZaakDocumentView(views.APIView):
 class InformatieObjectTypeListView(generics.ListAPIView):
     """
     List the available document types for a given zaak.
+
     TODO: permissions checks on zaak - can this user read/mutate the zaak?
     """
 

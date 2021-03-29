@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -8,15 +8,17 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
-from zgw_consumers.service import get_paginated_results
 
 from zac.api.context import get_zaak_context
+from zac.camunda.data import ProcessInstance
+from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.models import CoreConfig
-from zac.core.services import _client_from_url, get_documenten
+from zac.core.services import fetch_zaaktype, get_documenten
+from zgw.models import Zaak
 
 
 class DocumentSerializer(APIModelSerializer):
@@ -80,20 +82,21 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
     _documents: List = []
 
     def validate_selected_documents(self, selected_docs):
-        self.zaak = self.get_zaak_from_context()
-
         # Validate selected documents
+        hoofd_zaak = self.get_zaak_from_context()
         doc_urls = [doc["document"] for doc in selected_docs]
-        validate_zaak_documents(doc_urls, self.zaak)
+        validate_zaak_documents(doc_urls, hoofd_zaak)
 
         # Validated selected document types according to case type
-        ztc_client = _client_from_url(self.zaak.zaaktype)
-        results = get_paginated_results(ztc_client, "informatieobjecttype")
-        valid_eiots = [iot["url"] for iot in results]
+        process_instance = self._get_process_instance()
+        bijdrage_zaaktype_url = process_instance.get_variable("zaaktype")
+        bijdrage_zaaktype = fetch_zaaktype(bijdrage_zaaktype_url)
 
         selected_doc_types = [doc["document_type"] for doc in selected_docs]
         invalid_doc_types = [
-            doc_type for doc_type in selected_doc_types if doc_type not in valid_eiots
+            doc_type
+            for doc_type in selected_doc_types
+            if doc_type not in bijdrage_zaaktype.informatieobjecttypen
         ]
         if invalid_doc_types:
             raise serializers.ValidationError(
@@ -106,9 +109,31 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
             )
         return selected_docs
 
-    def get_zaak_from_context(self):
-        zaak_context = get_zaak_context(self.context["task"])
-        return zaak_context.zaak
+    def _get_process_instance(self) -> Optional[ProcessInstance]:
+        try:
+            return self._process_instance
+        except AttributeError:
+            self._process_instance = get_process_instance(
+                self.context["task"].process_instance_id
+            )
+            if not self._process_instance:
+                raise serializers.ValidationError(
+                    _(
+                        "No process instance with id: {pid} was found.".format(
+                            pid=self.context["task"].process_instance_id
+                        )
+                    )
+                )
+
+        return self._process_instance
+
+    def get_zaak_from_context(self) -> Zaak:
+        try:
+            return self._hoofd_zaak
+        except AttributeError:
+            self._hoofd_zaak = get_zaak_context(self.context["task"]).zaak
+
+        return self._hoofd_zaak
 
     def get_process_variables(self) -> Dict:
         """
@@ -125,15 +150,15 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
         original_documents, gone = get_documenten(self.get_zaak_from_context())
-
         upload = []
+        process_instance = self._get_process_instance()
         for old, new in zip(
             original_documents, self.validated_data["selected_documents"]
         ):
             upload.append(
                 {
                     "informatieobjecttype": new["document_type"],
-                    "bronorganisatie": self.zaak.bronorganisatie,
+                    "bronorganisatie": process_instance.get_variable("bronorganisatie"),
                     "creatiedatum": date.today().isoformat(),
                     "titel": old.titel,
                     "auteur": old.auteur,
