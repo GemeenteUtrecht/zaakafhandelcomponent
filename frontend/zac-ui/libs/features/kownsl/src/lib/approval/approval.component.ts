@@ -113,11 +113,6 @@ export class ApprovalComponent implements OnInit {
     this.zaakUrl = `/zaken/${zaakData.bronorganisatie}/${zaakData.identificatie}`;
   }
 
-  setLoginUrl(): void {
-    const currentPath = this.router.url;
-    this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
-  }
-
   createTableData(approvalData: ReviewRequest): Table {
     const tableData: Table = new Table(['Accordeur', 'Gedaan op', 'Akkoord'], []);
 
