@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
-import { AdviceForm, AdviceDocument } from '../../models/advice-form';
+import { AdviceForm } from '../../models/advice-form';
 import { ReviewRequest } from '../../models/review-request';
 import { RowData, Table, Zaak } from '@gu/models';
 import { Review } from '../../models/review';

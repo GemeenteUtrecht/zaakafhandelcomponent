@@ -41,7 +41,6 @@ export class AdviceService {
   }
 
   closeDocumentEdit(deleteUrls: DocumentUrls[]): Observable<any> {
-    console.log(deleteUrls);
     if (deleteUrls.length > 0) {
       const observables = [];
       deleteUrls.forEach(doc => {
