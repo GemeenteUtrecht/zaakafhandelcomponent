@@ -4,15 +4,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm, AdviceDocument } from '../../models/advice-form';
-import { Zaak } from '../../models/zaak';
 import { ReviewRequest } from '../../models/review-request';
-import { RowData, Table } from '@gu/models';
+import { RowData, Table, Zaak } from '@gu/models';
 import { Review } from '../../models/review';
 import { ZaakDocument } from '../../models/zaak-document';
 import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
 import { CloseDocument } from '../../models/close-document';
-import { switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -25,6 +24,7 @@ export class AdviceComponent implements OnInit {
   bronorganisatie: string;
 
   adviceData: ReviewRequest;
+  zaakData: Zaak;
   isLoading: boolean;
 
   isSubmitting: boolean;
@@ -32,12 +32,8 @@ export class AdviceComponent implements OnInit {
   submitFailed: boolean;
 
   hasError: boolean;
+  zaakHasError: boolean;
   errorMessage: string;
-
-  isNotLoggedIn: boolean;
-  readonly NOT_LOGGED_IN_MESSAGE = "Authenticatiegegevens zijn niet opgegeven.";
-
-  loginUrl: string;
 
   tableData: Table = new Table(['Adviseur', 'Gedaan op'], []);
 
@@ -46,6 +42,10 @@ export class AdviceComponent implements OnInit {
   pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
+  adviceFormData: AdviceForm = {
+    advice: "",
+    documents: []
+  };
 
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
@@ -57,13 +57,12 @@ export class AdviceComponent implements OnInit {
     private fb: FormBuilder,
     private adviceService: AdviceService,
     private route: ActivatedRoute,
-    private router: Router
   ) { }
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
     if (this.uuid) {
-      this.fetchAdvice()
+      this.fetchData()
       this.adviceForm = this.fb.group({
         advice: this.fb.control(""),
       })
@@ -72,39 +71,62 @@ export class AdviceComponent implements OnInit {
     }
   }
 
-  fetchAdvice(): void {
+  fetchData(): void {
     this.isLoading = true;
-    this.adviceService.getAdvice(this.uuid).subscribe(res => {
-      this.setZaakUrl(res.body.zaak);
-      this.bronorganisatie = res.body.zaak.bronorganisatie;
-      const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
-      if (isSubmittedBefore === "false") {
-        this.adviceData = res.body;
-        this.tableData.bodyData = this.createTableData(res.body.reviews);
-        this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
-      } else {
-        this.hasError = true;
-        this.errorMessage = "U heeft deze aanvraag al beantwoord.";
-      }
-      this.isLoading = false;
-    }, res => {
-      this.errorMessage = res.error.detail;
-      if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
-        this.setLoginUrl()
-        this.isNotLoggedIn = true;
-      }
+    this.adviceService.getAdvice(this.uuid)
+      .pipe(
+        tap( res => {
+          this.setLayout(res);
+        }),
+        catchError(res => {
+          this.errorMessage = res.error.detail ? res.error.detail : 'Er is een fout opgetreden';
+          this.hasError = true;
+          this.isLoading = false;
+          return of(null)
+        }),
+        switchMap(res => {
+          const { zaak } = res?.body;
+          return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
+        })
+      )
+      .subscribe( () => {
+        this.isLoading = false;
+      }, error => {
+        this.isLoading = false;
+      })
+  }
+
+  setLayout(res) {
+    this.setZaakUrl(res.body.zaak);
+    this.bronorganisatie = res.body.zaak.bronorganisatie;
+    const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
+    if (isSubmittedBefore === "false") {
+      this.adviceData = res.body;
+      this.tableData.bodyData = this.createTableData(res.body.reviews);
+      this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
+    } else {
       this.hasError = true;
-      this.isLoading = false;
-    })
+      this.errorMessage = "U heeft deze aanvraag al beantwoord.";
+    }
+  }
+
+  getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
+    return this.adviceService.getZaakDetail(bronorganisatie, identificatie)
+      .pipe(
+        switchMap(zaak => {
+          this.zaakData = zaak;
+          return of(zaak);
+        }),
+        catchError(() => {
+          this.zaakHasError = true;
+          this.isLoading = false;
+          return of(null);
+        })
+      );
   }
 
   setZaakUrl(zaakData: Zaak): void {
     this.zaakUrl = `/zaken/${zaakData.bronorganisatie}/${zaakData.identificatie}`;
-  }
-
-  setLoginUrl(): void {
-    const currentPath = this.router.url;
-    this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
   }
 
   createTableData(reviews: Review[]): RowData[] {
@@ -201,33 +223,33 @@ export class AdviceComponent implements OnInit {
     this.deleteUrls.push(urlMapping);
   }
 
-  // submit
   submitForm(): void {
     this.isSubmitting = true;
 
-    let adviceFormData: AdviceForm;
-    const documentsData: Array<AdviceDocument> = [];
 
-    adviceFormData = {
-      advice: this.adviceForm.controls['advice'].value,
-      documents: documentsData
-    }
+    this.adviceFormData.advice = this.adviceForm.controls['advice'].value;
 
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
           if (closedDocs.length > 0) {
-            adviceFormData.documents = closedDocs.map( (doc, i) => {
+            this.adviceFormData.documents = closedDocs.map( (doc, i) => {
               return {
                 document: this.deleteUrls[i].drcUrl,
                 editedDocument: doc.versionedUrl
               }
             })
           }
-          return of(adviceFormData);
+          return of(this.adviceFormData);
+        }),
+        catchError(res => {
+          if (this.submitFailed) {
+            this.errorMessage = res.error.detail ? res.error.detail : 'Er is een fout opgetreden';
+            return of(null)
+          }
         }),
         switchMap((formData: AdviceForm) => {
-          return this.adviceService.postAdvice(formData, this.uuid)
+          return this.adviceService.postAdvice(this.adviceFormData, this.uuid)
         })
       ).subscribe( () => {
       this.isSubmitting = false;

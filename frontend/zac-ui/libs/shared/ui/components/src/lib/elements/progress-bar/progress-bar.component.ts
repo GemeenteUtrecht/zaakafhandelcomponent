@@ -8,6 +8,8 @@ import { Component, Input, OnInit } from '@angular/core';
 export class ProgressBarComponent implements OnInit {
 
   @Input() progress: number;
+  @Input() endDate: string;
+  @Input() finished: boolean;
   roundedNumber: string;
   total = 100;
 

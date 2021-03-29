@@ -14,9 +14,12 @@ export class StatusComponent implements OnInit {
   @Input() identificatie: string;
   @Input() progress: number;
   @Input() deadline: string;
+  @Input() finished: boolean;
 
   data: any;
   isLoading: boolean;
+
+  isExpanded = false;
 
   pipe = new DatePipe("nl-NL");
 
