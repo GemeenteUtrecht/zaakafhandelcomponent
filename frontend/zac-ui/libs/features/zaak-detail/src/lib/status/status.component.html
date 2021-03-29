@@ -4,15 +4,20 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <ng-container *ngIf="data && !isLoading">
-    <gu-progress-bar *ngIf="progress" [progress]=progress class="d-block mb-3"></gu-progress-bar>
+    <gu-progress-bar *ngIf="progress"
+                     [progress]="finished ? 100 : progress"
+                     [finished]="finished"
+                     endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
+                     class="d-block mb-3"></gu-progress-bar>
     <div class="d-flex">
       <p class="p--bold mr-3">Uiterlijke einddatum:</p>
       <p *ngIf="deadline">{{deadline}}</p>
     </div>
-    <div class="timeline" *ngIf="data">
+    <div class="timeline mb-2" *ngIf="data">
       <div class="timeline__row row no-gutters"
-           *ngFor="let status of data; let last = last"
+           *ngFor="let status of data; let last = last; let i = index"
            [ngClass]="(last ? 'timeline__row--last' : '')"
+           [hidden]="!isExpanded && i >= 3"
       >
         <div class="col-1">
           <div class="timeline-item__nr"></div>
@@ -28,5 +33,12 @@
         </div>
       </div>
     </div>
+    <gu-button *ngIf="data?.length > 3"
+               type="tertiary"
+               size="extrasmall"
+               [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+               (click)="isExpanded = !isExpanded">
+      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+    </gu-button>
   </ng-container>
 </div>

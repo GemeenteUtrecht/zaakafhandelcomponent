@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { Zaak } from '../models/zaak';
+import { Zaak } from '@gu/models';
 import { ModalService } from '@gu/components';
 
 @Component({

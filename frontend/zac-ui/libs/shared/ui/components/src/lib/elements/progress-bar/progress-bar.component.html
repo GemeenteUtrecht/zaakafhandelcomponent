@@ -1,6 +1,11 @@
 <div class="progress-bar-container">
   <div class="progress-bar"
        [ngStyle]="{'width': progress + '%'}">
-    {{roundedNumber}}%
+    <ng-container *ngIf="!finished">
+      {{progress.toFixed(0)}}%
+    </ng-container>
+    <ng-container *ngIf="finished && endDate">
+      Afgehandeld op {{endDate}}
+    </ng-container>
   </div>
 </div>

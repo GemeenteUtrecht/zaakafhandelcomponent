@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { ApprovalForm } from '../../models/approval-form';
-import { ReviewRequest } from '../../models/review-request';
 import { HttpResponse } from '@angular/common/http';
+import { Zaak } from '@gu/models';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,10 @@ export class ApprovalService {
       observe: 'response' as 'response'
     }
     return this.http.Get<any>(endpoint, options);
+  }
+
+  getZaakDetail(bronorganisatie: string, identificatie: string): Observable<Zaak> {
+    return this.http.Get<Zaak>(encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`));
   }
 
   postApproval(formData: ApprovalForm, uuid:string): Observable<any> {

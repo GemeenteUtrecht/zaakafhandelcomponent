@@ -9,10 +9,19 @@
 
     <!-- Error -->
     <ng-template [ngIf]="hasError && !isLoading">
-      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage">
-        <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
-      </gu-message>
+      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
     </ng-template>
+
+    <div class="row mb-5" *ngIf="zaakData">
+      <div class="col-md-8 col-xl-6">
+        <div class="card card--blue">
+          <p class="p--marginsmall">{{zaakData.identificatie}}</p>
+          <h4>{{zaakData.zaaktype.omschrijving}}</h4>
+          <p class="p--marginsmall">{{zaakData.omschrijving}}</p>
+          <p class="p--marginsmall">{{zaakData.toelichting}}</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Main content -->
     <ng-template [ngIf]="!!approvalData && !isLoading">

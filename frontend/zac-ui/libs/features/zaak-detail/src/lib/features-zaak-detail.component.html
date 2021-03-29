@@ -15,7 +15,7 @@
       <div class="card card--blue" *ngIf="zaakData?.resultaat">
         <p class="p--marginsmall">Resultaat: </p>
         <h4>{{zaakData.resultaat.resultaattype.omschrijving}}</h4>
-        <p class="p--marginsmall">{{zaakData.resultaat.toelichting}}</p>
+        <p class="p--marginsmall" *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
       </div>
     </div>
   </div>
@@ -41,6 +41,7 @@
         [identificatie]="identificatie"
         [progress]="zaakData.deadlineProgress"
         [deadline]="zaakData.deadline"
+        [finished]="!!zaakData.resultaat"
         class="zaak-detail__section">
       </gu-status>
       <gu-keten-processen [mainZaakUrl]="mainZaakUrl"
