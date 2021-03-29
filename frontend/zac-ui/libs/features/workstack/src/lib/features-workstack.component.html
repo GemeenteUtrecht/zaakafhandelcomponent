@@ -58,7 +58,7 @@
                 <a *ngFor="let activity of activitiesData"
                    class="anchor mb-2 task-link"
                    href="{{activity.url}}">
-                  {{activity.activities[0].name}}
+                  {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
                 </a>
               </ng-container>
               <ng-template #noActivity>

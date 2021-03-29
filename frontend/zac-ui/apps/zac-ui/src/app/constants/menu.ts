@@ -14,12 +14,12 @@ const menuItems: MenuItem[] = [
 ];
 
 const bottomMenuItems: MenuItem[] = [
-  {
-    icon: 'login',
-    label: 'Inloggen',
-    to: '/accounts/login/?next=/ui/',
-    external: true
-  },
+  // {
+  //   icon: 'login',
+  //   label: 'Inloggen',
+  //   to: '/accounts/login/?next=/ui/',
+  //   external: true
+  // },
   {
     icon: 'admin_panel_settings',
     label: 'Autorisatieprofielen',
