@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -13,8 +13,9 @@ from zac.accounts.models import User
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.fields import SelectDocumentsField
-from zac.core.camunda.select_documents.serializers import DocumentSerializer
 from zac.core.utils import build_absolute_url, get_ui_url
 
 from .api import create_review_request
@@ -38,7 +39,9 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
         )
 
 
-class DocumentUserTaskSerializer(DocumentSerializer):
+class DocumentUserTaskSerializer(APIModelSerializer):
+    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
+
     class Meta:
         model = Document
         fields = (
@@ -218,7 +221,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             requester=self.context["request"].user.username,
         )
 
-    def get_process_variables(self) -> Dict[str, List]:
+    def get_process_variables(self) -> Dict[str, Union[List, str]]:
         """
         Get the required BPMN process variables for the BPMN.
         """

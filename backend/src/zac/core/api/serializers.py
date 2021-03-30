@@ -25,7 +25,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
+from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
@@ -83,19 +83,10 @@ class DocumentInfoSerializer(serializers.Serializer):
     )
     bestandsgrootte = serializers.SerializerMethodField()
 
-    read_url = serializers.SerializerMethodField(
-        label=_("ZAC document read URL"),
-        help_text=_(
-            "The document URL for the end user that opens a document to be read. Will "
-            "serve the file from a WebDAV server."
-        ),
-    )
+    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
 
     def get_bestandsgrootte(self, obj):
         return filesizeformat(obj.bestandsomvang)
-
-    def get_read_url(self, obj) -> str:
-        return get_dowc_url(obj, purpose=DocFileTypes.read)
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -406,18 +397,8 @@ class DocumentTypeSerializer(APIModelSerializer):
 
 
 class ZaakDocumentSerializer(APIModelSerializer):
-    read_url = serializers.SerializerMethodField(
-        label=_("ZAC document read URL"),
-        help_text=_(
-            "The document URL for the end user that opens a document to be read. Will serve the file from a WebDAV server."
-        ),
-    )
-    write_url = serializers.SerializerMethodField(
-        label=_("ZAC document write URL"),
-        help_text=_(
-            "The document URL for the end user that opens a document to be written. Will serve the file from a WebDAV server."
-        ),
-    )
+    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
+    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write)
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display"
     )
@@ -444,12 +425,6 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "help_text": _("File size in bytes"),
             }
         }
-
-    def get_read_url(self, obj) -> str:
-        return get_dowc_url(obj, purpose=DocFileTypes.read)
-
-    def get_write_url(self, obj) -> str:
-        return get_dowc_url(obj, purpose=DocFileTypes.write)
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
