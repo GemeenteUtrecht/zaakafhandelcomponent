@@ -97,3 +97,16 @@ class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
         return ""
 
     display_policy_schema.short_description = _("policy schema")
+
+    def get_extra_context(self, request, form_url) -> dict:
+        blueprints = [
+            (name, permission.blueprint_class.display_as_yaml())
+            for name, permission in registry.items()
+        ]
+        return {"blueprints": blueprints}
+
+    def add_view(self, request, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update(self.get_extra_context(request, form_url=form_url))
+        return super().add_view(request, form_url, extra_context)
+
