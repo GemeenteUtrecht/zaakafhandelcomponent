@@ -1,6 +1,8 @@
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
+from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import register
+from zac.core.services import fetch_zaaktype, get_informatieobjecttypen
 
 from .serializers import (
     DocumentSelectContext,
@@ -16,4 +18,10 @@ from .serializers import (
 )
 def get_context(task: Task) -> DocumentSelectContext:
     zaak_context = get_zaak_context(task, require_documents=True)
-    return DocumentSelectContext(documents=zaak_context.documents)
+    process_instance = get_process_instance(task.process_instance_id)
+    bijdrage_zaaktype_url = process_instance.get_variable("zaaktype")
+    bijdrage_zaaktype = fetch_zaaktype(bijdrage_zaaktype_url)
+    informatieobjecttypen = get_informatieobjecttypen(bijdrage_zaaktype.catalogus)
+    return DocumentSelectContext(
+        documents=zaak_context.documents, informatieobjecttypen=informatieobjecttypen
+    )

@@ -115,6 +115,42 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
 
+        process_instance_id = uuid.uuid4()
+        process_definition_id = uuid.uuid4()
+        definition_id = f"BBV_vragen:3:{process_definition_id}"
+        cls.process_instance = {
+            "id": str(process_instance_id),
+            "definition_id": definition_id,
+        }
+
+        process_instance = factory(ProcessInstance, cls.process_instance)
+        process_instance.get_variable = MagicMock()
+        process_instance.get_variable.return_value = None
+        cls.patch_get_process_instance = patch(
+            "zac.core.camunda.select_documents.context.get_process_instance",
+            return_value=process_instance,
+        )
+
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus_url,
+        )
+        cls.zaaktype = factory(ZaakType, zaaktype)
+
+        cls.patch_get_zaaktype = patch(
+            "zac.core.camunda.select_documents.context.fetch_zaaktype",
+            return_value=cls.zaaktype,
+        )
+
+        cls.patch_get_informatieobjecttypen = patch(
+            "zac.core.camunda.select_documents.context.get_informatieobjecttypen",
+            return_value=[factory(InformatieObjectType, documenttype)],
+        )
+
     def setUp(self):
         super().setUp()
 
@@ -123,6 +159,15 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
 
         self.patch_get_zaak_context_serializers.start()
         self.addCleanup(self.patch_get_zaak_context_serializers.stop)
+
+        self.patch_get_process_instance.start()
+        self.addCleanup(self.patch_get_process_instance.stop)
+
+        self.patch_get_zaaktype.start()
+        self.addCleanup(self.patch_get_zaaktype.stop)
+
+        self.patch_get_informatieobjecttypen.start()
+        self.addCleanup(self.patch_get_informatieobjecttypen.stop)
 
     def test_select_document_serializer(self):
         # Sanity check
