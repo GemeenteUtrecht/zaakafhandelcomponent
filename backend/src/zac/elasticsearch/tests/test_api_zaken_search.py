@@ -433,8 +433,12 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(zaak2["url"], json=zaak2)
 
         # index documents in es
-        self.create_zaak_document(zaak1)
-        self.create_zaak_document(zaak2)
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
         self.refresh_index()
 
         response = self.client.post(self.endpoint)

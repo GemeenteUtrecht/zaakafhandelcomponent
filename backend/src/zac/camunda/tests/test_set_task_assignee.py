@@ -14,7 +14,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
@@ -130,6 +130,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
         zaak = generate_oas_component(
             "zrc",
@@ -190,17 +191,16 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_task_not_found(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        PermissionDefinitionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            object_url="",
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         self.client.force_authenticate(user=user)
@@ -229,17 +229,17 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.addCleanup(self.patch_get_task.stop)
 
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        PermissionDefinitionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            object_url="",
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         self.client.force_authenticate(user=user)
