@@ -11,6 +11,7 @@ from ..permissions import (
     zaken_add_relations,
     zaken_handle_access,
     zaken_inzien,
+    zaken_update_documents,
     zaken_wijzigen,
 )
 
