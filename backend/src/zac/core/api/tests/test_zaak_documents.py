@@ -262,8 +262,19 @@ class ZaakDocumentsResponseTests(APITestCase):
                 response = self.client.patch(self.endpoint, payload)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check if x audit toelichting is added to headers for audit trail
+        relevant_requests = {
+            req.url: req.headers for req in m.request_history if req.method == "PATCH"
+        }
+        self.assertIn(self.document["url"], relevant_requests)
+        self.assertIn(document_2["url"], relevant_requests)
         self.assertEqual(
-            m.request_history[-3].headers["X-Audit-Toelichting"], "gewoon zomaar"
+            relevant_requests[self.document["url"]]["X-Audit-Toelichting"],
+            "gewoon zomaar",
+        )
+        self.assertEqual(
+            relevant_requests[document_2["url"]]["X-Audit-Toelichting"], "daarom"
         )
 
         # Make sure get_documenten in validators is only called once and not for every document
