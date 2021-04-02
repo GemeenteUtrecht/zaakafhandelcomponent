@@ -14,11 +14,10 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionDefinitionFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
-from zac.tests.utils import paginated_response
 
 from ..api.serializers import SetTaskAssigneeSerializer
 
@@ -192,10 +191,9 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
     def test_has_perm_task_not_found(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=user,
-            object_url="",
             policy={
                 "catalogus": self.zaaktype["catalogus"],
                 "zaaktype_omschrijving": "ZT1",
@@ -231,10 +229,9 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        BlueprintPermissionFactory.create(
             permission=zaakproces_usertasks.name,
             for_user=user,
-            object_url="",
             policy={
                 "catalogus": self.zaaktype["catalogus"],
                 "zaaktype_omschrijving": "ZT1",
