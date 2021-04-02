@@ -15,8 +15,8 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
     BlueprintPermissionFactory,
-    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -457,7 +457,7 @@ class ZaakDetailPermissionTests(APITestCase):
     @requests_mock.Mocker()
     def test_has_atomic_access(self, m):
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        AtomicPermissionFactory.create(
             object_url=self.zaak.url,
             permission=zaken_inzien.name,
             for_user=user,

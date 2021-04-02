@@ -11,7 +11,7 @@ class AccessRequestQuerySet(models.QuerySet):
         )
 
 
-class PermissionDefinitionQuerySet(models.QuerySet):
+class AtomicPermissionQuerySet(models.QuerySet):
     def for_user(self, user) -> models.QuerySet:
         return self.filter(users=user).distinct()
 

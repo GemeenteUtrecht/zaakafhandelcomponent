@@ -16,7 +16,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import AccessRequestResult
-from zac.accounts.models import AccessRequest, PermissionDefinition
+from zac.accounts.models import AccessRequest, AtomicPermission
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
     BlueprintPermissionFactory,
@@ -456,10 +456,10 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
 
-        permission_definition = PermissionDefinition.objects.for_user(
+        atomic_permission = AtomicPermission.objects.for_user(
             approved_request.requester
         ).get()
-        self.assertEqual(permission_definition.object_url, approved_request.zaak)
+        self.assertEqual(atomic_permission.object_url, approved_request.zaak)
 
     def test_approve_access_requests_without_end_date_fail(self, m):
         self._setUpMocks(m)

@@ -5,8 +5,8 @@ from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
     BlueprintPermissionFactory,
-    PermissionDefinitionFactory,
     UserFactory,
 )
 from zac.core.permissions import zaken_inzien
@@ -131,7 +131,7 @@ class SearchZakenTests(ESMixin, TestCase):
 
     def test_search_only_allowed_atomic(self):
         user = UserFactory.create()
-        PermissionDefinitionFactory.create(
+        AtomicPermissionFactory.create(
             object_url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             permission=zaken_inzien.name,
             for_user=user,

@@ -12,8 +12,8 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
     BlueprintPermissionFactory,
-    PermissionDefinitionFactory,
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig

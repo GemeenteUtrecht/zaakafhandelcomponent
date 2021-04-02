@@ -16,8 +16,8 @@ from .managers import UserManager
 from .permissions import registry
 from .query import (
     AccessRequestQuerySet,
+    AtomicPermissionQuerySet,
     BlueprintPermissionQuerySet,
-    PermissionDefinitionQuerySet,
 )
 
 
@@ -57,11 +57,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         through="UserAuthorizationProfile",
     )
-    permission_definitions = models.ManyToManyField(
-        "PermissionDefinition",
-        verbose_name=_("permission definitions"),
+    atomic_permissions = models.ManyToManyField(
+        "AtomicPermission",
+        verbose_name=_("atomic permissions"),
         related_name="users",
-        limit_choices_to={"policy": {}},
     )
 
     objects = UserManager()
@@ -179,7 +178,7 @@ class AccessRequest(models.Model):
             )
 
 
-class PermissionDefinition(models.Model):
+class AtomicPermission(models.Model):
     object_type = models.CharField(
         _("object type"),
         max_length=50,
@@ -205,7 +204,7 @@ class PermissionDefinition(models.Model):
         null=True,
         help_text=_("End date of the permission"),
     )
-    objects = PermissionDefinitionQuerySet.as_manager()
+    objects = AtomicPermissionQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("permission definition")

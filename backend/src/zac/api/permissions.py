@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from zds_client import ClientError
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.models import BlueprintPermission, PermissionDefinition
+from zac.accounts.models import AtomicPermission, BlueprintPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_zaak
 
@@ -34,7 +34,7 @@ class DefinitionBasePermission(permissions.BasePermission):
         # first check atomic permissions - this checks both atomic permissions directly attached to the user
         # and atomic permissions defined to authorization profiles
         if (
-            PermissionDefinition.objects.for_user(request.user)
+            AtomicPermission.objects.for_user(request.user)
             .filter(permission=self.permission.name, object_url=obj.url)
             .actual()
             .exists()
@@ -63,7 +63,7 @@ class DefinitionBasePermission(permissions.BasePermission):
             .actual()
             .exists()
         ) and (
-            not PermissionDefinition.objects.for_user(request.user)
+            not AtomicPermission.objects.for_user(request.user)
             .filter(permission=self.permission.name, object_type=self.object_type)
             .actual()
             .exists()

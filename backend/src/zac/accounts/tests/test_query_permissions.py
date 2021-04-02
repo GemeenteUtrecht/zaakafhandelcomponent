@@ -1,21 +1,21 @@
 from django.test import TestCase
 
-from ..models import BlueprintPermission, PermissionDefinition
+from ..models import AtomicPermission, BlueprintPermission
 from .factories import (
+    AtomicPermissionFactory,
     AuthorizationProfileFactory,
     BlueprintPermissionFactory,
-    PermissionDefinitionFactory,
     UserFactory,
 )
 
 
-class PermissionDefinitionQueryTests(TestCase):
+class AtomicPermissionQueryTests(TestCase):
     def test_query_for_user(self):
         user = UserFactory.create()
-        user_permission = PermissionDefinitionFactory.create()
-        user.permission_definitions.add(user_permission)
+        user_permission = AtomicPermissionFactory.create()
+        user.atomic_permissions.add(user_permission)
 
-        query_for_user = PermissionDefinition.objects.for_user(user)
+        query_for_user = AtomicPermission.objects.for_user(user)
 
         self.assertEqual(query_for_user.count(), 1)
         self.assertEqual(query_for_user.get(), user_permission)
@@ -38,7 +38,7 @@ class BlueprintPermissionQueryTests(TestCase):
         permission = BlueprintPermissionFactory.create()
 
         user = UserFactory.create()
-        # add two auth profiles for 1 user with the same permission_definition
+        # add two auth profiles for 1 user with the same atomic_permission
         auth_profiles = AuthorizationProfileFactory.create_batch(2)
         for auth_profile in auth_profiles:
             auth_profile.blueprint_permissions.add(permission)

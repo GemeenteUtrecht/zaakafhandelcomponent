@@ -10,7 +10,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.models import PermissionDefinition, User
+from zac.accounts.models import AtomicPermission, User
 from zac.core.permissions import zaken_inzien
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
@@ -134,10 +134,10 @@ class RolCreatedTests(ESMixin, APITestCase):
         response = self.client.post(path, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(PermissionDefinition.objects.for_user(self.user).count(), 1)
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
 
-        permission_definition = PermissionDefinition.objects.for_user(self.user).get()
+        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
 
-        self.assertEqual(permission_definition.object_url, ZAAK)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
+        self.assertEqual(atomic_permission.object_url, ZAAK)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)

@@ -7,9 +7,9 @@ from hijack_admin.admin import HijackUserAdminMixin
 
 from .models import (
     AccessRequest,
+    AtomicPermission,
     AuthorizationProfile,
     BlueprintPermission,
-    PermissionDefinition,
     User,
     UserAuthorizationProfile,
 )
@@ -25,13 +25,13 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 class _UserAdmin(HijackUserAdminMixin, UserAdmin):
     list_display = UserAdmin.list_display + ("hijack_field",)
     inlines = [UserAuthorizationProfileInline]
-    filter_horizontal = ("groups", "user_permissions", "permission_definitions")
+    filter_horizontal = ("groups", "user_permissions", "atomic_permissions")
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
 
         return fieldsets + (
-            (_("Object permissions"), {"fields": ("permission_definitions",)}),
+            (_("Object permissions"), {"fields": ("atomic_permissions",)}),
         )
 
 
@@ -76,8 +76,8 @@ class PermissionMixin:
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
-@admin.register(PermissionDefinition)
-class PermissionDefinitionAdmin(PermissionMixin, admin.ModelAdmin):
+@admin.register(AtomicPermission)
+class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
     list_display = ("permission", "object_type", "start_date")
     list_filter = ("permission", "object_type")
     search_fields = ("object_url",)

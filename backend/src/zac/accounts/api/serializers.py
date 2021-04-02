@@ -10,7 +10,7 @@ from zac.core.permissions import zaken_inzien
 
 from ..constants import AccessRequestResult, PermissionObjectType
 from ..email import send_email_to_requester
-from ..models import AccessRequest, PermissionDefinition, User
+from ..models import AccessRequest, AtomicPermission, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
         zaak_url = valid_data["zaak"]
 
         if (
-            PermissionDefinition.objects.for_user(requester)
+            AtomicPermission.objects.for_user(requester)
             .filter(object_url=zaak_url, permission=zaken_inzien.name)
             .actual()
             .exists()
@@ -91,7 +91,7 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
 
         # TODO refactor relations between access request and permission definitions
         # add permission definition
-        permission_definition = PermissionDefinition.objects.create(
+        atomic_permission = AtomicPermission.objects.create(
             object_url=access_request.zaak,
             object_type=PermissionObjectType.zaak,
             permission=zaken_inzien.name,
@@ -104,7 +104,7 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
             if access_request.end_date
             else None,
         )
-        access_request.requester.permission_definitions.add(permission_definition)
+        access_request.requester.atomic_permissions.add(atomic_permission)
 
         # close pending access requests
         pending_requests = access_request.requester.initiated_requests.filter(

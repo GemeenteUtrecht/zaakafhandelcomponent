@@ -19,7 +19,7 @@ from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult, PermissionObjectType
 from zac.accounts.email import send_email_to_requester
-from zac.accounts.models import AccessRequest, PermissionDefinition, User
+from zac.accounts.models import AccessRequest, AtomicPermission, User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
@@ -556,7 +556,7 @@ class AccessRequestHandleForm(forms.ModelForm):
         instance = super().save(**kwargs)
 
         if self.instance.result == AccessRequestResult.approve:
-            permission_definition = PermissionDefinition.objects.create(
+            atomic_permission = AtomicPermission.objects.create(
                 permission=zaken_inzien.name,
                 object_type=PermissionObjectType.zaak,
                 object_url=self.instance.zaak,
@@ -569,7 +569,7 @@ class AccessRequestHandleForm(forms.ModelForm):
                 if self.instance.end_date
                 else None,
             )
-            self.instance.requester.permission_definitions.add(permission_definition)
+            self.instance.requester.atomic_permissions.add(atomic_permission)
 
         # send email
         transaction.on_commit(

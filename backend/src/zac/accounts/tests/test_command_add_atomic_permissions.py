@@ -12,7 +12,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ..constants import PermissionObjectType
-from ..models import PermissionDefinition
+from ..models import AtomicPermission
 from .factories import UserFactory
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -81,13 +81,13 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
 
         call_command("add_atomic_permissions")
 
-        self.assertEqual(PermissionDefinition.objects.for_user(self.user).count(), 1)
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
 
-        permission_definition = PermissionDefinition.objects.for_user(self.user).get()
+        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
 
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.object_url, zaak["url"])
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.object_url, zaak["url"])
 
     def test_add_permission_for_advisor(self, m):
         # mock API requests
@@ -129,10 +129,10 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
 
         call_command("add_atomic_permissions")
 
-        self.assertEqual(PermissionDefinition.objects.for_user(self.user).count(), 1)
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
 
-        permission_definition = PermissionDefinition.objects.for_user(self.user).get()
+        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
 
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.object_url, zaak["url"])
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.object_url, zaak["url"])

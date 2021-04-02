@@ -20,11 +20,11 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ...constants import AccessRequestResult, PermissionObjectType
-from ...models import AccessRequest, PermissionDefinition
+from ...models import AccessRequest, AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
+    AtomicPermissionFactory,
     BlueprintPermissionFactory,
-    PermissionDefinitionFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -204,9 +204,7 @@ class AccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AccessRequest.objects.count(), 1)
-        self.assertEqual(
-            PermissionDefinition.objects.for_user(self.requester).count(), 1
-        )
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
 
         access_request = AccessRequest.objects.get()
 
@@ -218,15 +216,13 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.start_date, date(2020, 1, 1))
         self.assertIsNone(access_request.end_date)
 
-        permission_definition = PermissionDefinition.objects.for_user(
-            self.requester
-        ).get()
+        atomic_permission = AtomicPermission.objects.for_user(self.requester).get()
 
-        self.assertEqual(permission_definition.object_url, ZAAK_URL)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
-        self.assertEqual(permission_definition.start_date.date(), date(2020, 1, 1))
-        self.assertIsNone(permission_definition.end_date)
+        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 1))
+        self.assertIsNone(atomic_permission.end_date)
 
         data = response.json()
 
@@ -267,7 +263,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertTrue("requester" in response.json())
 
     def test_grant_access_with_existing_permission(self):
-        PermissionDefinitionFactory.create(
+        AtomicPermissionFactory.create(
             object_url=ZAAK_URL,
             object_type=PermissionObjectType.zaak,
             permission=zaken_inzien.name,
@@ -295,7 +291,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        PermissionDefinitionFactory.create(
+        AtomicPermissionFactory.create(
             object_url=ZAAK_URL,
             object_type=PermissionObjectType.zaak,
             permission=zaken_inzien.name,
@@ -313,7 +309,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.requester.initiated_requests.actual().count(), 1)
         self.assertEqual(
-            PermissionDefinition.objects.for_user(self.requester).actual().count(), 1
+            AtomicPermission.objects.for_user(self.requester).actual().count(), 1
         )
 
         actual_access_request = self.requester.initiated_requests.actual().get()
@@ -322,14 +318,14 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(actual_access_request.result, AccessRequestResult.approve)
         self.assertEqual(actual_access_request.comment, "some comment")
 
-        permission_definition = (
-            PermissionDefinition.objects.for_user(self.requester).actual().get()
+        atomic_permission = (
+            AtomicPermission.objects.for_user(self.requester).actual().get()
         )
 
-        self.assertEqual(permission_definition.object_url, ZAAK_URL)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
-        self.assertIsNone(permission_definition.end_date)
+        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertIsNone(atomic_permission.end_date)
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
@@ -375,14 +371,14 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(new_request.end_date, date(2021, 1, 1))
         self.assertEqual(new_request.comment, "some comment")
 
-        permission_definition = (
-            PermissionDefinition.objects.for_user(self.requester).actual().get()
+        atomic_permission = (
+            AtomicPermission.objects.for_user(self.requester).actual().get()
         )
 
-        self.assertEqual(permission_definition.object_url, ZAAK_URL)
-        self.assertEqual(permission_definition.object_type, PermissionObjectType.zaak)
-        self.assertEqual(permission_definition.permission, zaken_inzien.name)
-        self.assertEqual(permission_definition.end_date.date(), date(2021, 1, 1))
+        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
+        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertEqual(atomic_permission.end_date.date(), date(2021, 1, 1))
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
