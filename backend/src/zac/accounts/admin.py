@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.postgres.fields import JSONField
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
@@ -83,30 +84,21 @@ class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
     search_fields = ("object_url",)
 
 
+class PolicyWidget(forms.Widget):
+    template_name = "admin/accounts/blueprintpermission/policy_editor.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        json_schemas = {
+            name: permission.blueprint_class.display_as_jsonschema()
+            for name, permission in registry.items()
+        }
+        context.update({"json_schemas": json_schemas})
+        return context
+
+
 @admin.register(BlueprintPermission)
 class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
     list_display = ("permission", "object_type", "start_date")
     list_filter = ("permission", "object_type")
-    readonly_fields = ("display_policy_schema",)
-
-    def display_policy_schema(self, obj):
-        if obj.permission:
-            blueprint_class = obj.get_blueprint_class()
-            if blueprint_class:
-                return blueprint_class.display_as_yaml()
-        return ""
-
-    display_policy_schema.short_description = _("policy schema")
-
-    def get_extra_context(self, request, form_url) -> dict:
-        blueprints = [
-            (name, permission.blueprint_class.display_as_yaml())
-            for name, permission in registry.items()
-        ]
-        return {"blueprints": blueprints}
-
-    def add_view(self, request, form_url="", extra_context=None):
-        extra_context = extra_context or {}
-        extra_context.update(self.get_extra_context(request, form_url=form_url))
-        return super().add_view(request, form_url, extra_context)
-
+    formfield_overrides = {JSONField: {"widget": PolicyWidget}}
