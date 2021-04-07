@@ -18,6 +18,7 @@
   "license": "EUPL-1.2",
   "homepage": "https://github.com/GemeenteUtrecht/zaakafhandelcomponent",
   "dependencies": {
+    "@json-editor/json-editor": "^2.5.3",
     "classnames": "^2.2.6",
     "font-awesome": "^4.7.0",
     "immer": "^8.0.1",
