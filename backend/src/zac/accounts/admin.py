@@ -39,15 +39,54 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
         )
 
 
+class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
+    option_template_name = (
+        "admin/accounts/authorizationprofile/checkbox_option_with_link.html"
+    )
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        model = self.choices.queryset.model
+        context.update({"opts": model._meta})
+        return context
+
+
 @admin.register(AuthorizationProfile)
 class AuthorizationProfileAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
+    list_filter = ("blueprint_permissions__permission",)
     search_fields = ("name", "uuid")
-    filter_horizontal = ("blueprint_permissions",)
+    inlines = (UserAuthorizationProfileInline,)
+    formfield_overrides = {
+        models.ManyToManyField: {"widget": CheckboxSelectMultipleWithLinks},
+    }
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.prefetch_related("blueprint_permissions")
+        return qs.prefetch_related("blueprint_permissions", "user_set")
+
+    def get_users_display(self, obj):
+        return format_html_join(
+            ", ",
+            '<a href="{}">{}</a>',
+            (
+                (
+                    reverse(
+                        "admin:accounts_user_change",
+                        args=[user.id],
+                    ),
+                    user.username,
+                )
+                for user in obj.user_set.all()
+            ),
+        )
+
+    get_users_display.short_description = _("users")
+
+    def get_blueprint_permissions_count(self, obj):
+        return obj.blueprint_permissions.count()
+
+    get_blueprint_permissions_count.short_description = _("total permissions")
 
 
 @admin.register(UserAuthorizationProfile)
