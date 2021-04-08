@@ -4,7 +4,7 @@ import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components'
 import { TaskContextData } from '../../models/task-context';
 import { KetenProcessenService } from './keten-processen.service';
-import { KetenProcessen } from '../../models/keten-processen';
+import { KetenProcessen, Task } from '../../models/keten-processen';
 
 @Component({
   selector: 'gu-keten-processen',
@@ -36,6 +36,9 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   isLoadingContext: boolean;
   contextHasError: boolean;
   contextErrorMessage: string;
+
+  // Assign task
+  assignTaskTask: Task;
 
   constructor(
     private route: ActivatedRoute,
@@ -102,6 +105,11 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     } else {
       this.fetchFormLayout(taskId);
     }
+  }
+
+  assignTask(task: Task) {
+    this.assignTaskTask = task;
+    this.modalService.open('assignTaskModal');
   }
 
   fetchFormLayout(taskId): void {
