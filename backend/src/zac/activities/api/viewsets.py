@@ -20,7 +20,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
     )
     serializer_class = ActivitySerializer
     filterset_class = ActivityFilter
-    schema = None
 
     def filter_queryset(self, queryset):
         qs = super().filter_queryset(queryset)
@@ -45,4 +44,3 @@ class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Event.objects.none()
     serializer_class = EventSerializer
     permission_classes = (permissions.IsAuthenticated, CanWritePermission)
-    schema = None
