@@ -210,9 +210,12 @@ class AtomicPermission(models.Model):
         verbose_name = _("permission definition")
         verbose_name_plural = _("permission definitions")
 
+    @property
+    def object_uuid(self):
+        return self.object_url.rstrip("/").split("/")[-1]
+
     def __str__(self):
-        object_desc = self.object_url.split("/")[-1]
-        return f"{self.permission} ({self.object_type} {object_desc})"
+        return f"{self.permission} ({self.object_type} {self.object_uuid})"
 
 
 class BlueprintPermission(models.Model):

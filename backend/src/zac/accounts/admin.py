@@ -119,11 +119,44 @@ class PermissionMixin:
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
+class UserAtomicInline(admin.TabularInline):
+    model = AtomicPermission.users.through
+    extra = 1
+
+
 @admin.register(AtomicPermission)
 class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
-    list_display = ("permission", "object_type", "start_date")
-    list_filter = ("permission", "object_type")
+    list_display = (
+        "permission",
+        "object_type",
+        "object_uuid",
+        "get_users_display",
+        "start_date",
+    )
+    list_filter = ("permission", "object_type", "users")
     search_fields = ("object_url",)
+    inlines = (UserAtomicInline,)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("users")
+
+    def get_users_display(self, obj):
+        return format_html_join(
+            ", ",
+            '<a href="{}">{}</a>',
+            (
+                (
+                    reverse(
+                        "admin:accounts_user_change",
+                        args=[user.id],
+                    ),
+                    user.username,
+                )
+                for user in obj.users.all()
+            ),
+        )
+
+    get_users_display.short_description = _("users")
 
 
 class AuthorizationProfileInline(admin.TabularInline):
