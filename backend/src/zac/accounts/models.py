@@ -251,7 +251,12 @@ class BlueprintPermission(models.Model):
         verbose_name_plural = _("blueprint definitions")
 
     def __str__(self):
-        return f"{self.permission} ({self.object_type})"
+        if not self.permission or not self.policy:
+            return f"{self.permission}"
+
+        blueprint_class = self.get_blueprint_class()
+        blueprint = blueprint_class(self.policy)
+        return f"{self.permission}: {blueprint.short_display()}"
 
     def get_blueprint_class(self):
         permission = registry[self.permission]

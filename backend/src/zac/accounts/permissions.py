@@ -38,6 +38,9 @@ class Blueprint(Serializer):
     def search_query(self) -> Query:
         raise NotImplementedError("This method must be implemented by a subclass")
 
+    def short_display(self) -> str:
+        return "-"
+
 
 @dataclass(frozen=True)
 class Permission:

@@ -4,24 +4,41 @@
     const container = document.getElementById("policy_editor");
     const jsonSchemas = {{ json_schemas|safe }};
     const permission = document.getElementById("id_permission");
-    const schema = jsonSchemas[permission.value];
-    schema.title = "Blueprint data";
-    const jsonEditor = new JSONEditor(container, {"schema": schema });
 
-    jsonEditor.on('change', function() {
-        const errors = jsonEditor.validate();
-        if (errors.length) {
-            console.log(errors);
-        }
-        else {
-            const json = jsonEditor.getValue();
-            document.getElementById("id_{{ widget.attrs.id }}").value = JSON.stringify(json);
-        }
+
+    const displayJsonEditor = (permission_name) => {
+
+        const schema = jsonSchemas[permission_name] || {};
+        schema.title = "Blueprint data";
+        const jsonEditor = new JSONEditor(
+                container,
+                {"schema": schema, "no_additional_properties": true});
+
+        jsonEditor.on('change', function() {
+            const errors = jsonEditor.validate();
+            if (errors.length) {
+                console.log(errors);
+            }
+            else {
+                const json = jsonEditor.getValue();
+                document.getElementById("id_{{ widget.attrs.id }}").value = JSON.stringify(json);
+            }
+        });
+
+        {% if widget.value %}
+            const json = {{ widget.value|safe }};
+            jsonEditor.setValue(json);
+        {% endif %}
+        return jsonEditor;
+    };
+
+    let editor = displayJsonEditor(permission.value);
+
+    permission.addEventListener('change', function() {
+        editor.destroy();
+        editor = displayJsonEditor(permission.value);
     });
-    {% if widget.value %}
-        const json = {{ widget.value|safe }};
-        jsonEditor.setValue(json);
-    {% endif %}
+
 </script>
 
 <textarea name="{{ widget.name }}"
@@ -30,5 +47,3 @@
           id="id_{{ widget.attrs.id }}"
           style="display: none"
 >{{ widget.value|safe }}</textarea>
-
-{{ widget.name }}
