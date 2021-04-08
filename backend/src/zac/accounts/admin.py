@@ -2,6 +2,9 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.postgres.fields import JSONField
+from django.db import models
+from django.urls import reverse
+from django.utils.html import format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
@@ -84,6 +87,11 @@ class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
     search_fields = ("object_url",)
 
 
+class AuthorizationProfileInline(admin.TabularInline):
+    model = BlueprintPermission.auth_profiles.through
+    extra = 1
+
+
 class PolicyWidget(forms.Widget):
     template_name = "admin/accounts/blueprintpermission/policy_editor.html"
 
@@ -99,6 +107,40 @@ class PolicyWidget(forms.Widget):
 
 @admin.register(BlueprintPermission)
 class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
-    list_display = ("permission", "object_type", "start_date")
-    list_filter = ("permission", "object_type")
+    list_display = (
+        "permission",
+        "object_type",
+        "get_policy_list_display",
+        "get_auth_profiles_display",
+    )
+    list_filter = ("permission", "object_type", "auth_profiles")
     formfield_overrides = {JSONField: {"widget": PolicyWidget}}
+    inlines = (AuthorizationProfileInline,)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("auth_profiles")
+
+    def get_policy_list_display(self, obj):
+        blueprint_class = obj.get_blueprint_class()
+        blueprint = blueprint_class(obj.policy)
+        return blueprint.short_display()
+
+    get_policy_list_display.short_description = _("policy")
+
+    def get_auth_profiles_display(self, obj):
+        return format_html_join(
+            ", ",
+            '<a href="{}">{}</a>',
+            (
+                (
+                    reverse(
+                        "admin:accounts_authorizationprofile_change",
+                        args=[auth_profile.id],
+                    ),
+                    auth_profile.name,
+                )
+                for auth_profile in obj.auth_profiles.all()
+            ),
+        )
+
+    get_auth_profiles_display.short_description = _("authorization profiles")

@@ -20,7 +20,7 @@ class ZaakTypeBlueprint(Blueprint):
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
+        initial=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_(
             "Spans Zaken until and including this vertrouwelijkheidaanduiding."
         ),
@@ -51,6 +51,9 @@ class ZaakTypeBlueprint(Blueprint):
             & Range(va_order={"lte": max_va_order})
         )
         return query
+
+    def short_display(self):
+        return f"{self.data['zaaktype_omschrijving']} ({self.data['max_va']})"
 
 
 class ZaakHandleBlueprint(ZaakTypeBlueprint):
@@ -94,7 +97,7 @@ class InformatieObjectTypeBlueprint(Blueprint):
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
+        initial=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_("Maximum confidential level of the informatieobject"),
     )
 
@@ -113,3 +116,6 @@ class InformatieObjectTypeBlueprint(Blueprint):
             and iotype.omschrijving == self.data["iotype_omschrijving"]
             and current_va_order <= max_va_order
         )
+
+    def short_display(self):
+        return f"{self.data['iotype_omschrijving']} ({self.data['max_va']})"
