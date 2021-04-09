@@ -4,9 +4,7 @@ from .permissions import registry
 
 
 class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
-    option_template_name = (
-        "admin/accounts/widgets/checkbox_option_with_link.html"
-    )
+    option_template_name = "admin/accounts/widgets/checkbox_option_with_link.html"
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
