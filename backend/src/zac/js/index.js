@@ -7,3 +7,4 @@ moment.locale('nl');
 
 import './components';
 import './views';
+import './admin/views';

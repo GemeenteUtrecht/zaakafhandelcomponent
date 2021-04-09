@@ -5,7 +5,7 @@ from .permissions import registry
 
 class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
     option_template_name = (
-        "admin/accounts/authorizationprofile/checkbox_option_with_link.html"
+        "admin/accounts/widgets/checkbox_option_with_link.html"
     )
 
     def get_context(self, name, value, attrs):
@@ -16,7 +16,7 @@ class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
 
 
 class PolicyWidget(forms.Widget):
-    template_name = "admin/accounts/blueprintpermission/policy_editor.html"
+    template_name = "admin/accounts/widgets/policy_editor.html"
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
