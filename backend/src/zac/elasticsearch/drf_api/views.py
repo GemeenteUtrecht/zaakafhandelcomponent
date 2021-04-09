@@ -9,11 +9,15 @@ from rest_framework.response import Response
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.permissions import UserPermissions
-from zac.api.drf_spectacular.utils import input_serializer_to_parameters
+from zac.api.drf_spectacular.utils import (
+    input_serializer_to_parameters,
+    serializer_to_sorting_parameters,
+)
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
 
 from ..searches import autocomplete_zaak_search
+from .filters import ESOrderingFilter
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
 
@@ -47,8 +51,19 @@ class SearchViewSet(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
+    results_serializer_class = ZaakDetailSerializer
+    ordering = (
+        "-identificatie",
+        "-startdatum",
+        "-registratiedatum",
+    )
+    ordering_fields = "__all__"
 
-    @extend_schema(summary=_("Search zaken"), responses=ZaakDetailSerializer(many=True))
+    @extend_schema(
+        summary=_("Search zaken"),
+        parameters=[serializer_to_sorting_parameters(ZaakDetailSerializer)],
+        responses=ZaakDetailSerializer(many=True),
+    )
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of zaken based on input data.
@@ -57,7 +72,10 @@ class SearchViewSet(views.APIView):
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
-        zaken = self.perform_search(input_serializer.data)
+        # Get ordering
+        ordering = ESOrderingFilter().get_ordering(request, self)
+        zaken = self.perform_search({**input_serializer.data, **{"ordering": ordering}})
+
         # TODO for now zaak.resultaat is str which is not supported by ZaakDetailSerializer
         for zaak in zaken:
             zaak.resultaat = None
