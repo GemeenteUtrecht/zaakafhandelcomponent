@@ -1,10 +1,12 @@
+from urllib.parse import urlencode
+
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.urls import reverse
-from django.utils.html import format_html_join
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
@@ -18,6 +20,7 @@ from .models import (
     UserAuthorizationProfile,
 )
 from .permissions import registry
+from .widgets import CheckboxSelectMultipleWithLinks, PolicyWidget
 
 
 class UserAuthorizationProfileInline(admin.TabularInline):
@@ -27,9 +30,13 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 @admin.register(User)
 class _UserAdmin(HijackUserAdminMixin, UserAdmin):
-    list_display = UserAdmin.list_display + ("hijack_field",)
+    list_display = UserAdmin.list_display + (
+        "is_superuser",
+        "get_auth_profiles_display",
+        "get_atomic_permissions_display",
+        "hijack_field",
+    )
     inlines = [UserAuthorizationProfileInline]
-    filter_horizontal = ("groups", "user_permissions", "atomic_permissions")
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -38,17 +45,45 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
             (_("Object permissions"), {"fields": ("atomic_permissions",)}),
         )
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("atomic_permissions", "auth_profiles")
+        )
 
-class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
-    option_template_name = (
-        "admin/accounts/authorizationprofile/checkbox_option_with_link.html"
-    )
+    def display_related_as_list_of_links(self, obj, field_name):
+        field = getattr(obj, field_name)
 
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        model = self.choices.queryset.model
-        context.update({"opts": model._meta})
-        return context
+        # view_name = f"admin:{model._meta.app_label}_{model._meta.model_name}_change"
+        return field
+
+    def get_auth_profiles_display(self, obj):
+        return format_html_join(
+            ", ",
+            '<a href="{}">{}</a>',
+            (
+                (
+                    reverse(
+                        "admin:accounts_authorizationprofile_change",
+                        args=[auth_profile.id],
+                    ),
+                    auth_profile.name,
+                )
+                for auth_profile in obj.auth_profiles.all()
+            ),
+        )
+
+    get_auth_profiles_display.short_description = _("authorization profiles")
+
+    def get_atomic_permissions_display(self, obj):
+        count = obj.atomic_permissions.count()
+        changelist_url = reverse("admin:accounts_atomicpermission_changelist")
+        query = {"users__id__exact": obj.id}
+        url = f"{changelist_url}?{urlencode(query)}"
+        return format_html('<a href="{}">{}</a>', url, count)
+
+    get_atomic_permissions_display.short_description = _("atomic permissions")
 
 
 @admin.register(AuthorizationProfile)
@@ -84,7 +119,11 @@ class AuthorizationProfileAdmin(admin.ModelAdmin):
     get_users_display.short_description = _("users")
 
     def get_blueprint_permissions_count(self, obj):
-        return obj.blueprint_permissions.count()
+        count = obj.blueprint_permissions.count()
+        changelist_url = reverse("admin:accounts_blueprintpermission_changelist")
+        query = {"auth_profiles__id__exact": obj.id}
+        url = f"{changelist_url}?{urlencode(query)}"
+        return format_html('<a href="{}">{}</a>', url, count)
 
     get_blueprint_permissions_count.short_description = _("total permissions")
 
@@ -162,19 +201,6 @@ class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
 class AuthorizationProfileInline(admin.TabularInline):
     model = BlueprintPermission.auth_profiles.through
     extra = 1
-
-
-class PolicyWidget(forms.Widget):
-    template_name = "admin/accounts/blueprintpermission/policy_editor.html"
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        json_schemas = {
-            name: permission.blueprint_class.display_as_jsonschema()
-            for name, permission in registry.items()
-        }
-        context.update({"json_schemas": json_schemas})
-        return context
 
 
 @admin.register(BlueprintPermission)
