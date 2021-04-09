@@ -1,15 +1,13 @@
-from urllib.parse import urlencode
-
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.urls import reverse
-from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
+
+from zac.utils.admin import RelatedLinksMixin
 
 from .models import (
     AccessRequest,
@@ -29,7 +27,7 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(User)
-class _UserAdmin(HijackUserAdminMixin, UserAdmin):
+class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
     list_display = UserAdmin.list_display + (
         "is_superuser",
         "get_auth_profiles_display",
@@ -52,42 +50,19 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
             .prefetch_related("atomic_permissions", "auth_profiles")
         )
 
-    def display_related_as_list_of_links(self, obj, field_name):
-        field = getattr(obj, field_name)
-
-        # view_name = f"admin:{model._meta.app_label}_{model._meta.model_name}_change"
-        return field
-
     def get_auth_profiles_display(self, obj):
-        return format_html_join(
-            ", ",
-            '<a href="{}">{}</a>',
-            (
-                (
-                    reverse(
-                        "admin:accounts_authorizationprofile_change",
-                        args=[auth_profile.id],
-                    ),
-                    auth_profile.name,
-                )
-                for auth_profile in obj.auth_profiles.all()
-            ),
-        )
+        return self.display_related_as_list_of_links(obj, "auth_profiles")
 
     get_auth_profiles_display.short_description = _("authorization profiles")
 
     def get_atomic_permissions_display(self, obj):
-        count = obj.atomic_permissions.count()
-        changelist_url = reverse("admin:accounts_atomicpermission_changelist")
-        query = {"users__id__exact": obj.id}
-        url = f"{changelist_url}?{urlencode(query)}"
-        return format_html('<a href="{}">{}</a>', url, count)
+        return self.display_related_as_count_with_link(obj, "atomic_permissions")
 
     get_atomic_permissions_display.short_description = _("atomic permissions")
 
 
 @admin.register(AuthorizationProfile)
-class AuthorizationProfileAdmin(admin.ModelAdmin):
+class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
     list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
     list_filter = ("blueprint_permissions__permission",)
     search_fields = ("name", "uuid")
@@ -101,29 +76,12 @@ class AuthorizationProfileAdmin(admin.ModelAdmin):
         return qs.prefetch_related("blueprint_permissions", "user_set")
 
     def get_users_display(self, obj):
-        return format_html_join(
-            ", ",
-            '<a href="{}">{}</a>',
-            (
-                (
-                    reverse(
-                        "admin:accounts_user_change",
-                        args=[user.id],
-                    ),
-                    user.username,
-                )
-                for user in obj.user_set.all()
-            ),
-        )
+        return self.display_related_as_list_of_links(obj, "user_set")
 
     get_users_display.short_description = _("users")
 
     def get_blueprint_permissions_count(self, obj):
-        count = obj.blueprint_permissions.count()
-        changelist_url = reverse("admin:accounts_blueprintpermission_changelist")
-        query = {"auth_profiles__id__exact": obj.id}
-        url = f"{changelist_url}?{urlencode(query)}"
-        return format_html('<a href="{}">{}</a>', url, count)
+        return self.display_related_as_count_with_link(obj, "blueprint_permissions")
 
     get_blueprint_permissions_count.short_description = _("total permissions")
 
@@ -164,7 +122,7 @@ class UserAtomicInline(admin.TabularInline):
 
 
 @admin.register(AtomicPermission)
-class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
+class AtomicPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin):
     list_display = (
         "permission",
         "object_type",
@@ -180,20 +138,7 @@ class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
         return super().get_queryset(request).prefetch_related("users")
 
     def get_users_display(self, obj):
-        return format_html_join(
-            ", ",
-            '<a href="{}">{}</a>',
-            (
-                (
-                    reverse(
-                        "admin:accounts_user_change",
-                        args=[user.id],
-                    ),
-                    user.username,
-                )
-                for user in obj.users.all()
-            ),
-        )
+        return self.display_related_as_list_of_links(obj, "users")
 
     get_users_display.short_description = _("users")
 
@@ -204,7 +149,7 @@ class AuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(BlueprintPermission)
-class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
+class BlueprintPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin):
     list_display = (
         "permission",
         "object_type",
@@ -226,19 +171,6 @@ class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
     get_policy_list_display.short_description = _("policy")
 
     def get_auth_profiles_display(self, obj):
-        return format_html_join(
-            ", ",
-            '<a href="{}">{}</a>',
-            (
-                (
-                    reverse(
-                        "admin:accounts_authorizationprofile_change",
-                        args=[auth_profile.id],
-                    ),
-                    auth_profile.name,
-                )
-                for auth_profile in obj.auth_profiles.all()
-            ),
-        )
+        return self.display_related_as_list_of_links(obj, "auth_profiles")
 
     get_auth_profiles_display.short_description = _("authorization profiles")
