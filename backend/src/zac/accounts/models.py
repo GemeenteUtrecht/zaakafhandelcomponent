@@ -207,8 +207,8 @@ class AtomicPermission(models.Model):
     objects = AtomicPermissionQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("permission definition")
-        verbose_name_plural = _("permission definitions")
+        verbose_name = _("atomic permission")
+        verbose_name_plural = _("atomic permissions")
 
     @property
     def object_uuid(self):
