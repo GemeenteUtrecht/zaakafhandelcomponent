@@ -9,17 +9,16 @@ from rest_framework.response import Response
 from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.permissions import UserPermissions
-from zac.api.drf_spectacular.utils import (
-    input_serializer_to_parameters,
-    serializer_to_sorting_parameters,
-)
+from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
 
 from ..searches import autocomplete_zaak_search
+from ..documents import ZaakDocument
 from .filters import ESOrderingFilter
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
+from .utils import es_document_to_sorting_parameters
 
 
 class GetZakenView(views.APIView):
@@ -51,7 +50,7 @@ class SearchViewSet(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
-    results_serializer_class = ZaakDetailSerializer
+    search_document = ZaakDocument
     ordering = (
         "-identificatie",
         "-startdatum",
@@ -61,7 +60,7 @@ class SearchViewSet(views.APIView):
 
     @extend_schema(
         summary=_("Search zaken"),
-        parameters=[serializer_to_sorting_parameters(ZaakDetailSerializer)],
+        parameters=[es_document_to_sorting_parameters(ZaakDocument)],
         responses=ZaakDetailSerializer(many=True),
     )
     def post(self, request, *args, **kwargs):

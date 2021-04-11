@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
@@ -7,12 +7,41 @@ from drf_spectacular.plumbing import force_instance
 from rest_framework import serializers, views
 from rest_framework.settings import api_settings
 
-from zac.api.drf_spectacular.utils import get_sorting_fields
+from .utils import get_sorting_fields
 
 
 class ESOrderingFilter:
+    """
+    A custom filter that is strongly inspired by the rest_framework ordering filter
+    and has a similar interface.
+
+    Note: in this filter ordering = None is the same as ordering = "__all__".
+    """
+
     ordering_param = api_settings.ORDERING_PARAM
     ordering_fields = None
+
+    def add_keyword_to_text_field_type(ordering: List[str]) -> List[str]:
+        """
+        Fields that have a 'text' field type are searchable on their keyword
+        property.
+
+        This adds .keyword to any field name that has a 'text' field type.
+        """
+        all_fields = self.get_all_fields(view)
+        final_ordering = []
+        for field in ordering:
+            if field.startswith("-"):
+                field_type = all_fields[field[1:]]
+            else:
+                field_type = all_fields[field]
+
+            if field_type == "text":
+                field += ".keyword"
+
+            final_ordering.append(field)
+
+        return final_ordering
 
     def get_ordering(self, request, view):
         """
@@ -26,82 +55,52 @@ class ESOrderingFilter:
         if params:
             fields = [param.strip() for param in params.split(",")]
             ordering = self.remove_invalid_fields(fields, view, request)
+            ordering = self.add_keyword_to_text_field_type(ordering)
             if ordering:
                 return ordering
 
         return self.get_default_ordering(view)
 
     def get_default_ordering(self, view):
-        ordering = getattr(view, "ordering", None)
-        if isinstance(ordering, str):
-            return (ordering,)
-        return ordering
+        return getattr(view, "ordering", None)
 
-    def get_default_valid_fields(self, view, context={}):
+    def get_all_fields(self, view) -> Dict[str, str]:
         # If `ordering_fields` is not specified, then we determine a default
         # based on the serializer class, if one exists on the view.
-        if hasattr(view, "get_serializer_class"):
-            try:
-                serializer_class = view.get_serializer_class()
-            except AssertionError:
-                # Raised by the default implementation if
-                # no serializer_class was found
-                serializer_class = None
-        else:
-            serializer_class = getattr(view, "serializer_class", None)
+        try:
+            search_document = view.search_document
 
-        if serializer_class is None:
+        except AttributeError:
             msg = (
-                "Cannot use %s on a view which does not have either a "
-                "'serializer_class', an overriding 'get_serializer_class' "
-                "or 'ordering_fields' attribute."
+                "Cannot use %s on a view which does not have a "
+                "'search_document' attribute."
             )
             raise ImproperlyConfigured(msg % self.__class__.__name__)
 
-        return [
-            (field.source.replace(".", "__") or field_name, field.label)
-            for field_name, field in serializer_class(context=context).fields.items()
-            if not getattr(field, "write_only", False) and not field.source == "*"
-        ]
+        return {
+            field_name: field_type
+            for field_name, field_type in get_sorting_fields(search_document)
+        }
 
-    def get_results_serializer(self, view: views.APIView) -> serializers.Serializer:
-        assert hasattr(
-            view, "results_serializer_class"
-        ), f"{self.__class__.__name__} requires results_serializer_class to be set on view."
-        serializer = force_instance(view.results_serializer_class)
-        return serializer
-
-    def get_valid_fields(self, view, context={}) -> List[Tuple[str, str]]:
+    def get_ordering_fields(self, view) -> Dict[str, str]:
         ordering_fields = getattr(view, "ordering_fields", self.ordering_fields)
+        all_fields = self.get_all_fields(view)
 
-        if ordering_fields is None:
-            # Default to allowing filtering on serializer fields
-            return self.get_default_valid_fields(view, context)
+        if ordering_fields in [None, "__all__"]:
+            return all_fields
 
-        serializer = self.get_results_serializer(view)
-        all_valid_fields = get_sorting_fields(serializer.fields)
-        if ordering_fields == "__all__":
-            return [(field, field) for field in all_valid_fields]
+        return {field: all_fields[field] for field in ordering_fields}
 
-        else:
-            valid_fields = []
-            for field in ordering_fields:
-                if not isinstance(field, str):
-                    field = field[0]
+    def remove_invalid_fields(self, fields, view) -> List[str]:
+        """
+        Fields that have as type 'object' are unsortable for now.
 
-                if field in all_valid_fields:
-                    valid_fields.append((field, field))
-
-        return valid_fields
-
-    def remove_invalid_fields(self, fields, view, request):
-        valid_fields = [
-            item[0] for item in self.get_valid_fields(view, {"request": request})
-        ]
+        """
+        valid_fields = self.get_ordering_fields(view)
 
         def term_valid(term):
             if term.startswith("-"):
                 term = term[1:]
-            return term in valid_fields
+            return (term in valid_fields) and (all_fields[term] != "object")
 
         return [term for term in fields if term_valid(term)]

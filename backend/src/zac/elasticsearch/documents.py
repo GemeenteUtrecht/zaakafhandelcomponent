@@ -20,19 +20,25 @@ class RolDocument(InnerDoc):
     )
 
 
+class ZaakTypeDocument(InnerDoc):
+    url = field.Keyword()
+    omschrijving = field.Text(fields={"keyword": field.Keyword()})
+
+
 class ZaakDocument(Document):
     url = field.Keyword()
-    zaaktype = field.Keyword()
+    zaaktype = Nested(ZaakTypeDocument)
     identificatie = field.Keyword()
     bronorganisatie = field.Keyword()
-    omschrijving = field.Text()
-    vertrouwelijkheidaanduiding = field.Text()
+    omschrijving = field.Text(fields={"keyword": field.Keyword()})
+    vertrouwelijkheidaanduiding = field.Text(fields={"keyword": field.Keyword()})
     va_order = field.Integer()
     rollen = Nested(RolDocument)
 
     startdatum = field.Date()
     einddatum = field.Date()
     registratiedatum = field.Date()
+    deadline = field.Date()
 
     eigenschappen = field.Object(EigenschapDocument)
 
