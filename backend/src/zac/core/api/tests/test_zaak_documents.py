@@ -21,8 +21,12 @@ from zac.accounts.tests.factories import (
 )
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.models import CoreConfig
-from zac.core.permissions import zaken_inzien, zaken_update_documents, zaken_wijzigen
+from zac.core.permissions import (
+    zaken_download_documents,
+    zaken_inzien,
+    zaken_update_documents,
+    zaken_wijzigen,
+)
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -64,6 +68,7 @@ class ZaakDocumentsResponseTests(APITestCase):
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="bijlage",
         )
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -87,6 +92,12 @@ class ZaakDocumentsResponseTests(APITestCase):
             bronorganisatie="123456782",
             informatieobjecttype=cls.documenttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            auteur="some-auteur",
+            beschrijving="some-beschrijving",
+            bestandsnaam="some-bestandsnaam",
+            locked="True",
+            titel="some-titel",
+            bestandsomvang="10",
         )
         document = factory(Document, cls.document)
         document.informatieobjecttype = factory(InformatieObjectType, cls.documenttype)
@@ -100,6 +111,10 @@ class ZaakDocumentsResponseTests(APITestCase):
 
         cls.get_review_requests_patcher = patch(
             "zac.core.api.views.get_review_requests", return_value=[]
+        )
+
+        cls.get_documenten_permissions_patcher = patch(
+            "zac.core.api.permissions.get_documenten", return_value=([document], [])
         )
 
         cls.endpoint = reverse(
@@ -121,6 +136,9 @@ class ZaakDocumentsResponseTests(APITestCase):
 
         self.get_documenten_patcher.start()
         self.addCleanup(self.get_documenten_patcher.stop)
+
+        self.get_documenten_permissions_patcher.start()
+        self.addCleanup(self.get_documenten_permissions_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
@@ -150,19 +168,19 @@ class ZaakDocumentsResponseTests(APITestCase):
         response_data = response.json()
         expected = [
             {
-                "url": self.document["url"],
-                "auteur": self.document["auteur"],
+                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+                "auteur": "some-auteur",
                 "identificatie": "DOC-2020-007",
-                "beschrijving": self.document["beschrijving"],
-                "bestandsnaam": self.document["bestandsnaam"],
-                "locked": self.document["locked"],
+                "beschrijving": "some-beschrijving",
+                "bestandsnaam": "some-bestandsnaam",
+                "locked": True,
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                    "omschrijving": self.documenttype["omschrijving"],
+                    "omschrijving": "bijlage",
                 },
-                "titel": self.document["titel"],
+                "titel": "some-titel",
                 "vertrouwelijkheidaanduiding": "Openbaar",
-                "bestandsomvang": self.document["bestandsomvang"],
+                "bestandsomvang": 10,
                 "readUrl": read_url,
                 "writeUrl": write_url,
             }
@@ -211,18 +229,14 @@ class ZaakDocumentsResponseTests(APITestCase):
             self.document["url"],
             json={
                 **self.document,
-                **{
-                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim
-                },
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
         m.patch(
             document_2["url"],
             json={
                 **document_2,
-                **{
-                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.geheim
-                },
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.geheim,
             },
         )
         m.post(self.document["url"] + "/unlock", status_code=204)
@@ -232,34 +246,33 @@ class ZaakDocumentsResponseTests(APITestCase):
             self.document["url"],
             json={
                 **self.document,
-                **{
-                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim
-                },
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
         m.get(
             document_2["url"],
             json={
                 **document_2,
-                **{
-                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.geheim
-                },
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.geheim,
             },
         )
-
+        documenten = [
+            [
+                factory(Document, self.document),
+                factory(Document, document_2),
+            ],
+            ["meh", "meh"],
+        ]
         drc_client = Service.objects.get(api_root=DOCUMENTS_ROOT).build_client()
         with patch("zac.core.services._client_from_url", return_value=drc_client):
             with patch(
                 "zac.core.api.validators.get_documenten",
-                return_value=[
-                    [
-                        factory(Document, self.document),
-                        factory(Document, document_2),
-                    ],
-                    "meh",
-                ],
+                return_value=documenten,
             ) as mock_get_documenten:
-                response = self.client.patch(self.endpoint, payload)
+                with patch(
+                    "zac.core.api.permissions.get_documenten", return_value=documenten
+                ):
+                    response = self.client.patch(self.endpoint, payload)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

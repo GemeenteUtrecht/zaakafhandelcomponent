@@ -946,7 +946,7 @@ async def fetch_documents(zios: list, doc_versions: Optional[Dict[str, int]] = N
     return responses
 
 
-def update_document(url: str, data: dict, request_kwargs: dict):
+def update_document(url: str, data: dict, audit_line: str):
     client = _client_from_url(url)
 
     # lock eio
@@ -957,7 +957,10 @@ def update_document(url: str, data: dict, request_kwargs: dict):
 
     data["lock"] = lock
     response = client.partial_update(
-        "enkelvoudiginformatieobject", data=data, url=url, request_kwargs=request_kwargs
+        "enkelvoudiginformatieobject",
+        data=data,
+        url=url,
+        request_kwargs={"headers": {"X-Audit-Toelichting": audit_line}},
     )
 
     document = factory(Document, response)

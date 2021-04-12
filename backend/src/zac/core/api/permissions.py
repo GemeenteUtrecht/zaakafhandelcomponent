@@ -9,11 +9,13 @@ from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermissi
 from ..permissions import (
     zaken_add_documents,
     zaken_add_relations,
+    zaken_download_documents,
     zaken_handle_access,
     zaken_inzien,
     zaken_update_documents,
     zaken_wijzigen,
 )
+from ..services import get_documenten
 
 logger = logging.getLogger(__name__)
 

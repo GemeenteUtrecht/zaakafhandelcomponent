@@ -21,7 +21,6 @@ from rest_framework import (
     status,
     views,
 )
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -242,7 +241,10 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
 
 class ZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated & CanReadOrUpdateZaken,
+        CanUpdateDocumenten,
+    )
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDocumentSerializer, "PATCH": UpdateZaakDocumentSerializer}
@@ -285,29 +287,14 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        # Fetch documents the user wants to patch and check object permissions
-        documents, gone = get_documenten(zaak)
-        doc_permission = CanUpdateDocumenten()
-        for doc in documents:
-            has_perm = doc_permission.has_object_permission(request, self, doc)
-            if not has_perm:
-                raise PermissionDenied(
-                    _(
-                        "User {user} does not have sufficient permission to patch {doc}."
-                    ).format(user=request.user, doc=doc)
-                )
-
         new_doc_urls = [document.pop("url") for document in serializer.data]
-        request_kwargs = [
-            {"headers": {"X-Audit-Toelichting": document.pop("reden")}}
-            for document in serializer.data
-        ]
+        audit_lines = [document.pop("reden") for document in serializer.data]
         with parallel() as executor:
             documenten = executor.map(
                 update_document,
                 new_doc_urls,
                 serializer.data,
-                request_kwargs,
+                audit_lines,
             )
         serializer = self.get_serializer(instance=list(documenten), many=True)
         return Response(serializer.data)
