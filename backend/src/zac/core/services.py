@@ -24,6 +24,7 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -31,16 +32,16 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.permissions import UserPermissions
+from zac.accounts.constants import PermissionObjectType
+from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from ..accounts.models import User
 from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
-from .permissions import zaken_inzien
 from .rollen import Rol
 
 logger = logging.getLogger(__name__)
@@ -128,20 +129,42 @@ def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]
 
 
 def get_zaaktypen(
-    user_perms: Optional[UserPermissions] = None,
+    user: Optional[User] = None,
     catalogus: str = "",
     omschrijving: str = "",
 ) -> List[ZaakType]:
     zaaktypen = _get_zaaktypen(catalogus=catalogus)
-    if user_perms is not None:
-        # filter out zaaktypen from permissions
-        zaaktypen = user_perms.filter_zaaktypen(zaaktypen)
 
     if omschrijving:
         zaaktypen = [
             zaaktype for zaaktype in zaaktypen if zaaktype.omschrijving == omschrijving
         ]
-    return zaaktypen
+
+    if user is None or user.is_superuser:
+        return zaaktypen
+
+    # filter out zaaktypen from permissions
+    zaaktypen_policies = (
+        BlueprintPermission.objects.for_user(user)
+        .filter(object_type=PermissionObjectType.zaak)
+        .actual()
+        .values_list("policy", flat=True)
+        .distinct()
+    )
+    zaaktypen_policies = list(zaaktypen_policies)
+
+    return [
+        zaaktype
+        for zaaktype in zaaktypen
+        if [
+            policy
+            for policy in zaaktypen_policies
+            if policy["catalogus"] == zaaktype.catalogus
+            and policy["zaaktype_omschrijving"] == zaaktype.omschrijving
+            and VA_ORDER[policy["max_va"]]
+            >= VA_ORDER[zaaktype.vertrouwelijkheidaanduiding]
+        ]
+    ]
 
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
@@ -304,32 +327,11 @@ def _find_zaken(
     return _zaken
 
 
-def get_allowed_kwargs(user_perms: UserPermissions) -> list:
-    if user_perms.user.is_superuser:
-        return []
-
-    relevant_perms = [
-        perm
-        for perm in user_perms.zaaktype_permissions
-        if perm.permission == zaken_inzien.name
-    ]
-
-    find_kwargs = [
-        {
-            "zaaktypen": [zaaktype.url for zaaktype in perm.zaaktypen],
-            "max_va": perm.max_va,
-            "oo": perm.oo,
-        }
-        for perm in relevant_perms
-    ]
-
-    return find_kwargs
-
-
 def get_zaken_es(
-    user_perms: UserPermissions,
+    user: Optional[User] = None,
     size=None,
     query_params=None,
+    only_allowed=True,
 ) -> List[Zaak]:
     """
     Fetch all zaken from the ZRCs.
@@ -346,16 +348,14 @@ def get_zaken_es(
             )
         )
 
-    allowed_kwargs = get_allowed_kwargs(user_perms)
-    if not user_perms.user.is_superuser and not allowed_kwargs:
-        return []
-
-    find_kwargs["allowed"] = allowed_kwargs
-
-    _base_zaaktypen = {zt.url: zt for zt in get_zaaktypen(user_perms)}
+    if only_allowed and not user:
+        raise ValueError("'user' parameter is required when 'only_allowed=True'")
 
     # ES search
-    zaak_urls = search(size=size, **find_kwargs)
+    zaak_urls = search(user=user, size=size, only_allowed=only_allowed, **find_kwargs)
+
+    if not zaak_urls:
+        return []
 
     def _get_zaak(zaak_url):
         return get_zaak(zaak_url=zaak_url)
@@ -365,8 +365,11 @@ def get_zaken_es(
         zaken = list(results)
 
     # resolve zaaktype reference
+    # todo only fetch zaaktypen from search results
+    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
     for zaak in zaken:
-        zaak.zaaktype = _base_zaaktypen[zaak.zaaktype]
+        zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
     return zaken
 
@@ -480,7 +483,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # try local search index first
-    results = search(size=1, **query)
+    results = search(size=1, only_allowed=False, **query)
     if results:
         zaak = get_zaak(zaak_url=results[0])
     else:
@@ -677,6 +680,15 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     return rollen
 
 
+@cache_result("rol:{rol_url}", timeout=AN_HOUR)
+def fetch_rol(rol_url: str) -> Rol:
+    client = _client_from_url(rol_url)
+    rol = client.retrieve("rol", url=rol_url)
+
+    rol = factory(Rol, rol)
+    return rol
+
+
 def get_zaak_informatieobjecten(zaak: Zaak) -> list:
     client = _client_from_object(zaak)
     zaak_informatieobjecten = client.list(
@@ -744,14 +756,13 @@ def get_behandelaar_zaken(user: User) -> List[Zaak]:
     Retrieve zaken where `user` is a medewerker in the role of behandelaar.
     """
     medewerker_id = user.username
-    user_perms = UserPermissions(user)
     behandelaar_zaken = get_zaken_es(
-        user_perms, query_params={"behandelaar": medewerker_id}
+        user=user, query_params={"behandelaar": medewerker_id}
     )
     return behandelaar_zaken
 
 
-def get_rollen_all() -> List[Rol]:
+def get_rollen_all(**query_params) -> List[Rol]:
     """
     Retrieve all available rollen for ES indexing
     """
@@ -761,7 +772,7 @@ def get_rollen_all() -> List[Rol]:
     for zrc in zrcs:
         client = zrc.build_client()
 
-        _rollen = get_paginated_results(client, "rol")
+        _rollen = get_paginated_results(client, "rol", query_params=query_params)
 
         all_rollen += factory(Rol, _rollen)
 

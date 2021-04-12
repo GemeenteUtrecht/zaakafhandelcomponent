@@ -16,7 +16,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import ProcessInstance, Task
 from zac.contrib.kownsl.constants import KownslTypes
@@ -104,6 +104,7 @@ class GetUserTaskContextViewTests(APITestCase):
             catalogus=cls.catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
 
         cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
@@ -158,13 +159,16 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
+
         with patch(
             "zac.core.camunda.select_documents.context.get_zaak_context",
             return_value=self.zaak_context,
@@ -201,12 +205,14 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         with patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
@@ -239,12 +245,14 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         with patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
@@ -281,12 +289,14 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         with patch(
             "zac.contrib.validsign.camunda.get_zaak_context",
@@ -418,12 +428,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        PermissionSetFactory.create(
-            permissions=[zaakproces_usertasks.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_usertasks.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
 
     @patch(

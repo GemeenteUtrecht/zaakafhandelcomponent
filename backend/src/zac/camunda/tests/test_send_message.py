@@ -15,7 +15,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
 from zac.tests.utils import paginated_response
@@ -73,6 +73,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -162,12 +163,14 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         # gives them access to the page, zaaktype and VA specified -> visible
         # and allows them to send messages
-        PermissionSetFactory.create(
-            permissions=[zaakproces_send_message.name],
+        BlueprintPermissionFactory.create(
+            permission=zaakproces_send_message.name,
             for_user=user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
         )
 
         self.client.force_authenticate(user=user)

@@ -2,13 +2,14 @@ import logging
 from collections import defaultdict
 
 from elasticsearch import exceptions
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.core.rollen import Rol
-from zac.core.services import get_rollen, get_zaak_eigenschappen
+from zac.core.services import fetch_zaaktype, get_rollen, get_zaak_eigenschappen
 from zgw.models.zrc import Zaak
 
-from .documents import RolDocument, ZaakDocument
+from .documents import RolDocument, ZaakDocument, ZaakTypeDocument
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,21 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaaktype_url = (
-        zaak.zaaktype if isinstance(zaak.zaaktype, str) else zaak.zaaktype.url
+    zaaktype = (
+        zaak.zaaktype
+        if isinstance(zaak.zaaktype, ZaakType)
+        else fetch_zaaktype(zaak.zaaktype)
+    )
+    zaaktype_document = ZaakTypeDocument(
+        url=zaaktype.url,
+        omschrijving=zaaktype.omschrijving,
+        catalogus=zaaktype.catalogus,
     )
 
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
-        zaaktype=zaaktype_url,
+        zaaktype=zaaktype_document,
         identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
         omschrijving=zaak.omschrijving,
@@ -49,13 +57,9 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
         return create_zaak_document(zaak)
 
-    zaaktype_url = (
-        zaak.zaaktype if isinstance(zaak.zaaktype, str) else zaak.zaaktype.url
-    )
+    #  don't include zaaktype and identificatie since they are immutable
     zaak_document.update(
         refresh=True,
-        zaaktype=zaaktype_url,
-        identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
         va_order=VertrouwelijkheidsAanduidingen.get_choice(

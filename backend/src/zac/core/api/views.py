@@ -30,7 +30,6 @@ from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from zac.accounts.permissions import UserPermissions
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.utils.filters import ApiFilterBackend
@@ -495,7 +494,7 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen
 
     def get_zaaktypen(self) -> List[dict]:
-        zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
+        zaaktypen = get_zaaktypen(self.request.user)
 
         # aggregate
         zaaktypen_data = [
@@ -570,7 +569,7 @@ class EigenschappenView(ListAPIView):
         zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
 
         return get_zaaktypen(
-            UserPermissions(self.request.user),
+            self.request.user,
             catalogus=catalogus,
             omschrijving=zaaktype_omschrijving,
         )

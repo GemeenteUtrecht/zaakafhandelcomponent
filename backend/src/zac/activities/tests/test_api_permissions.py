@@ -9,11 +9,10 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
-from zac.core.permissions import zaken_inzien
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..permissions import activiteiten_schrijven
+from ..permissions import activiteiten_schrijven, activities_read
 from .factories import ActivityFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
@@ -44,12 +43,6 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
-    def setUp(self):
-        super().setUp()
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
 
     def test_read_not_logged_in(self):
         response = self.client.get(self.endpoint)
@@ -96,16 +89,9 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
             catalogus=catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [zaaktype],
-            },
-        )
+        m.get(zaaktype["url"], json=zaaktype)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -115,12 +101,14 @@ class ReadPermissionTests(ClearCachesMixin, APITestCase):
         m.get(zaak["url"], json=zaak)
 
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        BlueprintPermissionFactory.create(
+            permission=activities_read.name,
             for_user=user,
-            catalogus=catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         # set up test data
         ActivityFactory.create()
@@ -161,6 +149,7 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
             catalogus=cls.catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -174,10 +163,6 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
         super().setUp()
 
         self.user = UserFactory.create()
-
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
 
     def test_read_not_logged_in(self):
         endpoint = reverse(
@@ -196,15 +181,6 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
         m.get(self.zaak["url"], json=self.zaak)
 
         response = self.client.get(endpoint)
@@ -218,24 +194,18 @@ class DetailReadPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(self.user)
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[zaken_inzien.name],
+        BlueprintPermissionFactory.create(
+            permission=activities_read.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
 
         response = self.client.get(endpoint)
@@ -268,6 +238,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
             catalogus=cls.catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -281,10 +252,6 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         self.user = UserFactory.create()
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
     def test_create_activity_not_logged_in(self):
         response = self.client.post(self.endpoint)
 
@@ -295,15 +262,6 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
         m.get(self.zaak["url"], json=self.zaak)
         data = {
             "zaak": self.zaak["url"],
@@ -318,24 +276,19 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_logged_in_with_permissions(self, m):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[activiteiten_schrijven.name],
+        BlueprintPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
             "zaak": self.zaak["url"],
@@ -360,15 +313,6 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
         m.get(self.zaak["url"], json=self.zaak)
         data = {
             "activity": activity.id,
@@ -385,24 +329,19 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[activiteiten_schrijven.name],
+        BlueprintPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
             "activity": activity.id,
@@ -437,6 +376,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
             catalogus=cls.catalogus,
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -450,10 +390,6 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         super().setUp()
 
         self.user = UserFactory.create()
-
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
 
     def test_update_activity_not_logged_in(self):
         endpoint = reverse(
@@ -472,15 +408,6 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
         m.get(self.zaak["url"], json=self.zaak)
         data = {"name": "New name"}
 
@@ -495,24 +422,18 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=self.user)
         # set up user permissions
-        PermissionSetFactory.create(
-            permissions=[activiteiten_schrijven.name],
+        BlueprintPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
             for_user=self.user,
-            catalogus=self.catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [self.zaaktype],
-            },
-        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {"name": "New name"}
 

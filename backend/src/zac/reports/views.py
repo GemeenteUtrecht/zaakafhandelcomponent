@@ -1,14 +1,11 @@
 from io import BytesIO
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import FileResponse
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.detail import SingleObjectMixin
 
-from rules.contrib.views import PermissionRequiredMixin
-
-from zac.accounts.permissions import UserPermissions
 from zac.core.services import get_zaaktypen
 
 from .export import export_zaken
@@ -23,7 +20,7 @@ class ReportsListView(LoginRequiredMixin, ListView):
         qs = super().get_queryset()
 
         # filter on allowed zaaktypen
-        zaaktypen = get_zaaktypen(UserPermissions(self.request.user))
+        zaaktypen = get_zaaktypen(self.request.user)
         identificaties = list({zt.identificatie for zt in zaaktypen})
 
         # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen
@@ -35,7 +32,16 @@ class DownloadReportView(
     LoginRequiredMixin, PermissionRequiredMixin, SingleObjectMixin, View
 ):
     model = Report
-    permission_required = "reports:download"
+
+    def has_permission(self):
+        # move logic from "reports:download" rule
+        report = self.get_object()
+        if not report:
+            return True
+
+        zaaktypen = get_zaaktypen(self.request.user)
+        identificaties = {zt.identificatie for zt in zaaktypen}
+        return set(report.zaaktypen).issubset(identificaties)
 
     def get(self, request, *args, **kwargs):
         report = self.get_object()
