@@ -7,9 +7,9 @@ pytz
 raven
 uwsgi
 python-dateutil
+pyyaml
 isodate
 requests_mock
-rules  # permissions backend
 tablib[xlsx]
 elasticsearch-dsl
 

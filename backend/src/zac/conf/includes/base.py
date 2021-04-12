@@ -127,7 +127,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
-    "rules.apps.AutodiscoverRulesConfig",
     "django_filters",
     "extra_views",
     "hijack",

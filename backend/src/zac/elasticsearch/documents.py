@@ -22,12 +22,13 @@ class RolDocument(InnerDoc):
 
 class ZaakTypeDocument(InnerDoc):
     url = field.Keyword()
-    omschrijving = field.Text(fields={"keyword": field.Keyword()})
+    catalogus = field.Keyword()
+    omschrijving = field.Keyword()
 
 
 class ZaakDocument(Document):
     url = field.Keyword()
-    zaaktype = Nested(ZaakTypeDocument)
+    zaaktype = field.Object(ZaakTypeDocument)
     identificatie = field.Keyword()
     bronorganisatie = field.Keyword()
     omschrijving = field.Text(fields={"keyword": field.Keyword()})

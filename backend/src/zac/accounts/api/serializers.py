@@ -1,13 +1,16 @@
-from datetime import date
+from datetime import date, datetime
 
 from django.db import transaction
+from django.utils.timezone import make_aware
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from ..constants import AccessRequestResult
+from zac.core.permissions import zaken_inzien
+
+from ..constants import AccessRequestResult, PermissionObjectType
 from ..email import send_email_to_requester
-from ..models import AccessRequest, User
+from ..models import AccessRequest, AtomicPermission, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -59,9 +62,8 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
         zaak_url = valid_data["zaak"]
 
         if (
-            requester.initiated_requests.filter(
-                zaak=zaak_url, result=AccessRequestResult.approve
-            )
+            AtomicPermission.objects.for_user(requester)
+            .filter(object_url=zaak_url, permission=zaken_inzien.name)
             .actual()
             .exists()
         ):
@@ -86,6 +88,23 @@ class ZaakAccessSerializer(serializers.ModelSerializer):
         )
 
         access_request = super().create(validated_data)
+
+        # TODO refactor relations between access request and permission definitions
+        # add permission definition
+        atomic_permission = AtomicPermission.objects.create(
+            object_url=access_request.zaak,
+            object_type=PermissionObjectType.zaak,
+            permission=zaken_inzien.name,
+            start_date=make_aware(
+                datetime.combine(access_request.start_date, datetime.min.time())
+            ),
+            end_date=make_aware(
+                datetime.combine(access_request.end_date, datetime.min.time())
+            )
+            if access_request.end_date
+            else None,
+        )
+        access_request.requester.atomic_permissions.add(atomic_permission)
 
         # close pending access requests
         pending_requests = access_request.requester.initiated_requests.filter(

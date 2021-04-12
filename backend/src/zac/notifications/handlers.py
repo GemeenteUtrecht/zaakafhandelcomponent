@@ -1,6 +1,7 @@
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 
+from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
@@ -35,6 +36,9 @@ class ZakenHandler:
 
         elif data["resource"] == "rol":
             self._handle_rol_change(data["hoofd_object"])
+            # TODO should we remove permission if the rol is deleted?
+            if data["actie"] == "create":
+                add_permission_for_behandelaar(rol=data["resource_url"])
 
         elif data["resource"] == "zaaktype":
             self._handle_zaaktype_change(data["hoofd_object"])

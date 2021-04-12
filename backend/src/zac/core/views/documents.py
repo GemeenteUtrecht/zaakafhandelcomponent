@@ -1,11 +1,10 @@
 import mimetypes
 from typing import Any, Optional
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse
 from django.views import View
 
-from rules.contrib.views import PermissionRequiredMixin
 from zgw_consumers.api_models.documenten import Document
 
 from ..permissions import zaken_download_documents
@@ -22,6 +21,11 @@ class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = zaken_download_documents.name
 
     document = None
+
+    def has_permission(self):
+        obj = self.get_object()
+        perms = self.get_permission_required()
+        return self.request.user.has_perms(perms, obj)
 
     def get_object(self) -> Document:
         versie = _cast(self.request.GET.get("versie", None), int)

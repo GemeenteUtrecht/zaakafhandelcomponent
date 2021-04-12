@@ -1,5 +1,4 @@
 from io import BytesIO
-from unittest.mock import patch
 
 from django.urls import reverse_lazy
 
@@ -10,7 +9,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
@@ -43,10 +42,6 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         config.primary_drc = drc
         config.save()
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
         self.post_data = {
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
@@ -63,6 +58,7 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
             catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            omschrijving="ZT1",
         )
         informatieobjecttype = generate_oas_component(
             "ztc",
@@ -126,12 +122,14 @@ class AddDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user)
         # set up user permissions
         catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        PermissionSetFactory.create(
-            permissions=[zaken_add_documents.name],
+        BlueprintPermissionFactory.create(
+            permission=zaken_add_documents.name,
             for_user=user,
-            catalogus=catalogus,
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self._setupMocks(m)
         m.post(

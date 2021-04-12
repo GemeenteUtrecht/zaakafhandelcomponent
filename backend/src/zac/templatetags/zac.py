@@ -35,3 +35,14 @@ def count_access_requests(**kwargs):
     """returns the number of active access requests for a zaak"""
     zaak = find_zaak(**kwargs)
     return AccessRequest.objects.filter(zaak=zaak.url, result="").count()
+
+
+# Deprecated
+# this tag is used only to support legacy SSR views
+# Should be deletes after moving to SPA
+@register.simple_tag
+def has_perm(perm, user, obj=None):
+    if not hasattr(user, "has_perm"):  # pragma: no cover
+        return False  # swapped user model that doesn't support permissions
+    else:
+        return user.has_perm(perm, obj)

@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest import skip
 
 from django.conf import settings
 from django.db import transaction
@@ -11,7 +11,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import PermissionSetFactory, UserFactory
+from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
+    BlueprintPermissionFactory,
+    UserFactory,
+)
 from zac.contrib.kownsl.models import KownslConfig
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
@@ -51,10 +55,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
         config.service = kownsl
         config.save()
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -64,6 +64,7 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         resultaattype = generate_oas_component(
             "ztc",
@@ -108,28 +109,31 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
         self.assertEqual(response.status_code, 403)
 
     def test_logged_in_either_permission_no_object_perm(self, m):
+        self._setUpMocks(m)
         permissions = [zaken_close, zaken_set_result]
         for permission in permissions:
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
                 # gives them access to the page, but no catalogus specified -> nothing visible
-                PermissionSetFactory.create(
-                    permissions=[permission.name],
+                BlueprintPermissionFactory.create(
+                    permission=permission.name,
                     for_user=self.user,
-                    catalogus="",
-                    zaaktype_identificaties=[],
-                    max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+                    policy={
+                        "catalogus": "",
+                        "zaaktype_omschrijving": "",
+                        "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+                    },
                 )
 
                 response = self.app.get(self.url, user=self.user, status=403)
 
                 # object level permission check should fail
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(m.call_count, 0)
 
                 transaction.savepoint_rollback(sid)
 
+    @skip("Adding one permissions to all zaaktypen is deprecated")
     def test_logged_in_either_permission_all_zaaktypen_ok(self, m):
         self._setUpMocks(m)
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
@@ -147,14 +151,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionSetFactory.create(
-                    permissions=[permission.name],
-                    for_user=self.user,
-                    catalogus=self.zaaktype["catalogus"],
-                    zaaktype_identificaties=[],
-                    max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
-                )
-
                 response = self.app.get(self.url, user=self.user)
 
                 # object level permission check should fail
@@ -163,6 +159,7 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
 
                 transaction.savepoint_rollback(sid)
 
+    @skip("Adding one permissions to all zaaktypen is deprecated")
     def test_logged_in_both_permissions_all_zaaktypen_ok(self, m):
         self._setUpMocks(m)
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
@@ -173,14 +170,6 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
             json=[],
-        )
-
-        PermissionSetFactory.create(
-            permissions=[zaken_close.name, zaken_set_result.name],
-            for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
 
         response = self.app.get(self.url, user=self.user)
@@ -197,12 +186,14 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionSetFactory.create(
-                    permissions=[permission.name],
+                BlueprintPermissionFactory.create(
+                    permission=permission.name,
                     for_user=self.user,
-                    catalogus=self.zaaktype["catalogus"],
-                    zaaktype_identificaties=["ZT2"],
-                    max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+                    policy={
+                        "catalogus": self.zaaktype["catalogus"],
+                        "zaaktype_omschrijving": "ZT2",
+                        "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                    },
                 )
 
                 response = self.app.get(self.url, user=self.user, status=403)
@@ -225,12 +216,14 @@ class ZaakAfhandelingGETTests(ESMixin, ClearCachesMixin, WebTest):
             with self.subTest(permission=permission):
                 sid = transaction.savepoint()
 
-                PermissionSetFactory.create(
-                    permissions=[permission.name],
+                BlueprintPermissionFactory.create(
+                    permission=permission.name,
                     for_user=self.user,
-                    catalogus=self.zaaktype["catalogus"],
-                    zaaktype_identificaties=["ZT1"],
-                    max_va=VertrouwelijkheidsAanduidingen.openbaar,
+                    policy={
+                        "catalogus": self.zaaktype["catalogus"],
+                        "zaaktype_omschrijving": "ZT1",
+                        "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+                    },
                 )
 
                 response = self.app.get(self.url, user=self.user, status=403)
@@ -264,10 +257,6 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
-        mock_allowlist = patch("zac.core.rules.test_oo_allowlist", return_value=True)
-        mock_allowlist.start()
-        self.addCleanup(mock_allowlist.stop)
-
     def _setUpMocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -277,6 +266,7 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             catalogus=f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d",
             identificatie="ZT1",
+            omschrijving="ZT1",
         )
         resultaattype = generate_oas_component(
             "ztc",
@@ -342,12 +332,14 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_set_result_close_blocked(self, m):
         self._setUpMocks(m)
-        PermissionSetFactory.create(
-            permissions=[zaken_set_result.name],
+        BlueprintPermissionFactory.create(
+            permission=zaken_set_result.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_login(self.user)
         data = {
@@ -370,12 +362,14 @@ class ZaakAfhandelingPOSTTests(ESMixin, ClearCachesMixin, WebTest):
 
     def test_close_set_result_blocked(self, m):
         self._setUpMocks(m)
-        PermissionSetFactory.create(
-            permissions=[zaken_close.name],
+        BlueprintPermissionFactory.create(
+            permission=zaken_close.name,
             for_user=self.user,
-            catalogus=self.zaaktype["catalogus"],
-            zaaktype_identificaties=["ZT1"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_login(self.user)
         data = {

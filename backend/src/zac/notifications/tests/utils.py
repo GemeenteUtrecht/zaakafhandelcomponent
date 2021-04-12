@@ -1,6 +1,7 @@
 import os
 
 from requests_mock import Mocker
+from zgw_consumers.test import generate_oas_component
 
 MOCK_FILES_DIR = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),
@@ -19,6 +20,9 @@ def mock_service_oas_get(m: Mocker, url: str, service: str) -> None:
 
 ZAAK = "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
 ZAAKTYPE = "https://some.ztc.nl/api/v1/zaaktypen/ad4573d0-4d99-4e90-a05c-e08911e8673d"
+CATALOGUS = (
+    "https://some.ztc.nl/api/v1/catalogussen/2bd772a5-f1a4-458b-8c13-d2f85c2bfa89"
+)
 
 IDENTIFICATIE = "ZAAK-123"
 BRONORGANISATIE = "123456782"
@@ -42,3 +46,13 @@ ZAAK_RESPONSE = {
     "relevante_andere_zaken": [],
     "zaakgeometrie": None,
 }
+
+
+ZAAKTYPE_RESPONSE = generate_oas_component(
+    "ztc",
+    "schemas/ZaakType",
+    url=ZAAKTYPE,
+    identificatie="zt",
+    omschrijving="some zaaktype",
+    catalogus=CATALOGUS,
+)

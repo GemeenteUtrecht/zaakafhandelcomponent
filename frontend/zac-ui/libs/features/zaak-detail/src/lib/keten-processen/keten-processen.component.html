@@ -21,13 +21,36 @@
             <div class="taak__detail mr-md-2">
               <label class="label label--date">{{task.created | date:'fullDate'}}</label>
               <p class="p--marginsmall p--bold">{{task.name}}</p>
+              <gu-chip
+                *ngIf="!!task.assignee"
+                [type]="currentUser === task.assignee.username ? 'primary' : 'tertiary'"
+                class="d-inline-block mb-2">
+                <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
+                  {{task.assignee.firstName}} {{task.assignee.lastName}}
+                </ng-container>
+                <ng-template #username>
+                  {{task.assignee.username}}
+                </ng-template>
+              </gu-chip>
             </div>
-            <gu-button class="align-self-center"
-                       type="secondary"
-                       size="small"
-                       (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
-              Uitvoeren
-            </gu-button>
+            <div class="d-flex flex-column justify-content-center">
+              <ng-container *ngIf="currentUser && task.assignee">
+                <gu-button *ngIf="currentUser === task.assignee.username"
+                           class="mb-2"
+                           type="secondary"
+                           size="small"
+                           (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+                  Uitvoeren
+                </gu-button>
+              </ng-container>
+              <ng-container *ngIf="currentUser">
+                <gu-button type="tertiary"
+                           size="small"
+                           (click)="assignTask(task)">
+                  Toewijzen
+                </gu-button>
+              </ng-container>
+            </div>
           </div>
         </div>
         <div class="col-md-6">
@@ -39,7 +62,7 @@
                 <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
                 <gu-chip
                   *ngIf="!!task.assignee"
-                  type="primary"
+                  [type]="currentUser === task.assignee.username ? 'primary' : 'tertiary'"
                   class="d-inline-block mb-2">
                   <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                     {{task.assignee.firstName}} {{task.assignee.lastName}}
@@ -49,14 +72,23 @@
                   </ng-template>
                 </gu-chip>
               </div>
-              <ng-container *ngIf="currentUser && task.assignee">
-                <gu-button *ngIf="currentUser === task.assignee.username"
-                           class="align-self-center"
-                           type="secondary"
-                           (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">
-                  Uitvoeren
-                </gu-button>
-              </ng-container>
+              <div class="d-flex flex-column justify-content-center">
+                <ng-container *ngIf="currentUser && task.assignee">
+                  <gu-button *ngIf="currentUser === task.assignee.username"
+                             class="mb-2"
+                             type="secondary"
+                             (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">
+                    Uitvoeren
+                  </gu-button>
+                </ng-container>
+                <ng-container *ngIf="currentUser">
+                  <gu-button type="tertiary"
+                             size="small"
+                             (click)="assignTask(task)">
+                    Toewijzen
+                  </gu-button>
+                </ng-container>
+              </div>
             </div>
           </ng-container>
         </div>
@@ -91,5 +123,11 @@
 
     <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
   </ng-container>
-
+</gu-modal>
+<gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">
+  <gu-assign-task [taskData]="assignTaskTask"
+                  [currentUser]="currentUser"
+                  (reload)="fetchProcesses()"
+  >
+  </gu-assign-task>
 </gu-modal>

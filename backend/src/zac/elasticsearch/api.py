@@ -19,15 +19,21 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaaktype = ZaakTypeDocument(
-        url=zaak.zaaktype.url,
-        omschrijving=zaak.zaaktype.omschrijving,
+    zaaktype = (
+        zaak.zaaktype
+        if isinstance(zaak.zaaktype, ZaakType)
+        else fetch_zaaktype(zaak.zaaktype)
+    )
+    zaaktype_document = ZaakTypeDocument(
+        url=zaaktype.url,
+        omschrijving=zaaktype.omschrijving,
+        catalogus=zaaktype.catalogus,
     )
         
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
-        zaaktype=zaaktype,
+        zaaktype=zaaktype_document,
         identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
         omschrijving=zaak.omschrijving,
@@ -52,13 +58,9 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
         return create_zaak_document(zaak)
 
-    zaaktype_url = (
-        zaak.zaaktype if isinstance(zaak.zaaktype, str) else zaak.zaaktype.url
-    )
+    #  don't include zaaktype and identificatie since they are immutable
     zaak_document.update(
         refresh=True,
-        zaaktype=zaaktype_url,
-        identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
         va_order=VertrouwelijkheidsAanduidingen.get_choice(

@@ -1,6 +1,7 @@
 from itertools import groupby
 from typing import Any, Dict, List
 
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse, reverse_lazy
 from django.views.generic import FormView, TemplateView
 
@@ -11,7 +12,6 @@ from zgw_consumers.concurrent import parallel
 
 from zac.accounts.mixins import PermissionRequiredMixin
 from zac.accounts.models import AccessRequest
-from zac.accounts.permissions import UserPermissions
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.contrib.kownsl.api import (
@@ -75,7 +75,7 @@ class Index(PermissionRequiredMixin, BaseListView):
 
     def get_filter_form_kwargs(self):
         kwargs = super().get_filter_form_kwargs()
-        kwargs["zaaktypen"] = get_zaaktypen(UserPermissions(self.request.user))
+        kwargs["zaaktypen"] = get_zaaktypen(self.request.user)
         return kwargs
 
     def get_object_list(self):
@@ -84,8 +84,7 @@ class Index(PermissionRequiredMixin, BaseListView):
             filters = filter_form.as_filters()
         else:
             filters = {}
-        user_perms = UserPermissions(self.request.user)
-        zaken = get_zaken_es(user_perms, size=50, query_params=filters)
+        zaken = get_zaken_es(user=self.request.user, size=50, query_params=filters)
 
         return zaken
 
@@ -259,7 +258,23 @@ class ZaakAfhandelView(PermissionRequiredMixin, SingleObjectMixin, FormView):
     form_class = ZaakAfhandelForm
     template_name = "core/zaak_afhandeling.html"
     context_object_name = "zaak"
-    permission_required = "zaken:afhandelen"
+    # permission_required = zaken_close | zaken_set_result
+
+    def has_permission(self):
+        user = self.request.user
+        # user should have any of these permissions
+        for perm in [zaken_close, zaken_set_result]:
+            if user.has_perms([perm.name]):
+                return True
+        return False
+
+    def check_object_permissions(self, obj):
+        user = self.request.user
+        # user should have any of these permissions
+        for perm in [zaken_close, zaken_set_result]:
+            if user.has_perms([perm.name], obj=obj):
+                return
+        raise PermissionDenied(self.get_permission_denied_message())
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

@@ -9,12 +9,12 @@
                       bindLabel="name"
                       bindValue="username"
                       required
-                      placeholder="Gebruiker zoeken">
+                      placeholder="Zoek een gebruiker">
       </gu-multiselect>
     </div>
     <div class="d-flex justify-content-end">
       <gu-button
-        [disabled]="!grantAccessForm.valid"
+        [disabled]="!grantAccessForm.valid || isSubmitting"
         [loading]="isSubmitting"
         type="primary"
         size="large"

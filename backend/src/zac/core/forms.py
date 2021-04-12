@@ -1,6 +1,6 @@
 import itertools
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, Iterator, List, Tuple
 
 from django import forms
@@ -9,6 +9,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import is_safe_url
+from django.utils.timezone import make_aware
 from django.utils.translation import ugettext_lazy as _
 
 from django_camunda.api import get_process_instance_variable
@@ -16,14 +17,16 @@ from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
 from zgw_consumers.api_models.zaken import Zaak
 
-from zac.accounts.constants import AccessRequestResult
+from zac.accounts.constants import AccessRequestResult, PermissionObjectType
 from zac.accounts.email import send_email_to_requester
-from zac.accounts.models import AccessRequest, User
+from zac.accounts.models import AccessRequest, AtomicPermission, User
+from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
 
 from .fields import AlfrescoDocumentField, DocumentsMultipleChoiceField
+from .permissions import zaken_inzien
 from .services import (
     get_besluittypen_for_zaaktype,
     get_documenten,
@@ -450,6 +453,7 @@ class BaseReviewRequestFormSet(BaseTaskFormSet):
             user_deadlines=self.get_user_deadlines(),
             requester=self.user.username,
         )
+        add_permissions_for_advisors(self.review_request)
 
 
 UsersReviewRequestFormSet = forms.formset_factory(
@@ -550,6 +554,22 @@ class AccessRequestHandleForm(forms.ModelForm):
         self.instance.start_date = date.today()
 
         instance = super().save(**kwargs)
+
+        if self.instance.result == AccessRequestResult.approve:
+            atomic_permission = AtomicPermission.objects.create(
+                permission=zaken_inzien.name,
+                object_type=PermissionObjectType.zaak,
+                object_url=self.instance.zaak,
+                start_date=make_aware(
+                    datetime.combine(self.instance.start_date, datetime.min.time())
+                ),
+                end_date=make_aware(
+                    datetime.combine(self.instance.end_date, datetime.min.time())
+                )
+                if self.instance.end_date
+                else None,
+            )
+            self.instance.requester.atomic_permissions.add(atomic_permission)
 
         # send email
         transaction.on_commit(

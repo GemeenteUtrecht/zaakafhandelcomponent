@@ -1,0 +1,30 @@
+<div class="gu-assign-task" *ngIf="taskData">
+  <form [formGroup]="assignTaskForm" *ngIf="!submitSuccess">
+    <div class="form-group">
+      <p>Selecteer een gebruiker die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen.</p>
+      <gu-multiselect (search)="onSearch($event)"
+                      [items]="users"
+                      [multiple]="false"
+                      [control]="assignee"
+                      bindLabel="name"
+                      bindValue="username"
+                      required
+                      placeholder="Zoek een gebruiker">
+      </gu-multiselect>
+    </div>
+    <div class="d-flex justify-content-end">
+      <gu-button
+        [disabled]="!assignTaskForm.valid || isSubmitting"
+        [loading]="isSubmitting"
+        type="primary"
+        size="large"
+        (click)="submitForm()">
+        Versturen
+      </gu-button>
+    </div>
+    <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
+  </form>
+  <gu-success *ngIf="submitSuccess">
+    <p class="mb-4">Voltooid</p>
+  </gu-success>
+</div>
