@@ -19,9 +19,9 @@ from .serializers import (
 def get_context(task: Task) -> DocumentSelectContext:
     zaak_context = get_zaak_context(task, require_documents=True)
     process_instance = get_process_instance(task.process_instance_id)
-    bijdrage_zaaktype_url = process_instance.get_variable("zaaktype")
-    bijdrage_zaaktype = fetch_zaaktype(bijdrage_zaaktype_url)
-    informatieobjecttypen = get_informatieobjecttypen(bijdrage_zaaktype.catalogus)
+    related_zaaktype_url = process_instance.get_variable("zaaktype")
+    related_zaaktype = fetch_zaaktype(related_zaaktype_url)
+    informatieobjecttypen = get_informatieobjecttypen(related_zaaktype.catalogus)
     return DocumentSelectContext(
         documents=zaak_context.documents, informatieobjecttypen=informatieobjecttypen
     )

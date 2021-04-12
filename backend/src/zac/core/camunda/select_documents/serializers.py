@@ -96,14 +96,14 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
 
         # Validated selected document types according to case type
         process_instance = self._get_process_instance()
-        bijdrage_zaaktype_url = process_instance.get_variable("zaaktype")
-        bijdrage_zaaktype = fetch_zaaktype(bijdrage_zaaktype_url)
+        related_zaaktype_url = process_instance.get_variable("zaaktype")
+        related_zaaktype = fetch_zaaktype(related_zaaktype_url)
 
         selected_doc_types = [doc["document_type"] for doc in selected_docs]
         invalid_doc_types = [
             doc_type
             for doc_type in selected_doc_types
-            if doc_type not in bijdrage_zaaktype.informatieobjecttypen
+            if doc_type not in related_zaaktype.informatieobjecttypen
         ]
         if invalid_doc_types:
             raise serializers.ValidationError(
