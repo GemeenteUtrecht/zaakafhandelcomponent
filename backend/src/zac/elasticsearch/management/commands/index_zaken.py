@@ -9,7 +9,6 @@ from zac.core.services import fetch_zaaktype, get_rollen_all, get_zaken_all
 
 from ...api import (
     append_rol_to_document,
-    append_zaaktype_to_document,
     create_zaak_document,
     update_eigenschappen_in_zaak_document,
 )
@@ -39,6 +38,7 @@ class Command(BaseCommand):
         # create/refresh mapping in the ES
         ZaakDocument.init()
 
+        # Fetch zaaktypen and resolve zaaktype
         zaaktype_urls = {
             zaak.zaaktype.url if isinstance(zaak.zaaktype, ZaakType) else zaak.zaaktype
             for zaak in zaken

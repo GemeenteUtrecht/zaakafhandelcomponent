@@ -46,8 +46,8 @@ class GetZakenView(views.APIView):
 
 class SearchViewSet(views.APIView):
     parser_classes = (IgnoreCamelCaseJSONParser,)
-    #authentication_classes = (authentication.SessionAuthentication,)
-    #permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
     search_document = ZaakDocument
     ordering = (
@@ -55,7 +55,6 @@ class SearchViewSet(views.APIView):
         "-startdatum",
         "-registratiedatum",
     )
-    ordering_fields = "__all__"
 
     @extend_schema(
         summary=_("Search zaken"),

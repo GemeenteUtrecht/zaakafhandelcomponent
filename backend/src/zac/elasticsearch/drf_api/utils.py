@@ -1,11 +1,8 @@
 from collections import OrderedDict
-from typing import Any, Dict, Iterator, Tuple, Optional
+from typing import Any, Dict, Iterator, Optional, Tuple
 
 from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, field
-
-
-
 
 
 def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
@@ -16,14 +13,14 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
     fields = OrderedDict(fields)
     for field_name, field_value in fields.items():
         field_type = field_value["type"]
-        if field_type == "nested":
-            nested_fields = get_sorting_fields(field_value["properties"])
-            for nested_field_name, nested_field_value in list(nested_fields):
-                yield (f"{field_name}.{nested_field_name}", nested_field_value)
-
-        elif field == "object":
-            continue
-
+        if field_type in [field.Nested.name, field.Object.name]:
+            properties = field_value.get("properties")
+            if properties:
+                nested_fields = get_sorting_fields(properties)
+                for nested_field_name, nested_field_value in list(nested_fields):
+                    yield (f"{field_name}.{nested_field_name}", nested_field_value)
+            else:
+                continue
         else:
             yield (field_name, field_type)
 

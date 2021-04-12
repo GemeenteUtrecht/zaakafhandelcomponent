@@ -8,7 +8,7 @@ from rest_framework import views
 from rest_framework.request import Request
 from rest_framework.settings import api_settings
 
-from .utils import get_sorting_fields, get_document_properties
+from .utils import get_document_properties, get_sorting_fields
 
 
 class ESOrderingFilter:

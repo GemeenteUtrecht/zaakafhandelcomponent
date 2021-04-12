@@ -19,17 +19,12 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaaktype = (
-        zaak.zaaktype
-        if isinstance(zaak.zaaktype, ZaakType)
-        else fetch_zaaktype(zaak.zaaktype)
-    )
     zaaktype_document = ZaakTypeDocument(
-        url=zaaktype.url,
-        omschrijving=zaaktype.omschrijving,
-        catalogus=zaaktype.catalogus,
+        url=zaak.zaaktype.url,
+        omschrijving=zaak.zaaktype.omschrijving,
+        catalogus=zaak.zaaktype.catalogus,
     )
-        
+
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
@@ -157,21 +152,4 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak):
         )
 
     zaak_document.eigenschappen = eigenschappen_doc
-    zaak_document.save()
-
-
-def update_zaaktype_in_zaak_document(zaak: Zaak):
-    # TODO: What if you update the zaaktype itself?
-    try:
-        zaak_document = ZaakDocument.get(id=zaak.uuid)
-    except exceptions.NotFoundError as exc:
-        logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
-        zaak_document = create_zaak_document(zaak)
-
-    zaaktype = fetch_zaaktype(
-        zaak.zaaktype if not isinstance(zaak.zaaktype, ZaakType) else zaak.zaaktype.url
-    )
-    zaak_document.zaaktype = ZaakTypeDocument(
-        url=zaaktype.url, omschrijving=zaaktype.omschrijving
-    )
     zaak_document.save()
