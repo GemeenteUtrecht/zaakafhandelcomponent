@@ -19,10 +19,15 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
+    zaaktype = (
+        zaak.zaaktype
+        if isinstance(zaak.zaaktype, ZaakType)
+        else fetch_zaaktype(zaak.zaaktype)
+    )
     zaaktype_document = ZaakTypeDocument(
-        url=zaak.zaaktype.url,
-        omschrijving=zaak.zaaktype.omschrijving,
-        catalogus=zaak.zaaktype.catalogus,
+        url=zaaktype.url,
+        omschrijving=zaaktype.omschrijving,
+        catalogus=zaaktype.catalogus,
     )
 
     zaak_document = ZaakDocument(
@@ -95,22 +100,6 @@ def append_rol_to_document(rol: Rol):
         return
 
     zaak_document.rollen.append(rol_document)
-    zaak_document.save()
-
-
-def append_zaaktype_to_document(zaak: Zaak, zaaktype: ZaakType):
-    zaaktype_document = ZaakTypeDocument(
-        url=zaaktype.url,
-        omschrijving=zaaktype.omschrijving,
-    )
-
-    try:
-        zaak_document = ZaakDocument.get(id=zaak.id)
-    except exceptions.NotFoundError as exc:
-        logger.warning("zaak %s hasn't been indexed in ES", zaak, exc_info=True)
-        return
-
-    zaak_document.zaaktype = zaaktype_document
     zaak_document.save()
 
 

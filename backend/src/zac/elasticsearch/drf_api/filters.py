@@ -82,11 +82,13 @@ class ESOrderingFilter:
             raise ImproperlyConfigured(msg % self.__class__.__name__)
 
         properties = get_document_properties(search_document)
+        if properties:
+            return {
+                field_name: field_type
+                for field_name, field_type in get_sorting_fields(properties)
+            }
 
-        return {
-            field_name: field_type
-            for field_name, field_type in get_sorting_fields(properties)
-        }
+        return {}
 
     def get_ordering_fields(self, view: views.APIView) -> Dict[str, str]:
         ordering_fields = getattr(view, "ordering_fields", self.ordering_fields)
