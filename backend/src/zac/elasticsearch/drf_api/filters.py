@@ -1,13 +1,14 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
-from drf_spectacular.plumbing import force_instance
-from rest_framework import serializers, views
+from elasticsearch_dsl import field
+from rest_framework import views
+from rest_framework.request import Request
 from rest_framework.settings import api_settings
 
-from .utils import get_sorting_fields
+from .utils import get_sorting_fields, get_document_properties
 
 
 class ESOrderingFilter:
@@ -21,7 +22,9 @@ class ESOrderingFilter:
     ordering_param = api_settings.ORDERING_PARAM
     ordering_fields = None
 
-    def add_keyword_to_text_field_type(ordering: List[str]) -> List[str]:
+    def add_keyword_to_text_field_type(
+        self, ordering: List[str], view: views.APIView
+    ) -> List[str]:
         """
         Fields that have a 'text' field type are searchable on their keyword
         property.
@@ -30,41 +33,42 @@ class ESOrderingFilter:
         """
         all_fields = self.get_all_fields(view)
         final_ordering = []
-        for field in ordering:
-            if field.startswith("-"):
-                field_type = all_fields[field[1:]]
+        for field_name in ordering:
+            if field_name.startswith("-"):
+                field_type = all_fields[field_name[1:]]
             else:
-                field_type = all_fields[field]
+                field_type = all_fields[field_name]
 
-            if field_type == "text":
-                field += ".keyword"
+            if field_type == field.Text.name:
+                field_name = ".".join([field_name, field.Keyword.name])
 
-            final_ordering.append(field)
+            final_ordering.append(field_name)
 
         return final_ordering
 
-    def get_ordering(self, request, view):
+    def get_ordering(
+        self, request: Request, view: views.APIView
+    ) -> Optional[List[str]]:
         """
         Ordering is set by a comma delimited ?ordering=... query parameter.
 
-        The `ordering` query parameter can be overridden by setting
-        the `ordering_param` value on the OrderingFilter or by
+        The `ordering` query parameter can be overridden by
         specifying an `ORDERING_PARAM` value in the API settings.
         """
         params = request.query_params.get(self.ordering_param)
         if params:
             fields = [param.strip() for param in params.split(",")]
-            ordering = self.remove_invalid_fields(fields, view, request)
-            ordering = self.add_keyword_to_text_field_type(ordering)
+            ordering = self.remove_invalid_fields(fields, view)
+            ordering = self.add_keyword_to_text_field_type(ordering, view)
             if ordering:
                 return ordering
 
         return self.get_default_ordering(view)
 
-    def get_default_ordering(self, view):
+    def get_default_ordering(self, view: views.APIView) -> Optional[List[str]]:
         return getattr(view, "ordering", None)
 
-    def get_all_fields(self, view) -> Dict[str, str]:
+    def get_all_fields(self, view: views.APIView) -> Dict[str, str]:
         # If `ordering_fields` is not specified, then we determine a default
         # based on the serializer class, if one exists on the view.
         try:
@@ -77,21 +81,23 @@ class ESOrderingFilter:
             )
             raise ImproperlyConfigured(msg % self.__class__.__name__)
 
+        properties = get_document_properties(search_document)
+
         return {
             field_name: field_type
-            for field_name, field_type in get_sorting_fields(search_document)
+            for field_name, field_type in get_sorting_fields(properties)
         }
 
-    def get_ordering_fields(self, view) -> Dict[str, str]:
+    def get_ordering_fields(self, view: views.APIView) -> Dict[str, str]:
         ordering_fields = getattr(view, "ordering_fields", self.ordering_fields)
         all_fields = self.get_all_fields(view)
 
         if ordering_fields in [None, "__all__"]:
             return all_fields
 
-        return {field: all_fields[field] for field in ordering_fields}
+        return {field_name: all_fields[field_name] for field_name in ordering_fields}
 
-    def remove_invalid_fields(self, fields, view) -> List[str]:
+    def remove_invalid_fields(self, fields, view: views.APIView) -> List[str]:
         """
         Fields that have as type 'object' are unsortable for now.
 
@@ -101,6 +107,6 @@ class ESOrderingFilter:
         def term_valid(term):
             if term.startswith("-"):
                 term = term[1:]
-            return (term in valid_fields) and (all_fields[term] != "object")
+            return (term in valid_fields) and (valid_fields[term] != field.Object.name)
 
         return [term for term in fields if term_valid(term)]

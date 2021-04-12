@@ -2,13 +2,14 @@ import logging
 from collections import defaultdict
 
 from elasticsearch import exceptions
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.core.rollen import Rol
-from zac.core.services import get_rollen, get_zaak_eigenschappen
+from zac.core.services import fetch_zaaktype, get_rollen, get_zaak_eigenschappen
 from zgw.models.zrc import Zaak
 
-from .documents import RolDocument, ZaakDocument
+from .documents import RolDocument, ZaakDocument, ZaakTypeDocument
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,15 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaaktype_url = (
-        zaak.zaaktype if isinstance(zaak.zaaktype, str) else zaak.zaaktype.url
+    zaaktype = ZaakTypeDocument(
+        url=zaak.zaaktype.url,
+        omschrijving=zaak.zaaktype.omschrijving,
     )
-
+        
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
-        zaaktype=zaaktype_url,
+        zaaktype=zaaktype,
         identificatie=zaak.identificatie,
         bronorganisatie=zaak.bronorganisatie,
         omschrijving=zaak.omschrijving,
@@ -36,6 +38,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
+        deadline=zaak.deadline,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -98,6 +101,22 @@ def append_rol_to_document(rol: Rol):
     zaak_document.save()
 
 
+def append_zaaktype_to_document(zaak: Zaak, zaaktype: ZaakType):
+    zaaktype_document = ZaakTypeDocument(
+        url=zaaktype.url,
+        omschrijving=zaaktype.omschrijving,
+    )
+
+    try:
+        zaak_document = ZaakDocument.get(id=zaak.id)
+    except exceptions.NotFoundError as exc:
+        logger.warning("zaak %s hasn't been indexed in ES", zaak, exc_info=True)
+        return
+
+    zaak_document.zaaktype = zaaktype_document
+    zaak_document.save()
+
+
 def update_rollen_in_zaak_document(zaak: Zaak):
     try:
         zaak_document = ZaakDocument.get(id=zaak.uuid)
@@ -136,4 +155,21 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak):
         )
 
     zaak_document.eigenschappen = eigenschappen_doc
+    zaak_document.save()
+
+
+def update_zaaktype_in_zaak_document(zaak: Zaak):
+    # TODO: What if you update the zaaktype itself?
+    try:
+        zaak_document = ZaakDocument.get(id=zaak.uuid)
+    except exceptions.NotFoundError as exc:
+        logger.warning("zaak %s hasn't been indexed in ES", zaak.url, exc_info=True)
+        zaak_document = create_zaak_document(zaak)
+
+    zaaktype = fetch_zaaktype(
+        zaak.zaaktype if not isinstance(zaak.zaaktype, ZaakType) else zaak.zaaktype.url
+    )
+    zaak_document.zaaktype = ZaakTypeDocument(
+        url=zaaktype.url, omschrijving=zaaktype.omschrijving
+    )
     zaak_document.save()

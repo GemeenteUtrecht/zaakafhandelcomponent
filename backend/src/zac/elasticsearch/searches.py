@@ -52,7 +52,16 @@ def search(
     if omschrijving:
         s = s.query(Match(omschrijving=omschrijving))
     if zaaktypen:
-        s = s.filter(Terms(zaaktype=zaaktypen))
+        s = s.filter(
+            Nested(
+                path="zaaktype",
+                query=Bool(
+                    filter=(
+                        Terms(zaaktype__url=zaaktypen)
+                    )
+                )
+            )
+        )
     if behandelaar:
         s = s.filter(
             Nested(
@@ -114,7 +123,7 @@ def search(
     if _filters:
         combined_filter = reduce(operator.or_, _filters)
         s = s.filter(combined_filter)
-
+    
     if ordering:
         s = s.sort(*ordering)
 

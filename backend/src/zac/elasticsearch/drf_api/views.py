@@ -13,8 +13,8 @@ from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
 
-from ..searches import autocomplete_zaak_search
 from ..documents import ZaakDocument
+from ..searches import autocomplete_zaak_search
 from .filters import ESOrderingFilter
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
@@ -47,8 +47,8 @@ class GetZakenView(views.APIView):
 
 class SearchViewSet(views.APIView):
     parser_classes = (IgnoreCamelCaseJSONParser,)
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    #authentication_classes = (authentication.SessionAuthentication,)
+    #permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
     search_document = ZaakDocument
     ordering = (
@@ -73,7 +73,7 @@ class SearchViewSet(views.APIView):
 
         # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
-        zaken = self.perform_search({**input_serializer.data, **{"ordering": ordering}})
+        zaken = self.perform_search({**input_serializer.data, "ordering": ordering})
 
         # TODO for now zaak.resultaat is str which is not supported by ZaakDetailSerializer
         for zaak in zaken:

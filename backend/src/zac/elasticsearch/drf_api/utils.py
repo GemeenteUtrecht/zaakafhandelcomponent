@@ -1,12 +1,14 @@
 from collections import OrderedDict
-from typing import Any, Dict, Iterator
+from typing import Any, Dict, Iterator, Tuple, Optional
 
 from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, field
-from drf_spectacular.plumbing import force_instance
 
 
-def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[str]:
+
+
+
+def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
     """
     This (recursively) lists all the (nested) fields that can be sorted on.
 
@@ -26,6 +28,14 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[str]:
             yield (field_name, field_type)
 
 
+def get_document_properties(es_document: Document) -> Optional[Dict[str, Any]]:
+    assert isinstance(
+        es_document(), Document
+    ), f"Expected object of type elasticsearch_dsl.Document but got {type(es_document)} instead."
+    properties = es_document._doc_type.mapping.properties.to_dict().get("properties")
+    return properties
+
+
 def es_document_to_sorting_parameters(
     es_document: Document,
 ) -> OpenApiParameter:
@@ -33,11 +43,7 @@ def es_document_to_sorting_parameters(
     Turns the ES Document fields to possible sorting parameters.
 
     """
-    assert isinstance(
-        es_document(), Document
-    ), f"Expected object of type elasticsearch_dsl.Document but got {type(es_document)} instead."
-    properties = es_document._doc_type.mapping.properties.to_dict().get("properties")
-
+    properties = get_document_properties(es_document)
     if not properties:
         return None
 

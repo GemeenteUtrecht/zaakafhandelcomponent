@@ -14,6 +14,7 @@ from zac.elasticsearch.api import (
     delete_zaak_document,
     update_rollen_in_zaak_document,
     update_zaak_document,
+    update_zaaktype_in_zaak_document,
 )
 
 
@@ -34,6 +35,9 @@ class ZakenHandler:
 
         elif data["resource"] == "rol":
             self._handle_rol_change(data["hoofd_object"])
+
+        elif data["resource"] == "zaaktype":
+            self._handle_zaaktype_change(data["hoofd_object"])
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
@@ -67,6 +71,11 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         # index in ES
         update_rollen_in_zaak_document(zaak)
+
+    def _handle_zaaktype_change(self, zaak_url):
+        zaak = self._retrieve_zaak(zaak_url)
+        # index in ES
+        update_zaaktype_in_zaak_document(zaak)
 
 
 class ZaaktypenHandler:
