@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
 import requests_mock
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -46,7 +50,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
         )
-
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={
@@ -65,7 +68,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             json={"count": 0, "previous": None, "next": None, "results": []},
         )
 
-        call_command("index_zaken")
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
+            return_value=factory(ZaakType, zaaktype),
+        ):
+            call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -156,7 +163,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
 
-        call_command("index_zaken")
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
+            return_value=factory(ZaakType, zaaktype),
+        ):
+            call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -252,7 +263,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
 
-        call_command("index_zaken")
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
+            return_value=factory(ZaakType, zaaktype),
+        ):
+            call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -418,7 +433,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             ],
         )
 
-        call_command("index_zaken")
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
+            return_value=factory(ZaakType, zaaktype),
+        ):
+            call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -534,7 +553,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
 
-        call_command("index_zaken")
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
+            return_value=factory(ZaakType, zaaktype),
+        ):
+            call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")

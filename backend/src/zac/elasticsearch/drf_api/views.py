@@ -76,7 +76,7 @@ class SearchViewSet(views.APIView):
         # TODO for now zaak.resultaat is str which is not supported by ZaakDetailSerializer
         for zaak in zaken:
             zaak.resultaat = None
-        
+
         zaak_serializer = ZaakDetailSerializer(zaken, many=True)
 
         return Response(zaak_serializer.data)

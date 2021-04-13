@@ -18,7 +18,8 @@ class Zaak(_Zaak):
     def deadline(self) -> datetime.date:
         if not self.uiterlijke_einddatum_afdoening:
             end = self.startdatum + self.zaaktype.doorlooptijd
-            self.uiterlijke_einddatum_afdoening = end
+            return end
+
         return self.uiterlijke_einddatum_afdoening
 
     def deadline_progress(self) -> float:

@@ -11,7 +11,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 
-from ..documents import ZaakDocument
+from ..documents import ZaakDocument, ZaakTypeDocument
 from ..searches import search
 from .utils import ESMixin
 
@@ -22,15 +22,15 @@ ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 class SearchZakenTests(ESMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
-
+        self.zaaktype_document1 = ZaakTypeDocument(
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            omschrijving="zaaktype1",
+        )
         self.zaak_document1 = ZaakDocument(
             meta={"id": "a522d30c-6c10-47fe-82e3-e9f524c14ca8"},
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype={
-                "url": f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-                "omschrijving": "zaaktype1",
-            },
+            zaaktype=self.zaaktype_document1,
             identificatie="ZAAK1",
             bronorganisatie="123456",
             omschrijving="Some zaak description",
@@ -59,17 +59,19 @@ class SearchZakenTests(ESMixin, TestCase):
                     "Bedrag incl  BTW": "aaa",
                 }
             },
+            deadline="2021-12-31",
         )
         self.zaak_document1.save()
 
+        self.zaaktype_document2 = ZaakTypeDocument(
+            url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            omschrijving="zaaktype2",
+        )
         self.zaak_document2 = ZaakDocument(
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013aa"},
             url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
-            zaaktype={
-                "url": f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-                "omschrijving": "zaaktype2",
-            },
+            zaaktype=self.zaaktype_document2,
             identificatie="ZAAK2",
             bronorganisatie="7890",
             omschrijving="Other description",
@@ -77,6 +79,7 @@ class SearchZakenTests(ESMixin, TestCase):
             va_order=20,
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
+            deadline="2021-12-31",
         )
         self.zaak_document2.save()
 

@@ -27,7 +27,6 @@ class ESMixin:
     def create_zaak_document(zaak):
         if not isinstance(zaak, Zaak):
             zaak = factory(Zaak, zaak)
-        print("1: ",zaak.uiterlijke_einddatum_afdoening)
         create_zaak_document(zaak)
 
     @staticmethod
