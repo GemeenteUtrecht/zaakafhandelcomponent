@@ -19,6 +19,7 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
+    print("2: ",zaak.uiterlijke_einddatum_afdoening)
     zaaktype = (
         zaak.zaaktype
         if isinstance(zaak.zaaktype, ZaakType)
@@ -29,6 +30,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         omschrijving=zaaktype.omschrijving,
         catalogus=zaaktype.catalogus,
     )
+    print("3: ",zaak.uiterlijke_einddatum_afdoening)
 
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
@@ -46,7 +48,11 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         registratiedatum=zaak.registratiedatum,
         deadline=zaak.deadline,
     )
+    print("4: ",zaak.uiterlijke_einddatum_afdoening)
+
     zaak_document.save()
+    print("5: ",zaak.uiterlijke_einddatum_afdoening)
+
     # TODO check rollen in case of update
     return zaak_document
 

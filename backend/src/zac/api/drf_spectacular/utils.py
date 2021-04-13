@@ -1,7 +1,5 @@
 from typing import List
 
-from django.utils.translation import gettext_lazy as _
-
 from drf_spectacular.plumbing import force_instance
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework import serializers
