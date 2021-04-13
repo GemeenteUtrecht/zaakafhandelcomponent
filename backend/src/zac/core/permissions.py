@@ -52,6 +52,7 @@ zaken_download_documents = Permission(
 zaken_update_documents = Permission(
     name="zaken:update-documents",
     description="Bewerken van eigenschappen van de documenten bij zaken.",
+    blueprint_class=InformatieObjectTypeBlueprint,
 )
 
 zaken_add_documents = Permission(

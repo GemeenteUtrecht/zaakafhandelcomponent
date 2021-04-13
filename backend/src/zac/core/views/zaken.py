@@ -141,7 +141,7 @@ class ZaakDetail(PermissionRequiredMixin, BaseDetailView):
             documenten, gone = _documenten.result()
 
             filtered_documenten = filter_documenten_for_permissions(
-                documenten, self.request.user
+                documenten, self.request
             )
 
             review_requests = serialize(review_requests)

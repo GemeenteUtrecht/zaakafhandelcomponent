@@ -12,10 +12,8 @@ from ..permissions import (
     zaken_add_relations,
     zaken_handle_access,
     zaken_inzien,
-    zaken_update_documents,
     zaken_wijzigen,
 )
-from ..services import get_documenten
 
 logger = logging.getLogger(__name__)
 
@@ -63,28 +61,6 @@ class CanReadOrUpdateZaken:
     def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
         permission = self.get_permission(request)
         return permission.has_object_permission(request, view, obj)
-
-
-class CanUpdateDocumenten(DefinitionBasePermission):
-    permission = zaken_update_documents
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        zaak = view.get_object()
-        documents, gone = get_documenten(zaak)
-        for doc in documents:
-            if not self.has_object_permission(request, view, doc):
-                return False
-
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        if not isinstance(obj, Document):
-            return True
-        else:
-            return super().has_object_permission(request, view, obj)
 
 
 class CanHandleAccessRequests(DefinitionBasePermission):

@@ -62,7 +62,6 @@ from .permissions import (
     CanAddRelations,
     CanReadOrUpdateZaken,
     CanReadZaken,
-    CanUpdateDocumenten,
 )
 from .serializers import (
     AddDocumentResponseSerializer,
@@ -241,10 +240,7 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
 
 class ZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (
-        permissions.IsAuthenticated & CanReadOrUpdateZaken,
-        CanUpdateDocumenten,
-    )
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDocumentSerializer, "PATCH": UpdateZaakDocumentSerializer}
@@ -271,7 +267,7 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
 
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
-        filtered_documenten = filter_documenten_for_permissions(documents, request.user)
+        filtered_documenten = filter_documenten_for_permissions(documents, request)
         serializer = self.get_serializer(
             instance=filtered_documenten, many=True, context={"request": request}
         )
@@ -287,12 +283,23 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        new_doc_urls = [document.pop("url") for document in serializer.data]
+        # Check if document is allowed to be patched.
+        documents, gone = get_documenten(zaak)
+        filtered_documenten = [
+            doc.url for doc in filter_documenten_for_permissions(documents, request)
+        ]
+        updated_documents = [document.pop("url") for document in serializer.data]
+        for doc in updated_documents:
+            if doc not in filtered_documenten:
+                raise exceptions.PermissionDenied(
+                    "Not allowed to edit document %s." % doc
+                )
+
         audit_lines = [document.pop("reden") for document in serializer.data]
         with parallel() as executor:
             documenten = executor.map(
                 update_document,
-                new_doc_urls,
+                updated_documents,
                 serializer.data,
                 audit_lines,
             )

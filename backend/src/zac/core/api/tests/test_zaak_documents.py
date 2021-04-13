@@ -14,6 +14,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import PermissionObjectType
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -21,12 +22,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import (
-    zaken_download_documents,
-    zaken_inzien,
-    zaken_update_documents,
-    zaken_wijzigen,
-)
+from zac.core.permissions import zaken_inzien, zaken_update_documents, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -50,7 +46,7 @@ class ZaakDocumentsResponseTests(APITestCase):
         cls.user = SuperUserFactory.create()
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -99,10 +95,12 @@ class ZaakDocumentsResponseTests(APITestCase):
             titel="some-titel",
             bestandsomvang="10",
         )
-        document = factory(Document, cls.document)
-        document.informatieobjecttype = factory(InformatieObjectType, cls.documenttype)
+        cls.doc_obj = factory(Document, cls.document)
+        cls.doc_obj.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
+        )
         cls.get_documenten_patcher = patch(
-            "zac.core.api.views.get_documenten", return_value=([document], [])
+            "zac.core.api.views.get_documenten", return_value=([cls.doc_obj], [])
         )
 
         zaak = factory(Zaak, cls.zaak)
@@ -111,10 +109,6 @@ class ZaakDocumentsResponseTests(APITestCase):
 
         cls.get_review_requests_patcher = patch(
             "zac.core.api.views.get_review_requests", return_value=[]
-        )
-
-        cls.get_documenten_permissions_patcher = patch(
-            "zac.core.api.permissions.get_documenten", return_value=([document], [])
         )
 
         cls.endpoint = reverse(
@@ -136,9 +130,6 @@ class ZaakDocumentsResponseTests(APITestCase):
 
         self.get_documenten_patcher.start()
         self.addCleanup(self.get_documenten_patcher.stop)
-
-        self.get_documenten_permissions_patcher.start()
-        self.addCleanup(self.get_documenten_permissions_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
@@ -162,7 +153,11 @@ class ZaakDocumentsResponseTests(APITestCase):
             },
         )
 
-        response = self.client.get(self.endpoint)
+        with patch(
+            "zac.core.api.views.filter_documenten_for_permissions",
+            return_value=[self.doc_obj],
+        ):
+            response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
@@ -189,7 +184,10 @@ class ZaakDocumentsResponseTests(APITestCase):
 
     def test_no_documents(self, m):
         with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
-            response = self.client.get(self.endpoint)
+            with patch(
+                "zac.core.api.views.filter_documenten_for_permissions", return_value=[]
+            ):
+                response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
@@ -270,7 +268,8 @@ class ZaakDocumentsResponseTests(APITestCase):
                 return_value=documenten,
             ) as mock_get_documenten:
                 with patch(
-                    "zac.core.api.permissions.get_documenten", return_value=documenten
+                    "zac.core.api.views.filter_documenten_for_permissions",
+                    return_value=documenten[0],
                 ):
                     response = self.client.patch(self.endpoint, payload)
 
@@ -324,7 +323,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         config.save()
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -332,17 +331,9 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
             catalogus=catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zeer_geheim,
-        )
-        cls.documenttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-            catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
-
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -350,25 +341,32 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             identificatie="ZAAK-2020-0010",
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zeer_geheim,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
-
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+
         cls.get_review_requests_patcher = patch(
             "zac.core.api.views.get_review_requests", return_value=[]
         )
 
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
 
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/e3f5c6d2-0e49-4293-8428-26139f630950",
+            omschrijving="some-iot-omschrijving",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
         cls.document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
             informatieobjecttype=cls.documenttype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         cls.doc_obj = factory(Document, cls.document)
         cls.doc_obj.informatieobjecttype = factory(
@@ -451,12 +449,14 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self._setupMocks(m)
 
         user = UserFactory.create()
-        PermissionSetFactory.create(
-            permissions=[zaken_wijzigen.name],
+        BlueprintPermissionFactory.create(
+            permission=zaken_wijzigen.name,
             for_user=user,
-            catalogus="",
-            zaaktype_identificaties=[],
-            max_va=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
         )
         self.client.force_authenticate(user=user)
 
@@ -531,7 +531,41 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     @patch("zac.core.api.serializers.validate_zaak_documents", return_value=None)
-    def test_has_perm_to_to_patch(self, m, *mocks):
+    def test_has_perm_to_to_patch_case_but_not_documents(self, m, *mocks):
+        self._setupMocks(m)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            permission=zaken_wijzigen.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        with patch(
+            "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
+        ):
+            response = self.client.patch(
+                self.endpoint,
+                [
+                    {
+                        "reden": "Zomaar",
+                        "url": self.doc_obj.url,
+                        "vertrouwelijkheidaanduiding": "geheim",
+                    }
+                ],
+            )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    @patch("zac.core.api.serializers.validate_zaak_documents", return_value=None)
+    def test_has_perm_to_to_patch_case_and_download_but_not_edit_documents(
+        self, m, *mocks
+    ):
         self._setupMocks(m)
 
         user = UserFactory.create()
@@ -545,18 +579,14 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         BlueprintPermissionFactory.create(
+            object_type=PermissionObjectType.document,
             permission=zaken_update_documents.name,
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
-                "zaaktype_omschrijving": "ZT1",
+                "catalogus": self.documenttype["catalogus"],
+                "iotype_omschrijving": "some-iot-omschrijving",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
-        )
-        InformatieobjecttypePermissionFactory.create(
-            permission_set=permission_set,
-            catalogus=self.zaaktype["catalogus"],
-            max_va=VertrouwelijkheidsAanduidingen.zeer_geheim,
         )
         self.client.force_authenticate(user=user)
 
@@ -569,7 +599,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
                     [
                         {
                             "reden": "Zomaar",
-                            "url": "http://documents.nl/api/v1/enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b8",
+                            "url": self.doc_obj.url,
                             "vertrouwelijkheidaanduiding": "geheim",
                         }
                     ],
