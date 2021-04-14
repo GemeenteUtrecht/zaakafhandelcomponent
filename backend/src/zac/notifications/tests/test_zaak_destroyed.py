@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.tests.factories import UserFactory
 from zac.activities.models import Activity, Event
@@ -12,8 +12,9 @@ from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zgw.models.zrc import Zaak
 
-from .utils import BRONORGANISATIE, ZAAK_RESPONSE, ZAAKTYPE
+from .utils import BRONORGANISATIE, ZAAK_RESPONSE, ZAAKTYPE, ZAAKTYPE_RESPONSE
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -62,6 +63,7 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.meta.id, "f3ff2713-2f53-42ff-a154-16842309ad60")
 

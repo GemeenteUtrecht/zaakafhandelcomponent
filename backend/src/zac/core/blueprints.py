@@ -4,10 +4,10 @@ from elasticsearch_dsl.query import Query, Range, Term
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import Blueprint
+from zgw.models.zrc import Zaak
 
 
 class ZaakTypeBlueprint(Blueprint):

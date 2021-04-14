@@ -6,7 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
@@ -18,6 +17,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.utils import build_absolute_url, get_ui_url
+from zgw.models.zrc import Zaak
 
 from .api import create_review_request
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes

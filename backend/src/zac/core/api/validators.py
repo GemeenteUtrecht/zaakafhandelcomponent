@@ -4,9 +4,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import exceptions
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.core.services import get_documenten
+from zgw.models.zrc import Zaak
 
 
 def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):

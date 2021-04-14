@@ -7,6 +7,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
+    SuperUserFactory,
     UserFactory,
 )
 from zac.core.permissions import zaken_inzien
@@ -189,3 +190,13 @@ class SearchZakenTests(ESMixin, TestCase):
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
+
+    def test_sorting(self):
+        super_user = SuperUserFactory.create()
+        result = search(user=super_user, ordering=("-identificatie",))
+        self.assertEqual(result[0], self.zaak_document2.url)
+
+    def test_nested_sorting(self):
+        super_user = SuperUserFactory.create()
+        result = search(user=super_user, ordering=("-zaaktype.omschrijving",))
+        self.assertEqual(result[0], self.zaak_document2.url)

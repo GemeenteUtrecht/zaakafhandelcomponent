@@ -6,11 +6,11 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.request import Request
 from rest_framework.response import Response
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
+from zgw.models.zrc import Zaak
 
 from ..documents import ZaakDocument
 from ..searches import autocomplete_zaak_search
