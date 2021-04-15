@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
-from elasticsearch_dsl import field
+from elasticsearch_dsl import Document, field
 from rest_framework import views
 from rest_framework.request import Request
 from rest_framework.settings import api_settings
@@ -14,7 +14,12 @@ from .utils import get_document_properties, get_sorting_fields
 class ESOrderingFilter:
     """
     A custom filter that is strongly inspired by the rest_framework ordering filter
-    and has a similar interface.
+    and has a similar interface. It can be used with the 'Document' class of elasticsearch_dsl
+    library.
+
+    In our implementation a 'Text' field is a special field that can only be sorted on
+    by using a 'Keyword' field inside the 'fields' of the 'Text' field. The filter
+    will omit any 'Text' fields as sortable field candidates if they are non-compliant.
 
     Note: in this filter ordering = None is the same as ordering = "__all__".
     """
@@ -22,26 +27,39 @@ class ESOrderingFilter:
     ordering_param = api_settings.ORDERING_PARAM
     ordering_fields = None
 
-    def add_keyword_to_text_field_type(
-        self, ordering: List[str], view: views.APIView
-    ) -> List[str]:
-        """
-        Fields that have a 'text' field type are searchable on their keyword
-        property.
+    def _check_text_field_for_keyword_field_in_fields_attr(
+        self, es_document: Document, field_name: str
+    ):
+        properties = get_document_properties(es_document)
+        for name in field_name.split("."):
+            properties = properties.get("properties")
+            if properties:
+                properties = properties.get(name, {})
 
-        This adds .keyword to any field name that has a 'text' field type.
+        # Properties is reduced to the values of the field.
+        # If the field is a text field, has a 'fields' key and
+        # fields contains 'keyword', add keyword to the field name.
+        if properties:
+            if properties.get("type") == field.Text.name:
+                if properties.get("fields", {}).get(field.Keyword.name):
+                    return f"{field_name}.{field.Keyword.name}"
+        return field_name
+
+    def _add_keywords(self, ordering: List[str], view: views.APIView) -> List[str]:
         """
-        all_fields = self.get_all_fields(view)
+        Fields that have a 'text' field type could still be searchable if they have a keyword field in their fields attribute.
+
+        This adds .keyword to those fields.
+        """
+
         final_ordering = []
         for field_name in ordering:
-            if field_name.startswith("-"):
-                field_type = all_fields[field_name[1:]]
-            else:
-                field_type = all_fields[field_name]
-
-            if field_type == field.Text.name:
-                field_name = ".".join([field_name, field.Keyword.name])
-
+            reverse = field_name.startswith("-")
+            field_name = self._check_text_field_for_keyword_field_in_fields_attr(
+                view.search_document, field_name[1 if reverse else 0 :]
+            )
+            if reverse:
+                field_name = f"-{field_name}"
             final_ordering.append(field_name)
 
         return final_ordering
@@ -59,7 +77,7 @@ class ESOrderingFilter:
         if params:
             fields = [param.strip() for param in params.split(",")]
             ordering = self.remove_invalid_fields(fields, view)
-            ordering = self.add_keyword_to_text_field_type(ordering, view)
+            ordering = self._add_keywords(ordering, view)
             if ordering:
                 return ordering
 
@@ -82,6 +100,7 @@ class ESOrderingFilter:
             raise ImproperlyConfigured(msg % self.__class__.__name__)
 
         properties = get_document_properties(search_document)
+        properties = properties.get("properties", None)
         if properties:
             return {
                 field_name: field_type

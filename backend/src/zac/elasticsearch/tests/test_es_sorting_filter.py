@@ -9,12 +9,13 @@ from ..drf_api.filters import ESOrderingFilter
 
 
 class NestedEsTestDocument(InnerDoc):
-    some_nested_text = field.Text()
+    some_nested_text = field.Text(fields={"keyword": field.Keyword()})
 
 
 class ESTestDocument(Document):
     some_nested = field.Nested(NestedEsTestDocument)
     some_date = field.Date()
+    some_sortable_text = field.Text(fields={"keyword": field.Keyword()})
     some_text = field.Text()
     some_keyword = field.Keyword()
     some_boolean = field.Boolean()
@@ -48,7 +49,20 @@ class ESSortingFilterTest(TestCase):
         with self.assertRaises(AttributeError):
             ESOrderingFilter().get_ordering(some_request, SomeView)
 
-    def test_view_with_search_document(self):
+    def test_view_with_search_document_with_keyword_text_field(self):
+        request_factory = APIRequestFactory()
+        some_request = request_factory.post(
+            f"/some-url?ordering=some_sortable_text", {}, format="json"
+        )
+
+        class SomeView(views.APIView):
+            search_document = ESTestDocument
+
+        some_request = SomeView().initialize_request(some_request)
+        ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
+        self.assertEqual(ordering, ["some_sortable_text.keyword"])
+
+    def test_view_with_search_document_no_keyword_text_field(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(
             f"/some-url?ordering=some_text", {}, format="json"
@@ -59,12 +73,12 @@ class ESSortingFilterTest(TestCase):
 
         some_request = SomeView().initialize_request(some_request)
         ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
-        self.assertEqual(ordering, ["some_text.keyword"])
+        self.assertEqual(ordering, None)
 
     def test_remove_invalid_fields(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(
-            f"/some-url?ordering=some_text,something_that_doesntexist",
+            f"/some-url?ordering=some_date,something_that_doesntexist",
             {},
             format="json",
         )
@@ -74,12 +88,12 @@ class ESSortingFilterTest(TestCase):
 
         some_request = SomeView().initialize_request(some_request)
         ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
-        self.assertEqual(ordering, ["some_text.keyword"])
+        self.assertEqual(ordering, ["some_date"])
 
     def test_reversed_fields(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(
-            f"/some-url?ordering=-some_text", {}, format="json"
+            f"/some-url?ordering=-some_sortable_text", {}, format="json"
         )
 
         class SomeView(views.APIView):
@@ -87,12 +101,12 @@ class ESSortingFilterTest(TestCase):
 
         some_request = SomeView().initialize_request(some_request)
         ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
-        self.assertEqual(ordering, ["-some_text.keyword"])
+        self.assertEqual(ordering, ["-some_sortable_text.keyword"])
 
     def test_multiple_fields(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(
-            f"/some-url?ordering=-some_text,some_boolean", {}, format="json"
+            f"/some-url?ordering=-some_date,some_boolean", {}, format="json"
         )
 
         class SomeView(views.APIView):
@@ -100,7 +114,7 @@ class ESSortingFilterTest(TestCase):
 
         some_request = SomeView().initialize_request(some_request)
         ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
-        self.assertEqual(ordering, ["-some_text.keyword", "some_boolean"])
+        self.assertEqual(ordering, ["-some_date", "some_boolean"])
 
     def test_nested_fields(self):
         request_factory = APIRequestFactory()
@@ -118,17 +132,16 @@ class ESSortingFilterTest(TestCase):
     def test_set_ordering_fields(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(
-            f"/some-url?ordering=some_text,some_boolean,some_date", {}, format="json"
+            f"/some-url?ordering=some_boolean,some_date", {}, format="json"
         )
 
         class SomeView(views.APIView):
             search_document = ESTestDocument
             ordering_fields = (
-                "some_text",
                 "some_date",
                 "some_keyword",
             )
 
         some_request = SomeView().initialize_request(some_request)
         ordering = ESOrderingFilter().get_ordering(some_request, SomeView)
-        self.assertEqual(ordering, ["some_text.keyword", "some_date"])
+        self.assertEqual(ordering, ["some_date"])

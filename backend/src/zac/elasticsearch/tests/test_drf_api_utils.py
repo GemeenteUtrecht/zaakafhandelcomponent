@@ -12,7 +12,7 @@ from ..drf_api.utils import (
 
 
 class NestedEsTestDocument(InnerDoc):
-    some_nested_text = field.Text()
+    some_nested_text = field.Text(fields={"keyword": field.Keyword()})
 
 
 class ESTestDocument(Document):
@@ -31,15 +31,22 @@ class UtilsTests(TestCase):
     def test_get_document_properties(self):
         properties = get_document_properties(ESTestDocument)
         expected_data = {
-            "some_nested": {
-                "properties": {"some_nested_text": {"type": "text"}},
-                "type": "nested",
-            },
-            "some_date": {"type": "date"},
-            "some_text": {"type": "text"},
-            "some_keyword": {"type": "keyword"},
-            "some_boolean": {"type": "boolean"},
-            "some_object": {"type": "object"},
+            "properties": {
+                "some_nested": {
+                    "properties": {
+                        "some_nested_text": {
+                            "fields": {"keyword": {"type": "keyword"}},
+                            "type": "text",
+                        }
+                    },
+                    "type": "nested",
+                },
+                "some_date": {"type": "date"},
+                "some_text": {"type": "text"},
+                "some_keyword": {"type": "keyword"},
+                "some_boolean": {"type": "boolean"},
+                "some_object": {"type": "object"},
+            }
         }
         self.assertEqual(properties, expected_data)
 
@@ -52,11 +59,10 @@ class UtilsTests(TestCase):
 
     def test_get_sorting_fields(self):
         properties = get_document_properties(ESTestDocument)
-        list_of_fields = list(get_sorting_fields(properties))
+        list_of_fields = list(get_sorting_fields(properties["properties"]))
         expected_data = [
             ("some_nested.some_nested_text", "text"),
             ("some_date", "date"),
-            ("some_text", "text"),
             ("some_keyword", "keyword"),
             ("some_boolean", "boolean"),
         ]
@@ -68,7 +74,6 @@ class UtilsTests(TestCase):
         expected_data = [
             "some_nested.some_nested_text",
             "some_date",
-            "some_text",
             "some_keyword",
             "some_boolean",
         ]

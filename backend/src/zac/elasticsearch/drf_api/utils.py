@@ -9,6 +9,7 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
     """
     This (recursively) lists all the (nested) fields that can be sorted on.
 
+    A 'Text' field without a 'fields' key is NOT a sortable field.
     """
     fields = OrderedDict(fields)
     for field_name, field_value in fields.items():
@@ -19,17 +20,20 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
                 nested_fields = get_sorting_fields(properties)
                 for nested_field_name, nested_field_value in list(nested_fields):
                     yield (f"{field_name}.{nested_field_name}", nested_field_value)
-            else:
-                continue
+
         else:
-            yield (field_name, field_type)
+            if field_type == field.Text.name:
+                if field_value.get("fields", None):
+                    yield (field_name, field_type)
+            else:
+                yield (field_name, field_type)
 
 
 def get_document_properties(es_document: Document) -> Optional[Dict[str, Any]]:
     assert isinstance(
         es_document(), Document
     ), f"Expected object of type elasticsearch_dsl.Document but got {type(es_document)} instead."
-    properties = es_document._doc_type.mapping.properties.to_dict().get("properties")
+    properties = es_document._doc_type.mapping.properties.to_dict()
     return properties
 
 
@@ -41,6 +45,7 @@ def es_document_to_sorting_parameters(
 
     """
     properties = get_document_properties(es_document)
+    properties = properties.get("properties", None)
     if not properties:
         return None
 
