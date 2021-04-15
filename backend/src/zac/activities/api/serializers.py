@@ -1,9 +1,10 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from zac.accounts.api.serializers import UserSerializer
-from zac.core.camunda.select_documents.serializers import DocumentSerializer
 from zac.camunda.api.validators import UserValidator
-from django.utils.translation import gettext_lazy as _
+from zac.core.camunda.select_documents.serializers import DocumentSerializer
 
 from ..models import Activity, Event
 
@@ -43,6 +44,7 @@ class ActivitySerializer(serializers.ModelSerializer):
                 "view_name": "activities:activity-detail",
             },
         }
+
 
 class PatchActivitySerializer(ActivitySerializer):
     assignee = serializers.CharField(
