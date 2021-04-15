@@ -50,13 +50,12 @@ class ActivityViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticated,
         CanReadZaakPermission | CanWritePermission,
     )
-    serializer_class = ActivitySerializer
     filterset_class = ActivityFilter
 
     def get_serializer(self, **kwargs):
         if self.request.method == "PATCH":
             return PatchActivitySerializer(**kwargs)
-        return super().get_serializer(**kwargs)
+        return ActivityFilter(**kwargs)
 
     # Set document for document serializer
     def get_queryset(self):
