@@ -58,12 +58,13 @@ class ActivitySerializer(serializers.HyperlinkedModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        grant_permissions = (
+            validated_data.get("assignee")
+            and validated_data.get("assignee") != instance.assignee
+        )
         activity = super().update(instance, validated_data)
 
         # add permissions to assignee
-        if (
-            validated_data.get("assignee")
-            and validated_data.get("assignee") != instance.assignee
-        ):
+        if grant_permissions:
             add_permissions_for_activity_assignee(activity)
         return activity

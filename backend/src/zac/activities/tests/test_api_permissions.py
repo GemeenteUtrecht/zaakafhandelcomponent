@@ -7,7 +7,11 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
+from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
+    BlueprintPermissionFactory,
+    UserFactory,
+)
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..permissions import activiteiten_schrijven, activities_read
@@ -158,6 +162,34 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.data[0]["id"], activity.id)
 
+    @requests_mock.Mocker()
+    def test_read_logged_in_zaak_permission(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+        )
+        m.get(zaak["url"], json=zaak)
+
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            for_user=user, permission=activities_read.name, object_url=zaak["url"]
+        )
+
+        # set up test data
+        ActivityFactory.create()
+        activity = ActivityFactory.create(zaak=zaak["url"])
+
+        response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+        self.assertEqual(response.data[0]["id"], activity.id)
+
 
 class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
     """
@@ -268,6 +300,25 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        response = self.client.get(endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_read_logged_in_with_atomic_permissions(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_authenticate(self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activities_read.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
 
         response = self.client.get(endpoint)
@@ -388,6 +439,27 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    @requests_mock.Mocker()
+    def test_create_activity_logged_in_with_atomic_permissions(self, m):
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {
+            "zaak": self.zaak["url"],
+            "name": "Dummy",
+        }
+
+        response = self.client.post(self.endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_event_not_logged_in(self):
         endpoint = reverse_lazy("activities:event-list")
 
@@ -460,6 +532,29 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
+    def test_create_event_logged_in_with_atomic_permissions(self, m):
+        endpoint = reverse_lazy("activities:event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
         data = {
             "activity": activity.id,
@@ -578,6 +673,26 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_atomic_permissions(self, m):
+        endpoint = reverse(
+            "activities:activity-detail", kwargs={"pk": self.activity.pk}
+        )
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
         data = {"name": "New name"}
 

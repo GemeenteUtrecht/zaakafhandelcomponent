@@ -32,7 +32,7 @@ def add_atomic_permission_to_user(
     atomic_permission = AtomicPermission.objects.create(
         object_type=object_type,
         object_url=object_url,
-        permission=zaken_inzien.name,
+        permission=permission_name,
     )
     user.atomic_permissions.add(atomic_permission)
     return atomic_permission
