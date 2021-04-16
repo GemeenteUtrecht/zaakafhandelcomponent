@@ -44,7 +44,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TestCase):
                 permission.policy,
                 {
                     "catalogus": zaaktype["catalogus"],
-                    "zaktype_omschrijving": "ZT1",
+                    "zaaktype_omschrijving": "ZT1",
                     "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
                 },
             )

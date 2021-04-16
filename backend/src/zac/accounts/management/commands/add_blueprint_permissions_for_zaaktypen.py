@@ -26,20 +26,20 @@ class Command(BaseCommand):
         added = []
         for zaaktype in zaaktypen:
             for permission in permissions:
-                obj, created = BlueprintPermission.objects.get_or_create(
+                if not BlueprintPermission.objects.filter(
                     permission=permission,
                     policy__zaaktype_omschrijving=zaaktype.omschrijving,
                     policy__catalogus=zaaktype.catalogus,
-                    defaults={
-                        "policy": {
+                ).exists():
+                    obj = BlueprintPermission.objects.create(
+                        permission=permission,
+                        policy={
                             "catalogus": zaaktype.catalogus,
                             "zaaktype_omschrijving": zaaktype.omschrijving,
                             "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
                         },
-                        "object_type": PermissionObjectType.zaak,
-                    },
-                )
-                if created:
+                        object_type=PermissionObjectType.zaak,
+                    )
                     added.append(obj)
 
         self.stdout.write(
