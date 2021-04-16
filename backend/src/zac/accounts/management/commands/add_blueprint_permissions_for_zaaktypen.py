@@ -28,12 +28,12 @@ class Command(BaseCommand):
             for permission in permissions:
                 obj, created = BlueprintPermission.objects.get_or_create(
                     permission=permission,
-                    policy__zaktype_omschrijving=zaaktype.omschrijving,
+                    policy__zaaktype_omschrijving=zaaktype.omschrijving,
                     policy__catalogus=zaaktype.catalogus,
                     defaults={
                         "policy": {
                             "catalogus": zaaktype.catalogus,
-                            "zaktype_omschrijving": zaaktype.omschrijving,
+                            "zaaktype_omschrijving": zaaktype.omschrijving,
                             "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
                         },
                         "object_type": PermissionObjectType.zaak,
