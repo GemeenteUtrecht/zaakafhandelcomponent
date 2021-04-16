@@ -4,6 +4,7 @@ from django.db import migrations
 from django.utils import timezone
 
 from zac.core.services import get_zaaktypen
+from zac.core.permissions import zaken_download_documents
 
 from ..constants import AccessRequestResult, PermissionObjectType
 
@@ -17,9 +18,9 @@ def migrate_to_permission_definitions(apps, _):
     zaaktypen = get_zaaktypen()
 
     for permission_set in PermissionSet.objects.exclude(
-        zaaktype_identificaties=[], informatieobjecttypepermission=None
-    ).exclude(authorizationprofile=None):
-        # transform zaaktype_identificaties to omschriving
+        zaaktype_identificaties=[], authorizationprofile=None
+    ):
+        # transform zaaktype_identificaties to omschrijving
         zaaktype_omschrijvings = {
             zaaktype.omschrijving
             for zaaktype in zaaktypen
@@ -28,24 +29,27 @@ def migrate_to_permission_definitions(apps, _):
         }
         for zaaktype_omschrijving in zaaktype_omschrijvings:
             for permission_name in permission_set.permissions:
-                zaak_permission_definition = PermissionDefinition.objects.create(
-                    object_type=PermissionObjectType.zaak,
-                    permission=permission_name,
-                    policy={
-                        "catalogus": permission_set.catalogus,
-                        "zaaktype_omschrijving": zaaktype_omschrijving,
-                        "max_va": permission_set.max_va,
-                    },
-                )
+                # exclude permissions with different shape
+                if permission_name != zaken_download_documents.name:
+                    zaak_permission_definition = PermissionDefinition.objects.create(
+                        object_type=PermissionObjectType.zaak,
+                        permission=permission_name,
+                        policy={
+                            "catalogus": permission_set.catalogus,
+                            "zaaktype_omschrijving": zaaktype_omschrijving,
+                            "max_va": permission_set.max_va,
+                        },
+                    )
 
                 for auth_profile in permission_set.authorizationprofile_set.all():
                     auth_profile.permission_definitions.add(zaak_permission_definition)
 
         for doc_permission in permission_set.informatieobjecttypepermission_set.all():
-            for permission_name in permission_set.permissions:
+            # exclude permissions with different shape
+            if zaken_download_documents.name in permission_set.permissions:
                 doc_permission_definition = PermissionDefinition.objects.create(
                     object_type=PermissionObjectType.document,
-                    permission=permission_name,
+                    permission=zaken_download_documents.name,
                     policy={
                         "catalogus": doc_permission.catalogus,
                         "iotype_omschrijving": doc_permission.omschrijving,
