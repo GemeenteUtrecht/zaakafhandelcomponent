@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from zac.accounts.api.serializers import UserSerializer
 from zac.camunda.api.validators import UserValidator
-from zac.core.camunda.select_documents.serializers import DocumentSerializer
 
 from ..models import Activity, Event
 
@@ -21,8 +20,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
-    assignee = UserSerializer()
-    document = DocumentSerializer()
+    assignee = UserSerializer(
+        read_only=True,
+    )
     events = EventSerializer(many=True, read_only=True)
 
     class Meta:
@@ -50,13 +50,8 @@ class PatchActivitySerializer(ActivitySerializer):
     assignee = serializers.CharField(
         label=_("assignee"),
         help_text=_("User assigned to the activity."),
-        allow_blank=True,
+        required=False,
         validators=(UserValidator(),),
-    )
-    document = serializers.URLField(
-        label=_("activity document"),
-        help_text=_("URL that points to URL"),
-        allow_blank=True,
     )
 
     class Meta(ActivitySerializer.Meta):

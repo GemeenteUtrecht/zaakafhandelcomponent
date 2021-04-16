@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.urls import reverse, reverse_lazy
 
 import requests_mock

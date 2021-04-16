@@ -5,9 +5,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import exceptions, mixins, permissions, viewsets
 from rest_framework.response import Response
-from zgw_consumers.concurrent import parallel
 
-from zac.core.services import get_document, get_zaak
+from zac.core.services import get_zaak
 
 from ..models import Activity, Event
 from .filters import ActivityFilter
@@ -30,13 +29,12 @@ from .serializers import ActivitySerializer, EventSerializer, PatchActivitySeria
     ),
     retrieve=extend_schema(summary=_("Retrieve activity")),
     create=extend_schema(summary=_("Create activity")),
-    update=extend_schema(
+    partial_update=extend_schema(
         summary=_("Update activity"),
         request=PatchActivitySerializer,
-        response=ActivitySerializer,
+        responses={201: ActivitySerializer},
     ),
     destroy=extend_schema(summary=_("Destroy activity")),
-    tags=["activities"],
 )
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = (
@@ -51,24 +49,12 @@ class ActivityViewSet(viewsets.ModelViewSet):
         CanReadZaakPermission | CanWritePermission,
     )
     filterset_class = ActivityFilter
+    http_method_names = ["get", "post", "patch", "delete"]
 
-    def get_serializer(self, **kwargs):
+    def get_serializer_class(self):
         if self.request.method == "PATCH":
-            return PatchActivitySerializer(**kwargs)
-        return ActivityFilter(**kwargs)
-
-    # Set document for document serializer
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        document_urls = {
-            activity.document for activity in queryset if activity.document
-        }
-        with parallel() as executor:
-            result = executor.map(get_document, document_urls)
-        documents = {document.url: document for document in list(result)}
-        for activity in queryset:
-            activity.document = documents[activity.document]
-        return queryset
+            return PatchActivitySerializer
+        return ActivitySerializer
 
     def filter_queryset(self, queryset):
         qs = super().filter_queryset(queryset)
@@ -89,10 +75,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
         return qs
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(
-            instance=instance, data=request.data, partial=partial
+            instance=instance, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -102,7 +87,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        serializer = self.serializer_class(instance=self.get_object())
+        serializer = ActivitySerializer(instance=instance, context={"request": request})
         return Response(serializer.data)
 
 
