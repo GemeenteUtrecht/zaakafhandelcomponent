@@ -1,72 +1,98 @@
-<div class="d-flex justify-content-between" *ngIf="zaakData">
-  <h1>{{zaakData.zaaktype.omschrijving}}</h1>
-  <gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</gu-button>
-</div>
-<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-<div class="row">
-  <div class="col-md-6">
-    <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+<div class="zaak-detail">
+  <div class="d-flex justify-content-between" *ngIf="zaakData">
+    <div class="zaak-detail__header--left">
+      <h1>{{zaakData.zaaktype.omschrijving}}</h1>
+      <gu-button type="tertiary"
+                 size="extrasmall"
+                 class="ml-2"
+                 *ngIf="activities > 0"
+                 (click)="openModal('activities-modal')">
+        <span>
+          <gu-chip *ngIf="activityData" [type]="'primary'">{{activityData?.length}} activiteiten</gu-chip>
+        </span>
+      </gu-button>
+    </div>
+    <gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</gu-button>
   </div>
-</div>
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <div class="row">
+    <div class="col-md-6">
+      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+    </div>
+  </div>
 
-<div class="card-container">
-  <div class="row" *ngIf="zaakData?.resultaat">
-    <div class="col-md-4 mb-4">
-      <div class="card card--blue">
-        <p class="p--marginsmall">Resultaat: </p>
-        <h4>{{zaakData.resultaat.resultaattype.omschrijving}}</h4>
-        <p class="p--marginsmall" *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
+  <div class="card-container">
+    <div class="row" *ngIf="zaakData?.resultaat">
+      <div class="col-md-4 mb-4">
+        <div class="card card--blue">
+          <p class="p--marginsmall">Resultaat: </p>
+          <h4>{{zaakData.resultaat.resultaattype.omschrijving}}</h4>
+          <p class="p--marginsmall" *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
+        </div>
+      </div>
+    </div>
+    <div class="row" *ngIf="zaakData">
+      <div class="col-md-4">
+        <gu-informatie
+          *ngIf="zaakData"
+          [bronorganisatie]="bronorganisatie"
+          [identificatie]="identificatie"
+          [zaakData]="zaakData"
+          class="zaak-detail__section">
+        </gu-informatie>
+        <gu-betrokkenen [bronorganisatie]="bronorganisatie"
+                        [identificatie]="identificatie"
+                        class="zaak-detail__section"></gu-betrokkenen>
+        <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
+                                 [identificatie]="identificatie"
+                                 class="zaak-detail__section"></gu-adviseren-accorderen>
+      </div>
+      <div class="col-md-8">
+        <gu-status
+          [bronorganisatie]="bronorganisatie"
+          [identificatie]="identificatie"
+          [progress]="zaakData.deadlineProgress"
+          [deadline]="zaakData.deadline"
+          [finished]="!!zaakData.resultaat"
+          class="zaak-detail__section">
+        </gu-status>
+        <gu-keten-processen *ngIf="currentUser"
+                            [mainZaakUrl]="mainZaakUrl"
+                            [currentUser]="currentUser"
+                            [bronorganisatie]="bronorganisatie"
+                            [identificatie]="identificatie"
+                            class="zaak-detail__section">
+        </gu-keten-processen>
+        <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
+                               [bronorganisatie]="bronorganisatie"
+                               [identificatie]="identificatie"
+                               class="zaak-detail__section">
+        </gu-gerelateerde-zaken>
+        <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
+        <gu-documenten [mainZaakUrl]="mainZaakUrl"
+                       [bronorganisatie]="bronorganisatie"
+                       [identificatie]="identificatie"
+                       class="zaak-detail__section">
+        </gu-documenten>
       </div>
     </div>
   </div>
-  <div class="row" *ngIf="zaakData">
-    <div class="col-md-4">
-      <gu-informatie
-        *ngIf="zaakData"
-        [bronorganisatie]="bronorganisatie"
-        [identificatie]="identificatie"
-        [zaakData]="zaakData"
-        class="zaak-detail__section">
-      </gu-informatie>
-      <gu-betrokkenen [bronorganisatie]="bronorganisatie"
-                      [identificatie]="identificatie"
-                      class="zaak-detail__section"></gu-betrokkenen>
-      <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
-                               [identificatie]="identificatie"
-                               class="zaak-detail__section"></gu-adviseren-accorderen>
-    </div>
-    <div class="col-md-8">
-      <gu-status
-        [bronorganisatie]="bronorganisatie"
-        [identificatie]="identificatie"
-        [progress]="zaakData.deadlineProgress"
-        [deadline]="zaakData.deadline"
-        [finished]="!!zaakData.resultaat"
-        class="zaak-detail__section">
-      </gu-status>
-      <gu-keten-processen [mainZaakUrl]="mainZaakUrl"
-                          [bronorganisatie]="bronorganisatie"
-                          [identificatie]="identificatie"
-                          class="zaak-detail__section">
-      </gu-keten-processen>
-      <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
-                             [bronorganisatie]="bronorganisatie"
-                             [identificatie]="identificatie"
-                             class="zaak-detail__section">
-      </gu-gerelateerde-zaken>
-      <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
-      <gu-documenten [mainZaakUrl]="mainZaakUrl"
-                     [bronorganisatie]="bronorganisatie"
-                     [identificatie]="identificatie"
-                     class="zaak-detail__section">
-      </gu-documenten>
-    </div>
-  </div>
+  <gu-modal id="add-person-modal"
+            [closeIcon]="true"
+            title="Toegang verlenen"
+            size="small">
+    <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie">
+    </gu-toegang-verlenen>
+  </gu-modal>
+  <gu-modal
+    *ngIf="mainZaakUrl"
+    id="activities-modal"
+    type="right"
+    [closeIcon]="true">
+    <gu-activiteiten *ngIf="currentUser && activityData"
+                     [mainZaakUrl]="mainZaakUrl"
+                     [currentUser]="currentUser"
+                     [activityData]="activityData">
+    </gu-activiteiten>
+  </gu-modal>
 </div>
-<gu-modal id="add-person-modal"
-          [closeIcon]="true"
-          title="Toegang verlenen"
-          size="small">
-  <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie">
-  </gu-toegang-verlenen>
-</gu-modal>

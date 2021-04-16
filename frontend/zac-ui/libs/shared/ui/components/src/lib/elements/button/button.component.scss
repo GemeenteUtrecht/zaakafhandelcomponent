@@ -69,6 +69,9 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   }
   &--tertiary {
     @include button--tertiary;
+    &:hover span {
+      text-decoration: underline;
+    }
     &:disabled,
     &[disabled]{
       color: $color-disabled;

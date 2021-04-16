@@ -11,4 +11,22 @@
       border-bottom: 1px solid $border-grey;
     }
   }
+  .edit-icon {
+    display: none;
+    ::ng-deep .mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      margin: 3px 0 0 5px;
+      color: $color-blue;
+    }
+  }
+  gu-chip {
+    cursor: pointer;
+    &:hover {
+      .edit-icon {
+        display: block;
+      }
+    }
+  }
 }

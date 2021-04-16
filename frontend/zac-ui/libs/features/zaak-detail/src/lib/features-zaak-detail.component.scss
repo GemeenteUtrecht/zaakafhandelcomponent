@@ -2,6 +2,10 @@
 
 .zaak-detail {
   position: relative;
+  .zaak-detail__header--left {
+    display: flex;
+    align-items: flex-start;
+  }
   .card-container {
     margin: 1.25rem 0;
   }

@@ -4,8 +4,10 @@
   'chip--primary': type == 'primary',
   'chip--secondary': type == 'secondary',
   'chip--tertiary': type == 'tertiary',
-  'chip--warn': type == 'warn'
+  'chip--warn': type == 'warn',
+  'chip--hoverable': icon
   }"
 >
   <ng-content></ng-content>
+  <gu-icon *ngIf="icon" class="chip-icon">{{icon}}</gu-icon>
 </div>

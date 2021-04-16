@@ -5,6 +5,7 @@ import { ModalService } from '@gu/components'
 import { TaskContextData } from '../../models/task-context';
 import { KetenProcessenService } from './keten-processen.service';
 import { KetenProcessen, Task } from '../../models/keten-processen';
+import { User } from '@gu/models';
 
 @Component({
   selector: 'gu-keten-processen',
@@ -16,10 +17,10 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
+  @Input() currentUser: User;
 
   data: KetenProcessen[];
   processInstanceId: string;
-  currentUser: string;
 
   isLoading = true;
   hasError: boolean;
@@ -67,7 +68,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
 
   fetchCurrentUser(): void {
     this.ketenProcessenService.getCurrentUser().subscribe( res => {
-      this.currentUser = res.username;
+      this.currentUser = res;
     })
   }
 

@@ -1,0 +1,72 @@
+<div class="activiteiten">
+  <h1>Activiteiten</h1>
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <tabset *ngIf="!isLoading && activityData && currentUser" [justified]="true">
+
+    <tab heading="Lopend">
+      <div class="tab-content">
+        <ng-template tabHeading>
+          <gu-chip [type]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
+                   class="ml-1">
+            {{ongoingData?.length > 0 ? ongoingData?.length : 0}}
+          </gu-chip>
+        </ng-template>
+        <ng-container *ngIf="ongoingData.length > 0; else noOngoingActivities">
+          <div class="ongoing-activity row" *ngFor="let activity of ongoingData">
+            <div class="ongoing-activity__description col-3">
+              <h3>{{activity.name}}</h3>
+              <p class="mb-0">{{activity.remarks}}</p>
+            </div>
+            <div class="ongoing-activity__details col-6">
+              <gu-chip *ngIf="currentUserFullname"
+                       [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                       icon="edit"
+                       class="d-inline-block mb-2"
+              >
+                {{currentUserFullname}}
+              </gu-chip>
+              <div class="detail-note">
+                <label class="has-float-label">
+                  <span>Notitie</span>
+                  <textarea class="form-control mb-0" id="textarea_advice"></textarea>
+                </label>
+                <gu-button (click)="submitNotes(activity.id)"
+                           [formControl]="notes"
+                           [disabled]=
+                           type="secondary"
+                           size="small"
+                           class="mb-2">
+                  Notitie toevoegen
+                </gu-button>
+              </div>
+            </div>
+            <div class="ongoing-activity__buttons col-3">
+              <gu-button type="secondary" size="small" class="mb-2">Afsluiten</gu-button>
+              <gu-button type="tertiary" size="small">Verwijderen</gu-button>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noOngoingActivities>
+          <p>Er zijn geen lopende activiteiten.</p>
+        </ng-template>
+      </div>
+    </tab>
+
+    <tab heading="Afgesloten">
+      <div class="tab-content">
+        <ng-template tabHeading>
+          <gu-chip type="tertiary"
+                   class="ml-1">
+            {{finishedData?.length > 0 ? finishedData?.length : 0}}
+          </gu-chip>
+        </ng-template>
+        <ng-container *ngIf="finishedData.length > 0; else noFinishedActivities">
+
+        </ng-container>
+        <ng-template #noFinishedActivities>
+          <p>Er zijn geen afgesloten activiteiten.</p>
+        </ng-template>
+      </div>
+    </tab>
+  </tabset>
+</div>

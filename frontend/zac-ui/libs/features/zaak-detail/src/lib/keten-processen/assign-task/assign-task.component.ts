@@ -11,7 +11,6 @@ import { Task } from '../../../models/keten-processen'
   styleUrls: ['./assign-task.component.scss']
 })
 export class AssignTaskComponent implements OnChanges {
-  @Input() currentUser: string;
   @Input() taskData: Task;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
