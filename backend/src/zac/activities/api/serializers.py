@@ -59,4 +59,11 @@ class PatchActivitySerializer(ActivitySerializer):
             "assignee",
             "document",
             "status",
+            "zaak",
         )
+
+    def validate_zaak(self, zaak_url):
+        if self.zaak != zaak_url:
+            raise serializers.ValidationError(
+                _("Case URL is used for validation and can't be edited.")
+            )
