@@ -20,9 +20,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
-    assignee = UserSerializer(
-        read_only=True,
-    )
+    assignee = UserSerializer()
     events = EventSerializer(many=True, read_only=True)
 
     class Meta:
@@ -51,6 +49,7 @@ class PatchActivitySerializer(ActivitySerializer):
         label=_("assignee"),
         help_text=_("User assigned to the activity."),
         required=False,
+        allow_blank=True,
         validators=(UserValidator(),),
     )
 
@@ -63,7 +62,16 @@ class PatchActivitySerializer(ActivitySerializer):
         )
 
     def validate_zaak(self, zaak_url):
-        if self.zaak != zaak_url:
+        assert hasattr(self, "instance") and self.instance
+        if self.instance.zaak != zaak_url:
             raise serializers.ValidationError(
                 _("Case URL is used for validation and can't be edited.")
             )
+        return zaak_url
+
+    def update(self, instance, validated_data):
+        assignee = validated_data.pop("assignee")
+        if assignee:
+            validated_data["assignee"] = User.objects.get(username=assignee)
+
+        return super().update(instance, validated_data)
