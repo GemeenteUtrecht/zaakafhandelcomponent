@@ -81,7 +81,7 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
     def get_object(self, request: Request, obj_url: str):
         raise NotImplementedError("This method must be implemented by a subclass")
 
-    def get_object_url(self, serializer=None) -> str:
+    def get_object_url(self, serializer) -> str:
         return serializer.validated_data[self.object_attr]
 
     def has_permission(self, request: Request, view: APIView) -> bool:

@@ -56,6 +56,6 @@ class CanWriteEventsPermission(ZaakDefinitionPermission):
 
         return super().has_object_permission(request, view, obj)
 
-    def get_object_url(self, serializer=None):
+    def get_object_url(self, serializer):
         activity = super().get_object_url(serializer)
         return activity.zaak
