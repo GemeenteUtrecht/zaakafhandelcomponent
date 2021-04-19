@@ -88,9 +88,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         activity = ActivityFactory.create(zaak=self.zaak["url"])
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": activity.pk}
-        )
+        endpoint = reverse("activities:activity-detail", kwargs={"pk": activity.pk})
 
         # Assert current activity count is 2
         self.assertEqual(Activity.objects.count(), 2)
