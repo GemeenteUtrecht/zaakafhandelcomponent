@@ -68,6 +68,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
+        deadline=zaak.deadline,
     )
     return zaak_document
 

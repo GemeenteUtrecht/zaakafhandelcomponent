@@ -67,12 +67,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 0, "previous": None, "next": None, "results": []},
         )
-
-        with patch(
-            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
-            return_value=factory(ZaakType, zaaktype),
-        ):
-            call_command("index_zaken")
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -162,12 +158,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
-
-        with patch(
-            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
-            return_value=factory(ZaakType, zaaktype),
-        ):
-            call_command("index_zaken")
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -262,12 +254,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
-
-        with patch(
-            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
-            return_value=factory(ZaakType, zaaktype),
-        ):
-            call_command("index_zaken")
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -432,12 +420,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
                 zaak_eigenschap_datum_tijd,
             ],
         )
-
-        with patch(
-            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
-            return_value=factory(ZaakType, zaaktype),
-        ):
-            call_command("index_zaken")
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -552,12 +536,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
-
-        with patch(
-            "zac.elasticsearch.management.commands.index_zaken.fetch_zaaktype",
-            return_value=factory(ZaakType, zaaktype),
-        ):
-            call_command("index_zaken")
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")

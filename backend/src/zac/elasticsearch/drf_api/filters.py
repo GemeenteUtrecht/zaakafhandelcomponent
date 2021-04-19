@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional
 
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import gettext_lazy as _
 
 from elasticsearch_dsl import Document, field
 from rest_framework import views
@@ -30,6 +29,13 @@ class ESOrderingFilter:
     def _check_text_field_for_keyword_field_in_fields_attr(
         self, es_document: Document, field_name: str
     ):
+        # We are checking if we need to add keyword to the field name here
+        # because this method is called right before we interact with
+        # the ES interface and in the current implementation the ES
+        # interface requires that a text field should include a
+        # 'fields' key with a keyword field that we can sort on IF we
+        # want to sort on that field.
+
         properties = get_document_properties(es_document)
         for name in field_name.split("."):
             properties = properties.get("properties")
@@ -39,10 +45,14 @@ class ESOrderingFilter:
         # Properties is reduced to the values of the field.
         # If the field is a text field, has a 'fields' key and
         # fields contains 'keyword', add keyword to the field name.
+        # If it doesn't it shouldn't have made it this far
+        # and it should throw an exception.
         if properties:
             if properties.get("type") == field.Text.name:
-                if properties.get("fields", {}).get(field.Keyword.name):
-                    return f"{field_name}.{field.Keyword.name}"
+                # Throw an exception if invalid
+                properties["fields"][field.Keyword.name]
+                return f"{field_name}.{field.Keyword.name}"
+
         return field_name
 
     def _add_keywords(self, ordering: List[str], view: views.APIView) -> List[str]:

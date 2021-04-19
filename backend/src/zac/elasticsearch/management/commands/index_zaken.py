@@ -38,24 +38,8 @@ class Command(BaseCommand):
         # create/refresh mapping in the ES
         ZaakDocument.init()
 
-        # Fetch zaaktypen and resolve zaaktype
-        zaaktype_urls = {
-            zaak.zaaktype.url if isinstance(zaak.zaaktype, ZaakType) else zaak.zaaktype
-            for zaak in zaken
-        }
-        with parallel() as executor:
-            results = executor.map(fetch_zaaktype, list(zaaktype_urls))
-
-        zaaktypen = {zaaktype.url: zaaktype for zaaktype in list(results)}
-
         # TODO replace with bulk API
         for zaak in zaken:
-            zaaktype_url = (
-                zaak.zaaktype
-                if not isinstance(zaak.zaaktype, ZaakType)
-                else zaak.zaaktype.url
-            )
-            zaak.zaaktype = zaaktypen[zaaktype_url]
             create_zaak_document(zaak)
 
     def index_rollen(self):

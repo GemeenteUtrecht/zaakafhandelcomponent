@@ -23,8 +23,16 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
 
         else:
             if field_type == field.Text.name:
-                if field_value.get("fields", None):
+                try:
+                    field_value["fields"][field.Keyword.name]
                     yield (field_name, field_type)
+                except KeyError:
+                    # In this case the field is not sortable for now - skip it.
+
+                    # We're not adding keyword to the name yet because that doesn't make
+                    # sense at this stage. This function just spits back
+                    # the valid sorting fields.
+                    pass
             else:
                 yield (field_name, field_type)
 
