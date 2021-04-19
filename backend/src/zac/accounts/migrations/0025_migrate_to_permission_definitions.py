@@ -41,8 +41,10 @@ def migrate_to_permission_definitions(apps, _):
                         },
                     )
 
-                for auth_profile in permission_set.authorizationprofile_set.all():
-                    auth_profile.permission_definitions.add(zaak_permission_definition)
+                    for auth_profile in permission_set.authorizationprofile_set.all():
+                        auth_profile.permission_definitions.add(
+                            zaak_permission_definition
+                        )
 
         for doc_permission in permission_set.informatieobjecttypepermission_set.all():
             # exclude permissions with different shape
