@@ -16,7 +16,7 @@ def converter(converter_class):
     return converter_class
 
 
-def field_to_jsonschema(field):
+def field_to_jsonschema(field: serializers.Field) -> dict:
     if isinstance(field, serializers.Serializer):
         result = to_jsonschema(field)
     else:
@@ -29,7 +29,7 @@ def field_to_jsonschema(field):
     return result
 
 
-def to_jsonschema(serializer):
+def to_jsonschema(serializer: serializers.Serializer) -> dict:
     properties = {}
     required = []
     for name, field in serializer.fields.items():

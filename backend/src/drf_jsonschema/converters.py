@@ -12,7 +12,7 @@ class Error(Exception):
 class Converter:
     type = None
 
-    def convert(self, field):
+    def convert(self, field: serializers.Field) -> dict:
         assert self.type is not None
         if field.allow_null:
             type = [self.type, "null"]
