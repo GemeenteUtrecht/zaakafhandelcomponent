@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from zac.accounts.api.serializers import UserSerializer
+from zac.accounts.models import User
 from zac.camunda.api.validators import UserValidator
 
 from ..models import Activity, Event
@@ -20,7 +21,9 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
-    assignee = UserSerializer()
+    assignee = UserSerializer(
+        read_only=True,
+    )
     events = EventSerializer(many=True, read_only=True)
 
     class Meta:
@@ -62,15 +65,17 @@ class PatchActivitySerializer(ActivitySerializer):
         )
 
     def validate_zaak(self, zaak_url):
-        assert hasattr(self, "instance") and self.instance
-        if self.instance.zaak != zaak_url:
-            raise serializers.ValidationError(
-                _("Case URL is used for validation and can't be edited.")
-            )
+        if hasattr(self, "instance") and isinstance(self.instance, Activity):
+            if self.instance.zaak != zaak_url:
+                raise serializers.ValidationError(
+                    _(
+                        "Case URL is used for validation and can't be edited or left blank."
+                    )
+                )
         return zaak_url
 
     def update(self, instance, validated_data):
-        assignee = validated_data.pop("assignee")
+        assignee = validated_data.pop("assignee", None)
         if assignee:
             validated_data["assignee"] = User.objects.get(username=assignee)
 
