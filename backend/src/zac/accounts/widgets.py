@@ -8,8 +8,13 @@ class CheckboxSelectMultipleWithLinks(forms.CheckboxSelectMultiple):
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
+
         model = self.choices.queryset.model
         context.update({"opts": model._meta})
+
+        css_classes = context["widget"]["attrs"].get("class", "")
+        css_classes += " checkbox-with-links"
+        context["widget"]["attrs"]["class"] = css_classes.strip()
         return context
 
 
