@@ -5,7 +5,7 @@ from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, InnerDoc, field
 
 from ..drf_api.utils import (
-    es_document_to_sorting_parameters,
+    es_document_to_ordering_parameters,
     get_document_properties,
     get_sorting_fields,
 )
@@ -68,8 +68,8 @@ class UtilsTests(TestCase):
         ]
         self.assertEqual(list_of_fields, expected_data)
 
-    def test_es_document_to_sorting_parameters(self):
-        parameter = es_document_to_sorting_parameters(ESTestDocument)
+    def test_es_document_to_ordering_parameters(self):
+        parameter = es_document_to_ordering_parameters(ESTestDocument)
         self.assertTrue(isinstance(parameter, OpenApiParameter))
         expected_data = [
             "some_nested.some_nested_text",

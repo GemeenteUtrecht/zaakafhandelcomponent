@@ -45,7 +45,7 @@ def get_document_properties(es_document: Document) -> Optional[Dict[str, Any]]:
     return properties
 
 
-def es_document_to_sorting_parameters(
+def es_document_to_ordering_parameters(
     es_document: Document,
 ) -> OpenApiParameter:
     """
@@ -60,7 +60,7 @@ def es_document_to_sorting_parameters(
     else:
         enum = [field[0] for field in get_sorting_fields(properties)]
         return OpenApiParameter(
-            name="sorting",
+            name="ordering",
             type=str,
             location=OpenApiParameter.QUERY,
             required=False,

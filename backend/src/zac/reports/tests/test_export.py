@@ -8,7 +8,7 @@ from zgw_consumers.test import generate_oas_component
 
 from zgw.models.zrc import Zaak
 
-from ..export import export_zaken
+from ..export import export_zaken_as_tablib_dataset
 from .factories import ReportFactory
 
 
@@ -70,7 +70,7 @@ class ExportTests(TestCase):
         mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
 
         # call export function
-        result = export_zaken(report)
+        result = export_zaken_as_tablib_dataset(report)
 
         # assert result of export
         self.assertEqual(len(result), 2)

@@ -13,7 +13,7 @@ from zac.core.api.serializers import ZaakDetailSerializer
 from zac.core.services import get_zaak
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
-from zac.elasticsearch.drf_api.utils import es_document_to_sorting_parameters
+from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 
 from ..views import (
     get_access_requests_groups,
@@ -70,7 +70,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 
 @extend_schema(
     summary=_("List active cases"),
-    parameters=[es_document_to_sorting_parameters(ZaakDocument)],
+    parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
 class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)

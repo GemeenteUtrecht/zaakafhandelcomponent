@@ -17,7 +17,7 @@ from ..searches import autocomplete_zaak_search
 from .filters import ESOrderingFilter
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
-from .utils import es_document_to_sorting_parameters
+from .utils import es_document_to_ordering_parameters
 
 
 class GetZakenView(views.APIView):
@@ -58,7 +58,7 @@ class SearchViewSet(views.APIView):
 
     @extend_schema(
         summary=_("Search zaken"),
-        parameters=[es_document_to_sorting_parameters(ZaakDocument)],
+        parameters=[es_document_to_ordering_parameters(ZaakDocument)],
         responses=ZaakDetailSerializer(many=True),
     )
     def post(self, request, *args, **kwargs):
