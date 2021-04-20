@@ -127,7 +127,6 @@ class BaseDateTimeFieldConverter(FormatConverter):
     def convert(self, field):
         # ugh had to copy from DRF
         format = getattr(self, "format", self.settings_format)
-        # FIXME: I mysteriously get out 'date-time' instead of 'iso-8601'...
         if format not in self.expected_input_formats:
             raise Error("format not supported")
         # ugh copy from DRF
@@ -176,10 +175,6 @@ class ChoiceField:
                 has_display_names = True
             enum.append(choice)
             enumNames.append(display_name)
-            # FIXME: what about choices such as datetime?
-            # maybe we need a way to turn concrete instances into
-            # the underlying DRF fields just for the sake of
-            # conversion. But does a datetime choice make sense?
             if isinstance(choice, str):
                 types.add("string")
             elif isinstance(choice, bool):
