@@ -146,8 +146,8 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             return_value=cls.zaaktype,
         )
 
-        cls.patch_get_informatieobjecttypen = patch(
-            "zac.core.camunda.select_documents.context.get_informatieobjecttypen",
+        cls.patch_get_informatieobjecttypen_for_zaaktype = patch(
+            "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
             return_value=[factory(InformatieObjectType, documenttype)],
         )
 
@@ -166,8 +166,8 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
 
-        self.patch_get_informatieobjecttypen.start()
-        self.addCleanup(self.patch_get_informatieobjecttypen.stop)
+        self.patch_get_informatieobjecttypen_for_zaaktype.start()
+        self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
 
     def test_select_document_serializer(self):
         # Sanity check

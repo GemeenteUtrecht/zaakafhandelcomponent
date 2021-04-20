@@ -147,8 +147,8 @@ class GetUserTaskContextViewTests(APITestCase):
             return_value=cls.zaaktype_obj,
         )
 
-        cls.patch_get_informatieobjecttypen = patch(
-            "zac.core.camunda.select_documents.context.get_informatieobjecttypen",
+        cls.patch_get_informatieobjecttypen_for_zaaktype = patch(
+            "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
             return_value=[factory(InformatieObjectType, cls.documenttype)],
         )
 
@@ -166,8 +166,8 @@ class GetUserTaskContextViewTests(APITestCase):
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
 
-        self.patch_get_informatieobjecttypen.start()
-        self.addCleanup(self.patch_get_informatieobjecttypen.stop)
+        self.patch_get_informatieobjecttypen_for_zaaktype.start()
+        self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
 
     @patch(
         "zac.camunda.api.views.get_task",
