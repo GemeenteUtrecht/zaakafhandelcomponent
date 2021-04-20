@@ -8,8 +8,8 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
@@ -18,6 +18,7 @@ from zac.core.services import get_zaak
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import RolDocument, ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zgw.models.zrc import Zaak
 
 from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, ZAAKTYPE_RESPONSE
 
@@ -98,6 +99,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         #  create zaak_document in ES
         old_response = ZAAK_RESPONSE.copy()
         zaak = factory(Zaak, old_response)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
 
         self.assertEqual(
@@ -133,6 +135,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         #  create zaak_document
         old_response = ZAAK_RESPONSE.copy()
         zaak = factory(Zaak, old_response)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         #  set rollen
         zaak_document.rollen = [

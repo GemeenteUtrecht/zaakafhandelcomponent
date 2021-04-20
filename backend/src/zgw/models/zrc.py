@@ -17,8 +17,8 @@ class Zaak(_Zaak):
     @cached_property
     def deadline(self) -> datetime.date:
         if not self.uiterlijke_einddatum_afdoening:
-            end = self.startdatum + self.zaaktype.doorlooptijd
-            self.uiterlijke_einddatum_afdoening = end
+            return self.startdatum + self.zaaktype.doorlooptijd
+
         return self.uiterlijke_einddatum_afdoening
 
     def deadline_progress(self) -> float:

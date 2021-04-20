@@ -4,11 +4,11 @@ from django.http import Http404
 
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.client import ZGWClient
 
 from zac.accounts.models import User
 from zac.utils.decorators import optional_service
+from zgw.models.zrc import Zaak
 
 from .data import Advice, Approval, ReviewRequest
 from .models import KownslConfig

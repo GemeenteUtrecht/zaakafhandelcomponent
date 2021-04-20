@@ -26,13 +26,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.utils.filters import ApiFilterBackend
+from zgw.models.zrc import Zaak
 
 from ..cache import invalidate_zaak_cache
 from ..models import CoreConfig

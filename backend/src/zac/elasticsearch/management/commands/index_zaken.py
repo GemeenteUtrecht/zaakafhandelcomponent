@@ -2,8 +2,10 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from elasticsearch_dsl import Index
+from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.concurrent import parallel
 
-from zac.core.services import get_rollen_all, get_zaken_all
+from zac.core.services import fetch_zaaktype, get_rollen_all, get_zaken_all
 
 from ...api import (
     append_rol_to_document,

@@ -19,6 +19,7 @@ from .utils import (
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
+    ZAAKTYPE_RESPONSE,
     mock_service_oas_get,
 )
 
@@ -46,6 +47,9 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
+        cls.ztc = Service.objects.create(
+            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
+        )
         cls.zrc = Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
@@ -59,7 +63,10 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
     def test_find_zaak_resultaat_created(self, rm, mock_zaaktype):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
 
         with patch(
@@ -77,7 +84,10 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
 
     def test_get_zaak_resultaat_created(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
 
         matrix = [

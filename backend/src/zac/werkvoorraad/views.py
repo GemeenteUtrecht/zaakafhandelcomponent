@@ -17,13 +17,13 @@ from zac.core.services import get_behandelaar_zaken, get_zaak
 from zgw.models.zrc import Zaak
 
 
-def get_behandelaar_zaken_unfinished(user: User) -> List[Zaak]:
+def get_behandelaar_zaken_unfinished(user: User, ordering: List = []) -> List[Zaak]:
     """
     Retrieve the un-finished zaken where `user` is a medewerker in the role of behandelaar.
     """
-    zaken = get_behandelaar_zaken(user)
+    zaken = get_behandelaar_zaken(user, ordering=ordering)
     unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-    return sorted(unfinished_zaken, key=lambda zaak: zaak.deadline)
+    return unfinished_zaken
 
 
 def get_camunda_user_tasks(user: User):

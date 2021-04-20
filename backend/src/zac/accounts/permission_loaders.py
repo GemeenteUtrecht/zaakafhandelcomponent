@@ -1,11 +1,10 @@
 from typing import List, Optional, Union
 
-from zgw_consumers.api_models.zaken import Zaak
-
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
+from zgw.models.zrc import Zaak
 
 from .constants import PermissionObjectType
 from .models import AtomicPermission, User

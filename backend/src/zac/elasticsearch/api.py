@@ -29,7 +29,6 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         omschrijving=zaaktype.omschrijving,
         catalogus=zaaktype.catalogus,
     )
-
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
@@ -44,6 +43,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
+        deadline=zaak.deadline,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -68,6 +68,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
+        deadline=zaak.deadline,
     )
     return zaak_document
 

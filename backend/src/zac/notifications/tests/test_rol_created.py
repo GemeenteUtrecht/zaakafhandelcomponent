@@ -15,7 +15,7 @@ from zac.core.permissions import zaken_inzien
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zgw.models import Zaak
+from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
@@ -54,6 +54,9 @@ class RolCreatedTests(ESMixin, APITestCase):
         cls.zrc = Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
+        cls.ztc = Service.objects.create(
+            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
+        )
 
     def setUp(self):
         super().setUp()
@@ -86,11 +89,13 @@ class RolCreatedTests(ESMixin, APITestCase):
             },
         }
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
             f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(ROL, json=rol)
 
         response = self.client.post(path, NOTIFICATION)
@@ -124,6 +129,8 @@ class RolCreatedTests(ESMixin, APITestCase):
             },
         }
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
             f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",

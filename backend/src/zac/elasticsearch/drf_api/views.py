@@ -6,15 +6,18 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.request import Request
 from rest_framework.response import Response
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
 from zac.core.services import get_zaaktypen, get_zaken_es
+from zgw.models.zrc import Zaak
 
+from ..documents import ZaakDocument
 from ..searches import autocomplete_zaak_search
+from .filters import ESOrderingFilter
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import SearchSerializer, ZaakIdentificatieSerializer
+from .utils import es_document_to_sorting_parameters
 
 
 class GetZakenView(views.APIView):
@@ -46,8 +49,18 @@ class SearchViewSet(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchSerializer
+    search_document = ZaakDocument
+    ordering = (
+        "-identificatie",
+        "-startdatum",
+        "-registratiedatum",
+    )
 
-    @extend_schema(summary=_("Search zaken"), responses=ZaakDetailSerializer(many=True))
+    @extend_schema(
+        summary=_("Search zaken"),
+        parameters=[es_document_to_sorting_parameters(ZaakDocument)],
+        responses=ZaakDetailSerializer(many=True),
+    )
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of zaken based on input data.
@@ -56,10 +69,14 @@ class SearchViewSet(views.APIView):
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
-        zaken = self.perform_search(input_serializer.data)
+        # Get ordering
+        ordering = ESOrderingFilter().get_ordering(request, self)
+        zaken = self.perform_search({**input_serializer.data, "ordering": ordering})
+
         # TODO for now zaak.resultaat is str which is not supported by ZaakDetailSerializer
         for zaak in zaken:
             zaak.resultaat = None
+
         zaak_serializer = ZaakDetailSerializer(zaken, many=True)
 
         return Response(zaak_serializer.data)

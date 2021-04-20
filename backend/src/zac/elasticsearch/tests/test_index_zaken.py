@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
 import requests_mock
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -46,7 +50,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
         )
-
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={
@@ -64,7 +67,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 0, "previous": None, "next": None, "results": []},
         )
-
+        m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
         # check zaak_document exists
@@ -155,7 +158,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
-
+        m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
         # check zaak_document exists
@@ -251,7 +254,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
         )
-
+        m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
         # check zaak_document exists
@@ -417,7 +420,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
                 zaak_eigenschap_datum_tijd,
             ],
         )
-
+        m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
         # check zaak_document exists
@@ -533,7 +536,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
-
+        m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
         # check zaak_document exists
