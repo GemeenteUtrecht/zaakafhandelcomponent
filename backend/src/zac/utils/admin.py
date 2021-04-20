@@ -1,4 +1,8 @@
+from urllib.parse import urlencode
+
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 
 from django_camunda.admin import CamundaConfigAdmin
 from django_camunda.models import CamundaConfig
@@ -24,3 +28,34 @@ class ServiceResourceAdmin(ImportExportMixin, ServiceAdmin):
 @admin.register(CamundaConfig)
 class CamundaConfigResourceAdmin(ImportExportSoloMixin, CamundaConfigAdmin):
     resource_class = CamundaConfigResource
+
+
+class RelatedLinksMixin:
+    def display_related_as_list_of_links(self, obj, field_name):
+        field = getattr(obj, field_name)
+        model = field.model
+        view_change = f"admin:{model._meta.app_label}_{model._meta.model_name}_change"
+        return format_html_join(
+            ", ",
+            '<a href="{}">{}</a>',
+            (
+                (
+                    reverse(
+                        view_change,
+                        args=[related_obj.id],
+                    ),
+                    str(related_obj),
+                )
+                for related_obj in field.all()
+            ),
+        )
+
+    def display_related_as_count_with_link(self, obj, field_name):
+        field = getattr(obj, field_name)
+        model = field.model
+        changelist_url = reverse(
+            f"admin:{model._meta.app_label}_{model._meta.model_name}_changelist"
+        )
+        query = {f"{field.query_field_name}__id__exact": obj.id}
+        url = f"{changelist_url}?{urlencode(query)}"
+        return format_html('<a href="{}">{}</a>', url, field.count())

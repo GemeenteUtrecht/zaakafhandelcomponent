@@ -1,9 +1,13 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.postgres.fields import JSONField
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
+
+from zac.utils.admin import RelatedLinksMixin
 
 from .models import (
     AccessRequest,
@@ -14,6 +18,7 @@ from .models import (
     UserAuthorizationProfile,
 )
 from .permissions import registry
+from .widgets import CheckboxSelectMultipleWithLinks, PolicyWidget
 
 
 class UserAuthorizationProfileInline(admin.TabularInline):
@@ -22,10 +27,14 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(User)
-class _UserAdmin(HijackUserAdminMixin, UserAdmin):
-    list_display = UserAdmin.list_display + ("hijack_field",)
+class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
+    list_display = UserAdmin.list_display + (
+        "is_superuser",
+        "get_auth_profiles_display",
+        "get_atomic_permissions_display",
+        "hijack_field",
+    )
     inlines = [UserAuthorizationProfileInline]
-    filter_horizontal = ("groups", "user_permissions", "atomic_permissions")
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -34,16 +43,58 @@ class _UserAdmin(HijackUserAdminMixin, UserAdmin):
             (_("Object permissions"), {"fields": ("atomic_permissions",)}),
         )
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("atomic_permissions", "auth_profiles")
+        )
+
+    def get_auth_profiles_display(self, obj):
+        return self.display_related_as_list_of_links(obj, "auth_profiles")
+
+    get_auth_profiles_display.short_description = _("authorization profiles")
+
+    def get_atomic_permissions_display(self, obj):
+        return self.display_related_as_count_with_link(obj, "atomic_permissions")
+
+    get_atomic_permissions_display.short_description = _("atomic permissions")
+
+
+class AutorizationProfileForm(forms.ModelForm):
+    blueprint_permissions = forms.ModelMultipleChoiceField(
+        queryset=BlueprintPermission.objects.order_by(
+            "permission", "policy__zaaktype_omschrijving", "policy__iotype_omschrijving"
+        ),
+        widget=CheckboxSelectMultipleWithLinks,
+    )
+
+    class Meta:
+        model = AuthorizationProfile
+        fields = ("name", "blueprint_permissions")
+
 
 @admin.register(AuthorizationProfile)
-class AuthorizationProfileAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
+    list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
+    list_filter = ("blueprint_permissions__permission",)
     search_fields = ("name", "uuid")
-    filter_horizontal = ("blueprint_permissions",)
+    inlines = (UserAuthorizationProfileInline,)
+    form = AutorizationProfileForm
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.prefetch_related("blueprint_permissions")
+        return qs.prefetch_related("blueprint_permissions", "user_set")
+
+    def get_users_display(self, obj):
+        return self.display_related_as_list_of_links(obj, "user_set")
+
+    get_users_display.short_description = _("users")
+
+    def get_blueprint_permissions_count(self, obj):
+        return self.display_related_as_count_with_link(obj, "blueprint_permissions")
+
+    get_blueprint_permissions_count.short_description = _("total permissions")
 
 
 @admin.register(UserAuthorizationProfile)
@@ -76,24 +127,61 @@ class PermissionMixin:
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
+class UserAtomicInline(admin.TabularInline):
+    model = AtomicPermission.users.through
+    extra = 1
+
+
 @admin.register(AtomicPermission)
-class AtomicPermissionAdmin(PermissionMixin, admin.ModelAdmin):
-    list_display = ("permission", "object_type", "start_date")
-    list_filter = ("permission", "object_type")
+class AtomicPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin):
+    list_display = (
+        "permission",
+        "object_type",
+        "object_uuid",
+        "get_users_display",
+        "start_date",
+    )
+    list_filter = ("permission", "object_type", "users")
     search_fields = ("object_url",)
+    inlines = (UserAtomicInline,)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("users")
+
+    def get_users_display(self, obj):
+        return self.display_related_as_list_of_links(obj, "users")
+
+    get_users_display.short_description = _("users")
+
+
+class AuthorizationProfileInline(admin.TabularInline):
+    model = BlueprintPermission.auth_profiles.through
+    extra = 1
 
 
 @admin.register(BlueprintPermission)
-class BlueprintPermissionAdmin(PermissionMixin, admin.ModelAdmin):
-    list_display = ("permission", "object_type", "start_date")
-    list_filter = ("permission", "object_type")
-    readonly_fields = ("display_policy_schema",)
+class BlueprintPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin):
+    list_display = (
+        "permission",
+        "object_type",
+        "get_policy_list_display",
+        "get_auth_profiles_display",
+    )
+    list_filter = ("permission", "object_type", "auth_profiles")
+    formfield_overrides = {JSONField: {"widget": PolicyWidget}}
+    inlines = (AuthorizationProfileInline,)
 
-    def display_policy_schema(self, obj):
-        if obj.permission:
-            blueprint_class = obj.get_blueprint_class()
-            if blueprint_class:
-                return blueprint_class.display_as_yaml()
-        return ""
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("auth_profiles")
 
-    display_policy_schema.short_description = _("policy schema")
+    def get_policy_list_display(self, obj):
+        blueprint_class = obj.get_blueprint_class()
+        blueprint = blueprint_class(obj.policy)
+        return blueprint.short_display()
+
+    get_policy_list_display.short_description = _("policy")
+
+    def get_auth_profiles_display(self, obj):
+        return self.display_related_as_list_of_links(obj, "auth_profiles")
+
+    get_auth_profiles_display.short_description = _("authorization profiles")

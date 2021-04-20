@@ -9,6 +9,8 @@ from drf_spectacular.openapi import AutoSchema
 from elasticsearch_dsl.query import Query
 from rest_framework.serializers import Serializer
 
+from drf_jsonschema import to_jsonschema
+
 registry = {}
 
 
@@ -25,11 +27,19 @@ class Blueprint(Serializer):
         schema_yaml = yaml.dump(schema)
         return format_html("<pre>{}</pre>", schema_yaml)
 
+    @classmethod
+    def display_as_jsonschema(cls):
+        json_schema = to_jsonschema(cls())
+        return json_schema
+
     def has_access(self, obj):
         raise NotImplementedError("This method must be implemented by a subclass")
 
     def search_query(self) -> Query:
         raise NotImplementedError("This method must be implemented by a subclass")
+
+    def short_display(self) -> str:
+        return "-"
 
 
 @dataclass(frozen=True)
