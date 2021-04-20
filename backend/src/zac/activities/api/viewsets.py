@@ -32,7 +32,7 @@ from .serializers import ActivitySerializer, EventSerializer, PatchActivitySeria
     partial_update=extend_schema(
         summary=_("Update activity"),
         request=PatchActivitySerializer,
-        responses={201: ActivitySerializer},
+        responses={200: ActivitySerializer},
     ),
     destroy=extend_schema(summary=_("Destroy activity")),
 )
