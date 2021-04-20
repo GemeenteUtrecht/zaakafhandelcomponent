@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -15,6 +16,7 @@ from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.core.api.serializers import DocumentTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.models import CoreConfig
 from zac.core.services import fetch_zaaktype, get_documenten
@@ -41,15 +43,20 @@ class DocumentSerializer(APIModelSerializer):
 @dataclass
 class DocumentSelectContext(Context):
     documents: List[Document]
+    informatieobjecttypen: List[InformatieObjectType]
 
 
 @usertask_context_serializer
 class DocumentSelectContextSerializer(APIModelSerializer):
     documents = DocumentSerializer(many=True)
+    informatieobjecttypen = DocumentTypeSerializer(many=True)
 
     class Meta:
         model = DocumentSelectContext
-        fields = ("documents",)
+        fields = (
+            "documents",
+            "informatieobjecttypen",
+        )
 
 
 #
@@ -89,14 +96,14 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
 
         # Validated selected document types according to case type
         process_instance = self._get_process_instance()
-        bijdrage_zaaktype_url = process_instance.get_variable("zaaktype")
-        bijdrage_zaaktype = fetch_zaaktype(bijdrage_zaaktype_url)
+        related_zaaktype_url = process_instance.get_variable("zaaktype")
+        related_zaaktype = fetch_zaaktype(related_zaaktype_url)
 
         selected_doc_types = [doc["document_type"] for doc in selected_docs]
         invalid_doc_types = [
             doc_type
             for doc_type in selected_doc_types
-            if doc_type not in bijdrage_zaaktype.informatieobjecttypen
+            if doc_type not in related_zaaktype.informatieobjecttypen
         ]
         if invalid_doc_types:
             raise serializers.ValidationError(
