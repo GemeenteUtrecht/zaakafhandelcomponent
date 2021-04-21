@@ -11,7 +11,7 @@ from zac.core.services import get_zaak
 from ..models import Activity, Event
 from .filters import ActivityFilter
 from .permissions import CanReadZaakPermission, CanWritePermission
-from .serializers import ActivitySerializer, EventSerializer, PatchActivitySerializer
+from .serializers import ActivitySerializer, EventSerializer
 
 
 @extend_schema_view(
@@ -31,8 +31,6 @@ from .serializers import ActivitySerializer, EventSerializer, PatchActivitySeria
     create=extend_schema(summary=_("Create activity")),
     partial_update=extend_schema(
         summary=_("Update activity"),
-        request=PatchActivitySerializer,
-        responses={200: ActivitySerializer},
     ),
     destroy=extend_schema(summary=_("Destroy activity")),
 )
@@ -49,12 +47,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
         CanReadZaakPermission | CanWritePermission,
     )
     filterset_class = ActivityFilter
+    serializer_class = ActivitySerializer
     http_method_names = ["get", "post", "patch", "delete"]
-
-    def get_serializer_class(self):
-        if self.request.method == "PATCH":
-            return PatchActivitySerializer
-        return ActivitySerializer
 
     def filter_queryset(self, queryset):
         qs = super().filter_queryset(queryset)
@@ -81,13 +75,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        serializer = ActivitySerializer(instance=instance, context={"request": request})
         return Response(serializer.data)
 
 
