@@ -49,7 +49,6 @@ export class AssignTaskComponent implements OnChanges {
     return this.assignTaskForm.get('assignee') as FormControl;
   };
 
-
   onSearch(searchInput) {
     this.getAccounts(searchInput).subscribe(res => {
       this.users = res.results.map(result => ({

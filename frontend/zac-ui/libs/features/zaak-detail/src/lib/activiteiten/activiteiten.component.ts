@@ -2,10 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { Activity } from '../../models/activity';
-import { first, switchMap } from 'rxjs/operators';
+import { first } from 'rxjs/operators';
 import { User } from '@gu/models';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ApprovalForm } from '../../../../kownsl/src/models/approval-form';
+import { Result, UserSearch } from '../../models/user-search';
 
 @Component({
   selector: 'gu-activiteiten',
@@ -20,12 +20,18 @@ export class ActiviteitenComponent implements OnInit {
 
   activityForm: FormGroup;
 
+  users: Result[] = [];
+
   ongoingData: Activity[] = [];
   finishedData: Activity[] = [];
 
   isLoading: boolean;
   hasError: boolean;
   errorMessage: string;
+
+  openNoteEditField: number;
+  openAssigneeEditField: number;
+  eventIsExpanded: number;
 
   constructor(private http: ApplicationHttpClient,
               private fb: FormBuilder) {
@@ -45,6 +51,23 @@ export class ActiviteitenComponent implements OnInit {
     }
     this.formatActivityData(this.activityData);
     this.isLoading = false;
+  }
+
+  onSearch(searchInput) {
+    this.getAccounts(searchInput).subscribe(res => {
+      this.users = res.results.map(result => ({
+        ...result,
+        name: (result.firstName && result.lastName) ?
+          `${result.firstName} ${result.lastName}` :
+          (result.firstName && !result.lastName) ?
+            result.firstName : result.username
+      }))
+    })
+  }
+
+  getAccounts(searchInput: string): Observable<UserSearch>{
+    const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
+    return this.http.Get<UserSearch>(endpoint);
   }
 
   get activityId(): FormControl {

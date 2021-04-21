@@ -1,3 +1,10 @@
+export interface Event {
+  activity: number;
+  created: string;
+  id: number;
+  notes: string;
+}
+
 export interface Activity {
   id: number;
   url: string;
@@ -8,5 +15,5 @@ export interface Activity {
   assignee?: number;
   document: string;
   created: Date;
-  events: any[];
+  events: Event[];
 }

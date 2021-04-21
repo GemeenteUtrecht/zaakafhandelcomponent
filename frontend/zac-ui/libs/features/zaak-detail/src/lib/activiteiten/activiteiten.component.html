@@ -12,32 +12,104 @@
           </gu-chip>
         </ng-template>
         <ng-container *ngIf="ongoingData.length > 0; else noOngoingActivities">
-          <div class="ongoing-activity row" *ngFor="let activity of ongoingData">
+          <div class="ongoing-activity row" *ngFor="let activity of ongoingData; let i = index">
             <div class="ongoing-activity__description col-3">
               <h3>{{activity.name}}</h3>
               <p class="mb-0">{{activity.remarks}}</p>
             </div>
             <div class="ongoing-activity__details col-6">
-              <gu-chip *ngIf="currentUserFullname"
-                       [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
-                       icon="edit"
-                       class="d-inline-block mb-2"
-              >
-                {{currentUserFullname}}
-              </gu-chip>
-              <div class="detail-note">
-                <label class="has-float-label">
-                  <span>Notitie</span>
-                  <textarea class="form-control mb-0" id="textarea_advice"></textarea>
-                </label>
-                <gu-button (click)="submitNotes(activity.id)"
-                           [formControl]="notes"
-                           [disabled]=
-                           type="secondary"
-                           size="small"
-                           class="mb-2">
+              <div class="ongoing-activity__detail mb-2">
+                <gu-chip *ngIf="currentUserFullname"
+                         (click)="openAssigneeEditField = i; openNoteEditField = null"
+                         [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                         icon="edit"
+                         class="d-inline-block mb-2"
+                >
+                  {{currentUserFullname}}
+                </gu-chip>
+                <ng-container *ngIf="openAssigneeEditField === i">
+                  <gu-multiselect (search)="onSearch($event)"
+                                  [items]="users"
+                                  [multiple]="false"
+                                  bindLabel="name"
+                                  bindValue="username"
+                                  required
+                                  placeholder="Zoek een gebruiker"
+                                  class="mb-2">
+                  </gu-multiselect>
+                  <div class="d-flex justify-content-between">
+                    <gu-button (click)="openAssigneeEditField = null"
+                               type="tertiary"
+                               size="small">
+                      Sluiten
+                    </gu-button>
+                    <gu-button (click)="submitNotes(activity.id)"
+                               [formControl]="notes"
+                               type="primary"
+                               size="small">
+                      Gebruiker toewijzen
+                    </gu-button>
+                  </div>
+                </ng-container>
+              </div>
+
+              <div class="ongoing-activity__detail mb-2">
+                <div class="timeline mb-2">
+                  <div class="timeline__row row no-gutters"
+                       *ngFor="let event of activity.events; let last = last; let i = index"
+                       [ngClass]="(last ? 'timeline__row--last' : '')"
+                       [hidden]="!eventIsExpanded && i >= 3"
+                  >
+                    <div class="col-1">
+                      <div class="timeline-item__dot"></div>
+                    </div>
+                    <div class="timeline-item timeline-item--left col-11">
+                      <div class="item-left__info">
+                        <p class="p--nomargin p--bold">{{event.notes}}</p>
+                        <label class="label label--date p-0 m-0">{{event.created | date:'shortDate'}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <gu-button *ngIf="activity.events.length > 3"
+                           type="tertiary"
+                           size="extrasmall"
+                           [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
+                           (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
+                  {{eventIsExpanded === i ? 'Toon minder' : 'Toon meer'}}
+                </gu-button>
+              </div>
+
+              <div class="ongoing-activity__detail mb-2">
+                <gu-button *ngIf="openNoteEditField !== i"
+                           (click)="openNoteEditField = i; openAssigneeEditField = null"
+                           class="d-block"
+                           type="tertiary"
+                           size="extrasmall"
+                           icon="add">
                   Notitie toevoegen
                 </gu-button>
+
+                <ng-container *ngIf="openNoteEditField === i">
+                  <label class="has-float-label mb-2">
+                    <span>Notitie</span>
+                    <textarea class="form-control mb-0" id="textarea_advice"></textarea>
+                  </label>
+                  <div class="d-flex justify-content-between">
+                    <gu-button (click)="openNoteEditField = null"
+                               type="tertiary"
+                               size="small">
+                      Sluiten
+                    </gu-button>
+                    <gu-button (click)="submitNotes(activity.id)"
+                               [formControl]="notes"
+                               type="primary"
+                               size="small"
+                               class="mb-2">
+                      Notitie toevoegen
+                    </gu-button>
+                  </div>
+                </ng-container>
               </div>
             </div>
             <div class="ongoing-activity__buttons col-3">
