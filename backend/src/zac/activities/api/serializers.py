@@ -25,7 +25,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     assignee = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
-        allow_blank=True,
+        required=False,
     )
     events = EventSerializer(many=True, read_only=True)
 

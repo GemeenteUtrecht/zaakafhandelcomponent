@@ -8,6 +8,7 @@ class ImmutableFieldValidator:
     Validate if a field has changed.
     """
 
+    requires_context = True
     message = _("This field can't be changed.")
 
     def __call__(self, new_value, serializer_field):

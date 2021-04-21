@@ -163,7 +163,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.data[0]["id"], activity.id)
 
     @requests_mock.Mocker()
-    def test_read_logged_in_zaak_permission(self, m):
+    def test_read_logged_in_zaak_permission_atomic(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

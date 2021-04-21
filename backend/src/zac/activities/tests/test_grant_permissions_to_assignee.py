@@ -55,7 +55,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activities:activity-list")
-        data = {"zaak": ZAAK_URL, "name": "Dummy", "assignee": self.assignee.id}
+        data = {"zaak": ZAAK_URL, "name": "Dummy", "assignee": self.assignee.username}
 
         response = self.client.post(endpoint, data)
 
@@ -79,7 +79,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activities:activity-detail", args=[activity.id])
-        data = {"assignee": self.assignee.id}
+        data = {"assignee": self.assignee.username}
 
         response = self.client.patch(endpoint, data)
 
