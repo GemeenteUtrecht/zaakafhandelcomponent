@@ -1,3 +1,5 @@
+import datetime
+
 from django.urls import reverse
 
 import requests_mock
@@ -220,7 +222,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
-
         # index documents in es
         self.create_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
@@ -238,7 +239,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(
@@ -260,7 +260,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "startdatum": zaak1_model.startdatum.isoformat(),
                     "einddatum": None,
                     "einddatumGepland": zaak1_model.einddatum_gepland,
-                    "uiterlijkeEinddatumAfdoening": zaak1_model.uiterlijke_einddatum_afdoening,
+                    "uiterlijkeEinddatumAfdoening": None,
                     "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
                     "deadline": zaak1_model.deadline.isoformat(),
                     "deadlineProgress": zaak1_model.deadline_progress(),
@@ -381,7 +381,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "startdatum": zaak1_model.startdatum.isoformat(),
                     "einddatum": None,
                     "einddatumGepland": zaak1_model.einddatum_gepland,
-                    "uiterlijkeEinddatumAfdoening": zaak1_model.uiterlijke_einddatum_afdoening,
+                    "uiterlijkeEinddatumAfdoening": None,
                     "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
                     "deadline": zaak1_model.deadline.isoformat(),
                     "deadlineProgress": zaak1_model.deadline_progress(),
@@ -448,3 +448,68 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]["url"], zaak2["url"])
         self.assertEqual(data[1]["url"], zaak1["url"])
+
+    def test_search_with_ordering(self, m):
+        # set up catalogi api data
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        # set up zaken API data
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak1",
+            omschrijving="Some zaak 1",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+        )
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak2",
+            omschrijving="Other zaak 2",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
+        )
+
+        # mock requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(zaak1["url"], json=zaak1)
+        m.get(zaak2["url"], json=zaak2)
+
+        # index documents in es
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak1_model.deadline = datetime.date(2020, 1, 1)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2_model.deadline = datetime.date(2020, 1, 2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
+        self.refresh_index()
+
+        response = self.client.post(self.endpoint + "?ordering=-deadline")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]["url"], zaak2["url"])
+        self.assertEqual(data[1]["url"], zaak1["url"])
+
+        response = self.client.post(self.endpoint + "?ordering=deadline")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]["url"], zaak1["url"])
+        self.assertEqual(data[1]["url"], zaak2["url"])

@@ -7,7 +7,6 @@ from zgw_consumers.api_models.constants import (
     RolTypes,
     VertrouwelijkheidsAanduidingen,
 )
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -16,6 +15,7 @@ from zac.accounts.tests.factories import UserFactory
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
+from zgw.models.zrc import Zaak
 
 from ..services import get_rollen, get_zaken_es
 from .utils import ClearCachesMixin

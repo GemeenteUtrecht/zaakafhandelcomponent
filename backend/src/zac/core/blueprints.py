@@ -4,10 +4,10 @@ from elasticsearch_dsl.query import Query, Range, Term
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import Blueprint
+from zgw.models.zrc import Zaak
 
 
 class ZaakTypeBlueprint(Blueprint):
@@ -20,7 +20,7 @@ class ZaakTypeBlueprint(Blueprint):
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
+        initial=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_(
             "Spans Zaken until and including this vertrouwelijkheidaanduiding."
         ),
@@ -51,6 +51,9 @@ class ZaakTypeBlueprint(Blueprint):
             & Range(va_order={"lte": max_va_order})
         )
         return query
+
+    def short_display(self):
+        return f"{self.data['zaaktype_omschrijving']} ({self.data['max_va']})"
 
 
 class ZaakHandleBlueprint(ZaakTypeBlueprint):
@@ -94,7 +97,7 @@ class InformatieObjectTypeBlueprint(Blueprint):
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        default=VertrouwelijkheidsAanduidingen.openbaar,
+        initial=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_("Maximum confidential level of the informatieobject"),
     )
 
@@ -113,3 +116,6 @@ class InformatieObjectTypeBlueprint(Blueprint):
             and iotype.omschrijving == self.data["iotype_omschrijving"]
             and current_va_order <= max_va_order
         )
+
+    def short_display(self):
+        return f"{self.data['iotype_omschrijving']} ({self.data['max_va']})"

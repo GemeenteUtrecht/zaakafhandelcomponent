@@ -4,10 +4,10 @@ from typing import Dict, List, Optional
 from django.http import HttpRequest
 
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.models import User
 from zac.contrib.kownsl.data import ReviewRequest
+from zgw.models.zrc import Zaak
 
 from ..permissions import zaken_download_documents
 from ..services import get_zaak

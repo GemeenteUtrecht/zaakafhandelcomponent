@@ -1,11 +1,10 @@
 from typing import List, Optional, Union
 
-from zgw_consumers.api_models.zaken import Zaak
-
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
+from zgw.models.zrc import Zaak
 
 from .constants import PermissionObjectType
 from .models import AtomicPermission, User
@@ -32,7 +31,7 @@ def add_atomic_permission_to_user(
     atomic_permission = AtomicPermission.objects.create(
         object_type=object_type,
         object_url=object_url,
-        permission=zaken_inzien.name,
+        permission=permission_name,
     )
     user.atomic_permissions.add(atomic_permission)
     return atomic_permission

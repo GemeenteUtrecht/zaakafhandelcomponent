@@ -28,6 +28,7 @@ SUPPORTED_QUERY_PARAMS = (
     "zaaktypen",
     "behandelaar",
     "eigenschappen",
+    "ordering",
 )
 
 

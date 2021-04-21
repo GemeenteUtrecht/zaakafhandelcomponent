@@ -10,7 +10,7 @@ from zac.core.services import get_zaak
 
 from ..models import Activity, Event
 from .filters import ActivityFilter
-from .permissions import CanReadZaakPermission, CanWritePermission
+from .permissions import CanReadOrWriteActivitiesPermission, CanWriteEventsPermission
 from .serializers import ActivitySerializer, EventSerializer
 
 
@@ -44,7 +44,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     )
     permission_classes = (
         permissions.IsAuthenticated,
-        CanReadZaakPermission | CanWritePermission,
+        CanReadOrWriteActivitiesPermission,
     )
     filterset_class = ActivityFilter
     serializer_class = ActivitySerializer
@@ -58,13 +58,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
             zaak_url = self.request.query_params.get("zaak")
             if not zaak_url:
                 return queryset.none()
-
-            # permission check on the zaak itself
-            zaak = get_zaak(zaak_url=zaak_url)
-            if not self.request.user.has_perm("activities:read", zaak):
-                raise exceptions.PermissionDenied(
-                    "Not allowed to read activities for this zaak."
-                )
 
         return qs
 
@@ -84,4 +77,4 @@ class ActivityViewSet(viewsets.ModelViewSet):
 class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Event.objects.none()
     serializer_class = EventSerializer
-    permission_classes = (permissions.IsAuthenticated, CanWritePermission)
+    permission_classes = (permissions.IsAuthenticated, CanWriteEventsPermission)

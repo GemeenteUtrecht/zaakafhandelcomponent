@@ -750,14 +750,14 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
     return status
 
 
-@cache_result("get_behandelaar_zaken:{user.username}", timeout=AN_HOUR)
-def get_behandelaar_zaken(user: User) -> List[Zaak]:
+@cache_result("get_behandelaar_zaken:{user.username}:{ordering}", timeout=AN_HOUR)
+def get_behandelaar_zaken(user: User, ordering: List = []) -> List[Zaak]:
     """
     Retrieve zaken where `user` is a medewerker in the role of behandelaar.
     """
     medewerker_id = user.username
     behandelaar_zaken = get_zaken_es(
-        user=user, query_params={"behandelaar": medewerker_id}
+        user=user, query_params={"behandelaar": medewerker_id, "ordering": ordering}
     )
     return behandelaar_zaken
 

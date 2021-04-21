@@ -11,6 +11,9 @@ from zac.api.context import get_zaak_context
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.core.api.serializers import ZaakDetailSerializer
 from zac.core.services import get_zaak
+from zac.elasticsearch.documents import ZaakDocument
+from zac.elasticsearch.drf_api.filters import ESOrderingFilter
+from zac.elasticsearch.drf_api.utils import es_document_to_sorting_parameters
 
 from ..views import (
     get_access_requests_groups,
@@ -65,15 +68,27 @@ class WorkStackAdhocActivitiesView(ListAPIView):
         return groups
 
 
-@extend_schema(summary=_("List active cases"))
+@extend_schema(
+    summary=_("List active cases"),
+    parameters=[es_document_to_sorting_parameters(ZaakDocument)],
+)
 class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDetailSerializer
-    filter_backends = ()
+    search_document = ZaakDocument
+    ordering = ("-deadline",)
 
     def get_queryset(self):
-        return get_behandelaar_zaken_unfinished(self.request.user)
+        ordering = ESOrderingFilter().get_ordering(self.request, self)
+        unfinished_zaken = get_behandelaar_zaken_unfinished(
+            self.request.user,
+            ordering=ordering,
+        )
+        # TODO: Add support for resultaat in ES
+        for zaak in unfinished_zaken:
+            zaak.resultaat = None
+        return unfinished_zaken
 
 
 @extend_schema(summary=_("List user tasks"))

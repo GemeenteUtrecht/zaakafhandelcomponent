@@ -1,6 +1,6 @@
 import uuid
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
 
@@ -127,6 +127,32 @@ class GetUserTaskContextViewTests(APITestCase):
             ],
         )
 
+        process_instance_id = uuid.uuid4()
+        process_definition_id = uuid.uuid4()
+        definition_id = f"BBV_vragen:3:{process_definition_id}"
+        cls.process_instance = {
+            "id": str(process_instance_id),
+            "definition_id": definition_id,
+        }
+
+        process_instance = factory(ProcessInstance, cls.process_instance)
+        process_instance.get_variable = MagicMock()
+        process_instance.get_variable.return_value = None
+        cls.patch_get_process_instance = patch(
+            "zac.core.camunda.select_documents.context.get_process_instance",
+            return_value=process_instance,
+        )
+
+        cls.patch_get_zaaktype = patch(
+            "zac.core.camunda.select_documents.context.fetch_zaaktype",
+            return_value=cls.zaaktype_obj,
+        )
+
+        cls.patch_get_informatieobjecttypen_for_zaaktype = patch(
+            "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
+            return_value=[factory(InformatieObjectType, cls.documenttype)],
+        )
+
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -134,6 +160,15 @@ class GetUserTaskContextViewTests(APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
+
+        self.patch_get_process_instance.start()
+        self.addCleanup(self.patch_get_process_instance.stop)
+
+        self.patch_get_zaaktype.start()
+        self.addCleanup(self.patch_get_zaaktype.stop)
+
+        self.patch_get_informatieobjecttypen_for_zaaktype.start()
+        self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
 
     @patch(
         "zac.camunda.api.views.get_task",

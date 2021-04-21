@@ -43,6 +43,12 @@ zaken_set_result = Permission(
     blueprint_class=ZaakTypeBlueprint,
 )
 
+zaken_create_status = Permission(
+    name="zaken:create-status",
+    description="Status zetten op zaken.",
+    blueprint_class=ZaakTypeBlueprint,
+)
+
 zaken_download_documents = Permission(
     name="zaken:download-documents",
     description="Inzien documenten bij zaken, inclusief de (binaire) inhoud.",

@@ -10,7 +10,6 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -19,6 +18,7 @@ from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
 from zac.tests.utils import paginated_response
+from zgw.models.zrc import Zaak
 
 from ..api.serializers import MessageSerializer
 from ..data import ProcessInstance

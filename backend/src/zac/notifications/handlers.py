@@ -1,5 +1,5 @@
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.zaken import Zaak
+from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
@@ -16,6 +16,7 @@ from zac.elasticsearch.api import (
     update_rollen_in_zaak_document,
     update_zaak_document,
 )
+from zgw.models.zrc import Zaak
 
 
 class ZakenHandler:
@@ -43,6 +44,11 @@ class ZakenHandler:
     def _retrieve_zaak(zaak_url) -> Zaak:
         client = _client_from_url(zaak_url)
         zaak = client.retrieve("zaak", url=zaak_url)
+        if isinstance(zaak["zaaktype"], str):
+            zrc_client = _client_from_url(zaak["zaaktype"])
+            zaaktype = zrc_client.retrieve("zaaktype", url=zaak["zaaktype"])
+            zaak["zaaktype"] = factory(ZaakType, zaaktype)
+
         return factory(Zaak, zaak)
 
     def _handle_zaak_update(self, zaak_url: str):

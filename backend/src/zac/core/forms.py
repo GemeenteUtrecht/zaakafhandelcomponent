@@ -15,7 +15,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
-from zgw_consumers.api_models.zaken import Zaak
 
 from zac.accounts.constants import AccessRequestResult, PermissionObjectType
 from zac.accounts.email import send_email_to_requester
@@ -24,6 +23,7 @@ from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
 from zac.utils.sorting import sort
+from zgw.models.zrc import Zaak
 
 from .fields import AlfrescoDocumentField, DocumentsMultipleChoiceField
 from .permissions import zaken_inzien

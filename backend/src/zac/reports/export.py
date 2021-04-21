@@ -3,7 +3,7 @@ from typing import Dict, Iterator, List
 import tablib
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.zaken import Status, Zaak, ZaakEigenschap
+from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
 from zgw_consumers.concurrent import parallel
 
 from zac.core.services import (
@@ -13,6 +13,7 @@ from zac.core.services import (
     get_zaak_eigenschappen,
 )
 from zac.elasticsearch.searches import search
+from zgw.models.zrc import Zaak
 
 from .models import Report
 
