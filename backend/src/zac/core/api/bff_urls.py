@@ -1,14 +1,14 @@
 from django.urls import path
 
 from .views import (
-    CreateZaakDocumentView,
     CreateZaakRelationView,
     EigenschappenView,
     InformatieObjectTypeListView,
+    ListZaakDocumentsView,
     RelatedZakenView,
     VertrouwelijkheidsAanduidingenView,
     ZaakDetailView,
-    ZaakDocumentsView,
+    ZaakDocumentView,
     ZaakEigenschappenView,
     ZaakObjectsView,
     ZaakRolesView,
@@ -35,13 +35,13 @@ urlpatterns = [
     ),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/documents",
-        ZaakDocumentsView.as_view(),
+        ListZaakDocumentsView.as_view(),
         name="zaak-documents",
     ),
     path(
         "cases/document",
-        CreateZaakDocumentView.as_view(),
-        name="add-document",
+        ZaakDocumentView.as_view(),
+        name="manage-zaak-document",
     ),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/related-cases",

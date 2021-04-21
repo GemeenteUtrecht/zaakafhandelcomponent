@@ -12,6 +12,7 @@ from ..permissions import (
     zaken_handle_access,
     zaken_inzien,
     zaken_wijzigen,
+    zaken_update_documents,
 )
 
 logger = logging.getLogger(__name__)
@@ -20,11 +21,25 @@ logger = logging.getLogger(__name__)
 class CanAddDocuments(ZaakDefinitionPermission):
     permission = zaken_add_documents
 
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        if request.method != "POST":
-            return False
 
-        return super().has_permission(request, view)
+class CanUpdateDocuments(ZaakDefinitionPermission):
+    permission = zaken_update_documents
+
+
+class CanAddOrUpdateZaakDocuments:
+    def get_permission(self, request) -> DefinitionBasePermission:
+        if request.method == "PATCH":
+            return CanUpdateDocuments()
+        elif request.method == "POST":
+            return CanAddDocuments()
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_permission(request, view)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_object_permission(request, view, obj)
 
 
 class CanAddRelations(ZaakDefinitionPermission):

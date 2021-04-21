@@ -26,8 +26,8 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
-from zac.core.api.validators import validate_zaak_documents
 from zac.core.rollen import Rol
+from zac.core.services import get_documenten
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -41,20 +41,53 @@ from .utils import (
 )
 
 
-class InformatieObjectTypeSerializer(serializers.Serializer):
-    url = serializers.URLField()
-    omschrijving = serializers.CharField()
+class InformatieObjectTypeSerializer(APIModelSerializer):
+    class Meta:
+        model = InformatieObjectType
+        fields = (
+            "url",
+            "omschrijving",
+        )
 
 
-class AddDocumentSerializer(serializers.Serializer):
-    informatieobjecttype = serializers.URLField(required=True)
-    zaak = serializers.URLField(required=True)
-    file = serializers.FileField(required=True, use_url=False)
+class GetZaakDocumentSerializer(APIModelSerializer):
+    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
+    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write)
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        source="get_vertrouwelijkheidaanduiding_display"
+    )
+    informatieobjecttype = InformatieObjectTypeSerializer()
 
+    class Meta:
+        model = Document
+        fields = (
+            "url",
+            "auteur",
+            "identificatie",
+            "beschrijving",
+            "bestandsnaam",
+            "locked",
+            "informatieobjecttype",
+            "titel",
+            "vertrouwelijkheidaanduiding",
+            "bestandsomvang",
+            "read_url",
+            "write_url",
+        )
+        extra_kwargs = {
+            "bestandsomvang": {
+                "help_text": _("File size in bytes"),
+            }
+        }
+
+
+class AddZaakDocumentSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(required=False)
+    file = serializers.FileField(required=True, use_url=False)
+    informatieobjecttype = serializers.URLField(required=True)
 
     def validate(self, data):
-        zaak_url = data.get("zaak")
+        zaak_url = self.context['zaak'].url
         informatieobjecttype_url = data.get("informatieobjecttype")
 
         if zaak_url and informatieobjecttype_url:
@@ -72,8 +105,35 @@ class AddDocumentSerializer(serializers.Serializer):
         return data
 
 
-class AddDocumentResponseSerializer(serializers.Serializer):
-    document = serializers.URLField(source="url")
+class UpdateZaakDocumentSerializer(serializers.Serializer):
+    beschrijving = serializers.CharField(required=False)
+    file = serializers.FileField(required=True, use_url=False)
+    reden = serializers.CharField(
+        help_text=_("Reason for the edit, used in audit trail."),
+        required=True,
+        allow_null=True,
+    )
+    url = serializers.URLField(
+        help_text=_("URL of document"),
+        allow_blank=False
+    )
+    vertrouwelijkheidaanduiding = serializers.ChoiceField(
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        help_text=_("Confidentiality classification"),
+    )
+    
+    def validate(self, data):
+        document_url = data.get("url")
+        documenten, gone = get_documenten(self.context['zaak'])
+        documenten = {document.url: document for document in documenten}
+        try:
+            documenten[document_url]
+        except KeyError:
+            raise serializers.ValidationError(
+                _("The document is unrelated to the case.")
+            )
+
+        return data
 
 
 class DocumentInfoSerializer(serializers.Serializer):
@@ -385,83 +445,6 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
             "url",
             "formaat",
             "eigenschap",
-        )
-
-
-class DocumentTypeSerializer(APIModelSerializer):
-    class Meta:
-        model = InformatieObjectType
-        fields = (
-            "url",
-            "omschrijving",
-        )
-
-
-class ZaakDocumentSerializer(APIModelSerializer):
-    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
-    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write)
-    vertrouwelijkheidaanduiding = serializers.CharField(
-        source="get_vertrouwelijkheidaanduiding_display"
-    )
-    informatieobjecttype = DocumentTypeSerializer()
-
-    class Meta:
-        model = Document
-        fields = (
-            "url",
-            "auteur",
-            "identificatie",
-            "beschrijving",
-            "bestandsnaam",
-            "locked",
-            "informatieobjecttype",
-            "titel",
-            "vertrouwelijkheidaanduiding",
-            "bestandsomvang",
-            "read_url",
-            "write_url",
-        )
-        extra_kwargs = {
-            "bestandsomvang": {
-                "help_text": _("File size in bytes"),
-            }
-        }
-
-
-class UpdateZaakDocumentsSerializer(serializers.ListSerializer):
-    def validate(self, attrs):
-        documents = super().validate(attrs)
-        urls = [document["url"] for document in documents]
-        validate_zaak_documents(urls, self.context["zaak"])
-        return documents
-
-
-class UpdateZaakDocumentSerializer(APIModelSerializer):
-    reden = serializers.CharField(
-        help_text=_("Reason for the edit, used in audit trail."),
-        required=True,
-        allow_null=True,
-    )
-    url = serializers.URLField(
-        help_text=_("URL of document"),
-    )
-    vertrouwelijkheidaanduiding = serializers.ChoiceField(
-        choices=VertrouwelijkheidsAanduidingen.choices,
-        help_text=_("Confidentiality classification"),
-    )
-    versie = serializers.IntegerField(
-        help_text=_("Version of document"),
-        read_only=True,
-    )
-
-    class Meta:
-        list_serializer_class = UpdateZaakDocumentsSerializer
-        model = Document
-        fields = (
-            "reden",
-            "url",
-            "vertrouwelijkheidaanduiding",
-            "versie",
         )
 
 
