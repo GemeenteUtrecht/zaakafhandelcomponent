@@ -3,7 +3,6 @@ import logging
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
-from zgw_consumers.api_models.documenten import Document
 
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
 
