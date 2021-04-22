@@ -154,13 +154,14 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   assignedUsersMinDate(index: number): Date {
+    const today = new Date();
     if (this.assignedUsers.at(index - 1)) {
-      const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value;
+      const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value ? this.assignedUsers.at(index - 1).get('deadline').value : today;
       const dayAfterDeadline = new Date(previousDeadline);
       dayAfterDeadline.setDate(previousDeadline.getDate() + 1);
-      return previousDeadline ? dayAfterDeadline : new Date();
+      return dayAfterDeadline;
     } else {
-      return new Date();
+      return today
     }
   }
 }
