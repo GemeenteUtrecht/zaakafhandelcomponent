@@ -946,7 +946,7 @@ async def fetch_documents(zios: list, doc_versions: Optional[Dict[str, int]] = N
     return responses
 
 
-def update_document(url: str, file: UploadedFile, data: dict):
+def update_document(url: str, data: dict, audit_line: str):
     client = _client_from_url(url)
 
     # lock eio
@@ -955,13 +955,13 @@ def update_document(url: str, file: UploadedFile, data: dict):
     )
     lock = lock_result["lock"]
 
-    # update eio
-    content = base64.b64encode(file.read()).decode("utf-8")
-    data["inhoud"] = content
-    data["bestandsomvang"] = file.size
-    data["bestandsnaam"] = file.name
     data["lock"] = lock
-    response = client.partial_update("enkelvoudiginformatieobject", data=data, url=url)
+    response = client.partial_update(
+        "enkelvoudiginformatieobject",
+        data=data,
+        url=url,
+        request_kwargs={"headers": {"X-Audit-Toelichting": audit_line}},
+    )
 
     document = factory(Document, response)
 

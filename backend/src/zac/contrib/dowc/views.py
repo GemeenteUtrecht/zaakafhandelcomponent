@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
-from zac.core.services import find_document
+from zac.core.cache import invalidate_document_cache
+from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
 from .permissions import CanOpenDocuments
@@ -57,6 +58,9 @@ class OpenDowcView(APIView):
         referer = request.headers.get("referer", "")
         response, status_code = create_doc(request.user, document, purpose, referer)
         serializer = self.serializer_class(response)
+
+        # Invalidate cache
+        invalidate_document_cache(document)
         return Response(serializer.data, status=status_code)
 
 
@@ -82,4 +86,10 @@ class DeleteDowcView(APIView):
         serializer = self.serializer_class(data={"uuid": dowc_uuid})
         serializer.is_valid(raise_exception=True)
         data = patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
+
+        # Invalidate cache if valid response
+        if "versionedUrl" in data:
+            document = get_document(data["versionedUrl"])
+            invalidate_document_cache(document)
+
         return Response(data)

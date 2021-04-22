@@ -26,6 +26,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.core.api.validators import validate_zaak_documents
 from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
@@ -425,6 +426,43 @@ class ZaakDocumentSerializer(APIModelSerializer):
                 "help_text": _("File size in bytes"),
             }
         }
+
+
+class UpdateZaakDocumentsSerializer(serializers.ListSerializer):
+    def validate(self, attrs):
+        documents = super().validate(attrs)
+        urls = [document["url"] for document in documents]
+        validate_zaak_documents(urls, self.context["zaak"])
+        return documents
+
+
+class UpdateZaakDocumentSerializer(APIModelSerializer):
+    reden = serializers.CharField(
+        help_text=_("Reason for the edit, used in audit trail."),
+        required=True,
+        allow_null=True,
+    )
+    url = serializers.URLField(
+        help_text=_("URL of document"),
+    )
+    vertrouwelijkheidaanduiding = serializers.ChoiceField(
+        choices=VertrouwelijkheidsAanduidingen.choices,
+        help_text=_("Confidentiality classification"),
+    )
+    versie = serializers.IntegerField(
+        help_text=_("Version of document"),
+        read_only=True,
+    )
+
+    class Meta:
+        list_serializer_class = UpdateZaakDocumentsSerializer
+        model = Document
+        fields = (
+            "reden",
+            "url",
+            "vertrouwelijkheidaanduiding",
+            "versie",
+        )
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):

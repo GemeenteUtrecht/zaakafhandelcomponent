@@ -90,6 +90,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         cls.find_document_patcher = patch(
             "zac.contrib.dowc.views.find_document", return_value=document
         )
+        cls.get_document_patcher = patch(
+            "zac.contrib.dowc.views.get_document", return_value=document
+        )
 
         cls.zac_dowc_url = reverse(
             "dowc:request-doc",
@@ -105,6 +108,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
 
         self.find_document_patcher.start()
         self.addCleanup(self.find_document_patcher.stop)
+
+        self.get_document_patcher.start()
+        self.addCleanup(self.get_document_patcher.stop)
 
     def test_client(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)

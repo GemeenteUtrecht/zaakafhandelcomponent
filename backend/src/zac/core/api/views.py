@@ -31,6 +31,7 @@ from zgw_consumers.models import Service
 
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
+from zac.core.services import update_document
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
@@ -75,6 +76,7 @@ from .serializers import (
     RolSerializer,
     SearchEigenschapSerializer,
     UpdateZaakDetailSerializer,
+    UpdateZaakDocumentSerializer,
     VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
     ZaakDocumentSerializer,
@@ -238,13 +240,20 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
 
 class ZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakDocumentSerializer
-    schema_summary = _("List case documents")
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
 
+    def get_serializer(self, **kwargs):
+        mapping = {"GET": ZaakDocumentSerializer, "PATCH": UpdateZaakDocumentSerializer}
+        return mapping[self.request.method](**kwargs)
+
+    @extend_schema(
+        summary=_("List case documents"),
+        responses={
+            200: ZaakDocumentSerializer,
+        },
+    )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
-
         review_requests = get_review_requests(zaak)
 
         with parallel() as executor:
@@ -258,11 +267,43 @@ class ZaakDocumentsView(GetZaakMixin, views.APIView):
 
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
-        filtered_documenten = filter_documenten_for_permissions(documents, request.user)
-
-        serializer = self.serializer_class(
+        filtered_documenten = filter_documenten_for_permissions(documents, request)
+        serializer = self.get_serializer(
             instance=filtered_documenten, many=True, context={"request": request}
         )
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Edit case document properties"),
+    )
+    def patch(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        serializer = self.get_serializer(
+            data=request.data, many=True, context={"zaak": zaak}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        # Check if document is allowed to be patched.
+        documents, gone = get_documenten(zaak)
+        filtered_documenten = [
+            doc.url for doc in filter_documenten_for_permissions(documents, request)
+        ]
+        updated_documents = [document.pop("url") for document in serializer.data]
+        for doc in updated_documents:
+            if doc not in filtered_documenten:
+                raise exceptions.PermissionDenied(
+                    "Not allowed to edit document %s." % doc
+                )
+
+        audit_lines = [document.pop("reden") for document in serializer.data]
+        with parallel() as executor:
+            documenten = executor.map(
+                update_document,
+                updated_documents,
+                serializer.data,
+                audit_lines,
+            )
+        serializer = self.get_serializer(instance=list(documenten), many=True)
         return Response(serializer.data)
 
 
