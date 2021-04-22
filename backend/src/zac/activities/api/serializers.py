@@ -1,8 +1,10 @@
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
 from zac.accounts.models import User
+from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import Activity, Event
 from .permission_loaders import add_permissions_for_activity_assignee
@@ -19,11 +21,11 @@ class EventSerializer(serializers.ModelSerializer):
         )
 
 
-class ActivitySerializer(serializers.HyperlinkedModelSerializer):
-    assignee = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.filter(is_active=True),
+class ActivitySerializer(serializers.ModelSerializer):
+    assignee = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
         required=False,
-        allow_null=True,
     )
     events = EventSerializer(many=True, read_only=True)
 
@@ -45,6 +47,7 @@ class ActivitySerializer(serializers.HyperlinkedModelSerializer):
             "url": {
                 "view_name": "activities:activity-detail",
             },
+            "zaak": {"validators": (ImmutableFieldValidator(),)},
         }
 
     @transaction.atomic
