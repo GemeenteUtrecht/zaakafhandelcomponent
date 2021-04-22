@@ -27,7 +27,7 @@ from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
-from zac.core.services import get_documenten
+from zac.core.services import get_documenten, get_zaak
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -85,13 +85,18 @@ class AddZaakDocumentSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(required=False)
     file = serializers.FileField(required=True, use_url=False)
     informatieobjecttype = serializers.URLField(required=True)
+    zaak = serializers.URLField(
+        required=True,
+        help_text=_("URL of the case."),
+        allow_blank=False,
+    )
 
     def validate(self, data):
-        zaak_url = self.context['zaak'].url
+        zaak = data["zaak"]
         informatieobjecttype_url = data.get("informatieobjecttype")
 
-        if zaak_url and informatieobjecttype_url:
-            informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak_url)
+        if zaak and informatieobjecttype_url:
+            informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
             present = any(
                 iot
                 for iot in informatieobjecttypen
@@ -107,24 +112,28 @@ class AddZaakDocumentSerializer(serializers.Serializer):
 
 class UpdateZaakDocumentSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(required=False)
-    file = serializers.FileField(required=True, use_url=False)
+    file = serializers.FileField(required=False, use_url=False)
     reden = serializers.CharField(
         help_text=_("Reason for the edit, used in audit trail."),
         required=True,
         allow_null=True,
     )
-    url = serializers.URLField(
-        help_text=_("URL of document"),
-        allow_blank=False
-    )
+    url = serializers.URLField(help_text=_("URL of document"), allow_blank=False)
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        help_text=_("Confidentiality classification"),
+        help_text=_("Confidentiality classification."),
+        required=False,
     )
-    
+    zaak = serializers.URLField(
+        required=True,
+        help_text=_("URL of the case."),
+        allow_blank=False,
+    )
+
     def validate(self, data):
         document_url = data.get("url")
-        documenten, gone = get_documenten(self.context['zaak'])
+        zaak = get_zaak(zaak_url=data["zaak"])
+        documenten, gone = get_documenten(zaak)
         documenten = {document.url: document for document in documenten}
         try:
             documenten[document_url]

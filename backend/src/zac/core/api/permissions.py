@@ -4,15 +4,19 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
+from zac.api.permissions import (
+    DefinitionBasePermission,
+    DocumentDefinitionPermission,
+    ZaakDefinitionPermission,
+)
 
 from ..permissions import (
     zaken_add_documents,
     zaken_add_relations,
     zaken_handle_access,
     zaken_inzien,
-    zaken_wijzigen,
     zaken_update_documents,
+    zaken_wijzigen,
 )
 
 logger = logging.getLogger(__name__)
@@ -22,7 +26,7 @@ class CanAddDocuments(ZaakDefinitionPermission):
     permission = zaken_add_documents
 
 
-class CanUpdateDocuments(ZaakDefinitionPermission):
+class CanUpdateDocuments(DocumentDefinitionPermission):
     permission = zaken_update_documents
 
 

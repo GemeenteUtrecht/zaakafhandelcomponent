@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -7,7 +6,6 @@ from urllib.parse import urljoin
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
 
 import aiohttp
@@ -24,7 +22,6 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel

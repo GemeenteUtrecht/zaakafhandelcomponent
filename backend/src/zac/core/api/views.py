@@ -2,7 +2,7 @@ import base64
 import logging
 from datetime import date
 from itertools import groupby
-from typing import List, Dict
+from typing import Dict, List
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -26,6 +26,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
@@ -47,6 +48,7 @@ from ..services import (
     get_resultaat,
     get_rollen,
     get_statussen,
+    get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
@@ -63,6 +65,7 @@ from .permissions import (
     CanReadZaken,
 )
 from .serializers import (
+    AddZaakDocumentSerializer,
     AddZaakRelationSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
@@ -77,7 +80,6 @@ from .serializers import (
     UpdateZaakDocumentSerializer,
     VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
-    AddZaakDocumentSerializer,
     ZaakEigenschapSerializer,
     ZaakObjectGroupSerializer,
     ZaakStatusSerializer,
@@ -339,11 +341,11 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 ###############################
 
 
+@extend_schema(summary=_("List case documents"))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = GetZaakDocumentSerializer
-    schema_summary = _("List case documents")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -361,81 +363,96 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
 
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
-        filtered_documenten = filter_documenten_for_permissions(documents, request.user)
+        filtered_documenten = filter_documenten_for_permissions(documents, request)
 
         serializer = self.serializer_class(
-            instance=filtered_documenten, many=True,
+            instance=filtered_documenten,
+            many=True,
         )
         return Response(serializer.data)
 
 
-class ZaakDocumentView(GetZaakMixin, views.APIView):
-    permission_classes = (permissions.IsAuthenticated, CanAddOrUpdateZaakDocuments)
+class ZaakDocumentView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated & CanAddOrUpdateZaakDocuments,)
     parser_classes = (CamelCaseMultiPartParser,)
 
     def get_serializer(self, *args, **kwargs):
-        if self.request.method == 'PATCH':
+        if self.request.method == "PATCH":
             return UpdateZaakDocumentSerializer(*args, **kwargs)
         return AddZaakDocumentSerializer(*args, **kwargs)
 
-    def get_document_data(self, data, zaak) -> Dict[str, str]:
+    def get_document_data(self, validated_data: dict, zaak: Zaak) -> Dict[str, str]:
         # Get the document and zaak
-        uploaded_file = data["file"]
-        with uploaded_file.open("rb") as content:
-            inhoud = base64.b64encode(content.read())
-        
+
         document_data = {
-            "informatieobjecttype": data["informatieobjecttype"],
             "bronorganisatie": zaak.bronorganisatie,  # TODO: what if it's different?
             "creatiedatum": date.today().isoformat(),  # TODO: what if it's created on another date
-            "titel": uploaded_file.name,
             "auteur": self.request.user.get_full_name() or self.request.user.username,
             "taal": "nld",
-            "inhoud": inhoud.decode("ascii"),  # it's base64, so ascii compatible
-            "formaat": uploaded_file.content_type,
-            "bestandsnaam": uploaded_file.name,
             "ontvangstdatum": date.today().isoformat(),
         }
+
+        uploaded_file = validated_data.pop("file", None)
+        if uploaded_file:
+            with uploaded_file.open("rb") as content:
+                inhoud = base64.b64encode(content.read())
+
+            document_data.update(
+                {
+                    "bestandsnaam": uploaded_file.name,
+                    "formaat": uploaded_file.content_type,
+                    "inhoud": inhoud.decode(
+                        "ascii"
+                    ),  # it's base64, so ascii compatible
+                    "titel": uploaded_file.name,
+                }
+            )
+
+        document_data = {**document_data, **validated_data}
+
         return document_data
 
     @extend_schema(
-        summary=_("Edit case document."),
+        summary=_("Edit case document"),
         responses=GetZaakDocumentSerializer,
     )
-    def patch(self, request: Request) -> Response:
+    def patch(self, request: Request, *args, **kwargs) -> Response:
         """
         Patch an already uploaded document on the Documenten API.
         """
-        zaak = self.get_object()
         serializer = self.get_serializer(
             data=request.data,
-            context={"zaak": zaak},
         )
         serializer.is_valid(raise_exception=True)
 
-        audit_line = serializer.data['reden']
-        document_url = serializer.data['url']
-        document_data = self.get_document_data(serializer.data, zaak)
+        audit_line = serializer.validated_data.pop("reden")
+        document_url = serializer.validated_data.pop("url")
+
+        zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
+        document_data = self.get_document_data(serializer.validated_data, zaak)
         document = update_document(document_url, document_data, audit_line)
 
-        serializer = GetZaakDocumentSerializer(document)
+        document.informatieobjecttype = get_informatieobjecttype(
+            document.informatieobjecttype
+        )
+        serializer = GetZaakDocumentSerializer(instance=document)
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Add a document to a case"),
+        summary=_("Add document to case"),
         responses=GetZaakDocumentSerializer,
     )
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request, *args, **kwargs) -> Response:
         """
         Upload a document to the Documenten API and relate it to a case.
         """
-        zaak = self.get_object()
         serializer = self.get_serializer(
             data=request.data,
-            context={"zaak": zaak},
         )
         serializer.is_valid(raise_exception=True)
-        document_data = self.get_document_data(serializer.data, zaak)
+
+        zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
+        document_data = self.get_document_data(serializer.validated_data, zaak)
 
         core_config = CoreConfig.get_solo()
         service = core_config.primary_drc
@@ -455,8 +472,11 @@ class ZaakDocumentView(GetZaakMixin, views.APIView):
                 "zaak": zaak.url,
             },
         )
-
-        serializer = GetZaakDocumentSerializer(document)
+        document = factory(Document, document)
+        document.informatieobjecttype = get_informatieobjecttype(
+            document.informatieobjecttype
+        )
+        serializer = GetZaakDocumentSerializer(instance=document)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
