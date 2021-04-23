@@ -22,7 +22,7 @@ from zac.accounts.tests.factories import (
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
-from ...permissions import zaken_add_documents, zaken_update_documents
+from ...permissions import zaken_add_documents, zaken_update_documents, zaken_wijzigen
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 DOCUMENTS_ROOT = "https://open-zaak.nl/documenten/api/v1/"
@@ -153,6 +153,15 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         # set up user permissions
         catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         BlueprintPermissionFactory.create(
+            permission=zaken_wijzigen.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
             permission=zaken_add_documents.name,
             for_user=user,
             policy={
@@ -224,10 +233,94 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
+    def test_has_perm_to_edit_zaak_but_not_to_edit_document(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        self._setupMocks(m)
+        BlueprintPermissionFactory.create(
+            permission=zaken_wijzigen.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}123",
+            informatieobjecttype=self.informatieobjecttype["url"],
+        )
+        m.get(document["url"], json=document)
+        post_data = {
+            "reden": "Zomaar",
+            "url": document["url"],
+            "vertrouwelijkheidaanduiding": "geheim",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_edit_document_but_not_to_edit_zaak(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        self._setupMocks(m)
+        BlueprintPermissionFactory.create(
+            object_type=PermissionObjectType.document,
+            permission=zaken_update_documents.name,
+            for_user=user,
+            policy={
+                "catalogus": self.informatieobjecttype["catalogus"],
+                "iotype_omschrijving": "IOT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}123",
+            informatieobjecttype=self.informatieobjecttype["url"],
+        )
+        m.get(document["url"], json=document)
+        post_data = {
+            "reden": "Zomaar",
+            "url": document["url"],
+            "vertrouwelijkheidaanduiding": "geheim",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
     def test_has_perm_to_edit_document(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         self._setupMocks(m)
+        BlueprintPermissionFactory.create(
+            permission=zaken_wijzigen.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         BlueprintPermissionFactory.create(
             object_type=PermissionObjectType.document,
             permission=zaken_update_documents.name,

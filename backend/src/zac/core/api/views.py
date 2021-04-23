@@ -62,6 +62,7 @@ from .permissions import (
     CanAddRelations,
     CanReadOrUpdateZaken,
     CanReadZaken,
+    CanUpdateZaken,
 )
 from .serializers import (
     AddZaakDocumentSerializer,
@@ -372,7 +373,9 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
 
 
 class ZaakDocumentView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated & CanAddOrUpdateZaakDocuments,)
+    permission_classes = (
+        permissions.IsAuthenticated & CanAddOrUpdateZaakDocuments & CanUpdateZaken,
+    )
     parser_classes = (CamelCaseMultiPartParser,)
 
     def get_serializer(self, *args, **kwargs):
