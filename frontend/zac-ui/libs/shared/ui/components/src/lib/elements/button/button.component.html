@@ -1,23 +1,13 @@
-<button
-  class="btn"
+<span
+  *ngIf="loading"
+  class="btn__spinner"
   [ngClass]="{
-  'btn--primary': type == 'primary',
-  'btn--secondary': type == 'secondary',
-  'btn--tertiary': type == 'tertiary',
-  'btn--extrasmall': size == 'extrasmall',
-  'btn--small': size == 'small',
-  'btn--large': size == 'large'
+  'btn__spinner--primary': type == 'primary',
+  'btn__spinner--secondary': type == 'secondary',
+  'btn__spinner--tertiary': type == 'tertiary'
   }"
-  [disabled]="disabled">
-  <span
-    *ngIf="loading"
-    class="btn__spinner"
-    [ngClass]="{
-    'btn__spinner--primary': type == 'primary',
-    'btn__spinner--secondary': type == 'secondary',
-    'btn__spinner--tertiary': type == 'tertiary'
-    }"
-  ></span>
-  <mat-icon *ngIf="icon">{{icon}}</mat-icon>
-  <span><ng-content></ng-content></span>
-</button>
+></span>
+<mat-icon *ngIf="icon">{{icon}}</mat-icon>
+<span>
+  <ng-content></ng-content>
+</span>

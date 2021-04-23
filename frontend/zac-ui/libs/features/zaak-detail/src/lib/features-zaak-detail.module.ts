@@ -45,7 +45,7 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
     AdviserenAccorderenComponent,
     DetailModalComponent,
     ToegangVerlenenComponent,
-    ActiviteitenComponent
+    ActiviteitenComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

@@ -15,6 +15,9 @@
       &:before {
         content: none;
       }
+      .timeline-item {
+        padding-bottom: 0;
+      }
     }
   }
   &-item {

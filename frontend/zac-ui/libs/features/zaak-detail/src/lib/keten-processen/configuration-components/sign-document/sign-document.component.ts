@@ -107,9 +107,9 @@ export class SignDocumentComponent implements OnChanges {
   addAssignUsersStep() {
     return this.fb.group({
       username: ["", Validators.minLength(1)],
-      firstName: [""],
-      lastName: [""],
-      email: ["", {validators: Validators.email, updateOn: 'blur'}],
+      firstName: ["", Validators.required],
+      lastName: ["", Validators.required],
+      email: ["", {validators: [Validators.email, Validators.required], updateOn: 'blur'}],
     })
   }
 

@@ -5,12 +5,12 @@
   </ng-container>
   <ng-container *ngIf="!!data && data.length > 0 && !isLoading">
     <div class="keten-processen__actie-buttons-container">
-      <gu-button
+      <button gu-button
         (click)="sendMessage(message)"
         *ngFor="let message of data[0].messages"
         type="primary" size="small" class="d-inline-block mr-2 mb-2">
         {{message}}
-      </gu-button>
+      </button>
     </div>
     <gu-message *ngIf="sendMessageHasError" type="warn" message="{{sendMessageErrorMessage}}"></gu-message>
     <div class="keten-processen__taken">
@@ -35,21 +35,22 @@
               </gu-chip>
             </div>
             <div class="d-flex flex-column justify-content-center">
-              <ng-container *ngIf="currentUser.username && task.assignee">
-                <gu-button *ngIf="currentUser.username === task.assignee.username"
-                           class="mb-2"
-                           type="secondary"
-                           size="small"
-                           (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+              <ng-container *ngIf="(task.assignee?.username === currentUser?.username) || (task.assignee?.username === null)">
+                <button gu-button
+                        class="mb-2"
+                        type="secondary"
+                        size="small"
+                        (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
                   Uitvoeren
-                </gu-button>
+                </button>
               </ng-container>
               <ng-container *ngIf="currentUser.username && !task.assignee">
-                <gu-button type="tertiary"
-                           size="small"
-                           (click)="assignTask(task)">
+                <button gu-button
+                        type="tertiary"
+                        size="small"
+                        (click)="assignTask(task)">
                   Toewijzen
-                </gu-button>
+                </button>
               </ng-container>
             </div>
           </div>
@@ -76,19 +77,19 @@
               </div>
               <div class="d-flex flex-column justify-content-center">
                 <ng-container *ngIf="currentUser.username && task.assignee">
-                  <gu-button *ngIf="currentUser.username === task.assignee.username"
+                  <button gu-button *ngIf="currentUser.username === task.assignee.username"
                              class="mb-2"
                              type="secondary"
-                             (click)="executeTask(subProcess.id, task.hasForm, task.executeUrl)">
+                             (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
                     Uitvoeren
-                  </gu-button>
+                  </button>
                 </ng-container>
                 <ng-container *ngIf="currentUser.username && !task.assignee">
-                  <gu-button type="tertiary"
+                  <button gu-button type="tertiary"
                              size="small"
                              (click)="assignTask(task)">
                     Toewijzen
-                  </gu-button>
+                  </button>
                 </ng-container>
               </div>
             </div>
@@ -129,6 +130,7 @@
 </gu-modal>
 <gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">
   <gu-assign-task [taskData]="assignTaskTask"
+                  [currentUser]="currentUser"
                   (reload)="fetchProcesses()"
   >
   </gu-assign-task>

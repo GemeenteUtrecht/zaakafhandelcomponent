@@ -2,17 +2,18 @@
   <div class="d-flex justify-content-between" *ngIf="zaakData">
     <div class="zaak-detail__header--left">
       <h1>{{zaakData.zaaktype.omschrijving}}</h1>
-      <gu-button type="tertiary"
-                 size="extrasmall"
-                 class="ml-2"
-                 *ngIf="activities > 0"
-                 (click)="openModal('activities-modal')">
+      <button gu-button
+              type="tertiary"
+              size="extrasmall"
+              class="ml-2 p-0"
+              *ngIf="activeActivities?.length > 0"
+              (click)="openModal('activities-modal')">
         <span>
-          <gu-chip *ngIf="activityData" [type]="'primary'">{{activityData?.length}} activiteiten</gu-chip>
+          <gu-chip *ngIf="activeActivities" [type]="'primary'">{{activeActivities?.length}} activiteiten</gu-chip>
         </span>
-      </gu-button>
+      </button>
     </div>
-    <gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</gu-button>
+    <button gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <div class="row">

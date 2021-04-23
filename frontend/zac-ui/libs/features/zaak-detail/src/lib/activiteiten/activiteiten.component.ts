@@ -1,11 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
+import { ActiviteitenService } from './activiteiten.service';
 import { Observable } from 'rxjs';
 import { Activity } from '../../models/activity';
 import { first } from 'rxjs/operators';
 import { User } from '@gu/models';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Result, UserSearch } from '../../models/user-search';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Result } from '../../models/user-search';
 
 @Component({
   selector: 'gu-activiteiten',
@@ -19,6 +19,8 @@ export class ActiviteitenComponent implements OnInit {
   currentUserFullname: string;
 
   activityForm: FormGroup;
+  addActivityForm: FormGroup;
+  assignUserForm: FormGroup;
 
   users: Result[] = [];
 
@@ -28,20 +30,35 @@ export class ActiviteitenComponent implements OnInit {
   isLoading: boolean;
   hasError: boolean;
   errorMessage: string;
-
   openNoteEditField: number;
   openAssigneeEditField: number;
+  openDocumentUploadForm: number;
+
   eventIsExpanded: number;
 
-  constructor(private http: ApplicationHttpClient,
-              private fb: FormBuilder) {
-    this.activityForm = this.fb.group({
-      activityId: this.fb.control("", Validators.required),
-      notes: this.fb.control("", Validators.required),
-    })
-  }
+  showAddActivityButton: boolean;
+  showCloseActivityConfirmation: number;
+  showDeleteActivityConfirmation: number;
+
+  isSubmitting: boolean;
+
+  constructor(private actvititeitenService: ActiviteitenService,
+              private fb: FormBuilder) { }
 
   ngOnInit(): void {
+    this.activityForm = this.fb.group({
+      notes: this.fb.array(this.addNotesControl(this.activityData))
+    })
+
+    this.assignUserForm = this.fb.group({
+      user: this.fb.array(this.addAssignUserControl(this.activityData))
+    })
+
+    this.addActivityForm = this.fb.group({
+      name: this.fb.control("", Validators.required),
+      remarks: this.fb.control(""),
+    })
+
     this.isLoading = true;
     if (this.currentUser) {
       this.currentUserFullname = (this.currentUser.firstName && this.currentUser.lastName) ?
@@ -53,8 +70,40 @@ export class ActiviteitenComponent implements OnInit {
     this.isLoading = false;
   }
 
+  addNotesControl(data) {
+    return data.map( () => this.fb.control("", Validators.required) )
+  }
+
+  addAssignUserControl(data) {
+    return data.map( () => this.fb.control("", Validators.required) )
+  }
+
+  get addActivityName(): FormControl {
+    return this.addActivityForm.get('name') as FormControl;
+  };
+
+  get addActivityRemarks(): FormControl {
+    return this.addActivityForm.get('remarks') as FormControl;
+  };
+
+  get notesControl(): FormArray {
+    return this.activityForm.get('notes') as FormArray;
+  };
+
+  get assignUserControl(): FormArray {
+    return this.assignUserForm.get('user') as FormArray;
+  };
+
+  notes(index: number): FormControl {
+    return this.notesControl.at(index) as FormControl;
+  }
+
+  assignedUser(index: number): FormControl {
+    return this.assignUserControl.at(index) as FormControl;
+  }
+
   onSearch(searchInput) {
-    this.getAccounts(searchInput).subscribe(res => {
+    this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
       this.users = res.results.map(result => ({
         ...result,
         name: (result.firstName && result.lastName) ?
@@ -65,22 +114,9 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
-  getAccounts(searchInput: string): Observable<UserSearch>{
-    const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
-    return this.http.Get<UserSearch>(endpoint);
-  }
-
-  get activityId(): FormControl {
-    return this.activityForm.get('activityId') as FormControl;
-  };
-
-  get notes(): FormControl {
-    return this.activityForm.get('notes') as FormControl;
-  };
-
   fetchActivities() {
     if (this.mainZaakUrl) {
-      this.getActivities()
+      this.actvititeitenService.getActivities(this.mainZaakUrl)
         .pipe(first())
         .subscribe(res => {
           this.activityData = res;
@@ -99,32 +135,85 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
-  submitNotes(activityId) {
-    this.isLoading = true
-    this.activityId.patchValue(activityId);
+  createNewActivity() {
+    this.isSubmitting = true;
     const formData = {
-      activity: this.activityId.value,
-      notes: this.notes
+      zaak: this.mainZaakUrl,
+      name: this.addActivityName.value,
+      remarks: this.addActivityRemarks.value
     }
 
-    this.postNotes(formData).subscribe(() => {
+    this.actvititeitenService.postNewActivity(formData).subscribe(() => {
+      this.isSubmitting = false;
+      this.addActivityForm.reset();
+      this.showAddActivityButton = false
       this.fetchActivities();
     }, res =>  {
-      this.hasError = true;
-      this.errorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden."
-      this.isLoading = false;
+      this.setError(res)
     })
-
   }
 
-  getActivities(): Observable<Activity[]> {
-    const endpoint = `/activities/api/activities?zaak=${this.mainZaakUrl}`;
-    return this.http.Get<Activity[]>(endpoint);
+  submitNotes(activityId, index) {
+    this.isLoading = true
+    const formData = {
+      activity: activityId,
+      notes: this.notes(index).value
+    }
+
+    this.actvititeitenService.postNotes(formData).subscribe(() => {
+      this.activityForm.reset();
+      this.openNoteEditField = null;
+      this.fetchActivities();
+    }, res =>  {
+      this.setError(res)
+    })
   }
 
-  postNotes(formData): Observable<any> {
-    return this.http.Post<any>(encodeURI('/activities/api/events'), formData);
+  submitAssignUser(activityId, index) {
+    this.isLoading = true
+    const formData = {
+      assignee: this.assignedUser(index).value
+    }
+
+    this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
+      this.assignUserForm.reset();
+      this.openAssigneeEditField = null;
+      this.fetchActivities();
+    }, res =>  {
+      this.setError(res);
+    })
   }
 
+  closeActivity(activityId) {
+    this.isLoading = true
+    const formData = {
+      status: "finished"
+    }
 
+    this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
+      this.showCloseActivityConfirmation = null;
+      this.fetchActivities();
+    }, res =>  {
+      this.showCloseActivityConfirmation = null;
+      this.setError(res);
+    })
+  }
+
+  deleteActivity(activityId) {
+    this.isLoading = true
+
+    this.actvititeitenService.deleteActivity(activityId).subscribe(() => {
+      this.showDeleteActivityConfirmation = null;
+      this.fetchActivities();
+    }, res =>  {
+      this.showDeleteActivityConfirmation = null;
+      this.setError(res);
+    })
+  }
+
+  setError(res) {
+    this.hasError = true;
+    this.errorMessage = res.error?.detail ? res.error.detail : "Er is een fout opgetreden."
+    this.isLoading = false;
+  }
 }

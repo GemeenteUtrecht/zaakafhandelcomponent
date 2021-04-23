@@ -114,6 +114,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   }
 
   fetchFormLayout(taskId): void {
+    this.contextHasError = false;
     this.isLoadingContext = true;
     this.modalService.open('ketenprocessenModal');
     this.ketenProcessenService.getFormLayout(taskId).subscribe(res => {

@@ -43,7 +43,7 @@
           <div class="col-md-6 form-group">
             <gu-input-field [control] = "assignedUsersEmail(i)"
                             type="text"
-                            label="E-mail (optioneel)"
+                            label="E-mail"
                             id="sign-doc-email--{{i}}">
             </gu-input-field>
             <p class="form-control-error" *ngIf="assignedUsersEmail(i).value !== '' && assignedUsersEmail(i).invalid">Geen geldige e-mail</p>
@@ -51,29 +51,29 @@
           <div class="col-md-6 form-group">
             <gu-input-field [control] = "assignedUsersFirstname(i)"
                             type="text"
-                            label="Voornaam (optioneel)"
+                            label="Voornaam"
                             id="sign-doc-firstname--{{i}}">
             </gu-input-field>
           </div>
           <div class="col-md-6 form-group">
             <gu-input-field [control] = "assignedUsersLastname(i)"
                             type="text"
-                            label="Achternaam (optioneel)"
+                            label="Achternaam"
                             id="sign-doc-lastname--{{i}}">
             </gu-input-field>
           </div>
         </div>
       </div>
       </div>
-      <gu-button type="secondary" size="small" (click)="addStep()">Ondertekenaar toevoegen</gu-button>
+      <button gu-button type="secondary" size="small" (click)="addStep()">Ondertekenaar toevoegen</button>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large"
+      <button gu-button size="large"
                  (click)="submitForm()"
                  [disabled]="!signDocumentForm.valid || isSubmitting"
                  [loading]="isSubmitting">
         Voltooien
-      </gu-button>
+      </button>
     </div>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">

@@ -20,7 +20,6 @@ export class FeaturesZaakDetailComponent implements OnInit {
   currentUser: User;
 
   zaakData: Zaak;
-  activityData: Activity[];
 
   isLoading: boolean;
   hasError: boolean;
@@ -28,7 +27,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
 
   loginUrl: string;
 
-  activities = 2;
+  activityData: Activity[];
+  activeActivities: Activity[];
 
   constructor(
     private http: ApplicationHttpClient,
@@ -69,6 +69,9 @@ export class FeaturesZaakDetailComponent implements OnInit {
       )
       .subscribe( activities => {
         this.activityData = activities;
+        this.activeActivities = activities.filter(activity => {
+          return activity.status === 'on_going'
+        })
         this.isLoading = false;
       }, error => {
         this.isLoading = false;

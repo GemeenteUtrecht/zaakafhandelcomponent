@@ -3,7 +3,7 @@
 .tab-content {
   padding: 1rem;
 }
-.ongoing-activity {
+.activity {
   display: flex;
   justify-content: space-between;
   border: 1px solid $border-grey;
@@ -22,7 +22,10 @@
       height: 10rem;
     }
   }
-  .detail-note {
-
+  hr {
+    box-sizing: border-box;
+    height: 1px;
+    width: 100%;
+    margin: 2rem 0;
   }
 }
