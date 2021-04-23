@@ -39,7 +39,7 @@ urlpatterns = [
         name="zaak-documents",
     ),
     path(
-        "cases/document",
+        "cases/<str:bronorganisatie>/<str:identificatie>/document",
         ZaakDocumentView.as_view(),
         name="zaak-document",
     ),

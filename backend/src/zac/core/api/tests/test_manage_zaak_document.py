@@ -30,7 +30,13 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse("zaak-document")
+    endpoint = reverse(
+        "zaak-document",
+        kwargs={
+            "bronorganisatie": "123456782",
+            "identificatie": "ZAAK-2020-0010",
+        },
+    )
 
     def setUp(self):
         super().setUp()
@@ -263,7 +269,13 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
 
 class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse("zaak-document")
+    endpoint = reverse(
+        "zaak-document",
+        kwargs={
+            "bronorganisatie": "123456782",
+            "identificatie": "ZAAK-2020-0010",
+        },
+    )
 
     def setUp(self):
         super().setUp()

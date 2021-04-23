@@ -943,7 +943,17 @@ async def fetch_documents(zios: list, doc_versions: Optional[Dict[str, int]] = N
     return responses
 
 
-def update_document(url: str, data: dict, audit_line: str):
+def create_document(document_data: Dict) -> Document:
+    core_config = CoreConfig.get_solo()
+    service = core_config.primary_drc
+    if not service:
+        raise RuntimeError("No DRC configured!")
+    drc_client = service.build_client()
+    document = drc_client.create("enkelvoudiginformatieobject", document_data)
+    return factory(Document, document)
+
+
+def update_document(url: str, data: dict, audit_line: str) -> Document:
     client = _client_from_url(url)
 
     # lock eio
@@ -976,6 +986,19 @@ def update_document(url: str, data: dict, audit_line: str):
     # refresh new state
     document = get_document(document.url)
     return document
+
+
+def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
+    # relate document and zaak
+    zrc_client = Service.get_client(zaak_url)
+    response = zrc_client.create(
+        "zaakinformatieobject",
+        {
+            "informatieobject": document_url,
+            "zaak": zaak_url,
+        },
+    )
+    return response
 
 
 ###################################################

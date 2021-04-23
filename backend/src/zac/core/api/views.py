@@ -26,7 +26,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
@@ -37,8 +36,8 @@ from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
 from ..cache import invalidate_zaak_cache
-from ..models import CoreConfig
 from ..services import (
+    create_document,
     find_zaak,
     get_document,
     get_documenten,
@@ -382,8 +381,6 @@ class ZaakDocumentView(views.APIView):
         return AddZaakDocumentSerializer(*args, **kwargs)
 
     def get_document_data(self, validated_data: dict, zaak: Zaak) -> Dict[str, str]:
-        # Get the document and zaak
-
         document_data = {
             "bronorganisatie": zaak.bronorganisatie,  # TODO: what if it's different?
             "creatiedatum": date.today().isoformat(),  # TODO: what if it's created on another date
@@ -409,7 +406,6 @@ class ZaakDocumentView(views.APIView):
             )
 
         document_data = {**document_data, **validated_data}
-
         return document_data
 
     @extend_schema(
@@ -453,26 +449,8 @@ class ZaakDocumentView(views.APIView):
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
+        document = create_document(document_data)
 
-        core_config = CoreConfig.get_solo()
-        service = core_config.primary_drc
-        if not service:
-            raise RuntimeError("No DRC configured!")
-        drc_client = service.build_client()
-        document = drc_client.create("enkelvoudiginformatieobject", document_data)
-
-        # relate document and zaak
-        zrc_client = Service.get_client(
-            zaak.url
-        )  # resolves, otherwise the get_zaak would've failed
-        zrc_client.create(
-            "zaakinformatieobject",
-            {
-                "informatieobject": document["url"],
-                "zaak": zaak.url,
-            },
-        )
-        document = factory(Document, document)
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
         )
