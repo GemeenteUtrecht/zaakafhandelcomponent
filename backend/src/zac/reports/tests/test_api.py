@@ -120,7 +120,6 @@ class ViewTests(APITestCase):
             "https://example.com/zaken/api/v1/zaken/123",
             "https://example.com/zaken/api/v1/zaken/456",
         ]
-        zaak = get_zaak
         mock_get_zaak.side_effect = get_zaak
         mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
 

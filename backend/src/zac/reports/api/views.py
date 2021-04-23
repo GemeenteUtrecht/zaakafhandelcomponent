@@ -1,19 +1,13 @@
-from typing import List, Optional
-
-from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from zac.core.api.pagination import BffPagination
 from zac.core.services import get_zaaktypen
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
-from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 
 from ..export import get_zaken_details_for_export
 from ..models import Report
@@ -58,6 +52,7 @@ class ReportListViewSet(ListAPIView):
     ],
 )
 class ReportDownloadView(GenericAPIView):
+    queryset = Report.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = ReportDownloadSerializer
     pagination_class = BffPagination
@@ -73,16 +68,8 @@ class ReportDownloadView(GenericAPIView):
         "zaaktype.omschrijving",
     )
 
-    def get_object(self) -> Optional[Report]:
-        pk = self.kwargs.get("pk")
-        report = get_object_or_404(Report, pk=pk) if pk else None
-        return report
-
-    def get_queryset(self) -> List[Optional[ReportRow]]:
+    def get(self, request, *args, **kwargs):
         report = self.get_object()
-        if not report:
-            return [None]
-
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(
             report, ordering=ordering
@@ -108,12 +95,8 @@ class ReportDownloadView(GenericAPIView):
                     status=zaak_statuses[zaak.url] if zaak.status else "",
                 )
             )
-        return qs
-
-    def get(self, request, *args, **kwargs):
-        qs = self.get_queryset()
         page = self.paginate_queryset(qs)
-        serializer = self.serializer_class(page, many=True)
+        serializer = self.get_serializer(instance=page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def has_permission(self):

@@ -32,7 +32,9 @@ class DownloadViewTests(ClearCachesMixin, TestCase):
         user = SuperUserFactory.create()
         self.client.force_login(user)
 
-        with patch("zac.reports.views.export_zaken", return_value=Dataset()):
+        with patch(
+            "zac.reports.views.export_zaken_as_tablib_dataset", return_value=Dataset()
+        ):
             response = self.client.get(self.url)
 
         self.assertEqual(
