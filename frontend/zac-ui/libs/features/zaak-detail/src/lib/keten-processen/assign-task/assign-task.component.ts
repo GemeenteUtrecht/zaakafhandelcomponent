@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Result, UserSearch } from '../../../models/user-search';
 import { ApplicationHttpClient } from '@gu/services';
 import { Task } from '../../../models/keten-processen'
+import { User } from '@gu/models';
 
 @Component({
   selector: 'gu-assign-task',
@@ -11,8 +12,8 @@ import { Task } from '../../../models/keten-processen'
   styleUrls: ['./assign-task.component.scss']
 })
 export class AssignTaskComponent implements OnChanges {
-  @Input() currentUser: string;
   @Input() taskData: Task;
+  @Input() currentUser: User;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   assignTaskForm: FormGroup;
@@ -50,7 +51,6 @@ export class AssignTaskComponent implements OnChanges {
     return this.assignTaskForm.get('assignee') as FormControl;
   };
 
-
   onSearch(searchInput) {
     this.getAccounts(searchInput).subscribe(res => {
       this.users = res.results.map(result => ({
@@ -61,6 +61,11 @@ export class AssignTaskComponent implements OnChanges {
             result.firstName : result.username
       }))
     })
+  }
+
+  assignSelf() {
+    this.assignee.patchValue(this.currentUser.username);
+    this.submitForm();
   }
 
   submitForm() {

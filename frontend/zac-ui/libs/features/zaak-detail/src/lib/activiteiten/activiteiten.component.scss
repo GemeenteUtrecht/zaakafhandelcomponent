@@ -1,0 +1,31 @@
+@import './base/colors/colors';
+
+.tab-content {
+  padding: 1rem;
+}
+.activity {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid $border-grey;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  &__buttons {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+  }
+  textarea {
+    height: 3rem;
+    transition: height 0.3s;
+    &:focus {
+      height: 10rem;
+    }
+  }
+  hr {
+    box-sizing: border-box;
+    height: 1px;
+    width: 100%;
+    margin: 2rem 0;
+  }
+}

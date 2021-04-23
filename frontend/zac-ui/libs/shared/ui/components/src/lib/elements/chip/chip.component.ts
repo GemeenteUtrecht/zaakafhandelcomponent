@@ -8,5 +8,6 @@ import { Component, Input } from '@angular/core';
 export class ChipComponent {
 
   @Input() type: 'primary' | 'secondary' | 'tertiary' | 'warn'
+  @Input() icon: string;
 
 }

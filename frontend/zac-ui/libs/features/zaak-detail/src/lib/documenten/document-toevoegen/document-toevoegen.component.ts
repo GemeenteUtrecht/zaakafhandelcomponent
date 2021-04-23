@@ -12,7 +12,10 @@ import { ModalService } from '@gu/components';
 })
 export class DocumentToevoegenComponent implements OnInit {
   @Input() mainZaakUrl: string;
+  @Input() activity: string;
+  @Input() closeButton: boolean;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() close: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   documentTypes: any;
   addDocumentForm: FormGroup;
@@ -58,10 +61,17 @@ export class DocumentToevoegenComponent implements OnInit {
     formData.append("file", this.addDocumentForm.controls['documentFile'].value);
     formData.append("zaak", this.mainZaakUrl);
 
+    if (this.activity) {
+      formData.append("beschrijving", this.activity);
+    }
+
     this.isSubmitting = true;
     this.postDocument(formData).subscribe(() => {
       this.reload.emit(true);
-      this.modalService.close("document-toevoegen-modal");
+      this.close.emit(true);
+      if (!this.activity) {
+        this.modalService.close("document-toevoegen-modal");
+      }
       this.addDocumentForm.reset();
       this.isSubmitting = false;
     }, errorRes => {

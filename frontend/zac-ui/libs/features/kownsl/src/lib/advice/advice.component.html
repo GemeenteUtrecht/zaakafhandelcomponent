@@ -76,14 +76,14 @@
           <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
         </section>
         <div class="d-flex justify-content-end">
-          <gu-button
+          <button gu-button
             [disabled]="!adviceForm.valid || isSubmitting"
             [loading]="isSubmitting"
             type="primary"
             size="large"
             (click)="submitForm()">
             Advisering bevestigen
-          </gu-button>
+          </button>
         </div>
         <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
           <gu-message [message]="errorMessage" type="warn"></gu-message>

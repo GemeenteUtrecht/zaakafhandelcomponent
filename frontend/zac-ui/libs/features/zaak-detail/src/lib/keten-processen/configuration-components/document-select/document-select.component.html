@@ -18,12 +18,12 @@
       </div>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large"
+      <button gu-button size="large"
                  (click)="submitForm()"
                  [disabled]="!selectDocumentsForm.valid || isSubmitting"
                  [loading]="isSubmitting">
         Voltooien
-      </gu-button>
+      </button>
     </div>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">

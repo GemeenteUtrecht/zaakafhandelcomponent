@@ -1,0 +1,295 @@
+<div class="activities mt-4">
+  <div class="d-flex justify-content-between">
+    <h1>Activiteiten</h1>
+    <button gu-button *ngIf="!showAddActivityButton" icon="add" (click)="showAddActivityButton = true">
+      Toevoegen
+    </button>
+  </div>
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <div *ngIf="showAddActivityButton" class="create-activity">
+    <form [formGroup]="addActivityForm">
+      <div class="form-group">
+        <div class="row">
+          <div class="col-lg-6">
+            <h4>Activiteit toevoegen</h4>
+            <gu-input-field [control]="addActivityName"
+                            type="text"
+                            label="Naam activiteit"
+                            class="mb-4">
+            </gu-input-field>
+            <gu-input-field [control]="addActivityRemarks"
+                            type="text"
+                            label="Opmerkingen (optioneel)"
+                            class="mb-2">
+            </gu-input-field>
+            <div class="d-flex justify-content-end">
+              <button gu-button
+                      type="tertiary"
+                      (click)="showAddActivityButton = false">
+                Sluiten
+              </button>
+              <button gu-button
+                      [disabled]="!addActivityForm.valid || isSubmitting"
+                      (click)="createNewActivity()"
+              >
+                Toevoegen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <tabset *ngIf="!isLoading && activityData && currentUser" [justified]="true">
+    <tab heading="Lopend">
+      <div class="tab-content">
+        <ng-template tabHeading>
+          <gu-chip [type]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
+                   class="ml-1">
+            {{ongoingData?.length > 0 ? ongoingData?.length : 0}}
+          </gu-chip>
+        </ng-template>
+        <ng-container *ngIf="ongoingData.length > 0; else noOngoingActivities">
+          <div class="activity row" *ngFor="let activity of ongoingData; let i = index">
+            <div class="activity__description col-lg-3">
+              <p class="p--bold p--marginsmall">{{activity.name}}</p>
+              <p>{{activity.remarks}}</p>
+            </div>
+            <div class="activity__details col-lg-5">
+              <!--  Gebruiker toewijzen  -->
+              <div class="activity__detail mb-4">
+                <gu-chip *ngIf="activity.assignee"
+                         (click)="openAssigneeEditField = i; openNoteEditField = null"
+                         [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                         icon="edit"
+                         class="d-inline-block mb-1"
+                >
+                  {{activity.assignee}}
+                </gu-chip>
+                <button gu-button *ngIf="!activity.assignee && openAssigneeEditField !== i"
+                        (click)="openAssigneeEditField = i; openNoteEditField = null"
+                        class="d-block"
+                        type="secondary"
+                        size="extrasmall"
+                        icon="person_add">
+                  Gebruiker toewijzen
+                </button>
+                <ng-container *ngIf="openAssigneeEditField === i">
+                  <gu-multiselect (search)="onSearch($event)"
+                                  [control]="assignedUser(i)"
+                                  [items]="users"
+                                  [multiple]="false"
+                                  bindLabel="name"
+                                  bindValue="username"
+                                  required
+                                  placeholder="Zoek een gebruiker"
+                                  class="mb-2">
+                  </gu-multiselect>
+                  <div class="d-flex justify-content-between">
+                    <button gu-button (click)="openAssigneeEditField = null"
+                               type="tertiary"
+                               size="small">
+                      Sluiten
+                    </button>
+                    <button gu-button (click)="submitAssignUser(activity.id, i)"
+                            [disabled]="!assignedUser(i).valid"
+                            type="primary"
+                            size="small">
+                      Gebruiker toewijzen
+                    </button>
+                  </div>
+                </ng-container>
+              </div>
+              <!--  Document uploaden  -->
+              <div class="activity__detail mb-4">
+
+                <button gu-button *ngIf="openDocumentUploadForm !== i"
+                        (click)="openDocumentUploadForm = i; openAssigneeEditField = null"
+                        class="d-block"
+                        type="secondary"
+                        size="extrasmall"
+                        icon="upload_file">
+                  Document toevoegen
+                </button>
+                <gu-document-toevoegen *ngIf="openDocumentUploadForm === i"
+                                       [mainZaakUrl]="mainZaakUrl"
+                                       [activity]="activity.name"
+                                       (close)="openDocumentUploadForm = null"
+                                       (reload)="fetchActivities()">
+                </gu-document-toevoegen>
+              </div>
+              <!--  Notities  -->
+              <div class="activity__detail mb-4">
+                <div class="timeline">
+                  <div class="timeline__row row no-gutters"
+                       *ngFor="let event of activity.events; let last = last; let i = index"
+                       [ngClass]="(last ? 'timeline__row--last' : '')"
+                       [hidden]="!eventIsExpanded && i >= 3"
+                  >
+                    <div class="col-1">
+                      <div class="timeline-item__dot"></div>
+                    </div>
+                    <div class="timeline-item timeline-item--left col-11">
+                      <div class="item-left__info ml-2">
+                        <p class="p--nomargin p--bold">{{event.notes}}</p>
+                        <label class="label label--date p-0 m-0">{{event.created | date:'shortDate'}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button gu-button *ngIf="activity.events.length > 3"
+                           type="tertiary"
+                           size="extrasmall"
+                           [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
+                           (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
+                  {{eventIsExpanded === i ? 'Toon minder' : 'Toon meer'}}
+                </button>
+              </div>
+              <!--  Notitie toevoegen  -->
+              <div class="activity__detail">
+                <form *ngIf="activityForm" [formGroup]="activityForm">
+                  <button gu-button *ngIf="openNoteEditField !== i"
+                             (click)="openNoteEditField = i; openAssigneeEditField = null"
+                             class="d-block"
+                             type="secondary"
+                             size="extrasmall"
+                             icon="note_add">
+                    Notitie toevoegen
+                  </button>
+
+                  <ng-container *ngIf="openNoteEditField === i">
+                    <label class="has-float-label mb-2">
+                      <span>Notitie</span>
+                      <textarea class="form-control mb-0" [formControl]="notes(i)"></textarea>
+                    </label>
+                    <div class="d-flex justify-content-between">
+                      <button gu-button (click)="openNoteEditField = null"
+                                 type="tertiary"
+                                 size="small">
+                        Sluiten
+                      </button>
+                      <button gu-button (click)="submitNotes(activity.id, i)"
+                              [disabled]="!notes(i).valid"
+                              type="primary"
+                              size="small">
+                        Notitie toevoegen
+                      </button>
+                    </div>
+                  </ng-container>
+                </form>
+              </div>
+            </div>
+            <hr class="d-lg-none">
+            <!--  Afsluiten of verwijderen  -->
+            <div class="activity__buttons col-lg-4">
+              <button gu-button *ngIf="showCloseActivityConfirmation !== i"
+                      type="secondary"
+                      size="small"
+                      class="mb-2"
+                      (click)="showCloseActivityConfirmation = i">Afsluiten</button>
+              <div *ngIf="showCloseActivityConfirmation === i" class="d-flex">
+                <p>Weet je zeker dat je deze activiteit wilt sluiten?</p>
+                <div class="">
+                  <button gu-button
+                          type="primary"
+                          size="small"
+                          class="mb-2"
+                          (click)="closeActivity(activity.id)">
+                    Bevestigen
+                  </button>
+                  <button gu-button type="primary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
+                </div>
+              </div>
+              <button gu-button *ngIf="showDeleteActivityConfirmation !== i"
+                      type="tertiary"
+                      size="small"
+                      class="mb-2"
+                      (click)="showDeleteActivityConfirmation = i">Verwijderen</button>
+              <div *ngIf="showDeleteActivityConfirmation === i" class="d-flex">
+                <p>Weet je zeker dat je deze activiteit PERMANENT wilt verwijderen?</p>
+                <div class="">
+                  <button gu-button
+                          type="primary"
+                          size="small"
+                          class="mb-2"
+                          (click)="deleteActivity(activity.id)">
+                    Bevestigen
+                  </button>
+                  <button gu-button type="primary" size="small" class="mb-2" (click)="showDeleteActivityConfirmation = null">Annuleren</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noOngoingActivities>
+          <p>Er zijn geen lopende activiteiten.</p>
+        </ng-template>
+      </div>
+    </tab>
+
+    <tab heading="Afgesloten">
+      <div class="tab-content">
+        <ng-template tabHeading>
+          <gu-chip type="tertiary"
+                   class="ml-1">
+            {{finishedData?.length > 0 ? finishedData?.length : 0}}
+          </gu-chip>
+        </ng-template>
+        <ng-container *ngIf="finishedData.length > 0; else noFinishedActivities">
+          <div class="activity row" *ngFor="let activity of finishedData; let i = index">
+            <div class="activity__description col-lg-3">
+              <p class="p--bold p--marginsmall">{{activity.name}}</p>
+              <p>{{activity.remarks}}</p>
+            </div>
+            <div class="activity__details col-lg-5">
+              <!--  Gebruiker toewijzen  -->
+              <div class="activity__detail mb-4">
+                <gu-chip *ngIf="activity.assignee"
+                         [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                         class="d-inline-block mb-1">
+                  {{activity.assignee}}
+                </gu-chip>
+              </div>
+              <!--  Document uploaden  -->
+
+              <!--  Notities  -->
+              <div class="activity__detail mb-4">
+                <div class="timeline">
+                  <div class="timeline__row row no-gutters"
+                       *ngFor="let event of activity.events; let last = last; let i = index"
+                       [ngClass]="(last ? 'timeline__row--last' : '')"
+                       [hidden]="!eventIsExpanded && i >= 3"
+                  >
+                    <div class="col-1">
+                      <div class="timeline-item__dot"></div>
+                    </div>
+                    <div class="timeline-item timeline-item--left col-11">
+                      <div class="item-left__info ml-2">
+                        <p class="p--nomargin p--bold">{{event.notes}}</p>
+                        <label class="label label--date p-0 m-0">{{event.created | date:'shortDate'}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button gu-button *ngIf="activity.events.length > 3"
+                        type="tertiary"
+                        size="extrasmall"
+                        [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
+                        (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
+                  {{eventIsExpanded === i ? 'Toon minder' : 'Toon meer'}}
+                </button>
+              </div>
+            </div>
+            <!--  Document  -->
+            <div class="activity__buttons col-lg-4">
+
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noFinishedActivities>
+          <p>Er zijn geen afgesloten activiteiten.</p>
+        </ng-template>
+      </div>
+    </tab>
+  </tabset>
+</div>

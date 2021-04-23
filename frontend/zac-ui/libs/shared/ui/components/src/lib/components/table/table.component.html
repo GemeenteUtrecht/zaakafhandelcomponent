@@ -38,13 +38,13 @@
 
               <!-- Button -->
               <ng-container *ngSwitchCase="'button'">
-                <gu-button
+                <button gu-button
                   [type]=" cell.value['buttonType'] ? cell.value['buttonType'] : 'tertiary'"
                   size="extrasmall"
                   noPadding
                   (click)="handleButtonClick(cell.key, cell.value['value'])">
                   {{ cell.value['label'] }}
-                </gu-button>
+                </button>
               </ng-container>
 
               <!-- Icon -->

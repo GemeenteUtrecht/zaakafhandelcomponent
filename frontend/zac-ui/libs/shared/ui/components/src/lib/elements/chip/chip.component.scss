@@ -16,6 +16,11 @@
   color: $color-white;
   &--primary {
     background-color: $color-blue;
+    .chip-icon {
+      ::ng-deep .mat-icon {
+        color: $color-white;
+      }
+    }
   }
   &--secondary {
     background-color: $color-orange;
@@ -23,8 +28,30 @@
   &--tertiary {
     background-color: $background-grey;
     color: $color-text;
+    .chip-icon {
+      ::ng-deep .mat-icon {
+        color: $color-blue;
+      }
+    }
   }
   &--warn {
     background-color: $color-warn;
+  }
+  &--hoverable {
+    cursor: pointer;
+    .chip-icon {
+      display: none;
+      ::ng-deep .mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px;
+      }
+    }
+    &:hover {
+      .chip-icon {
+        display: block;
+      }
+    }
   }
 }
