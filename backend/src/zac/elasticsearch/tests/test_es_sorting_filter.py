@@ -25,8 +25,8 @@ class ESTestDocument(Document):
         name = settings.ES_INDEX_ZAKEN
 
 
-class ESSortingFilterTest(TestCase):
-    def test_view_default_sorting(self):
+class ESOrderingFilterTest(TestCase):
+    def test_view_default_ordering(self):
         request_factory = APIRequestFactory()
         some_request = request_factory.post(f"/some-url", {}, format="json")
 

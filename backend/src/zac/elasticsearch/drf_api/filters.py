@@ -7,7 +7,7 @@ from rest_framework import views
 from rest_framework.request import Request
 from rest_framework.settings import api_settings
 
-from .utils import get_document_properties, get_sorting_fields
+from .utils import get_document_properties, get_ordering_fields
 
 
 class ESOrderingFilter:
@@ -114,7 +114,7 @@ class ESOrderingFilter:
         if properties:
             return {
                 field_name: field_type
-                for field_name, field_type in get_sorting_fields(properties)
+                for field_name, field_type in get_ordering_fields(properties)
             }
 
         return {}

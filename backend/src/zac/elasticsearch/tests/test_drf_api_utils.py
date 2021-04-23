@@ -7,7 +7,7 @@ from elasticsearch_dsl import Document, InnerDoc, field
 from ..drf_api.utils import (
     es_document_to_ordering_parameters,
     get_document_properties,
-    get_sorting_fields,
+    get_ordering_fields,
 )
 
 
@@ -57,9 +57,9 @@ class UtilsTests(TestCase):
         with self.assertRaises(AssertionError):
             get_document_properties(NotAnESDocument)
 
-    def test_get_sorting_fields(self):
+    def test_get_ordering_fields(self):
         properties = get_document_properties(ESTestDocument)
-        list_of_fields = list(get_sorting_fields(properties["properties"]))
+        list_of_fields = list(get_ordering_fields(properties["properties"]))
         expected_data = [
             ("some_nested.some_nested_text", "text"),
             ("some_date", "date"),

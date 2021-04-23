@@ -40,7 +40,7 @@ class ReportListViewSet(ListAPIView):
             type=str,
             location=OpenApiParameter.QUERY,
             required=False,
-            description="Possible sorting parameters. Multiple values are possible and should be separated by a comma.",
+            description="Possible ordering parameters. Multiple values are possible and should be separated by a comma.",
             enum=(
                 "identificatie",
                 "omschrijving",
