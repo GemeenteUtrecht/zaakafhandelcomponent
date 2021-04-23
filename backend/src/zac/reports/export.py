@@ -6,6 +6,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
 from zgw_consumers.concurrent import parallel
 
+from zac.accounts.models import User
 from zac.core.services import (
     _get_from_catalogus,
     get_status,
@@ -33,9 +34,10 @@ def _get_zaaktypen(report: Report) -> List[ZaakType]:
     return factory(ZaakType, all_zaaktypen)
 
 
-def get_export_zaken(report: Report, ordering: List[str]) -> List[Zaak]:
+def get_export_zaken(user: User, report: Report, ordering: List[str]) -> List[Zaak]:
     zaaktypen = {zaaktype.url: zaaktype for zaaktype in _get_zaaktypen(report)}
     zaak_urls = search(
+        user=user,
         zaaktypen=list(zaaktypen.keys()),
         include_closed=False,
         ordering=ordering,
@@ -52,10 +54,11 @@ def get_export_zaken(report: Report, ordering: List[str]) -> List[Zaak]:
 
 
 def get_zaken_details_for_export(
+    user: User,
     report: Report,
     ordering: List[str] = ["startdatum", "registratiedatum", "identificatie"],
 ) -> Tuple[List[Zaak], Dict[str, str], Dict[str, List[ZaakEigenschap]]]:
-    zaken = get_export_zaken(report, ordering=ordering)
+    zaken = get_export_zaken(user, report, ordering=ordering)
 
     # get the statuses & eigenschappen
     with parallel() as executor:
@@ -75,8 +78,10 @@ def get_zaken_details_for_export(
     return zaken, zaak_statuses, zaak_eigenschappen
 
 
-def export_zaken_as_tablib_dataset(report: Report) -> tablib.Dataset:
-    zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(report)
+def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset:
+    zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(
+        user, report
+    )
 
     data = tablib.Dataset(
         headers=[

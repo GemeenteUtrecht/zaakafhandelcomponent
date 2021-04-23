@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from ..models import Report
-from .data import ReportRow
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -14,14 +12,12 @@ class ReportSerializer(serializers.ModelSerializer):
         )
 
 
-class ReportDownloadSerializer(APIModelSerializer):
-    class Meta:
-        model = ReportRow
-        fields = (
-            "eigenschappen",
-            "identificatie",
-            "omschrijving",
-            "startdatum",
-            "status",
-            "zaaktype_omschrijving",
-        )
+class ReportDownloadSerializer(serializers.Serializer):
+    identificatie = serializers.CharField()
+    omschrijving = serializers.CharField()
+    startdatum = serializers.DateField()
+    status = serializers.CharField()
+    zaaktype_omschrijving = serializers.CharField()
+    eigenschappen = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField()), allow_empty=True
+    )

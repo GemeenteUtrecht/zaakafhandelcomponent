@@ -46,7 +46,7 @@ class DownloadReportView(
     def get(self, request, *args, **kwargs):
         report = self.get_object()
 
-        dataset = export_zaken_as_tablib_dataset(report)
+        dataset = export_zaken_as_tablib_dataset(request.user, report)
 
         response = FileResponse(
             BytesIO(dataset.export("xlsx")),

@@ -11,7 +11,6 @@ from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 
 from ..export import get_zaken_details_for_export
 from ..models import Report
-from .data import ReportRow
 from .serializers import ReportDownloadSerializer, ReportSerializer
 
 
@@ -72,31 +71,30 @@ class ReportDownloadView(GenericAPIView):
         report = self.get_object()
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(
-            report, ordering=ordering
+            request.user, report, ordering=ordering
         )
 
         qs = []
         for zaak in zaken:
-            eigenschappen = zaak_eigenschappen.get(zaak.url) or ""
+            eigenschappen = zaak_eigenschappen.get(zaak.url) or []
             if eigenschappen:
-                formatted = [
-                    f"{eigenschap.naam}: {eigenschap.waarde}"
+                eigenschappen = [
+                    {eigenschap.naam: eigenschap.waarde}
                     for eigenschap in sorted(eigenschappen, key=lambda e: e.naam)
                 ]
-                eigenschappen = "\n".join(formatted)
 
             qs.append(
-                ReportRow(
-                    identificatie=zaak.identificatie,
-                    zaaktype_omschrijving=zaak.zaaktype.omschrijving,
-                    startdatum=zaak.startdatum,
-                    omschrijving=zaak.omschrijving,
-                    eigenschappen=eigenschappen,
-                    status=zaak_statuses[zaak.url] if zaak.status else "",
-                )
+                {
+                    "eigenschappen": eigenschappen,
+                    "identificatie": zaak.identificatie,
+                    "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
+                    "startdatum": zaak.startdatum,
+                    "omschrijving": zaak.omschrijving,
+                    "status": zaak_statuses[zaak.url] if zaak.status else "",
+                }
             )
         page = self.paginate_queryset(qs)
-        serializer = self.get_serializer(instance=page, many=True)
+        serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def has_permission(self):
