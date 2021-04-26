@@ -154,7 +154,7 @@ djangorestframework==3.12.2
     #   -r requirements/base.txt
     #   drf-spectacular
     #   zgw-consumers
-drf-spectacular==0.12.0
+drf-spectacular==0.15.1
     # via -r requirements/base.txt
 elasticsearch-dsl==7.3.0
     # via -r requirements/base.txt

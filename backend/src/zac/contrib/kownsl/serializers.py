@@ -50,7 +50,7 @@ class ApprovalSerializer(APIModelSerializer):
         model = Approval
         fields = ("created", "author", "status", "toelichting")
 
-    def get_status(self, obj):
+    def get_status(self, obj) -> str:
         if obj.approved:
             return _("Akkoord")
         else:
