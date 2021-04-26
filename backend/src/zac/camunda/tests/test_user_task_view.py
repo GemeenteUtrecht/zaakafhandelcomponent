@@ -177,11 +177,7 @@ class GetUserTaskContextViewTests(APITestCase):
     def test_get_context_no_permission(self, m, gt):
         user = UserFactory.create()
         self.client.force_authenticate(user)
-        with patch(
-            "zac.core.camunda.select_documents.context.get_zaak_context",
-            return_value=self.zaak_context,
-        ):
-            response = self.client.get(self.task_endpoint)
+        response = self.client.get(self.task_endpoint)
         self.assertEqual(response.status_code, 403)
 
     @patch(
@@ -205,10 +201,14 @@ class GetUserTaskContextViewTests(APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.select_documents.context.get_zaak_context",
-            return_value=self.zaak_context,
+            "zac.core.camunda.select_documents.context.get_zaak",
+            return_value=self.zaak,
         ):
-            response = self.client.get(self.task_endpoint)
+            with patch(
+                "zac.core.camunda.select_documents.context.get_documenten",
+                return_value=[[self.document], []],
+            ):
+                response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
