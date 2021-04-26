@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -13,7 +13,7 @@ import { FeaturesZaakDetailService } from './features-zaak-detail.service';
   templateUrl: './features-zaak-detail.component.html',
   styleUrls: ['./features-zaak-detail.component.scss']
 })
-export class FeaturesZaakDetailComponent implements OnInit, AfterViewInit {
+export class FeaturesZaakDetailComponent implements OnInit {
   bronorganisatie: string;
   identificatie: string;
   mainZaakUrl: string;
@@ -95,7 +95,6 @@ export class FeaturesZaakDetailComponent implements OnInit, AfterViewInit {
 
   openActivitiesModal() {
     this.route.queryParams.subscribe(params => {
-      console.log(params)
       const activityParam = params['activities'];
       if (activityParam) {
         this.openModal('activities-modal')
