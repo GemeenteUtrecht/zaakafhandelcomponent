@@ -79,4 +79,8 @@ export class FeaturesWorkstackComponent implements OnInit {
     }
   }
 
+  createActivityLink(zaak) {
+    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`
+  }
+
 }
