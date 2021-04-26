@@ -1,7 +1,5 @@
 import logging
 
-from django.core.exceptions import ImproperlyConfigured
-
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -10,7 +8,7 @@ from zds_client import ClientError
 from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import AtomicPermission, BlueprintPermission
 from zac.core.permissions import Permission
-from zac.core.services import get_zaak
+from zac.core.services import get_document, get_informatieobjecttype, get_zaak
 
 logger = logging.getLogger(__name__)
 
@@ -115,3 +113,20 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
             return None
 
         return zaak
+
+
+class DocumentDefinitionPermission(ObjectDefinitionBasePermission):
+    object_attr = "url"
+    object_type = PermissionObjectType.document
+
+    def get_object(self, request: Request, obj_url: str):
+        try:
+            document = get_document(obj_url)
+            document.informatieobjecttype = get_informatieobjecttype(
+                document.informatieobjecttype
+            )
+        except ClientError:
+            logger.info("Invalid Document specified", exc_info=True)
+            return None
+
+        return document
