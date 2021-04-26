@@ -1,4 +1,4 @@
 <div class="gu-search">
-  <gu-search-form class="d-block mb-4" (loadResult)="setResult($event)"></gu-search-form>
-  <gu-search-results [resultData]="resultData"></gu-search-results>
+  <gu-search-form class="d-block mb-4" (loadResult)="resultData = $event" [sortData]="sortData"></gu-search-form>
+  <gu-search-results [resultData]="resultData" (sortOutput)="sortData = $event"></gu-search-results>
 </div>

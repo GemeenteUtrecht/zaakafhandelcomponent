@@ -1,5 +1,6 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { RowData, Table, Zaak } from '@gu/models';
+import { tableHead } from './constants/table';
 
 @Component({
   selector: 'gu-search-results',
@@ -8,6 +9,7 @@ import { RowData, Table, Zaak } from '@gu/models';
 })
 export class SearchResultsComponent implements OnChanges {
   @Input() resultData: Zaak[];
+  @Output() sortOutput = new EventEmitter<any>();
 
   tableData: Table = new Table([], []);
 
@@ -20,7 +22,7 @@ export class SearchResultsComponent implements OnChanges {
   }
 
   createTableData(resultData: Zaak[]): Table {
-    const tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Deadline'], []);
+    const tableData: Table = new Table(tableHead, []);
 
     // Add table body data
     tableData.bodyData = resultData.map( result => {
