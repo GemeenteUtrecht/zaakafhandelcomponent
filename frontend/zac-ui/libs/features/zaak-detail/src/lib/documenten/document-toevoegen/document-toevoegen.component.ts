@@ -4,6 +4,7 @@ import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { ModalService } from '@gu/components';
+import { Document } from '@gu/models';
 
 @Component({
   selector: 'gu-document-toevoegen',
@@ -12,10 +13,13 @@ import { ModalService } from '@gu/components';
 })
 export class DocumentToevoegenComponent implements OnInit {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
   @Input() activity: string;
   @Input() closeButton: boolean;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() close: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
 
   documentTypes: any;
   addDocumentForm: FormGroup;
@@ -62,16 +66,17 @@ export class DocumentToevoegenComponent implements OnInit {
     formData.append("zaak", this.mainZaakUrl);
 
     if (this.activity) {
-      formData.append("beschrijving", this.activity);
+      formData.append("beschrijving", `Document voor activiteit '${this.activity}'`);
     }
 
     this.isSubmitting = true;
-    this.postDocument(formData).subscribe(() => {
+    this.postDocument(formData).subscribe(res => {
       this.reload.emit(true);
       this.close.emit(true);
       if (!this.activity) {
         this.modalService.close("document-toevoegen-modal");
       }
+      this.uploadedDocument.emit(res)
       this.addDocumentForm.reset();
       this.isSubmitting = false;
     }, errorRes => {
@@ -79,8 +84,8 @@ export class DocumentToevoegenComponent implements OnInit {
     })
   }
 
-  postDocument(formData: FormData): Observable<any> {
-    return this.http.Post<any>(encodeURI("/api/core/cases/document"), formData);
+  postDocument(formData: FormData): Observable<Document> {
+    return this.http.Post<any>(encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/document`), formData);
   }
 
   async handleFileSelect(file: File) {

@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { Observable } from 'rxjs';
+import { EMPTY, forkJoin, Observable, of } from 'rxjs';
 import { Activity } from '../../models/activity';
 import { UserSearch } from '../../models/user-search';
+import { Tab } from '../../../../workstack/src/lib/constants/tabs';
+import { Document } from '@gu/models';
+import { ReadWriteDocument } from '../documenten/documenten.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +17,19 @@ export class ActiviteitenService {
   getAccounts(searchInput: string): Observable<UserSearch> {
     const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
     return this.http.Get<UserSearch>(endpoint);
+  }
+
+  getDocuments(activities: Activity[]): Observable<any> {
+    const observables = [];
+    activities.forEach(activity => {
+      if (activity.document) {
+        const endpoint = encodeURI(`/core/api/documents/info?document=${activity.document}`);
+        observables.push(this.http.Get<any>(endpoint));
+      } else {
+        observables.push(of(null));
+      }
+    });
+    return forkJoin(observables)
   }
 
   getActivities(mainZaakUrl): Observable<Activity[]> {
@@ -35,6 +51,10 @@ export class ActiviteitenService {
 
   postNotes(formData): Observable<any> {
     return this.http.Post<any>(encodeURI('/activities/api/events'), formData);
+  }
+
+  readDocument(endpoint) {
+    return this.http.Post<ReadWriteDocument>(endpoint);
   }
 
 }
