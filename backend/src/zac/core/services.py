@@ -989,7 +989,10 @@ def update_document(url: str, data: dict, audit_line: str) -> Document:
 
 
 def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
-    # relate document and zaak
+    """
+    Relate a document to a case.
+
+    """
     zrc_client = Service.get_client(zaak_url)
     response = zrc_client.create(
         "zaakinformatieobject",

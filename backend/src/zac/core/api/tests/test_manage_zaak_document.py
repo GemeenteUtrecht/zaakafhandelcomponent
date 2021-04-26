@@ -4,6 +4,7 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
@@ -424,8 +425,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         m.get(zaaktype["url"], json=zaaktype)
         m.get(self.informatieobjecttype["url"], json=self.informatieobjecttype)
+
+        self.ziot_url = furl(f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen").set(
+            {"zaaktype": zaaktype["url"]}
+        )
         m.get(
-            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={zaaktype['url']}",
+            self.ziot_url.url,
             json={
                 "count": 1,
                 "next": None,
@@ -464,6 +469,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
+            vertrouwelijkheidaanduiding="openbaar",
         )
 
         m.post(
@@ -485,7 +491,34 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.post(self.endpoint, post_data, format="multipart")
 
+        called_urls = [req.url for req in m.request_history]
+        # Check that informatieobjecttype url was called
+        self.assertTrue(self.informatieobjecttype["url"] in called_urls)
+
+        # Check that zaakinformatieobjecten url was called
+        self.assertTrue(self.ziot_url.url in called_urls)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        expected_data = {
+            "url": document["url"],
+            "auteur": document["auteur"],
+            "identificatie": document["identificatie"],
+            "beschrijving": document["beschrijving"],
+            "bestandsnaam": document["bestandsnaam"],
+            "locked": document["locked"],
+            "informatieobjecttype": {
+                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+                "omschrijving": self.informatieobjecttype["omschrijving"],
+            },
+            "titel": document["titel"],
+            "vertrouwelijkheidaanduiding": "Openbaar",
+            "bestandsomvang": document["bestandsomvang"],
+            "readUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/read',
+            "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+        }
+        self.assertEqual(expected_data, data)
 
     @requests_mock.Mocker()
     def test_patch_document_no_url_no_reden(self, m):

@@ -51,6 +51,7 @@ from ..services import (
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
+    relate_document_to_zaak,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup
@@ -453,7 +454,7 @@ class ZaakDocumentView(views.APIView):
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
         document = create_document(document_data)
-
+        relate_document_to_zaak(document.url, zaak.url)
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
         )
