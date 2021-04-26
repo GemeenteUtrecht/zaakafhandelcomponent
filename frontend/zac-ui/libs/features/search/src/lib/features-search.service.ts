@@ -4,7 +4,8 @@ import { ApplicationHttpClient } from '@gu/services';
 import { ZaaktypeEigenschap } from '../models/zaaktype-eigenschappen';
 import { Zaaktype } from '../models/zaaktype';
 import { Search } from '../models/search';
-import { Zaak } from '@gu/models';
+import { TableSort, Zaak } from '@gu/models';
+import { tableHeadMapping } from './search-results/constants/table';
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +24,11 @@ export class FeaturesSearchService {
     return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
   }
 
-  postSearchZaken(formData: Search): Observable<Zaak[]> {
-    const endpoint = encodeURI("/api/search/zaken");
+  postSearchZaken(formData: Search, sortData?: TableSort): Observable<Zaak[]> {
+    const sortOrder = sortData?.order === 'desc' ? '-' : '';
+    const sortValue = sortData ? tableHeadMapping[sortData.value] : '';
+    const sortParameter = sortData ? `?ordering=${sortOrder}${sortValue}` : '';
+    const endpoint = encodeURI(`/api/search/zaken${sortParameter}`);
     return this.http.Post<Zaak[]>(endpoint, formData);
   }
 }

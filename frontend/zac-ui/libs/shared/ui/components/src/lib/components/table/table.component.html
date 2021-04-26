@@ -2,7 +2,9 @@
   <thead [ngClass]="headColor === 'gray' ? 'table-head--gray' : ''">
     <tr>
       <th *ngIf="expandable"></th>
-      <th *ngFor="let head of tableData.headData">{{ head }}</th>
+      <th [ngClass]="sortable ? 'sort-head' : null" *ngFor="let head of tableData.headData" (click)="sortable ? outputSort(head) : null">{{ head }}
+        <mat-icon *ngIf="sortValue === head">{{ sortOrder === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
+      </th>
     </tr>
   </thead>
   <tbody>

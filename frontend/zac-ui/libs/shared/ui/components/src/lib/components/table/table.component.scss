@@ -19,6 +19,20 @@
     vertical-align: middle;
     text-align: left;
   }
+  th.sort-head {
+    cursor: pointer;
+    &:hover {
+      background-color: $background-grey;
+    }
+    .mat-icon {
+      vertical-align: middle;
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      font-size: 22px;
+      color: $color-blue;
+    }
+  }
   td.table-expand {
     padding-left: 0.625rem;
     width: 1.25rem;

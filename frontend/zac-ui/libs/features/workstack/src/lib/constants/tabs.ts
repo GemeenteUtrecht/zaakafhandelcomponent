@@ -8,7 +8,7 @@ const tabs: Tab[] = [
   {
     component: 'zaken',
     label: 'Zaken (behandelaar)',
-    endpoint: '/api/workstack/cases'
+    endpoint: '/api/workstack/cases?ordering=-deadline'
   },
   {
     component: 'tasks',

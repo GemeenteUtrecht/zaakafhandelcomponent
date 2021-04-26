@@ -30,3 +30,8 @@ export interface ExtensiveCell {
   iconColor?: string;
   buttonType?: string;
 }
+
+export interface TableSort {
+  value: string;
+  order: 'asc' | 'desc';
+}

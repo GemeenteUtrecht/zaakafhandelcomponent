@@ -1,9 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { ExtensiveCell, Table } from '@gu/models';
+import { ExtensiveCell, Table, TableSort } from '@gu/models';
 
-export interface IButtonOutput {
-  [key: string]: any;
-}
 
 @Component({
   selector: 'gu-table',
@@ -14,13 +11,16 @@ export interface IButtonOutput {
 export class TableComponent {
 
   @Input() expandable = false;
+  @Input() sortable = false;
   @Input() tableData: Table;
   @Input() headColor: 'gray';
 
   @Output() tableOutput = new EventEmitter<any>();
   @Output() buttonOutput = new EventEmitter<any>();
+  @Output() sortOutput = new EventEmitter<any>();
 
-  constructor() { }
+  sortValue: string;
+  sortOrder: 'asc' | 'desc';
 
   keepOriginalOrder = (a) => a.key
 
@@ -83,5 +83,20 @@ export class TableComponent {
         return value.type;
       }
     }
+  }
+
+  outputSort(headValue) {
+    if (headValue !== this.sortValue) {
+      this.sortValue = headValue;
+      this.sortOrder = 'asc'
+    }
+    else if (headValue === this.sortValue) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    }
+    const output: TableSort = {
+      value: this.sortValue,
+      order: this.sortOrder
+    }
+    this.sortOutput.emit(output);
   }
 }

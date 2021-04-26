@@ -17,6 +17,8 @@
               </ng-template>
 
               <gu-table *ngIf="zakenTableData.bodyData.length > 0; else noZaken"
+                        (sortOutput)="fetchZaken($event)"
+                        [sortable]="true"
                         [tableData]="zakenTableData"
               ></gu-table>
               <ng-template #noZaken>
