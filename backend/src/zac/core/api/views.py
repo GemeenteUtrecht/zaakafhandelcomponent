@@ -414,6 +414,7 @@ class ZaakDocumentView(views.APIView):
 
     @extend_schema(
         summary=_("Edit case document"),
+        request=UpdateZaakDocumentSerializer,
         responses=GetZaakDocumentSerializer,
     )
     def patch(self, request: Request, *args, **kwargs) -> Response:
