@@ -52,7 +52,7 @@ class ReportListViewSet(ListAPIView):
 )
 class ReportDownloadView(GenericAPIView):
     queryset = Report.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)  # & CanDownloadReports
     serializer_class = ReportDownloadSerializer
     pagination_class = BffPagination
     search_document = ZaakDocument
@@ -70,30 +70,8 @@ class ReportDownloadView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         report = self.get_object()
         ordering = ESOrderingFilter().get_ordering(self.request, self)
-        zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(
-            request.user, report, ordering=ordering
-        )
-
-        qs = []
-        for zaak in zaken:
-            eigenschappen = zaak_eigenschappen.get(zaak.url) or []
-            if eigenschappen:
-                eigenschappen = [
-                    {eigenschap.naam: eigenschap.waarde}
-                    for eigenschap in sorted(eigenschappen, key=lambda e: e.naam)
-                ]
-
-            qs.append(
-                {
-                    "eigenschappen": eigenschappen,
-                    "identificatie": zaak.identificatie,
-                    "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
-                    "startdatum": zaak.startdatum,
-                    "omschrijving": zaak.omschrijving,
-                    "status": zaak_statuses[zaak.url] if zaak.status else "",
-                }
-            )
-        page = self.paginate_queryset(qs)
+        zaken = get_zaken_details_for_export(request.user, report, ordering=ordering)
+        page = self.paginate_queryset(zaken)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -103,6 +81,6 @@ class ReportDownloadView(GenericAPIView):
         if not report:
             return True
 
-        zaaktypen = get_zaaktypen(self.request.user)
+        zaaktypen = get_zaaktypen(user=self.request.user)
         identificaties = {zt.identificatie for zt in zaaktypen}
         return set(report.zaaktypen).issubset(identificaties)

@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import Eigenschap, EigenschapSpecificatie
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.test import generate_oas_component
 
@@ -42,9 +43,24 @@ def get_zaak(zaak_url: str):
 def get_zaak_eigenschappen(zaak: Zaak):
     if zaak.identificatie == "123":
         return []
+
+    eigenschapspec = generate_oas_component(
+        "ztc",
+        "schemas/EigenschapSpecificatie",
+        formaat="tekst",
+    )
+    eigenschap = generate_oas_component(
+        "ztc", "schemas/Eigenschap", specificatie=eigenschapspec
+    )
+    eigenschap = factory(Eigenschap, eigenschap)
+
     return [
-        ZaakEigenschap(url="", eigenschap="", zaak=zaak, naam="eig1", waarde="waarde1"),
-        ZaakEigenschap(url="", eigenschap="", zaak=zaak, naam="eig2", waarde="waarde2"),
+        ZaakEigenschap(
+            url="", eigenschap=eigenschap, zaak=zaak, naam="eig1", waarde="waarde1"
+        ),
+        ZaakEigenschap(
+            url="", eigenschap=eigenschap, zaak=zaak, naam="eig2", waarde="waarde2"
+        ),
     ]
 
 
@@ -54,7 +70,7 @@ class ViewTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         ReportFactory.create_batch(5)
-        endpoint = reverse("reports:report-api-list")
+        endpoint = reverse("report-api-list")
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -82,7 +98,7 @@ class ViewTests(APITestCase):
         mock_get_zaak.side_effect = get_zaak
         mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
 
-        endpoint = reverse("reports:report-api-download", kwargs={"pk": report.pk})
+        endpoint = reverse("report-api-download", kwargs={"pk": report.pk})
 
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -124,7 +140,7 @@ class ViewTests(APITestCase):
         mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
 
         endpoint = (
-            reverse("reports:report-api-download", kwargs={"pk": report.pk})
+            reverse("report-api-download", kwargs={"pk": report.pk})
             + "?ordering=-zaaktype_omschrijving"
         )
 

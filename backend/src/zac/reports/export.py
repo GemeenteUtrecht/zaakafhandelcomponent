@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List, Tuple
+from typing import Iterator, List
 
 import tablib
 from zgw_consumers.api_models.base import factory
@@ -57,7 +57,7 @@ def get_zaken_details_for_export(
     user: User,
     report: Report,
     ordering: List[str] = ["startdatum", "registratiedatum", "identificatie"],
-) -> Tuple[List[Zaak], Dict[str, str], Dict[str, List[ZaakEigenschap]]]:
+) -> List[Zaak]:
     zaken = get_export_zaken(user, report, ordering=ordering)
 
     # get the statuses & eigenschappen
@@ -75,13 +75,14 @@ def get_zaken_details_for_export(
         for zaak_eigenschappen in eigenschappen
         if zaak_eigenschappen
     }
-    return zaken, zaak_statuses, zaak_eigenschappen
+    for zaak in zaken:
+        zaak.eigenschappen = zaak_eigenschappen.get(zaak.url)
+        zaak.status = zaak_statuses.get(zaak.url)
+    return zaken
 
 
 def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset:
-    zaken, zaak_statuses, zaak_eigenschappen = get_zaken_details_for_export(
-        user, report
-    )
+    zaken = get_zaken_details_for_export(user, report)
 
     data = tablib.Dataset(
         headers=[
@@ -94,7 +95,7 @@ def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset
         ]
     )
     for zaak in zaken:
-        eigenschappen = zaak_eigenschappen.get(zaak.url) or ""
+        eigenschappen = zaak.eigenschappen or ""
         if eigenschappen:
             formatted = [
                 f"{eigenschap.naam}: {eigenschap.waarde}"
@@ -109,7 +110,7 @@ def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset
                 zaak.startdatum,
                 zaak.omschrijving,
                 eigenschappen,
-                zaak_statuses[zaak.url] if zaak.status else "",
+                zaak.status if zaak.status else "",
             ]
         )
     return data
