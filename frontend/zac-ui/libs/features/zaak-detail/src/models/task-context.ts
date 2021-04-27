@@ -7,6 +7,7 @@ export interface Document {
   url: string;
   readUrl: string;
   versie?: number;
+  documentType?: string;
 }
 
 export interface ZaakInformatie {
@@ -22,8 +23,14 @@ export interface FormField {
   enum?: Array<string[]>;
 }
 
+interface InformatieObjectType {
+  omschrijving: string;
+  url: string;
+}
+
 export interface Context {
   documents?: Document[];
+  informatieobjecttypen?: InformatieObjectType[];
   title?: string;
   zaakInformatie?: ZaakInformatie;
   reviewType?: 'advice' | 'approval';

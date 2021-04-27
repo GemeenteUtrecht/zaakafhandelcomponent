@@ -68,10 +68,12 @@ export class FeaturesZaakDetailComponent implements OnInit {
         })
       )
       .subscribe( activities => {
-        this.activityData = activities;
-        this.activeActivities = activities.filter(activity => {
-          return activity.status === 'on_going'
-        })
+        if (activities) {
+          this.activityData = activities;
+          this.activeActivities = activities.filter(activity => {
+            return activity.status === 'on_going'
+          })
+        }
         this.isLoading = false;
       }, error => {
         this.isLoading = false;
