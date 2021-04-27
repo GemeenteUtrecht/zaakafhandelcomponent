@@ -18,7 +18,7 @@ export class DocumentenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  tableData: Table = new Table(['Op slot', 'Acties', '', 'Bestandsnaam', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
+  tableData: Table = new Table(['Op slot', 'Bestandsnaam', 'Acties', '', '', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
 
   documentsData: any;
 
@@ -28,6 +28,8 @@ export class DocumentenComponent implements OnChanges {
 
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
+
+  selectedDocumentUrl: string;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -69,6 +71,7 @@ export class DocumentenComponent implements OnChanges {
            label: icon,
            iconColor: iconColor
          },
+         bestandsnaam: element.bestandsnaam,
          lezen: {
            type: 'button',
            label: 'Lezen',
@@ -80,7 +83,11 @@ export class DocumentenComponent implements OnChanges {
            value: element.writeUrl,
            buttonType: editButtonStyle
          },
-         bestandsnaam: element.bestandsnaam,
+         uploaden: {
+           type: 'button',
+           label: 'Overschrijven',
+           value: element.url
+         },
          type: element.informatieobjecttype['omschrijving'],
          vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
          bestandsomvang: bestandsomvang
@@ -100,6 +107,9 @@ export class DocumentenComponent implements OnChanges {
         break;
       case 'bewerken':
         this.editDocument(actionUrl);
+        break;
+      case 'uploaden':
+        this.patchDocument(actionUrl);
         break;
     }
     if (actionType === 'bewerken') {
@@ -127,6 +137,11 @@ export class DocumentenComponent implements OnChanges {
         }
       })
     }
+  }
+
+  patchDocument(documentUrl) {
+    this.selectedDocumentUrl = documentUrl;
+    this.openModal('document-overschrijven-modal')
   }
 
   openDocumentEdit(writeUrl) {
