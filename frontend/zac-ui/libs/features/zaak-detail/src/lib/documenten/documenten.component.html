@@ -34,3 +34,15 @@
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>
+<gu-modal id="document-overschrijven-modal"
+          [closeIcon]="true"
+          title="Document overschrijven"
+          size="small">
+  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [bronorganisatie]="bronorganisatie"
+                         [identificatie]="identificatie"
+                         [updateDocument]="true"
+                         [documentUrl]="selectedDocumentUrl"
+                         (reload)="fetchDocuments()">
+  </gu-document-toevoegen>
+</gu-modal>
