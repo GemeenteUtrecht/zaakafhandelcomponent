@@ -59,7 +59,7 @@
               <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
                 <a *ngFor="let activity of activitiesData"
                    class="anchor mb-2 task-link"
-                   href="{{activity.url}}">
+                   href="{{createActivityLink(activity.zaak)}}">
                   {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
                 </a>
               </ng-container>

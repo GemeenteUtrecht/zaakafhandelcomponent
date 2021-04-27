@@ -6,10 +6,10 @@
               type="tertiary"
               size="extrasmall"
               class="ml-2 p-0"
-              *ngIf="activeActivities?.length > 0"
+              *ngIf="activeActivities"
               (click)="openModal('activities-modal')">
         <span>
-          <gu-chip *ngIf="activeActivities" [type]="'primary'">{{activeActivities?.length}} activiteiten</gu-chip>
+          <gu-chip [type]="'primary'">{{activeActivities?.length}} activiteiten</gu-chip>
         </span>
       </button>
     </div>
@@ -92,6 +92,8 @@
     [closeIcon]="true">
     <gu-activiteiten *ngIf="currentUser && activityData"
                      [mainZaakUrl]="mainZaakUrl"
+                     [bronorganisatie]="bronorganisatie"
+                     [identificatie]="identificatie"
                      [currentUser]="currentUser"
                      [activityData]="activityData">
     </gu-activiteiten>

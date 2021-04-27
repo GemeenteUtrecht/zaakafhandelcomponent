@@ -9,5 +9,6 @@ export * from './accounts/user';
 
 // Zaken
 export * from './zaken/assignee'
+export * from './zaken/document'
 export * from './zaken/task'
 export * from './zaken/zaak'

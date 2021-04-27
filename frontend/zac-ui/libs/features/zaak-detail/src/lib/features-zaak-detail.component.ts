@@ -82,6 +82,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
     return this.zaakDetailService.getActivities(zaakUrl)
       .pipe(
         switchMap(res => {
+          this.openActivitiesModal();
           return of(res);
         }),
         catchError(() => {
@@ -90,6 +91,15 @@ export class FeaturesZaakDetailComponent implements OnInit {
           return of(null);
         })
       )
+  }
+
+  openActivitiesModal() {
+    this.route.queryParams.subscribe(params => {
+      const activityParam = params['activities'];
+      if (activityParam) {
+        this.openModal('activities-modal')
+      }
+    });
   }
 
   fetchCurrentUser(): void {

@@ -1,11 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ActiviteitenService } from './activiteiten.service';
-import { Observable } from 'rxjs';
 import { Activity } from '../../models/activity';
 import { first } from 'rxjs/operators';
-import { User } from '@gu/models';
+import { User, ShortDocument } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Result } from '../../models/user-search';
+import { Document, ReadWriteDocument } from '../documenten/documenten.interface';
 
 @Component({
   selector: 'gu-activiteiten',
@@ -14,6 +14,8 @@ import { Result } from '../../models/user-search';
 })
 export class ActiviteitenComponent implements OnInit {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
   @Input() activityData: Activity[];
   @Input() currentUser: User;
   currentUserFullname: string;
@@ -42,6 +44,11 @@ export class ActiviteitenComponent implements OnInit {
 
   isSubmitting: boolean;
 
+  activityDocs: ShortDocument[] = [];
+  ongoingActivityDocs: ShortDocument[] = [];
+  finishedActivityDocs: ShortDocument[] = [];
+  isFetchingDocuments: boolean;
+
   constructor(private actvititeitenService: ActiviteitenService,
               private fb: FormBuilder) { }
 
@@ -67,6 +74,7 @@ export class ActiviteitenComponent implements OnInit {
           this.currentUser.firstName : this.currentUser.username
     }
     this.formatActivityData(this.activityData);
+    this.fetchDocuments(this.activityData);
     this.isLoading = false;
   }
 
@@ -121,9 +129,22 @@ export class ActiviteitenComponent implements OnInit {
         .subscribe(res => {
           this.activityData = res;
           this.formatActivityData(res);
+          this.fetchDocuments(res);
           this.isLoading = false;
         });
     }
+  }
+
+  fetchDocuments(activities) {
+    this.isFetchingDocuments = true;
+    this.actvititeitenService.getDocuments(activities).subscribe( res => {
+      this.activityDocs = res;
+      this.formatDocsData(this.activityDocs);
+      this.isFetchingDocuments = false;
+    }, error => {
+      console.log(error);
+      this.isFetchingDocuments = false;
+    });
   }
 
   formatActivityData(activities: Activity[]) {
@@ -132,6 +153,15 @@ export class ActiviteitenComponent implements OnInit {
     })
     this.finishedData = activities.filter(activity => {
       return activity.status === 'finished'
+    })
+  }
+
+  formatDocsData(activityDocs: ShortDocument[]) {
+    this.ongoingActivityDocs = activityDocs.filter((activity, i) => {
+      return this.activityData[i].status === 'on_going';
+    })
+    this.finishedActivityDocs = activityDocs.filter((activity, i) => {
+      return this.activityData[i].status === 'on_going';
     })
   }
 
@@ -208,6 +238,25 @@ export class ActiviteitenComponent implements OnInit {
     }, res =>  {
       this.showDeleteActivityConfirmation = null;
       this.setError(res);
+    })
+  }
+
+  patchActivityDocument(activityId, document: Document) {
+    const formData = {
+      document: document.url
+    }
+    this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
+      this.openDocumentUploadForm = null;
+      this.fetchActivities();
+    }, res =>  {
+      this.openDocumentUploadForm = null;
+      this.setError(res);
+    })
+  }
+
+  readDocument(readUrl) {
+    this.actvititeitenService.readDocument(readUrl).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
     })
   }
 
