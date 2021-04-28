@@ -109,7 +109,7 @@ def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset
                 zaak.startdatum,
                 zaak.omschrijving,
                 eigenschappen,
-                zaak.status if zaak.status else "",
+                zaak.status.statustype.omschrijving if zaak.status else "",
             ]
         )
     return data
