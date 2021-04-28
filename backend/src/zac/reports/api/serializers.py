@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakStatusSerializer
+from zac.core.api.serializers import ZaakEigenschapSerializer
 from zgw.models.zrc import Zaak
 
 from ..models import Report
@@ -17,7 +17,9 @@ class ReportSerializer(serializers.ModelSerializer):
 
 
 class ReportDownloadSerializer(APIModelSerializer):
-    status = ZaakStatusSerializer(allow_null=True)
+    status = serializers.CharField(
+        allow_null=True, source="status.statustype.omschrijving"
+    )
     zaaktype_omschrijving = serializers.CharField(source="zaaktype.omschrijving")
     eigenschappen = ZaakEigenschapSerializer(many=True, allow_null=True)
 

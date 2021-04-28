@@ -67,9 +67,7 @@ def get_zaken_details_for_export(
             get_zaak_eigenschappen, zaken
         )
 
-    zaak_statuses = {
-        status.zaak: status.statustype.omschrijving for status in statuses if status
-    }
+    zaak_statuses = {status.zaak: status for status in statuses if status}
     zaak_eigenschappen = {
         zaak_eigenschappen[0].zaak.url: zaak_eigenschappen
         for zaak_eigenschappen in eigenschappen
@@ -77,7 +75,8 @@ def get_zaken_details_for_export(
     }
     for zaak in zaken:
         zaak.eigenschappen = zaak_eigenschappen.get(zaak.url)
-        zaak.status = zaak_statuses.get(zaak.url)
+        zaak.status = zaak_statuses.get(zaak.url, None)
+
     return zaken
 
 
