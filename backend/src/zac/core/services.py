@@ -868,6 +868,8 @@ def find_document(
 
     # not in cache -> check it in all known DRCs
     drcs = Service.objects.filter(api_type=APITypes.drc)
+
+    result = None
     for drc in drcs:
         client = drc.build_client()
         results = get_paginated_results(
@@ -886,9 +888,18 @@ def find_document(
             # the same version...
             candidates = [result for result in results if result["versie"] == versie]
             if not candidates:
-                raise RuntimeError(
-                    f"Version '{versie}' for document does not seem to exist..."
-                )
+                # The DRC only returns the latest version and so the candidates
+                # will always be empty if the latest version isn't the requested version.
+                # In this case try to retrieve the document by using get_document.
+                try:
+                    url = results[0]["url"] + "?versie=%s" % versie
+                    document = get_document(url)
+                    return document
+
+                except Exception:
+                    raise RuntimeError(
+                        f"Version '{versie}' for document does not seem to exist..."
+                    )
             if len(candidates) > 1:
                 logger.warning(
                     "Multiple results for version '%d' found, this is an error in the DRC "
