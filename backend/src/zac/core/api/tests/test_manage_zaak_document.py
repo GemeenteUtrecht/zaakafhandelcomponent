@@ -584,7 +584,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         m.post(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6/lock",
-            json={'error':'dit is foute boel'},
+            json={"error": "dit is foute boel"},
             status_code=400,
         )
 
@@ -600,10 +600,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(
-            response.json(),
-            {'error': 'dit is foute boel'}
-        )
+        self.assertEqual(response.json(), {"error": "dit is foute boel"})
 
     @requests_mock.Mocker()
     def test_patch_document(self, m):

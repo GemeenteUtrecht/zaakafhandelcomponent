@@ -21,10 +21,10 @@ from rest_framework import (
     status,
     views,
 )
+from rest_framework.exceptions import APIException
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
