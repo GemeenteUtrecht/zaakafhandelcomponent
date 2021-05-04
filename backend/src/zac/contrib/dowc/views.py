@@ -7,6 +7,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
@@ -39,7 +40,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     ],
 )
 class OpenDowcView(APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
+    # authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
@@ -47,7 +48,8 @@ class OpenDowcView(APIView):
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
-            self.document = find_document(bronorganisatie, identificatie, versie=versie)
+            document = find_document(bronorganisatie, identificatie, versie=versie)
+            self.document = factory(Document, document)
         return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
@@ -59,7 +61,6 @@ class OpenDowcView(APIView):
         response, status_code = create_doc(request.user, document, purpose, referer)
         serializer = self.serializer_class(response)
 
-        # Invalidate cache
         invalidate_document_cache(document)
         return Response(serializer.data, status=status_code)
 
@@ -87,7 +88,7 @@ class DeleteDowcView(APIView):
         serializer.is_valid(raise_exception=True)
         data = patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
 
-        # Invalidate cache if valid response
+        # Refresh cache state if valid response
         if "versionedUrl" in data:
             document = get_document(data["versionedUrl"])
             invalidate_document_cache(document)

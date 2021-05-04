@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.http import HttpResponse
 from django.views import View
 
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from ..permissions import zaken_download_documents
@@ -29,7 +30,8 @@ class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def get_object(self) -> Document:
         versie = _cast(self.request.GET.get("versie", None), int)
-        self.document = find_document(versie=versie, **self.kwargs)
+        document = find_document(versie=versie, **self.kwargs)
+        self.document = factory(Document, document)
 
         informatieobjecttype = get_informatieobjecttype(
             self.document.informatieobjecttype

@@ -88,7 +88,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         }
 
         cls.find_document_patcher = patch(
-            "zac.contrib.dowc.views.find_document", return_value=document
+            "zac.contrib.dowc.views.find_document", return_value=cls.document
         )
         cls.get_document_patcher = patch(
             "zac.contrib.dowc.views.get_document", return_value=document

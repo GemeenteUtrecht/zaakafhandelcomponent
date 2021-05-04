@@ -11,6 +11,7 @@ from django.utils import timezone
 import aiohttp
 import requests
 from furl import furl
+from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
@@ -37,7 +38,7 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from .cache import get_zios_cache_key, invalidate_document_cache, invalidate_zaak_cache
+from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol
 
@@ -57,12 +58,20 @@ def _client_from_object(obj):
 
 
 async def fetch(session: aiohttp.ClientSession, url: str):
+    """
+    DEPRECATED/UNUSED
+
+    """
     creds = _client_from_url(url).auth.credentials()
     async with session.get(url, headers=creds) as response:
         return await response.json()
 
 
 def fetch_async(cache_key: str, job, *args, **kwargs):
+    """
+    DEPRECATED/UNUSED
+
+    """
     result = cache.get(cache_key)
     if result is not None:
         return result
@@ -781,6 +790,74 @@ def get_rollen_all(**query_params) -> List[Rol]:
 ###################################################
 
 
+def cache_document(
+    cache_key: str,
+    document_url: str,
+    document: Dict,
+    timeout: Optional[float] = AN_HOUR / 2,
+):
+    cache.set(cache_key, document, timeout=timeout)
+    cache.set(f"document:{document_url}", document, timeout=timeout)
+
+
+def check_document_cache(url: str, document: Dict):
+    document_furl = furl(url)
+    versie = document_furl.args.get("versie")
+    cache_key = (
+        f"document:{document['bronorganisatie']}:{document['identificatie']}:{versie}"
+    )
+
+    # Cache this version of the document
+    if cache_key not in cache:
+        cache_document(cache_key, url, document)
+
+
+def fetch_document(url: str) -> Dict[str, str]:
+    """
+    Retrieve document by URL from DRC or cache.
+
+    Return error details if not found.
+    """
+    cache_key = f"document:{url}"
+    if cache_key in cache:
+        return cache.get(cache_key)
+
+    client = _client_from_url(url)
+    try:
+        result = client.retrieve("enkelvoudiginformatieobject", url=url)
+        check_document_cache(url, result)
+    except ClientError as err:
+        result = err.args[0]
+
+    return result
+
+
+def fetch_documents(
+    zios: list, doc_versions: Optional[Dict[str, int]] = None
+) -> Tuple[List[Dict], List[str]]:
+    doc_versions = doc_versions or {}
+    document_urls = []
+    for zio in zios:
+        document_furl = furl(zio)
+        if zio in doc_versions:
+            document_furl.args["versie"] = doc_versions[zio]
+        document_urls.append(document_furl.url)
+
+    with parallel() as executor:
+        results = executor.map(lambda url: fetch_document(url), document_urls)
+
+    documenten = []
+    gone = []
+    for document, zio in zip(results, zios):
+        if "url" in document:
+            documenten.append(document)
+
+        elif document["status"] == 404:
+            gone.append(zio)
+
+    return documenten, gone
+
+
 def get_documenten(
     zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
 ) -> Tuple[List[Document], List[str]]:
@@ -791,29 +868,11 @@ def get_documenten(
 
     # retrieve the documents themselves, in parallel
     zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
-    cache_key = get_zios_cache_key(zios)
-
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
-    documenten = fetch_async(
-        cache_key,
-        fetch_documents,
-        zaak_informatieobjecten,
-        doc_versions=doc_versions,
-    )
 
+    # Add version to zio_url if found in doc_versions
+    found, gone = fetch_documents(zios, doc_versions)
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
-
-    gone = []
-    found = []
-    for document, zio in zip(documenten, zaak_informatieobjecten):
-        if "url" in document:  # resolved
-            found.append(document)
-            continue
-
-        if document["status"] != 404:  # unknown error
-            continue
-
-        gone.append(zio["informatieobject"])
 
     # figure out relevant ztcs
     informatieobjecttypen = {document["informatieobjecttype"] for document in found}
@@ -847,26 +906,21 @@ def get_documenten(
             document.informatieobjecttype
         ]
 
-    # cache results
-    for document in documenten:
-        cache_key = f"document:{document.bronorganisatie}:{document.identificatie}"
-        cache.set(cache_key, document, timeout=AN_HOUR / 2)
-
     return documenten, gone
 
 
-@cache_result(
-    "document:{bronorganisatie}:{identificatie}:{versie}", timeout=AN_HOUR / 2
-)
+@cache_result("document:{bronorganisatie}:{identificatie}:{versie}")
 def find_document(
     bronorganisatie: str, identificatie: str, versie: Optional[int] = None
-) -> Document:
+) -> Dict:
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
+
     """
-    query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # not in cache -> check it in all known DRCs
+    query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
+
     drcs = Service.objects.filter(api_type=APITypes.drc)
 
     result = None
@@ -882,6 +936,7 @@ def find_document(
         # get the latest one if no explicit version is given
         if versie is None:
             result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
+
         else:
             # there's only supposed to be one unique case
             # NOTE: there are known issues with DRC-CMIS returning multiple docs for
@@ -890,11 +945,10 @@ def find_document(
             if not candidates:
                 # The DRC only returns the latest version and so the candidates
                 # will always be empty if the latest version isn't the requested version.
-                # In this case try to retrieve the document by using get_document.
+                # In this case try to retrieve the document by using fetch_document.
                 try:
-                    url = results[0]["url"] + "?versie=%s" % versie
-                    document = get_document(url)
-                    return document
+                    document_furl = furl(results[0]["url"]).add({"versie": versie})
+                    result = fetch_document(document_furl.url)
 
                 except Exception:
                     raise RuntimeError(
@@ -908,27 +962,33 @@ def find_document(
                     extra={"query": query},
                 )
 
-            result = candidates[0]
-
-        result = factory(Document, result)
+                result = candidates[0]
         break
 
-    if result is None:
+    if not result:
         raise ObjectDoesNotExist(
             "Document object was not found in any known registrations"
         )
 
+    # Cache result - add versie to url if versie was specified.
+    document_furl = furl(result["url"])
+    if versie:
+        document_furl.add({"versie": versie})
+
+    cache.set(document_furl.url, result, timeout=AN_HOUR / 2)
     return result
 
 
-# @cache_result("get_document:{url}", timeout=AN_HOUR)
 def get_document(url: str) -> Document:
     """
     Retrieve document by URL.
+
+    Raise ClientError error if result doesn't have a URL.
     """
-    client = _client_from_url(url)
-    result = client.retrieve("enkelvoudiginformatieobject", url=url)
-    return factory(Document, result)
+    result = fetch_document(url)
+    if "url" in result:
+        return factory(Document, result)
+    raise ClientError(result)
 
 
 def download_document(document: Document) -> Tuple[Document, bytes]:
@@ -936,22 +996,6 @@ def download_document(document: Document) -> Tuple[Document, bytes]:
     response = requests.get(document.inhoud, headers=client.auth.credentials())
     response.raise_for_status()
     return document, response.content
-
-
-async def fetch_documents(zios: list, doc_versions: Optional[Dict[str, int]] = None):
-    doc_versions = doc_versions or {}
-    tasks = []
-    async with aiohttp.ClientSession() as session:
-        for zio in zios:
-            document_furl = furl(zio["informatieobject"])
-            if zio["informatieobject"] in doc_versions:
-                document_furl.args["versie"] = doc_versions[zio["informatieobject"]]
-            task = asyncio.ensure_future(fetch(session=session, url=document_furl.url))
-            tasks.append(task)
-
-        responses = await asyncio.gather(*tasks)
-
-    return responses
 
 
 def create_document(document_data: Dict) -> Document:
