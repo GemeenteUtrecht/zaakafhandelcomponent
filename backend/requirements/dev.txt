@@ -432,7 +432,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/ci.txt
     #   drf-spectacular
-urllib3==1.25.5
+urllib3==1.25.11
     # via
     #   -r requirements/ci.txt
     #   elasticsearch
