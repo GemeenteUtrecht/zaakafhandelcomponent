@@ -21,9 +21,11 @@ from rest_framework import (
     status,
     views,
 )
+from rest_framework.exceptions import APIException
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
+from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.concurrent import parallel
@@ -431,7 +433,10 @@ class ZaakDocumentView(views.APIView):
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
-        document = update_document(document_url, document_data, audit_line)
+        try:
+            document = update_document(document_url, document_data, audit_line)
+        except ClientError as err:
+            raise APIException(err.args[0])
 
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype

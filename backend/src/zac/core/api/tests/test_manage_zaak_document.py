@@ -567,6 +567,42 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(data, expected_data)
 
     @requests_mock.Mocker()
+    def test_patch_document_already_locked(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+        )
+        m.get(document["url"], json=document)
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6/lock",
+            json={"error": "dit is foute boel"},
+            status_code=400,
+        )
+
+        post_data = {
+            "reden": "daarom",
+            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.json(), {"error": "dit is foute boel"})
+
+    @requests_mock.Mocker()
     def test_patch_document(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
@@ -607,7 +643,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
-        self.maxDiff = None
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         expected_data = {
