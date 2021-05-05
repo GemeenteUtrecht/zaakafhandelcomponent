@@ -58,7 +58,10 @@ def create_doc(
             None,
         ):  # Requesting user may already have created an object dowc
             try:
-                response = client.list("documenten", data=data)
+                # We can fetch the first from the list because the
+                # client will have raised an exception
+                # if the status isn't as expected.
+                response = client.list("documenten", data=data)[0]
                 status_code = status.HTTP_200_OK
             except ClientError as err:  # Relay error
                 return err.args[0], status.HTTP_400_BAD_REQUEST

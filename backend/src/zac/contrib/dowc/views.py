@@ -40,7 +40,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     ],
 )
 class OpenDowcView(APIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
@@ -48,8 +48,7 @@ class OpenDowcView(APIView):
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
-            document = find_document(bronorganisatie, identificatie, versie=versie)
-            self.document = factory(Document, document)
+            self.document = find_document(bronorganisatie, identificatie, versie=versie)
         return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
@@ -92,7 +91,7 @@ class DeleteDowcView(APIView):
         serializer.is_valid(raise_exception=True)
         data = patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
 
-        # Refresh cache state if valid response
+        # Invalidate cache if valid response
         if "versionedUrl" in data:
             document = get_document(data["versionedUrl"])
             invalidate_document_cache(document)
