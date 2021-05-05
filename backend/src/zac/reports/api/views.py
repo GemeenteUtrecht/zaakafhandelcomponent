@@ -11,6 +11,7 @@ from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 
 from ..export import get_zaken_details_for_export
 from ..models import Report
+from .permissions import CanDownloadReports
 from .serializers import ReportDownloadSerializer, ReportSerializer
 
 
@@ -52,7 +53,7 @@ class ReportListViewSet(ListAPIView):
 )
 class ReportDownloadView(GenericAPIView):
     queryset = Report.objects.all()
-    permission_classes = (IsAuthenticated,)  # & CanDownloadReports
+    permission_classes = (IsAuthenticated & CanDownloadReports,)
     serializer_class = ReportDownloadSerializer
     pagination_class = BffPagination
     search_document = ZaakDocument
@@ -74,13 +75,3 @@ class ReportDownloadView(GenericAPIView):
         page = self.paginate_queryset(zaken)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
-
-    def has_permission(self):
-        # move logic from "reports:download" rule
-        report = self.get_object()
-        if not report:
-            return True
-
-        zaaktypen = get_zaaktypen(user=self.request.user)
-        identificaties = {zt.identificatie for zt in zaaktypen}
-        return set(report.zaaktypen).issubset(identificaties)

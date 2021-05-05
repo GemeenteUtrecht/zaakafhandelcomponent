@@ -1,6 +1,6 @@
 import logging
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 
 from rest_framework import permissions
 from rest_framework.request import Request
@@ -11,6 +11,7 @@ from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import AtomicPermission, BlueprintPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_zaak
+from zac.reports.models import Report
 
 logger = logging.getLogger(__name__)
 
@@ -110,3 +111,51 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
             return None
 
         return zaak
+
+
+class ReportDefinitionPermission(DefinitionBasePermission):
+    object_attr = "report"
+    object_type: str = PermissionObjectType.report
+
+    def get_object(self, pk: int):
+        try:
+            report = Report.objects.get(pk=pk)
+        except ObjectDoesNotExist:
+            logger.info("Report with pk %s does not exist" % pk, exc_info=True)
+            return None
+
+        return report
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
+        # check blueprint permissions
+        for permission in (
+            BlueprintPermission.objects.for_user(request.user)
+            .filter(permission=self.permission.name, object_type=self.object_type)
+            .actual()
+        ):
+            if permission.has_access(obj, request.user):
+                return True
+
+        return False
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.user.is_superuser:
+            return True
+
+        serializer = view.get_serializer(data=request.data)
+        # if the serializer is not valid, we want to see validation errors -> permission is granted
+        if not serializer.is_valid():
+            return True
+
+        # first check  if the user has permissions for any object
+        if not super().has_permission(request, view):
+            return False
+
+        report_pk = serializer.validated_data[self.object_attr]
+        obj = self.get_object(report_pk)
+        if not obj:
+            return False
+        return self.has_object_permission(request, view, obj)

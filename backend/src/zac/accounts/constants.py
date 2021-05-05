@@ -11,3 +11,4 @@ class AccessRequestResult(DjangoChoices):
 class PermissionObjectType(DjangoChoices):
     zaak = ChoiceItem("zaak", _("zaak"))
     document = ChoiceItem("document", _("document"))
+    report = ChoiceItem("report", _("report"))

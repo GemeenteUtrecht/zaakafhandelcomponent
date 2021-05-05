@@ -4,11 +4,17 @@ from django.urls import reverse
 
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import Eigenschap, EigenschapSpecificatie
+from zgw_consumers.api_models.catalogi import Eigenschap
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.test import generate_oas_component
 
-from zac.accounts.tests.factories import SuperUserFactory
+from zac.accounts.constants import PermissionObjectType
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+    UserFactory,
+)
+from zac.reports.api.permissions import rapport_inzien
 from zgw.models.zrc import Zaak
 
 from .factories import ReportFactory
@@ -64,7 +70,7 @@ def get_zaak_eigenschappen(zaak: Zaak):
     ]
 
 
-class ViewTests(APITestCase):
+class ResponseTests(APITestCase):
     def test_list_reports(self):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -152,3 +158,73 @@ class ViewTests(APITestCase):
         data = response.json()
         self.assertTrue(data["results"][0]["zaaktypeOmschrijving"], "zt2")
         self.assertTrue(data["results"][1]["zaaktypeOmschrijving"], "zt1")
+
+
+class PermissionTests(APITestCase):
+    def test_get_list_not_logged_in(self):
+        ReportFactory.create()
+        endpoint = reverse("report-api-list")
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_list_logged_in(self):
+        ReportFactory.create()
+        endpoint = reverse("report-api-list")
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_report_not_logged_in(self):
+        report = ReportFactory.create(zaaktypen=["zt1", "zt2"])
+        endpoint = reverse("report-api-download", kwargs={"pk": report.pk})
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_report_logged_in_no_permission(self):
+        report = ReportFactory.create(zaaktypen=["zt1", "zt2"])
+        endpoint = reverse("report-api-download", kwargs={"pk": report.pk})
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 403)
+
+    @patch("zac.reports.export.get_zaak_eigenschappen")
+    @patch("zac.reports.export.get_zaak")
+    @patch("zac.reports.export.search")
+    @patch("zac.reports.export._get_from_catalogus")
+    def test_get_report_logged_in_with_permission(
+        self,
+        mock_get_from_catalogus,
+        mock_search,
+        mock_get_zaak,
+        mock_get_zaak_eigenschappen,
+    ):
+        # set up test data and mocks
+        report = ReportFactory.create(zaaktypen=["zt1", "zt2"])
+        mock_get_from_catalogus.side_effect = _get_from_catalogus
+        mock_search.return_value = [
+            "https://example.com/zaken/api/v1/zaken/123",
+            "https://example.com/zaken/api/v1/zaken/456",
+        ]
+        zaak = get_zaak
+        mock_get_zaak.side_effect = get_zaak
+        mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
+
+        endpoint = reverse("report-api-download", kwargs={"pk": report.pk})
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        # Create permission
+        BlueprintPermissionFactory.create(
+            permission=rapport_inzien.name,
+            for_user=user,
+            policy={
+                "zaaktypen": ["zt1", "zt2"],
+            },
+            object_type=PermissionObjectType.report,
+        )
+
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
