@@ -173,3 +173,44 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
                 "info_url": "http://www.some-referer-url.com/",
             },
         )
+
+    def test_doc_file_already_exists_same_user(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=409,
+        )
+        m.get(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=200,
+            json=[self.dowc_response],
+        )
+
+        with patch(
+            "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
+        ):
+            response = self.client.post(
+                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_doc_file_already_exists_different_user(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=403,
+            json={"errors": "this is already locked"},
+        )
+
+        with patch(
+            "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
+        ):
+            response = self.client.post(
+                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"errors": "this is already locked"})
