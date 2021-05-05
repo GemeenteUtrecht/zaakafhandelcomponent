@@ -48,7 +48,14 @@ class ReportListViewSet(ListAPIView):
                 "startdatum",
                 "zaaktype.omschrijving",
             ),
-        )
+        ),
+        OpenApiParameter(
+            name="page",
+            type=int,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            description="Page of paginated response.",
+        ),
     ],
 )
 class ReportDownloadView(GenericAPIView):
