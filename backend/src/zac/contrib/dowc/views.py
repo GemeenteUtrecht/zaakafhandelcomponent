@@ -7,7 +7,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
