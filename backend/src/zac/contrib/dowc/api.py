@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Tuple, Union
 
 from django.http import Http404
 
@@ -43,29 +43,29 @@ def create_doc(
     document: Document,
     purpose: str,
     referer: str,
-) -> Tuple[DowcResponse, int]:
+) -> Tuple[Union[Any, DowcResponse], int]:
 
     drc_url = furl(document.url).add({"versie": document.versie}).url
     client = get_client(user)
-    try:
-        response = client.create(
-            "documenten",
-            data={
-                "drc_url": drc_url,
-                "purpose": purpose,
-                "info_url": referer,
-            },
-        )
-        return factory(DowcResponse, response), status.HTTP_201_CREATED
-    except ClientError:
-        response = client.list(
-            "documenten",
-            query_params={
-                "drc_url": drc_url,
-                "purpose": purpose,
-            },
-        )
-        return factory(DowcResponse, response[0]), status.HTTP_200_OK
+
+    data = {"drc_url": drc_url, "purpose": purpose, "info_url": referer}
+    try:  # First try to create the object in dowc
+        response = client.create("documenten", data=data)
+        status_code = status.HTTP_201_CREATED
+
+    except ClientError as err:
+        if err.args == (
+            None,
+        ):  # Requesting user may already have created an object dowc
+            try:
+                response = client.list("documenten", data=data)
+                status_code = status.HTTP_200_OK
+            except ClientError as err:  # Relay error
+                return err.args[0], status.HTTP_400_BAD_REQUEST
+        else:  # Object might exist and is owned by a different user
+            return err.args[0], status.HTTP_400_BAD_REQUEST
+
+    return factory(DowcResponse, response), status_code
 
 
 @optional_service
