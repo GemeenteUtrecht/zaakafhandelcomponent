@@ -10,7 +10,7 @@ from zds_client import ClientError
 from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import AtomicPermission, BlueprintPermission
 from zac.core.permissions import Permission
-from zac.core.services import get_zaak
+from zac.core.services import get_document, get_informatieobjecttype, get_zaak
 from zac.reports.models import Report
 
 logger = logging.getLogger(__name__)
@@ -20,23 +20,24 @@ class DefinitionBasePermission(permissions.BasePermission):
     permission: Permission
     object_type: str = PermissionObjectType.zaak
 
-    def __new__(cls, *args, **kwargs):
-        permission = getattr(cls, "permission", None)
-        if permission is None:
-            raise ImproperlyConfigured(
-                "%s is missing the 'permission' attribute" % cls.__name__
-            )
-        return super().__new__(cls, *args, **kwargs)
+    def get_permission(self, request):
+        assert self.permission is not None, (
+            "'%s' should either include a `permission` attribute, "
+            "or override the `get_permission()` method." % self.__class__.__name__
+        )
+
+        return self.permission
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
 
+        permission_name = self.get_permission(request).name
         # first check atomic permissions - this checks both atomic permissions directly attached to the user
         # and atomic permissions defined to authorization profiles
         if (
             AtomicPermission.objects.for_user(request.user)
-            .filter(permission=self.permission.name, object_url=obj.url)
+            .filter(permission=permission_name, object_url=obj.url)
             .actual()
             .exists()
         ):
@@ -45,7 +46,7 @@ class DefinitionBasePermission(permissions.BasePermission):
         # then check blueprint permissions
         for permission in (
             BlueprintPermission.objects.for_user(request.user)
-            .filter(permission=self.permission.name, object_type=self.object_type)
+            .filter(permission=permission_name, object_type=self.object_type)
             .actual()
         ):
             if permission.has_access(obj, request.user):
@@ -57,15 +58,16 @@ class DefinitionBasePermission(permissions.BasePermission):
         if request.user.is_superuser:
             return True
 
+        permission_name = self.get_permission(request).name
         # check if the user has permissions for any object
         if (
             not BlueprintPermission.objects.for_user(request.user)
-            .filter(permission=self.permission.name, object_type=self.object_type)
+            .filter(permission=permission_name, object_type=self.object_type)
             .actual()
             .exists()
         ) and (
             not AtomicPermission.objects.for_user(request.user)
-            .filter(permission=self.permission.name, object_type=self.object_type)
+            .filter(permission=permission_name, object_type=self.object_type)
             .actual()
             .exists()
         ):
@@ -80,6 +82,9 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
     def get_object(self, request: Request, obj_url: str):
         raise NotImplementedError("This method must be implemented by a subclass")
 
+    def get_object_url(self, serializer) -> str:
+        return serializer.validated_data[self.object_attr]
+
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.user.is_superuser:
             return True
@@ -93,7 +98,7 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
         if not super().has_permission(request, view):
             return False
 
-        object_url = serializer.validated_data[self.object_attr]
+        object_url = self.get_object_url(serializer)
         obj = self.get_object(request, object_url)
         if not obj:
             return False
@@ -159,3 +164,20 @@ class ReportDefinitionPermission(DefinitionBasePermission):
         if not obj:
             return False
         return self.has_object_permission(request, view, obj)
+
+
+class DocumentDefinitionPermission(ObjectDefinitionBasePermission):
+    object_attr = "url"
+    object_type = PermissionObjectType.document
+
+    def get_object(self, request: Request, obj_url: str):
+        try:
+            document = get_document(obj_url)
+            document.informatieobjecttype = get_informatieobjecttype(
+                document.informatieobjecttype
+            )
+        except ClientError:
+            logger.info("Invalid Document specified", exc_info=True)
+            return None
+
+        return document

@@ -87,12 +87,12 @@
     </div>
   </ng-container>
   <div class="d-flex justify-content-end justify-content-lg-center">
-    <gu-button size="large"
+    <button gu-button size="large"
                [disabled]="!searchForm.valid || isSubmitting"
                [loading]="isSubmitting"
                (click)="submitForm()">
       Zoeken
-    </gu-button>
+    </button>
   </div>
 </form>
 <gu-message *ngIf="hasError" type="warn" [message]="errorMessage">

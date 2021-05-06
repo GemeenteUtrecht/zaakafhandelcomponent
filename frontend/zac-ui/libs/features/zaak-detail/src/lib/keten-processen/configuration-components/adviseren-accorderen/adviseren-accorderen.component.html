@@ -56,7 +56,7 @@
         </div>
         <p class="p--error" *ngIf="assignedUsersErrorMessage">{{assignedUsersErrorMessage}}</p>
       </div>
-      <gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</gu-button>
+      <button gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</button>
     </article>
     <article class="configuration-details">
       <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
@@ -64,12 +64,12 @@
       <textarea id="textarea_config" [formControl]="toelichting"></textarea>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large"
+      <button gu-button size="large"
                  (click)="submitForm()"
                  [disabled]="!assignUsersForm.valid || isSubmitting"
                  [loading]="isSubmitting">
         Voltooien
-      </gu-button>
+      </button>
     </div>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">

@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { ModalService } from '@gu/components';
+import { Document } from '@gu/models';
 
 @Component({
   selector: 'gu-document-toevoegen',
@@ -12,7 +13,15 @@ import { ModalService } from '@gu/components';
 })
 export class DocumentToevoegenComponent implements OnInit {
   @Input() mainZaakUrl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
+  @Input() activity: string;
+  @Input() documentUrl?: string;
+  @Input() updateDocument: boolean;
+  @Input() closeButton: boolean;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() close: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
 
   documentTypes: any;
   addDocumentForm: FormGroup;
@@ -27,14 +36,28 @@ export class DocumentToevoegenComponent implements OnInit {
 
   ngOnInit() {
     this.addDocumentForm = this.fb.group({
-      documentType: this.fb.control("", Validators.required),
-      documentFile: this.fb.control("", Validators.required),
+      documentFile: this.fb.control("", Validators.required)
     })
+
+    if (!this.updateDocument) {
+      const documentTypeControl = this.fb.control("", Validators.required);
+      this.addDocumentForm.addControl('documentType', documentTypeControl);
+    }
+
+    if (this.updateDocument) {
+      const reasonControl = this.fb.control("", Validators.required);
+      this.addDocumentForm.addControl('reason', reasonControl);
+    }
+
     this.fetchDocumentTypes()
   }
 
   get documentTypeControl(): FormControl {
     return this.addDocumentForm.controls['documentType'] as FormControl;
+  }
+
+  get reasonControl(): FormControl {
+    return this.addDocumentForm.controls['reason'] as FormControl;
   }
 
   fetchDocumentTypes() {
@@ -54,23 +77,58 @@ export class DocumentToevoegenComponent implements OnInit {
   submitForm(): void {
     const formData = new FormData();
 
-    formData.append("informatieobjecttype", this.addDocumentForm.controls['documentType'].value);
     formData.append("file", this.addDocumentForm.controls['documentFile'].value);
     formData.append("zaak", this.mainZaakUrl);
 
+    if (!this.updateDocument) {
+      formData.append("informatieobjecttype", this.addDocumentForm.controls['documentType'].value);
+    }
+
+    if (this.activity) {
+      formData.append("beschrijving", `Document voor activiteit '${this.activity}'`);
+    }
+
+    if (this.updateDocument) {
+      formData.append("url", this.documentUrl);
+      formData.append("reden", this.addDocumentForm.controls['reason'].value);
+    }
+
     this.isSubmitting = true;
-    this.postDocument(formData).subscribe(() => {
-      this.reload.emit(true);
-      this.modalService.close("document-toevoegen-modal");
-      this.addDocumentForm.reset();
-      this.isSubmitting = false;
-    }, errorRes => {
-      console.log(errorRes);
-    })
+
+    if (!this.updateDocument) {
+      this.postDocument(formData).subscribe(res => {
+        this.closeAndResetForm();
+        this.uploadedDocument.emit(res)
+        this.isSubmitting = false;
+      }, errorRes => {
+        console.log(errorRes);
+      })
+    } else if (this.updateDocument) {
+      this.patchDocument(formData).subscribe(() => {
+        this.closeAndResetForm()
+        this.isSubmitting = false;
+      }, errorRes => {
+        console.log(errorRes);
+      })
+    }
   }
 
-  postDocument(formData: FormData): Observable<any> {
-    return this.http.Post<any>(encodeURI("/api/core/cases/document"), formData);
+  closeAndResetForm() {
+    this.reload.emit(true);
+    this.close.emit(true);
+    if (!this.activity) {
+      this.modalService.close("document-toevoegen-modal");
+      this.modalService.close("document-overschrijven-modal");
+    }
+    this.addDocumentForm.reset();
+  }
+
+  postDocument(formData: FormData): Observable<Document> {
+    return this.http.Post<any>(encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/document`), formData);
+  }
+
+  patchDocument(formData: FormData): Observable<any> {
+    return this.http.Patch<any>(encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/document`), formData);
   }
 
   async handleFileSelect(file: File) {

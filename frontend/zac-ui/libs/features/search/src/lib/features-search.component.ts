@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Zaak } from '@gu/models';
+import { TableSort, Zaak } from '@gu/models';
 
 @Component({
   selector: 'gu-features-search',
@@ -9,10 +9,6 @@ import { Zaak } from '@gu/models';
 export class FeaturesSearchComponent {
 
   resultData: Zaak[];
+  sortData: TableSort;
 
-  constructor() { }
-
-  setResult(resultData: Zaak[]) {
-    this.resultData = resultData;
-  }
 }

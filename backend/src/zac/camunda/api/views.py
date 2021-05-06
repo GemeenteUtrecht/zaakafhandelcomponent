@@ -100,6 +100,11 @@ class UserTaskView(APIView):
 
     def get_parsers(self):
         default = super().get_parsers()
+        if getattr(
+            self, "swagger_fake_view", False
+        ):  # hit during api schema generation
+            return default
+
         task = self.get_object()
         item = get_registry_item(task)
         if not item.parsers:
@@ -108,6 +113,11 @@ class UserTaskView(APIView):
 
     def get_renderers(self):
         default = super().get_renderers()
+        if getattr(
+            self, "swagger_fake_view", False
+        ):  # hit during api schema generation
+            return default
+
         task = self.get_object()
         item = get_registry_item(task)
         if not item.renderers:

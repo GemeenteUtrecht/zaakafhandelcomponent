@@ -8,22 +8,50 @@
       <div class="configuration-files" formArrayName="documents">
         <div class="row">
           <div class="col-md-6 form-group" *ngFor="let document of documents.controls; let i = index">
-            <gu-checkbox id="kp-docs-select-{{i}}"
+            <gu-checkbox class="mb-2" id="kp-docs-select-{{i}}"
                          [value]="taskContextData.context.documents[i].url"
                          [control]="document">
-              <span><a [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
+              <span>
+                <a class="anchor" (click)="readDocument(taskContextData.context.documents[i].readUrl)">
+                  {{taskContextData.context.documents[i].bestandsnaam}}
+                </a>
+              </span>
             </gu-checkbox>
+            <div class="p-2">
+              <p class="d-inline p--bold">{{taskContextData.context.documents[i].documentType}}</p>
+              <button gu-button *ngIf="!openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Wijzigen</button>
+              <button gu-button *ngIf="openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
+              <ng-container *ngIf="openSelectorsArray.includes(i)">
+                <div class="row">
+                  <div class="col-4">
+                    <p>Wijzigen naar:</p>
+                  </div>
+                  <div class="col-8">
+                    <gu-multiselect
+                      *ngIf="openSelectorsArray.includes(i)"
+                      [multiple]="false"
+                      [items]="taskContextData.context.informatieobjecttypen"
+                      placeholder="Selecteer documenttype"
+                      bindLabel="omschrijving"
+                      bindValue="omschrijving"
+                      class="mb-4"
+                      [control]="documentType(i)">
+                    </gu-multiselect>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
           </div>
         </div>
       </div>
     </article>
     <div class="d-flex justify-content-end">
-      <gu-button size="large"
+      <button gu-button size="large"
                  (click)="submitForm()"
                  [disabled]="!selectDocumentsForm.valid || isSubmitting"
                  [loading]="isSubmitting">
         Voltooien
-      </gu-button>
+      </button>
     </div>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">

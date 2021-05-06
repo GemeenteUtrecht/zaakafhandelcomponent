@@ -15,12 +15,12 @@
   </ng-container>
 
   <div class="d-flex justify-content-end">
-    <gu-button
+    <button gu-button
       type="secondary"
       (click)="openModal('document-toevoegen-modal')"
     >
       Document toevoegen
-    </gu-button>
+    </button>
   </div>
 </div>
 
@@ -29,6 +29,20 @@
           title="Document toevoegen"
           size="small">
   <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [bronorganisatie]="bronorganisatie"
+                         [identificatie]="identificatie"
+                         (reload)="fetchDocuments()">
+  </gu-document-toevoegen>
+</gu-modal>
+<gu-modal id="document-overschrijven-modal"
+          [closeIcon]="true"
+          title="Document overschrijven"
+          size="small">
+  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [bronorganisatie]="bronorganisatie"
+                         [identificatie]="identificatie"
+                         [updateDocument]="true"
+                         [documentUrl]="selectedDocumentUrl"
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>

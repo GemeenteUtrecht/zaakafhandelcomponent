@@ -13,19 +13,19 @@
       </gu-multiselect>
     </div>
     <div class="d-flex justify-content-end">
-      <gu-button
+      <button gu-button
         [disabled]="!grantAccessForm.valid || isSubmitting"
         [loading]="isSubmitting"
         type="primary"
         size="large"
         (click)="submitForm()">
         Versturen
-      </gu-button>
+      </button>
     </div>
     <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
   </form>
   <gu-success *ngIf="submitSuccess">
     <p class="mb-4">U heeft gebruiker {{requesterUser.name}} succesvol toegang verleend tot <strong>{{identificatie}}</strong></p>
-    <gu-button type="tertiary" size="small" (click)="submitSuccess=false">Sluiten</gu-button>
+    <button gu-button type="tertiary" size="small" (click)="submitSuccess=false">Sluiten</button>
   </gu-success>
 </div>

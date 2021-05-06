@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesWorkstackService } from './features-workstack.service';
 import { tabs, Tab } from './constants/tabs';
+import { tableHead, tableHeadMapping } from './constants/zaken-tablehead';
 import { RowData, Zaak, Table, UserTask, UserTaskZaak, Task } from '@gu/models';
 import { AccessRequests } from './models/access-request';
 import { AdHocActivities } from './models/activities';
@@ -22,7 +23,7 @@ export class FeaturesWorkstackComponent implements OnInit {
   accessRequestData: AccessRequests[];
 
   zakenTableData: Table = new Table(
-    ['Identificatie', 'Zaaktype', 'Startdatum', 'Geplande einddatum', 'Vertrouwelijkheid'],
+    tableHead,
     []
   );
 
@@ -47,6 +48,15 @@ export class FeaturesWorkstackComponent implements OnInit {
     }, error => {
       console.log(error);
       this.isLoading = false;
+    });
+  }
+
+  fetchZaken(sortValue) {
+    this.workstackService.getWorkstackZaken(tableHeadMapping[sortValue.value], sortValue.order).subscribe( res => {
+      this.zakenData = res;
+      this.zakenTableData.bodyData = this.formatZakenTableData(this.zakenData);
+    }, error => {
+      console.log(error);
     });
   }
 
@@ -77,6 +87,10 @@ export class FeaturesWorkstackComponent implements OnInit {
     } else {
       return task.executeUrl;
     }
+  }
+
+  createActivityLink(zaak) {
+    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`
   }
 
 }

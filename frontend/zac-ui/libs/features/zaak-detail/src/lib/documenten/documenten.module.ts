@@ -18,7 +18,8 @@ import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
     SharedUiComponentsModule,
   ],
   exports: [
-    DocumentenComponent
+    DocumentenComponent,
+    DocumentToevoegenComponent
   ]
 })
 export class DocumentenModule { }

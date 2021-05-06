@@ -29,16 +29,16 @@
                           class="mb-2">
           </gu-input-field>
           <div class="d-flex justify-content-between">
-            <gu-button type="tertiary" size="small" (click)="confInEditMode=false">
+            <button gu-button type="tertiary" size="small" (click)="confInEditMode=false">
               Sluiten
-            </gu-button>
-            <gu-button type="primary"
+            </button>
+            <button gu-button type="primary"
                        size="small"
                        [loading]="isSubmitting"
                        [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value"
                        (click)="submitConfidentiality()">
               Wijzigen
-            </gu-button>
+            </button>
           </div>
           <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage">
           </gu-message>

@@ -1,22 +1,34 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 
 @Component({
-  selector: 'gu-button',
+  // tslint:disable-next-line:component-selector
+  selector: '[gu-button]',
   templateUrl: './button.component.html',
   styleUrls: ['./button.component.scss']
 })
-export class ButtonComponent implements OnInit {
-
+export class ButtonComponent {
   @Input() type: 'primary' | 'secondary' | 'tertiary' = 'primary';
   @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
   @Input() noPadding?: boolean;
-  @Input() disabled?: boolean;
   @Input() loading?: boolean;
   @Input() icon?: string;
+  @Input() class = '';
+  @Input() disabled?: boolean;
 
-  constructor() { }
-
-  ngOnInit(): void {
+  @HostBinding('attr.disabled')
+  get disable() {
+    return this.disabled ? 'disabled' : null;
   }
 
+  @HostBinding('attr.class')
+  get buttonType() {
+    return [
+      'btn',
+      `btn--${this.type}`,
+      `btn--${this.size}`,
+      this.loading ? `btn__spinner` : null,
+      this.loading ? `btn__spinner--${this.type}` : null,
+      this.class
+    ].filter(Boolean).join(' ')
+  };
 }

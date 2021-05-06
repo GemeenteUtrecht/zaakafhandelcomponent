@@ -18,4 +18,10 @@ export class FeaturesWorkstackService {
     });
     return forkJoin(observables)
   }
+
+  getWorkstackZaken(sortValue, sortOrder): Observable<any> {
+    const order = sortOrder === 'desc' ? '-' : ''
+    const endpoint = encodeURI(`/api/workstack/cases?ordering=${order}${sortValue}`)
+    return this.http.Get<any>(endpoint);
+  }
 }

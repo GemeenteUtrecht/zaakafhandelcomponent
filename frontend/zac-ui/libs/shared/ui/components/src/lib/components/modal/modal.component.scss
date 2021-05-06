@@ -1,3 +1,5 @@
+@import './base/colors/colors';
+
 gu-modal {
   /* modals are hidden by default */
   display: none;
@@ -27,16 +29,33 @@ gu-modal {
       &--small {
         max-width: 500px;
       }
+      &--right {
+        min-height: 100vh;
+        margin: unset;
+        margin-left: auto;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        transform: translateX(100%);
+        transition: transform 0.3s;
+      }
     }
     .gu-modal-header {
       display: flex;
+      justify-content: flex-end;
       &--mb {
-        margin-bottom: 1.875rem;
+        margin-bottom: 0.45rem;
       }
-      mat-icon {
-        align-self: flex-start;
-        margin-left: auto;
-        cursor: pointer;
+      .gu-modal-close-button {
+        display: flex;
+        padding: 4px;
+        &:hover {
+          background-color: $background-grey;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+        mat-icon {
+          margin-left: auto;
+        }
       }
     }
   }
@@ -57,4 +76,7 @@ gu-modal {
 
 body.gu-modal-open {
   overflow: hidden;
+  .gu-modal-body--right {
+    transform: translateX(0%);
+  }
 }

@@ -1,16 +1,19 @@
 <div class="gu-modal">
   <div class="gu-modal-body"
        [ngClass]="{
-        'gu-modal-body--small': size == 'small'
+        'gu-modal-body--small': size == 'small',
+        'gu-modal-body--right': type == 'right'
         }">
     <div class="gu-modal-header"
          [ngClass]="{
         'gu-modal-header--mb': title
         }"
     >
-      <h1 *ngIf="title" class="mb-0">{{title}}</h1>
-      <mat-icon role="button" (click)="close()">close</mat-icon>
+      <div class="gu-modal-close-button">
+        <mat-icon role="button" (click)="close()">close</mat-icon>
+      </div>
     </div>
+      <h1 *ngIf="title" class="mb-4">{{title}}</h1>
     <ng-content></ng-content>
   </div>
 </div>

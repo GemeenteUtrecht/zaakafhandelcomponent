@@ -113,7 +113,7 @@ djangorestframework==3.12.2
     #   -r requirements/base.in
     #   drf-spectacular
     #   zgw-consumers
-drf-spectacular==0.12.0
+drf-spectacular==0.15.1
     # via -r requirements/base.in
 elasticsearch-dsl==7.3.0
     # via -r requirements/base.in
@@ -234,7 +234,7 @@ typing-extensions==3.7.4.3
     # via aiohttp
 uritemplate==3.0.1
     # via drf-spectacular
-urllib3==1.25.5
+urllib3==1.25.11
     # via
     #   elasticsearch
     #   requests

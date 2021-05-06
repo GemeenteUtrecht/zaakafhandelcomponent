@@ -5,7 +5,7 @@ from django.urls import reverse
 
 import requests_mock
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -33,150 +33,167 @@ KOWNSL_ROOT = "https://kownsl.nl/"
 
 
 @requests_mock.Mocker()
-class ZaakDocumentsResponseTests(APITestCase):
+class ZaakDocumentsResponseTests(APITransactionTestCase):
     """
     Test the API response body for zaak-documents endpoint.
     """
 
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
+    endpoint = reverse(
+        "zaak-documents",
+        kwargs={
+            "bronorganisatie": "123456782",
+            "identificatie": "ZAAK-2020-0010",
+        },
+    )
 
-        cls.user = SuperUserFactory.create()
+    def setUp(self):
+        super().setUp()
+        self.user = SuperUserFactory.create()
+
+    @patch("zac.core.api.views.get_review_requests", return_value=[])
+    def test_get_zaak_documents(self, m, *other_mocks):
+        self.client.force_authenticate(user=self.user)
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        )
-        cls.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
-        cls.documenttype = generate_oas_component(
+        documenttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="bijlage",
-            catalogus=catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
-        cls.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-2020-0010",
-            bronorganisatie="123456782",
-            zaaktype=cls.zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            startdatum="2020-12-25",
-            uiterlijkeEinddatumAfdoening="2021-01-04",
-        )
-        cls.document = generate_oas_component(
+
+        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             identificatie="DOC-2020-007",
             bronorganisatie="123456782",
-            informatieobjecttype=cls.documenttype["url"],
+            informatieobjecttype=documenttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            bestandsomvang=10,
+            auteur="some-auteur",
+            beschrijving="some-beschrijving",
+            bestandsnaam="some-bestandsnaam",
+            locked="True",
+            titel="some-titel",
+            bestandsomvang="10",
+        )
+        doc_obj = factory(Document, document)
+        doc_obj.informatieobjecttype = factory(InformatieObjectType, documenttype)
+
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
-        zaak = factory(Zaak, cls.zaak)
-        zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-
-        document = factory(Document, cls.document)
-        document.informatieobjecttype = factory(InformatieObjectType, cls.documenttype)
-
-        cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[]
-        )
-        cls.get_documenten_patcher = patch(
-            "zac.core.api.views.get_documenten", return_value=([document], [])
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
-        cls.endpoint = reverse(
-            "zaak-documents",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "ZAAK-2020-0010",
-            },
-        )
+        zaak = factory(Zaak, zaak)
+        zaak.zaaktype = factory(ZaakType, zaaktype)
 
-    def setUp(self):
-        super().setUp()
-
-        self.find_zaak_patcher.start()
-        self.addCleanup(self.find_zaak_patcher.stop)
-
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
-
-        self.get_documenten_patcher.start()
-        self.addCleanup(self.get_documenten_patcher.stop)
-
-        # ensure that we have a user with all permissions
-        self.client.force_authenticate(user=self.user)
-
-    def test_get_zaak_documents(self, m):
-        read_url = reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "DOC-2020-007",
-                "purpose": DocFileTypes.read,
-            },
-        )
-
-        write_url = reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "DOC-2020-007",
-                "purpose": DocFileTypes.write,
-            },
-        )
-
-        response = self.client.get(self.endpoint)
+        with patch(
+            "zac.core.api.views.filter_documenten_for_permissions",
+            return_value=[doc_obj],
+        ):
+            with patch("zac.core.api.views.find_zaak", return_value=zaak):
+                with patch(
+                    "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
+                ):
+                    response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
             {
-                "url": self.document["url"],
-                "auteur": self.document["auteur"],
+                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+                "auteur": "some-auteur",
                 "identificatie": "DOC-2020-007",
-                "beschrijving": self.document["beschrijving"],
-                "bestandsnaam": self.document["bestandsnaam"],
-                "locked": self.document["locked"],
+                "beschrijving": "some-beschrijving",
+                "bestandsnaam": "some-bestandsnaam",
+                "locked": True,
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
                     "omschrijving": "bijlage",
                 },
-                "titel": self.document["titel"],
+                "titel": "some-titel",
                 "vertrouwelijkheidaanduiding": "Openbaar",
                 "bestandsomvang": 10,
-                "readUrl": read_url,
-                "writeUrl": write_url,
+                "readUrl": reverse(
+                    "dowc:request-doc",
+                    kwargs={
+                        "bronorganisatie": "123456782",
+                        "identificatie": "DOC-2020-007",
+                        "purpose": DocFileTypes.read,
+                    },
+                ),
+                "writeUrl": reverse(
+                    "dowc:request-doc",
+                    kwargs={
+                        "bronorganisatie": "123456782",
+                        "identificatie": "DOC-2020-007",
+                        "purpose": DocFileTypes.write,
+                    },
+                ),
             }
         ]
         self.assertEqual(response_data, expected)
 
-    def test_no_documents(self, m):
-        with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
-            response = self.client.get(self.endpoint)
+    @patch("zac.core.api.views.get_review_requests", return_value=[])
+    def test_no_documents(self, m, *other_mocks):
+        self.client.force_authenticate(user=self.user)
+
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+
+        zaak = factory(Zaak, zaak)
+        zaak.zaaktype = factory(ZaakType, zaaktype)
+
+        with patch("zac.core.api.views.find_zaak", return_value=zaak):
+            with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
+                with patch(
+                    "zac.core.api.views.filter_documenten_for_permissions",
+                    return_value=[],
+                ):
+                    response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
     def test_not_found(self, m):
+        self.client.force_authenticate(user=self.user)
+
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint)
 
@@ -197,7 +214,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         config.save()
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -216,19 +233,35 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             bronorganisatie="123456782",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-            startdatum="2020-12-25",
-            uiterlijkeEinddatumAfdoening="2021-01-04",
         )
-
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+
         cls.get_review_requests_patcher = patch(
             "zac.core.api.views.get_review_requests", return_value=[]
         )
-        cls.get_documenten_patcher = patch(
-            "zac.core.api.views.get_documenten", return_value=([], [])
+
+        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+
+        cls.documenttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/e3f5c6d2-0e49-4293-8428-26139f630950",
+            omschrijving="some-iot-omschrijving",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        cls.document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+            informatieobjecttype=cls.documenttype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        cls.doc_obj = factory(Document, cls.document)
+        cls.doc_obj.informatieobjecttype = factory(
+            InformatieObjectType, cls.documenttype
         )
 
         cls.endpoint = reverse(
@@ -237,6 +270,24 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
                 "bronorganisatie": "123456782",
                 "identificatie": "ZAAK-2020-0010",
             },
+        )
+
+    def _setupMocks(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
         )
 
     def setUp(self):
@@ -248,12 +299,11 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
 
-        self.get_documenten_patcher.start()
-        self.addCleanup(self.get_documenten_patcher.stop)
-
     def test_not_authenticated(self):
         response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        response = self.client.patch(self.endpoint, [{}])
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_authenticated_no_permissions(self):
@@ -261,22 +311,15 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        response = self.client.patch(self.endpoint, [{}])
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_perm_but_not_for_zaaktype(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
-        # gives them access to the page, but no catalogus specified -> nothing visible
+    def test_has_perm_to_get_but_not_for_zaaktype(self, m):
+        self._setupMocks(m)
+
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
             permission=zaken_inzien.name,
@@ -290,26 +333,11 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_perm_but_not_for_va(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
+    def test_has_perm_to_get_but_not_for_va(self, m):
+        self._setupMocks(m)
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
         BlueprintPermissionFactory.create(
@@ -322,18 +350,14 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         self.client.force_authenticate(user=user)
-
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_has_perm(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
+        self._setupMocks(m)
+
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
@@ -347,6 +371,8 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
-
+        with patch(
+            "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

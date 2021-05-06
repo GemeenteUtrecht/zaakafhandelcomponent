@@ -4,13 +4,18 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
+from zac.api.permissions import (
+    DefinitionBasePermission,
+    DocumentDefinitionPermission,
+    ZaakDefinitionPermission,
+)
 
 from ..permissions import (
     zaken_add_documents,
     zaken_add_relations,
     zaken_handle_access,
     zaken_inzien,
+    zaken_update_documents,
     zaken_wijzigen,
 )
 
@@ -20,11 +25,25 @@ logger = logging.getLogger(__name__)
 class CanAddDocuments(ZaakDefinitionPermission):
     permission = zaken_add_documents
 
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        if request.method != "POST":
-            return False
 
-        return super().has_permission(request, view)
+class CanUpdateDocuments(DocumentDefinitionPermission):
+    permission = zaken_update_documents
+
+
+class CanAddOrUpdateZaakDocuments:
+    def get_permission(self, request) -> DefinitionBasePermission:
+        if request.method == "PATCH":
+            return CanUpdateDocuments()
+        elif request.method == "POST":
+            return CanAddDocuments()
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_permission(request, view)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_object_permission(request, view, obj)
 
 
 class CanAddRelations(ZaakDefinitionPermission):

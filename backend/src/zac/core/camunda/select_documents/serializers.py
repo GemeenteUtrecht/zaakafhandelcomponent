@@ -16,7 +16,7 @@ from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
-from zac.core.api.serializers import DocumentTypeSerializer
+from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.models import CoreConfig
 from zac.core.services import fetch_zaaktype, get_documenten
@@ -49,7 +49,7 @@ class DocumentSelectContext(Context):
 @usertask_context_serializer
 class DocumentSelectContextSerializer(APIModelSerializer):
     documents = DocumentSerializer(many=True)
-    informatieobjecttypen = DocumentTypeSerializer(many=True)
+    informatieobjecttypen = InformatieObjectTypeSerializer(many=True)
 
     class Meta:
         model = DocumentSelectContext

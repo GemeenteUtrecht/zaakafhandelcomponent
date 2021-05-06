@@ -16,6 +16,8 @@ import { GerelateerdeZakenModule } from './gerelateerde-zaken/gerelateerde-zaken
 import { DocumentenModule } from './documenten/documenten.module';
 import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail-modal.component';
 import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.component';
+import { ActiviteitenComponent } from './activiteiten/activiteiten.component';
+import { TabsModule } from 'ngx-bootstrap/tabs';
 
 @NgModule({
   imports: [
@@ -31,7 +33,8 @@ import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.co
     KetenProcessenModule,
     GerelateerdeZakenModule,
     DocumentenModule,
-    MultiselectModule
+    MultiselectModule,
+    TabsModule.forRoot()
   ],
   declarations: [
     FeaturesZaakDetailComponent,
@@ -41,7 +44,8 @@ import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.co
     GerelateerdeObjectenComponent,
     AdviserenAccorderenComponent,
     DetailModalComponent,
-    ToegangVerlenenComponent
+    ToegangVerlenenComponent,
+    ActiviteitenComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

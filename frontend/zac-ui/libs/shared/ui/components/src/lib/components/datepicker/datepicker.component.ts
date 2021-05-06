@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { ControlContainer, FormControl, NgForm } from '@angular/forms';
 import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
 import { defineLocale } from 'ngx-bootstrap/chronos';
@@ -10,7 +10,7 @@ import { nlLocale } from 'ngx-bootstrap/locale';
   styleUrls: ['./datepicker.component.scss'],
   viewProviders: [ { provide: ControlContainer, useExisting: NgForm } ]
 })
-export class DatepickerComponent implements OnChanges {
+export class DatepickerComponent implements OnInit, OnChanges {
   @Input() control: FormControl;
   @Input() label: string;
   @Input() id: string;
@@ -26,7 +26,13 @@ export class DatepickerComponent implements OnChanges {
     this.localeService.use('nl');
   }
 
-  ngOnChanges() {
+  ngOnInit() {
+    if (this.control.value && (this.control.value < this.minDate)) {
+      this.control.patchValue(null);
+    }
+  }
+
+  ngOnChanges(changes:SimpleChanges) {
     this.bsConfig = {
       adaptivePosition: true,
       dateInputFormat: 'DD-MM-YYYY',

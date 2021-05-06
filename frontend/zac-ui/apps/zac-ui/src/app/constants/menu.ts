@@ -4,7 +4,7 @@ const menuItems: MenuItem[] = [
   {
     icon: 'article',
     label: 'Werkvoorraad',
-    to: '/werkvoorraad',
+    to: '/',
   },
   {
     icon: 'search',

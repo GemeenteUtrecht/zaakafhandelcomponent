@@ -1,10 +1,10 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Result } from '../../models/zaaktype';
 import { ZaaktypeEigenschap } from '../../models/zaaktype-eigenschappen';
 import { FeaturesSearchService } from '../features-search.service';
 import { Search } from '../../models/search';
-import { Zaak } from '@gu/models';
+import { Zaak, TableSort } from '@gu/models';
 import { Router } from '@angular/router';
 
 @Component({
@@ -12,10 +12,12 @@ import { Router } from '@angular/router';
   templateUrl: './search-form.component.html',
   styleUrls: ['./search-form.component.scss']
 })
-export class SearchFormComponent implements OnInit {
+export class SearchFormComponent implements OnInit, OnChanges {
+  @Input() sortData: TableSort;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
 
   searchForm: FormGroup
+  formData: Search;
 
   zaaktypenData: Result[];
   zaaktypeEigenschappenData: ZaaktypeEigenschap[] = [];
@@ -47,6 +49,12 @@ export class SearchFormComponent implements OnInit {
       eigenschapwaarde: ['']
     })
     this.fetchZaaktypen();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.sortData.previousValue !== this.sortData ) {
+      this.postSearchZaken(this.formData, this.sortData);
+    }
   }
 
   setLoginUrl(): void {
@@ -117,19 +125,19 @@ export class SearchFormComponent implements OnInit {
         value: this.eigenschapwaarde.value
       }
     }
-    const formData: Search = {
+    this.formData = {
       ...this.identificatie.value && {identificatie: this.identificatie.value},
       ...zaaktype && {zaaktype: zaaktype},
       ...this.omschrijving.value && {omschrijving: this.omschrijving.value},
       ...(this.eigenschapnaam.value && this.eigenschapwaarde.value) && {eigenschappen: eigenschappen}
     }
 
-    this.postSearchZaken(formData)
+    this.postSearchZaken(this.formData)
   }
 
-  postSearchZaken(formData: Search) {
+  postSearchZaken(formData: Search, sortData?: TableSort) {
     this.isSubmitting = true;
-    this.searchService.postSearchZaken(formData).subscribe(res =>{
+    this.searchService.postSearchZaken(formData, sortData).subscribe(res =>{
       this.loadResult.emit(res);
       this.isSubmitting = false;
     }, error => {

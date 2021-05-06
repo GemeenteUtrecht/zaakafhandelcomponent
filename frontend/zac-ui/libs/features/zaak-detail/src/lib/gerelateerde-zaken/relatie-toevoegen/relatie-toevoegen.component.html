@@ -29,14 +29,14 @@
       </gu-multiselect>
     </div>
     <div class="d-flex justify-content-end">
-      <gu-button
-        [disabled]="!addRelationForm.valid"
+      <button gu-button
+        [disabled]="!addRelationForm.valid || isSubmitting"
         [loading]="isSubmitting"
         type="primary"
         size="large"
         (click)="submitForm()">
         Relatie toevoegen
-      </gu-button>
+      </button>
     </div>
   </form>
 </div>

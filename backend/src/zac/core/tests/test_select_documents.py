@@ -76,6 +76,11 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
+        cls.patch_get_zaak = patch(
+            "zac.core.camunda.select_documents.context.get_zaak",
+            return_value=cls.zaak,
+        )
+
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
@@ -97,22 +102,9 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         )
 
         cls.document.informatieobjecttype = factory(InformatieObjectType, documenttype)
-
-        cls.zaak_context = ZaakContext(
-            zaak=cls.zaak,
-            documents=[
-                cls.document,
-            ],
-        )
-
-        cls.patch_get_zaak_context = patch(
-            "zac.core.camunda.select_documents.context.get_zaak_context",
-            return_value=cls.zaak_context,
-        )
-
-        cls.patch_get_zaak_context_serializers = patch(
-            "zac.core.camunda.select_documents.serializers.get_zaak_context",
-            return_value=cls.zaak_context,
+        cls.patch_get_documenten = patch(
+            "zac.core.camunda.select_documents.context.get_documenten",
+            return_value=[[cls.document], []],
         )
 
         process_instance_id = uuid.uuid4()
@@ -154,11 +146,11 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.patch_get_zaak_context.start()
-        self.addCleanup(self.patch_get_zaak_context.stop)
+        self.patch_get_zaak.start()
+        self.addCleanup(self.patch_get_zaak.stop)
 
-        self.patch_get_zaak_context_serializers.start()
-        self.addCleanup(self.patch_get_zaak_context_serializers.stop)
+        self.patch_get_documenten.start()
+        self.addCleanup(self.patch_get_documenten.stop)
 
         self.patch_get_process_instance.start()
         self.addCleanup(self.patch_get_process_instance.stop)

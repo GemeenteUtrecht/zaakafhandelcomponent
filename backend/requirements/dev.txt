@@ -113,7 +113,7 @@ django-compat==1.0.15
     #   django-hijack-admin
 django-cors-headers==3.5.0
     # via -r requirements/ci.txt
-django-debug-toolbar==1.11
+django-debug-toolbar==3.2.1
     # via -r requirements/dev.in
 django-elasticsearch-debug-toolbar==2.0.0
     # via -r requirements/dev.in
@@ -181,7 +181,7 @@ djangorestframework==3.12.2
     #   zgw-consumers
 docutils==0.16
     # via sphinx
-drf-spectacular==0.12.0
+drf-spectacular==0.15.1
     # via -r requirements/ci.txt
 elasticsearch-dsl==7.3.0
     # via -r requirements/ci.txt
@@ -432,7 +432,7 @@ uritemplate==3.0.1
     # via
     #   -r requirements/ci.txt
     #   drf-spectacular
-urllib3==1.25.5
+urllib3==1.25.11
     # via
     #   -r requirements/ci.txt
     #   elasticsearch
