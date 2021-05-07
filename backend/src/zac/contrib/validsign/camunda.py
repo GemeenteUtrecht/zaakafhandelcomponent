@@ -159,6 +159,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
 
         return {
             "signers": signers,
+            "documenten": self.validated_data["selected_documents"],
         }
 
     def on_task_submission(self) -> None:
