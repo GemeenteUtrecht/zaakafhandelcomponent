@@ -1,6 +1,7 @@
 from zac.accounts.permissions import Permission
 from zac.api.permissions import ReportDefinitionPermission
-from zac.core.blueprints import ReportBlueprint
+
+from ..blueprints import ReportBlueprint
 
 rapport_inzien = Permission(
     name="rapport:inzien",
