@@ -18,8 +18,12 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
-from zac.core.models import CoreConfig
-from zac.core.services import fetch_zaaktype, get_documenten
+from zac.core.services import (
+    create_document,
+    download_document,
+    fetch_zaaktype,
+    get_document,
+)
 from zgw.models import Zaak
 
 
@@ -86,7 +90,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
     """
 
     selected_documents = SelectedDocumentSerializer(many=True)
-    _documents: List = []
+    _documents: List[Document] = []
 
     def validate_selected_documents(self, selected_docs):
         # Validate selected documents
@@ -148,7 +152,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         """
         assert self._documents, "Please run self.on_task_submission() first."
 
-        return {"documenten": [doc["url"] for doc in self._documents]}
+        return {"documenten": [doc.url for doc in self._documents]}
 
     def on_task_submission(self) -> None:
         """
@@ -156,16 +160,36 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         """
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
-        original_documents, gone = get_documenten(self.get_zaak_from_context())
-        upload = []
-        process_instance = self._get_process_instance()
-        for old, new in zip(
-            original_documents, self.validated_data["selected_documents"]
-        ):
-            upload.append(
+        # Get original documents
+        with parallel() as executor:
+            original_documents = executor.map(
+                lambda doc: get_document(doc["document"]),
+                self.validated_data["selected_documents"],
+            )
+        original_documents = {doc.url: doc for doc in original_documents}
+
+        # Get content of documents
+        with parallel() as executor:
+            original_documents = executor.map(
+                lambda doc: download_document(doc),
+                [doc for doc_url, doc in original_documents.items()],
+            )
+        original_documents = list(original_documents)
+
+        # Set document.inhoud to fetched content
+        old_documents = {}
+        for doc, inhoud in original_documents:
+            doc.inhoud = inhoud.decode("ascii")
+            old_documents[doc.url] = doc
+
+        # Create list of new document data to upload
+        new_documents = []
+        for new in self.validated_data["selected_documents"]:
+            old = old_documents[new["document"]]
+            new_documents.append(
                 {
                     "informatieobjecttype": new["document_type"],
-                    "bronorganisatie": process_instance.get_variable("bronorganisatie"),
+                    "bronorganisatie": old.bronorganisatie,
                     "creatiedatum": date.today().isoformat(),
                     "titel": old.titel,
                     "auteur": old.auteur,
@@ -177,16 +201,10 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
                 }
             )
 
-        core_config = CoreConfig.get_solo()
-        service = core_config.primary_drc
-        if not service:
-            raise RuntimeError("No DRC configured!")
-
-        drc_client = service.build_client()
         with parallel() as executor:
-            documents = executor.submit(
-                lambda doc: drc_client.create("enkelvoudiginformatieobject", doc),
-                upload,
+            documents = executor.map(
+                lambda doc: create_document(doc),
+                new_documents,
             )
 
-        self._documents = documents.result()
+        self._documents = list(documents)

@@ -505,12 +505,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             ],
         }
 
-        m.post(
-            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
-            json=[self.document_dict],
-            status_code=201,
-        )
-
         m.get(
             f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/zaaktype?deserializeValues=false",
             json=serialize_variable(self.zaaktype["url"]),
@@ -521,18 +515,26 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.select_documents.serializers.get_documenten",
-            return_value=([self.document], []),
+            "zac.core.camunda.select_documents.serializers.get_document",
+            return_value=self.document,
         ):
             with patch(
-                "zac.core.camunda.select_documents.serializers.get_zaak_context",
-                return_value=self.zaak_context,
+                "zac.core.camunda.select_documents.serializers.download_document",
+                return_value=(self.document, b"some-content"),
             ):
                 with patch(
-                    "zac.core.camunda.select_documents.serializers.get_process_instance",
-                    return_value=self.process_instance,
+                    "zac.core.camunda.select_documents.serializers.create_document",
+                    return_value=self.document,
                 ):
-                    response = self.client.put(self.task_endpoint, payload)
+                    with patch(
+                        "zac.core.camunda.select_documents.serializers.get_zaak_context",
+                        return_value=self.zaak_context,
+                    ):
+                        with patch(
+                            "zac.core.camunda.select_documents.serializers.get_process_instance",
+                            return_value=self.process_instance,
+                        ):
+                            response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
 
