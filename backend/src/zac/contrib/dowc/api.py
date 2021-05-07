@@ -14,6 +14,7 @@ from zac.client import Client
 from zac.utils.decorators import optional_service
 
 from .data import DowcResponse
+from .exceptions import DOWCCreateError
 from .models import DowcConfig
 
 
@@ -43,7 +44,7 @@ def create_doc(
     document: Document,
     purpose: str,
     referer: str,
-) -> Tuple[Union[Any, DowcResponse], int]:
+) -> Tuple[DowcResponse, int]:
 
     drc_url = furl(document.url).add({"versie": document.versie}).url
     client = get_client(user)
@@ -64,9 +65,10 @@ def create_doc(
                 response = client.list("documenten", data=data)[0]
                 status_code = status.HTTP_200_OK
             except ClientError as err:  # Relay error
-                return err.args[0], status.HTTP_400_BAD_REQUEST
+                raise DOWCCreateError(err.args[0])
+
         else:  # Object might exist and is owned by a different user
-            return err.args[0], status.HTTP_400_BAD_REQUEST
+            raise DOWCCreateError(err.args[0])
 
     return factory(DowcResponse, response), status_code
 
