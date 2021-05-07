@@ -7,7 +7,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
@@ -48,8 +47,7 @@ class OpenDowcView(APIView):
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         if not self.document:
             versie = _cast(self.request.GET.get("versie", None), int)
-            document = find_document(bronorganisatie, identificatie, versie=versie)
-            self.document = factory(Document, document)
+            self.document = find_document(bronorganisatie, identificatie, versie=versie)
         return self.document
 
     def post(self, request, bronorganisatie, identificatie, purpose):

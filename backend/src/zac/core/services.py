@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -8,10 +7,9 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
-import aiohttp
 import requests
 from furl import furl
-from zds_client.client import ClientError
+from requests.models import Response
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
@@ -55,33 +53,6 @@ def _client_from_url(url: str):
 
 def _client_from_object(obj):
     return _client_from_url(obj.url)
-
-
-async def fetch(session: aiohttp.ClientSession, url: str):
-    """
-    DEPRECATED/UNUSED
-
-    """
-    creds = _client_from_url(url).auth.credentials()
-    async with session.get(url, headers=creds) as response:
-        return await response.json()
-
-
-def fetch_async(cache_key: str, job, *args, **kwargs):
-    """
-    DEPRECATED/UNUSED
-
-    """
-    result = cache.get(cache_key)
-    if result is not None:
-        return result
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    coro = job(*args, **kwargs)
-    result = loop.run_until_complete(coro)
-    cache.set(cache_key, result, 30 * 60)
-    return result
 
 
 ###################################################
@@ -812,29 +783,26 @@ def check_document_cache(url: str, document: Dict):
         cache_document(cache_key, url, document)
 
 
-def fetch_document(url: str) -> Dict[str, str]:
+def _fetch_document(url: str) -> Response:
     """
     Retrieve document by URL from DRC or cache.
 
-    Return error details if not found.
     """
     cache_key = f"document:{url}"
     if cache_key in cache:
         return cache.get(cache_key)
 
     client = _client_from_url(url)
-    try:
-        result = client.retrieve("enkelvoudiginformatieobject", url=url)
-        check_document_cache(url, result)
-    except ClientError as err:
-        result = err.args[0]
-
-    return result
+    headers = client.auth.credentials()
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        check_document_cache(url, response.json())
+    return response
 
 
 def fetch_documents(
     zios: list, doc_versions: Optional[Dict[str, int]] = None
-) -> Tuple[List[Dict], List[str]]:
+) -> Tuple[List[Document], List[str]]:
     doc_versions = doc_versions or {}
     document_urls = []
     for zio in zios:
@@ -844,18 +812,18 @@ def fetch_documents(
         document_urls.append(document_furl.url)
 
     with parallel() as executor:
-        results = executor.map(lambda url: fetch_document(url), document_urls)
+        responses = executor.map(lambda url: _fetch_document(url), document_urls)
 
     documenten = []
     gone = []
-    for document, zio in zip(results, zios):
-        if "url" in document:
-            documenten.append(document)
-
-        elif document["status"] == 404:
+    for response, zio in zip(responses, zios):
+        if response.status_code != 200:
             gone.append(zio)
 
-    return documenten, gone
+        else:
+            documenten.append(response.json())
+
+    return factory(Document, documenten), gone
 
 
 def get_documenten(
@@ -875,7 +843,7 @@ def get_documenten(
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
 
     # figure out relevant ztcs
-    informatieobjecttypen = {document["informatieobjecttype"] for document in found}
+    informatieobjecttypen = {document.informatieobjecttype for document in found}
 
     _iot = list(informatieobjecttypen)
 
@@ -898,97 +866,94 @@ def get_documenten(
         for iot in all_informatieobjecttypen
     }
 
-    documenten = factory(Document, found)
-
     # resolve relations
-    for document in documenten:
+    for document in found:
         document.informatieobjecttype = informatieobjecttypen[
             document.informatieobjecttype
         ]
 
-    return documenten, gone
+    return found, gone
 
 
-@cache_result("document:{bronorganisatie}:{identificatie}:{versie}")
 def find_document(
     bronorganisatie: str, identificatie: str, versie: Optional[int] = None
-) -> Dict:
+) -> Document:
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
 
     """
-
-    # not in cache -> check it in all known DRCs
-    query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
-
-    drcs = Service.objects.filter(api_type=APITypes.drc)
-
-    result = None
-    for drc in drcs:
-        client = drc.build_client()
-        results = get_paginated_results(
-            client, "enkelvoudiginformatieobject", query_params=query
-        )
-
-        if not results:
-            continue
-
-        # get the latest one if no explicit version is given
-        if versie is None:
-            result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
-
-        else:
-            # there's only supposed to be one unique case
-            # NOTE: there are known issues with DRC-CMIS returning multiple docs for
-            # the same version...
-            candidates = [result for result in results if result["versie"] == versie]
-            if not candidates:
-                # The DRC only returns the latest version and so the candidates
-                # will always be empty if the latest version isn't the requested version.
-                # In this case try to retrieve the document by using fetch_document.
-                try:
-                    document_furl = furl(results[0]["url"]).add({"versie": versie})
-                    result = fetch_document(document_furl.url)
-
-                except Exception:
-                    raise RuntimeError(
-                        f"Version '{versie}' for document does not seem to exist..."
-                    )
-            if len(candidates) > 1:
-                logger.warning(
-                    "Multiple results for version '%d' found, this is an error in the DRC "
-                    "implementation!",
-                    versie,
-                    extra={"query": query},
-                )
-
-                result = candidates[0]
-        break
+    cache_key = "document:{bronorganisatie}:{identificatie}:{versie}"
+    result = cache.get(cache_key)
 
     if not result:
-        raise ObjectDoesNotExist(
-            "Document object was not found in any known registrations"
-        )
+        # not in cache -> check it in all known DRCs
+        query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
-    # Cache result - add versie to url if versie was specified.
-    document_furl = furl(result["url"])
-    if versie:
-        document_furl.add({"versie": versie})
+        drcs = Service.objects.filter(api_type=APITypes.drc)
 
-    cache.set(document_furl.url, result, timeout=AN_HOUR / 2)
-    return result
+        for drc in drcs:
+            client = drc.build_client()
+            results = get_paginated_results(
+                client, "enkelvoudiginformatieobject", query_params=query
+            )
+
+            if not results:
+                continue
+
+            # get the latest one if no explicit version is given
+            if versie is None:
+                result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
+
+            else:
+                # there's only supposed to be one unique case
+                # NOTE: there are known issues with DRC-CMIS returning multiple docs for
+                # the same version...
+                candidates = [
+                    result for result in results if result["versie"] == versie
+                ]
+                if not candidates:
+                    # The DRC only returns the latest version and so the candidates
+                    # will always be empty if the latest version isn't the requested version.
+                    # In this case try to retrieve the document by using fetch_document.
+                    document_furl = furl(results[0]["url"]).add({"versie": versie})
+                    response = _fetch_document(document_furl.url)
+                    response.raise_for_status()
+                    result = response.json()
+
+                if len(candidates) > 1:
+                    logger.warning(
+                        "Multiple results for version '%d' found, this is an error in the DRC "
+                        "implementation!",
+                        versie,
+                        extra={"query": query},
+                    )
+
+                    result = candidates[0]
+            break
+
+        if not result:
+            raise ObjectDoesNotExist(
+                "Document object was not found in any known registrations"
+            )
+
+        # Cache result - add versie to url if versie was specified.
+        document_furl = furl(result["url"])
+        if versie:
+            document_furl.add({"versie": versie})
+
+        cache_document(cache_key, document_furl.url, result)
+
+    return factory(Document, result)
 
 
 def get_document(url: str) -> Document:
     """
     Retrieve document by URL.
 
-    Raise ClientError error if result doesn't have a URL.
     """
-    result = fetch_document(url)
-    if "url" in result:
-        return factory(Document, result)
-    raise ClientError(result)
+    response = _fetch_document(url)
+    response.raise_for_status()
+    return factory(Document, response.json())
 
 
 def download_document(document: Document) -> Tuple[Document, bytes]:

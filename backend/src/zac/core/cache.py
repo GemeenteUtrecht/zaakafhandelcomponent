@@ -70,30 +70,3 @@ def invalidate_document_cache(document: Document):
         f"document:{document.url}",
     ]
     cache.delete_many(keys)
-
-
-def get_zios_cache_key(zios: Iterable[str]):
-    """
-    DEPECRATED/UNUSED
-
-    """
-    key = "zios:{}".format(",".join(zios))
-    key = hashlib.md5(key.encode("ascii")).hexdigest()
-    return key
-
-
-def invalid_zio_cache(zaak: Zaak):
-    """
-    DEPECRATED/UNUSED
-
-    """
-    from .services import get_zaak_informatieobjecten
-
-    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
-    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
-
-    # construct cache keys
-    permutations = itertools.permutations(zios)
-    for permutation in permutations:
-        key = get_zios_cache_key(permutation)
-        cache.delete(key)
