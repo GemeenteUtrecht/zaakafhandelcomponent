@@ -111,6 +111,7 @@ class UserTasksTests(APITestCase):
                         "assignee": {
                             "email": self.user.email,
                             "firstName": self.user.first_name,
+                            "fullName": self.user.get_full_name(),
                             "id": self.user.id,
                             "isStaff": self.user.is_staff,
                             "lastName": self.user.last_name,
