@@ -165,6 +165,7 @@ class ProcessInstanceTests(TestCase):
                                 "assignee": {
                                     "username": self.user.username,
                                     "firstName": self.user.first_name,
+                                    "fullName": self.user.get_full_name(),
                                     "lastName": self.user.last_name,
                                     "id": self.user.id,
                                     "isStaff": self.user.is_staff,
