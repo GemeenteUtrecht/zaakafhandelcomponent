@@ -6,9 +6,10 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.test import generate_oas_component
 
+from zac.accounts.tests.factories import SuperUserFactory
 from zgw.models.zrc import Zaak
 
-from ..export import export_zaken
+from ..export import export_zaken_as_tablib_dataset
 from .factories import ReportFactory
 
 
@@ -69,8 +70,9 @@ class ExportTests(TestCase):
         mock_get_zaak.side_effect = get_zaak
         mock_get_zaak_eigenschappen.side_effect = get_zaak_eigenschappen
 
+        user = SuperUserFactory.create()
         # call export function
-        result = export_zaken(report)
+        result = export_zaken_as_tablib_dataset(user, report)
 
         # assert result of export
         self.assertEqual(len(result), 2)
@@ -90,6 +92,7 @@ class ExportTests(TestCase):
 
         self.assertEqual(mock_get_from_catalogus.call_count, 2)
         mock_search.assert_called_once_with(
+            user=user,
             zaaktypen=[
                 "https://example.com/catalogi/api/v1/zaaktypen/zt1",
                 "https://example.com/catalogi/api/v1/zaaktypen/zt2",

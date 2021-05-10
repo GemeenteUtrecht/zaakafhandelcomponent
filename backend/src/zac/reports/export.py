@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List
+from typing import Iterator, List
 
 import tablib
 from zgw_consumers.api_models.base import factory
@@ -6,6 +6,7 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap
 from zgw_consumers.concurrent import parallel
 
+from zac.accounts.models import User
 from zac.core.services import (
     _get_from_catalogus,
     get_status,
@@ -33,12 +34,13 @@ def _get_zaaktypen(report: Report) -> List[ZaakType]:
     return factory(ZaakType, all_zaaktypen)
 
 
-def get_export_zaken(report: Report) -> List[Zaak]:
+def get_export_zaken(user: User, report: Report, ordering: List[str]) -> List[Zaak]:
     zaaktypen = {zaaktype.url: zaaktype for zaaktype in _get_zaaktypen(report)}
     zaak_urls = search(
+        user=user,
         zaaktypen=list(zaaktypen.keys()),
         include_closed=False,
-        ordering=["startdatum", "registratiedatum", "identificatie"],
+        ordering=ordering,
     )
 
     with parallel() as executor:
@@ -51,8 +53,12 @@ def get_export_zaken(report: Report) -> List[Zaak]:
     return zaken
 
 
-def export_zaken(report: Report) -> tablib.Dataset:
-    zaken = get_export_zaken(report)
+def get_zaken_details_for_export(
+    user: User,
+    report: Report,
+    ordering: List[str] = ["startdatum", "registratiedatum", "identificatie"],
+) -> List[Zaak]:
+    zaken = get_export_zaken(user, report, ordering=ordering)
 
     # get the statuses & eigenschappen
     with parallel() as executor:
@@ -61,14 +67,21 @@ def export_zaken(report: Report) -> tablib.Dataset:
             get_zaak_eigenschappen, zaken
         )
 
-    zaak_statuses: Dict[str, str] = {
-        status.zaak: status.statustype.omschrijving for status in statuses if status
-    }
-    zaak_eigenschappen: Dict[str, List[ZaakEigenschap]] = {
+    zaak_statuses = {status.zaak: status for status in statuses if status}
+    zaak_eigenschappen = {
         zaak_eigenschappen[0].zaak.url: zaak_eigenschappen
         for zaak_eigenschappen in eigenschappen
         if zaak_eigenschappen
     }
+    for zaak in zaken:
+        zaak.eigenschappen = zaak_eigenschappen.get(zaak.url)
+        zaak.status = zaak_statuses.get(zaak.url, None)
+
+    return zaken
+
+
+def export_zaken_as_tablib_dataset(user: User, report: Report) -> tablib.Dataset:
+    zaken = get_zaken_details_for_export(user, report)
 
     data = tablib.Dataset(
         headers=[
@@ -81,7 +94,7 @@ def export_zaken(report: Report) -> tablib.Dataset:
         ]
     )
     for zaak in zaken:
-        eigenschappen = zaak_eigenschappen.get(zaak.url) or ""
+        eigenschappen = zaak.eigenschappen or ""
         if eigenschappen:
             formatted = [
                 f"{eigenschap.naam}: {eigenschap.waarde}"
@@ -96,7 +109,7 @@ def export_zaken(report: Report) -> tablib.Dataset:
                 zaak.startdatum,
                 zaak.omschrijving,
                 eigenschappen,
-                zaak_statuses[zaak.url] if zaak.status else "",
+                zaak.status.statustype.omschrijving if zaak.status else "",
             ]
         )
     return data

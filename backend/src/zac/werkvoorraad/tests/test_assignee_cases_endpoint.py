@@ -166,7 +166,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         )
 
     @requests_mock.Mocker()
-    def test_cases_sorting_endpoint(self, m):
+    def test_cases_ordering_endpoint(self, m):
         Service.objects.create(
             label="Catalogi API",
             api_type=APITypes.ztc,

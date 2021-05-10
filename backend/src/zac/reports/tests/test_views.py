@@ -32,7 +32,9 @@ class DownloadViewTests(ClearCachesMixin, TestCase):
         user = SuperUserFactory.create()
         self.client.force_login(user)
 
-        with patch("zac.reports.views.export_zaken", return_value=Dataset()):
+        with patch(
+            "zac.reports.views.export_zaken_as_tablib_dataset", return_value=Dataset()
+        ):
             response = self.client.get(self.url)
 
         self.assertEqual(
@@ -43,7 +45,7 @@ class DownloadViewTests(ClearCachesMixin, TestCase):
         # check that it's a file response
         self.assertIsInstance(response, FileResponse)
 
-    @patch("zac.reports.views.export_zaken", return_value=Dataset())
+    @patch("zac.reports.views.export_zaken_as_tablib_dataset", return_value=Dataset())
     @patch("zac.reports.views.get_zaaktypen")
     def test_permissions(self, mock_get_zaaktypen, *args):
         user = UserFactory.create()

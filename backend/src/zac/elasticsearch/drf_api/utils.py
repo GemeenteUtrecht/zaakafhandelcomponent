@@ -5,7 +5,7 @@ from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, field
 
 
-def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
+def get_ordering_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
     """
     This (recursively) lists all the (nested) fields that can be sorted on.
 
@@ -17,7 +17,7 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
         if field_type in [field.Nested.name, field.Object.name]:
             properties = field_value.get("properties")
             if properties:
-                nested_fields = get_sorting_fields(properties)
+                nested_fields = get_ordering_fields(properties)
                 for nested_field_name, nested_field_value in list(nested_fields):
                     yield (f"{field_name}.{nested_field_name}", nested_field_value)
 
@@ -31,7 +31,7 @@ def get_sorting_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
 
                     # We're not adding keyword to the name yet because that doesn't make
                     # sense at this stage. This function just spits back
-                    # the valid sorting fields.
+                    # the valid ordering fields.
                     pass
             else:
                 yield (field_name, field_type)
@@ -45,11 +45,11 @@ def get_document_properties(es_document: Document) -> Optional[Dict[str, Any]]:
     return properties
 
 
-def es_document_to_sorting_parameters(
+def es_document_to_ordering_parameters(
     es_document: Document,
 ) -> OpenApiParameter:
     """
-    Turns the ES Document fields to possible sorting parameters.
+    Turns the ES Document fields to possible ordering parameters.
 
     """
     properties = get_document_properties(es_document)
@@ -58,12 +58,12 @@ def es_document_to_sorting_parameters(
         return None
 
     else:
-        enum = [field[0] for field in get_sorting_fields(properties)]
+        enum = [field[0] for field in get_ordering_fields(properties)]
         return OpenApiParameter(
-            name="sorting",
+            name="ordering",
             type=str,
             location=OpenApiParameter.QUERY,
             required=False,
-            description="Possible sorting parameters. Multiple values are possible and should be separated by a comma.",
+            description="Possible ordering parameters. Multiple values are possible and should be separated by a comma.",
             enum=enum,
         )

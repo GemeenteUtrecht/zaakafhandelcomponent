@@ -191,12 +191,12 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.zaak_document1.url)
 
-    def test_sorting(self):
+    def test_ordering(self):
         super_user = SuperUserFactory.create()
         result = search(user=super_user, ordering=("-identificatie",))
         self.assertEqual(result[0], self.zaak_document2.url)
 
-    def test_nested_sorting(self):
+    def test_nested_ordering(self):
         super_user = SuperUserFactory.create()
         result = search(user=super_user, ordering=("-zaaktype.omschrijving",))
         self.assertEqual(result[0], self.zaak_document2.url)
