@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 from django.http import Http404
 
@@ -14,6 +14,7 @@ from zac.client import Client
 from zac.utils.decorators import optional_service
 
 from .data import DowcResponse
+from .exceptions import DOWCCreateError
 from .models import DowcConfig
 
 
@@ -47,25 +48,29 @@ def create_doc(
 
     drc_url = furl(document.url).add({"versie": document.versie}).url
     client = get_client(user)
-    try:
-        response = client.create(
-            "documenten",
-            data={
-                "drc_url": drc_url,
-                "purpose": purpose,
-                "info_url": referer,
-            },
-        )
-        return factory(DowcResponse, response), status.HTTP_201_CREATED
-    except ClientError:
-        response = client.list(
-            "documenten",
-            query_params={
-                "drc_url": drc_url,
-                "purpose": purpose,
-            },
-        )
-        return factory(DowcResponse, response[0]), status.HTTP_200_OK
+
+    data = {"drc_url": drc_url, "purpose": purpose, "info_url": referer}
+    try:  # First try to create the object in dowc
+        response = client.create("documenten", data=data)
+        status_code = status.HTTP_201_CREATED
+
+    except ClientError as err:
+        if err.args == (
+            None,
+        ):  # Requesting user may already have created an object dowc
+            try:
+                # We can fetch the first from the list because the
+                # client will have raised an exception
+                # if the status isn't as expected.
+                response = client.list("documenten", data=data)[0]
+                status_code = status.HTTP_200_OK
+            except ClientError as err:  # Relay error
+                raise DOWCCreateError(err.args[0])
+
+        else:  # Object might exist and is owned by a different user
+            raise DOWCCreateError(err.args[0])
+
+    return factory(DowcResponse, response), status_code
 
 
 @optional_service

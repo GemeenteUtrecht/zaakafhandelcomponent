@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zgw_consumers.api_models.documenten import Document
@@ -14,6 +15,7 @@ from zac.core.cache import invalidate_document_cache
 from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
+from .exceptions import DOWCCreateError
 from .permissions import CanOpenDocuments
 from .serializers import DowcResponseSerializer, DowcSerializer
 
@@ -56,7 +58,11 @@ class OpenDowcView(APIView):
         """
         document = self.get_object(bronorganisatie, identificatie)
         referer = request.headers.get("referer", "")
-        response, status_code = create_doc(request.user, document, purpose, referer)
+        try:
+            response, status_code = create_doc(request.user, document, purpose, referer)
+        except DOWCCreateError as err:
+            raise ValidationError(err.args[0])
+
         serializer = self.serializer_class(response)
 
         # Invalidate cache
