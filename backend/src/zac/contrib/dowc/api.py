@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Union
+from typing import Dict, Tuple
 
 from django.http import Http404
 
