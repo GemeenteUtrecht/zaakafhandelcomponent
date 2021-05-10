@@ -882,7 +882,7 @@ def find_document(
     Find the document uniquely identified by bronorganisatie and identificatie.
 
     """
-    cache_key = "document:{bronorganisatie}:{identificatie}:{versie}"
+    cache_key = f"document:{bronorganisatie}:{identificatie}:{versie}"
     result = cache.get(cache_key)
 
     if not result:
@@ -911,7 +911,17 @@ def find_document(
                 candidates = [
                     result for result in results if result["versie"] == versie
                 ]
-                if not candidates:
+                if len(candidates) >= 1:
+                    if len(candidates) > 1:
+                        logger.warning(
+                            "Multiple results for version '%d' found, this is an error in the DRC "
+                            "implementation!",
+                            versie,
+                            extra={"query": query},
+                        )
+                    result = candidates[0]
+
+                else:
                     # The DRC only returns the latest version and so the candidates
                     # will always be empty if the latest version isn't the requested version.
                     # In this case try to retrieve the document by using fetch_document.
@@ -919,15 +929,6 @@ def find_document(
                     response = _fetch_document(document_furl.url)
                     response.raise_for_status()
                     result = response.json()
-
-                if len(candidates) > 1:
-                    logger.warning(
-                        "Multiple results for version '%d' found, this is an error in the DRC "
-                        "implementation!",
-                        versie,
-                        extra={"query": query},
-                    )
-
                     result = candidates[0]
             break
 
