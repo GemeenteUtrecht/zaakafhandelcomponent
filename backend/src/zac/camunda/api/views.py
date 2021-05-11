@@ -143,7 +143,6 @@ class UserTaskView(APIView):
 
     @extend_schema(
         summary=_("Submit user task data"),
-        request=SubmitUserTaskSerializer,
         responses={
             204: None,
             400: OpenApiTypes.OBJECT,
