@@ -65,7 +65,6 @@ class OpenDowcView(APIView):
 
         serializer = self.serializer_class(response)
 
-        # Invalidate cache
         invalidate_document_cache(document)
         return Response(serializer.data, status=status_code)
 

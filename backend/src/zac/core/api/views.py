@@ -104,7 +104,7 @@ class GetDocumentInfoView(views.APIView):
         if not document_url:
             raise exceptions.ValidationError("'document' query parameter is required.")
 
-        document = get_document(url=document_url)
+        document = get_document(document_url)
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
         )

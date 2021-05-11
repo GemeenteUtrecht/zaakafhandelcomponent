@@ -66,26 +66,7 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
 
 def invalidate_document_cache(document: Document):
     keys = [
-        f"document:{document.bronorganisatie}:{document.identificatie}",
-        f"get_document:{document.url}",
+        f"document:{document.bronorganisatie}:{document.identificatie}:None",
+        f"document:{document.url}",
     ]
     cache.delete_many(keys)
-
-
-def get_zios_cache_key(zios: Iterable[str]):
-    key = "zios:{}".format(",".join(zios))
-    key = hashlib.md5(key.encode("ascii")).hexdigest()
-    return key
-
-
-def invalid_zio_cache(zaak: Zaak):
-    from .services import get_zaak_informatieobjecten
-
-    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
-    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
-
-    # construct cache keys
-    permutations = itertools.permutations(zios)
-    for permutation in permutations:
-        key = get_zios_cache_key(permutation)
-        cache.delete(key)
