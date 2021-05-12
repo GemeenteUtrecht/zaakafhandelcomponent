@@ -819,13 +819,12 @@ def fetch_documents(
     gone = []
     for response, zio in zip(responses, zios):
         if response.status_code == 200:
-            doc = factory(Document, response.json())
-            documenten.append(doc)
+            documenten.append(response.json())
         else:
             logger.warning("Document with url %s can't be retrieved." % zio)
             gone.append(zio)
 
-    return documenten, gone
+    return factory(Document, documenten), gone
 
 
 def get_documenten(
