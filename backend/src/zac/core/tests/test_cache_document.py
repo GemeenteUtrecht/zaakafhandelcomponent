@@ -95,10 +95,11 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         )
 
         mock_cache.get = MagicMock()
-        mock_cache.get.return_value = False
+        mock_cache.get.return_value = None
         find_document("123456782", "DOC-2020-007", versie=110)
-
-        mock_cache.get.return_value = document
+        result = MagicMock()
+        result.json.return_value = document
+        mock_cache.get.return_value = result
 
         # See if cache is used in a second call
         find_document("123456782", "DOC-2020-007", versie=110)
