@@ -21,6 +21,7 @@ from zgw_consumers.api_models.catalogi import (
     StatusType,
     ZaakType,
 )
+from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -36,9 +37,13 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from .cache import invalidate_document_cache, invalidate_zaak_cache
+from .cache import (
+    invalidate_document_cache,
+    invalidate_rollen_cache,
+    invalidate_zaak_cache,
+)
 from .models import CoreConfig
-from .rollen import Rol
+from .rollen import Rol, get_naam_medewerker
 
 logger = logging.getLogger(__name__)
 
@@ -664,6 +669,54 @@ def fetch_rol(rol_url: str) -> Rol:
 
     rol = factory(Rol, rol)
     return rol
+
+
+def update_rol(rol_url: str, new_rol: Dict) -> Rol:
+    # Get zrc_client from the zaak url of the rol
+    zrc_client = _client_from_url(new_rol["zaak"])
+
+    # Destroy old rol
+    zrc_client.destroy("rol", url=rol_url)
+
+    # Create new rol
+    rol = zrc_client.create("rol", new_rol)
+
+    return factory(Rol, rol)
+
+
+def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
+    rollen = get_rollen(zaak)
+
+    from .api.serializers import UpdateRolSerializer
+
+    new_rollen = []
+    for rol in rollen:
+        if rol.betrokkene_type.lower() == RolTypes.medewerker.lower():
+            identificatie = rol.betrokkene_identificatie["identificatie"]
+            try:  # Try to get user data
+                user = User.objects.get(username=identificatie)
+                new_rol = UpdateRolSerializer(instance=rol, context={"user": user}).data
+                if get_naam_medewerker(factory(Rol, new_rol)) != get_naam_medewerker(
+                    rol
+                ):
+                    new_rollen.append((rol.url, new_rol))
+            except ObjectDoesNotExist:
+                logger.warning(
+                    "Couldn't find user with identificatie %s" % identificatie
+                )
+
+    if new_rollen:
+        with parallel() as executor:
+            results = executor.map(lambda args: update_rol(*args), new_rollen)
+
+        updated_rollen = list(results)
+
+        # Make sure cache is invalidated
+        invalidate_rollen = [url for url, new_rol in new_rollen]
+        invalidate_rollen_cache(zaak, rollen=invalidate_rollen)
+        return updated_rollen
+
+    return
 
 
 def get_zaak_informatieobjecten(zaak: Zaak) -> list:
