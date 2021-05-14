@@ -492,6 +492,49 @@ class RolSerializer(APIModelSerializer):
         )
 
 
+class MedewerkerIdentificatieSerializer(serializers.Serializer):
+    voorletters = serializers.SerializerMethodField()
+    achternaam = serializers.SerializerMethodField()
+    identificatie = serializers.CharField()
+    voorvoegsel_achternaam = serializers.CharField()
+
+    def get_voorletters(self, attrs):
+        user = self.context.get("user")
+        if user:
+            voorletters = " ".join(
+                [name[0].upper() for name in user.first_name.split()]
+            ).strip()
+            return voorletters or attrs["voorletters"]
+        return attrs["voorletters"]
+
+    def get_achternaam(self, attrs):
+        user = self.context.get("user")
+        if user:
+            return user.last_name or attrs["achternaam"]
+        return attrs["achternaam"]
+
+
+class UpdateRolSerializer(APIModelSerializer):
+    zaak = serializers.CharField(source="zaak.url")
+    betrokkene_identificatie = MedewerkerIdentificatieSerializer()
+
+    class Meta:
+        model = Rol
+        fields = (
+            "betrokkene",
+            "betrokkene_identificatie",
+            "betrokkene_type",
+            "indicatie_machtiging",
+            "omschrijving",
+            "omschrijving_generiek",
+            "registratiedatum",
+            "roltoelichting",
+            "roltype",
+            "url",
+            "zaak",
+        )
+
+
 class ZaakObjectGroupSerializer(APIModelSerializer):
     items = serializers.ListField(
         child=serializers.JSONField(),
