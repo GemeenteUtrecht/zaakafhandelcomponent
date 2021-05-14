@@ -762,42 +762,49 @@ def get_rollen_all(**query_params) -> List[Rol]:
 
 
 def cache_document(
-    cache_key: str,
-    document_url: str,
+    url: str,
     response: Response,
     timeout: Optional[float] = AN_HOUR / 2,
 ):
-    cache.set(cache_key, response, timeout=timeout)
-    cache.set(f"document:{document_url}", response, timeout=timeout)
+    if response.status_code == 200:
+        document = factory(Document, response.json())
+        document_furl = furl(url)
+        versie = document_furl.args.get("versie")
 
+        cache_key = (
+            f"document:{document.bronorganisatie}:{document.identificatie}:{versie}"
+        )
+        if cache_key not in cache:
+            cache.set(cache_key, document, timeout=timeout)
 
-def check_document_cache(url: str, response: Response):
-    document_furl = furl(url)
-    versie = document_furl.args.get("versie")
-    document = response.json()
-    cache_key = (
-        f"document:{document['bronorganisatie']}:{document['identificatie']}:{versie}"
-    )
+        cache_key_url = f"document:{url}"
+        if cache_key_url not in cache:
+            cache.set(cache_key_url, response, timeout=timeout)
 
-    # Cache this version of the document
-    if cache_key not in cache:
-        cache_document(cache_key, url, response)
+        if (
+            not versie
+        ):  # add cache of document with versie as well - this timeout can be extended as versies should be immutable
+            cache_key_versie = f"document:{document.bronorganisatie}:{document.identificatie}:{document.versie}"
+            if cache_key_versie not in cache:
+                cache.set(cache_key_versie, document, timeout=A_DAY)
+
+            document_furl.args["versie"] = versie
+            cache_key_version_url = f"document:{document_furl.url}"
+            if cache_key_version_url not in cache:
+                cache.set(cache_key_version_url, response, timeout=A_DAY)
 
 
 def _fetch_document(url: str) -> Response:
     """
     Retrieve document by URL from DRC or cache.
-
     """
     cache_key = f"document:{url}"
     if cache_key in cache:
         return cache.get(cache_key)
-
     client = _client_from_url(url)
     headers = client.auth.credentials()
     response = requests.get(url, headers=headers)
-    if response.status_code == 200:  # Cache results
-        check_document_cache(url, response)
+    cache_document(url, response)
     return response
 
 
@@ -811,10 +818,8 @@ def fetch_documents(
         if zio in doc_versions:
             document_furl.args["versie"] = doc_versions[zio]
         document_urls.append(document_furl.url)
-
     with parallel() as executor:
         responses = executor.map(lambda url: _fetch_document(url), document_urls)
-
     documenten = []
     gone = []
     for response, zio in zip(responses, zios):
@@ -823,7 +828,6 @@ def fetch_documents(
         else:
             logger.warning("Document with url %s can't be retrieved." % zio)
             gone.append(zio)
-
     return factory(Document, documenten), gone
 
 
@@ -831,29 +835,22 @@ def get_documenten(
     zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
 ) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
-
     # get zaakinformatieobjecten
     zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
-
     # retrieve the documents themselves, in parallel
     zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
-
     # Add version to zio_url if found in doc_versions
     found, gone = fetch_documents(zios, doc_versions)
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
-
     # figure out relevant ztcs
     informatieobjecttypen = {document.informatieobjecttype for document in found}
-
     _iot = list(informatieobjecttypen)
-
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     relevant_ztcs = []
     for ztc in ztcs:
         if any(iot.startswith(ztc.api_root) for iot in _iot):
             relevant_ztcs.append(ztc)
-
     all_informatieobjecttypen = []
     for ztc in relevant_ztcs:
         client = ztc.build_client()
@@ -861,92 +858,73 @@ def get_documenten(
         all_informatieobjecttypen += [
             iot for iot in results if iot["url"] in informatieobjecttypen
         ]
-
     informatieobjecttypen = {
         iot["url"]: factory(InformatieObjectType, iot)
         for iot in all_informatieobjecttypen
     }
-
     # resolve relations
     for document in found:
         document.informatieobjecttype = informatieobjecttypen[
             document.informatieobjecttype
         ]
-
     return found, gone
 
 
+@cache_result("document:{bronorganisatie}:{identificatie}:{versie}")
 def find_document(
     bronorganisatie: str, identificatie: str, versie: Optional[int] = None
 ) -> Document:
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
-
     """
-    cache_key = f"document:{bronorganisatie}:{identificatie}:{versie}"
-    result = cache.get(cache_key)
+    # not in cache -> check it in all known DRCs
+    query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
-    if not result:
-        # not in cache -> check it in all known DRCs
-        query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
+    drcs = Service.objects.filter(api_type=APITypes.drc)
 
-        drcs = Service.objects.filter(api_type=APITypes.drc)
+    result = None
+    for drc in drcs:
+        client = drc.build_client()
+        results = get_paginated_results(
+            client, "enkelvoudiginformatieobject", query_params=query
+        )
 
-        for drc in drcs:
-            client = drc.build_client()
-            results = get_paginated_results(
-                client, "enkelvoudiginformatieobject", query_params=query
-            )
+        if not results:
+            continue
 
-            if not results:
-                continue
+        # get the latest one if no explicit version is given
+        if versie is None:
+            result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
 
-            # get the latest one if no explicit version is given
-            if versie is None:
-                result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
+        else:
+            # there's only supposed to be one unique case
+            # NOTE: there are known issues with DRC-CMIS returning multiple docs for
+            # the same version...
+            candidates = [result for result in results if result["versie"] == versie]
+            if len(candidates) >= 1:
+                if len(candidates) > 1:
+                    logger.warning(
+                        "Multiple results for version '%d' found, this is an error in the DRC "
+                        "implementation!",
+                        versie,
+                        extra={"query": query},
+                    )
+                result = candidates[0]
 
             else:
-                # there's only supposed to be one unique case
-                # NOTE: there are known issues with DRC-CMIS returning multiple docs for
-                # the same version...
-                candidates = [
-                    result for result in results if result["versie"] == versie
-                ]
-                if len(candidates) >= 1:
-                    if len(candidates) > 1:
-                        logger.warning(
-                            "Multiple results for version '%d' found, this is an error in the DRC "
-                            "implementation!",
-                            versie,
-                            extra={"query": query},
-                        )
-                    result = candidates[0]
+                # The DRC only returns the latest version and so the candidates
+                # will always be empty if the latest version isn't the requested version.
+                # In this case try to retrieve the document by using fetch_document.
+                document_furl = furl(results[0]["url"]).add({"versie": versie})
+                response = _fetch_document(document_furl.url)
+                response.raise_for_status()
+                result = response.json()
+        break
 
-                else:
-                    # The DRC only returns the latest version and so the candidates
-                    # will always be empty if the latest version isn't the requested version.
-                    # In this case try to retrieve the document by using fetch_document.
-                    document_furl = furl(results[0]["url"]).add({"versie": versie})
-                    response = _fetch_document(document_furl.url)
-                    response.raise_for_status()
-                    result = response.json()
-                    result = candidates[0]
-            break
-
-        if not result:
-            raise ObjectDoesNotExist(
-                "Document object was not found in any known registrations"
-            )
-
-        # Cache result - add versie to url if versie was specified.
-        document_furl = furl(result["url"])
-        if versie:
-            document_furl.add({"versie": versie})
-
-        cache_document(cache_key, document_furl.url, result)
-
-    else:
-        result = result.json()
+    if not result:
+        raise ObjectDoesNotExist(
+            "Document object was not found in any known registrations"
+        )
 
     return factory(Document, result)
 
