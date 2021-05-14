@@ -181,7 +181,7 @@ djangorestframework==3.12.2
     #   zgw-consumers
 docutils==0.16
     # via sphinx
-drf-spectacular==0.15.1
+drf-spectacular==0.16.0
     # via -r requirements/ci.txt
 elasticsearch-dsl==7.3.0
     # via -r requirements/ci.txt

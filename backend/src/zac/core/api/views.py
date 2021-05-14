@@ -189,7 +189,6 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
 
     @extend_schema(
         summary=_("Update case details"),
-        request=UpdateZaakDetailSerializer,
         responses={
             204: None,
         },
@@ -416,7 +415,6 @@ class ZaakDocumentView(views.APIView):
 
     @extend_schema(
         summary=_("Edit case document"),
-        request=UpdateZaakDocumentSerializer,
         responses=GetZaakDocumentSerializer,
     )
     def patch(self, request: Request, *args, **kwargs) -> Response:
