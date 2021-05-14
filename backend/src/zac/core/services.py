@@ -691,7 +691,7 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
 
     new_rollen = []
     for rol in rollen:
-        if rol.betrokkene_type.lower() == RolTypes.medewerker.lower():
+        if rol.betrokkene_type == RolTypes.medewerker:
             identificatie = rol.betrokkene_identificatie["identificatie"]
             try:  # Try to get user data
                 user = User.objects.get(username=identificatie)
