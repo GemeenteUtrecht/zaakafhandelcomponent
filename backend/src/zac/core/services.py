@@ -764,23 +764,24 @@ def get_rollen_all(**query_params) -> List[Rol]:
 def cache_document(
     cache_key: str,
     document_url: str,
-    document: Dict,
+    response: Response,
     timeout: Optional[float] = AN_HOUR / 2,
 ):
-    cache.set(cache_key, document, timeout=timeout)
-    cache.set(f"document:{document_url}", document, timeout=timeout)
+    cache.set(cache_key, response, timeout=timeout)
+    cache.set(f"document:{document_url}", response, timeout=timeout)
 
 
-def check_document_cache(url: str, document: Dict):
+def check_document_cache(url: str, response: Response):
     document_furl = furl(url)
     versie = document_furl.args.get("versie")
+    document = response.json()
     cache_key = (
         f"document:{document['bronorganisatie']}:{document['identificatie']}:{versie}"
     )
 
     # Cache this version of the document
     if cache_key not in cache:
-        cache_document(cache_key, url, document)
+        cache_document(cache_key, url, response)
 
 
 def _fetch_document(url: str) -> Response:
@@ -795,8 +796,8 @@ def _fetch_document(url: str) -> Response:
     client = _client_from_url(url)
     headers = client.auth.credentials()
     response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        check_document_cache(url, response.json())
+    if response.status_code == 200:  # Cache results
+        check_document_cache(url, response)
     return response
 
 
@@ -817,11 +818,11 @@ def fetch_documents(
     documenten = []
     gone = []
     for response, zio in zip(responses, zios):
-        if response.status_code != 200:
-            gone.append(zio)
-
-        else:
+        if response.status_code == 200:
             documenten.append(response.json())
+        else:
+            logger.warning("Document with url %s can't be retrieved." % zio)
+            gone.append(zio)
 
     return factory(Document, documenten), gone
 
@@ -943,6 +944,9 @@ def find_document(
             document_furl.add({"versie": versie})
 
         cache_document(cache_key, document_furl.url, result)
+
+    else:
+        result = result.json()
 
     return factory(Document, result)
 
