@@ -788,7 +788,7 @@ def cache_document(
             if cache_key_versie not in cache:
                 cache.set(cache_key_versie, document, timeout=A_DAY)
 
-            document_furl.args["versie"] = versie
+            document_furl.args["versie"] = document.versie
             cache_key_version_url = f"document:{document_furl.url}"
             if cache_key_version_url not in cache:
                 cache.set(cache_key_version_url, response, timeout=A_DAY)
