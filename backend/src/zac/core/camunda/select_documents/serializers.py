@@ -1,3 +1,4 @@
+import base64
 from dataclasses import dataclass
 from datetime import date
 from typing import Dict, List, Optional
@@ -179,6 +180,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         # Set document.inhoud to fetched content
         old_documents = {}
         for doc, inhoud in original_documents:
+            inhoud = base64.b64encode(inhoud)
             doc.inhoud = inhoud.decode("ascii")
             old_documents[doc.url] = doc
 
