@@ -9,7 +9,7 @@ from zac.core.cache import (
     invalidate_zaak_list_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import _client_from_url
+from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
 from zac.elasticsearch.api import (
     create_zaak_document,
     delete_zaak_document,
@@ -75,6 +75,9 @@ class ZakenHandler:
 
     def _handle_rol_change(self, zaak_url):
         zaak = self._retrieve_zaak(zaak_url)
+        # See if medewerker rollen have all the necessary fields
+        update_medewerker_identificatie_rol(zaak)
+
         # index in ES
         update_rollen_in_zaak_document(zaak)
 
