@@ -17,7 +17,6 @@ export class SignDocumentComponent implements OnChanges {
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   steps = 1;
-  minDate = new Date();
   items: Result[] = [];
 
   signDocumentForm: FormGroup;
@@ -54,13 +53,7 @@ export class SignDocumentComponent implements OnChanges {
 
   onSearch(searchInput) {
     this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-      this.items = res.results.map(result => ({
-        ...result,
-        name: (result.firstName && result.lastName) ?
-          `${result.firstName} ${result.lastName}` :
-          (result.firstName && !result.lastName) ?
-            result.firstName : result.username
-      }))
+      this.items = res.results;
     })
   }
 

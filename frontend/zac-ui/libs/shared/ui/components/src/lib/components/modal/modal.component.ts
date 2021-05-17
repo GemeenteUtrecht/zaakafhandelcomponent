@@ -51,12 +51,14 @@ export class ModalComponent implements OnInit, OnDestroy {
   // open modal
   open(): void {
     this.element.style.display = 'block';
+    this.element.classList.add('gu-modal-open');
     document.body.classList.add('gu-modal-open');
   }
 
   // close modal
   close(): void {
     this.element.style.display = 'none';
+    this.element.classList.remove('gu-modal-open');
     document.body.classList.remove('gu-modal-open');
   }
 }

@@ -3,10 +3,6 @@
 gu-modal {
   /* modals are hidden by default */
   display: none;
-  ::-webkit-scrollbar {
-    width: 0;
-    background: transparent; /* make scrollbar transparent */
-  }
 
   .gu-modal {
     position: fixed;
@@ -75,8 +71,8 @@ gu-modal {
 }
 
 body.gu-modal-open {
-  overflow: hidden;
   .gu-modal-body--right {
     transform: translateX(0%);
+    transition-delay: 1s;
   }
 }

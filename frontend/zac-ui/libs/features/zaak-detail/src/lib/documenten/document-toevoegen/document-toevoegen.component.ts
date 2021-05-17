@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
-import { ModalService } from '@gu/components';
+import { FileUploadComponent, ModalService } from '@gu/components';
 import { Document } from '@gu/models';
 
 @Component({
@@ -20,8 +20,9 @@ export class DocumentToevoegenComponent implements OnInit {
   @Input() updateDocument: boolean;
   @Input() closeButton: boolean;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() close: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
+  @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 
   documentTypes: any;
   addDocumentForm: FormGroup;
@@ -114,8 +115,9 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   closeAndResetForm() {
+    this.fileUploadComponent.resetFileInput();
     this.reload.emit(true);
-    this.close.emit(true);
+    this.closeModal.emit(true);
     if (!this.activity) {
       this.modalService.close("document-toevoegen-modal");
       this.modalService.close("document-overschrijven-modal");

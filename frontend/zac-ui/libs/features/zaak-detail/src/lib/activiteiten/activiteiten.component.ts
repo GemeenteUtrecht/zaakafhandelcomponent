@@ -18,7 +18,6 @@ export class ActiviteitenComponent implements OnInit {
   @Input() identificatie: string;
   @Input() activityData: Activity[];
   @Input() currentUser: User;
-  currentUserFullname: string;
 
   activityForm: FormGroup;
   addActivityForm: FormGroup;
@@ -53,6 +52,10 @@ export class ActiviteitenComponent implements OnInit {
               private fb: FormBuilder) { }
 
   ngOnInit(): void {
+    this.createForm();
+  }
+
+  createForm() {
     this.activityForm = this.fb.group({
       notes: this.fb.array(this.addNotesControl(this.activityData))
     })
@@ -67,12 +70,6 @@ export class ActiviteitenComponent implements OnInit {
     })
 
     this.isLoading = true;
-    if (this.currentUser) {
-      this.currentUserFullname = (this.currentUser.firstName && this.currentUser.lastName) ?
-        `${this.currentUser.firstName} ${this.currentUser.lastName}` :
-        (this.currentUser.firstName && !this.currentUser.lastName) ?
-          this.currentUser.firstName : this.currentUser.username
-    }
     this.formatActivityData(this.activityData);
     this.fetchDocuments(this.activityData);
     this.isLoading = false;
@@ -112,13 +109,7 @@ export class ActiviteitenComponent implements OnInit {
 
   onSearch(searchInput) {
     this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
-      this.users = res.results.map(result => ({
-        ...result,
-        name: (result.firstName && result.lastName) ?
-          `${result.firstName} ${result.lastName}` :
-          (result.firstName && !result.lastName) ?
-            result.firstName : result.username
-      }))
+      this.users = res.results;
     })
   }
 
@@ -128,9 +119,7 @@ export class ActiviteitenComponent implements OnInit {
         .pipe(first())
         .subscribe(res => {
           this.activityData = res;
-          this.formatActivityData(res);
-          this.fetchDocuments(res);
-          this.isLoading = false;
+          this.createForm();
         });
     }
   }
@@ -166,6 +155,7 @@ export class ActiviteitenComponent implements OnInit {
   }
 
   createNewActivity() {
+    this.hasError = false;
     this.isSubmitting = true;
     const formData = {
       zaak: this.mainZaakUrl,
@@ -179,6 +169,8 @@ export class ActiviteitenComponent implements OnInit {
       this.showAddActivityButton = false
       this.fetchActivities();
     }, res =>  {
+      this.isSubmitting = false;
+      this.addActivityForm.reset();
       this.setError(res)
     })
   }
@@ -262,7 +254,8 @@ export class ActiviteitenComponent implements OnInit {
 
   setError(res) {
     this.hasError = true;
-    this.errorMessage = res.error?.detail ? res.error.detail : "Er is een fout opgetreden."
+    this.errorMessage = res.error?.detail ? res.error.detail :
+      res.error?.nonFieldErrors ? res.error.nonFieldErrors[0] : "Er is een fout opgetreden."
     this.isLoading = false;
   }
 }

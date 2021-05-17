@@ -8,7 +8,8 @@
       *ngIf="(data.length > 0) && tableData"
       [tableData]="tableData"
       [expandable]="true"
-      [headColor]="'gray'"
+      headColor="gray"
+      [wrap]="true"
       (buttonOutput)="handleTableButtonOutput($event)">
     </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gegevens.</p>

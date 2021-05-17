@@ -45,15 +45,15 @@
         </form>
       </div>
     </div>
-    <p class="p--marginsmall p--bold">{{zaakData.omschrijving}}</p>
+    <h3>{{zaakData.omschrijving}}</h3>
     <p>{{zaakData.toelichting ? zaakData.toelichting : '(geen toelichting)'}}</p>
     <div class="zaak-detail__contact-gegevens">
       <div class="row" *ngFor="let prop of propertiesData;">
-        <div class="col-5">
-          <p class="p--bold p--marginsmall">{{prop.eigenschap.naam}}:</p>
+        <div class="col-12">
+          <p class="p--bold mb-0">{{prop.eigenschap.naam}}</p>
         </div>
-        <div class="col-7">
-          <p class="p--marginsmall">{{prop.value}}</p>
+        <div class="col-12">
+          <p class="mb-3">{{prop.value}}</p>
         </div>
       </div>
     </div>

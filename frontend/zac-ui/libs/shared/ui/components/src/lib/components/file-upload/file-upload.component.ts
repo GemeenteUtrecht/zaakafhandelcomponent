@@ -6,6 +6,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
   styleUrls: ['./file-upload.component.scss']
 })
 export class FileUploadComponent {
+
   @Output() selectedFileOutput: EventEmitter<File> = new EventEmitter();
   @Output() fileValue: EventEmitter<File> = new EventEmitter();
 
@@ -13,6 +14,11 @@ export class FileUploadComponent {
   file: File;
 
   constructor() { }
+
+  resetFileInput() {
+    this.fileInput = null;
+    this.file = null;
+  }
 
   handleFileChangeEvent(event: Event) {
     const element: HTMLInputElement = event.currentTarget as HTMLInputElement;

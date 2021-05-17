@@ -1,4 +1,4 @@
-<table class="table">
+<table class="table" [ngClass]="wrap ? 'table--wrap' : ''">
   <thead [ngClass]="headColor === 'gray' ? 'table-head--gray' : ''">
     <tr>
       <th *ngIf="expandable"></th>

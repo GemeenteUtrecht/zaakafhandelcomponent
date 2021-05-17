@@ -25,7 +25,7 @@
             <div class="d-flex justify-content-end">
               <button gu-button
                       type="tertiary"
-                      (click)="showAddActivityButton = false">
+                      (click)="showAddActivityButton = false; hasError = false;">
                 Sluiten
               </button>
               <button gu-button
@@ -37,6 +37,9 @@
             </div>
           </div>
         </div>
+      </div>
+      <div *ngIf="hasError" class="d-flex mb-4">
+        <gu-message [message]="errorMessage" type="warn"></gu-message>
       </div>
     </form>
   </div>
@@ -79,7 +82,7 @@
                                   [control]="assignedUser(i)"
                                   [items]="users"
                                   [multiple]="false"
-                                  bindLabel="name"
+                                  bindLabel="fullName"
                                   bindValue="username"
                                   required
                                   placeholder="Zoek een gebruiker"

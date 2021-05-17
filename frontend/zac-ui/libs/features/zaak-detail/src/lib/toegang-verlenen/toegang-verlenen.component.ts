@@ -47,13 +47,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
 
   onSearch(searchInput) {
     this.getAccounts(searchInput).subscribe(res => {
-      this.users = res.results.map(result => ({
-        ...result,
-        name: (result.firstName && result.lastName) ?
-          `${result.firstName} ${result.lastName}` :
-          (result.firstName && !result.lastName) ?
-            result.firstName : result.username
-      }))
+      this.users = res.results;
     })
   }
 

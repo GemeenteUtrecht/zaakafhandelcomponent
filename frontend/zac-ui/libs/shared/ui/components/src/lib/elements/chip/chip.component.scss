@@ -14,6 +14,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: $color-white;
+  white-space: nowrap;
   &--primary {
     background-color: $color-blue;
     .chip-icon {

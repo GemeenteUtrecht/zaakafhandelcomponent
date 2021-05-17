@@ -2,7 +2,7 @@ const tableHead = [
   'Identificatie',
   'Zaaktype',
   'Startdatum',
-  'Geplande einddatum',
+  'Uiterste einddatum',
   'Vertrouwelijkheid'
 ]
 
@@ -10,7 +10,7 @@ const tableHeadMapping = {
   'Identificatie': 'identificatie',
   'Zaaktype': 'zaaktype.omschrijving',
   'Startdatum': 'startdatum',
-  'Geplande einddatum': 'einddatumGepland',
+  'Uiterste einddatum': 'deadline',
   'Vertrouwelijkheid': 'vertrouwelijkheidaanduiding'
 }
 

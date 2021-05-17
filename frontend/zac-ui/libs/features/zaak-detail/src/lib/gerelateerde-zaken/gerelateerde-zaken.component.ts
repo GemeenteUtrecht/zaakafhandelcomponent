@@ -49,15 +49,15 @@ export class GerelateerdeZakenComponent implements OnChanges {
   }
 
   formatTableData(data){
-    return data.map( element => {
+    return data.map( (element: RelatedCase) => {
       return {
         cellData: {
-          resultaat: element.zaak.resultaat ? element.zaak.resultaat : '-',
+          resultaat: element.zaak.resultaat ? element.zaak.resultaat.resultaattype.omschrijving : '-',
           status: element.zaak.status ? element.zaak.status.statustype.omschrijving : '-',
           zaakId: {
             type: 'link',
             label: element.zaak.identificatie,
-            url: `/core/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
+            url: `/ui/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
           zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-',
           aard: element.aardRelatie ? element.aardRelatie : '-',
