@@ -74,6 +74,9 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
 
   fetchProcesses(): void {
     this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
+    this.hasError = true;
     this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe( data => {
       this.data = data;
       this.processInstanceId = data.length > 0 ? data[0].id : null;

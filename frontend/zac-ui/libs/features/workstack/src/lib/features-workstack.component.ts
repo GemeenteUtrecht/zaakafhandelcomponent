@@ -73,7 +73,7 @@ export class FeaturesWorkstackComponent implements OnInit {
           },
           zaaktype: element.zaaktype.omschrijving,
           startdate: element.startdatum,
-          plannedEndDate: element.einddatumGepland,
+          deadline: element.deadline,
           trust: element.vertrouwelijkheidaanduiding,
         },
       }

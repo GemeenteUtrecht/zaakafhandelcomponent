@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ExtensiveCell, Table, TableSort } from '@gu/models';
 
-
 @Component({
   selector: 'gu-table',
   templateUrl: './table.component.html',
@@ -14,6 +13,7 @@ export class TableComponent {
   @Input() sortable = false;
   @Input() tableData: Table;
   @Input() headColor: 'gray';
+  @Input() wrap = false;
 
   @Output() tableOutput = new EventEmitter<any>();
   @Output() buttonOutput = new EventEmitter<any>();

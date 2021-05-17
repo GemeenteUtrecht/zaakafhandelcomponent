@@ -3,8 +3,9 @@
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <ng-container *ngIf="!!data && data.length > 0 && !isLoading">
+  <ng-container *ngIf="!!data && data?.length > 0 && !isLoading">
     <div class="keten-processen__actie-buttons-container">
+      <h3>Adhoc taken</h3>
       <button gu-button
         (click)="sendMessage(message)"
         *ngFor="let message of data[0].messages"
@@ -16,7 +17,7 @@
     <div class="keten-processen__taken">
       <div class="row">
         <div class="col-md-6 mb-4 mb-md-0">
-          <h3>Taken</h3>
+          <h3 *ngIf="data[0]?.tasks.length > 0">Vaste taken</h3>
           <div class="taak d-flex justify-content-between" *ngFor="let task of data[0].tasks">
             <div class="taak__detail mr-md-2">
               <label class="label label--date">{{task.created | date:'fullDate'}}</label>
@@ -25,7 +26,7 @@
                        [type]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
                        icon="edit"
                        (click)="assignTask(task)"
-                       class="d-inline-block mb-2">
+                       class="d-inline-block mb-2 chip--clickable">
                 <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                   {{task.assignee.firstName}} {{task.assignee.lastName}}
                 </ng-container>
@@ -56,7 +57,7 @@
           </div>
         </div>
         <div class="col-md-6">
-          <h3>Deeltaken</h3>
+          <h3 *ngIf="data[0]?.subProcesses.length > 0">Deeltaken</h3>
           <ng-container *ngFor="let subProcess of data[0].subProcesses">
             <div class="taak d-flex justify-content-between" *ngFor="let task of subProcess.tasks">
               <div class="taak__detail mr-md-2">
@@ -64,9 +65,11 @@
                 <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
                 <gu-chip *ngIf="!!task.assignee"
                          [type]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
-                         icon="edit"
-                         (click)="assignTask(task)"
-                         class="d-inline-block mb-2">
+                         [icon]="task.name !== ('Adviseren' || 'Accorderen') ? 'edit' : null"
+                         (click)="task.name !== ('Adviseren' || 'Accorderen') && assignTask(task)"
+                         class="d-inline-block mb-2"
+                         [ngClass]="task.name !== ('Adviseren' || 'Accorderen') ? 'chip--clickable' : null"
+                >
                   <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                     {{task.assignee.firstName}} {{task.assignee.lastName}}
                   </ng-container>

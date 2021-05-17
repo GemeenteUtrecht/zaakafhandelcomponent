@@ -6,7 +6,7 @@
   </ng-container>
 
   <!-- Table -->
-  <ng-container *ngIf="documentsData && !isLoading">
+  <ng-container *ngIf="documentsData">
     <gu-table *ngIf="(documentsData.length > 0) && tableData"
               [tableData]="tableData"
               (buttonOutput)="handleTableButtonOutput($event)"
@@ -31,6 +31,7 @@
   <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
                          [bronorganisatie]="bronorganisatie"
                          [identificatie]="identificatie"
+                         (closeModal)="closeModal('document-toevoegen-modal')"
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>

@@ -87,16 +87,12 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
       &[disabled] {
         color: $color-disabled;
       }
-    }
-
-    &--tertiary#{&}--extrasmall {
-      padding: 0;
-      min-width: unset;
-
-      &:hover span {
-        text-decoration: underline;
+      &.btn--extrasmall {
+        padding: 0;
+        min-width: unset;
       }
     }
+
 
     .mat-icon {
       font-size: 1rem;

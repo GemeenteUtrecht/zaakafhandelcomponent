@@ -66,7 +66,7 @@ export class DetailModalComponent implements OnChanges {
       const date = this.pipe.transform(review.created, 'short');
       const docAdviezen = review.documents ? review.documents.length.toString() : '-';
 
-      const reviewDocumentTableData = this.formatTableReviewDoc(review.documents);
+      const reviewDocumentTableData = review.documents?.length > 0 ? this.formatTableReviewDoc(review.documents) : null;
 
       const cellData: RowData = {
         cellData: {

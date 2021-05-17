@@ -1,6 +1,6 @@
 <div class="zaak-detail">
-  <div class="d-flex justify-content-between" *ngIf="zaakData">
-    <div class="zaak-detail__header--left">
+  <div class="d-flex flex-column flex-md-row justify-content-md-between" *ngIf="zaakData">
+    <div class="d-flex">
       <h1>{{zaakData.zaaktype.omschrijving}}</h1>
       <button gu-button
               type="tertiary"
@@ -9,7 +9,10 @@
               *ngIf="activeActivities"
               (click)="openModal('activities-modal')">
         <span>
-          <gu-chip [type]="'primary'">{{activeActivities?.length}} activiteiten</gu-chip>
+          <gu-chip [type]="'primary'" [ngPlural]="activeActivities?.length">
+              <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit</ng-template>
+              <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten</ng-template>
+          </gu-chip>
         </span>
       </button>
     </div>
@@ -17,14 +20,14 @@
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-lg-6">
       <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
     </div>
   </div>
 
   <div class="card-container">
     <div class="row" *ngIf="zaakData?.resultaat">
-      <div class="col-md-4 mb-4">
+      <div class="col-xl-4 mb-4">
         <div class="card card--blue">
           <p class="p--marginsmall">Resultaat: </p>
           <h4>{{zaakData.resultaat.resultaattype.omschrijving}}</h4>
@@ -33,7 +36,7 @@
       </div>
     </div>
     <div class="row" *ngIf="zaakData">
-      <div class="col-md-4">
+      <div class="col-xl-4">
         <gu-informatie
           *ngIf="zaakData"
           [bronorganisatie]="bronorganisatie"
@@ -48,7 +51,7 @@
                                  [identificatie]="identificatie"
                                  class="zaak-detail__section"></gu-adviseren-accorderen>
       </div>
-      <div class="col-md-8">
+      <div class="col-xl-8">
         <gu-status
           [bronorganisatie]="bronorganisatie"
           [identificatie]="identificatie"

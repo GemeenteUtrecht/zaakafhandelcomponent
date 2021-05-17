@@ -27,9 +27,7 @@ export class DatepickerComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    if (this.control.value && (this.control.value < this.minDate)) {
-      this.control.patchValue(null);
-    }
+    this.checkValidValue();
   }
 
   ngOnChanges(changes:SimpleChanges) {
@@ -39,8 +37,14 @@ export class DatepickerComponent implements OnInit, OnChanges {
       minDate: this.minDate,
       showWeekNumbers: false
     }
-    if (this.control.value && (this.control.value < this.minDate)) {
-      this.control.patchValue(null);
+    this.checkValidValue();
+  }
+
+  checkValidValue() {
+    const selectedValueDate = new Date(this.control.value?.toDateString());
+    const minValueDate = new Date(this.minDate.toDateString());
+    if (selectedValueDate && (selectedValueDate < minValueDate)) {
+      this.clearValue();
     }
   }
 

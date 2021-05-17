@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { Table, RowData } from '@gu/models';
+import { Table, RowData, ExtensiveCell } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import { convertKbToMb } from '@gu/utils';
 
@@ -63,6 +63,18 @@ export class DocumentenComponent implements OnChanges {
        : `${element.bestandsomvang} KB`;
      const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
      const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
+     const showEditCell = !element.locked || this.docsInEditMode.includes(element.writeUrl);
+     const editCell: ExtensiveCell = {
+       type: 'button',
+       label: editLabel,
+       value: element.writeUrl,
+       buttonType: editButtonStyle
+     }
+     const overwriteCell: ExtensiveCell = {
+        type: 'button',
+        label: 'Overschrijven',
+        value: element.url
+      }
 
      const cellData: RowData = {
        cellData: {
@@ -77,17 +89,8 @@ export class DocumentenComponent implements OnChanges {
            label: 'Lezen',
            value: element.readUrl
          },
-         bewerken: {
-           type: 'button',
-           label: editLabel,
-           value: element.writeUrl,
-           buttonType: editButtonStyle
-         },
-         uploaden: {
-           type: 'button',
-           label: 'Overschrijven',
-           value: element.url
-         },
+         bewerken: showEditCell ? editCell : '',
+         overschrijven:  element.locked ? '' : overwriteCell,
          type: element.informatieobjecttype['omschrijving'],
          vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
          bestandsomvang: bestandsomvang
@@ -108,7 +111,7 @@ export class DocumentenComponent implements OnChanges {
       case 'bewerken':
         this.editDocument(actionUrl);
         break;
-      case 'uploaden':
+      case 'overschrijven':
         this.patchDocument(actionUrl);
         break;
     }
@@ -118,10 +121,12 @@ export class DocumentenComponent implements OnChanges {
   }
 
   readDocument(readUrl) {
+    this.isLoading = true;
     this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
+      this.isLoading = false;
       window.open(res.magicUrl, "_blank");
     }, errorResponse => {
-
+      this.isLoading = false;
     })
   }
 
@@ -145,21 +150,25 @@ export class DocumentenComponent implements OnChanges {
   }
 
   openDocumentEdit(writeUrl) {
+    this.isLoading = true;
     this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
       // Open document
       window.open(res.magicUrl, "_blank");
 
       // Change table layout so "Bewerkingen opslaan" button will be shown
-      this.tableData.bodyData = this.formatTableData(this.documentsData);
+      this.fetchDocuments();
 
       // Map received deleteUrl to the writeUrl
       this.addDeleteUrlsMapping(writeUrl, res.deleteUrl);
-    }, errorResponse => {
 
+      this.isLoading = false;
+    }, errorResponse => {
+      this.isLoading = false;
     })
   }
 
   closeDocumentEdit(deleteUrl, writeUrl) {
+    this.isLoading = true;
     return this.documentenService.closeDocumentEdit(deleteUrl).subscribe( res => {
       // Remove deleteUrl mapping from local array
       this.deleteUrls.forEach( (document, index) => {
@@ -170,9 +179,11 @@ export class DocumentenComponent implements OnChanges {
 
       // Remove editMode
       this.docsInEditMode = this.docsInEditMode.filter(e => e !== writeUrl);
-      this.tableData.bodyData = this.formatTableData(this.documentsData);
-    }, errorResponse => {
+      this.fetchDocuments();
 
+      this.isLoading = false;
+    }, errorResponse => {
+      this.isLoading = false;
     })
   }
 
@@ -186,5 +197,9 @@ export class DocumentenComponent implements OnChanges {
 
   openModal(id: string) {
     this.modalService.open(id);
+  }
+
+  closeModal(id: string) {
+    this.modalService.close(id);
   }
 }

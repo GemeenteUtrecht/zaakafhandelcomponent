@@ -21,6 +21,15 @@ export interface Status {
   statustype: Statustype;
 }
 
+export interface Resultaat {
+  resultaattype: {
+    omschrijving: string;
+    url: string;
+  };
+  toelichting: string;
+  url: string;
+}
+
 export interface Zaak {
   url: string;
   identificatie: string;
