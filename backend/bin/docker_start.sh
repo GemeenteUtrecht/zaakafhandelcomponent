@@ -27,5 +27,8 @@ exec uwsgi \
     --static-map /media=/app/media  \
     --chdir src \
     --processes 4 \
-    --threads 1
+    --threads 1 \
+    --buffer-size=32k
     # processes & threads are needed for concurrency without nginx sitting inbetween
+    # the buffer size increase is required because the ADFS token exchange returns
+    # larger request block sizes than the default of 4k (5.1k)
