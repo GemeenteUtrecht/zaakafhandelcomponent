@@ -5,6 +5,7 @@ from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
+    invalidate_rollen_cache,
     invalidate_zaak_cache,
     invalidate_zaak_list_cache,
     invalidate_zaaktypen_cache,
@@ -75,6 +76,10 @@ class ZakenHandler:
 
     def _handle_rol_change(self, zaak_url):
         zaak = self._retrieve_zaak(zaak_url)
+
+        # Invalidate cache
+        invalidate_rollen_cache(zaak)
+
         # See if medewerker rollen have all the necessary fields
         update_medewerker_identificatie_rol(zaak)
 

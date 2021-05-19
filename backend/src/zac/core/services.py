@@ -678,6 +678,9 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
     # Destroy old rol
     zrc_client.destroy("rol", url=rol_url)
 
+    # Invalidate the cache of the rol that is destroyed
+    cache.delete(f"rol:{rol_url}")
+
     # Create new rol
     rol = zrc_client.create("rol", new_rol)
 
@@ -685,8 +688,10 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
 
 
 def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
+    # Get latest list of rollen that belong to the zaak
     rollen = get_rollen(zaak)
 
+    # Determine which rollen could use some extra identification information
     from .api.serializers import UpdateRolSerializer
 
     new_rollen = []
@@ -705,15 +710,15 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
                     "Couldn't find user with identificatie %s" % identificatie
                 )
 
+    # If any new rollen can be made - 'update' the rol
     if new_rollen:
+        # Make sure rollen cache is invalidated for this zaak since new roles were assigned
+        invalidate_rollen_cache(zaak)
+
         with parallel() as executor:
             results = executor.map(lambda args: update_rol(*args), new_rollen)
 
         updated_rollen = list(results)
-
-        # Make sure cache is invalidated
-        invalidate_rollen = [url for url, new_rol in new_rollen]
-        invalidate_rollen_cache(zaak, rollen=invalidate_rollen)
         return updated_rollen
 
     return
