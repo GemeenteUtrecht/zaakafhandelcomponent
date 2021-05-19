@@ -75,3 +75,12 @@ def invalidate_rollen_cache(zaak: Zaak):
     _cache = caches["request"]
     if _cache:
         _cache.delete(f"rollen:{zaak.url}")
+
+    from zac.core.services import get_rollen
+
+    rollen = get_rollen(zaak)
+    cache_keys = []
+    for rol in rollen:
+        cache_keys.append(f"rol:{rol.url}")
+
+    cache.delete_many(cache_keys)

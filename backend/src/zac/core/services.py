@@ -678,9 +678,6 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
     # Destroy old rol
     zrc_client.delete("rol", url=rol_url)
 
-    # Invalidate the cache of the rol that is destroyed
-    cache.delete(f"rol:{rol_url}")
-
     # Create new rol
     rol = zrc_client.create("rol", new_rol)
     return factory(Rol, rol)
@@ -711,9 +708,6 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
 
     # If any new rollen can be made - 'update' the rol
     if new_rollen:
-        # Make sure rollen cache is invalidated for this zaak since new roles were assigned
-        invalidate_rollen_cache(zaak)
-
         with parallel() as executor:
             results = executor.map(lambda args: update_rol(*args), new_rollen)
 

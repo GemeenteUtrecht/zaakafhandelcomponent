@@ -77,11 +77,17 @@ class ZakenHandler:
     def _handle_rol_change(self, zaak_url):
         zaak = self._retrieve_zaak(zaak_url)
 
-        # Invalidate cache
+        # Invalidate cache for get_rollen in update_medewerker_identificatie_rol
         invalidate_rollen_cache(zaak)
 
         # See if medewerker rollen have all the necessary fields
-        update_medewerker_identificatie_rol(zaak)
+        updated_rollen = update_medewerker_identificatie_rol(zaak)
+
+        if (
+            updated_rollen
+        ):  # Invalidate cache for get_rollen in update_rollen_in_zaak_document
+            # and make sure old rollen in cache that were destroyed are deleted.
+            invalidate_rollen_cache(zaak)
 
         # index in ES
         update_rollen_in_zaak_document(zaak)
