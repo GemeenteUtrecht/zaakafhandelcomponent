@@ -13,6 +13,7 @@ from zac.core.services import _client_from_url, update_medewerker_identificatie_
 from zac.elasticsearch.api import (
     create_zaak_document,
     delete_zaak_document,
+    update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
     update_zaak_document,
 )
@@ -28,10 +29,11 @@ class ZakenHandler:
                 self._handle_zaak_update(data["hoofd_object"])
             elif data["actie"] == "destroy":
                 self._handle_zaak_destroy(data["hoofd_object"])
-        elif (
-            data["resource"] in ["resultaat", "status", "zaakeigenschap"]
-            and data["actie"] == "create"
-        ):
+
+        elif data["resource"] == "zaakeigenschap":
+            self._handle_zaakeigenschap_change(data["hoofd_object"])
+
+        elif data["resource"] in ["resultaat", "status"] and data["actie"] == "create":
             self._handle_related_creation(data["hoofd_object"])
 
         elif data["resource"] == "rol":
@@ -80,6 +82,13 @@ class ZakenHandler:
 
         # index in ES
         update_rollen_in_zaak_document(zaak)
+
+    def _handle_zaakeigenschap_change(self, zaak_url):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaak_cache(zaak)
+
+        # index in ES
+        update_eigenschappen_in_zaak_document(zaak)
 
 
 class ZaaktypenHandler:
