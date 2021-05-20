@@ -10,7 +10,11 @@ from zac.core.cache import (
     invalidate_zaak_list_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
+from zac.core.services import (
+    _client_from_url,
+    get_rollen,
+    update_medewerker_identificatie_rol,
+)
 from zac.elasticsearch.api import (
     create_zaak_document,
     delete_zaak_document,
@@ -78,15 +82,14 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
 
         # Invalidate cache for get_rollen in update_medewerker_identificatie_rol
-        invalidate_rollen_cache(zaak)
+        rollen = get_rollen(zaak)
+        invalidate_rollen_cache(zaak, rollen=rollen)
 
         # See if medewerker rollen have all the necessary fields
         updated_rollen = update_medewerker_identificatie_rol(zaak)
-
         if (
             updated_rollen
         ):  # Invalidate cache for get_rollen in update_rollen_in_zaak_document
-            # and make sure old rollen in cache that were destroyed are deleted.
             invalidate_rollen_cache(zaak)
 
         # index in ES

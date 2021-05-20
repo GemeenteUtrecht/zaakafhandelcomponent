@@ -129,42 +129,10 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
         self.assertTrue(f"rollen:{ZAAK_URL}" in _cache)
         self.assertEqual(old_rollen, _cache.get(f"rollen:{ZAAK_URL}"))
 
-        # Mock a different response:
-        new_rollen = [
-            generate_oas_component(
-                "zrc",
-                "schemas/Rol",
-                zaak=ZAAK_URL,
-                betrokkene_identificatie={
-                    "identificatie": "123456",
-                    "voorletters": "M Y",
-                    "achternaam": "Surname",
-                    "voorvoegsel_achternaam": "",
-                },
-                omschrijving="andere-rol",
-            )
-        ]
-        new_rollen_objs = []
-        for rol in new_rollen:
-            rol = factory(Rol, rol)
-            rol.zaak = zaak
-            new_rollen_objs.append(rol)
-
-        paginated_response = {
-            "count": 0,
-            "next": None,
-            "previous": None,
-            "results": new_rollen,
-        }
-        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response)
         invalidate_rollen_cache(zaak)
 
-        # Assert rollen are still cached...
-        self.assertTrue(f"rollen:{ZAAK_URL}" in _cache)
-        # ... but return the new rollen
-        cached_rol = _cache.get(f"rollen:{ZAAK_URL}")[0]
-        new_rol = new_rollen_objs[0]
-        self.assertEqual(asdict(cached_rol), asdict(new_rol))
+        # Assert rollen are now removed from cache
+        self.assertFalse(f"rollen:{ZAAK_URL}" in _cache)
 
     def test_invalidate_fetch_rol_cache(self, m):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -194,15 +162,6 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
         self.assertTrue(f"rol:{rol['url']}" in cache)
         self.assertEqual(fetched_rol, cache.get(f"rol:{rol['url']}"))
 
-        # Mock request for get_rollen in invalidate_rollen_cache
-        paginated_response = {
-            "count": 0,
-            "next": None,
-            "previous": None,
-            "results": [rol],
-        }
-        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response)
-
         # Create zaak
         zaak = generate_oas_component(
             "zrc",
@@ -212,7 +171,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
         zaak = factory(Zaak, zaak)
 
         # Invalidate cache
-        invalidate_rollen_cache(zaak)
+        invalidate_rollen_cache(zaak, rollen=[factory(Rol, rol)])
 
         # Make sure rol isnt cached anymore
         self.assertFalse(f"rol:{rol['url']}" in cache)
