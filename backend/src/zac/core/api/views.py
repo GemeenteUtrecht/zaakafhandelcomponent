@@ -213,6 +213,20 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def create_permission_message(self, request):
+        """
+        Add custom permission body, since we use AND and can't set it inside permission classes
+        """
+        return {"can_request_access": True, "reason": ""}
+
+    def permission_denied(self, request, message=None, code=None):
+
+        message = message or self.create_permission_message(request)
+
+        if request.authenticators and not request.successful_authenticator:
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
+
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
