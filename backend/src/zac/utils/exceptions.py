@@ -1,5 +1,9 @@
 from django.forms.utils import ErrorList
 
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.views import exception_handler as drf_exception_handler
+
 
 def get_error_list(errors):
     """
@@ -12,3 +16,43 @@ def get_error_list(errors):
             for value in value_list
         ]
     )
+
+
+def exception_handler(exc, context):
+    """
+    Update the default DRF exception handler with data when user can request permissions
+    """
+    response = drf_exception_handler(exc, context)
+
+    from zac.core.api.views import ZaakDetailView
+    from zac.core.services import find_zaak
+
+    view = context.get("view")
+    request = context.get("request")
+
+    if not isinstance(view, ZaakDetailView) or not isinstance(exc, PermissionDenied):
+        return response
+
+    zaak = find_zaak(**context.get("kwargs", {}))
+    has_perm_to_request_access = request.user.has_perm_to_request_access(zaak)
+    has_pending_access_request = request.user.has_pending_access_request(zaak)
+
+    can_request_access = has_perm_to_request_access and not has_pending_access_request
+    reason = (
+        "User doesn't have permissions to request the access"
+        if not has_perm_to_request_access
+        else "User has pending access request for this zaak"
+        if has_pending_access_request
+        else ""
+    )
+
+    permission_data = {"can_request_access": can_request_access, "reason": reason}
+
+    serializer = PermissionDeniedSerializer(instance=permission_data)
+    response.data = serializer.data
+    return response
+
+
+class PermissionDeniedSerializer(serializers.Serializer):
+    can_request_access = serializers.BooleanField()
+    reason = serializers.CharField(max_length=1000, allow_blank=True)
