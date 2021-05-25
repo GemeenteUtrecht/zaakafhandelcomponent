@@ -66,6 +66,9 @@
     &--expanded {
       visibility: visible;
       opacity: 1;
+      td {
+        white-space: pre;
+      }
     }
   }
 

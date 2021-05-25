@@ -30,7 +30,8 @@
       "@gu/utils": ["libs/shared/utils/src/index.ts"],
       "@gu/zaak-detail": ["libs/features/zaak-detail/src/index.ts"],
       "@gu/search": ["libs/features/search/src/index.ts"],
-      "@gu/workstack": ["libs/features/workstack/src/index.ts"]
+      "@gu/workstack": ["libs/features/workstack/src/index.ts"],
+      "@gu/reports": ["libs/features/reports/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

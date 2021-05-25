@@ -2,7 +2,7 @@ import { MenuItem } from '@gu/models';
 
 const menuItems: MenuItem[] = [
   {
-    icon: 'article',
+    icon: 'inventory',
     label: 'Werkvoorraad',
     to: '/',
   },
@@ -10,6 +10,11 @@ const menuItems: MenuItem[] = [
     icon: 'search',
     label: 'Zaken zoeken',
     to: '/zaken',
+  },
+  {
+    icon: 'summarize',
+    label: 'Rapportages',
+    to: '/rapportages',
   },
 ];
 
@@ -31,7 +36,7 @@ const bottomMenuItems: MenuItem[] = [
     icon: 'admin',
     label: 'Admin',
     to: '/admin',
-    external: true
+    external: true,
     // roles: [UserRole.Admin],
   },
 ];

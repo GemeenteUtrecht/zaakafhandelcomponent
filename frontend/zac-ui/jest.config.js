@@ -9,5 +9,6 @@ module.exports = {
     '<rootDir>/libs/features/zaak-detail',
     '<rootDir>/libs/features/search',
     '<rootDir>/libs/features/workstack',
+    '<rootDir>/libs/features/reports',
   ],
 };

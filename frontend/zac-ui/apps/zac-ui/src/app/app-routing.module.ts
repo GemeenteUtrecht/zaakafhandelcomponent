@@ -4,33 +4,44 @@ import { Routes, RouterModule } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./components/workstack/workstack.module')
-      .then(m => m.WorkstackModule)
+    loadChildren: () =>
+      import('./components/workstack/workstack.module').then(
+        (m) => m.WorkstackModule
+      ),
   },
   {
     path: 'kownsl',
-    loadChildren: () => import('./components/kownsl/kownsl.module')
-      .then(m => m.KownslModule)
+    loadChildren: () =>
+      import('./components/kownsl/kownsl.module').then((m) => m.KownslModule),
   },
   {
     path: 'werkvoorraad',
-    loadChildren: () => import('./components/workstack/workstack.module')
-      .then(m => m.WorkstackModule)
+    loadChildren: () =>
+      import('./components/workstack/workstack.module').then(
+        (m) => m.WorkstackModule
+      ),
   },
   {
     path: 'zaken',
-    loadChildren: () => import('./components/zaken/zaken.module')
-      .then(m => m.ZakenModule)
+    loadChildren: () =>
+      import('./components/zaken/zaken.module').then((m) => m.ZakenModule),
   },
   {
     path: 'zoeken',
-    loadChildren: () => import('./components/search/search.module')
-      .then(m => m.SearchModule)
+    loadChildren: () =>
+      import('./components/search/search.module').then((m) => m.SearchModule),
+  },
+  {
+    path: 'rapportages',
+    loadChildren: () =>
+      import('./components/reports/reports.module').then(
+        (m) => m.ReportsModule
+      ),
   },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

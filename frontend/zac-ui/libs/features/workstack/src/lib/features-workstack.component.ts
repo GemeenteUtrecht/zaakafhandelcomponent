@@ -9,11 +9,9 @@ import { AdHocActivities } from './models/activities';
 @Component({
   selector: 'gu-features-workstack',
   templateUrl: './features-workstack.component.html',
-  styleUrls: ['./features-workstack.component.scss']
+  styleUrls: ['./features-workstack.component.scss'],
 })
-
 export class FeaturesWorkstackComponent implements OnInit {
-
   tabs: Tab[] = tabs;
 
   allData: any;
@@ -22,14 +20,11 @@ export class FeaturesWorkstackComponent implements OnInit {
   activitiesData: AdHocActivities[];
   accessRequestData: AccessRequests[];
 
-  zakenTableData: Table = new Table(
-    tableHead,
-    []
-  );
+  zakenTableData: Table = new Table(tableHead, []);
 
   isLoading: boolean;
 
-  constructor(private workstackService: FeaturesWorkstackService) { }
+  constructor(private workstackService: FeaturesWorkstackService) {}
 
   ngOnInit(): void {
     this.fetchWorkstack();
@@ -37,31 +32,43 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   fetchWorkstack() {
     this.isLoading = true;
-    this.workstackService.getWorkstack(tabs).subscribe(res => {
-      this.allData = res;
-      this.zakenData = res[0];
-      this.taskData = res[1];
-      this.activitiesData = res[2];
-      this.accessRequestData = res[3];
-      this.zakenTableData.bodyData = this.formatZakenTableData(this.zakenData);
-      this.isLoading = false;
-    }, error => {
-      console.log(error);
-      this.isLoading = false;
-    });
+    this.workstackService.getWorkstack(tabs).subscribe(
+      (res) => {
+        this.allData = res;
+        this.zakenData = res[0];
+        this.taskData = res[1];
+        this.activitiesData = res[2];
+        this.accessRequestData = res[3];
+        this.zakenTableData.bodyData = this.formatZakenTableData(
+          this.zakenData
+        );
+        this.isLoading = false;
+      },
+      (error) => {
+        console.log(error);
+        this.isLoading = false;
+      }
+    );
   }
 
   fetchZaken(sortValue) {
-    this.workstackService.getWorkstackZaken(tableHeadMapping[sortValue.value], sortValue.order).subscribe( res => {
-      this.zakenData = res;
-      this.zakenTableData.bodyData = this.formatZakenTableData(this.zakenData);
-    }, error => {
-      console.log(error);
-    });
+    this.workstackService
+      .getWorkstackZaken(tableHeadMapping[sortValue.value], sortValue.order)
+      .subscribe(
+        (res) => {
+          this.zakenData = res;
+          this.zakenTableData.bodyData = this.formatZakenTableData(
+            this.zakenData
+          );
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
   }
 
   formatZakenTableData(data: Zaak[]): RowData[] {
-    return data.map( element => {
+    return data.map((element) => {
       const zaakUrl = `/ui/zaken/${element.bronorganisatie}/${element.identificatie}`;
 
       const cellData: RowData = {
@@ -69,28 +76,27 @@ export class FeaturesWorkstackComponent implements OnInit {
           link: {
             type: 'link',
             label: element.identificatie,
-            url: zaakUrl
+            url: zaakUrl,
           },
           zaaktype: element.zaaktype.omschrijving,
           startdate: element.startdatum,
           deadline: element.deadline,
           trust: element.vertrouwelijkheidaanduiding,
         },
-      }
+      };
       return cellData;
-    })
+    });
   }
 
   createRouteLink(zaak: UserTaskZaak, task: Task) {
     if (task.hasForm) {
-      return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
+      return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`;
     } else {
       return task.executeUrl;
     }
   }
 
   createActivityLink(zaak) {
-    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`
+    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`;
   }
-
 }
