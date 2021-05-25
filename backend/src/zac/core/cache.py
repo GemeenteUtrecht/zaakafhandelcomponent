@@ -5,6 +5,7 @@ from django.core.cache import cache, caches
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import Rol
 from zgw_consumers.client import Client
 
 from zgw.models.zrc import Zaak
@@ -71,11 +72,14 @@ def invalidate_document_cache(document: Document):
     cache.delete_many(keys)
 
 
-def invalidate_rollen_cache(zaak: Zaak, rollen: Optional[List[str]] = None):
+def invalidate_rollen_cache(zaak: Zaak, rollen: Optional[List[Rol]] = None):
     _cache = caches["request"]
     if _cache:
-        _cache.delete(f"report:{zaak.url}")
+        _cache.delete(f"rollen:{zaak.url}")
 
     if rollen:
-        cache_keys = [f"rol:{rol}" for rol in rollen]
+        cache_keys = []
+        for rol in rollen:
+            cache_keys.append(f"rol:{rol.url}")
+
         cache.delete_many(cache_keys)

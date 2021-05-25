@@ -5,11 +5,16 @@ from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
+    invalidate_rollen_cache,
     invalidate_zaak_cache,
     invalidate_zaak_list_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
+from zac.core.services import (
+    _client_from_url,
+    get_rollen,
+    update_medewerker_identificatie_rol,
+)
 from zac.elasticsearch.api import (
     create_zaak_document,
     delete_zaak_document,
@@ -77,8 +82,17 @@ class ZakenHandler:
 
     def _handle_rol_change(self, zaak_url):
         zaak = self._retrieve_zaak(zaak_url)
+
+        # Invalidate cache for get_rollen in update_medewerker_identificatie_rol
+        rollen = get_rollen(zaak)
+        invalidate_rollen_cache(zaak, rollen=rollen)
+
         # See if medewerker rollen have all the necessary fields
-        update_medewerker_identificatie_rol(zaak)
+        updated_rollen = update_medewerker_identificatie_rol(zaak)
+        if (
+            updated_rollen
+        ):  # Invalidate cache for get_rollen in update_rollen_in_zaak_document
+            invalidate_rollen_cache(zaak)
 
         # index in ES
         update_rollen_in_zaak_document(zaak)

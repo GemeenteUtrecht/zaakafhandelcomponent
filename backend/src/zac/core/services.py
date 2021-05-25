@@ -676,17 +676,18 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
     zrc_client = _client_from_url(new_rol["zaak"])
 
     # Destroy old rol
-    zrc_client.destroy("rol", url=rol_url)
+    zrc_client.delete("rol", url=rol_url)
 
     # Create new rol
     rol = zrc_client.create("rol", new_rol)
-
     return factory(Rol, rol)
 
 
 def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
+    # Get latest list of rollen that belong to the zaak
     rollen = get_rollen(zaak)
 
+    # Determine which rollen could use some extra identification information
     from .api.serializers import UpdateRolSerializer
 
     new_rollen = []
@@ -705,15 +706,12 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
                     "Couldn't find user with identificatie %s" % identificatie
                 )
 
+    # If any new rollen can be made - 'update' the rol
     if new_rollen:
         with parallel() as executor:
             results = executor.map(lambda args: update_rol(*args), new_rollen)
 
         updated_rollen = list(results)
-
-        # Make sure cache is invalidated
-        invalidate_rollen = [url for url, new_rol in new_rollen]
-        invalidate_rollen_cache(zaak, rollen=invalidate_rollen)
         return updated_rollen
 
     return
@@ -780,7 +778,6 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
     return status
 
 
-@cache_result("get_behandelaar_zaken:{user.username}:{ordering}", timeout=AN_HOUR)
 def get_behandelaar_zaken(user: User, ordering: List = []) -> List[Zaak]:
     """
     Retrieve zaken where `user` is a medewerker in the role of behandelaar.

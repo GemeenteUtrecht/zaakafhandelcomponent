@@ -239,16 +239,20 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rol_2.zaak = zaak
 
         with patch(
-            "zac.core.services.get_rollen", return_value=[rol_1]
-        ) as mock_services_get_rollen:
+            "zac.notifications.handlers.get_rollen", return_value=[rol_1]
+        ) as mock_handlers_get_rollen:
             with patch(
-                "zac.core.services.update_rol", return_value=rol_2
-            ) as mock_update_rol:
+                "zac.core.services.get_rollen", return_value=[rol_1]
+            ) as mock_services_get_rollen:
                 with patch(
-                    "zac.elasticsearch.api.get_rollen", return_value=[rol_2]
-                ) as mock_es_get_rollen:
-                    response = self.client.post(path, NOTIFICATION)
+                    "zac.core.services.update_rol", return_value=rol_2
+                ) as mock_update_rol:
+                    with patch(
+                        "zac.elasticsearch.api.get_rollen", return_value=[rol_2]
+                    ) as mock_es_get_rollen:
+                        response = self.client.post(path, NOTIFICATION)
 
+        mock_handlers_get_rollen.assert_called_once_with(zaak)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mock_services_get_rollen.assert_called_once_with(zaak)
         mock_update_rol.assert_called_once_with(
