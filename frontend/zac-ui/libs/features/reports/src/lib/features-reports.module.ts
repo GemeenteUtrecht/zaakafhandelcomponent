@@ -1,24 +1,26 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FeaturesWorkstackComponent } from './features-workstack.component';
+import { FeaturesReportsComponent } from './features-reports.component';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
-import { SharedUiComponentsModule } from '@gu/components';
+import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { TabsModule } from 'ngx-bootstrap/tabs';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
     CommonModule,
-    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
     HttpClientModule,
     HttpClientXsrfModule.withOptions({
       cookieName: 'csrftoken',
       headerName: 'X-CSRFToken',
     }),
     SharedUiComponentsModule,
-    TabsModule.forRoot()
+    MultiselectModule,
+    TabsModule.forRoot(),
   ],
-  declarations: [FeaturesWorkstackComponent],
-  exports: [FeaturesWorkstackComponent],
+  declarations: [FeaturesReportsComponent],
+  exports: [FeaturesReportsComponent],
 })
-export class FeaturesWorkstackModule {}
+export class FeaturesReportsModule {}

@@ -1,0 +1,34 @@
+<div class="reports">
+  <h1>Rapportages</h1>
+  <p>Selecteer een voorgedefinieerde rapportage</p>
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <form [formGroup]='reportForm'>
+    <div class="form-group">
+      <div class="row">
+        <div class="col-lg-6">
+          <gu-multiselect *ngIf="reportTypes"
+                          [control]="reportType"
+                          (change)="onReportTypeSelect()"
+                          [searchable]="true"
+                          [items]="reportTypes"
+                          [multiple]="false"
+                          bindLabel="name"
+                          bindValue="id"
+                          label="Rapportage">
+          </gu-multiselect>
+          <div *ngIf="hasError" class="mt-2 mb-2">
+            <gu-message [message]="errorMessage" type="warn"></gu-message>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  <section *ngIf="reportCases">
+    <h3 class="mb-4">Resultaten ({{reportCases.count}})</h3>
+    <gu-table [tableData]="reportCasesTableData"
+              [sortable]="true"
+              [expandable]="true"
+              [wrap]="true"
+              (sortOutput)="sortTable($event)"></gu-table>
+  </section>
+</div>

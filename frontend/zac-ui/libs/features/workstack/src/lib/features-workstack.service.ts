@@ -4,24 +4,26 @@ import { forkJoin, Observable } from 'rxjs';
 import { Tab } from './constants/tabs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FeaturesWorkstackService {
-
-  constructor(private http: ApplicationHttpClient) { }
+  constructor(private http: ApplicationHttpClient) {}
 
   getWorkstack(tabs: Tab[]): Observable<any> {
     const observables = [];
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       const endpoint = encodeURI(tab.endpoint);
       observables.push(this.http.Get<any>(endpoint));
     });
-    return forkJoin(observables)
+    return forkJoin(observables);
   }
 
   getWorkstackZaken(sortValue, sortOrder): Observable<any> {
-    const order = sortOrder === 'desc' ? '-' : ''
-    const endpoint = encodeURI(`/api/workstack/cases?ordering=${order}${sortValue}`)
+    const order = sortOrder === 'desc' ? '-' : '';
+    const endpoint = encodeURI(
+      `/api/workstack/cases?ordering=${order}${sortValue}`
+    );
     return this.http.Get<any>(endpoint);
   }
+
 }
