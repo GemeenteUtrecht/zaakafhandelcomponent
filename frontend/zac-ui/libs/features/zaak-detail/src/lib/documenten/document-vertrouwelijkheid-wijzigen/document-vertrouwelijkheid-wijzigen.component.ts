@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentenService } from '../documenten.service';
-import { ModalService } from '@gu/components';
 import { Document } from '@gu/models';
 
 @Component({
@@ -18,6 +17,8 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   isLoading: boolean;
+  hasError: boolean;
+  errorMessage: string;
 
   currentConfidentialityType: any;
   confidentialityData: any;
@@ -29,8 +30,7 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
 
   constructor(
     private documentenService: DocumentenService,
-    private fb: FormBuilder,
-    private modalService: ModalService
+    private fb: FormBuilder
   ) {
     this.confidentialityForm = this.fb.group({
       confidentialityType: this.fb.control("", Validators.required),
@@ -59,6 +59,7 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   }
 
   fetchConfidentiality() {
+    this.hasError = false;
     this.documentenService.getConfidentiality().subscribe(data => {
       this.confidentialityData = data;
       if (this.selectedDocument) {
@@ -67,6 +68,8 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
       this.isLoading = false;
     }, error => {
       console.log(error);
+      this.hasError = true;
+      this.errorMessage = error?.error?.detail ? error.error.detail : 'Vertrouwelijkheidaanduidingen konden niet worden opgehaald.';
       this.isLoading = false;
     })
   }

@@ -6,7 +6,6 @@ import { convertKbToMb } from '@gu/utils';
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
 import { DocumentenService } from './documenten.service';
 import { ModalService } from '@gu/components';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'gu-documenten',
