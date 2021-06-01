@@ -34,6 +34,7 @@ from zgw_consumers.models import Service
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.core.services import update_document
+from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
@@ -177,6 +178,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         summary=_("Retrieve case details"),
         responses={
             200: ZaakDetailSerializer,
+            403: PermissionDeniedSerializer,
         },
     )
     def get(
@@ -191,6 +193,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         summary=_("Update case details"),
         responses={
             204: None,
+            403: PermissionDeniedSerializer,
         },
     )
     def patch(self, request: Request, bronorganisatie: str, identificatie) -> Response:

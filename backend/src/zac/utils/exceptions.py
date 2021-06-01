@@ -1,4 +1,5 @@
 from django.forms.utils import ErrorList
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -25,13 +26,19 @@ def exception_handler(exc, context):
     response = drf_exception_handler(exc, context)
 
     from zac.core.api.views import ZaakDetailView
-    from zac.core.services import find_zaak
 
     view = context.get("view")
-    request = context.get("request")
 
-    if not isinstance(view, ZaakDetailView) or not isinstance(exc, PermissionDenied):
-        return response
+    if isinstance(view, ZaakDetailView) and isinstance(exc, PermissionDenied):
+        return handle_zaak_permission_denied(response, context)
+
+    return response
+
+
+def handle_zaak_permission_denied(response, context):
+    from zac.core.services import find_zaak
+
+    request = context.get("request")
 
     zaak = find_zaak(**context.get("kwargs", {}))
     has_perm_to_request_access = request.user.has_perm_to_request_access(zaak)
@@ -39,9 +46,9 @@ def exception_handler(exc, context):
 
     can_request_access = has_perm_to_request_access and not has_pending_access_request
     reason = (
-        "User doesn't have permissions to request the access"
+        _("User doesn't have permissions to request the access")
         if not has_perm_to_request_access
-        else "User has pending access request for this zaak"
+        else _("User has pending access request for this zaak")
         if has_pending_access_request
         else ""
     )
@@ -54,5 +61,11 @@ def exception_handler(exc, context):
 
 
 class PermissionDeniedSerializer(serializers.Serializer):
-    can_request_access = serializers.BooleanField()
-    reason = serializers.CharField(max_length=1000, allow_blank=True)
+    can_request_access = serializers.BooleanField(
+        help_text=_("Boolean indicating if the user can request access for the zaak")
+    )
+    reason = serializers.CharField(
+        max_length=1000,
+        allow_blank=True,
+        help_text=_("Reason why the user can't request access for the zaak"),
+    )
