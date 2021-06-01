@@ -26,7 +26,7 @@ export interface ExtensiveCell {
   type: 'link' | 'icon' | 'button' | 'table';
   label?: string | number;
   url?: string;
-  value?: string;
+  value?: any;
   iconColor?: string;
   buttonType?: string;
 }
