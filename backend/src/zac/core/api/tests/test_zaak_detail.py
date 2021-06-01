@@ -15,13 +15,14 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    AccessRequestFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien, zaken_wijzigen
+from zac.core.permissions import zaken_inzien, zaken_request_access, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -260,7 +261,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response["reden"], ["Dit veld is vereist."])
 
 
-class ZaakDetailPermissionTests(APITestCase):
+class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -286,7 +287,7 @@ class ZaakDetailPermissionTests(APITestCase):
             omschrijving="ZT1",
         )
         cls.zaaktype = factory(ZaakType, cls._zaaktype)
-        zaak = generate_oas_component(
+        cls._zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
@@ -295,7 +296,7 @@ class ZaakDetailPermissionTests(APITestCase):
             zaaktype=cls.zaaktype.url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
-        cls.zaak = factory(Zaak, zaak)
+        cls.zaak = factory(Zaak, cls._zaak)
         cls.zaak.zaaktype = cls.zaaktype
 
         cls.find_zaak_patcher = patch(
@@ -323,7 +324,16 @@ class ZaakDetailPermissionTests(APITestCase):
         response = self.client.patch(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_authenticated_no_permissions(self):
+    @requests_mock.Mocker()
+    def test_authenticated_no_permissions(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
+        )
+
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
@@ -332,18 +342,22 @@ class ZaakDetailPermissionTests(APITestCase):
 
         response = self.client.patch(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {
+                "canRequestAccess": False,
+                "reason": "User doesn't have permissions to request the access",
+            },
+        )
 
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
         m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
-            json=[],
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
         )
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
@@ -361,23 +375,22 @@ class ZaakDetailPermissionTests(APITestCase):
         response = self.client.get(self.detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {
+                "canRequestAccess": False,
+                "reason": "User doesn't have permissions to request the access",
+            },
+        )
 
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
         m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
-            json=paginated_response([self._zaaktype]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak.url}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak.url}",
-            json=[],
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
         )
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
@@ -395,6 +408,74 @@ class ZaakDetailPermissionTests(APITestCase):
         response = self.client.get(self.detail_url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {
+                "canRequestAccess": False,
+                "reason": "User doesn't have permissions to request the access",
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_has_no_perm_can_request(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
+        )
+        user = UserFactory.create()
+        # gives them access to the page and zaaktype, but insufficient VA
+        BlueprintPermissionFactory.create(
+            permission=zaken_request_access.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["canRequestAccess"], True)
+
+    @requests_mock.Mocker()
+    def test_has_no_perm_already_requested(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
+        )
+        user = UserFactory.create()
+        # gives them access to the page and zaaktype, but insufficient VA
+        BlueprintPermissionFactory.create(
+            permission=zaken_request_access.name,
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        AccessRequestFactory.create(requester=user, zaak=self.zaak.url)
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {
+                "canRequestAccess": False,
+                "reason": "User has pending access request for this zaak",
+            },
+        )
 
     @requests_mock.Mocker()
     def test_has_perm_to_retrieve(self, m):
