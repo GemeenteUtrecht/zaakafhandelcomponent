@@ -2,7 +2,7 @@
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage">
+  <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
   <p class="p--marginsmall">Wijzig het vertrouwelijkheidsniveau van:</p>
   <p class="p--bold">{{selectedDocument.bestandsnaam}}</p>
   <form [formGroup]="confidentialityForm" class="mt-4">
