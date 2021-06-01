@@ -11,7 +11,7 @@ class AccessRequestResult(DjangoChoices):
 class PermissionObjectType(DjangoChoices):
     zaak = ChoiceItem("zaak", _("zaak"))
     document = ChoiceItem("document", _("document"))
-    report = ChoiceItem("report", _("report"))
+    search_report = ChoiceItem("search_report", _("search report"))
 
 
 class PermissionReason(DjangoChoices):
@@ -20,3 +20,4 @@ class PermissionReason(DjangoChoices):
     activiteit = ChoiceItem("activiteit", _("activiteit"))
     adviseur = ChoiceItem("adviseur", _("adviseur"))
     accordeur = ChoiceItem("accordeur", _("accordeur"))
+

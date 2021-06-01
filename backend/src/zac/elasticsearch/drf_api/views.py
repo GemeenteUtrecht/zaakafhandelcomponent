@@ -2,26 +2,36 @@ from typing import List
 
 from django.utils.translation import gettext_lazy as _
 
-from drf_spectacular.utils import extend_schema
-from rest_framework import authentication, permissions, views
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import status, views
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.generics import GenericAPIView, ListCreateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
-from zac.core.api.serializers import ZaakDetailSerializer, ZaakSerializer
-from zac.core.services import get_zaaktypen, get_zaken_es
-from zgw.models.zrc import Zaak
+from zac.core.api.serializers import ZaakSerializer
+from zac.core.services import get_zaaktypen
 
 from ..documents import ZaakDocument
-from ..searches import autocomplete_zaak_search
+from ..models import SearchReport
+from ..searches import autocomplete_zaak_search, search
 from .filters import ESOrderingFilter
+from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
-from .serializers import SearchSerializer, ZaakIdentificatieSerializer
+from .permissions import CanDownloadSearchReports
+from .serializers import (
+    SearchReportSerializer,
+    SearchSerializer,
+    ZaakDocumentSerializer,
+    ZaakIdentificatieSerializer,
+)
 from .utils import es_document_to_ordering_parameters
 
 
 class GetZakenView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def get_serializer(**kwargs):
@@ -44,53 +54,151 @@ class GetZakenView(views.APIView):
         return Response(data=zaak_serializer.data)
 
 
-class SearchViewSet(views.APIView):
+class ESPaginationMixin:
+    pagination_class = ESPagination
+
+    def get_paginated_response(self, data, fields: List[str]):
+        """
+        Return a paginated style `Response` object for the given output data.
+        """
+        assert isinstance(self.pagination_class(), ESPagination)
+        return self.paginator.get_paginated_response(data, fields)
+
+
+class SearchView(ESPaginationMixin, GenericAPIView):
+    authentication_classes = (SessionAuthentication,)
+    ordering = ("-identificatie",)
     parser_classes = (IgnoreCamelCaseJSONParser,)
-    authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = SearchSerializer
+    permission_classes = (IsAuthenticated,)
     search_document = ZaakDocument
-    ordering = (
-        "-identificatie",
-        "-startdatum",
-        "-registratiedatum",
-    )
+    serializer_class = SearchSerializer
+
+    def get_queryset(self, **kwargs):
+        return search(**kwargs)
 
     @extend_schema(
         summary=_("Search zaken"),
-        parameters=[es_document_to_ordering_parameters(ZaakDocument)],
-        responses=ZaakDetailSerializer(many=True),
+        parameters=[
+            es_document_to_ordering_parameters(ZaakDocument),
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Page of paginated response.",
+            ),
+        ],
+        responses=ZaakDocumentSerializer(many=True),
     )
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of zaken based on input data.
         The response contains only zaken the user has permisisons to see.
+
         """
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
         # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
-        zaken = self.perform_search({**input_serializer.data, "ordering": ordering})
 
-        # TODO for now zaak.resultaat is str which is not supported by ZaakDetailSerializer
-        for zaak in zaken:
-            zaak.resultaat = None
+        # Make search query
+        fields = input_serializer.validated_data.get("fields")
 
-        zaak_serializer = ZaakDetailSerializer(zaken, many=True)
+        search_query = {
+            **input_serializer.validated_data,
+            "user": self.request.user,
+            "ordering": ordering,
+            "fields": fields,
+        }
+        results = self.get_queryset(**search_query)
+        page = self.paginate_queryset(results)
+        serializer = ZaakDocumentSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data, fields=fields)
 
-        return Response(zaak_serializer.data)
 
-    def perform_search(self, data) -> List[Zaak]:
-        # TODO search on zaaktype attributes instead of urls
-        if data.get("zaaktype"):
-            zaaktype_data = data.pop("zaaktype")
-            zaaktypen = get_zaaktypen(
-                self.request.user,
-                catalogus=zaaktype_data["catalogus"],
-                omschrijving=zaaktype_data["omschrijving"],
-            )
-            data["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
+class SearchReportViewSet(ListCreateAPIView):
+    ordering = ("-identificatie",)
+    permission_classes = (IsAuthenticated,)
+    queryset = SearchReport.objects.all()
+    serializer_class = SearchReportSerializer
 
-        zaken = get_zaken_es(user=self.request.user, size=50, query_params=data)
-        return zaken
+    def get_queryset(self):
+        qs = super().get_queryset()
+
+        # filter on allowed zaaktypen
+        zaaktypen = get_zaaktypen(self.request.user)
+        identificaties = list({zt.identificatie for zt in zaaktypen})
+
+        # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen
+        # for this particular user
+        return qs.filter(zaaktypen__contained_by=identificaties)
+
+    @extend_schema(
+        summary=_("Create a search report"),
+        request=SearchSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        search_serializer = SearchSerializer(data=request.data)
+        search_serializer.is_valid(raise_exception=True)
+
+        # Get ordering
+        ordering = ESOrderingFilter().get_ordering(request, self)
+
+        # Make search query
+        fields = search_serializer.validated_data.get("fields")
+        search_query = {
+            **search_serializer.validated_data,
+            "ordering": ordering,
+            "fields": fields,
+        }
+
+        # Create and save instance
+        data = {**request.data, "query": search_query}
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    @extend_schema(
+        summary=_("Retrieve a list of search reports"),
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class SearchReportDetailView(ESPaginationMixin, GenericAPIView):
+    ordering = ("-identificatie",)
+    parser_classes = (IgnoreCamelCaseJSONParser,)
+    permission_classes = (IsAuthenticated & CanDownloadSearchReports,)
+    queryset = SearchReport.objects.all()
+    search_document = ZaakDocument
+    serializer_class = ZaakDocumentSerializer
+
+    @extend_schema(
+        summary=_("Retrieve a search report"),
+        parameters=[
+            es_document_to_ordering_parameters(ZaakDocument),
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Page of paginated response.",
+            ),
+        ],
+        responses=ZaakDocumentSerializer(many=True),
+    )
+    def get(self, request, *args, **kwargs):
+        search_report = self.get_object()
+        ordering = ESOrderingFilter().get_ordering(self.request, self)
+        if ordering:
+            search_report.query = {**search_report.query, "ordering": ordering}
+
+        results = search(user=request.user, **search_report.query)
+        page = self.paginate_queryset(results)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data, fields=search_report.fields)

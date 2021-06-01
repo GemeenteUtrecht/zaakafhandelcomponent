@@ -2,6 +2,10 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
+from ..documents import ZaakDocument
+from ..models import SearchReport
+from .utils import get_document_fields, get_document_properties
+
 
 class ZaakIdentificatieSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
@@ -40,6 +44,31 @@ class SearchSerializer(serializers.Serializer):
             "ZAAK-EIGENSCHAPpen in format `<property name>:{'value': <property value>}`"
         ),
     )
+    fields = serializers.MultipleChoiceField(
+        required=False,
+        help_text=_(
+            "Fields that will be returned with the search results. Default returns all fields. Will always include <identificatie>."
+        ),
+        choices=[
+            field[0]
+            for field in get_document_fields(
+                get_document_properties(ZaakDocument)["properties"]
+            )
+        ],
+        default=["*"],
+    )
+    include_closed = serializers.BooleanField(
+        required=False,
+        help_text=_("Include closed ZAKEN."),
+        default=False,
+    )
+
+    def validate_fields(self, fields):
+        if not fields:
+            fields = ["*"]
+        else:
+            fields.add("identificatie")
+        return list(fields)
 
     def validate_eigenschappen(self, data):
         validated_data = dict()
@@ -54,3 +83,53 @@ class SearchSerializer(serializers.Serializer):
                 )
             validated_data[name] = value["value"]
         return validated_data
+
+
+class SearchReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchReport
+        fields = (
+            "id",
+            "name",
+            "query",
+        )
+
+
+class EigenschapDocumentSerializer(serializers.Serializer):
+    tekst = serializers.CharField(required=False)
+    getal = serializers.DecimalField(required=False, max_digits=10, decimal_places=2)
+    datum = serializers.DateField(required=False)
+    datum_tijd = serializers.DateTimeField(required=False)
+
+
+class BetrokkeneIdentificatieSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(required=False)
+
+
+class RolDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(required=False)
+    betrokkene_type = serializers.CharField()
+    omschrijving_generiek = serializers.CharField()
+    betrokkene_identificatie = BetrokkeneIdentificatieSerializer(required=False)
+
+
+class ZaakTypeDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(required=False)
+    catalogus = serializers.CharField(required=False)
+    omschrijving = serializers.CharField(required=False)
+
+
+class ZaakDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(required=False)
+    zaaktype = ZaakTypeDocumentSerializer(required=False)
+    identificatie = serializers.CharField(required=False)
+    bronorganisatie = serializers.CharField(required=False)
+    omschrijving = serializers.CharField(required=False)
+    vertrouwelijkheidaanduiding = serializers.CharField(required=False)
+    va_order = serializers.IntegerField(required=False)
+    rollen = RolDocumentSerializer(required=False, many=True)
+    startdatum = serializers.DateTimeField(required=False)
+    einddatum = serializers.DateTimeField(required=False)
+    registratiedatum = serializers.DateTimeField(required=False)
+    deadline = serializers.DateTimeField(required=False)
+    eigenschappen = EigenschapDocumentSerializer(many=True, required=False)

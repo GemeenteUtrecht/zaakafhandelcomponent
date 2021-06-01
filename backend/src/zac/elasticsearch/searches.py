@@ -1,6 +1,6 @@
 import operator
 from functools import reduce
-from typing import List
+from typing import Dict, List
 
 from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (
@@ -34,6 +34,7 @@ SUPPORTED_QUERY_PARAMS = (
     "behandelaar",
     "eigenschappen",
     "ordering",
+    "fields",
 )
 
 
@@ -89,7 +90,8 @@ def search(
     only_allowed=True,
     include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
-) -> List[str]:
+    fields=None,
+) -> List[ZaakDocument]:
 
     size = size or 10000
     s = ZaakDocument.search()[:size]
@@ -140,9 +142,11 @@ def search(
     if ordering:
         s = s.sort(*ordering)
 
+    if fields:
+        s = s.source(fields)
+
     response = s.execute()
-    zaak_urls = [hit.url for hit in response]
-    return zaak_urls
+    return response.hits
 
 
 def autocomplete_zaak_search(identificatie: str) -> List[ZaakDocument]:

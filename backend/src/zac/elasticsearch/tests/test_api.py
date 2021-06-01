@@ -14,9 +14,9 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.reports.api.permissions import rapport_inzien
 from zgw.models.zrc import Zaak
 
+from ..drf_api.permissions import zoek_rapport_inzien
 from .factories import ReportFactory
 
 
@@ -218,7 +218,7 @@ class PermissionTests(APITestCase):
 
         # Create permission
         BlueprintPermissionFactory.create(
-            permission=rapport_inzien.name,
+            permission=zoek_rapport_inzien.name,
             for_user=user,
             policy={
                 "zaaktypen": ["zt1", "zt2"],

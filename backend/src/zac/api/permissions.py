@@ -11,7 +11,7 @@ from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
-from zac.reports.models import Report
+from zac.elasticsearch.models import SearchReport
 
 logger = logging.getLogger(__name__)
 
@@ -127,15 +127,15 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
         return zaak
 
 
-class ReportDefinitionPermission(DefinitionBasePermission):
-    object_attr = "report"
-    object_type: str = PermissionObjectType.report
+class SearchReportDefinitionPermission(DefinitionBasePermission):
+    object_attr = "search_report"
+    object_type: str = PermissionObjectType.search_report
 
     def get_object(self, pk: int):
         try:
-            report = Report.objects.get(pk=pk)
+            report = SearchReport.objects.get(pk=pk)
         except ObjectDoesNotExist:
-            logger.info("Report with pk %s does not exist" % pk, exc_info=True)
+            logger.info("SearchReport with pk %s does not exist" % pk, exc_info=True)
             return None
 
         return report

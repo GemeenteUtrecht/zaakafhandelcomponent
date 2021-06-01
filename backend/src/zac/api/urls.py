@@ -25,7 +25,6 @@ urlpatterns = [
     path("dowc/", include("zac.contrib.dowc.urls")),
     path("core/", include("zac.core.api.bff_urls")),
     path("camunda/", include("zac.camunda.api.urls")),
-    path("reports/", include("zac.reports.api.urls")),
     path("search/", include("zac.elasticsearch.drf_api.urls")),
     path("workstack/", include("zac.werkvoorraad.api.urls")),
     path("", include("zac.notifications.urls")),

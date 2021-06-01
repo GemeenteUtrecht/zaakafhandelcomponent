@@ -5,10 +5,10 @@ from rest_framework import serializers
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.permissions import Blueprint
-from zac.reports.models import Report
+from zac.elasticsearch.models import SearchReport
 
 
-class ReportBlueprint(Blueprint):
+class SearchReportBlueprint(Blueprint):
     zaaktypen = serializers.ListField(
         child=serializers.CharField(max_length=50),
         help_text=_(
@@ -16,7 +16,7 @@ class ReportBlueprint(Blueprint):
         ),
     )
 
-    def has_access(self, report: Report):
+    def has_access(self, report: SearchReport):
         return set(report.zaaktypen).issubset(set(self.data["zaaktypen"]))
 
     def search_query(self) -> Query:
