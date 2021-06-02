@@ -1,0 +1,37 @@
+<div class="document-vertrouwelijkheid-wijzigen" *ngIf='selectedDocument && currentConfidentialityType'>
+  <ng-container *ngIf="isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+  <p class="p--marginsmall">Wijzig het vertrouwelijkheidsniveau van:</p>
+  <p class="p--bold">{{selectedDocument.bestandsnaam}}</p>
+  <form [formGroup]="confidentialityForm" class="mt-4">
+    <gu-multiselect
+      [multiple]="false"
+      [items]="confidentialityData"
+      [selectedValue]="currentConfidentialityType?.value"
+      label="Vertrouwelijkheidsniveau"
+      bindLabel="label"
+      bindValue="value"
+      [control]="confidentialityTypeControl"
+      class="mb-4"
+    ></gu-multiselect>
+    <gu-input-field [control]="reasonControl"
+                    type="text"
+                    label="Reden"
+                    id="conf-reden"
+                    class="mb-2">
+    </gu-input-field>
+    <div class="d-flex justify-content-end">
+      <button gu-button type="primary"
+              size="small"
+              [loading]="isSubmitting"
+              [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value || isSubmitting"
+              (click)="submitConfidentiality()">
+        Wijzigen
+      </button>
+    </div>
+    <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage">
+    </gu-message>
+  </form>
+</div>

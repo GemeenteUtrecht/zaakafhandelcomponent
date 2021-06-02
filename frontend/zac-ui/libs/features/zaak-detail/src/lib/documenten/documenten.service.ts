@@ -31,4 +31,14 @@ export class DocumentenService {
     const endpoint = encodeURI(deleteUrl);
     return this.http.Delete<any>(endpoint);
   }
+
+  getConfidentiality(): Observable<any> {
+    const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
+    return this.http.Get<any>(endpoint);
+  }
+
+  patchConfidentiality(bronorganisatie, identificatie, formData): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`);
+    return this.http.Patch<any>(endpoint, formData);
+  }
 }

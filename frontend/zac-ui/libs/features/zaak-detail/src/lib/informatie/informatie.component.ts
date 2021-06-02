@@ -87,6 +87,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     }
     this.informatieService.patchConfidentiality(this.bronorganisatie, this.identificatie, formData).subscribe( () => {
       this.setConfidentialityType(this.confidentialityTypeControl.value);
+      this.reasonControl.reset();
       this.confInEditMode = false;
       this.isSubmitting = false;
     }, error => {

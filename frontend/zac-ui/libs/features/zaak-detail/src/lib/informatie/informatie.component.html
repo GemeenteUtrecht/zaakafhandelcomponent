@@ -35,7 +35,7 @@
             <button gu-button type="primary"
                        size="small"
                        [loading]="isSubmitting"
-                       [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value"
+                       [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value || isSubmitting"
                        (click)="submitConfidentiality()">
               Wijzigen
             </button>

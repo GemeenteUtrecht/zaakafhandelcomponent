@@ -4,11 +4,13 @@ import { DocumentToevoegenComponent } from './document-toevoegen/document-toevoe
 import { DocumentenComponent } from './documenten.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
+import { DocumentVertrouwelijkheidWijzigenComponent } from './document-vertrouwelijkheid-wijzigen/document-vertrouwelijkheid-wijzigen.component';
 
 @NgModule({
   declarations: [
     DocumentenComponent,
-    DocumentToevoegenComponent
+    DocumentToevoegenComponent,
+    DocumentVertrouwelijkheidWijzigenComponent
   ],
   imports: [
     CommonModule,
@@ -19,7 +21,8 @@ import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
   ],
   exports: [
     DocumentenComponent,
-    DocumentToevoegenComponent
+    DocumentToevoegenComponent,
+    DocumentVertrouwelijkheidWijzigenComponent
   ]
 })
 export class DocumentenModule { }

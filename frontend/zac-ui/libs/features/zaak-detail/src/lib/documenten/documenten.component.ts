@@ -29,6 +29,7 @@ export class DocumentenComponent implements OnChanges {
   docsInEditMode: string[] = [];
   deleteUrls: DocumentUrls[] = [];
 
+  selectedDocument: Document;
   selectedDocumentUrl: string;
 
   constructor(
@@ -92,7 +93,11 @@ export class DocumentenComponent implements OnChanges {
          bewerken: showEditCell ? editCell : '',
          overschrijven:  element.locked ? '' : overwriteCell,
          type: element.informatieobjecttype['omschrijving'],
-         vertrouwelijkheid: element.vertrouwelijkheidaanduiding,
+         vertrouwelijkheid: {
+           type: 'button',
+           label: element.vertrouwelijkheidaanduiding,
+           value: element
+         },
          bestandsomvang: bestandsomvang
        }
      }
@@ -113,6 +118,9 @@ export class DocumentenComponent implements OnChanges {
         break;
       case 'overschrijven':
         this.patchDocument(actionUrl);
+        break;
+      case 'vertrouwelijkheid':
+        this.patchConfidentiality(actionUrl);
         break;
     }
     if (actionType === 'bewerken') {
@@ -147,6 +155,11 @@ export class DocumentenComponent implements OnChanges {
   patchDocument(documentUrl) {
     this.selectedDocumentUrl = documentUrl;
     this.openModal('document-overschrijven-modal')
+  }
+
+  patchConfidentiality(document: Document) {
+    this.selectedDocument = document;
+    this.openModal('document-vertrouwelijkheid-wijzigen-modal')
   }
 
   openDocumentEdit(writeUrl) {

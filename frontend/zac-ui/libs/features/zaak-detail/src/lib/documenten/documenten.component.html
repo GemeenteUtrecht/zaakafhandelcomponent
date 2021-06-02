@@ -47,3 +47,15 @@
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>
+<gu-modal id="document-vertrouwelijkheid-wijzigen-modal"
+          [closeIcon]="true"
+          size="small">
+  <gu-document-vertrouwelijkheid-wijzigen [mainZaakUrl]="mainZaakUrl"
+                                          [bronorganisatie]="bronorganisatie"
+                                          [identificatie]="identificatie"
+                                          [selectedDocument]="selectedDocument"
+                                          (closeModal)="closeModal('document-vertrouwelijkheid-wijzigen-modal')"
+                                          (reload)="fetchDocuments()">
+
+  </gu-document-vertrouwelijkheid-wijzigen>
+</gu-modal>
