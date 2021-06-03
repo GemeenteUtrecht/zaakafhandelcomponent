@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import JSONField
@@ -185,15 +186,14 @@ class AccessRequest(models.Model):
     )
     start_date = models.DateField(
         _("start date"),
-        blank=True,
-        null=True,
-        help_text=_("Start date of the granted access"),
+        default=date.today,
+        help_text=_("Date when the access request was created"),
     )
     end_date = models.DateField(
         _("end date"),
         blank=True,
         null=True,
-        help_text=_("End date of the granted access"),
+        help_text=_("Date when the access request was handled"),
     )
     user_atomic_permission = models.OneToOneField(
         "UserAtomicPermission",

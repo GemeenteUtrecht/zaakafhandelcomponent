@@ -141,3 +141,74 @@ class GrantPermissionSerializer(serializers.ModelSerializer):
             )
         )
         return atomic_permission
+
+
+class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):
+    requester = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Username of access requester/grantee"),
+    )
+    handler = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        help_text=_("Username of access handler/granter"),
+    )
+
+    class Meta:
+        model = AccessRequest
+        fields = (
+            "url",
+            "requester",
+            "handler",
+            "zaak",
+            "comment",
+            "result",
+            "start_date",
+            "end_date",
+        )
+
+
+class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
+    requester = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        help_text=_("Username of access requester/grantee"),
+    )
+
+    class Meta:
+        model = AccessRequest
+        fields = ("url", "zaak", "comment", "requester")
+
+    def validate(self, data):
+        valid_data = super().validate(data)
+
+        request = self.context["request"]
+        requester = request.user
+        zaak_url = valid_data["zaak"]
+
+        if (
+            AtomicPermission.objects.for_user(requester)
+            .filter(object_url=zaak_url, permission=zaken_inzien.name)
+            .actual()
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                _("User %(requester)s already has an access to zaak %(zaak)s")
+                % {"requester": requester.username, "zaak": zaak_url}
+            )
+
+        if (
+            requester.initiated_requests.filter(zaak=zaak_url, result="")
+            .actual()
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                _(
+                    "User %(requester)s already has an pending access request to zaak %(zaak)s"
+                )
+                % {"requester": requester.username, "zaak": zaak_url}
+            )
+
+        valid_data["requester"] = requester
+        return valid_data

@@ -3,10 +3,11 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import GrantZaakPermissionView, InformatieobjecttypenJSONView
-from .viewsets import UserViewSet
+from .viewsets import AccessRequestViewSet, UserViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register("users", UserViewSet, basename="users")
+router.register("access-requests", AccessRequestViewSet)
 
 urlpatterns = router.urls + [
     path(

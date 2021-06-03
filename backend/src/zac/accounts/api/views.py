@@ -47,7 +47,7 @@ class InformatieobjecttypenJSONView(views.APIView):
 @extend_schema(summary=_("Grant permission to zaak"))
 class GrantZaakPermissionView(generics.CreateAPIView):
     """
-    Create an atomic permission t to zaak for a particular user
+    Create an atomic permission for a particular user
     """
 
     authentication_classes = [SessionAuthentication]
