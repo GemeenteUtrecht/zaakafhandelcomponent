@@ -25,4 +25,8 @@ export class InformatieService {
     return this.http.Patch<any>(endpoint, formData);
   }
 
+  patchCaseDetails(bronorganisatie, identificatie, formData): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`);
+    return this.http.Patch<any>(endpoint, formData);
+  }
 }

@@ -3,7 +3,7 @@
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
-  <ng-container *ngIf="data && !isLoading">
+  <ng-container *ngIf="data && data[0] && !isLoading">
     <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
                      [finished]="finished"
                      endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
