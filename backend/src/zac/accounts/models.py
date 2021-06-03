@@ -60,8 +60,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     atomic_permissions = models.ManyToManyField(
         "AtomicPermission",
+        blank=True,
         verbose_name=_("atomic permissions"),
         related_name="users",
+        through="UserAtomicPermission",
     )
 
     objects = UserManager()
@@ -172,7 +174,7 @@ class AccessRequest(models.Model):
         _("comment"),
         max_length=1000,
         blank=True,
-        help_text=_("Comment provided by the handler"),
+        help_text=_("Comment provided by the requester"),
     )
     result = models.CharField(
         _("result"),
@@ -192,6 +194,13 @@ class AccessRequest(models.Model):
         blank=True,
         null=True,
         help_text=_("End date of the granted access"),
+    )
+    user_atomic_permission = models.OneToOneField(
+        "UserAtomicPermission",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text=_("Permission created if the access request is approved"),
     )
 
     objects = AccessRequestQuerySet.as_manager()
@@ -243,6 +252,20 @@ class AtomicPermission(models.Model):
 
     def __str__(self):
         return f"{self.permission} ({self.object_type} {self.object_uuid})"
+
+
+class UserAtomicPermission(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
+    comment = models.CharField(
+        _("comment"),
+        max_length=1000,
+        blank=True,
+        help_text=_("Comment provided by the granter of the permission"),
+    )
+
+    class Meta:
+        db_table = "accounts_user_atomic_permissions"
 
 
 class BlueprintPermission(models.Model):
