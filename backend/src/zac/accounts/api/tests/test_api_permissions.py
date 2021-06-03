@@ -37,7 +37,7 @@ BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-001"
 
 
-class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
+class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -160,7 +160,7 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
 
 
 @freeze_time("2020-01-01")
-class AccessRequestAPITests(APITransactionTestCase):
+class GrantAccessAPITests(APITransactionTestCase):
     """
     Test GrantZaakAccessView
     """
@@ -203,18 +203,7 @@ class AccessRequestAPITests(APITransactionTestCase):
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(AccessRequest.objects.count(), 1)
         self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
-
-        access_request = AccessRequest.objects.get()
-
-        self.assertEqual(access_request.handler, self.handler)
-        self.assertEqual(access_request.requester, self.requester)
-        self.assertEqual(access_request.zaak, ZAAK_URL)
-        self.assertEqual(access_request.result, AccessRequestResult.approve)
-        self.assertEqual(access_request.comment, "some comment")
-        self.assertEqual(access_request.start_date, date(2020, 1, 1))
-        self.assertIsNone(access_request.end_date)
 
         atomic_permission = AtomicPermission.objects.for_user(self.requester).get()
 
@@ -229,12 +218,10 @@ class AccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             data,
             {
+                "permission": "zaken:inzien",
                 "requester": self.requester.username,
-                "handler": self.handler.username,
                 "zaak": ZAAK_URL,
-                "comment": "some comment",
-                "result": AccessRequestResult.approve,
-                "startDate": "2020-01-01",
+                "startDate": "2020-01-01T00:00:00Z",
                 "endDate": None,
             },
         )
@@ -307,16 +294,9 @@ class AccessRequestAPITests(APITransactionTestCase):
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(self.requester.initiated_requests.actual().count(), 1)
         self.assertEqual(
             AtomicPermission.objects.for_user(self.requester).actual().count(), 1
         )
-
-        actual_access_request = self.requester.initiated_requests.actual().get()
-
-        self.assertIsNone(actual_access_request.end_date)
-        self.assertEqual(actual_access_request.result, AccessRequestResult.approve)
-        self.assertEqual(actual_access_request.comment, "some comment")
 
         atomic_permission = (
             AtomicPermission.objects.for_user(self.requester).actual().get()
@@ -349,30 +329,22 @@ class AccessRequestAPITests(APITransactionTestCase):
             "requester": self.requester.username,
             "zaak": ZAAK_URL,
             "comment": "some comment",
-            "end_date": "2021-01-01",
+            "end_date": "2021-01-01T00:00:00Z",
         }
 
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(self.requester.initiated_requests.count(), 2)
 
         pending_request.refresh_from_db()
-        new_request = AccessRequest.objects.exclude(id=pending_request.id).get()
-
-        self.assertEqual(pending_request.result, AccessRequestResult.approve)
-        self.assertEqual(pending_request.end_date, date(2021, 1, 1))
-        self.assertEqual(
-            pending_request.comment,
-            f"Automatically approved after access request #{new_request.id}",
-        )
-
-        self.assertEqual(new_request.result, AccessRequestResult.approve)
-        self.assertEqual(new_request.end_date, date(2021, 1, 1))
-        self.assertEqual(new_request.comment, "some comment")
-
         atomic_permission = (
             AtomicPermission.objects.for_user(self.requester).actual().get()
+        )
+
+        self.assertEqual(pending_request.result, AccessRequestResult.approve)
+        self.assertEqual(
+            pending_request.user_atomic_permission,
+            atomic_permission.useratomicpermission_set.get(),
         )
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)

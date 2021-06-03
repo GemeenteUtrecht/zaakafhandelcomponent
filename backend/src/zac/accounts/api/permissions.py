@@ -7,4 +7,5 @@ logger = logging.getLogger(__name__)
 
 
 class CanHandleAccess(ZaakDefinitionPermission):
+    object_attr = "object_url"
     permission = zaken_handle_access

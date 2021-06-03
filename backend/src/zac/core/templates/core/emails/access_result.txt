@@ -1,7 +1,7 @@
 {% load i18n %}{% blocktrans with identificatie=zaak.identificatie result=access_request.get_result_display %}Dear {{ user }}
 
 The access to zaak {{ identificatie }} is {{ result }}.{% endblocktrans %}
-{% if access_request.result == "approve" %}{% trans "You can see it here:" %} {{ zaak.absolute_url }}{% endif %}
+{% if result == "approve" %}{% trans "You can see it here:" %} {{ zaak.absolute_url }}{% endif %}
 
 {% blocktrans %}Best regards,
 ZAC Team{% endblocktrans %}

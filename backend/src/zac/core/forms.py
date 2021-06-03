@@ -573,7 +573,13 @@ class AccessRequestHandleForm(forms.ModelForm):
 
         # send email
         transaction.on_commit(
-            lambda: send_email_to_requester(self.instance, self.request)
+            lambda: send_email_to_requester(
+                self.instance.requester,
+                zaak_url=self.instance.zaak,
+                result=self.instance.result,
+                request=self.request,
+                ui=False,
+            )
         )
 
         return instance

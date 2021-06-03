@@ -10,7 +10,7 @@ from zac.accounts.api.serializers import CatalogusURLSerializer
 from zac.core.services import get_informatieobjecttypen
 
 from .permissions import CanHandleAccess
-from .serializers import ZaakAccessSerializer
+from .serializers import GrantPermissionSerializer
 
 
 class InformatieobjecttypenJSONView(views.APIView):
@@ -44,12 +44,12 @@ class InformatieobjecttypenJSONView(views.APIView):
         return JsonResponse(response_data)
 
 
-@extend_schema(summary=_("Grant access to zaak"))
-class GrantZaakAccessView(generics.CreateAPIView):
+@extend_schema(summary=_("Grant permission to zaak"))
+class GrantZaakPermissionView(generics.CreateAPIView):
     """
-    Create an approved access request to zaak for a particular user
+    Create an atomic permission t to zaak for a particular user
     """
 
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, CanHandleAccess]
-    serializer_class = ZaakAccessSerializer
+    serializer_class = GrantPermissionSerializer
