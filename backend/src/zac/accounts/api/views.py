@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from zac.accounts.api.serializers import CatalogusURLSerializer
 from zac.core.services import get_informatieobjecttypen
 
-from .permissions import CanHandleAccess
+from .permissions import CanGrantAccess
 from .serializers import GrantPermissionSerializer
 
 
@@ -51,5 +51,5 @@ class GrantZaakPermissionView(generics.CreateAPIView):
     """
 
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanHandleAccess]
+    permission_classes = [IsAuthenticated, CanGrantAccess]
     serializer_class = GrantPermissionSerializer

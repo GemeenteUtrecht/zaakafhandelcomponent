@@ -8,10 +8,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from zac.core.api.pagination import BffPagination
+from zac.utils.mixins import PatchModelMixin
 
 from ..models import AccessRequest, User
 from .filters import UserFilter
-from .permissions import CanRequestAccess
+from .permissions import CanCreateOrHandleAccessRequest
 from .serializers import (
     AccessRequestDetailSerializer,
     CreateAccessRequestSerializer,
@@ -52,12 +53,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     partial_update=extend_schema(
         summary=_("Handle an access request"),
         request=HandleAccessRequestSerializer,
+        responses={200: HandleAccessRequestSerializer},
     ),
 )
 class AccessRequestViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
+    PatchModelMixin,
     viewsets.GenericViewSet,
 ):
     """
@@ -65,7 +67,7 @@ class AccessRequestViewSet(
     """
 
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanRequestAccess]
+    permission_classes = [IsAuthenticated, CanCreateOrHandleAccessRequest]
     queryset = AccessRequest.objects.all()
 
     def get_serializer_class(self):

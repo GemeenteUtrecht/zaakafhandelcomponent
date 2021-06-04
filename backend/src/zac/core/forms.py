@@ -516,7 +516,9 @@ class AccessRequestHandleForm(forms.ModelForm):
     """
 
     checked = forms.BooleanField(required=False)
-    end_date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}), required=False
+    )
 
     class Meta:
         model = AccessRequest
@@ -530,7 +532,7 @@ class AccessRequestHandleForm(forms.ModelForm):
     def clean(self):
         super().clean()
         checked = self.cleaned_data["checked"]
-        end_date = self.cleaned_data["end_date"]
+        end_date = self.cleaned_data.get("end_date")
         submit = self.data.get("submit")
 
         #  save end date only if the result == approve

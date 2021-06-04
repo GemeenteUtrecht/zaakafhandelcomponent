@@ -229,10 +229,10 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         help_text=_("Username of access handler/granter"),
     )
     handler_comment = serializers.CharField(
-        required=False, help_text=_("Comment of the handler+")
+        required=False, help_text=_("Comment of the handler")
     )
     start_date = serializers.DateField(
-        default=date.today, help_text=_("Start date of the access")
+        required=False, help_text=_("Start date of the access")
     )
     end_date = serializers.DateField(
         required=False, help_text=_("End date of the access")
@@ -254,7 +254,14 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     def validate(self, data):
         valid_data = super().validate(data)
 
-        if self.instance.result:
+        if not valid_data.get("result"):
+            raise serializers.ValidationError(
+                _(
+                    "'result' field should be defined when the access request is handled`"
+                )
+            )
+
+        if self.instance and self.instance.result:
             raise serializers.ValidationError(
                 _("This access request has already been handled")
             )
@@ -268,9 +275,9 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        handler_comment = validated_data.pop("handler_comment")
-        start_date = validated_data.pop("start_date")
-        end_date = validated_data.pop("end_date")
+        handler_comment = validated_data.get("handler_comment", "")
+        start_date = validated_data.get("start_date", date.today())
+        end_date = validated_data.get("end_date")
 
         access_request = super().update(instance, validated_data)
 
