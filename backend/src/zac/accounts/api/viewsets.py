@@ -15,6 +15,7 @@ from .permissions import CanRequestAccess
 from .serializers import (
     AccessRequestDetailSerializer,
     CreateAccessRequestSerializer,
+    HandleAccessRequestSerializer,
     UserSerializer,
 )
 
@@ -48,9 +49,16 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         request=CreateAccessRequestSerializer,
         responses={201: CreateAccessRequestSerializer},
     ),
+    partial_update=extend_schema(
+        summary=_("Handle an access request"),
+        request=HandleAccessRequestSerializer,
+    ),
 )
 class AccessRequestViewSet(
-    mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     Access request for a particular zaak
@@ -64,5 +72,6 @@ class AccessRequestViewSet(
         mapping = {
             "GET": AccessRequestDetailSerializer,
             "POST": CreateAccessRequestSerializer,
+            "PATCH": HandleAccessRequestSerializer,
         }
         return mapping[self.request.method]

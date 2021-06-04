@@ -184,12 +184,12 @@ class AccessRequest(models.Model):
         blank=True,
         help_text=_("Result of the access request"),
     )
-    start_date = models.DateField(
-        _("start date"),
+    requested_date = models.DateField(
+        _("requested date"),
         default=date.today,
         help_text=_("Date when the access request was created"),
     )
-    end_date = models.DateField(
+    handled_date = models.DateField(
         _("end date"),
         blank=True,
         null=True,

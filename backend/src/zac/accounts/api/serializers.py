@@ -1,5 +1,8 @@
+from datetime import date, datetime
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.utils.timezone import make_aware
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -164,8 +167,8 @@ class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):
             "zaak",
             "comment",
             "result",
-            "start_date",
-            "end_date",
+            "requested_date",
+            "handled_date",
         )
 
 
@@ -212,3 +215,95 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 
         valid_data["requester"] = requester
         return valid_data
+
+
+class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
+    requester = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        help_text=_("Username of access requester/grantee"),
+    )
+    handler = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+        help_text=_("Username of access handler/granter"),
+    )
+    handler_comment = serializers.CharField(
+        required=False, help_text=_("Comment of the handler+")
+    )
+    start_date = serializers.DateField(
+        default=date.today, help_text=_("Start date of the access")
+    )
+    end_date = serializers.DateField(
+        required=False, help_text=_("End date of the access")
+    )
+
+    class Meta:
+        model = AccessRequest
+        fields = (
+            "url",
+            "requester",
+            "handler",
+            "result",
+            "handler_comment",
+            "start_date",
+            "end_date",
+        )
+        extra_kwargs = {"url": {"read_only": True}, "result": {"allow_blank": False}}
+
+    def validate(self, data):
+        valid_data = super().validate(data)
+
+        if self.instance.result:
+            raise serializers.ValidationError(
+                _("This access request has already been handled")
+            )
+
+        request = self.context["request"]
+
+        valid_data["handler"] = request.user
+        valid_data["handled_date"] = date.today()
+
+        return valid_data
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        handler_comment = validated_data.pop("handler_comment")
+        start_date = validated_data.pop("start_date")
+        end_date = validated_data.pop("end_date")
+
+        access_request = super().update(instance, validated_data)
+
+        if access_request.result == AccessRequestResult.approve:
+            # add permission definition
+            atomic_permission = AtomicPermission.objects.create(
+                object_url=access_request.zaak,
+                object_type=PermissionObjectType.zaak,
+                permission=zaken_inzien.name,
+                start_date=make_aware(
+                    datetime.combine(start_date, datetime.min.time())
+                ),
+                end_date=make_aware(datetime.combine(end_date, datetime.min.time()))
+                if end_date
+                else None,
+            )
+            user_atomic_permission = UserAtomicPermission.objects.create(
+                atomic_permission=atomic_permission,
+                user=access_request.requester,
+                comment=handler_comment,
+            )
+            access_request.user_atomic_permission = user_atomic_permission
+            access_request.save()
+
+        # send email
+        request = self.context.get("request")
+        transaction.on_commit(
+            lambda: send_email_to_requester(
+                access_request.requester,
+                zaak_url=access_request.zaak,
+                result=access_request.result,
+                request=request,
+                ui=True,
+            )
+        )
+        return access_request
