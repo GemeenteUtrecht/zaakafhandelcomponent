@@ -167,8 +167,8 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.zaak, ZAAK_URL)
         self.assertEqual(access_request.result, "")
         self.assertEqual(access_request.comment, "some comment")
-        self.assertEqual(access_request.start_date, date(2020, 1, 1))
-        self.assertIsNone(access_request.end_date)
+        self.assertEqual(access_request.requested_date, date(2020, 1, 1))
+        self.assertIsNone(access_request.handled_date)
 
         data = response.json()
 
@@ -230,7 +230,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         access_request = AccessRequest.objects.get()
 
         self.assertEqual(access_request.requester, self.requester)
-        self.assertIsNone(access_request.end_date)
+        self.assertIsNone(access_request.handled_date)
         self.assertEqual(access_request.result, "")
         self.assertEqual(access_request.comment, "some comment")
 
