@@ -87,7 +87,7 @@ django-solo==1.1.3
     #   django-auth-adfs-db
     #   django-camunda
     #   zgw-consumers
-django==2.2.20
+django==2.2.24
     # via
     #   -r requirements/base.in
     #   django-appconf
@@ -203,7 +203,7 @@ requests-mock==1.7.0
     # via
     #   -r requirements/base.in
     #   zgw-consumers
-requests==2.22.0
+requests==2.25.1
     # via
     #   django-auth-adfs
     #   django-camunda
@@ -234,7 +234,7 @@ typing-extensions==3.7.4.3
     # via aiohttp
 uritemplate==3.0.1
     # via drf-spectacular
-urllib3==1.25.11
+urllib3==1.26.5
     # via
     #   elasticsearch
     #   requests
