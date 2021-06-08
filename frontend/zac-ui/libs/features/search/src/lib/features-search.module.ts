@@ -7,6 +7,7 @@ import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { FeaturesSearchComponent } from './features-search.component';
 import { SearchFormComponent } from './search-form/search-form.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
+import {ZaakSelectModule} from "./zaak-select/zaak-select.module";
 
 @NgModule({
   imports: [
@@ -20,6 +21,7 @@ import { SearchResultsComponent } from './search-results/search-results.componen
     ReactiveFormsModule,
     SharedUiComponentsModule,
     MultiselectModule,
+    ZaakSelectModule,
   ],
   exports: [FeaturesSearchComponent],
   declarations: [

@@ -42,7 +42,6 @@ export class SearchFormComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.searchForm = this.fb.group({
-      identificatie: [''],
       zaaktype: [''],
       omschrijving: [''],
       eigenschapnaam: [''],
@@ -79,6 +78,14 @@ export class SearchFormComponent implements OnInit, OnChanges {
         this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het ophalen van zaaktypen."
       }
     })
+  }
+
+  /**
+   * Navigate to the detail view directly if a zaak is selected using zaak select.
+   * @param {Object} zaak
+   */
+  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
+    this.router.navigate([zaak.bronorganisatie, zaak.identificatie]);
   }
 
   onZaaktypeSelect(zaaktype: Result) {
@@ -126,7 +133,6 @@ export class SearchFormComponent implements OnInit, OnChanges {
       }
     }
     this.formData = {
-      ...this.identificatie.value && {identificatie: this.identificatie.value},
       ...zaaktype && {zaaktype: zaaktype},
       ...this.omschrijving.value && {omschrijving: this.omschrijving.value},
       ...(this.eigenschapnaam.value && this.eigenschapwaarde.value) && {eigenschappen: eigenschappen}
@@ -147,14 +153,9 @@ export class SearchFormComponent implements OnInit, OnChanges {
     })
   }
 
-  get identificatie(): FormControl {
-    return this.searchForm.get('identificatie') as FormControl;
-  };
-
   get zaaktype(): FormControl {
     return this.searchForm.get('zaaktype') as FormControl;
   };
-
 
   get omschrijving(): FormControl {
     return this.searchForm.get('omschrijving') as FormControl;
