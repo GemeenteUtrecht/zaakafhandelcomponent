@@ -10,7 +10,7 @@ import {FormControl} from "@angular/forms";
 })
 export class ZaakSelectComponent {
   @Input() control?: FormControl;
-  @Input() label = 'Identificatie';
+  @Input() label = 'Zaaknummer';
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
