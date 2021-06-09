@@ -35,7 +35,7 @@ export class FormService {
       // Convert FieldConfigurations to FormGroup instance.
       .reduce((acc, fieldConfiguration: FieldConfiguration) => {
         const key = this.keyFromFieldConfiguration(fieldConfiguration);
-        const required = fieldConfiguration.required || true;
+        const required = typeof fieldConfiguration.required === "boolean" ? fieldConfiguration.required : true;
 
         if (required) {
           acc[key] = new FormControl(fieldConfiguration.value, Validators.required);
