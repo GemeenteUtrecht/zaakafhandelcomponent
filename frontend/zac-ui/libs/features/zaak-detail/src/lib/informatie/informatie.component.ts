@@ -105,6 +105,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       },
       {
         label: 'reden',
+        placeholder: 'Reden',
         value: '',
         writeonly: true,
       },
