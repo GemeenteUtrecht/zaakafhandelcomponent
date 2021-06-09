@@ -72,7 +72,7 @@ export class FormComponent implements OnInit {
     field.control.markAsTouched()
   }
 
-  _submit(event) {
+  _submit() {
     this.submit.emit(this.formGroup.getRawValue())
   }
 
