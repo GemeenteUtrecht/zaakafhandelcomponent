@@ -13,6 +13,7 @@ export class BetrokkenenComponent implements OnChanges {
 
   data: any;
   isLoading = true;
+  isExpanded: boolean;
 
   constructor(private http: ApplicationHttpClient) { }
 

@@ -2,11 +2,20 @@
   <h2>Betrokkenen</h2>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <ng-container *ngIf="data && !isLoading">
-    <div class="betrokkenen__role" *ngFor="let role of data;">
+    <div class="betrokkenen__role"
+         *ngFor="let role of data; let i = index"
+         [hidden]="!isExpanded && i <= data.length - 4">
       <div class="role-description">
         <p class="p--grey">{{role.omschrijving}}</p>
       </div>
       <p class="p--bold p--nomargin">{{role.name}}</p>
     </div>
+    <button gu-button *ngIf="data?.length > 3"
+            type="tertiary"
+            size="extrasmall"
+            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+            (click)="isExpanded = !isExpanded">
+      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+    </button>
   </ng-container>
 </div>
