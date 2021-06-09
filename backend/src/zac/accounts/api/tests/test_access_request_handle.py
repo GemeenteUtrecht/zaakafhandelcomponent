@@ -1,9 +1,8 @@
-from datetime import date, datetime
+from datetime import date
 
 from django.contrib.sites.models import Site
 from django.core import mail
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 import requests_mock
@@ -15,15 +14,14 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.permissions import zaken_handle_access, zaken_inzien
+from zac.core.permissions import zaken_handle_access, zaken_inzien, zaken_request_access
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ...constants import AccessRequestResult, PermissionObjectType
-from ...models import AccessRequest, AtomicPermission
+from ...models import AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
-    AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
@@ -37,7 +35,7 @@ BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-001"
 
 
-class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
+class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -63,15 +61,15 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
             zaaktype=self.zaaktype["url"],
         )
 
-        self.endpoint = reverse("grant-zaak-access")
-        self.data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL
+        )
+
+        self.endpoint = reverse("accessrequest-detail", args=[access_request.id])
+        self.data = {"result": AccessRequestResult.approve}
 
     def test_no_permissions(self):
-        response = self.client.post(self.endpoint, self.data)
+        response = self.client.patch(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -94,12 +92,12 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        response = self.client.post(self.endpoint, self.data)
+        response = self.client.patch(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_permission_but_for_other_zaaktype(self, m):
+    def test_has_request_permission(self, m):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -107,16 +105,16 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            permission=zaken_request_access.name,
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
-                "zaaktype_omschrijving": "ZT2",
+                "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
 
-        response = self.client.post(self.endpoint, self.data)
+        response = self.client.patch(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -154,17 +152,13 @@ class AccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        response = self.client.post(self.endpoint, self.data)
+        response = self.client.patch(self.endpoint, self.data)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 @freeze_time("2020-01-01")
-class AccessRequestAPITests(APITransactionTestCase):
-    """
-    Test GrantZaakAccessView
-    """
-
+class HandleAccessRequestAPITests(APITransactionTestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -186,56 +180,61 @@ class AccessRequestAPITests(APITransactionTestCase):
         )
 
         self.client.force_authenticate(self.handler)
-        self.endpoint = reverse("grant-zaak-access")
 
     @requests_mock.Mocker()
-    def test_grant_access_success(self, m):
+    def test_handle_request_access_approve(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL
+        )
+        endpoint = reverse("accessrequest-detail", args=[access_request.id])
+
         data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
+            "result": AccessRequestResult.approve,
+            "handler_comment": "some comment",
+            "start_date": "2020-01-02",
+            "end_date": "2021-01-01",
         }
 
-        response = self.client.post(self.endpoint, data)
+        response = self.client.patch(endpoint, data)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(AccessRequest.objects.count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
 
-        access_request = AccessRequest.objects.get()
+        access_request.refresh_from_db()
 
         self.assertEqual(access_request.handler, self.handler)
-        self.assertEqual(access_request.requester, self.requester)
-        self.assertEqual(access_request.zaak, ZAAK_URL)
         self.assertEqual(access_request.result, AccessRequestResult.approve)
-        self.assertEqual(access_request.comment, "some comment")
-        self.assertEqual(access_request.start_date, date(2020, 1, 1))
-        self.assertIsNone(access_request.end_date)
+        self.assertEqual(access_request.handled_date, date(2020, 1, 1))
 
-        atomic_permission = AtomicPermission.objects.for_user(self.requester).get()
+        user_atomic_permission = access_request.user_atomic_permission
+
+        self.assertEqual(user_atomic_permission.comment, "some comment")
+        self.assertEqual(user_atomic_permission.user, self.requester)
+
+        atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 1))
-        self.assertIsNone(atomic_permission.end_date)
+        self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 2))
+        self.assertEqual(atomic_permission.end_date.date(), date(2021, 1, 1))
 
         data = response.json()
 
         self.assertEqual(
             data,
             {
+                "url": f"http://testserver{endpoint}",
                 "requester": self.requester.username,
                 "handler": self.handler.username,
-                "zaak": ZAAK_URL,
-                "comment": "some comment",
                 "result": AccessRequestResult.approve,
-                "startDate": "2020-01-01",
-                "endDate": None,
+                "handlerComment": "some comment",
+                "startDate": "2020-01-02",
+                "endDate": "2021-01-01",
             },
         )
 
@@ -250,141 +249,109 @@ class AccessRequestAPITests(APITransactionTestCase):
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
 
-    def test_grant_access_no_user(self):
-        data = {
-            "requester": "some user",
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+    @requests_mock.Mocker()
+    def test_handle_access_request_reject(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(ZAAK_URL, json=self.zaak)
 
-        response = self.client.post(self.endpoint, data)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("requester" in response.json())
-
-    def test_grant_access_with_existing_permission(self):
-        AtomicPermissionFactory.create(
-            object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
-            permission=zaken_inzien.name,
-            for_user=self.requester,
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL
         )
+        endpoint = reverse("accessrequest-detail", args=[access_request.id])
+
         data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
+            "result": AccessRequestResult.reject,
+            "handler_comment": "some comment",
+            "start_date": "2020-01-02",
+            "end_date": "2021-01-01",
         }
 
-        response = self.client.post(self.endpoint, data)
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 0)
+
+        access_request.refresh_from_db()
+
+        self.assertEqual(access_request.handler, self.handler)
+        self.assertEqual(access_request.result, AccessRequestResult.reject)
+        self.assertEqual(access_request.handled_date, date(2020, 1, 1))
+        self.assertIsNone(access_request.user_atomic_permission)
+
+        data = response.json()
+
+        self.assertEqual(
+            data,
+            {
+                "url": f"http://testserver{endpoint}",
+                "requester": self.requester.username,
+                "handler": self.handler.username,
+                "result": AccessRequestResult.reject,
+                "handlerComment": "some comment",
+                "startDate": "2020-01-02",
+                "endDate": "2021-01-01",
+            },
+        )
+
+        # test email
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        subject = _("Access Request to %(zaak)s") % {"zaak": IDENTIFICATIE}
+        self.assertEqual(email.subject, subject)
+        self.assertEqual(email.to, [self.requester.email])
+
+        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
+        url = f"http://testserver{zaak_detail_path}"
+        self.assertNotIn(url, email.body)
+
+    @requests_mock.Mocker()
+    def test_handle_access_request_with_result(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(ZAAK_URL, json=self.zaak)
+
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL, result=AccessRequestResult.reject
+        )
+        endpoint = reverse("accessrequest-detail", args=[access_request.id])
+
+        data = {
+            "result": AccessRequestResult.approve,
+            "handler_comment": "some comment",
+            "start_date": "2020-01-02",
+            "end_date": "2021-01-01",
+        }
+
+        response = self.client.patch(endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json()["nonFieldErrors"],
-            [
-                f"User {self.requester.username} already has an access to zaak {ZAAK_URL}"
-            ],
+            ["This access request has already been handled"],
         )
 
     @requests_mock.Mocker()
-    def test_grant_access_with_existing_permission_expired(self, m):
+    def test_handle_access_request_empty_result(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        AtomicPermissionFactory.create(
-            object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
-            permission=zaken_inzien.name,
-            for_user=self.requester,
-            end_date=timezone.make_aware(datetime(2019, 12, 31)),
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL
         )
+        endpoint = reverse("accessrequest-detail", args=[access_request.id])
+
         data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
-
-        response = self.client.post(self.endpoint, data)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(self.requester.initiated_requests.actual().count(), 1)
-        self.assertEqual(
-            AtomicPermission.objects.for_user(self.requester).actual().count(), 1
-        )
-
-        actual_access_request = self.requester.initiated_requests.actual().get()
-
-        self.assertIsNone(actual_access_request.end_date)
-        self.assertEqual(actual_access_request.result, AccessRequestResult.approve)
-        self.assertEqual(actual_access_request.comment, "some comment")
-
-        atomic_permission = (
-            AtomicPermission.objects.for_user(self.requester).actual().get()
-        )
-
-        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
-        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertIsNone(atomic_permission.end_date)
-
-        # check email
-        self.assertEqual(len(mail.outbox), 1)
-        email = mail.outbox[0]
-        self.assertEqual(email.to, [self.requester.email])
-
-        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
-        url = f"http://testserver{zaak_detail_path}"
-        self.assertIn(url, email.body)
-
-    @requests_mock.Mocker()
-    def test_grant_access_with_existing_pending_request(self, m):
-        # mock ZRC data
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
-
-        pending_request = AccessRequestFactory.create(
-            requester=self.requester, result="", zaak=ZAAK_URL
-        )
-        data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
+            "handler_comment": "some comment",
+            "start_date": "2020-01-02",
             "end_date": "2021-01-01",
         }
 
-        response = self.client.post(self.endpoint, data)
+        response = self.client.patch(endpoint, data)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(self.requester.initiated_requests.count(), 2)
-
-        pending_request.refresh_from_db()
-        new_request = AccessRequest.objects.exclude(id=pending_request.id).get()
-
-        self.assertEqual(pending_request.result, AccessRequestResult.approve)
-        self.assertEqual(pending_request.end_date, date(2021, 1, 1))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            pending_request.comment,
-            f"Automatically approved after access request #{new_request.id}",
+            response.json()["nonFieldErrors"],
+            ["'result' field should be defined when the access request is handled`"],
         )
-
-        self.assertEqual(new_request.result, AccessRequestResult.approve)
-        self.assertEqual(new_request.end_date, date(2021, 1, 1))
-        self.assertEqual(new_request.comment, "some comment")
-
-        atomic_permission = (
-            AtomicPermission.objects.for_user(self.requester).actual().get()
-        )
-
-        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
-        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.end_date.date(), date(2021, 1, 1))
-
-        # check email
-        self.assertEqual(len(mail.outbox), 1)
-        email = mail.outbox[0]
-        self.assertEqual(email.to, [self.requester.email])
-
-        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
-        url = f"http://testserver{zaak_detail_path}"
-        self.assertIn(url, email.body)

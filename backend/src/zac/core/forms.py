@@ -516,11 +516,13 @@ class AccessRequestHandleForm(forms.ModelForm):
     """
 
     checked = forms.BooleanField(required=False)
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}), required=False
+    )
 
     class Meta:
         model = AccessRequest
         fields = ("checked", "end_date")
-        widgets = {"end_date": forms.DateInput(attrs={"type": "date"})}
 
     def __init__(self, **kwargs):
         self.request = kwargs.pop("request")
@@ -530,7 +532,7 @@ class AccessRequestHandleForm(forms.ModelForm):
     def clean(self):
         super().clean()
         checked = self.cleaned_data["checked"]
-        end_date = self.cleaned_data["end_date"]
+        end_date = self.cleaned_data.get("end_date")
         submit = self.data.get("submit")
 
         #  save end date only if the result == approve
@@ -551,7 +553,7 @@ class AccessRequestHandleForm(forms.ModelForm):
 
         self.instance.result = self.data.get("submit")
         self.instance.handler = self.request.user
-        self.instance.start_date = date.today()
+        self.instance.handled_date = date.today()
 
         instance = super().save(**kwargs)
 
@@ -561,19 +563,25 @@ class AccessRequestHandleForm(forms.ModelForm):
                 object_type=PermissionObjectType.zaak,
                 object_url=self.instance.zaak,
                 start_date=make_aware(
-                    datetime.combine(self.instance.start_date, datetime.min.time())
+                    datetime.combine(date.today(), datetime.min.time())
                 ),
                 end_date=make_aware(
-                    datetime.combine(self.instance.end_date, datetime.min.time())
+                    datetime.combine(self.cleaned_data["end_date"], datetime.min.time())
                 )
-                if self.instance.end_date
+                if self.cleaned_data["end_date"]
                 else None,
             )
             self.instance.requester.atomic_permissions.add(atomic_permission)
 
         # send email
         transaction.on_commit(
-            lambda: send_email_to_requester(self.instance, self.request)
+            lambda: send_email_to_requester(
+                self.instance.requester,
+                zaak_url=self.instance.zaak,
+                result=self.instance.result,
+                request=self.request,
+                ui=False,
+            )
         )
 
         return instance

@@ -432,13 +432,11 @@ class HandleAccessRequestsTests(ESMixin, TransactionWebTest):
 
         approved_request = AccessRequest.objects.get(id=int(form["form-0-id"].value))
         self.assertEqual(approved_request.result, AccessRequestResult.approve)
-        self.assertEqual(approved_request.end_date, date(2020, 12, 12))
-        self.assertEqual(approved_request.start_date, date(2020, 1, 1))
+        self.assertEqual(approved_request.handled_date, date(2020, 1, 1))
 
         other_request = AccessRequest.objects.get(id=int(form["form-1-id"].value))
         self.assertEqual(other_request.result, "")
-        self.assertIsNone(other_request.start_date)
-        self.assertIsNone(other_request.end_date)
+        self.assertIsNone(other_request.handled_date)
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]

@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.postgres.fields import JSONField
-from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
@@ -35,13 +34,6 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
         "hijack_field",
     )
     inlines = [UserAuthorizationProfileInline]
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-
-        return fieldsets + (
-            (_("Object permissions"), {"fields": ("atomic_permissions",)}),
-        )
 
     def get_queryset(self, request):
         return (

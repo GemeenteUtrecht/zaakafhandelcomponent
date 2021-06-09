@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import JSONField
@@ -9,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Query
 
+from zac.core.permissions import zaken_request_access
 from zac.utils.exceptions import get_error_list
 
 from .constants import AccessRequestResult, PermissionObjectType
@@ -59,8 +61,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     atomic_permissions = models.ManyToManyField(
         "AtomicPermission",
+        blank=True,
         verbose_name=_("atomic permissions"),
         related_name="users",
+        through="UserAtomicPermission",
     )
 
     objects = UserManager()
@@ -82,6 +86,32 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
+
+    def has_perm_to_request_access(self, zaak) -> bool:
+        if self.is_superuser:
+            return True
+
+        atomic_permissions = (
+            AtomicPermission.objects.for_user(self)
+            .actual()
+            .filter(permission=zaken_request_access.name, object_url=zaak.url)
+        )
+        if atomic_permissions.exists():
+            return True
+
+        blueprint_permissions = (
+            BlueprintPermission.objects.for_user(self)
+            .actual()
+            .filter(permission=zaken_request_access.name)
+        )
+        for permission in blueprint_permissions:
+            if permission.has_access(zaak, self):
+                return True
+
+        return False
+
+    def has_pending_access_request(self, zaak) -> bool:
+        return self.initiated_requests.actual().filter(zaak=zaak.url, result="")
 
 
 # Permissions
@@ -145,7 +175,7 @@ class AccessRequest(models.Model):
         _("comment"),
         max_length=1000,
         blank=True,
-        help_text=_("Comment provided by the handler"),
+        help_text=_("Comment provided by the requester"),
     )
     result = models.CharField(
         _("result"),
@@ -154,17 +184,23 @@ class AccessRequest(models.Model):
         blank=True,
         help_text=_("Result of the access request"),
     )
-    start_date = models.DateField(
-        _("start date"),
-        blank=True,
-        null=True,
-        help_text=_("Start date of the granted access"),
+    requested_date = models.DateField(
+        _("requested date"),
+        default=date.today,
+        help_text=_("Date when the access request was created"),
     )
-    end_date = models.DateField(
+    handled_date = models.DateField(
         _("end date"),
         blank=True,
         null=True,
-        help_text=_("End date of the granted access"),
+        help_text=_("Date when the access request was handled"),
+    )
+    user_atomic_permission = models.OneToOneField(
+        "UserAtomicPermission",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text=_("Permission created if the access request is approved"),
     )
 
     objects = AccessRequestQuerySet.as_manager()
@@ -216,6 +252,20 @@ class AtomicPermission(models.Model):
 
     def __str__(self):
         return f"{self.permission} ({self.object_type} {self.object_uuid})"
+
+
+class UserAtomicPermission(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
+    comment = models.CharField(
+        _("comment"),
+        max_length=1000,
+        blank=True,
+        help_text=_("Comment provided by the granter of the permission"),
+    )
+
+    class Meta:
+        db_table = "accounts_user_atomic_permissions"
 
 
 class BlueprintPermission(models.Model):

@@ -1,6 +1,6 @@
 import logging
 
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import permissions
 from rest_framework.request import Request

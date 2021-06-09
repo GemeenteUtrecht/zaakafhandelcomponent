@@ -2,14 +2,23 @@ from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import filters, viewsets
+from rest_framework import filters, mixins, viewsets
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 
 from zac.core.api.pagination import BffPagination
+from zac.utils.mixins import PatchModelMixin
 
-from ..models import User
+from ..models import AccessRequest, User
 from .filters import UserFilter
-from .serializers import UserSerializer
+from .permissions import CanCreateOrHandleAccessRequest
+from .serializers import (
+    AccessRequestDetailSerializer,
+    CreateAccessRequestSerializer,
+    HandleAccessRequestSerializer,
+    UserSerializer,
+)
 
 
 @extend_schema_view(
@@ -32,3 +41,39 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     def me(self, request, *args, **kwargs):
         self.kwargs["pk"] = self.request.user.id
         return self.retrieve(request, *args, **kwargs)
+
+
+@extend_schema_view(
+    retrieve=extend_schema(summary=_("Retrieve access requests")),
+    create=extend_schema(
+        summary=_("Create an access request"),
+        request=CreateAccessRequestSerializer,
+        responses={201: CreateAccessRequestSerializer},
+    ),
+    partial_update=extend_schema(
+        summary=_("Handle an access request"),
+        request=HandleAccessRequestSerializer,
+        responses={200: HandleAccessRequestSerializer},
+    ),
+)
+class AccessRequestViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    PatchModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Access request for a particular zaak
+    """
+
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, CanCreateOrHandleAccessRequest]
+    queryset = AccessRequest.objects.all()
+
+    def get_serializer_class(self):
+        mapping = {
+            "GET": AccessRequestDetailSerializer,
+            "POST": CreateAccessRequestSerializer,
+            "PATCH": HandleAccessRequestSerializer,
+        }
+        return mapping[self.request.method]
