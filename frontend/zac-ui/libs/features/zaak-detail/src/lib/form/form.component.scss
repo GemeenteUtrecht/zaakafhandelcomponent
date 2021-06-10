@@ -1,0 +1,16 @@
+.form {
+  box-sizing: border-box;
+  position: relative;
+
+  &__edit-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

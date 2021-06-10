@@ -1,0 +1,66 @@
+<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_submit()">
+  <button gu-button class="form__edit-toggle" type="tertiary" size="extrasmall" icon="edit" (click)="toggleEdit($event)" *ngIf="editable === 'toggle'">
+    {{edit ? 'Annuleren' : 'Bewerken' }}
+  </button>
+
+  <h2 *ngIf="title">{{ title }}</h2>
+
+
+  <fieldset class="form__body">
+    <div *ngFor="let field of fields">
+
+      <!-- Read-only field. -->
+      <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
+        <div class="col-12">
+          <p class="p--bold mb-0">{{field.label}}</p>
+        </div>
+
+        <div class="col-12" *ngIf="!field.choices">
+          <p class="" *ngIf="field.value">{{field.value}}</p>
+          <p class="" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+        </div>
+
+
+        <div class="col-12" *ngIf="field.choices">
+          <p class="mt-2">
+            <gu-chip type="tertiary">{{field.control.value}}</gu-chip>
+          </p>
+        </div>
+      </div>
+      <!-- End read-only field. -->
+
+      <!-- Regular field. -->
+      <gu-input-field
+        *ngIf="field.widgetType == 'input'"
+        [control]="field.control"
+        [label]="field.label"
+        [placeholder]="field.placeholder"
+        [type]="field.type"
+        [value]="field.control.value"
+        class="mb-4"
+      ></gu-input-field>
+      <!-- End regular field. -->
+
+
+      <!-- Select field. -->
+      <gu-multiselect
+        *ngIf="field.widgetType == 'select' && edit"
+        [items]="field.choices"
+        [selectedValue]="field.control.value"
+        [label]="field.label"
+        bindLabel="label"
+        bindValue="value"
+        (change)="selectChanged($event, field)"
+        class="mb-4"
+      ></gu-multiselect>
+      <!-- End select field. -->
+    </div>
+  </fieldset>
+
+  <footer class="form__footer">
+    <button *ngIf="edit" gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2" [disabled]="!formGroup.valid">
+      Opslaan
+    </button>
+  </footer>
+</form>
+
