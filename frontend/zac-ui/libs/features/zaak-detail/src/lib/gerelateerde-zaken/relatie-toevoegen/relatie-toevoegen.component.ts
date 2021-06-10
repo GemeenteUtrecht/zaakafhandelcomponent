@@ -23,10 +23,6 @@ export class RelatieToevoegenComponent implements OnInit {
     {
       value: 'bijdrage',
       label: 'Bijdrage'
-    },
-    {
-      value: 'onderwerp',
-      label: 'Onderwerp'
     }
   ];
 
