@@ -35,7 +35,7 @@
 
               <!-- Clickable cell link -->
               <ng-container *ngSwitchCase="'link'">
-                <a class="anchor" [href]="cell.value['url']">{{ cell.value['label'] }}</a>
+                <a class="anchor" [href]="cell.value['url']" target="{{ cell.value['target'] || '_self' }}">{{ cell.value['label'] }}</a>
               </ng-container>
 
               <!-- Button -->

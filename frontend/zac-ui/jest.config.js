@@ -10,5 +10,6 @@ module.exports = {
     '<rootDir>/libs/features/search',
     '<rootDir>/libs/features/workstack',
     '<rootDir>/libs/features/reports',
+    '<rootDir>/libs/features/forms',
   ],
 };

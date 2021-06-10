@@ -56,6 +56,9 @@
     },
     "features-reports": {
       "tags": []
+    },
+    "features-forms": {
+      "tags": []
     }
   }
 }
