@@ -9,7 +9,7 @@ from rest_framework import serializers
 
 from zac.core.permissions import zaken_inzien
 
-from ..constants import AccessRequestResult, PermissionObjectType
+from ..constants import AccessRequestResult, PermissionObjectType, PermissionReason
 from ..email import send_email_to_requester
 from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
 
@@ -121,7 +121,10 @@ class GrantPermissionSerializer(serializers.ModelSerializer):
 
         atomic_permission = super().create(validated_data)
         user_atomic_permission = UserAtomicPermission.objects.create(
-            user=user, atomic_permission=atomic_permission, comment=comment
+            user=user,
+            atomic_permission=atomic_permission,
+            comment=comment,
+            reason=PermissionReason.toegang_verlenen,
         )
         # close pending access requests
         pending_requests = user.initiated_requests.filter(
@@ -298,6 +301,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
                 atomic_permission=atomic_permission,
                 user=access_request.requester,
                 comment=handler_comment,
+                reason=PermissionReason.toegang_verlenen,
             )
             access_request.user_atomic_permission = user_atomic_permission
             access_request.save()

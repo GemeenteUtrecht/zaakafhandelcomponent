@@ -13,7 +13,7 @@ from elasticsearch_dsl.query import Query
 from zac.core.permissions import zaken_request_access
 from zac.utils.exceptions import get_error_list
 
-from .constants import AccessRequestResult, PermissionObjectType
+from .constants import AccessRequestResult, PermissionObjectType, PermissionReason
 from .managers import UserManager
 from .permissions import registry
 from .query import (
@@ -257,6 +257,13 @@ class AtomicPermission(models.Model):
 class UserAtomicPermission(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
+    reason = models.CharField(
+        _("reason"),
+        choices=PermissionReason.choices,
+        max_length=50,
+        blank=True,
+        help_text=_("The reason why the permission was granted to the user"),
+    )
     comment = models.CharField(
         _("comment"),
         max_length=1000,
