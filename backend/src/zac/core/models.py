@@ -21,6 +21,15 @@ class CoreConfig(SingletonModel):
         limit_choices_to={"api_type": APITypes.brc},
         related_name="+",
     )
+    primary_objects_api = models.ForeignKey(
+        verbose_name=_("Primary objects API"),
+        to="zgw_consumers.Service",
+        null=True,
+        on_delete=models.SET_NULL,
+        limit_choices_to={"api_type": APITypes.orc},
+        related_name="+",
+        help_text=_("Default Objects API service to use"),
+    )
 
     app_id = models.URLField(
         _("BPTL Application ID"),
