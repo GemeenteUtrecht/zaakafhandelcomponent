@@ -6,7 +6,7 @@ from zgw_consumers.models import Service
 
 
 class JSONWidget(widgets.Widget):
-    """ Convert data into JSON for serialization."""
+    """Convert data into JSON for serialization."""
 
     def clean(self, value, row=None, *args, **kwargs):
         return json.loads(value)
@@ -18,7 +18,7 @@ class JSONWidget(widgets.Widget):
 
 
 class JSONResourceMixin(object):
-    """ Override ModelResource to provide JSON field support."""
+    """Override ModelResource to provide JSON field support."""
 
     @classmethod
     def widget_from_django_field(cls, f, default=widgets.Widget):

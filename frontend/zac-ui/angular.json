@@ -474,6 +474,48 @@
           "style": "scss"
         }
       }
+    },
+    "features-forms": {
+      "projectType": "library",
+      "root": "libs/features/forms",
+      "sourceRoot": "libs/features/forms/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/forms/tsconfig.lib.json",
+            "project": "libs/features/forms/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/forms/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/forms/tsconfig.lib.json",
+              "libs/features/forms/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/features/forms/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/forms/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
     }
   },
   "cli": {

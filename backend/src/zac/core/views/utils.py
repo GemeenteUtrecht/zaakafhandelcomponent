@@ -27,7 +27,7 @@ def filter_documenten_for_permissions(
     documenten: List[Document],
     request: Request,
 ) -> List[Document]:
-    """Filter documents on the user permissions. """
+    """Filter documents on the user permissions."""
 
     if request.method in SAFE_METHODS:
         permission = zaken_download_documents

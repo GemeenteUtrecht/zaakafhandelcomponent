@@ -12,6 +12,11 @@ const menuItems: MenuItem[] = [
     to: '/zaken',
   },
   {
+    icon: 'launch',
+    label: 'Formulieren',
+    to: '/formulieren',
+  },
+  {
     icon: 'summarize',
     label: 'Rapportages',
     to: '/rapportages',

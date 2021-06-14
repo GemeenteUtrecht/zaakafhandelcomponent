@@ -23,12 +23,13 @@ export interface CellData {
 }
 
 export interface ExtensiveCell {
-  type: 'link' | 'icon' | 'button' | 'table';
+  buttonType?: string;
+  iconColor?: string;
   label?: string | number;
+  target?: '_blank'|'_parent'|'_self'|'_top'|string
+  type: 'link' | 'icon' | 'button' | 'table';
   url?: string;
   value?: any;
-  iconColor?: string;
-  buttonType?: string;
 }
 
 export interface TableSort {

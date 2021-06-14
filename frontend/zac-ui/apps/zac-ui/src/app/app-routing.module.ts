@@ -32,6 +32,11 @@ const routes: Routes = [
       import('./components/search/search.module').then((m) => m.SearchModule),
   },
   {
+    path: 'formulieren',
+    loadChildren: () =>
+      import('./components/forms/forms.module').then((m) => m.FormsModule),
+  },
+  {
     path: 'rapportages',
     loadChildren: () =>
       import('./components/reports/reports.module').then(
