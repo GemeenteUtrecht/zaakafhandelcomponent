@@ -57,7 +57,7 @@ from ..services import (
     relate_document_to_zaak,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
-from ..zaakobjecten import GROUPS, ZaakObjectGroup
+from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
 from .pagination import BffPagination
@@ -332,7 +332,8 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         grouped = groupby(zaakobjecten, key=group_key)
         for _group, items in grouped:
             group = GROUPS.get(
-                _group, ZaakObjectGroup(object_type=_group, label=_group)
+                _group,
+                ZaakObjectGroup(object_type=_group, label=_group, retriever=noop),
             )
             group.retrieve_items(items)
             groups.append(group)
