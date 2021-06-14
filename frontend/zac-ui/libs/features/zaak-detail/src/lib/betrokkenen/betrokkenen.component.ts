@@ -11,7 +11,8 @@ export class BetrokkenenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  data: any;
+  hiddenRoleData: any;
+  alwaysVisibleRoleData: any;
   isLoading = true;
   isExpanded: boolean;
 
@@ -20,10 +21,11 @@ export class BetrokkenenComponent implements OnChanges {
   ngOnChanges(): void {
     this.isLoading = true;
     this.getRoles().subscribe(data => {
-      this.data = data;
+      this.hiddenRoleData = data.slice(0, -3);
+      this.alwaysVisibleRoleData = data.slice(-3)
       this.isLoading = false;
     }, error => {
-      console.log(error);
+      console.error(error);
       this.isLoading = false;
     })
   }
@@ -31,5 +33,9 @@ export class BetrokkenenComponent implements OnChanges {
   getRoles(): Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/roles`);
     return this.http.Get<any>(endpoint);
+  }
+
+  formatRoles(data) {
+    this.alwaysVisibleRoleData = data.slice(-3)
   }
 }

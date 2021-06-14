@@ -16,7 +16,7 @@ export class GerelateerdeZakenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  tableData: Table = new Table(['Resultaat', 'Status', 'Zaak ID', 'Zaaktype', 'Aard'], []);
+  tableData: Table = new Table(['Zaaknummer', 'Zaaktype'], []);
 
   data: any;
   isLoading = true;
@@ -50,18 +50,22 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   formatTableData(data){
     return data.map( (element: RelatedCase) => {
+      const eigenschappenArray = [
+        `Resultaat: ${element.zaak.resultaat ? element.zaak.resultaat : '-'}`,
+        `Status: ${element.zaak.status ? element.zaak.status.statustype.omschrijving : '-'}`,
+        `Aard relatie: ${element.aardRelatie ? element.aardRelatie : '-'}`
+      ]
+      const eigenschappen = eigenschappenArray.join('\n')
       return {
         cellData: {
-          resultaat: element.zaak.resultaat ? element.zaak.resultaat.resultaattype.omschrijving : '-',
-          status: element.zaak.status ? element.zaak.status.statustype.omschrijving : '-',
-          zaakId: {
+          zaaknummer: {
             type: 'link',
             label: element.zaak.identificatie,
             url: `/ui/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}`
           },
-          zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-',
-          aard: element.aardRelatie ? element.aardRelatie : '-',
-        }
+          zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-'
+        },
+        expandData: eigenschappen
       }
     })
   }

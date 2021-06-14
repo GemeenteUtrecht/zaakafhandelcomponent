@@ -47,9 +47,11 @@
         <gu-betrokkenen [bronorganisatie]="bronorganisatie"
                         [identificatie]="identificatie"
                         class="zaak-detail__section"></gu-betrokkenen>
-        <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
-                                 [identificatie]="identificatie"
-                                 class="zaak-detail__section"></gu-adviseren-accorderen>
+        <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
+                               [bronorganisatie]="bronorganisatie"
+                               [identificatie]="identificatie"
+                               class="zaak-detail__section">
+        </gu-gerelateerde-zaken>
       </div>
       <div class="col-xl-8">
         <gu-status
@@ -67,11 +69,9 @@
                             [identificatie]="identificatie"
                             class="zaak-detail__section">
         </gu-keten-processen>
-        <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
-                               [bronorganisatie]="bronorganisatie"
-                               [identificatie]="identificatie"
-                               class="zaak-detail__section">
-        </gu-gerelateerde-zaken>
+        <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
+                                 [identificatie]="identificatie"
+                                 class="zaak-detail__section"></gu-adviseren-accorderen>
         <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
         <gu-documenten [mainZaakUrl]="mainZaakUrl"
                        [bronorganisatie]="bronorganisatie"
