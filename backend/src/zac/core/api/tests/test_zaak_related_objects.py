@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
-from rest_framework.test import APITestCase, APITransactionTestCase
+from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
@@ -168,7 +168,20 @@ class RelatedObjectsTests(APITransactionTestCase):
         m.get(OBJECT_1["url"], json=OBJECT_1)
         m.get(OBJECT_2["url"], json=OBJECT_2)
         m.get(OBJECTTYPE_1["url"], json=OBJECTTYPE_1)
+        m.get(
+            f"{OBJECTTYPE_1['url']}/versions",
+            json=[
+                {"$id": "http://mock.example.com/mocked1"},
+                {"$id": "http://mock.example.com/mocked2"},
+            ],
+        )
         m.get(OBJECTTYPE_2["url"], json=OBJECTTYPE_2)
+        m.get(
+            f"{OBJECTTYPE_2['url']}/versions",
+            json=[
+                {"$id": "http://mock.example.com/mocked3"},
+            ],
+        )
 
         self.client.force_login(self.user)
 

@@ -12,7 +12,8 @@ from zac.client import Client
 from zac.core.models import CoreConfig
 from zac.utils.decorators import cache
 
-A_DAY = 60 * 60 * 24
+AN_HOUR = 60 * 60
+A_DAY = AN_HOUR * 24
 
 
 def get_ui_url(paths: List[str], params: Optional[dict] = {}) -> str:
@@ -39,6 +40,19 @@ def build_absolute_url(path: str, request: Optional[HttpRequest] = None) -> str:
     return f"{protocol}://{domain}{path}"
 
 
+@cache("objecttype:{url}", timeout=AN_HOUR)
+def _fetch_objecttype(client: Client, url: str) -> dict:
+    object_type = client.retrieve("objecttype", url=url)
+
+    # get the versions, expanded
+    objecttype_versions = client.list(
+        "objectversion", objecttype_uuid=object_type["uuid"]
+    )
+    object_type["versions"] = objecttype_versions
+
+    return object_type
+
+
 @cache("object:{url}", timeout=A_DAY)
 def _fetch_object(client: Client, url: str) -> dict:
     retrieved_item = client.retrieve("object", url=url)
@@ -48,9 +62,9 @@ def _fetch_object(client: Client, url: str) -> dict:
         raise RuntimeError("No service for the objecttype API has been configured.")
 
     objecttype_client = service.build_client()
-    objecttype = objecttype_client.retrieve("objecttype", url=retrieved_item["type"])
-
-    retrieved_item["type"] = objecttype
+    retrieved_item["type"] = _fetch_objecttype(
+        objecttype_client, url=retrieved_item["type"]
+    )
     return retrieved_item
 
 
