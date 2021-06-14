@@ -33,6 +33,8 @@ class ZaakObjectGroup:
         # Resolve if some of the related objects are in the objects API
         config = CoreConfig.get_solo()
         object_api = config.primary_objects_api
+        if not object_api:
+            raise RuntimeError("No objects API has been configured yet.")
 
         objects_in_object_api = []
         other_objects = []

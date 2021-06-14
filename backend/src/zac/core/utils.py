@@ -57,6 +57,8 @@ def _fetch_object(client: Client, url: str) -> dict:
 def fetch_objects(urls: List[str]) -> List[Dict]:
     config = CoreConfig.get_solo()
     object_api = config.primary_objects_api
+    if not object_api:
+        raise RuntimeError("No objects API has been configured yet.")
     object_api_client = object_api.build_client()
 
     def fetch_object(url):
