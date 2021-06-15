@@ -7,6 +7,7 @@ from typing import Dict, List
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
@@ -349,7 +350,7 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
     serializer_class = UserAtomicPermissionSerializer
-    schema_summary = _("List users and atomic permissions of a case")
+    schema_summary = _("List case users and atomic permissions")
 
     def get_queryset(self):
         zaak = self.get_object()
@@ -361,7 +362,11 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
                     "useratomicpermission_set",
                     queryset=UserAtomicPermission.objects.select_related(
                         "atomic_permission"
-                    ).filter(atomic_permission__object_url=zaak.url),
+                    ).filter(
+                        models.Q(atomic_permission__end_date__isnull=True)
+                        | models.Q(atomic_permission__end_date__gte=timezone.now()),
+                        atomic_permission__object_url=zaak.url,
+                    ),
                     to_attr="zaak_atomic_permissions",
                 )
             )
