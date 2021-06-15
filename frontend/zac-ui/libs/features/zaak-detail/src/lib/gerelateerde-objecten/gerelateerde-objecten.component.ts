@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {GerelateerdeObjectenService} from "./gerelateerde-objecten.service";
 import {Table} from "@gu/models";
-import {GroupGerelateerdeObjecten, GerelateerdeObject} from './group-gerelateerde-objecten';
+import {GroupGerelateerdeObjecten, GerelateerdeObject} from '../../models/group-gerelateerde-objecten';
 
 @Component({
   selector: 'gu-gerelateerde-objecten',
