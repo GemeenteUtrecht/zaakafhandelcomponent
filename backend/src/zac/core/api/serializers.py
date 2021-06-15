@@ -66,6 +66,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "identificatie",
             "beschrijving",
             "bestandsnaam",
+            "versie",
             "locked",
             "informatieobjecttype",
             "titel",

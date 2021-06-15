@@ -18,7 +18,16 @@ export class DocumentenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  tableData: Table = new Table(['Op slot', 'Bestandsnaam', 'Acties', '', '', 'Type', 'Vertrouwelijkheid'], []);
+  tableData: Table = new Table([
+    'Op slot',
+    'Bestandsnaam',
+    'Versie',
+    'Acties',
+    '',
+    '',
+    'Type',
+    'Vertrouwelijkheid',
+  ], []);
 
   documentsData: any;
 
@@ -85,6 +94,7 @@ export class DocumentenComponent implements OnChanges {
            iconColor: iconColor
          },
          bestandsnaam: element.bestandsnaam,
+         versie: String(element.versie),
          lezen: {
            type: 'button',
            label: 'Lezen',

@@ -10,6 +10,7 @@ export interface Document {
   title: string;
   url: string;
   vertrouwelijkheidaanduiding: string;
+  versie: number,
   writeUrl: string;
 }
 

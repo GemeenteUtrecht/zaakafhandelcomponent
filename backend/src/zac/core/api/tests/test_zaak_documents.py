@@ -72,6 +72,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             identificatie="DOC-2020-007",
             bronorganisatie="123456782",
             informatieobjecttype=documenttype["url"],
+            versie=1,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             auteur="some-auteur",
             beschrijving="some-beschrijving",
@@ -125,6 +126,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 "identificatie": "DOC-2020-007",
                 "beschrijving": "some-beschrijving",
                 "bestandsnaam": "some-bestandsnaam",
+                "versie": 1,
                 "locked": True,
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",

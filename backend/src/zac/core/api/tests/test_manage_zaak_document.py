@@ -469,6 +469,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
+            versie=1,
             vertrouwelijkheidaanduiding="openbaar",
         )
 
@@ -507,6 +508,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "identificatie": document["identificatie"],
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
+            "versie": 1,
             "locked": document["locked"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -613,6 +615,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "schemas/EnkelvoudigInformatieObject",
             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             locked=False,
         )
@@ -651,6 +654,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "identificatie": document["identificatie"],
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
+            "versie": 1,
             "locked": False,
             "informatieobjecttype": {
                 "url": self.informatieobjecttype["url"],
