@@ -13,6 +13,7 @@ export class BetrokkenenComponent implements OnChanges {
 
   hiddenRoleData: any;
   alwaysVisibleRoleData: any;
+  allRoleData: any;
   isLoading = true;
   isExpanded: boolean;
 
@@ -21,6 +22,7 @@ export class BetrokkenenComponent implements OnChanges {
   ngOnChanges(): void {
     this.isLoading = true;
     this.getRoles().subscribe(data => {
+      this.allRoleData = data;
       this.hiddenRoleData = data.slice(0, -3);
       this.alwaysVisibleRoleData = data.slice(-3)
       this.isLoading = false;
