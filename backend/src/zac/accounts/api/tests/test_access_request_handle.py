@@ -18,7 +18,7 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien, zaken_reques
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult, PermissionObjectType
+from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
 from ...models import AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
@@ -214,6 +214,9 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(user_atomic_permission.comment, "some comment")
         self.assertEqual(user_atomic_permission.user, self.requester)
+        self.assertEqual(
+            user_atomic_permission.reason, PermissionReason.toegang_verlenen
+        )
 
         atomic_permission = user_atomic_permission.atomic_permission
 

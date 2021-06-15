@@ -1,4 +1,4 @@
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 
 import requests_mock
 from rest_framework import status
@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import PermissionReason
 from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import SuperUserFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
@@ -69,6 +70,10 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(permission_read.permission, activities_read.name)
         self.assertEqual(permission_write.object_url, ZAAK_URL)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
+
+        for permission in [permission_read, permission_write]:
+            user_atomic_permission = permission.useratomicpermission_set.get()
+            self.assertEqual(user_atomic_permission.reason, PermissionReason.activiteit)
 
     @requests_mock.Mocker()
     def test_update_activity_change_assignee(self, m):

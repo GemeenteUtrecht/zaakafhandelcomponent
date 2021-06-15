@@ -19,8 +19,8 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult, PermissionObjectType
-from ...models import AccessRequest, AtomicPermission
+from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from ...models import AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
     AtomicPermissionFactory,
@@ -212,6 +212,11 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
         self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 1))
         self.assertIsNone(atomic_permission.end_date)
+
+        user_atomic_permission = atomic_permission.useratomicpermission_set.get()
+        self.assertEqual(
+            user_atomic_permission.reason, PermissionReason.toegang_verlenen
+        )
 
         data = response.json()
 
