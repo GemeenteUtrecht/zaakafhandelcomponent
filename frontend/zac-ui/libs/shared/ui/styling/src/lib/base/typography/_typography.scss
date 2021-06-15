@@ -47,6 +47,9 @@ p {
   &.p--nomargin {
     margin-bottom: 0;
   }
+  &.p--pre-wrap {
+    white-space: pre-wrap;
+  }
 }
 
 @font-face {
