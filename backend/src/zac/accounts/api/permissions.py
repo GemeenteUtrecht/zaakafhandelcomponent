@@ -14,8 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 class CanGrantAccess(ZaakDefinitionPermission):
-    object_attr = "object_url"
     permission = zaken_handle_access
+
+    def get_object_url(self, serializer) -> str:
+        return serializer.validated_data["atomic_permission"]["object_url"]
 
 
 class CanRequestAccess(ZaakDefinitionPermission):

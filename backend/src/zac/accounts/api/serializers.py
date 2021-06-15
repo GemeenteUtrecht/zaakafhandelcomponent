@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, now
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -66,47 +66,69 @@ class UsernameField(serializers.SlugRelatedField):
         return instance
 
 
-class GrantPermissionSerializer(serializers.ModelSerializer):
-    requester = UsernameField(
+class AtomicPermissionSerializer(serializers.ModelSerializer):
+    requester = serializers.SlugRelatedField(
+        source="user",
         slug_field="username",
         queryset=User.objects.all(),
         help_text=_("User to give the permission to"),
     )
-    comment = serializers.CharField(
-        required=False, help_text=_("Comment provided by the granter of the permission")
+    permission = serializers.CharField(
+        max_length=255,
+        help_text=_("Name of the permission"),
+        default=zaken_inzien.name,
+        source="atomic_permission.permission",
+    )
+    zaak = serializers.URLField(
+        max_length=1000,
+        help_text=_("URL of the zaak this permission applies to"),
+        source="atomic_permission.object_url",
+    )
+    start_date = serializers.DateTimeField(
+        default=now,
+        help_text=_("Start date of the access"),
+        source="atomic_permission.start_date",
+    )
+    end_date = serializers.DateTimeField(
+        required=False,
+        help_text=_("End date of the access"),
+        source="atomic_permission.end_date",
     )
 
     class Meta:
-        model = AtomicPermission
+        model = UserAtomicPermission
         fields = (
+            "id",
             "requester",
             "permission",
             "zaak",
-            "comment",
             "start_date",
             "end_date",
+            "comment",
+            "reason",
         )
-        extra_kwargs = {
-            "permission": {"default": zaken_inzien.name},
-            "zaak": {"source": "object_url"},
-        }
+        extra_kwargs = {"id": {"read_only": True}, "reason": {"read_only": True}}
 
+
+class GrantPermissionSerializer(AtomicPermissionSerializer):
     def validate(self, data):
         valid_data = super().validate(data)
 
-        requester = valid_data["requester"]
-        object_url = valid_data["object_url"]
-        permission = valid_data["permission"]
+        user = valid_data["user"]
+        atomic_permission = valid_data["atomic_permission"]
 
         if (
-            AtomicPermission.objects.for_user(requester)
-            .filter(object_url=object_url, permission=permission)
+            AtomicPermission.objects.for_user(user)
+            .filter(
+                object_url=atomic_permission["object_url"],
+                permission=atomic_permission["permission"],
+            )
             .actual()
             .exists()
         ):
             raise serializers.ValidationError(
                 _("User %(requester)s already has an access to zaak %(zaak)s")
-                % {"requester": requester.username, "zaak": object_url}
+                % {"requester": user.username, "zaak": atomic_permission["object_url"]}
             )
 
         return valid_data
@@ -115,20 +137,25 @@ class GrantPermissionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context["request"]
 
-        validated_data.update({"object_type": PermissionObjectType.zaak})
-        user = validated_data.pop("requester")
-        comment = validated_data.pop("comment")
-
-        atomic_permission = super().create(validated_data)
-        user_atomic_permission = UserAtomicPermission.objects.create(
-            user=user,
-            atomic_permission=atomic_permission,
-            comment=comment,
-            reason=PermissionReason.toegang_verlenen,
+        atomic_permission_data = validated_data.pop("atomic_permission")
+        atomic_permission_data.update({"object_type": PermissionObjectType.zaak})
+        if "end_date" not in atomic_permission_data:
+            atomic_permission_data.update({"end_date": None})
+        atomic_permission, created = AtomicPermission.objects.get_or_create(
+            **atomic_permission_data
         )
+
+        validated_data.update(
+            {
+                "atomic_permission": atomic_permission,
+                "reason": PermissionReason.toegang_verlenen,
+            }
+        )
+        user_atomic_permission = super().create(validated_data)
+
         # close pending access requests
-        pending_requests = user.initiated_requests.filter(
-            zaak=validated_data["object_url"], result=""
+        pending_requests = user_atomic_permission.user.initiated_requests.filter(
+            zaak=atomic_permission.object_url, result=""
         ).actual()
         if pending_requests.exists():
             pending_requests.update(
@@ -139,14 +166,14 @@ class GrantPermissionSerializer(serializers.ModelSerializer):
         # send email
         transaction.on_commit(
             lambda: send_email_to_requester(
-                user,
-                zaak_url=validated_data["object_url"],
+                user_atomic_permission.user,
+                zaak_url=atomic_permission.object_url,
                 result=AccessRequestResult.approve,
                 request=request,
                 ui=True,
             )
         )
-        return atomic_permission
+        return user_atomic_permission
 
 
 class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):

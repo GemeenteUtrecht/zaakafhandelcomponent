@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 import requests_mock
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -166,6 +167,7 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+@freeze_time("2020-01-01")
 class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -236,8 +238,14 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
                     "username": user_permission.user.username,
                     "permissions": [
                         {
+                            "id": user_permission.id,
+                            "requester": user_permission.user.username,
                             "permission": user_permission.atomic_permission.permission,
+                            "zaak": self.zaak["url"],
+                            "startDate": "2020-01-01T00:00:00Z",
+                            "endDate": None,
                             "reason": user_permission.reason,
+                            "comment": "",
                         }
                     ],
                 }
@@ -262,8 +270,14 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
                     "username": user_permission.user.username,
                     "permissions": [
                         {
+                            "id": user_permission.id,
+                            "requester": user_permission.user.username,
                             "permission": user_permission.atomic_permission.permission,
                             "reason": user_permission.reason,
+                            "comment": "",
+                            "zaak": self.zaak["url"],
+                            "startDate": "2020-01-01T00:00:00Z",
+                            "endDate": None,
                         }
                     ],
                 }
@@ -292,8 +306,14 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
                     "username": user_permission.user.username,
                     "permissions": [
                         {
+                            "id": user_permission.id,
+                            "requester": user_permission.user.username,
                             "permission": user_permission.atomic_permission.permission,
                             "reason": user_permission.reason,
+                            "comment": "",
+                            "zaak": self.zaak["url"],
+                            "startDate": "2020-01-01T00:00:00Z",
+                            "endDate": None,
                         }
                     ],
                 }

@@ -223,11 +223,14 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(
             data,
             {
+                "id": user_atomic_permission.id,
                 "permission": "zaken:inzien",
                 "requester": self.requester.username,
                 "zaak": ZAAK_URL,
                 "startDate": "2020-01-01T00:00:00Z",
                 "endDate": None,
+                "reason": PermissionReason.toegang_verlenen,
+                "comment": "some comment",
             },
         )
 
