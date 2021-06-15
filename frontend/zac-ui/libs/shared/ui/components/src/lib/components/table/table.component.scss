@@ -22,6 +22,9 @@
     vertical-align: middle;
     text-align: left;
   }
+  th {
+    text-transform: capitalize;
+  }
   th.sort-head {
     cursor: pointer;
     &:hover {
