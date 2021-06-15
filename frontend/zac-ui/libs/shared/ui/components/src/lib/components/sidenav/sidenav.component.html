@@ -34,9 +34,10 @@
          (click)="toggle()"
          [routerLink]="!item.external ? [item.to] : null"
          [href]="item.external ? item.to : null"
+         [target]="item.external ? '_blank' : null"
          class="menu-item menu-link"
          [ngClass]="{
-         'selected': selectedParentMenu === subtractParentRoute(item.to),
+         'selected': !item.external && selectedParentMenu === subtractParentRoute(item.to),
          'mb-3': item.marginBottom === true
          }">
         <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
@@ -45,9 +46,10 @@
           <a *ngIf="bottomItem.external"
              (click)="toggle()"
              href="{{bottomItem.to}}"
+             [target]="bottomItem.external ? '_blank' : null"
              class="menu-item menu-link"
              [ngClass]="{
-             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'selected': !bottomItem.external && selectedParentMenu === subtractParentRoute(bottomItem.to),
              'mb-3': bottomItem.marginBottom === true
              }"
           >
@@ -58,7 +60,7 @@
              [routerLink]="!bottomItem.external ? [bottomItem.to] : null"
              class="menu-item menu-link"
              [ngClass]="{
-             'selected': selectedParentMenu === subtractParentRoute(bottomItem.to),
+             'selected': !bottomItem.external && selectedParentMenu === subtractParentRoute(bottomItem.to),
              'mb-3': bottomItem.marginBottom === true
              }"
           >

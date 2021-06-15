@@ -31,6 +31,12 @@ const bottomMenuItems: MenuItem[] = [
   //   external: true
   // },
   {
+    icon: 'link',
+    label: 'Alfresco',
+    to: 'https://alfresco-oz.utrechtproeftuin.nl/',
+    external: true,
+  },
+  {
     icon: 'admin_panel_settings',
     label: 'Autorisatieprofielen',
     to: '/accounts/auth-profiles/',
