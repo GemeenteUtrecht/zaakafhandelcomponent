@@ -18,7 +18,7 @@ export class DocumentenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  tableData: Table = new Table(['Op slot', 'Bestandsnaam', 'Acties', '', '', 'Type', 'Vertrouwelijkheid', 'Bestandsgrootte'], []);
+  tableData: Table = new Table(['Op slot', 'Bestandsnaam', 'Acties', '', '', 'Type', 'Vertrouwelijkheid'], []);
 
   documentsData: any;
 
@@ -97,8 +97,7 @@ export class DocumentenComponent implements OnChanges {
            type: 'button',
            label: element.vertrouwelijkheidaanduiding,
            value: element
-         },
-         bestandsomvang: bestandsomvang
+         }
        }
      }
      return cellData;

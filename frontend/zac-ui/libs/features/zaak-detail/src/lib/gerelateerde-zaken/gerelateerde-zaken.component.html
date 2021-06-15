@@ -9,6 +9,7 @@
   <ng-container *ngIf="data && !isLoading">
     <gu-table *ngIf="(data.length > 0) && tableData"
               [tableData]="tableData"
+              [expandable]="true"
               class="mb-4">
     </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>

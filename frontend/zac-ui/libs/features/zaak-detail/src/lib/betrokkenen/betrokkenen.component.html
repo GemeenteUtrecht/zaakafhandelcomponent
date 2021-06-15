@@ -1,12 +1,30 @@
 <div class="betrokkenen card">
-  <h2>Betrokkenen</h2>
+  <div class="d-flex">
+    <h2 class="mr-1">Betrokkenen</h2>
+    <gu-chip type="primary">{{allRoleData?.length}}</gu-chip>
+  </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-  <ng-container *ngIf="data && !isLoading">
-    <div class="betrokkenen__role" *ngFor="let role of data;">
+  <ng-container *ngIf="alwaysVisibleRoleData && hiddenRoleData && !isLoading">
+    <div class="betrokkenen__role" *ngFor="let role of alwaysVisibleRoleData; let i = index">
       <div class="role-description">
-        <p class="p--grey">{{role.omschrijving}}</p>
+        <p class="p--grey">{{role.roltoelichting}}</p>
       </div>
       <p class="p--bold p--nomargin">{{role.name}}</p>
     </div>
+    <div class="betrokkenen__role"
+         *ngFor="let role of hiddenRoleData; let i = index"
+         [hidden]="!isExpanded">
+      <div class="role-description">
+        <p class="p--grey">{{role.roltoelichting}}</p>
+      </div>
+      <p class="p--bold p--nomargin">{{role.name}}</p>
+    </div>
+    <button gu-button *ngIf="hiddenRoleData?.length > 0"
+            type="tertiary"
+            size="extrasmall"
+            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+            (click)="isExpanded = !isExpanded">
+      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+    </button>
   </ng-container>
 </div>

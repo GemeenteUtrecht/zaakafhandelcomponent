@@ -1,11 +1,10 @@
 <div class="keten-processen card">
-  <h2>Actieve (keten)processen</h2>
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <ng-container *ngIf="!!data && data?.length > 0 && !isLoading">
     <div class="keten-processen__actie-buttons-container">
-      <h3>Adhoc taken</h3>
+      <h3>Acties</h3>
       <button gu-button
         (click)="sendMessage(message)"
         *ngFor="let message of data[0].messages"
@@ -102,7 +101,7 @@
     </div>
   </ng-container>
   <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
-    <p>Er zijn geen actieve (keten)processen.</p>
+    <p>Er zijn geen acties beschikbaar.</p>
   </ng-container>
 </div>
 <gu-modal
