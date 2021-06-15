@@ -1,16 +1,11 @@
 from django.http import JsonResponse
-from django.utils.translation import ugettext_lazy as _
 
-from drf_spectacular.utils import extend_schema
-from rest_framework import generics, views
+from rest_framework import views
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from zac.accounts.api.serializers import CatalogusURLSerializer
 from zac.core.services import get_informatieobjecttypen
-
-from .permissions import CanGrantAccess
-from .serializers import GrantPermissionSerializer
 
 
 class InformatieobjecttypenJSONView(views.APIView):
@@ -42,14 +37,3 @@ class InformatieobjecttypenJSONView(views.APIView):
                 }
             )
         return JsonResponse(response_data)
-
-
-@extend_schema(summary=_("Grant permission to zaak"))
-class GrantZaakPermissionView(generics.CreateAPIView):
-    """
-    Create an atomic permission for a particular user
-    """
-
-    authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanGrantAccess]
-    serializer_class = GrantPermissionSerializer
