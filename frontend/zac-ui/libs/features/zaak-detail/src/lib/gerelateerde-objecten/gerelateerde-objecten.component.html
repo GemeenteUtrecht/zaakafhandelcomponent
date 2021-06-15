@@ -1,4 +1,19 @@
 <div class="gerelateerde-objecten card">
   <h2>Gerelateerde objecten</h2>
-<!--  <gu-table [tableData]="tableData"></gu-table>-->
+  <!-- Loading -->
+  <ng-container *ngIf="isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <!-- End loading -->
+
+    <!-- Table -->
+    <ng-container *ngIf="relatedObjects && !isLoading">
+      <div *ngFor="let tableData of tablesData">
+        <h3>{{tableData.title}}</h3>
+        <gu-table [tableData]="tableData.table"
+                  class="mb-4">
+        </gu-table>
+      </div>
+      <p *ngIf="(relatedObjects.length === 0)">Er zijn geen gerelateerde objecten.</p>
+    </ng-container>
 </div>

@@ -1,5 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {GerelateerdeObjectenService } from "./gerelateerde-objecten.service";
+import {GerelateerdeObjectenService} from "./gerelateerde-objecten.service";
+import {Table} from "@gu/models";
+import {GroupGerelateerdeObjecten, GerelateerdeObject} from './group-gerelateerde-objecten';
 
 @Component({
   selector: 'gu-gerelateerde-objecten',
@@ -10,11 +12,14 @@ export class GerelateerdeObjectenComponent implements OnInit {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  /** @type {boolean} Whether this component is loading. */
+  /* Whether this component is loading. */
   isLoading: boolean;
 
-  /** @type {Object[]} The list of groups of objects (Related objects are grouped on objecttype) */
-  relatedObjects: Array<Object>;
+  /* The list of groups of objects (Related objects are grouped on objecttype) */
+  relatedObjects: Array<GroupGerelateerdeObjecten>;
+
+  /* Each item in the array contains the label of the objecttype and a table with the objects of that type */
+  tablesData: Array<object>;
 
   constructor(private gerelateerdeObjectenService: GerelateerdeObjectenService) { }
 
@@ -34,6 +39,11 @@ export class GerelateerdeObjectenComponent implements OnInit {
     ).subscribe(
       (data) => {
         this.relatedObjects = data;
+
+        this.tablesData = data.map((group: GroupGerelateerdeObjecten) => {
+          return this.formatGroupData(group)
+        })
+
         this.isLoading = false;
       },
       (error) => {
@@ -41,6 +51,35 @@ export class GerelateerdeObjectenComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  formatGroupData(group: GroupGerelateerdeObjecten): object {
+    /* Use the latest version of the ObjectType to make the table headers */
+    const objectProperties: [] = group.items[0]
+      .type.versions[group.items[0].type.versions.length - 1]
+      .jsonSchema.required;
+
+    let tableHeader: string[] = [];
+    for (const property of objectProperties) {
+        tableHeader.push(property);
+    }
+
+    /* Iterate over the items to populate the table */
+    let tableContent: Array<any> = group.items.map((relatedObject: GerelateerdeObject) => {
+      /* Filter object data so that only required properties are shown */
+      const objectData = {};
+      objectProperties.forEach((propertyName: string): void => {
+        const propertyValue: any = relatedObject.record.data[propertyName];
+        objectData[propertyName] = propertyValue ? String(propertyValue) : '';
+      });
+
+      return {
+        cellData: objectData
+      };
+    });
+
+    const table = new Table(tableHeader, tableContent);
+    return {title: group.label, table: table};
   }
 
 }
