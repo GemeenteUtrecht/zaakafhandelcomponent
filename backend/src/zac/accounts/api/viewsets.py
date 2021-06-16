@@ -11,6 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from zac.core.api.pagination import BffPagination
 from zac.utils.mixins import PatchModelMixin
 
+from ..constants import AccessRequestResult
+from ..email import send_email_to_requester
 from ..models import AccessRequest, User, UserAtomicPermission
 from .filters import UserFilter
 from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess
@@ -117,9 +119,22 @@ class AtomicPermissionViewSet(
     @transaction.atomic
     def perform_destroy(self, instance):
         atomic_permission = instance.atomic_permission
+        user = instance.user
+        zaak = atomic_permission.object_url
 
         super().perform_destroy(instance)
 
         # remove permission if there are no users using it
         if not atomic_permission.useratomicpermission_set.count():
             atomic_permission.delete()
+
+        # send email about losing the access to the user
+        transaction.on_commit(
+            lambda: send_email_to_requester(
+                user,
+                zaak_url=zaak,
+                result=AccessRequestResult.reject,
+                request=self.request,
+                ui=True,
+            )
+        )
