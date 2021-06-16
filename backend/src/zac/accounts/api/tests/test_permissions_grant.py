@@ -63,7 +63,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=self.zaaktype["url"],
         )
 
-        self.endpoint = reverse("grant-zaak-access")
+        self.endpoint = reverse("accesses-list")
         self.data = {
             "requester": self.requester.username,
             "zaak": ZAAK_URL,
@@ -186,7 +186,7 @@ class GrantAccessAPITests(APITransactionTestCase):
         )
 
         self.client.force_authenticate(self.handler)
-        self.endpoint = reverse("grant-zaak-access")
+        self.endpoint = reverse("accesses-list")
 
     @requests_mock.Mocker()
     def test_grant_access_success(self, m):
