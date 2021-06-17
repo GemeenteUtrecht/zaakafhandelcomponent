@@ -76,9 +76,9 @@ def add_permissions_for_advisors(
         else review_request.for_zaak
     )
     reason = (
-        PermissionReason.akkorder
+        PermissionReason.accordeur
         if review_request.review_type == KownslTypes.approval
-        else PermissionReason.adviser
+        else PermissionReason.adviseur
     )
     atomic_permissions = []
     for user in rr_users:

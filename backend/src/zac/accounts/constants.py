@@ -18,5 +18,5 @@ class PermissionReason(DjangoChoices):
     betrokkene = ChoiceItem("betrokkene", _("betrokkene"))
     toegang_verlenen = ChoiceItem("toegang verlenen", _("toegang verlenen"))
     activiteit = ChoiceItem("activiteit", _("activiteit"))
-    adviser = ChoiceItem("adviser", _("adviser"))
-    akkorder = ChoiceItem("akkorder", _("akkorder"))
+    adviseur = ChoiceItem("adviseur", _("adviseur"))
+    accordeur = ChoiceItem("accordeur", _("accordeur"))

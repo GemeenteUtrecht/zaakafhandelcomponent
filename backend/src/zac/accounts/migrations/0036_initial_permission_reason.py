@@ -39,9 +39,9 @@ def get_reason(user_atomic_permission) -> str:
     for review_request in review_requests:
         if user.username in list(review_request.user_deadlines.keys()):
             return (
-                PermissionReason.akkorder
+                PermissionReason.accordeur
                 if review_request.review_type == KownslTypes.approval
-                else PermissionReason.adviser
+                else PermissionReason.adviseur
             )
 
     return ""
