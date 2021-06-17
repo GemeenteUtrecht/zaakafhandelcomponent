@@ -12,7 +12,7 @@ from zac.core.api.serializers import ZaakSerializer
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 
 
-class AccessRequestSerializer(APIModelSerializer):
+class AccessRequestSerializer(serializers.ModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -21,7 +21,10 @@ class AccessRequestSerializer(APIModelSerializer):
 
     class Meta:
         model = AccessRequest
-        fields = ("requester",)
+        fields = (
+            "id",
+            "requester",
+        )
 
 
 class WorkStackAccessRequestsSerializer(APIModelSerializer):
