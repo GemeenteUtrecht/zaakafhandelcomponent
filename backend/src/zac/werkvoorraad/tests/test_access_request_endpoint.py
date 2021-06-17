@@ -96,7 +96,30 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
+
         self.assertEqual(len(data), 1)
         self.assertEqual(
-            sorted(list(data[0].keys())), sorted(["accessRequests", "url", "zaak"])
+            data,
+            [
+                {
+                    "url": reverse(
+                        "core:zaak-access-requests",
+                        kwargs={
+                            "bronorganisatie": zaak.bronorganisatie,
+                            "identificatie": zaak.identificatie,
+                        },
+                    ),
+                    "accessRequests": [
+                        {
+                            "id": self.access_request1.id,
+                            "requester": self.access_request1.requester.username,
+                        }
+                    ],
+                    "zaak": {
+                        "identificatie": zaak.identificatie,
+                        "bronorganisatie": zaak.bronorganisatie,
+                        "url": zaak.url,
+                    },
+                }
+            ],
         )
