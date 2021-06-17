@@ -5,7 +5,9 @@ from itertools import groupby
 from typing import Dict, List
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 from django.http import Http404
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
@@ -31,6 +33,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.accounts.models import User, UserAtomicPermission
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.core.services import update_document
@@ -64,6 +67,7 @@ from .pagination import BffPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
+    CanHandleAccessRequests,
     CanReadOrUpdateZaken,
     CanReadZaken,
     CanUpdateZaken,
@@ -82,6 +86,7 @@ from .serializers import (
     SearchEigenschapSerializer,
     UpdateZaakDetailSerializer,
     UpdateZaakDocumentSerializer,
+    UserAtomicPermissionSerializer,
     VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
     ZaakEigenschapSerializer,
@@ -340,6 +345,35 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
+
+
+class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
+    serializer_class = UserAtomicPermissionSerializer
+    schema_summary = _("List case users and atomic permissions")
+
+    def get_queryset(self):
+        zaak = self.get_object()
+
+        queryset = (
+            User.objects.filter(atomic_permissions__object_url=zaak.url)
+            .prefetch_related(
+                models.Prefetch(
+                    "useratomicpermission_set",
+                    queryset=UserAtomicPermission.objects.select_related(
+                        "atomic_permission"
+                    ).filter(
+                        models.Q(atomic_permission__end_date__isnull=True)
+                        | models.Q(atomic_permission__end_date__gte=timezone.now()),
+                        atomic_permission__object_url=zaak.url,
+                    ),
+                    to_attr="zaak_atomic_permissions",
+                )
+            )
+            .distinct()
+        )
+        return queryset
 
 
 ###############################

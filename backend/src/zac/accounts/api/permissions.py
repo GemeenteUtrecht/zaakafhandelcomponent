@@ -8,14 +8,29 @@ from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermissi
 from zac.core.permissions import zaken_handle_access, zaken_request_access
 from zac.core.services import get_zaak
 
-from ..models import AccessRequest
+from ..models import AccessRequest, UserAtomicPermission
 
 logger = logging.getLogger(__name__)
 
 
 class CanGrantAccess(ZaakDefinitionPermission):
-    object_attr = "object_url"
     permission = zaken_handle_access
+
+    def get_object_url(self, serializer) -> str:
+        return serializer.validated_data["atomic_permission"]["object_url"]
+
+    def has_object_permission(self, request, view, obj):
+        if isinstance(obj, UserAtomicPermission):
+            obj = self.get_object(request, obj.atomic_permission.object_url)
+        return super().has_object_permission(request, view, obj)
+
+    def get_object(self, request: Request, obj_url: str):
+        try:
+            zaak = get_zaak(zaak_url=obj_url)
+        except ClientError:
+            logger.info("Invalid Zaak specified", exc_info=True)
+            return None
+        return zaak
 
 
 class CanRequestAccess(ZaakDefinitionPermission):

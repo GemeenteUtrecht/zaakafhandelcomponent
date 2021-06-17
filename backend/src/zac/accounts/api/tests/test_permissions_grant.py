@@ -19,8 +19,8 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult, PermissionObjectType
-from ...models import AccessRequest, AtomicPermission
+from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from ...models import AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
     AtomicPermissionFactory,
@@ -63,7 +63,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=self.zaaktype["url"],
         )
 
-        self.endpoint = reverse("grant-zaak-access")
+        self.endpoint = reverse("accesses-list")
         self.data = {
             "requester": self.requester.username,
             "zaak": ZAAK_URL,
@@ -186,7 +186,7 @@ class GrantAccessAPITests(APITransactionTestCase):
         )
 
         self.client.force_authenticate(self.handler)
-        self.endpoint = reverse("grant-zaak-access")
+        self.endpoint = reverse("accesses-list")
 
     @requests_mock.Mocker()
     def test_grant_access_success(self, m):
@@ -213,16 +213,24 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 1))
         self.assertIsNone(atomic_permission.end_date)
 
+        user_atomic_permission = atomic_permission.useratomicpermission_set.get()
+        self.assertEqual(
+            user_atomic_permission.reason, PermissionReason.toegang_verlenen
+        )
+
         data = response.json()
 
         self.assertEqual(
             data,
             {
+                "id": user_atomic_permission.id,
                 "permission": "zaken:inzien",
                 "requester": self.requester.username,
                 "zaak": ZAAK_URL,
                 "startDate": "2020-01-01T00:00:00Z",
                 "endDate": None,
+                "reason": PermissionReason.toegang_verlenen,
+                "comment": "some comment",
             },
         )
 

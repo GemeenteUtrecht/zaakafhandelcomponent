@@ -7,6 +7,7 @@ from .views import (
     ListZaakDocumentsView,
     RelatedZakenView,
     VertrouwelijkheidsAanduidingenView,
+    ZaakAtomicPermissionsView,
     ZaakDetailView,
     ZaakDocumentView,
     ZaakEigenschappenView,
@@ -60,6 +61,11 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/objects",
         ZaakObjectsView.as_view(),
         name="zaak-objects",
+    ),
+    path(
+        "cases/<str:bronorganisatie>/<str:identificatie>/atomic-permissions",
+        ZaakAtomicPermissionsView.as_view(),
+        name="zaak-atomic-permissions",
     ),
     # meta
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),

@@ -1,13 +1,13 @@
 from typing import List, Optional, Union
 
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
 from zgw.models.zrc import Zaak
 
-from .constants import PermissionObjectType
-from .models import AtomicPermission, User
+from .constants import PermissionObjectType, PermissionReason
+from .models import AtomicPermission, User, UserAtomicPermission
 
 
 def add_atomic_permission_to_user(
@@ -15,6 +15,7 @@ def add_atomic_permission_to_user(
     object_url: str,
     object_type: str = PermissionObjectType.zaak,
     permission_name: str = zaken_inzien.name,
+    reason: str = "",
 ) -> Optional[AtomicPermission]:
     if (
         AtomicPermission.objects.for_user(user)
@@ -33,7 +34,10 @@ def add_atomic_permission_to_user(
         object_url=object_url,
         permission=permission_name,
     )
-    user.atomic_permissions.add(atomic_permission)
+
+    UserAtomicPermission.objects.create(
+        user=user, atomic_permission=atomic_permission, reason=reason
+    )
     return atomic_permission
 
 
@@ -53,7 +57,9 @@ def add_permission_for_behandelaar(rol: Union[str, Rol]) -> Optional[AtomicPermi
         return
 
     user = User.objects.get(username=rol_username)
-    atomic_permission = add_atomic_permission_to_user(user, rol.zaak)
+    atomic_permission = add_atomic_permission_to_user(
+        user, rol.zaak, reason=PermissionReason.betrokkene
+    )
     return atomic_permission
 
 
@@ -69,9 +75,14 @@ def add_permissions_for_advisors(
         if isinstance(review_request.for_zaak, Zaak)
         else review_request.for_zaak
     )
+    reason = (
+        PermissionReason.accordeur
+        if review_request.review_type == KownslTypes.approval
+        else PermissionReason.adviseur
+    )
     atomic_permissions = []
     for user in rr_users:
-        atomic_permission = add_atomic_permission_to_user(user, zaak_url)
+        atomic_permission = add_atomic_permission_to_user(user, zaak_url, reason=reason)
         if atomic_permission:
             atomic_permissions.append(atomic_permission)
 

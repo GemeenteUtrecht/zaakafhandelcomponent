@@ -23,6 +23,8 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.api.serializers import AtomicPermissionSerializer
+from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
@@ -624,3 +626,15 @@ class VertrouwelijkheidsAanduidingSerializer(APIModelSerializer):
     class Meta:
         model = VertrouwelijkheidsAanduidingData
         fields = ("label", "value")
+
+
+class UserAtomicPermissionSerializer(serializers.ModelSerializer):
+    permissions = AtomicPermissionSerializer(
+        many=True,
+        source="zaak_atomic_permissions",
+        help_text=_("Atomic permissions for the case"),
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "permissions")

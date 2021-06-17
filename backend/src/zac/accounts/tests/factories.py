@@ -1,7 +1,7 @@
 import factory
 import factory.fuzzy
 
-from ..constants import PermissionObjectType
+from ..constants import PermissionObjectType, PermissionReason
 from ..models import UserAuthorizationProfile
 
 
@@ -70,3 +70,12 @@ class BlueprintPermissionFactory(factory.django.DjangoModelFactory):
             UserAuthorizationProfile.objects.create(
                 user=extracted, auth_profile=auth_profile
             )
+
+
+class UserAtomicPermissionFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    atomic_permission = factory.SubFactory(AtomicPermissionFactory)
+    reason = factory.fuzzy.FuzzyChoice(PermissionReason.values)
+
+    class Meta:
+        model = "accounts.UserAtomicPermission"
