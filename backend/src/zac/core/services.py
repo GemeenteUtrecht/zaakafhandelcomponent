@@ -778,7 +778,7 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
     return status
 
 
-def get_behandelaar_zaken(user: User, ordering: List = None) -> List[Zaak]:
+def get_behandelaar_zaken(user: User, ordering: Optional[List] = None) -> List[Zaak]:
     """
     Retrieve zaken where `user` is a medewerker in the role of behandelaar.
     """
