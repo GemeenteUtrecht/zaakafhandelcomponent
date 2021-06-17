@@ -17,7 +17,7 @@ from .models import (
     UserAuthorizationProfile,
 )
 from .permissions import registry
-from .widgets import CheckboxSelectMultipleWithLinks, PolicyWidget
+from .widgets import PolicyWidget
 
 
 class UserAuthorizationProfileInline(admin.TabularInline):
@@ -53,26 +53,13 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
     get_atomic_permissions_display.short_description = _("atomic permissions")
 
 
-class AutorizationProfileForm(forms.ModelForm):
-    blueprint_permissions = forms.ModelMultipleChoiceField(
-        queryset=BlueprintPermission.objects.order_by(
-            "permission", "policy__zaaktype_omschrijving", "policy__iotype_omschrijving"
-        ),
-        widget=CheckboxSelectMultipleWithLinks,
-    )
-
-    class Meta:
-        model = AuthorizationProfile
-        fields = ("name", "blueprint_permissions")
-
-
 @admin.register(AuthorizationProfile)
 class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
     list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
     list_filter = ("blueprint_permissions__permission",)
     search_fields = ("name", "uuid")
     inlines = (UserAuthorizationProfileInline,)
-    form = AutorizationProfileForm
+    filter_horizontal = ("blueprint_permissions",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

@@ -302,6 +302,7 @@ class BlueprintPermission(models.Model):
     class Meta:
         verbose_name = _("blueprint definition")
         verbose_name_plural = _("blueprint definitions")
+        ordering = ("policy__zaaktype_omschrijving", "permission")
 
     def __str__(self):
         if not self.permission or not self.policy:
