@@ -76,17 +76,7 @@
                   {{accessRequestData?.length > 0 ? accessRequestData?.length : 0}}
                 </gu-chip>
               </ng-template>
-
-              <ng-container *ngIf="accessRequestData?.length > 0; else noRequests" >
-                <a *ngFor="let request of accessRequestData"
-                   class="anchor mb-2 task-link"
-                   href="{{request.url}}">
-                  {{request.accessRequests[0].requester}}
-                </a>
-              </ng-container>
-              <ng-template #noRequests>
-                <p>Er zijn geen toegangsverzoeken.</p>
-              </ng-template>
+              <gu-access-request [data]='accessRequestData' (reload)="fetchWorkstack"></gu-access-request>
             </ng-container>
 
           </ng-container>

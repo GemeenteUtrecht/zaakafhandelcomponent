@@ -7,6 +7,7 @@ import { ModalService } from '@gu/components';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Activity } from '../models/activity';
 import { FeaturesZaakDetailService } from './features-zaak-detail.service';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'gu-features-zaak-detail',
@@ -20,10 +21,17 @@ export class FeaturesZaakDetailComponent implements OnInit {
   currentUser: User;
 
   zaakData: Zaak;
+  zaakAccessRequestForm: FormGroup;
 
   isLoading: boolean;
   hasError: boolean;
   errorMessage: string;
+
+  canRequestAccess: boolean;
+  isSubmittingAccessRequest: boolean;
+  accessRequestSuccess: boolean;
+  accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
+  accessRequestFinished: boolean;
 
   loginUrl: string;
 
@@ -31,12 +39,17 @@ export class FeaturesZaakDetailComponent implements OnInit {
   activeActivities: Activity[];
 
   constructor(
+    private fb: FormBuilder,
     private http: ApplicationHttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private modalService: ModalService,
     private zaakDetailService: FeaturesZaakDetailService
-  ) { }
+  ) {
+    this.zaakAccessRequestForm = this.fb.group({
+      comment: this.fb.control(""),
+    })
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -49,6 +62,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   }
 
   fetchInformation() {
+    this.canRequestAccess = false
     this.isLoading = true;
     this.zaakDetailService.getInformation(this.bronorganisatie, this.identificatie)
       .pipe(
@@ -57,7 +71,12 @@ export class FeaturesZaakDetailComponent implements OnInit {
           this.mainZaakUrl = res.url ? res.url : null;
         }),
         catchError(res => {
-          this.errorMessage = res.error.detail ? res.error.detail : 'Er is een fout opgetreden';
+          this.errorMessage = res.error.detail ?
+            res.error.detail :
+            res.error.reason ?
+              res.error.reason :
+              'Er is een fout opgetreden';
+          this.canRequestAccess = res.error.canRequestAccess;
           this.hasError = true;
           this.isLoading = false;
           return of(null)
@@ -112,6 +131,30 @@ export class FeaturesZaakDetailComponent implements OnInit {
 
   openModal(id: string) {
     this.modalService.open(id);
+  }
+
+  get commentControl(): FormControl {
+    return this.zaakAccessRequestForm.get('comment') as FormControl;
+  };
+
+  submitAccessRequest() {
+    this.isSubmittingAccessRequest = true;
+    const comment = this.commentControl.value ? this.commentControl.value : undefined;
+    const formData = {
+      bronorganisatie: this.bronorganisatie,
+      identificatie: this.identificatie,
+      comment: comment
+    }
+    this.zaakDetailService.postAccessRequest(formData).subscribe(() => {
+      this.isSubmittingAccessRequest = false;
+      this.accessRequestFinished = true;
+      this.accessRequestSuccess = true;
+    }, error => {
+      this.isSubmittingAccessRequest = false;
+      this.accessRequestFinished = true;
+      this.accessRequestSuccess = false;
+      this.errorMessage = error.detail ? error.detail : "De aanvraag is niet gelukt"
+    })
   }
 
 }

@@ -26,4 +26,9 @@ export class FeaturesWorkstackService {
     return this.http.Get<any>(endpoint);
   }
 
+  patchAccessRequest(requestId, formData): Observable<any> {
+    const endpoint = encodeURI(`/api/accounts/access-requests/${requestId}`);
+    return this.http.Patch<any>(endpoint, formData);
+  }
+
 }

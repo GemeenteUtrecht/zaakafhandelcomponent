@@ -26,4 +26,8 @@ export class FeaturesZaakDetailService {
     return this.http.Get<User>(endpoint);
   }
 
+  postAccessRequest(formData): Observable<any> {
+    const endpoint = encodeURI("/api/accounts/access-requests");
+    return this.http.Post<any>(endpoint, formData);
+  }
 }

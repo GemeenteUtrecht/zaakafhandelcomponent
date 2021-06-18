@@ -18,10 +18,33 @@
     </div>
     <button gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
   </div>
+
+<!--  Loading -->
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-  <div class="row">
+
+<!--  Error and 403 access request -->
+  <div class="row" *ngIf="hasError && errorMessage">
     <div class="col-lg-6">
-      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      <gu-message
+        *ngIf="!isSubmittingAccessRequest"
+        [type]="!accessRequestSuccess ? 'warn' : 'success'"
+        [message]="!accessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
+        class="d-block mb-4"
+        ></gu-message>
+      <div *ngIf="canRequestAccess && !accessRequestSuccess">
+        <h2>Toegang vragen tot deze zaak</h2>
+        <gu-input-field [control]="commentControl"
+                        type="text"
+                        label="Opmerking (optioneel)"
+                        class="mb-4">
+        </gu-input-field>
+        <button gu-button
+                (click)="submitAccessRequest()"
+                [disabled]='isSubmittingAccessRequest'
+                [loading]='isSubmittingAccessRequest'>
+          Aanvraag versturen
+        </button>
+      </div>
     </div>
   </div>
 
