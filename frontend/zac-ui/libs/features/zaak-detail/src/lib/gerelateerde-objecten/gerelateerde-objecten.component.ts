@@ -59,16 +59,15 @@ export class GerelateerdeObjectenComponent implements OnInit {
       .type.versions[group.items[0].type.versions.length - 1]
       .jsonSchema.required;
 
-    let tableHeader: string[] = [];
-    for (const property of objectProperties) {
-        tableHeader.push(property);
-    }
+    let tableHeader: string[] = objectProperties.filter((property, index): boolean => {
+      return property !== 'objectid';
+    });
 
     /* Iterate over the items to populate the table */
     let tableContent: Array<any> = group.items.map((relatedObject: GerelateerdeObject) => {
       /* Filter object data so that only required properties are shown */
       const objectData = {};
-      objectProperties.forEach((propertyName: string): void => {
+      tableHeader.forEach((propertyName: string): void => {
         const propertyValue: any = relatedObject.record.data[propertyName];
         objectData[propertyName] = propertyValue ? String(propertyValue) : '';
       });
