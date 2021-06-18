@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from unittest.mock import patch
 
 from django.contrib.sites.models import Site
 from django.urls import reverse
@@ -8,6 +9,7 @@ import requests_mock
 from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -15,6 +17,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.permissions import zaken_inzien, zaken_request_access
 from zac.core.tests.utils import ClearCachesMixin
+from zgw.models.zrc import Zaak
 
 from ...constants import PermissionObjectType
 from ...models import AccessRequest
@@ -59,12 +62,22 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
             zaaktype=self.zaaktype["url"],
         )
+        zaak = factory(Zaak, self.zaak)
 
         self.endpoint = reverse("accessrequest-list")
         self.data = {
-            "zaak": ZAAK_URL,
+            "zaak": {
+                "identificatie": IDENTIFICATIE,
+                "bronorganisatie": BRONORGANISATIE,
+            },
             "comment": "some comment",
         }
+
+        find_zaak_patcher = patch(
+            "zac.accounts.api.serializers.find_zaak", return_value=zaak
+        )
+        find_zaak_patcher.start()
+        self.addCleanup(find_zaak_patcher.stop)
 
     def test_no_permissions(self):
         response = self.client.post(self.endpoint, self.data)
@@ -118,10 +131,6 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
 
 @freeze_time("2020-01-01")
 class CreateAccessRequestAPITests(APITransactionTestCase):
-    """
-    Test GrantZaakAccessView
-    """
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -140,9 +149,15 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
             identificatie=IDENTIFICATIE,
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
         )
-
+        zaak = factory(Zaak, self.zaak)
         self.client.force_authenticate(self.requester)
         self.endpoint = reverse("accessrequest-list")
+
+        find_zaak_patcher = patch(
+            "zac.accounts.api.serializers.find_zaak", return_value=zaak
+        )
+        find_zaak_patcher.start()
+        self.addCleanup(find_zaak_patcher.stop)
 
     @requests_mock.Mocker()
     def test_request_access_success(self, m):
@@ -151,7 +166,10 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         m.get(ZAAK_URL, json=self.zaak)
 
         data = {
-            "zaak": ZAAK_URL,
+            "zaak": {
+                "identificatie": IDENTIFICATIE,
+                "bronorganisatie": BRONORGANISATIE,
+            },
             "comment": "some comment",
         }
 
@@ -177,7 +195,11 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
             {
                 "url": f"http://testserver{reverse('accessrequest-detail', args=[access_request.id])}",
                 "requester": self.requester.username,
-                "zaak": ZAAK_URL,
+                "zaak": {
+                    "url": ZAAK_URL,
+                    "identificatie": IDENTIFICATIE,
+                    "bronorganisatie": BRONORGANISATIE,
+                },
                 "comment": "some comment",
             },
         )
@@ -190,7 +212,10 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
             for_user=self.requester,
         )
         data = {
-            "zaak": ZAAK_URL,
+            "zaak": {
+                "identificatie": IDENTIFICATIE,
+                "bronorganisatie": BRONORGANISATIE,
+            },
             "comment": "some comment",
         }
 
@@ -218,7 +243,10 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
             end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
         data = {
-            "zaak": ZAAK_URL,
+            "zaak": {
+                "identificatie": IDENTIFICATIE,
+                "bronorganisatie": BRONORGANISATIE,
+            },
             "comment": "some comment",
         }
 
@@ -243,7 +271,10 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         AccessRequestFactory.create(requester=self.requester, result="", zaak=ZAAK_URL)
         data = {
             "requester": self.requester.username,
-            "zaak": ZAAK_URL,
+            "zaak": {
+                "identificatie": IDENTIFICATIE,
+                "bronorganisatie": BRONORGANISATIE,
+            },
             "comment": "some comment",
             "end_date": "2021-01-01",
         }
