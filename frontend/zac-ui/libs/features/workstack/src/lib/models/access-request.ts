@@ -1,4 +1,5 @@
 export interface Request {
+  id: number;
   requester: string;
 }
 

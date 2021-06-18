@@ -12,6 +12,10 @@
     border-color: $color-warn;
     background-color: $background-red;
   }
+  &--success {
+    border-color: $color-success;
+    background-color: $background-green;
+  }
   p {
     word-break: break-word;
   }

@@ -5,6 +5,8 @@ import { FeaturesWorkstackComponent } from './features-workstack.component';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { SharedUiComponentsModule } from '@gu/components';
 import { TabsModule } from 'ngx-bootstrap/tabs';
+import { AccessRequestComponent } from './access-request/access-request.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
@@ -15,10 +17,12 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
       cookieName: 'csrftoken',
       headerName: 'X-CSRFToken',
     }),
+    FormsModule,
+    ReactiveFormsModule,
     SharedUiComponentsModule,
     TabsModule.forRoot()
   ],
-  declarations: [FeaturesWorkstackComponent],
+  declarations: [FeaturesWorkstackComponent, AccessRequestComponent],
   exports: [FeaturesWorkstackComponent],
 })
 export class FeaturesWorkstackModule {}

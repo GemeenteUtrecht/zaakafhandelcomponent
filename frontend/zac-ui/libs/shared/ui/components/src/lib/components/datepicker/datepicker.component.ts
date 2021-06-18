@@ -41,7 +41,7 @@ export class DatepickerComponent implements OnInit, OnChanges {
   }
 
   checkValidValue() {
-    const selectedValueDate = new Date(this.control.value?.toDateString());
+    const selectedValueDate = this.control.value ? new Date(this.control.value.toDateString()) : null;
     const minValueDate = new Date(this.minDate.toDateString());
     if (selectedValueDate && (selectedValueDate < minValueDate)) {
       this.clearValue();

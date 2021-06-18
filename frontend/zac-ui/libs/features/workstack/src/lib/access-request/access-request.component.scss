@@ -1,0 +1,19 @@
+@import './base/colors/colors';
+.access-request {
+  font-size: 1rem;
+  display: block;
+  border: 1px solid $border-grey;
+  padding: 0.5rem;
+  border-radius: 5px;
+  a {
+    border-bottom: 1px solid $border-darkgrey;
+  }
+  ul li {
+    list-style: none;
+    display: flex;
+    ::ng-deep .mat-icon {
+      color: $color-blue;
+      font-size: 1.25rem;
+    }
+  }
+}

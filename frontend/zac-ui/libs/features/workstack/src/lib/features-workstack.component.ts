@@ -24,6 +24,8 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   isLoading: boolean;
 
+  currentActiveTab: string;
+
   constructor(private workstackService: FeaturesWorkstackService) {}
 
   ngOnInit(): void {
@@ -65,6 +67,11 @@ export class FeaturesWorkstackComponent implements OnInit {
           console.log(error);
         }
       );
+  }
+
+  reloadWorkstack(tab) {
+    this.currentActiveTab = tab;
+    this.fetchWorkstack();
   }
 
   formatZakenTableData(data: Zaak[]): RowData[] {

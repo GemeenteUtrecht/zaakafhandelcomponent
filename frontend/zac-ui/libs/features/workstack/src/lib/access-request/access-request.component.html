@@ -1,0 +1,73 @@
+<h2>Zaken met toegangsverzoeken</h2>
+<div *ngIf="data?.length > 0; else noRequests" class='col-md-6'>
+  <div *ngFor="let accessRequest of data" class="access-request mb-2">
+    <a [routerLink]="getZaakLink(accessRequest.zaak)" target="_blank" class='d-block p-2 mb-3'>{{accessRequest.zaak.identificatie}}</a>
+    <ul>
+      <li *ngFor='let request of accessRequest.accessRequests' class='mb-2'>
+        <gu-icon>add_moderator</gu-icon>
+        <button gu-button type='tertiary' size='extrasmall' (click)='openRequestHandler(accessRequest, request)'>{{request.requester}}</button>
+      </li>
+    </ul>
+  </div>
+</div>
+<ng-template #noRequests>
+  <p>Er zijn geen toegangsverzoeken.</p>
+</ng-template>
+
+<gu-modal
+  id="access-request-modal"
+  size='small'
+  [closeIcon]="true"
+>
+  <gu-loading-indicator *ngIf='isSubmitting'></gu-loading-indicator>
+  <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess">
+    <h2>Toegangsverzoek behandelen</h2>
+    <p *ngIf='openedAccessRequest'>
+      <strong>{{openedRequest.requester}}</strong> vraagt toegang tot
+      <a [routerLink]='getZaakLink(openedAccessRequest.zaak)' target="_blank">{{openedAccessRequest.zaak.identificatie}}</a>
+    </p>
+
+    <fieldset class="form__body">
+      <gu-input-field
+        [control]="handlerCommentControl"
+        label="Opmerking (optioneel)"
+        type="text"
+        class="mb-3"
+      ></gu-input-field>
+
+      <gu-datepicker
+        label='Verloopdatum toegang (optioneel)'
+        [control]="endDateControl"
+        placeholder="Datum"
+        class='d-block mb-4'
+      ></gu-datepicker>
+    </fieldset>
+
+    <footer class="form__footer d-flex justify-content-end">
+      <button gu-button
+              type="primary"
+              size="small"
+              class="d-inline-block mr-2"
+              [loading]='isSubmitting'
+              (click)="submitForm('approve', openedRequest)">
+        Goedkeuren
+      </button>
+      <button gu-button type="secondary" size="small" class="d-inline-block" (click)="submitForm('reject', openedRequest)">
+        Afwijzen
+      </button>
+    </footer>
+  </form>
+  <ng-template [ngIf]="hasError && !isSubmitting">
+    <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+  </ng-template>
+  <div *ngIf="submitSuccess" class="mt-2">
+    <gu-message type='success' *ngIf="result === 'approve'">
+      <strong>{{ openedRequest.requester }}</strong> heeft nu toegang tot
+      <a [routerLink]='getZaakLink(openedAccessRequest.zaak)' target="_blank">{{openedAccessRequest.zaak.identificatie}}</a>
+    </gu-message>
+    <gu-message type='warn' class="mb-4" *ngIf="result === 'reject'">
+      Toegangsverzoek van <strong>{{ openedRequest.requester }}</strong> geweigerd voor
+      <a [routerLink]='getZaakLink(openedAccessRequest.zaak)' target="_blank">{{openedAccessRequest.zaak.identificatie}}</a>
+    </gu-message>
+  </div>
+</gu-modal>
