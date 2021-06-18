@@ -36,6 +36,9 @@ class CanGrantAccess(ZaakDefinitionPermission):
 class CanRequestAccess(ZaakDefinitionPermission):
     permission = zaken_request_access
 
+    def get_object_url(self, serializer) -> str:
+        return serializer.validated_data["zaak"].url
+
 
 class CanHandleAccessRequest(DefinitionBasePermission):
     permission = zaken_handle_access

@@ -6,8 +6,11 @@ from django.utils.timezone import make_aware, now
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.core.permissions import zaken_inzien
+from zac.core.services import find_zaak, get_zaak
+from zgw.models.zrc import Zaak
 
 from ..constants import AccessRequestResult, PermissionObjectType, PermissionReason
 from ..email import send_email_to_requester
@@ -176,6 +179,23 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
         return user_atomic_permission
 
 
+class ZaakShortSerializer(APIModelSerializer):
+    class Meta:
+        model = Zaak
+        fields = ("url", "identificatie", "bronorganisatie")
+        extra_kwargs = {"url": {"read_only": True}}
+
+    def to_representation(self, zaak_url: str):
+        zaak = get_zaak(zaak_url=zaak_url)
+        return super().to_representation(zaak)
+
+    def to_internal_value(self, data):
+        if "url" in data:
+            return get_zaak(zaak_url=data["url"])
+
+        return find_zaak(**data)
+
+
 class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
@@ -187,6 +207,7 @@ class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True,
         help_text=_("Username of access handler/granter"),
     )
+    zaak = ZaakShortSerializer(help_text=_("Zaak to request access for"))
 
     class Meta:
         model = AccessRequest
@@ -208,6 +229,7 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True,
         help_text=_("Username of access requester/grantee"),
     )
+    zaak = ZaakShortSerializer(help_text=_("Zaak to request access for"))
 
     class Meta:
         model = AccessRequest
@@ -218,21 +240,21 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 
         request = self.context["request"]
         requester = request.user
-        zaak_url = valid_data["zaak"]
+        zaak = valid_data["zaak"]
 
         if (
             AtomicPermission.objects.for_user(requester)
-            .filter(object_url=zaak_url, permission=zaken_inzien.name)
+            .filter(object_url=zaak.url, permission=zaken_inzien.name)
             .actual()
             .exists()
         ):
             raise serializers.ValidationError(
                 _("User %(requester)s already has an access to zaak %(zaak)s")
-                % {"requester": requester.username, "zaak": zaak_url}
+                % {"requester": requester.username, "zaak": zaak.url}
             )
 
         if (
-            requester.initiated_requests.filter(zaak=zaak_url, result="")
+            requester.initiated_requests.filter(zaak=zaak.url, result="")
             .actual()
             .exists()
         ):
@@ -240,11 +262,15 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
                 _(
                     "User %(requester)s already has an pending access request to zaak %(zaak)s"
                 )
-                % {"requester": requester.username, "zaak": zaak_url}
+                % {"requester": requester.username, "zaak": zaak.url}
             )
 
         valid_data["requester"] = requester
         return valid_data
+
+    def create(self, validated_data):
+        validated_data["zaak"] = validated_data["zaak"].url
+        return super().create(validated_data)
 
 
 class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
