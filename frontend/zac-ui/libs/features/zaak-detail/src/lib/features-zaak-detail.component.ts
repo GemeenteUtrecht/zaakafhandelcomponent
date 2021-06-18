@@ -141,8 +141,10 @@ export class FeaturesZaakDetailComponent implements OnInit {
     this.isSubmittingAccessRequest = true;
     const comment = this.commentControl.value ? this.commentControl.value : undefined;
     const formData = {
-      bronorganisatie: this.bronorganisatie,
-      identificatie: this.identificatie,
+      zaak: {
+        bronorganisatie: this.bronorganisatie,
+        identificatie: this.identificatie
+      },
       comment: comment
     }
     this.zaakDetailService.postAccessRequest(formData).subscribe(() => {
