@@ -38,6 +38,37 @@ See the `backend` folder for further instructions.
 
 ### Frontend developers
 
+There are multiple ways to work on the frontend.
+
+**Frontend dev server**
+
+From inside the `zaakafhandelcomponent/` run the following command to
+start the development server:
+
+```bash
+docker-compose up -d ingress-dev
+```
+
+This brings up both the backend (including the elasticsearch service) and the frontend.
+Any change to the frontend source code will cause the frontend to be rebuilt.
+
+The entire app is available on `http://localhost:8080` (and the new UI is available at `http://localhost:8080/ui`.
+
+For everything to work properly, the backend needs to be configured. More information on this can be found in the
+backend README. But, as a checklist:
+- A superuser needs to be created
+- The services to be added for OpenZaak (Catalogi, Zaken, Besluiten, Documenten API), Kadaster, Kownsl, Open Forms, Object/Objecttypes API and notificaties API.
+- The Camunda endpoint needs to be specified.
+- The kadaster configuration needs to point to the Kadaster Service created.
+- The Zaken need to be indexed in elastic (with the management command `python manage.py index_zaken`). In case of problems, it can help to clear the django cache in the docker container:
+```
+$ python
+>>> from django.core.cache import cache
+>>> cache.clear()
+```
+
+**Separate backend/frontend**
+
 Developers working on the frontend can bring up the backend services using Docker:
 
 ```bash
@@ -46,17 +77,6 @@ docker-compose up -d backend
 
 This will expose the backend on `http://localhost:8000`.
 
-Future improvements could bring in a database fixture with out-of-the-box configuration.
-Alternatively, you could develop against `https://zac-test.utrechtproeftuin.nl` as
-backend.
-
-You can also run the frontend dev server using:
-
-```bash
-docker-compose up -d ingress-dev
-```
-
-The entire app is then available on `http://localhost:8080`.
 
 ### Full stack
 
