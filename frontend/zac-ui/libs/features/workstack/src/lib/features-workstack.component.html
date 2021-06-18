@@ -2,8 +2,8 @@
   <h1>Werkvoorraad</h1>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <tabset *ngIf="!isLoading">
-    <ng-container *ngFor="let tab of tabs">
-      <tab [heading]="tab.label">
+    <ng-container *ngFor="let tab of tabs; let i = index">
+      <tab [heading]="tab.label" [active]="currentActiveTab ? tab.label === currentActiveTab : i === 0">
         <div class="tab-content">
           <ng-container [ngSwitch]="tab.component">
 
@@ -76,7 +76,7 @@
                   {{accessRequestData?.length > 0 ? accessRequestData?.length : 0}}
                 </gu-chip>
               </ng-template>
-              <gu-access-request [data]='accessRequestData' (reload)="fetchWorkstack"></gu-access-request>
+              <gu-access-request [data]='accessRequestData' (reload)="reloadWorkstack('Toegangsverzoeken')"></gu-access-request>
             </ng-container>
 
           </ng-container>

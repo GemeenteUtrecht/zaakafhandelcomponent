@@ -17,7 +17,7 @@ const tabs: Tab[] = [
   },
   {
     component: 'activities',
-    label: 'Ad-hoc-activiteiten',
+    label: 'Activiteiten',
     endpoint: '/api/workstack/activities'
   },
   {
