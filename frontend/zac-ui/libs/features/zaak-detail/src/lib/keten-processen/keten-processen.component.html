@@ -40,7 +40,7 @@
                         class="mb-2"
                         type="secondary"
                         size="small"
-                        (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+                        (click)="executeTask(task.id)">
                   Uitvoeren
                 </button>
               </ng-container>
@@ -82,7 +82,7 @@
                   <button gu-button *ngIf="currentUser.username === task.assignee.username"
                              class="mb-2"
                              type="secondary"
-                             (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+                             (click)="executeTask(task.id)">
                     Uitvoeren
                   </button>
                 </ng-container>
@@ -128,6 +128,10 @@
     <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-sign-document>
 
     <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
+
+    <div *ngSwitchCase="'zac:doRedirect'">
+
+    </div>
   </ng-container>
 </gu-modal>
 <gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">

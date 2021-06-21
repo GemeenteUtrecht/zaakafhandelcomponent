@@ -25,7 +25,7 @@ export class KetenProcessenService {
 
   getFormLayout(taskId: string): Observable<TaskContextData> {
     const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
-    return this.http.Get(endpoint);
+    return this.http.Get<TaskContextData>(endpoint);
   }
 
   sendMessage(formData: SendMessageForm): Observable<SendMessageForm> {

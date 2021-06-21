@@ -61,7 +61,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.route.queryParams.subscribe(params => {
       const userTaskId = params['user-task'];
       if (userTaskId) {
-        this.executeTask(userTaskId, true);
+        this.executeTask(userTaskId);
       }
     });
   }
@@ -103,12 +103,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     })
   }
 
-  executeTask(taskId, hasForm, executeUrl?): void {
-    if (!hasForm) {
-      window.location = executeUrl;
-    } else {
-      this.fetchFormLayout(taskId);
-    }
+  executeTask(taskId): void {
+    this.fetchFormLayout(taskId);
   }
 
   assignTask(task: Task) {
@@ -116,11 +112,19 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.modalService.open('assignTaskModal');
   }
 
+  doRedirect(taskContext: TaskContextData) {
+    if (taskContext.form === 'zac:doRedirect') {
+      const target = taskContext.context.openInNewWindow ? "_blank" : "_self";
+      window.open(taskContext.context.redirectTo, target);
+    }
+  }
+
   fetchFormLayout(taskId): void {
     this.contextHasError = false;
     this.isLoadingContext = true;
     this.modalService.open('ketenprocessenModal');
     this.ketenProcessenService.getFormLayout(taskId).subscribe(res => {
+      this.doRedirect(res)
       this.taskContextData = res;
       this.isLoadingContext = false;
     }, errorRes => {
