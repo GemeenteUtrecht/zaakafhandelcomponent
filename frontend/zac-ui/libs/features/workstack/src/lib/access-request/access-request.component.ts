@@ -70,7 +70,6 @@ export class AccessRequestComponent implements OnInit {
       this.isSubmitting = false;
       this.hasError = false;
       this.submitSuccess = true;
-      this.reload.emit(true)
     }, error => {
       console.error(error);
       this.hasError = true;

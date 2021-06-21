@@ -71,12 +71,14 @@ export class FeaturesZaakDetailComponent implements OnInit {
           this.mainZaakUrl = res.url ? res.url : null;
         }),
         catchError(res => {
+          this.canRequestAccess = res.error.canRequestAccess;
           this.errorMessage = res.error.detail ?
             res.error.detail :
             res.error.reason ?
               res.error.reason :
-              'Er is een fout opgetreden';
-          this.canRequestAccess = res.error.canRequestAccess;
+                res.error.canRequestAccess ?
+                  "Je hebt geen toegang tot deze zaak" :
+                  "Er is een fout opgetreden";
           this.hasError = true;
           this.isLoading = false;
           return of(null)

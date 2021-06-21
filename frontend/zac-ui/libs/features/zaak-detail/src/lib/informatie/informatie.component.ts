@@ -99,6 +99,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       },
       {
         label: 'Toelichting',
+        placeholder: ' ',
         name: 'toelichting',
         required: false,
         value: this.zaakData.toelichting,

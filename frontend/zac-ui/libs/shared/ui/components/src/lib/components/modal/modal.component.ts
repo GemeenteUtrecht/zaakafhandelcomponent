@@ -1,4 +1,13 @@
-import { Component, ViewEncapsulation, ElementRef, Input, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  ViewEncapsulation,
+  ElementRef,
+  Input,
+  OnInit,
+  OnDestroy,
+  Output,
+  EventEmitter
+} from '@angular/core';
 
 import { ModalService } from "./modal.service";
 
@@ -14,6 +23,8 @@ export class ModalComponent implements OnInit, OnDestroy {
   @Input() title: string;
   @Input() size: 'small' | 'medium' = 'medium';
   @Input() type: 'center' | 'right' = 'center';
+
+  @Output() onClose: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   private element: any;
 
@@ -60,5 +71,6 @@ export class ModalComponent implements OnInit, OnDestroy {
     this.element.style.display = 'none';
     this.element.classList.remove('gu-modal-open');
     document.body.classList.remove('gu-modal-open');
+    this.onClose.emit(true);
   }
 }

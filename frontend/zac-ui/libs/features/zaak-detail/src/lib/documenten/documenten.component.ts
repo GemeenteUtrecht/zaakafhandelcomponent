@@ -79,12 +79,17 @@ export class DocumentenComponent implements OnChanges {
        label: editLabel,
        value: element.writeUrl,
        buttonType: editButtonStyle
-     }
+     };
      const overwriteCell: ExtensiveCell = {
         type: 'button',
         label: 'Overschrijven',
         value: element.url
-      }
+      };
+     const confidentialityButton: ExtensiveCell | string = element.locked ? element.vertrouwelijkheidaanduiding : {
+       type: 'button',
+       label: element.vertrouwelijkheidaanduiding,
+       value: element
+     }
 
      const cellData: RowData = {
        cellData: {
@@ -103,11 +108,7 @@ export class DocumentenComponent implements OnChanges {
          bewerken: showEditCell ? editCell : '',
          overschrijven:  element.locked ? '' : overwriteCell,
          type: element.informatieobjecttype['omschrijving'],
-         vertrouwelijkheid: {
-           type: 'button',
-           label: element.vertrouwelijkheidaanduiding,
-           value: element
-         }
+         vertrouwelijkheid: confidentialityButton
        }
      }
      return cellData;

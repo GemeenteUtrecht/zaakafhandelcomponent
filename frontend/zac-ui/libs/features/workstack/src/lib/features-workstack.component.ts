@@ -70,8 +70,8 @@ export class FeaturesWorkstackComponent implements OnInit {
   }
 
   reloadWorkstack(tab) {
-    this.currentActiveTab = tab;
     this.fetchWorkstack();
+    this.currentActiveTab = tab;
   }
 
   formatZakenTableData(data: Zaak[]): RowData[] {
