@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+
+  alfrescoURL: 'https://alfresco-oz.utrechtproeftuin.nl/',
 };
 
 /*

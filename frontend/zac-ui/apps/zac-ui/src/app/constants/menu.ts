@@ -1,4 +1,5 @@
 import { MenuItem } from '@gu/models';
+import {environment} from "../../environments/environment";
 
 const menuItems: MenuItem[] = [
   {
@@ -33,7 +34,7 @@ const bottomMenuItems: MenuItem[] = [
   {
     icon: 'link',
     label: 'Alfresco',
-    to: 'https://alfresco-oz.utrechtproeftuin.nl/',
+    to: environment.alfrescoURL,
     external: true,
   },
   {
