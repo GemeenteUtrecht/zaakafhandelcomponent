@@ -2,7 +2,7 @@
   <h1>{{taskContextData.context.title}}</h1>
   <div class="card card--blue col-md-6 mb-4">
     <h2>{{taskContextData.context.zaakInformatie.omschrijving}}</h2>
-    <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : "Geen toelichting"}}</p>
+    <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
   </div>
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">
     <h2>Gegevens</h2>
