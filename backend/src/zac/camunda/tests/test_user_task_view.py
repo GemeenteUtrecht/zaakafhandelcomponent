@@ -649,18 +649,3 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
         response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
-
-    @patch(
-        "zac.camunda.api.views.get_task",
-        return_value=_get_task(**{"formKey": "zac:doRedirect"}),
-    )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
-    def test_put_redirect_user_task(self, m, mock_complete, mock_get_task):
-        self._mock_permissions(m)
-
-        payload = {}
-
-        response = self.client.put(self.task_endpoint, payload)
-
-        self.assertEqual(response.status_code, 204)
-        mock_complete.assert_called_once()

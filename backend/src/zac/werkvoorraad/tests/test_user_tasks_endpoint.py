@@ -108,7 +108,6 @@ class UserTasksTests(APITestCase):
                 {
                     "task": {
                         "name": TASK_DATA["name"],
-                        "hasForm": False,
                         "assignee": {
                             "email": self.user.email,
                             "firstName": self.user.first_name,
@@ -119,6 +118,13 @@ class UserTasksTests(APITestCase):
                             "username": self.user.username,
                         },
                         "created": TASK_DATA["created"],
+                        "executeUrl": reverse(
+                            "core:zaak-task",
+                            kwargs={
+                                "task_id": TASK_DATA["id"],
+                            },
+                        ),
+                        "hasForm": False,
                         "id": TASK_DATA["id"],
                     },
                     "zaak": {
