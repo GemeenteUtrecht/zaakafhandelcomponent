@@ -95,7 +95,10 @@
         <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
                                  [identificatie]="identificatie"
                                  class="zaak-detail__section"></gu-adviseren-accorderen>
-        <!--            <gu-gerelateerde-objecten class="zaak-detail__section"></gu-gerelateerde-objecten>-->
+        <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
+                                  [identificatie]="identificatie"
+                                  class="zaak-detail__section">
+        </gu-gerelateerde-objecten>
         <gu-documenten [mainZaakUrl]="mainZaakUrl"
                        [bronorganisatie]="bronorganisatie"
                        [identificatie]="identificatie"
