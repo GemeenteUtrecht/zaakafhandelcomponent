@@ -18,6 +18,7 @@
   id="access-request-modal"
   size='small'
   [closeIcon]="true"
+  (onClose)='reload.emit(true)'
 >
   <gu-loading-indicator *ngIf='isSubmitting'></gu-loading-indicator>
   <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess">
