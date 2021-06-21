@@ -1,9 +1,0 @@
-{% load i18n static admin_urls %}
-{% if widget.wrap_label %}<label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>{% endif %}
-{% include "django/forms/widgets/input.html" %}{% if widget.wrap_label %} {{ widget.label }} <a
-        class="related-widget-wrapper-link change-related"
-        id="change_{{ widget.attrs.id }}"
-        href="{% url opts|admin_urlname:'change' widget.value|admin_urlquote%}"
-        title="{% blocktrans %}Change{% endblocktrans %}"
-        ><img src="{% static 'admin/img/icon-changelink.svg' %}" alt="{% trans 'Change' %}">
-</a></label>{% endif %}
