@@ -18,9 +18,8 @@ done
 >&2 echo "Apply database migrations"
 python src/manage.py migrate
 
-# Start server
 >&2 echo "Starting server"
-exec uwsgi \
+cmd="uwsgi \
     --http :8000 \
     --module zac.wsgi \
     --static-map /static=/app/static \
@@ -28,7 +27,15 @@ exec uwsgi \
     --chdir src \
     --processes 4 \
     --threads 1 \
-    --buffer-size 32768
-    # processes & threads are needed for concurrency without nginx sitting inbetween
-    # the buffer size increase is required because the ADFS token exchange returns
-    # larger request block sizes than the default of 4k (5.1k)
+    --buffer-size 32768 \
+"
+
+PY_AUTORELOAD=${AUTORELOAD:-false}
+if [ $PY_AUTORELOAD = "true" ]
+then
+        >&2 echo "WARNING: Starting uwsgi with py-autoreload enabled is unsafe and should not be used outside development environments!"
+        cmd="${cmd} --py-autoreload 1"
+fi
+
+# Start server
+exec $cmd
