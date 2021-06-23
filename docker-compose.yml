@@ -64,6 +64,8 @@ services:
       dockerfile: Dockerfile-dev
       args:
         - NODE_VERSION=${NODE_VERSION:-13}
+    environment:
+      - SOURCEMAP=false
     volumes:
       - ./frontend/zac-ui:/app
 
