@@ -26,7 +26,7 @@ services:
       - 9200:9200
       - 9300:9300
 
-  backend:
+  backend: &backend-default
     image: scrumteamzgw/zaakafhandelcomponent:${TAG:-latest}
     build: ./backend
     environment:
@@ -51,6 +51,26 @@ services:
       - redis
       - elasticsearch
 
+  backend-dev:
+    <<: *backend-default
+    environment:
+      - AUTORELOAD=true
+      - DJANGO_SETTINGS_MODULE=zac.conf.docker
+      - SECRET_KEY=${SECRET_KEY:-changeme}
+      - IS_HTTPS=0
+      - ALLOWED_HOSTS=localhost
+      - REDIS_HOST=redis
+      - ES_HOST=elasticsearch
+      - USE_REDIS_CACHE=True
+      - CACHE_DEFAULT=redis:6379/0
+      - CACHE_AXES=redis:6379/0
+      - CACHE_OAS=redis:6379/1
+      - CACHE_SESSIONS=redis:6379/1
+      - CORS_HEADERS_ENABLED=True
+      - DEBUG=True
+    volumes:
+      - ./backend:/app
+
   # frontend
   frontend:
     image: scrumteamzgw/zac-ui:${TAG:-latest}
@@ -64,6 +84,8 @@ services:
       dockerfile: Dockerfile-dev
       args:
         - NODE_VERSION=${NODE_VERSION:-13}
+    environment:
+      - SOURCEMAP=false
     volumes:
       - ./frontend/zac-ui:/app
 
@@ -84,6 +106,17 @@ services:
       - FRONTEND_PATH=
     depends_on:
       - backend
+      - frontend-dev
+
+  ingress-dev-fullstack:
+    <<: *ingress-default
+    environment:
+      - BACKEND_HOST=backend-dev
+      - FRONTEND_HOST=frontend-dev
+      - FRONTEND_PORT=4200
+      - FRONTEND_PATH=
+    depends_on:
+      - backend-dev
       - frontend-dev
 
 volumes:
