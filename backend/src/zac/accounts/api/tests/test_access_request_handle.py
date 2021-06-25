@@ -217,14 +217,14 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             user_atomic_permission.reason, PermissionReason.toegang_verlenen
         )
+        self.assertEqual(user_atomic_permission.start_date.date(), date(2020, 1, 2))
+        self.assertEqual(user_atomic_permission.end_date.date(), date(2021, 1, 1))
 
         atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 2))
-        self.assertEqual(atomic_permission.end_date.date(), date(2021, 1, 1))
 
         data = response.json()
 

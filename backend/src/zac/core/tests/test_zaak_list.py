@@ -193,6 +193,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         m.get(zaak1["url"], json=zaak1)
         self.create_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
+        self.refresh_index()
 
         response = self.app.get(self.url, user=self.user)
 

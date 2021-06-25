@@ -293,7 +293,7 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
         UserAtomicPermissionFactory.create(
             user=user,
             atomic_permission__object_url=self.zaak["url"],
-            atomic_permission__end_date=timezone.make_aware(datetime(2019, 12, 31)),
+            end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
 
         response = self.client.get(self.endpoint)

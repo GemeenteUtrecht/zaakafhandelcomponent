@@ -20,12 +20,13 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
-from ...models import AtomicPermission
+from ...models import AtomicPermission, UserAtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
+    UserAtomicPermissionFactory,
     UserFactory,
 )
 
@@ -210,13 +211,13 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.start_date.date(), date(2020, 1, 1))
-        self.assertIsNone(atomic_permission.end_date)
 
         user_atomic_permission = atomic_permission.useratomicpermission_set.get()
         self.assertEqual(
             user_atomic_permission.reason, PermissionReason.toegang_verlenen
         )
+        self.assertEqual(user_atomic_permission.start_date.date(), date(2020, 1, 1))
+        self.assertIsNone(user_atomic_permission.end_date)
 
         data = response.json()
 
@@ -286,11 +287,11 @@ class GrantAccessAPITests(APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        AtomicPermissionFactory.create(
-            object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
-            permission=zaken_inzien.name,
-            for_user=self.requester,
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectType.zaak,
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.requester,
             end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
         data = {
@@ -303,17 +304,19 @@ class GrantAccessAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            AtomicPermission.objects.for_user(self.requester).actual().count(), 1
+            UserAtomicPermission.objects.filter(user=self.requester).actual().count(), 1
         )
 
-        atomic_permission = (
-            AtomicPermission.objects.for_user(self.requester).actual().get()
+        user_atomic_permission = (
+            UserAtomicPermission.objects.filter(user=self.requester).actual().get()
         )
+        atomic_permission = user_atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertIsNone(atomic_permission.end_date)
+
+        self.assertIsNone(UserAtomicPermission.end_date)
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
@@ -345,20 +348,20 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         pending_request.refresh_from_db()
-        atomic_permission = (
-            AtomicPermission.objects.for_user(self.requester).actual().get()
-        )
+
+        user_atomic_permission = UserAtomicPermission.objects.filter(
+            user=self.requester
+        ).get()
+        atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(pending_request.result, AccessRequestResult.approve)
-        self.assertEqual(
-            pending_request.user_atomic_permission,
-            atomic_permission.useratomicpermission_set.get(),
-        )
+        self.assertEqual(pending_request.user_atomic_permission, user_atomic_permission)
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.end_date.date(), date(2021, 1, 1))
+
+        self.assertEqual(user_atomic_permission.end_date.date(), date(2021, 1, 1))
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
