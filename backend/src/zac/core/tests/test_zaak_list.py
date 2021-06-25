@@ -233,6 +233,7 @@ class ZaakListTests(ESMixin, ClearCachesMixin, TransactionWebTest):
         zaak1_model = factory(Zaak, zaak1)
         zaak1_model.zaaktype = factory(ZaakType, zt1)
         self.create_zaak_document(zaak1_model)
+        self.refresh_index()
 
         response = self.app.get(self.url, {"zaaktypen": zt1["url"]}, user=superuser)
 
