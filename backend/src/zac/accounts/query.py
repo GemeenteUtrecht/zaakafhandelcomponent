@@ -11,6 +11,8 @@ class AtomicPermissionQuerySet(models.QuerySet):
     def for_user(self, user) -> models.QuerySet:
         return self.filter(users=user).distinct()
 
+
+class UserAtomicPermissionQuerySet(models.QuerySet):
     def actual(self) -> models.QuerySet:
         return self.filter(
             models.Q(end_date__gte=timezone.now()) | models.Q(end_date=None),

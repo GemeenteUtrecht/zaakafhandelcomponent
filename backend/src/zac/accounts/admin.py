@@ -118,7 +118,6 @@ class AtomicPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin
         "object_type",
         "object_uuid",
         "get_users_display",
-        "start_date",
     )
     list_filter = ("permission", "object_type", "users")
     search_fields = ("object_url",)

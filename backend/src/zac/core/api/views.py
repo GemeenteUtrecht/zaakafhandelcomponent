@@ -363,11 +363,9 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
                     "useratomicpermission_set",
                     queryset=UserAtomicPermission.objects.select_related(
                         "atomic_permission"
-                    ).filter(
-                        models.Q(atomic_permission__end_date__isnull=True)
-                        | models.Q(atomic_permission__end_date__gte=timezone.now()),
-                        atomic_permission__object_url=zaak.url,
-                    ),
+                    )
+                    .filter(atomic_permission__object_url=zaak.url)
+                    .actual(),
                     to_attr="zaak_atomic_permissions",
                 )
             )

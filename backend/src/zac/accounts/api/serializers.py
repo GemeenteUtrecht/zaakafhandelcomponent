@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.utils.timezone import make_aware, now
+from django.utils.timezone import make_aware
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -87,16 +87,6 @@ class AtomicPermissionSerializer(serializers.ModelSerializer):
         help_text=_("URL of the zaak this permission applies to"),
         source="atomic_permission.object_url",
     )
-    start_date = serializers.DateTimeField(
-        default=now,
-        help_text=_("Start date of the access"),
-        source="atomic_permission.start_date",
-    )
-    end_date = serializers.DateTimeField(
-        required=False,
-        help_text=_("End date of the access"),
-        source="atomic_permission.end_date",
-    )
 
     class Meta:
         model = UserAtomicPermission
@@ -121,10 +111,11 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
         atomic_permission = valid_data["atomic_permission"]
 
         if (
-            AtomicPermission.objects.for_user(user)
+            UserAtomicPermission.objects.select_related("atomic_permission")
             .filter(
-                object_url=atomic_permission["object_url"],
-                permission=atomic_permission["permission"],
+                user=user,
+                atomic_permission__object_url=atomic_permission["object_url"],
+                atomic_permission__permission=atomic_permission["permission"],
             )
             .actual()
             .exists()
@@ -142,8 +133,6 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
 
         atomic_permission_data = validated_data.pop("atomic_permission")
         atomic_permission_data.update({"object_type": PermissionObjectType.zaak})
-        if "end_date" not in atomic_permission_data:
-            atomic_permission_data.update({"end_date": None})
         atomic_permission, created = AtomicPermission.objects.get_or_create(
             **atomic_permission_data
         )
@@ -243,8 +232,12 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         zaak = valid_data["zaak"]
 
         if (
-            AtomicPermission.objects.for_user(requester)
-            .filter(object_url=zaak.url, permission=zaken_inzien.name)
+            UserAtomicPermission.objects.select_related("atomic_permission")
+            .filter(
+                user=requester,
+                atomic_permission__object_url=zaak.url,
+                atomic_permission__permission=zaken_inzien.name,
+            )
             .actual()
             .exists()
         ):
@@ -339,22 +332,22 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 
         if access_request.result == AccessRequestResult.approve:
             # add permission definition
-            atomic_permission = AtomicPermission.objects.create(
+            atomic_permission, created = AtomicPermission.objects.get_or_create(
                 object_url=access_request.zaak,
                 object_type=PermissionObjectType.zaak,
                 permission=zaken_inzien.name,
-                start_date=make_aware(
-                    datetime.combine(start_date, datetime.min.time())
-                ),
-                end_date=make_aware(datetime.combine(end_date, datetime.min.time()))
-                if end_date
-                else None,
             )
             user_atomic_permission = UserAtomicPermission.objects.create(
                 atomic_permission=atomic_permission,
                 user=access_request.requester,
                 comment=handler_comment,
                 reason=PermissionReason.toegang_verlenen,
+                start_date=make_aware(
+                    datetime.combine(start_date, datetime.min.time())
+                ),
+                end_date=make_aware(datetime.combine(end_date, datetime.min.time()))
+                if end_date
+                else None,
             )
             access_request.user_atomic_permission = user_atomic_permission
             access_request.save()
