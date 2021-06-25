@@ -91,7 +91,9 @@ def search(
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
     if omschrijving:
-        s = s.query(Match(omschrijving=omschrijving))
+        s = s.query(
+            QueryString(default_field="omschrijving", query=f"*{omschrijving}*")
+        )
     if zaaktypen:
         s = s.filter(Terms(zaaktype__url=zaaktypen))
     if behandelaar:
