@@ -10,6 +10,11 @@ import { KetenProcessenService } from '../../keten-processen.service';
   styleUrls: ['../configuration-components.scss']
 })
 export class RedirectComponent {
+  /**
+   * Allows the user to complete an external opened task
+   * from the parent component by submitting the task id.
+   */
+
   @Input() taskContextData: TaskContextData;
   @Input() target: '_blank' | '_self';
 

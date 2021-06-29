@@ -6,9 +6,11 @@
     <div class="keten-processen__actie-buttons-container">
       <h3>Acties</h3>
       <button gu-button
-        (click)="sendMessage(message)"
-        *ngFor="let message of data[0].messages"
-        type="primary" size="small" class="d-inline-block mr-2 mb-2">
+              *ngFor="let message of data[0].messages"
+              (click)="sendMessage(message)"
+              type="primary"
+              size="small"
+              class="d-inline-block mr-2 mb-2">
         {{message}}
       </button>
     </div>
