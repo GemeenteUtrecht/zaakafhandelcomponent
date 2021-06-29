@@ -149,12 +149,31 @@ The display of all the users and their atomic permissions for the case in the ZA
 
 Example
 ^^^^^^^
-For example, user John has blueprint permission to read all the cases of the "Beleid opstellen" case
+For example, a user John has a blueprint permission to read all the cases of the "Beleid opstellen" case
 type. But one of these cases has a related case with another case type ("Bestuurlijke besluitvorming").
-So John can be granted an atomic permission for the particular case, so he will be able to see only
-one case of this case type.
-All atomic permissions can be seen in the ZAC admin page and can be filtered on users.
-To grant a permission an admin page can also be used, but it's easier to do so in the app itself.
+John should not see all "Bestuurlijke besluitvorming" cases, but he can be John can be granted an
+atomic permission for the particular case.
+
+To grant a permission an admin page can be used, but it's easier to do it in the app itself.
+
+If you have a permission to manage access to cases, go to the page of the case with the
+"Bestuurlijke besluitvorming" case type. In the top right corner of the page click on "Toegang verlenen"
+button and select John as the user who you grant an access to. After clicking on "Versturen" button the
+atomic permission is created.
+
+.. image:: _assets/authorization_atomic_grant.png
+    :alt: Grant permission to the user
+
+You can see the created permission in the admin page. Go to the "Atomic permissions" page in the ZAC
+admin.
+
+.. image:: _assets/authorization_atomic_add.png
+    :alt: Go to the atomic permission page
+
+Here you can see the created permission. You can also filter on permission types and users here.
+
+.. image:: _assets/authorization_atomic_list.png
+    :alt: atomic permissions page
 
 
 Relations between authorization objects
