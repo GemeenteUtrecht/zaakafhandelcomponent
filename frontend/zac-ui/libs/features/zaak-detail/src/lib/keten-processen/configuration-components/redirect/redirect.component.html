@@ -1,0 +1,22 @@
+<div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
+  <h1>{{taskContextData.task.name}}</h1>
+  <gu-message type="primary" *ngIf="target === '_blank'" class='d-block mb-4'>
+    <p>De taak is geopend in een nieuw pop-up venster. Zorg er voor dat uw browser pop-up blockers uitgeschakeld zijn.</p>
+
+    <p class="p--marginsmall"><strong>Heeft u de taak afgerond? Klik dan op de knop hieronder.</strong></p>
+  </gu-message>
+    <div class="d-flex justify-content-start">
+      <button gu-button size="large"
+              (click)="submitForm()"
+              [disabled]="isSubmitting"
+              [loading]="isSubmitting">
+        Taak afronden
+      </button>
+    </div>
+  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
+  </gu-message>
+</div>
+<!-- Success screen -->
+<gu-success *ngIf="submitSuccess">
+  <h3 class="mb-4">Voltooid</h3>
+</gu-success>

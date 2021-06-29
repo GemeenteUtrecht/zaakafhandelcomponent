@@ -9,6 +9,7 @@ import { DocumentSelectComponent } from './configuration-components/document-sel
 import { SignDocumentComponent } from './configuration-components/sign-document/sign-document.component';
 import { DynamicFormComponent } from './configuration-components/dynamic-form/dynamic-form.component';
 import { AssignTaskComponent } from './assign-task/assign-task.component';
+import { RedirectComponent } from './configuration-components/redirect/redirect.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { AssignTaskComponent } from './assign-task/assign-task.component';
     SignDocumentComponent,
     DynamicFormComponent,
     AssignTaskComponent,
+    RedirectComponent,
   ],
   imports: [
     CommonModule,

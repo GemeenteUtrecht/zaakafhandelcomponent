@@ -41,6 +41,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   // Assign task
   assignTaskTask: Task;
 
+  doRedirectTarget: '_blank' | '_self';
+
   constructor(
     private route: ActivatedRoute,
     private modalService: ModalService,
@@ -114,8 +116,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
 
   doRedirect(taskContext: TaskContextData) {
     if (taskContext.form === 'zac:doRedirect') {
-      const target = taskContext.context.openInNewWindow ? "_blank" : "_self";
-      window.open(taskContext.context.redirectTo, target);
+      this.doRedirectTarget = taskContext.context.openInNewWindow ? "_blank" : "_self";
+      window.open(taskContext.context.redirectTo, this.doRedirectTarget);
     }
   }
 

@@ -127,11 +127,9 @@
 
     <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-sign-document>
 
+    <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="fetchProcesses()"></gu-redirect>
+
     <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
-
-    <div *ngSwitchCase="'zac:doRedirect'">
-
-    </div>
   </ng-container>
 </gu-modal>
 <gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">
