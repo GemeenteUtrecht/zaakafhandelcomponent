@@ -71,6 +71,26 @@ For now two blueprints are supported:
 
 The new blueprints can be easily defined for all kind of objects and their properties.
 
+Example
+^^^^^^^
+
+For example, we want to create a permission to read all cases with the case type "Beleid opstellen".
+
+In the admin page click on the "Toevoegen" button for "Blueprint definitions":
+
+.. image:: _assets/authorization_blueprint_add.png
+    :alt: Click on the "Toevoegen" button for "Blueprint definitions"
+
+After selecting ``permission`` field ``policy`` field set appears. It represents the blueprint and shows
+which objects properties this permission applies to. Fill in all the fields and click on
+"opslaan" button.
+
+.. image:: _assets/authorization_blueprint_form.png
+    :alt: Fill in permission data
+
+The blueprint permission is created.
+
+
 Authorization profiles
 ----------------------
 
@@ -81,13 +101,37 @@ to relate users to them.
 
 Like blueprint permissions authorization profiles are also managed by functional managers in the ZAC admin.
 
+Example
+^^^^^^^
+
+In the previous subsection we've created a blueprint permission to read cases with the case type
+"Beleid opstellen". Now we want to grant this permission to the user called John.
+
+In the admin interface click on the "Toevoegen" button for "Autorisatieprofielen":
+
+.. image:: _assets/authorization_authprofile_add.png
+    :alt: Click on the "Toevoegen" button for "Autorisatieprofielen"
+
+Fill in the name and select all the blueprint permissions for the authorization profile.
+It's possible to search on permission type and blueprint data in the select widget.
+In the "User authorization profiles" section select all the users who will have this authorization
+profile and and click on "opslaan" button.
+
+.. image:: _assets/authorization_authprofile_form.png
+    :alt: Fill in authorization profile data
+
+The authorization profile page displays how many blueprint permissions this profile has. You can click
+on the number to see all the permissions.
+You can also see which users have this profile.
+
+.. image:: _assets/authorization_authprofile_list.png
+    :alt: Auth profile page
+
 Atomic permissions
 ------------------
 
-Sometimes users should have extra permissions for particular objects. For example, user John has
-blueprint permission to read all the cases of the "Beleid opstellen" case type. But one of these
-cases has a related case with another case type ("Bestuurlijke besluitvorming"). So John can
-request access for the particular case and he will be able to see only one case of this case type.
+Sometimes users should have extra rights for particular objects. For example, if the user should have rights
+to read only particular cases of a certain case type, when atomic permissions can be used.
 
 Unlike blueprint permissions there are several sources of the atomic permissions for the users:
 
@@ -101,3 +145,13 @@ Unlike blueprint permissions there are several sources of the atomic permissions
 * the functional manager created an atomic permission in the admin (not recommended).
 
 The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
+
+
+Example
+^^^^^^^
+For example, user John has blueprint permission to read all the cases of the "Beleid opstellen" case
+type. But one of these cases has a related case with another case type ("Bestuurlijke besluitvorming").
+So John can be granted an atomic permission for the particular case, so he will be able to see only
+one case of this case type.
+All atomic permissions can be seen in the ZAC admin page and can be filtered on users.
+To grant a permission an admin page can also be used, but it's easier to do so in the app itself.
