@@ -65,12 +65,15 @@ class ESPaginationMixin:
         return self.paginator.get_paginated_response(data, fields)
 
 
-class SearchView(ESPaginationMixin, GenericAPIView):
-    authentication_classes = (SessionAuthentication,)
+class ESOrderingMixin:
     ordering = ("-identificatie",)
+    search_document = ZaakDocument
+
+
+class SearchView(ESOrderingMixin, ESPaginationMixin, GenericAPIView):
+    authentication_classes = (SessionAuthentication,)
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (IsAuthenticated,)
-    search_document = ZaakDocument
     serializer_class = SearchSerializer
 
     def get_queryset(self, **kwargs):
@@ -93,7 +96,7 @@ class SearchView(ESPaginationMixin, GenericAPIView):
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of zaken based on input data.
-        The response contains only zaken the user has permisisons to see.
+        The response contains only zaken the user has permissions to see.
 
         """
         input_serializer = self.serializer_class(data=request.data)
@@ -102,41 +105,49 @@ class SearchView(ESPaginationMixin, GenericAPIView):
         # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
 
-        # Make search query
-        fields = input_serializer.validated_data.get("fields")
-
         search_query = {
             **input_serializer.validated_data,
             "user": self.request.user,
             "ordering": ordering,
-            "fields": fields,
         }
+
         results = self.get_queryset(**search_query)
         page = self.paginate_queryset(results)
         serializer = ZaakDocumentSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data, fields=fields)
+        return self.get_paginated_response(
+            serializer.data, fields=input_serializer.validated_data["fields"]
+        )
 
 
-class SearchReportViewSet(ListCreateAPIView):
-    ordering = ("-identificatie",)
+class SearchReportViewSet(ESOrderingMixin, ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
-    queryset = SearchReport.objects.all()
     serializer_class = SearchReportSerializer
+    queryset = SearchReport.objects.all()
 
     def get_queryset(self):
         qs = super().get_queryset()
 
         # filter on allowed zaaktypen
         zaaktypen = get_zaaktypen(self.request.user)
-        identificaties = list({zt.identificatie for zt in zaaktypen})
+        allowed_zt_urls = {zt.url for zt in zaaktypen}
 
         # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen
         # for this particular user
-        return qs.filter(zaaktypen__contained_by=identificaties)
+        allowed_report_ids = []
+        for report in qs:
+            search_results = search(
+                **{**report.query, "fields": ["zaaktype.url"]}, user=self.request.user
+            )
+            zaaktypen = set(result.zaaktype.url for result in search_results)
+            if zaaktypen.issubset(allowed_zt_urls):
+                allowed_report_ids.append(report.id)
+
+        return qs.filter(id__in=allowed_report_ids)
 
     @extend_schema(
         summary=_("Create a search report"),
         request=SearchSerializer,
+        parameters=[es_document_to_ordering_parameters(ZaakDocument)],
     )
     def post(self, request, *args, **kwargs):
         search_serializer = SearchSerializer(data=request.data)
@@ -146,15 +157,16 @@ class SearchReportViewSet(ListCreateAPIView):
         ordering = ESOrderingFilter().get_ordering(request, self)
 
         # Make search query
-        fields = search_serializer.validated_data.get("fields")
         search_query = {
             **search_serializer.validated_data,
             "ordering": ordering,
-            "fields": fields,
         }
 
         # Create and save instance
-        data = {**request.data, "query": search_query}
+        data = {
+            **request.data,
+            "query": search_query,
+        }
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -170,15 +182,14 @@ class SearchReportViewSet(ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
 
-class SearchReportDetailView(ESPaginationMixin, GenericAPIView):
-    ordering = ("-identificatie",)
+class SearchReportDetailView(ESOrderingMixin, ESPaginationMixin, GenericAPIView):
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (IsAuthenticated & CanDownloadSearchReports,)
     queryset = SearchReport.objects.all()
-    search_document = ZaakDocument
     serializer_class = ZaakDocumentSerializer
 
     @extend_schema(
+        operation_id="search_reports_detail",
         summary=_("Retrieve a search report"),
         parameters=[
             es_document_to_ordering_parameters(ZaakDocument),
@@ -201,4 +212,6 @@ class SearchReportDetailView(ESPaginationMixin, GenericAPIView):
         results = search(user=request.user, **search_report.query)
         page = self.paginate_queryset(results)
         serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data, fields=search_report.fields)
+        return self.get_paginated_response(
+            serializer.data, fields=search_report.query["fields"]
+        )

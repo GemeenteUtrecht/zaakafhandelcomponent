@@ -6,6 +6,13 @@ from ..documents import ZaakDocument
 from ..models import SearchReport
 from .utils import get_document_fields, get_document_properties
 
+DEFAULT_ES_FIELDS = [
+    field[0]
+    for field in get_document_fields(
+        get_document_properties(ZaakDocument)["properties"]
+    )
+]
+
 
 class ZaakIdentificatieSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
@@ -49,13 +56,8 @@ class SearchSerializer(serializers.Serializer):
         help_text=_(
             "Fields that will be returned with the search results. Default returns all fields. Will always include <identificatie>."
         ),
-        choices=[
-            field[0]
-            for field in get_document_fields(
-                get_document_properties(ZaakDocument)["properties"]
-            )
-        ],
-        default=["*"],
+        choices=DEFAULT_ES_FIELDS,
+        default=sorted(DEFAULT_ES_FIELDS),
     )
     include_closed = serializers.BooleanField(
         required=False,
@@ -64,9 +66,7 @@ class SearchSerializer(serializers.Serializer):
     )
 
     def validate_fields(self, fields):
-        if not fields:
-            fields = ["*"]
-        else:
+        if isinstance(fields, set):
             fields.add("identificatie")
         return list(fields)
 

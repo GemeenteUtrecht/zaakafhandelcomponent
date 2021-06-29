@@ -7,19 +7,9 @@ from zac.core.api.pagination import BffPagination
 from ..documents import ZaakDocument
 from .utils import get_document_fields, get_document_properties
 
-DEFAULT_ES_FIELDS = [
-    field[0]
-    for field in get_document_fields(
-        get_document_properties(ZaakDocument)["properties"]
-    )
-]
-
 
 class ESPagination(BffPagination):
-    def get_paginated_response(self, data, fields: List[str] = ["*"]):
-        if fields == ["*"]:
-            fields = DEFAULT_ES_FIELDS
-
+    def get_paginated_response(self, data, fields: List[str]):
         return Response(
             {
                 "fields": fields,

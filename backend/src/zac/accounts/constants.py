@@ -20,4 +20,3 @@ class PermissionReason(DjangoChoices):
     activiteit = ChoiceItem("activiteit", _("activiteit"))
     adviseur = ChoiceItem("adviseur", _("adviseur"))
     accordeur = ChoiceItem("accordeur", _("accordeur"))
-
