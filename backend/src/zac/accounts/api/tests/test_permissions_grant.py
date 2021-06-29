@@ -310,13 +310,13 @@ class GrantAccessAPITests(APITransactionTestCase):
         user_atomic_permission = (
             UserAtomicPermission.objects.filter(user=self.requester).actual().get()
         )
-        atomic_permission = user_atomic_permission
+        atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
-        self.assertIsNone(UserAtomicPermission.end_date)
+        self.assertIsNone(user_atomic_permission.end_date)
 
         # check email
         self.assertEqual(len(mail.outbox), 1)
