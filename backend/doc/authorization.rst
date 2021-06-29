@@ -72,6 +72,14 @@ For now, two blueprints are supported:
 
 The new blueprints can be easily defined for all kinds of objects and their properties.
 
+.. note::
+
+   If you want to quickly create permissions for all case types you can run the following command:
+
+   .. code:: shell
+
+      python src/manage.py add_blueprint_permissions_for_zaaktypen
+
 Example
 ^^^^^^^
 
@@ -148,11 +156,20 @@ Unlike blueprint permissions there are several sources of the atomic permissions
 
 The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
 
+.. note::
+
+   If there are behandelaars, advisers and approvers who were created in the past and you want to create
+   related atomic permissions for them you can run the following command:
+
+   .. code:: shell
+
+      python src/manage.py add_atomic_permissions
+
 Example
 ^^^^^^^
 For example, a user John has a blueprint permission to read all the cases of the "Beleid opstellen" case
 type. But one of these cases has a related case with another case type ("Bestuurlijke besluitvorming").
-John should not see all "Bestuurlijke besluitvorming" cases, but he can be John can be granted an
+John should not see all "Bestuurlijke besluitvorming" cases, but he can be granted an
 atomic permission for the particular case.
 
 To grant a permission an admin page can be used, but it's easier to do it in the app itself.
