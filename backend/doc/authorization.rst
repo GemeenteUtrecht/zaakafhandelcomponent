@@ -127,6 +127,7 @@ You can also see which users have this profile.
 .. image:: _assets/authorization_authprofile_list.png
     :alt: Auth profile page
 
+
 Atomic permissions
 ------------------
 
@@ -146,7 +147,6 @@ Unlike blueprint permissions there are several sources of the atomic permissions
 
 The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
 
-
 Example
 ^^^^^^^
 For example, user John has blueprint permission to read all the cases of the "Beleid opstellen" case
@@ -155,3 +155,22 @@ So John can be granted an atomic permission for the particular case, so he will 
 one case of this case type.
 All atomic permissions can be seen in the ZAC admin page and can be filtered on users.
 To grant a permission an admin page can also be used, but it's easier to do so in the app itself.
+
+
+Relations between authorization objects
+---------------------------------------
+
+For development and administration purposes here is the ER diagram for the authorization models.
+It shows how users, permissions and authorization profiles related to each other.
+
+.. image:: _assets/authorization_er.png
+    :alt: ER diagram
+
+As you can see there are many-to-many relations between models:
+
+* ``User`` and ``AuthorizationProfile``
+* ``User`` and ``AtomicPermission``
+* ``AuthorizationProfile`` and ``BlueprintPermission``
+
+This structure helps to create unique blueprint and atomic permissions and then related users to these
+objects.
