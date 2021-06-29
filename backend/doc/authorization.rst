@@ -7,7 +7,7 @@ Authorization
 The ZAC represents the application of the 5th layer of the Common Ground architecture. It
 requests and modifies information from different APIs including Zaken API, Documenten API,
 Kownsl API, etc. Therefore the ZAC has implemented the authorization model which ensures that
-all the ZAC users have permissions to perform necessary operations via these APIs.
+all the ZAC users have permission to perform necessary operations via these APIs.
 
 Permission types
 ----------------
@@ -42,7 +42,7 @@ The permissions used only in the old version of the ZAC:
     * ``zaken:set-result`` - to set result to the case
     * ``zaken:create-status`` - to add status to the case
 
-Each operation type has its own required shape for a blueprint permission.
+Each operation type has its required shape for a blueprint permission.
 It is explained in the details in the "Blueprint permission" subsection.
 
 Blueprint permissions
@@ -53,13 +53,14 @@ The permissions in the ZAC can be divided into two groups:
 * blueprint permissions
 * atomic permissions.
 
-Blueprint permission allows a user to perform a particular operation on the defined subset of the objects.
+The blueprint permission allows a user to perform a particular operation on the defined subset of the objects.
 This is the main type of the permissions. Blueprint permissions are defined by functional managers
-in the admin interface of the ZAC. The user interface to manage them in the app is **WIP**.
+in the admin interface of the ZAC.
+
+The user interface to manage them in the app is **WIP**.
 
 The subset of the objects (or "blueprint") is defined based on object properties and unique for every permission type.
-
-For now two blueprints are supported:
+For now, two blueprints are supported:
 
 * for zaak permissions:
     * zaaktype (``catalogus`` and ``omschrijving``)
@@ -69,7 +70,7 @@ For now two blueprints are supported:
     * informatieobjecttype (``catalogus`` and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
 
-The new blueprints can be easily defined for all kind of objects and their properties.
+The new blueprints can be easily defined for all kinds of objects and their properties.
 
 Example
 ^^^^^^^
@@ -81,8 +82,8 @@ In the admin page click on the "Toevoegen" button for "Blueprint definitions":
 .. image:: _assets/authorization_blueprint_add.png
     :alt: Click on the "Toevoegen" button for "Blueprint definitions"
 
-After selecting ``permission`` field ``policy`` field set appears. It represents the blueprint and shows
-which objects properties this permission applies to. Fill in all the fields and click on
+After selecting ``permission`` field a ``policy`` fieldset appears. It represents the blueprint and
+shows which objects properties this permission applies to. Fill in all the fields and click on
 "opslaan" button.
 
 .. image:: _assets/authorization_blueprint_form.png
@@ -94,7 +95,7 @@ The blueprint permission is created.
 Authorization profiles
 ----------------------
 
-Blueprint permissions can be grouped into authorization profiles which represent "roles" in the ZAC
+Blueprint permissions can be grouped into authorization profiles that represent "roles" in the ZAC
 authorization model. Each user can relate to one of many authorization profiles. Therefore it is
 possible to create several profiles with typical permission groups (read-only, admin, etc.) and then
 to relate users to them.
@@ -104,7 +105,7 @@ Like blueprint permissions authorization profiles are also managed by functional
 Example
 ^^^^^^^
 
-In the previous subsection we've created a blueprint permission to read cases with the case type
+In the previous subsection, we've created a blueprint permission to read cases with the case type
 "Beleid opstellen". Now we want to grant this permission to the user called John.
 
 In the admin interface click on the "Toevoegen" button for "Autorisatieprofielen":
@@ -115,7 +116,7 @@ In the admin interface click on the "Toevoegen" button for "Autorisatieprofielen
 Fill in the name and select all the blueprint permissions for the authorization profile.
 It's possible to search on permission type and blueprint data in the select widget.
 In the "User authorization profiles" section select all the users who will have this authorization
-profile and and click on "opslaan" button.
+profile and click on "opslaan" button.
 
 .. image:: _assets/authorization_authprofile_form.png
     :alt: Fill in authorization profile data
@@ -132,7 +133,7 @@ Atomic permissions
 ------------------
 
 Sometimes users should have extra rights for particular objects. For example, if the user should have rights
-to read only particular cases of a certain case type, when atomic permissions can be used.
+to read only particular cases of a certain case type then atomic permissions can be used.
 
 Unlike blueprint permissions there are several sources of the atomic permissions for the users:
 
@@ -142,8 +143,8 @@ Unlike blueprint permissions there are several sources of the atomic permissions
   the users mentioned there receive a permission to read the case automatically.
 * the user is assigned to a case **activity**. When the user is assigned to the activity they
   receive permissions to read and update activities automatically.
-* the user **requested access** to the particular case and this request was approved.
-* the functional manager created an atomic permission in the admin (not recommended).
+* the user **requests access** to the particular case and this request was approved.
+* the functional manager grants permission to the user.
 
 The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
 
@@ -158,13 +159,13 @@ To grant a permission an admin page can be used, but it's easier to do it in the
 
 If you have a permission to manage access to cases, go to the page of the case with the
 "Bestuurlijke besluitvorming" case type. In the top right corner of the page click on "Toegang verlenen"
-button and select John as the user who you grant an access to. After clicking on "Versturen" button the
+button and select John as the user to who you grant access. After clicking on "Versturen" button the
 atomic permission is created.
 
 .. image:: _assets/authorization_atomic_grant.png
     :alt: Grant permission to the user
 
-You can see the created permission in the admin page. Go to the "Atomic permissions" page in the ZAC
+You can see the created permission on the admin page. Go to the "Atomic permissions" page in the ZAC
 admin.
 
 .. image:: _assets/authorization_atomic_add.png
@@ -191,5 +192,5 @@ As you can see there are many-to-many relations between models:
 * ``User`` and ``AtomicPermission``
 * ``AuthorizationProfile`` and ``BlueprintPermission``
 
-This structure helps to create unique blueprint and atomic permissions and then related users to these
+This structure helps to create unique blueprint and atomic permissions and relate users to these
 objects.
