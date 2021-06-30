@@ -6,9 +6,11 @@
     <div class="keten-processen__actie-buttons-container">
       <h3>Acties</h3>
       <button gu-button
-        (click)="sendMessage(message)"
-        *ngFor="let message of data[0].messages"
-        type="primary" size="small" class="d-inline-block mr-2 mb-2">
+              *ngFor="let message of data[0].messages"
+              (click)="sendMessage(message)"
+              type="primary"
+              size="small"
+              class="d-inline-block mr-2 mb-2">
         {{message}}
       </button>
     </div>
@@ -40,7 +42,7 @@
                         class="mb-2"
                         type="secondary"
                         size="small"
-                        (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+                        (click)="executeTask(task.id)">
                   Uitvoeren
                 </button>
               </ng-container>
@@ -82,7 +84,7 @@
                   <button gu-button *ngIf="currentUser.username === task.assignee.username"
                              class="mb-2"
                              type="secondary"
-                             (click)="executeTask(task.id, task.hasForm, task.executeUrl)">
+                             (click)="executeTask(task.id)">
                     Uitvoeren
                   </button>
                 </ng-container>
@@ -126,6 +128,8 @@
     <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-document-select>
 
     <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-sign-document>
+
+    <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="fetchProcesses()"></gu-redirect>
 
     <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
   </ng-container>

@@ -34,7 +34,9 @@ export interface Context {
   title?: string;
   zaakInformatie?: ZaakInformatie;
   reviewType?: 'advice' | 'approval';
-  formFields?: FormField[]
+  formFields?: FormField[],
+  redirectTo?: string,
+  openInNewWindow?: boolean
 }
 
 export interface TaskContextData {
@@ -44,6 +46,7 @@ export interface TaskContextData {
     'zac:documentSelectie' |
     'zac:gebruikerSelectie' |
     'zac:validSign:configurePackage' |
+    'zac:doRedirect' |
     any;
   task: Task;
 }
