@@ -96,25 +96,25 @@ class SearchZakenTests(ESMixin, TestCase):
         )
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_identificatie(self):
         result = search(identificatie="ZAAK1", only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_bronorg(self):
         result = search(bronorganisatie="123456", only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_behandelaar(self):
         result = search(behandelaar="some_username", only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_only_allowed_blueprint(self):
         user = UserFactory.create()
@@ -131,7 +131,7 @@ class SearchZakenTests(ESMixin, TestCase):
         result = search(user=user, only_allowed=True)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_only_allowed_atomic(self):
         user = UserFactory.create()
@@ -144,13 +144,13 @@ class SearchZakenTests(ESMixin, TestCase):
         result = search(user=user, only_allowed=True)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_omschrijving(self):
         result = search(omschrijving="some", only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_omschrijving_part(self):
         result = search(omschrijving="som", only_allowed=False)
@@ -164,13 +164,13 @@ class SearchZakenTests(ESMixin, TestCase):
         )
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_search_eigenschappen_with_point(self):
         result = search(eigenschappen={"Bedrag incl. BTW": "aaa"}, only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_combined(self):
         user = UserFactory.create()
@@ -195,14 +195,14 @@ class SearchZakenTests(ESMixin, TestCase):
         )
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0], self.zaak_document1)
 
     def test_ordering(self):
         super_user = SuperUserFactory.create()
         result = search(user=super_user, ordering=("-identificatie",))
-        self.assertEqual(result[0], self.zaak_document2.url)
+        self.assertEqual(result[0].url, self.zaak_document2.url)
 
     def test_nested_ordering(self):
         super_user = SuperUserFactory.create()
         result = search(user=super_user, ordering=("-zaaktype.omschrijving",))
-        self.assertEqual(result[0], self.zaak_document2.url)
+        self.assertEqual(result[0].url, self.zaak_document2.url)

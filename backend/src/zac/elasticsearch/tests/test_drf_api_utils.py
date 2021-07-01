@@ -77,6 +77,7 @@ class UtilsTests(TestCase):
         expected_data = [
             ("some_nested.some_nested_text", "text"),
             ("some_date", "date"),
+            ("some_text", "text"),
             ("some_keyword", "keyword"),
             ("some_boolean", "boolean"),
         ]
