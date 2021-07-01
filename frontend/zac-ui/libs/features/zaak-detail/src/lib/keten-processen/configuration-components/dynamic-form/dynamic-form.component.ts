@@ -55,7 +55,8 @@ export class DynamicFormComponent implements OnChanges {
     const formattedEnumArray = []
     enumArray.forEach(value => {
       formattedEnumArray.push({
-        id: value[0]
+        id: value[0],
+        name: value[1]
       });
     });
     this.formattedEnumItems[name] = formattedEnumArray;
