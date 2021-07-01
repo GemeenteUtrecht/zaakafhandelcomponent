@@ -1,11 +1,15 @@
 @import './base/colors/colors';
 
 :host {
-  width: 100%;
+  display: block;
 }
 
 .table {
   width: 100%;
+
+  &--wrap {
+    white-space: normal;
+  }
 
   &__row--expandable &__cell--expandable-toggle .mat-icon {
     cursor: pointer;
@@ -26,7 +30,6 @@
     background: whitesmoke;
     cursor: pointer;
   }
-
 
   &__row--expanded-content & {
     box-shadow: none;
@@ -53,13 +56,12 @@
     border-bottom: none;
   }
 
-
   &__nested-content {
     white-space: pre-line;
   }
 
-  &--wrap {
-    white-space: normal;
+  &__nested-content .table__cell:first-of-type {
+    padding-left: 0;
   }
 
   .icon {
@@ -77,5 +79,11 @@
     &--red {
       color: $color-warn;
     }
+  }
+
+  &__row--no-data &__cell p {
+    font-style: italic;
+    margin: 12px 0;
+    text-align: center;
   }
 }

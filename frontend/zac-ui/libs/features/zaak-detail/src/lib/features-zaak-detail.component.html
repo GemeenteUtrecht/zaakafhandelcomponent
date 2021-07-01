@@ -75,7 +75,11 @@
                                [identificatie]="identificatie"
                                class="zaak-detail__section">
         </gu-gerelateerde-zaken>
+
+        <gu-user-permissions [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-user-permissions>
       </div>
+
+
       <div class="col-xl-8">
         <gu-status
           [bronorganisatie]="bronorganisatie"

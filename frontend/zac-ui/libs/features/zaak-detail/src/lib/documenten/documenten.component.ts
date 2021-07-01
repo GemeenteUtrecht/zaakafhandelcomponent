@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Table, RowData, ExtensiveCell } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { convertKbToMb } from '@gu/utils';
 
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
 import { DocumentenService } from './documenten.service';

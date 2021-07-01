@@ -1,0 +1,14 @@
+<div class="user-permissions card">
+  <!-- Title -->
+  <h2>Gebruikersrechten</h2>
+
+  <!-- Loading -->
+  <ng-container *ngIf="isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+
+  <!-- Form -->
+  <ng-container *ngIf="!isLoading">
+    <gu-table [expandable]="true" [table]="table" (buttonOutput)="onButtonClick($event)"></gu-table>
+  </ng-container>
+</div>
