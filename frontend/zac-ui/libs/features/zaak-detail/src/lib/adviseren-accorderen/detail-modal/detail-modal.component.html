@@ -6,9 +6,8 @@
   <ng-container *ngIf="data && !isLoading">
     <gu-table
       *ngIf="(data.length > 0) && tableData"
-      [tableData]="tableData"
+      [table]="tableData"
       [expandable]="true"
-      headColor="gray"
       [wrap]="true"
       (buttonOutput)="handleTableButtonOutput($event)">
     </gu-table>

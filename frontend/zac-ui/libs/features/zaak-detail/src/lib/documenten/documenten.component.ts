@@ -68,9 +68,6 @@ export class DocumentenComponent implements OnChanges {
     return data.map( (element: Document) => {
      const icon = element.locked ? 'lock' : 'lock_open'
      const iconColor = element.locked ? 'orange' : 'green'
-     const bestandsomvang =
-       element.bestandsomvang > 999 ? `${(convertKbToMb(element.bestandsomvang, 2)).toLocaleString("nl-NL")} MB`
-       : `${element.bestandsomvang} KB`;
      const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
      const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
      const showEditCell = !element.locked || this.docsInEditMode.includes(element.writeUrl);

@@ -10,7 +10,7 @@
     <ng-container *ngIf="relatedObjects && !isLoading">
       <div *ngFor="let tableData of tablesData">
         <h3>{{tableData.title}}</h3>
-        <gu-table [tableData]="tableData.table"
+        <gu-table [table]="tableData.table"
                   class="mb-4">
         </gu-table>
       </div>
