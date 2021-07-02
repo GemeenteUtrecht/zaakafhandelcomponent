@@ -151,7 +151,7 @@ class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
-    start = models.DateTimeField(_("start"), blank=True, null=True)
+    start = models.DateTimeField(_("start"), default=timezone.now)
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
@@ -275,12 +275,6 @@ class UserAtomicPermission(models.Model):
 
     class Meta:
         db_table = "accounts_user_atomic_permissions"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "atomic_permission"],
-                name="unique_user_and_atomic_permission",
-            )
-        ]
 
 
 class BlueprintPermission(models.Model):
@@ -300,24 +294,14 @@ class BlueprintPermission(models.Model):
             "on their properties i.e. zaaktype, informatieobjecttype"
         ),
     )
-    start_date = models.DateTimeField(
-        _("start date"),
-        default=timezone.now,
-        help_text=_("Start date of the permission"),
-    )
-    end_date = models.DateTimeField(
-        _("end date"),
-        blank=True,
-        null=True,
-        help_text=_("End date of the permission"),
-    )
 
     objects = BlueprintPermissionQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("blueprint definition")
-        verbose_name_plural = _("blueprint definitions")
+        verbose_name = _("blueprint permission")
+        verbose_name_plural = _("blueprint permissions")
         ordering = ("policy__zaaktype_omschrijving", "permission")
+        unique_together = ("permission", "policy")
 
     def __str__(self):
         if not self.permission or not self.policy:

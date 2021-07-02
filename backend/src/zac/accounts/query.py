@@ -26,6 +26,7 @@ class BlueprintPermissionQuerySet(models.QuerySet):
 
     def actual(self) -> models.QuerySet:
         return self.filter(
-            models.Q(end_date__gte=timezone.now()) | models.Q(end_date=None),
-            start_date__lte=timezone.now(),
-        )
+            models.Q(auth_profiles__userauthorizationprofile__end__gte=timezone.now())
+            | models.Q(auth_profiles__userauthorizationprofile__end=None),
+            auth_profiles__userauthorizationprofile__start__lte=timezone.now(),
+        ).distinct()
