@@ -5,27 +5,23 @@ from django.urls import reverse
 
 from elasticsearch_dsl import Index
 from furl import furl
-from rest_framework.test import APITestCase, APITransactionTestCase
+from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..drf_api.serializers import DEFAULT_ES_FIELDS
 from ..models import SearchReport
-from ..searches import search
 from .factories import SearchReportFactory
 from .utils import ESMixin
 
@@ -149,34 +145,35 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 },
             },
         )
-        endpoint = reverse("report-list")
+        endpoint = reverse("searchreport-list")
 
         with patch(
             "zac.elasticsearch.drf_api.views.get_zaaktypen", return_value=zaaktypen
         ):
             response = self.client.get(endpoint)
-
         self.assertEqual(response.status_code, 200)
         results = response.json()
         self.assertEqual(len(results), 2)
         self.assertEqual(
             results[0]["query"],
             {
-                "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "zaaktype": {
-                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                     "omschrijving": "zaaktype1",
+                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                 },
+                "fields": ["bronorganisatie", "identificatie", "zaaktype"],
+                "includeClosed": False,
             },
         )
         self.assertEqual(
             results[1]["query"],
             {
-                "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "zaaktype": {
-                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                     "omschrijving": "zaaktype2",
+                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                 },
+                "fields": ["bronorganisatie", "identificatie", "zaaktype"],
+                "includeClosed": False,
             },
         )
 
@@ -230,7 +227,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 },
             },
         )
-        endpoint = reverse("report-list")
+        endpoint = reverse("searchreport-list")
 
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
@@ -238,17 +235,18 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(
             results[0]["query"],
             {
+                "zaaktype": {
+                    "omschrijving": "zaaktype1",
+                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                },
                 "fields": [
                     "bronorganisatie",
                     "identificatie",
-                    "zaaktype.url",
                     "zaaktype.catalogus",
                     "zaaktype.omschrijving",
+                    "zaaktype.url",
                 ],
-                "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-                    "omschrijving": "zaaktype1",
-                },
+                "includeClosed": False,
             },
         )
 
@@ -289,7 +287,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        endpoint = reverse("report-detail", kwargs={"pk": search_report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
 
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -411,7 +409,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        endpoint = reverse("report-detail", kwargs={"pk": search_report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
 
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -521,7 +519,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        endpoint = reverse("report-detail", kwargs={"pk": search_report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
 
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -606,7 +604,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
 
         endpoint = (
-            furl(reverse("report-detail", kwargs={"pk": search_report.pk}))
+            furl(reverse("searchreport-results", kwargs={"pk": search_report.pk}))
             .add({"ordering": ["-identificatie"]})
             .url
         )
@@ -672,7 +670,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
 
         endpoint = (
-            furl(reverse("report-detail", kwargs={"pk": search_report.pk}))
+            furl(reverse("searchreport-results", kwargs={"pk": search_report.pk}))
             .add({"ordering": ["identificatie"]})
             .url
         )
@@ -739,11 +737,11 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     @requests_mock.Mocker()
     def test_create_search_report(self, m):
-        endpoint = reverse("report-list")
+        endpoint = reverse("searchreport-list")
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
         response = self.client.post(
-            endpoint, {"name": "wow-nice-report"}, format="json"
+            endpoint, {"name": "wow-nice-report", "query": {}}, format="json"
         )
         self.assertEqual(response.status_code, 201)
         search_report = SearchReport.objects.get(name="wow-nice-report")
@@ -775,14 +773,14 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_get_list_not_logged_in(self):
         SearchReportFactory.create()
-        endpoint = reverse("report-list")
+        endpoint = reverse("searchreport-list")
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 403)
 
     def test_get_list_logged_in(self):
         SearchReportFactory.create()
         search_reports = SearchReport.objects.all()
-        endpoint = reverse("report-list")
+        endpoint = reverse("searchreport-list")
         user = UserFactory.create()
         self.client.force_authenticate(user)
         with patch(
@@ -794,13 +792,13 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_get_report_not_logged_in(self):
         report = SearchReportFactory.create()
-        endpoint = reverse("report-detail", kwargs={"pk": report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": report.pk})
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 403)
 
     def test_get_report_logged_in_no_permission(self):
         report = SearchReportFactory.create()
-        endpoint = reverse("report-detail", kwargs={"pk": report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": report.pk})
         user = UserFactory.create()
         self.client.force_authenticate(user)
         response = self.client.get(endpoint)
@@ -871,7 +869,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaken.refresh()
 
         search_report = SearchReportFactory.create()
-        endpoint = reverse("report-detail", kwargs={"pk": search_report.pk})
+        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 

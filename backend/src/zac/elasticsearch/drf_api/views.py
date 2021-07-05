@@ -9,6 +9,7 @@ from rest_framework.generics import GenericAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakSerializer
@@ -139,7 +140,7 @@ class SearchView(ESGenericAPIView):
         )
 
 
-class SearchReportViewSet(PerformSearchMixin, ListCreateAPIView):
+class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = SearchReportSerializer
     queryset = SearchReport.objects.all()
@@ -162,38 +163,31 @@ class SearchReportViewSet(PerformSearchMixin, ListCreateAPIView):
 
         return qs.filter(id__in=allowed_report_ids)
 
-    @extend_schema(
-        summary=_("Create a search report"),
-        request=SearchSerializer,
-        parameters=[es_document_to_ordering_parameters(ZaakDocument)],
-    )
-    def post(self, request, *args, **kwargs):
-        search_serializer = SearchSerializer(data=request.data)
-        search_serializer.is_valid(raise_exception=True)
+    @extend_schema(summary=_("Create a search report"))
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-        # Make search query
-        search_query = {
-            **search_serializer.validated_data,
-        }
-
-        # Create and save instance
-        data = {
-            **request.data,
-            "query": search_query,
-        }
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+    @extend_schema(summary=_("Destroy a search report"))
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
     @extend_schema(
         summary=_("Retrieve a list of search reports"),
     )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(summary=_("Partially update a search report"))
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @extend_schema(summary=_("Retrieve a search report"))
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @extend_schema(summary=_("Update a search report"))
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
 
 class SearchReportDetailView(ESGenericAPIView):
@@ -203,8 +197,8 @@ class SearchReportDetailView(ESGenericAPIView):
     serializer_class = ZaakDocumentSerializer
 
     @extend_schema(
-        operation_id="search_reports_detail",
-        summary=_("Retrieve a search report"),
+        operation_id="search_reports_results",
+        summary=_("Retrieve the results of a search report"),
         parameters=[
             es_document_to_ordering_parameters(ZaakDocument),
             OpenApiParameter(

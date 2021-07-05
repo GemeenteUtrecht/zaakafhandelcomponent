@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from ..documents import ZaakDocument
 from ..models import SearchReport
+from .fields import OrderedMultipleChoiceField
 from .utils import get_document_fields, get_document_properties
 
 DEFAULT_ES_FIELDS = [
@@ -51,13 +52,13 @@ class SearchSerializer(serializers.Serializer):
             "ZAAK-EIGENSCHAPpen in format `<property name>:{'value': <property value>}`"
         ),
     )
-    fields = serializers.MultipleChoiceField(
+    fields = OrderedMultipleChoiceField(
         required=False,
         help_text=_(
             "Fields that will be returned with the search results. Default returns all fields. Will always include <identificatie>."
         ),
         choices=DEFAULT_ES_FIELDS,
-        default=sorted(DEFAULT_ES_FIELDS),
+        default=DEFAULT_ES_FIELDS,
     )
     include_closed = serializers.BooleanField(
         required=False,
@@ -68,7 +69,8 @@ class SearchSerializer(serializers.Serializer):
     def validate_fields(self, fields):
         if isinstance(fields, set):
             fields.add("identificatie")
-        return list(fields)
+            fields.add("bronorganisatie")
+        return sorted(list(fields))
 
     def validate_eigenschappen(self, data):
         validated_data = dict()
@@ -86,6 +88,8 @@ class SearchSerializer(serializers.Serializer):
 
 
 class SearchReportSerializer(serializers.ModelSerializer):
+    query = SearchSerializer()
+
     class Meta:
         model = SearchReport
         fields = (

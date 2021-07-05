@@ -11,7 +11,7 @@ def get_random_search_query():
     fields = random.choices(DEFAULT_ES_FIELDS)
     include_closed = random.choice([False, True])
     return {
-        "fields": fields,
+        "fields": sorted(fields),
         "include_closed": include_closed,
     }
 
