@@ -37,6 +37,7 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
+from .api.api_models import Objecttype
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol, get_naam_medewerker
@@ -1108,3 +1109,18 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
         },
     )
     return factory(BesluitDocument, bio_data)
+
+
+###################################################
+#               Objecttypes                       #
+###################################################
+
+
+def fetch_objecttypes() -> List[Objecttype]:
+    conf = CoreConfig.get_solo()
+    objecttype_service = conf.primary_objecttypes_api
+
+    client = objecttype_service.build_client()
+    objecttypes_data = client.list("objecttype")
+
+    return factory(Objecttype, objecttypes_data)

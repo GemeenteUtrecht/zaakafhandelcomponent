@@ -1,0 +1,27 @@
+from dataclasses import dataclass
+from datetime import date
+from typing import Optional
+
+from zgw_consumers.api_models.base import ZGWModel
+
+
+# TODO Move to ZGW_consumers
+@dataclass
+class Objecttype(ZGWModel):
+    url: str
+    name: str
+    name_plural: str
+    description: Optional[str]
+    data_classification: Optional[str]
+    maintainer_organization: Optional[str]
+    maintainer_department: Optional[str]
+    contact_person: Optional[str]
+    contact_email: Optional[str]
+    source: Optional[str]
+    update_frequency: Optional[str]
+    provider_organization: Optional[str]
+    documentation_url: Optional[str]
+    labels: Optional[dict]
+    created_at: Optional[date]
+    modified_at: Optional[date]
+    versions: Optional[list]
