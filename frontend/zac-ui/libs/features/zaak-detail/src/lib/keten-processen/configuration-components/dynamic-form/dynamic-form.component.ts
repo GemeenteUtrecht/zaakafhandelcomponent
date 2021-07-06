@@ -5,19 +5,24 @@ import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { DatePipe } from '@angular/common';
 
+/**
+ * <gu-dynamic-form [taskContextData]="taskContextData"></gu-dynamic-form>
+ *
+ * A Dynamic Form is a specific type of form for a process task.
+ * As the name implies, a form will be rendered dynamically according
+ * to the input data. The value of "inputType" from the input data
+ * specifies what type of input field needs to be displayed.
+ *
+ * Requires taskContextData: TaskContextData input for the form layout.
+ *
+ * Emits successReload: boolean after succesfully submitting the form.
+ */
 @Component({
   selector: 'gu-dynamic-form',
   templateUrl: './dynamic-form.component.html',
   styleUrls: ['../configuration-components.scss']
 })
 export class DynamicFormComponent implements OnChanges {
-  /**
-   * A Dynamic Form is a specific type of form for a process task.
-   * As the name implies, a form will be rendered dynamically according
-   * to the input data. The value of "inputType" from the input data
-   * specifies what type of input field needs to be displayed.
-   */
-
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
