@@ -119,8 +119,8 @@ export class UserPermissionsComponent implements OnInit {
     //
 
     /**
-     * TODO: VALIDATE, DOES THIS WORK???
-     * @param event
+     * Gets called when delete button is clicked, remover user permission.
+     * @param {TableButtonClickEvent} event
      */
     onButtonClick(event: TableButtonClickEvent): void {
         const permission = event.delete;
