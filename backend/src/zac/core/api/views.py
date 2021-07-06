@@ -36,7 +36,7 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-from zac.core.services import update_document
+from zac.core.services import fetch_objecttypes, update_document
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -81,6 +81,7 @@ from .serializers import (
     ExtraInfoUpSerializer,
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
+    ObjecttypeSerializer,
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
@@ -679,3 +680,22 @@ class EigenschappenView(ListAPIView):
         )
 
         return eigenschappen_aggregated
+
+
+#
+# Objects endpoints
+#
+
+
+@extend_schema(
+    summary=_("List Objecttypes"),
+    description=_("Retrieves all object types from the configured Objecttypes API."),
+)
+class ObjecttypeListView(ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjecttypeSerializer
+    action = "list"
+
+    def get_queryset(self):
+        return fetch_objecttypes()

@@ -5,6 +5,7 @@ from .views import (
     EigenschappenView,
     InformatieObjectTypeListView,
     ListZaakDocumentsView,
+    ObjecttypeListView,
     RelatedZakenView,
     VertrouwelijkheidsAanduidingenView,
     ZaakAtomicPermissionsView,
@@ -80,4 +81,5 @@ urlpatterns = [
         VertrouwelijkheidsAanduidingenView.as_view(),
         name="confidentiality-classications",
     ),
+    path("objecttypes", ObjecttypeListView.as_view(), name="objecttypes-list"),
 ]

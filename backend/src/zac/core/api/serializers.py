@@ -652,3 +652,13 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("username", "permissions")
+
+
+class ObjecttypeSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    name = serializers.CharField()
+    description = serializers.CharField()
+    versions = serializers.ListField(
+        child=serializers.URLField(),
+        help_text=_("List of URLs of the different object type versions"),
+    )
