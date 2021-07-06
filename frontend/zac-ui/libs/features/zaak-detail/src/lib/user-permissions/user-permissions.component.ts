@@ -97,7 +97,7 @@ export class UserPermissionsComponent implements OnInit {
                 nestedTableData: new Table(['Reden', 'Commentaar'], [{
                     cellData: {
                         reason: permission.reason,
-                        comment: permission["comment?"]
+                        comment: permission["comment"]
                     }
                 },
                 ]),
