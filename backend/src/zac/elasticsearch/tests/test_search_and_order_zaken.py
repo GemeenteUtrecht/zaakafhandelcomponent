@@ -156,7 +156,7 @@ class SearchZakenTests(ESMixin, TestCase):
         result = search(omschrijving="som", only_allowed=False)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], self.zaak_document1.url)
+        self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_eigenschappen(self):
         result = search(
