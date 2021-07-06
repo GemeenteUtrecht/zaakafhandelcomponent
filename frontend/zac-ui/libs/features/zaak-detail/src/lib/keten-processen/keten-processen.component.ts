@@ -7,6 +7,19 @@ import { KetenProcessenService } from './keten-processen.service';
 import { KetenProcessen, Task } from '../../models/keten-processen';
 import { User } from '@gu/models';
 
+/**
+ * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
+ *
+ * A "Ketenproces" is a process that is modelled in the Camunda BPM (Business Process Model).
+ * This component allows you to start a new process or execute a process task. Process tasks
+ * can also be assigned to a specific user.
+ *
+ * Requires mainZaakUrl: string input to identify the url of the case (zaak).
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ * Requires currentUsers: User input to identify the current user.
+ *
+ */
 @Component({
   selector: 'gu-keten-processen',
   templateUrl: './keten-processen.component.html',
@@ -14,11 +27,6 @@ import { User } from '@gu/models';
 })
 
 export class KetenProcessenComponent implements OnChanges, AfterViewInit {
-  /**
-   * A "Ketenproces" is a process that is modelled in the Camunda BPM (Business Process Model).
-   * This component allows you to start a new process or execute a process task. Process tasks
-   * can also be assigned to a specific user.
-   */
   @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;

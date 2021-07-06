@@ -5,6 +5,18 @@ import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { DatePipe } from '@angular/common';
 
+/**
+ * <gu-dynamic-form [taskContextData]="taskContextData"></gu-dynamic-form>
+ *
+ * A Dynamic Form is a specific type of form for a process task.
+ * As the name implies, a form will be rendered dynamically according
+ * to the input data. The value of "inputType" from the input data
+ * specifies what type of input field needs to be displayed.
+ *
+ * Requires taskContextData: TaskContextData input for the form layout.
+ *
+ * Emits successReload: boolean after succesfully submitting the form.
+ */
 @Component({
   selector: 'gu-dynamic-form',
   templateUrl: './dynamic-form.component.html',
@@ -33,12 +45,19 @@ export class DynamicFormComponent implements OnChanges {
     private datePipe: DatePipe
   ) {}
 
+  /**
+   * Lifecycle hook which detect changes from the component input data.
+   * @param {SimpleChanges} changes
+   */
   ngOnChanges(changes: SimpleChanges) {
     if (changes.taskContextData.previousValue !== this.taskContextData ) {
       this.addDynamicFormControls()
     }
   }
 
+  /**
+   * Create controls for the input fields.
+   */
   addDynamicFormControls() {
     this.dynamicForm = this.fb.group({});
     this.formFields = this.taskContextData.context.formFields;
@@ -51,16 +70,25 @@ export class DynamicFormComponent implements OnChanges {
     })
   }
 
+  /**
+   * Format the component input data to fit the "gu-multiselect" component.
+   * @param {string} name
+   * @param {Array<string[]>} enumArray
+   */
   formatEnumItems(name: string, enumArray: Array<string[]>) {
     const formattedEnumArray = []
     enumArray.forEach(value => {
       formattedEnumArray.push({
-        id: value[0]
+        id: value[0],
+        name: value[1]
       });
     });
     this.formattedEnumItems[name] = formattedEnumArray;
   }
 
+  /**
+   * Format the form data to fit the API.
+   */
   submitForm() {
     const formData = {
       form: this.taskContextData.form
@@ -79,6 +107,10 @@ export class DynamicFormComponent implements OnChanges {
     this.putForm(formData);
   }
 
+  /**
+   * PUT request.
+   * @param formData
+   */
   putForm(formData) {
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
       this.isSubmitting = false;
@@ -91,6 +123,10 @@ export class DynamicFormComponent implements OnChanges {
     })
   }
 
+  /**
+   * Format the boolean input type to fit the "gu-multiselect" component.
+   * @param {string} groupName
+   */
   formatBooleanItems(groupName: string) {
     this.formattedBooleanItems[groupName] = [
       {id: true, name: "Ja"},
@@ -98,10 +134,11 @@ export class DynamicFormComponent implements OnChanges {
     ];
   }
 
-  get formField() {
-    return this.dynamicForm.controls;
-  };
-
+  /**
+   * Get the form control of the input field.
+   * @param {string} name
+   * @returns {FormControl}
+   */
   dynamicFormField(name: string): FormControl {
     return this.dynamicForm.get(name) as FormControl;
   }

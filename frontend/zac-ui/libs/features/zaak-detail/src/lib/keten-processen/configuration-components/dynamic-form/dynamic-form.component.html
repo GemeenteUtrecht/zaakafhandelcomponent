@@ -3,7 +3,7 @@
   <form class="configuration-form" [formGroup]="dynamicForm">
     <article class="configuration-details" *ngFor="let formField of formFields">
       <div class="col-md-6 form-group">
-        <label class="h4 d-inline-block" >{{formField.label}}</label>
+        <label class="h4 d-inline-block">{{formField.label | titlecase}}</label>
         <ng-container [ngSwitch]="formField.inputType">
 <!--          enum-->
           <ng-container *ngSwitchCase="'enum'">
@@ -12,7 +12,7 @@
                             [items]="formattedEnumItems[formField.name]"
                             [multiple]="false"
                             [control]="dynamicFormField(formField.name)"
-                            bindLabel="id"
+                            bindLabel="name"
                             bindValue="id">
             </gu-multiselect>
           </ng-container>
