@@ -1,6 +1,4 @@
 import random
-from dataclasses import dataclass
-from typing import List
 
 import factory
 
@@ -18,8 +16,7 @@ def get_random_search_query():
 
 class SearchReportFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: "search-report-%d" % n)
+    query = factory.LazyFunction(get_random_search_query)
 
     class Meta:
         model = "elasticsearch.SearchReport"
-
-    query = factory.LazyFunction(get_random_search_query)

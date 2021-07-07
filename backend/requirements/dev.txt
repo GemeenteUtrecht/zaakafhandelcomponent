@@ -218,6 +218,7 @@ imagesize==1.2.0
 importlib-metadata==0.23
     # via
     #   -r requirements/ci.txt
+    #   jsonschema
     #   kombu
 inflection==0.3.1
     # via
@@ -405,7 +406,7 @@ sqlparse==0.3.0
     #   -r requirements/ci.txt
     #   django
     #   django-debug-toolbar
-tablib[xlsx]==0.14.0
+tablib==0.14.0
     # via
     #   -r requirements/ci.txt
     #   django-import-export

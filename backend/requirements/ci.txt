@@ -189,6 +189,7 @@ idna==2.8
 importlib-metadata==0.23
     # via
     #   -r requirements/base.txt
+    #   jsonschema
     #   kombu
 inflection==0.3.1
     # via
@@ -328,7 +329,7 @@ sqlparse==0.3.0
     # via
     #   -r requirements/base.txt
     #   django
-tablib[xlsx]==0.14.0
+tablib==0.14.0
     # via
     #   -r requirements/base.txt
     #   django-import-export
