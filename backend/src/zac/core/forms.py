@@ -16,9 +16,18 @@ from django_camunda.api import get_process_instance_variable
 from django_camunda.camunda_models import Task
 from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
 
-from zac.accounts.constants import AccessRequestResult, PermissionObjectType
+from zac.accounts.constants import (
+    AccessRequestResult,
+    PermissionObjectType,
+    PermissionReason,
+)
 from zac.accounts.email import send_email_to_requester
-from zac.accounts.models import AccessRequest, AtomicPermission, User
+from zac.accounts.models import (
+    AccessRequest,
+    AtomicPermission,
+    User,
+    UserAtomicPermission,
+)
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.camunda.forms import BaseTaskFormSet, TaskFormMixin
 from zac.contrib.kownsl.api import create_review_request
@@ -558,10 +567,15 @@ class AccessRequestHandleForm(forms.ModelForm):
         instance = super().save(**kwargs)
 
         if self.instance.result == AccessRequestResult.approve:
-            atomic_permission = AtomicPermission.objects.create(
+            atomic_permission, created = AtomicPermission.objects.get_or_create(
                 permission=zaken_inzien.name,
                 object_type=PermissionObjectType.zaak,
                 object_url=self.instance.zaak,
+            )
+            UserAtomicPermission.objects.create(
+                atomic_permission=atomic_permission,
+                user=self.instance.requester,
+                reason=PermissionReason.toegang_verlenen,
                 start_date=make_aware(
                     datetime.combine(date.today(), datetime.min.time())
                 ),

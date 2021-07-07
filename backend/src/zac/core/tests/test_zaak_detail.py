@@ -21,6 +21,7 @@ from zac.accounts.constants import PermissionObjectType
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
+    UserAtomicPermissionFactory,
     UserFactory,
 )
 from zac.contrib.kownsl.data import Approval, ReviewRequest
@@ -313,10 +314,10 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_user_has_atomic_auth_with_no_end_date(self, m):
         self._setUpMocks(m)
 
-        AtomicPermissionFactory.create(
-            object_url=self.zaak["url"],
-            permission=zaken_inzien.name,
-            for_user=self.user,
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=self.zaak["url"],
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.user,
             end_date=None,
         )
 
@@ -328,10 +329,10 @@ class ZaakDetailTests(ESMixin, ClearCachesMixin, TransactionWebTest):
     def test_user_has_atomic_auth_expired(self, m):
         self._setUpMocks(m)
 
-        AtomicPermissionFactory.create(
-            object_url=self.zaak["url"],
-            permission=zaken_inzien.name,
-            for_user=self.user,
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=self.zaak["url"],
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.user,
             end_date=timezone.now() - datetime.timedelta(days=1),
         )
 

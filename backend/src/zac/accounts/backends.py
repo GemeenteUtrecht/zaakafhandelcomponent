@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
-from zac.accounts.models import AtomicPermission, BlueprintPermission
+from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 
 
 class UserModelEmailBackend(ModelBackend):
@@ -37,16 +37,20 @@ class PermissionsBackend:
             .actual()
         )
 
-        atomic_permissions = (
-            AtomicPermission.objects.for_user(user_obj).filter(permission=perm).actual()
+        user_atomic_permissions = (
+            UserAtomicPermission.objects.select_related("atomic_permission")
+            .filter(user=user_obj, atomic_permission__permission=perm)
+            .actual()
         )
 
         # similar to DefinitionBasePermission.has_permission
         if not obj:
-            return blueprint_permissions.exists() or atomic_permissions.exists()
+            return blueprint_permissions.exists() or user_atomic_permissions.exists()
 
         # similar to DefinitionBasePermission.has_object_permission
-        if atomic_permissions.filter(object_url=obj.url).exists():
+        if user_atomic_permissions.filter(
+            atomic_permission__object_url=obj.url
+        ).exists():
             return True
 
         for permission in blueprint_permissions:

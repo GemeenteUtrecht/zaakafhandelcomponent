@@ -16,7 +16,12 @@ from elasticsearch_dsl.query import (
 )
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.models import AtomicPermission, BlueprintPermission, User
+from zac.accounts.models import (
+    AtomicPermission,
+    BlueprintPermission,
+    User,
+    UserAtomicPermission,
+)
 from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
@@ -47,10 +52,13 @@ def query_allowed_for_user(
 
     # atomic permissions
     object_urls = (
-        AtomicPermission.objects.for_user(user)
+        UserAtomicPermission.objects.filter(
+            user=user,
+            atomic_permission__object_type=object_type,
+            atomic_permission__permission=permission,
+        )
         .actual()
-        .filter(object_type=object_type, permission=permission)
-        .values_list("object_url", flat=True)
+        .values_list("atomic_permission__object_url", flat=True)
     )
     if object_urls.count():
         allowed.append(Terms(url=list(object_urls)))

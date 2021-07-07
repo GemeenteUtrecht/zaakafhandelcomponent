@@ -20,6 +20,7 @@ from .query import (
     AccessRequestQuerySet,
     AtomicPermissionQuerySet,
     BlueprintPermissionQuerySet,
+    UserAtomicPermissionQuerySet,
 )
 
 
@@ -91,12 +92,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_superuser:
             return True
 
-        atomic_permissions = (
-            AtomicPermission.objects.for_user(self)
-            .actual()
-            .filter(permission=zaken_request_access.name, object_url=zaak.url)
-        )
-        if atomic_permissions.exists():
+        user_atomic_permissions = UserAtomicPermission.objects.filter(
+            user=self,
+            atomic_permission__permission=zaken_request_access.name,
+            atomic_permission__object_url=zaak.url,
+        ).actual()
+        if user_atomic_permissions.exists():
             return True
 
         blueprint_permissions = (
@@ -150,7 +151,7 @@ class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
-    start = models.DateTimeField(_("start"), blank=True, null=True)
+    start = models.DateTimeField(_("start"), default=timezone.now)
     end = models.DateTimeField(_("end"), blank=True, null=True)
 
 
@@ -229,22 +230,13 @@ class AtomicPermission(models.Model):
         max_length=1000,
         help_text=_("URL of the object in one of ZGW APIs this permission applies to"),
     )
-    start_date = models.DateTimeField(
-        _("start date"),
-        default=timezone.now,
-        help_text=_("Start date of the permission"),
-    )
-    end_date = models.DateTimeField(
-        _("end date"),
-        blank=True,
-        null=True,
-        help_text=_("End date of the permission"),
-    )
+
     objects = AtomicPermissionQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("atomic permission")
         verbose_name_plural = _("atomic permissions")
+        unique_together = ("permission", "object_url")
 
     @property
     def object_uuid(self):
@@ -270,6 +262,16 @@ class UserAtomicPermission(models.Model):
         blank=True,
         help_text=_("Comment provided by the granter of the permission"),
     )
+    start_date = models.DateTimeField(
+        _("start date"),
+        default=timezone.now,
+        help_text=_("Start date of the permission"),
+    )
+    end_date = models.DateTimeField(
+        _("end date"), blank=True, null=True, help_text=_("End date of the permission")
+    )
+
+    objects = UserAtomicPermissionQuerySet.as_manager()
 
     class Meta:
         db_table = "accounts_user_atomic_permissions"
@@ -292,24 +294,14 @@ class BlueprintPermission(models.Model):
             "on their properties i.e. zaaktype, informatieobjecttype"
         ),
     )
-    start_date = models.DateTimeField(
-        _("start date"),
-        default=timezone.now,
-        help_text=_("Start date of the permission"),
-    )
-    end_date = models.DateTimeField(
-        _("end date"),
-        blank=True,
-        null=True,
-        help_text=_("End date of the permission"),
-    )
 
     objects = BlueprintPermissionQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("blueprint definition")
-        verbose_name_plural = _("blueprint definitions")
+        verbose_name = _("blueprint permission")
+        verbose_name_plural = _("blueprint permissions")
         ordering = ("policy__zaaktype_omschrijving", "permission")
+        unique_together = ("permission", "policy")
 
     def __str__(self):
         if not self.permission or not self.policy:

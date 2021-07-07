@@ -26,6 +26,7 @@ from ...tests.factories import (
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
+    UserAtomicPermissionFactory,
     UserFactory,
 )
 
@@ -235,11 +236,11 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        AtomicPermissionFactory.create(
-            object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
-            permission=zaken_inzien.name,
-            for_user=self.requester,
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectType.zaak,
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.requester,
             end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
         data = {

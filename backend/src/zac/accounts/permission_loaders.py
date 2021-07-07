@@ -16,32 +16,35 @@ def add_atomic_permission_to_user(
     object_type: str = PermissionObjectType.zaak,
     permission_name: str = zaken_inzien.name,
     reason: str = "",
-) -> Optional[AtomicPermission]:
+) -> Optional[UserAtomicPermission]:
     if (
-        AtomicPermission.objects.for_user(user)
-        .actual()
+        UserAtomicPermission.objects.select_related("atomic_permission")
         .filter(
-            object_type=object_type,
-            object_url=object_url,
-            permission=permission_name,
+            user=user,
+            atomic_permission__object_type=object_type,
+            atomic_permission__object_url=object_url,
+            atomic_permission__permission=permission_name,
         )
+        .actual()
         .exists()
     ):
         return None
 
-    atomic_permission = AtomicPermission.objects.create(
+    atomic_permission, created = AtomicPermission.objects.get_or_create(
         object_type=object_type,
         object_url=object_url,
         permission=permission_name,
     )
 
-    UserAtomicPermission.objects.create(
+    user_atomic_permission = UserAtomicPermission.objects.create(
         user=user, atomic_permission=atomic_permission, reason=reason
     )
-    return atomic_permission
+    return user_atomic_permission
 
 
-def add_permission_for_behandelaar(rol: Union[str, Rol]) -> Optional[AtomicPermission]:
+def add_permission_for_behandelaar(
+    rol: Union[str, Rol]
+) -> Optional[UserAtomicPermission]:
     if not isinstance(rol, Rol):
         rol = fetch_rol(rol)
 
@@ -57,15 +60,15 @@ def add_permission_for_behandelaar(rol: Union[str, Rol]) -> Optional[AtomicPermi
         return
 
     user = User.objects.get(username=rol_username)
-    atomic_permission = add_atomic_permission_to_user(
+    user_atomic_permission = add_atomic_permission_to_user(
         user, rol.zaak, reason=PermissionReason.betrokkene
     )
-    return atomic_permission
+    return user_atomic_permission
 
 
 def add_permissions_for_advisors(
     review_request: ReviewRequest,
-) -> List[AtomicPermission]:
+) -> List[UserAtomicPermission]:
 
     user_deadlines = review_request.user_deadlines or {}
     rr_usernames = list(user_deadlines.keys())
@@ -80,10 +83,12 @@ def add_permissions_for_advisors(
         if review_request.review_type == KownslTypes.approval
         else PermissionReason.adviseur
     )
-    atomic_permissions = []
+    user_atomic_permissions = []
     for user in rr_users:
-        atomic_permission = add_atomic_permission_to_user(user, zaak_url, reason=reason)
-        if atomic_permission:
-            atomic_permissions.append(atomic_permission)
+        user_atomic_permission = add_atomic_permission_to_user(
+            user, zaak_url, reason=reason
+        )
+        if user_atomic_permission:
+            user_atomic_permissions.append(user_atomic_permission)
 
-    return atomic_permissions
+    return user_atomic_permissions
