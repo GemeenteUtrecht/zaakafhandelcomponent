@@ -56,6 +56,10 @@
     border-bottom: none;
   }
 
+  &__cell--expandable-toggle {
+    padding-right: 24px;
+  }
+
   &__nested-content {
     white-space: pre-line;
   }
