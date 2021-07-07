@@ -53,7 +53,16 @@ export class DocumentenComponent implements OnChanges {
   fetchDocuments() {
     this.isLoading = true;
     this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
-      this.tableData.bodyData = this.formatTableData(data)
+      this.tableData = new Table([
+          'Op slot',
+          'Bestandsnaam',
+          'Versie',
+          'Acties',
+          '',
+          '',
+          'Type',
+          'Vertrouwelijkheid',
+      ], this.formatTableData(data));
       this.documentsData = data;
       this.isLoading = false;
     }, res => {
