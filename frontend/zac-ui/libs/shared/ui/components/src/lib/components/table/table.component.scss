@@ -5,9 +5,13 @@
 }
 
 .table {
-  width: 100%;
+  overflow-x: auto;
 
-  &--wrap {
+  &__table {
+    width: 100%;
+  }
+
+  &__table--wrap {
     white-space: normal;
   }
 
@@ -46,7 +50,6 @@
   &__row--expanded-content > .table__cell {
     opacity: 0;
     overflow: hidden;
-    padding: 0;
   }
 
   &__row--expanded + .table__row--expanded-content > .table__cell {
@@ -60,8 +63,12 @@
     border-bottom: none;
   }
 
+  &__cell {
+    padding: 0 12px;
+    white-space: pre;
+  }
+
   &__cell--expandable-toggle {
-    padding-right: 24px;
   }
 
   &__nested-content {
