@@ -19,6 +19,7 @@ import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.co
 import { ActiviteitenComponent } from './activiteiten/activiteiten.component';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { FormModule } from './form/form.module';
+import { UserPermissionsModule } from './user-permissions/user-permissions.module';
 
 @NgModule({
   imports: [
@@ -32,6 +33,7 @@ import { FormModule } from './form/form.module';
     FormsModule,
     ReactiveFormsModule,
     SharedUiComponentsModule,
+    UserPermissionsModule,
     KetenProcessenModule,
     GerelateerdeZakenModule,
     DocumentenModule,

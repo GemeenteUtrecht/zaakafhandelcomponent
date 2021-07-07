@@ -44,26 +44,15 @@ p {
   &.p--marginsmall {
     margin-bottom: 0.625rem;
   }
+  &.p--muted {
+    color: rgba(0,0,0,.54);
+  }
   &.p--nomargin {
     margin-bottom: 0;
   }
   &.p--pre-wrap {
     white-space: pre-wrap;
   }
-}
-
-@font-face {
-  font-family: "Lucida Grande";
-  font-style: normal;
-  font-weight: 400;
-  src: local("LucidaGrande");
-}
-
-@font-face {
-  font-family: "Lucida Grande";
-  font-style: normal;
-  font-weight: 700;
-  src: local("LucidaGrandeBold");
 }
 
 @font-face {

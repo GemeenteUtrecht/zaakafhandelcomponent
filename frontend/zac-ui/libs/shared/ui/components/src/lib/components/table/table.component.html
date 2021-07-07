@@ -1,79 +1,102 @@
-<table class="table" [ngClass]="wrap ? 'table--wrap' : ''">
-  <thead [ngClass]="headColor === 'gray' ? 'table-head--gray' : ''">
-    <tr>
-      <th *ngIf="expandable"></th>
-      <th [ngClass]="sortable ? 'sort-head' : null" *ngFor="let head of tableData.headData" (click)="sortable ? outputSort(head) : null">{{ head }}
-        <mat-icon *ngIf="sortValue === head">{{ sortOrder === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    <ng-template ngFor let-element [ngForOf]="tableData.bodyData">
-      <tr
-        class="parent-row"
-        [ngClass]="element.clickOutput || (expandable && element.expandData?.length > 0) || (expandable && element.nestedTableData) ? 'parent-row--clickable' : ''"
-        (click)="handleRowClickOutput(element.clickOutput); expandRow($event, element.expandData); expandNestedTable($event, element.nestedTableData)"
-        [attr.role]="element.clickOutput || (expandable && element.expandData) ? 'button' : ''"
-      >
-        <!-- Expand icon -->
-        <ng-container>
-          <td *ngIf="(expandable && element.expandData) || (expandable && element.nestedTableData)" class="table-expand">
-            <mat-icon class="arrow" aria-hidden="false" aria-label="expand">keyboard_arrow_right</mat-icon>
-          </td>
-          <td *ngIf="(expandable && (!element.expandData  && !element.nestedTableData))"></td>
+<div class="table mat-elevation-z2">
+    <table *ngIf="dataSource" class="table__table" [class.table--wrap]="wrap" mat-table matSort
+           [matSortDisabled]="!sortable" [dataSource]="dataSource" multiTemplateDataRows (matSortChange)="onSort($event)">
+
+        <!-- Expandable toggle -->
+        <ng-container matColumnDef="_expandableToggle">
+            <th class="table__cell" mat-header-cell *matHeaderCellDef></th>
+            <td class="table__cell table__cell--expandable-toggle" mat-cell *matCellDef="let dataRow">
+                <mat-icon *ngIf="dataRow._expandData || dataRow._nestedTableData"
+                          class="arrow"
+                          aria-hidden="false"
+                          aria-label="expand"
+                          (click)="onToggleClick(dataRow)">
+                    keyboard_arrow_right
+                </mat-icon>
+            </td>
         </ng-container>
 
-        <td *ngFor="let cell of element.cellData | keyvalue:keepOriginalOrder">
-          <!-- Regular string table cell -->
-          <ng-container *ngIf="isString(cell.value); else extensiveCell">
-            {{ cell.value }}
-          </ng-container>
+        <!-- Data -->
+        <ng-container *ngFor="let column of columns" [matColumnDef]="column.name">
+            <th class="table__cell" mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label}}</th>
+            <td class="table__cell" mat-cell *matCellDef="let dataRow">
+                <div [ngSwitch]="dataRow[column.name].type">
 
-          <!-- Special table cells -->
-          <ng-template #extensiveCell>
-            <ng-container [ngSwitch]="checkCellType(cell.value)">
+                    <!-- Button -->
+                    <ng-container *ngSwitchCase="'button'">
+                        <button gu-button [type]=" dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
+                                size="extrasmall"
+                                noPadding
+                                (click)="onButtonClick(column.name, dataRow[column.name].value)">
+                            {{ dataRow[column.name].label }}
+                        </button>
+                    </ng-container>
 
-              <!-- Clickable cell link -->
-              <ng-container *ngSwitchCase="'link'">
-                <a class="anchor" [href]="cell.value['url']" target="{{ cell.value['target'] || '_self' }}">{{ cell.value['label'] }}</a>
-              </ng-container>
+                    <!-- Chip -->
+                    <ng-container *ngSwitchCase="'chip'">
+                        <gu-chip type="tertiary">{{dataRow[column.name].label}}</gu-chip>
+                    </ng-container>
 
-              <!-- Button -->
-              <ng-container *ngSwitchCase="'button'">
-                <button gu-button
-                  [type]=" cell.value['buttonType'] ? cell.value['buttonType'] : 'tertiary'"
-                  size="extrasmall"
-                  noPadding
-                  (click)="handleButtonClick(cell.key, cell.value['value'])">
-                  {{ cell.value['label'] }}
-                </button>
-              </ng-container>
+                    <!-- Icon -->
+                    <ng-container *ngSwitchCase="'icon'">
+                        <mat-icon class="icon"
+                                  [ngClass]="(dataRow[column.name].iconColor ? 'icon--' + dataRow[column.name].iconColor : '')">
+                            {{dataRow[column.name].label}}
+                        </mat-icon>
+                    </ng-container>
 
-              <!-- Icon -->
-              <ng-container *ngSwitchCase="'icon'">
-                <mat-icon
-                  class="icon"
-                  [ngClass]="(cell.value['iconColor'] ? 'icon--' + cell.value['iconColor'] : '')">
-                  {{cell.value['label']}}
-                </mat-icon>
-              </ng-container>
-            </ng-container>
-          </ng-template>
-        </td>
-      </tr>
+                    <!-- Link -->
+                    <ng-container *ngSwitchCase="'link'">
+                        <a class="anchor" [href]="dataRow[column.name].url"
+                           target="{{ dataRow[column.name].target || '_self' }}">{{ dataRow[column.name].label }}</a>
+                    </ng-container>
 
-      <!-- Expand row -->
-      <tr *ngIf="expandable && element.expandData" class="child-row">
-        <td colspan="10">{{element.expandData}}</td>
-      </tr>
+                    <!-- Text -->
+                    <ng-template ngSwitchDefault>
+                        {{dataRow[column.name].label}}
+                    </ng-template>
+                </div>
+            </td>
+        </ng-container>
 
-      <!-- Table -->
-      <tr *ngIf="expandable && element.nestedTableData" class="child-row nested-table-row">
-        <td colspan="10">
-          <gu-table [tableData]="element.nestedTableData"
-                    (buttonOutput)="handleNestedButtonClick($event)"></gu-table>
-        </td>
-      </tr>
-    </ng-template>
-  </tbody>
-</table>
+        <!-- Expendable Data -->
+        <ng-container matColumnDef="_expandedIndent">
+            <td class="table__cell" mat-cell *matCellDef="let dataRow"></td>
+        </ng-container>
+
+        <ng-container matColumnDef="_expandedDetail">
+            <td class="table__cell" mat-cell *matCellDef="let dataRow" [attr.colspan]="displayedColumns.length - 1">
+                <div class="table__nested-content"
+                     [class.table__nested-content--expanded]="getDataRowIndex(dataRow) == expandedIndex"
+                     [@detailExpand]="getDataRowIndex(dataRow) == expandedIndex ? 'expanded' : 'collapsed'">
+                    {{ dataRow._expandData }}
+                    <gu-table [table]="dataRow._nestedTableData" (buttonOutput)="onNestedButtonClick($event)"></gu-table>
+                </div>
+            </td>
+        </ng-container>
+
+        <!-- Header row -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+        <!-- Data rows -->
+        <tr class="table__row table__row--expandable"
+            [class.table__row--expanded]="getDataRowIndex(dataRow) === expandedIndex"
+            [class.table__row--interactive]="tableOutput.observers.length"
+            mat-row
+            *matRowDef="let dataRow; columns: displayedColumns;"
+            (click)="onRowClick(dataRow._clickOutput);"></tr>
+
+        <!-- Expanded data rows -->
+        <tr class="table__row table__row--expanded-content"
+            mat-row
+            *matRowDef="let row; columns: ['_expandedIndent', '_expandedDetail']">
+        </tr>
+
+        <!-- No data row -->
+        <tr class="table__row table__row--no-data" *matNoDataRow>
+            <td class="table__cell" [attr.colspan]="displayedColumns.length">
+                <p class="p p--muted">Geen gegevens.</p>
+            </td>
+        </tr>
+    </table>
+</div>

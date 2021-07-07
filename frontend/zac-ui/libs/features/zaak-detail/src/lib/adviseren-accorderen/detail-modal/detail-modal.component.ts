@@ -76,7 +76,7 @@ export class DetailModalComponent implements OnChanges {
           docAdviezen: docAdviezen
         },
         nestedTableData: reviewDocumentTableData,
-        expandData: ''
+        // expandData: ''
       }
       return cellData;
     })

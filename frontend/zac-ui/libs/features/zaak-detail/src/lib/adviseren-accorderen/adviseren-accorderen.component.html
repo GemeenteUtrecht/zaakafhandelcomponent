@@ -7,7 +7,7 @@
   <ng-container *ngIf="data && !isLoading">
     <gu-table
       *ngIf="(data.length > 0) && tableData"
-      [tableData]="tableData"
+      [table]="tableData"
       (tableOutput)="handleTableClickOutput($event)">
     </gu-table>
     <p *ngIf="(data.length === 0)">Er is niets gevonden.</p>

@@ -8,7 +8,6 @@
 
   <fieldset class="form__body">
     <div *ngFor="let field of fields">
-
       <!-- Read-only field. -->
       <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
         <div class="col-12">

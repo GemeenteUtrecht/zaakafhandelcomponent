@@ -19,7 +19,7 @@
               <gu-table *ngIf="zakenTableData.bodyData.length > 0; else noZaken"
                         (sortOutput)="fetchZaken($event)"
                         [sortable]="true"
-                        [tableData]="zakenTableData"
+                        [table]="zakenTableData"
               ></gu-table>
               <ng-template #noZaken>
                 <p>Er zijn geen zaken gevonden.</p>

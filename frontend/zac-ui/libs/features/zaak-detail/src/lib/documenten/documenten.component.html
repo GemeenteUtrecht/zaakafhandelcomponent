@@ -18,7 +18,7 @@
   <!-- Table -->
   <ng-container *ngIf="documentsData">
     <gu-table *ngIf="(documentsData.length > 0) && tableData"
-              [tableData]="tableData"
+              [table]="tableData"
               (buttonOutput)="handleTableButtonOutput($event)"
               class="mb-4"></gu-table>
     <p *ngIf="(documentsData.length === 0)">Er zijn geen documenten.</p>

@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Table, RowData, ExtensiveCell } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { convertKbToMb } from '@gu/utils';
 
 import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
 import { DocumentenService } from './documenten.service';
@@ -54,7 +53,16 @@ export class DocumentenComponent implements OnChanges {
   fetchDocuments() {
     this.isLoading = true;
     this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
-      this.tableData.bodyData = this.formatTableData(data)
+      this.tableData = new Table([
+          'Op slot',
+          'Bestandsnaam',
+          'Versie',
+          'Acties',
+          '',
+          '',
+          'Type',
+          'Vertrouwelijkheid',
+      ], this.formatTableData(data));
       this.documentsData = data;
       this.isLoading = false;
     }, res => {
@@ -68,9 +76,6 @@ export class DocumentenComponent implements OnChanges {
     return data.map( (element: Document) => {
      const icon = element.locked ? 'lock' : 'lock_open'
      const iconColor = element.locked ? 'orange' : 'green'
-     const bestandsomvang =
-       element.bestandsomvang > 999 ? `${(convertKbToMb(element.bestandsomvang, 2)).toLocaleString("nl-NL")} MB`
-       : `${element.bestandsomvang} KB`;
      const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
      const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
      const showEditCell = !element.locked || this.docsInEditMode.includes(element.writeUrl);

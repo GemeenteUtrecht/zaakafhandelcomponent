@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {FormGroup} from '@angular/forms';
 import {FormService} from './form.service';
 import {Field, FieldConfiguration} from "./field";
@@ -14,12 +14,13 @@ export class FormComponent implements OnInit {
   fields!: Array<Field<any>>
   formGroup!: FormGroup;
   payLoad = '';
+  resolvedKeys = [];
 
   @Input() title: string = '';
   @Input() editable: boolean | string = true;
-  @Input() form: Array<FieldConfiguration> = [];
-  @Input() keys?: Array<string> = null;
-  @Input() readonlyKeys?: Array<string> = [];
+  @Input() form: FieldConfiguration[] = [];
+  @Input() keys?: string[] = null;
+  @Input() readonlyKeys?: string[] = [];
 
   @Output() submit: EventEmitter<any> = new EventEmitter<any>();
 
@@ -33,8 +34,8 @@ export class FormComponent implements OnInit {
       this.edit = Boolean(this.editable);
     }
 
-    this.keys = this.keys || this.fs.keysFromForm(this.form);
-    this.formGroup = this.fs.objectToFormGroup(this.form, this.keys);
+    this.resolvedKeys = this.keys || this.fs.keysFromForm(this.form);
+    this.formGroup = this.fs.objectToFormGroup(this.form, this.resolvedKeys);
     this.fields = this.getFields();
   }
 
@@ -58,7 +59,7 @@ export class FormComponent implements OnInit {
    * @return {Field[]}
    */
   getFields() {
-    return this.fs.formGroupToFields(this.formGroup, this.form, this.keys, this.edit);
+    return this.fs.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit);
   }
 
   /**

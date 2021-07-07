@@ -50,7 +50,7 @@
       <ng-template [ngIf]="!!adviceData.reviews">
         <section *ngIf="adviceData.reviews.length > 0">
           <h2 class="mb-4">Vorige adviezen</h2>
-          <gu-table [tableData]="tableData"
+          <gu-table [table]="tableData"
                     [expandable]="true">
           </gu-table>
         </section>
@@ -62,7 +62,7 @@
           <section *ngIf="adviceData.documents.length > 0">
             <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
             <gu-table
-              [tableData]="documentTableData"
+                    [table]="documentTableData"
               (buttonOutput)="handleTableButtonOutput($event)"
             ></gu-table>
           </section>
