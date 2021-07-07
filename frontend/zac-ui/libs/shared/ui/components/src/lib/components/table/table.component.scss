@@ -44,12 +44,16 @@
   }
 
   &__row--expanded-content > .table__cell {
+    opacity: 0;
     overflow: hidden;
     padding: 0;
   }
 
   &__row--expanded + .table__row--expanded-content > .table__cell {
+    opacity: 1;
     overflow: visible;
+    transition: all 225ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    transition-delay: 225ms;
   }
 
   &__row--expanded-content .table .table__row:last-child .table__cell {
