@@ -2,8 +2,6 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from django_better_admin_arrayfield.models.fields import ArrayField
-
 
 class SearchReport(models.Model):
     name = models.CharField(_("name"), max_length=100)

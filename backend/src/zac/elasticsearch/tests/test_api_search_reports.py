@@ -484,7 +484,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     @requests_mock.Mocker()
     def test_view_report_detail_some_fields_one_zaaktype(self, m):
-        # set up test data and mocksv
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
@@ -498,9 +497,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{CATALOGI_ROOT}zaaktypen",
             json={"next": None, "count": 1, "previous": None, "results": [zaaktype_1]},
         )
-
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user=user)
 
         search_report = SearchReportFactory.create(
             name="Some-report-0",
@@ -520,10 +516,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
 
         endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
-
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
-
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
 
@@ -561,176 +555,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "deadline": None,
                         "eigenschappen": [],
                     }
-                ],
-            },
-        )
-
-    @requests_mock.Mocker()
-    def test_search_report_detail_ordering(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        zaaktype_1 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            omschrijving="zaaktype1",
-        )
-        zaaktype_2 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            omschrijving="zaaktype2",
-        )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "next": None,
-                "count": 1,
-                "previous": None,
-                "results": [zaaktype_1, zaaktype_2],
-            },
-        )
-
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        search_report = SearchReportFactory.create(
-            name="Some-report-0",
-            query={
-                "fields": ["identificatie", "url"],
-            },
-        )
-
-        endpoint = (
-            furl(reverse("searchreport-results", kwargs={"pk": search_report.pk}))
-            .add({"ordering": ["-identificatie"]})
-            .url
-        )
-
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-
-        results = response.json()
-        self.assertEqual(
-            results,
-            {
-                "fields": [
-                    "identificatie",
-                    "url",
-                ],
-                "next": None,
-                "previous": None,
-                "count": 2,
-                "results": [
-                    {
-                        "url": "https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
-                        "zaaktype": {
-                            "catalogus": None,
-                            "omschrijving": None,
-                            "url": None,
-                        },
-                        "identificatie": "ZAAK2",
-                        "bronorganisatie": None,
-                        "omschrijving": None,
-                        "vertrouwelijkheidaanduiding": None,
-                        "vaOrder": None,
-                        "rollen": [],
-                        "startdatum": None,
-                        "einddatum": None,
-                        "registratiedatum": None,
-                        "deadline": None,
-                        "eigenschappen": [],
-                    },
-                    {
-                        "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-                        "zaaktype": {
-                            "catalogus": None,
-                            "omschrijving": None,
-                            "url": None,
-                        },
-                        "identificatie": "ZAAK1",
-                        "bronorganisatie": None,
-                        "omschrijving": None,
-                        "vertrouwelijkheidaanduiding": None,
-                        "vaOrder": None,
-                        "rollen": [],
-                        "startdatum": None,
-                        "einddatum": None,
-                        "registratiedatum": None,
-                        "deadline": None,
-                        "eigenschappen": [],
-                    },
-                ],
-            },
-        )
-
-        endpoint = (
-            furl(reverse("searchreport-results", kwargs={"pk": search_report.pk}))
-            .add({"ordering": ["identificatie"]})
-            .url
-        )
-
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-
-        results = response.json()
-        self.assertEqual(
-            results,
-            {
-                "fields": [
-                    "identificatie",
-                    "url",
-                ],
-                "next": None,
-                "previous": None,
-                "count": 2,
-                "results": [
-                    {
-                        "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-                        "zaaktype": {
-                            "catalogus": None,
-                            "omschrijving": None,
-                            "url": None,
-                        },
-                        "identificatie": "ZAAK1",
-                        "bronorganisatie": None,
-                        "omschrijving": None,
-                        "vertrouwelijkheidaanduiding": None,
-                        "vaOrder": None,
-                        "rollen": [],
-                        "startdatum": None,
-                        "einddatum": None,
-                        "registratiedatum": None,
-                        "deadline": None,
-                        "eigenschappen": [],
-                    },
-                    {
-                        "url": "https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
-                        "zaaktype": {
-                            "catalogus": None,
-                            "omschrijving": None,
-                            "url": None,
-                        },
-                        "identificatie": "ZAAK2",
-                        "bronorganisatie": None,
-                        "omschrijving": None,
-                        "vertrouwelijkheidaanduiding": None,
-                        "vaOrder": None,
-                        "rollen": [],
-                        "startdatum": None,
-                        "einddatum": None,
-                        "registratiedatum": None,
-                        "deadline": None,
-                        "eigenschappen": [],
-                    },
                 ],
             },
         )

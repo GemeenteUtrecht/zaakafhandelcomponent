@@ -1,6 +1,6 @@
 import operator
 from functools import reduce
-from typing import Dict, List
+from typing import List
 
 from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (

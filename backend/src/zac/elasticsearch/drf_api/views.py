@@ -1,6 +1,5 @@
 from typing import List
 
-from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -56,22 +55,6 @@ class GetZakenView(views.APIView):
         return Response(data=zaak_serializer.data)
 
 
-class ESPaginationMixin:
-    pagination_class = ESPagination
-
-    def get_paginated_response(self, data, fields: List[str]):
-        """
-        Return a paginated style `Response` object for the given output data.
-        """
-        assert isinstance(self.pagination_class(), ESPagination)
-        return self.paginator.get_paginated_response(data, fields)
-
-
-class ESOrderingMixin:
-    ordering = ("-identificatie",)
-    search_document = ZaakDocument
-
-
 class PerformSearchMixin:
     def perform_search(self, search_query):
         if search_query.get("zaaktype"):
@@ -87,11 +70,40 @@ class PerformSearchMixin:
         return results
 
 
-class SearchView(PerformSearchMixin, ESOrderingMixin, ESPaginationMixin, views.APIView):
+class SearchView(
+    PerformSearchMixin,
+    views.APIView,
+):
     authentication_classes = (SessionAuthentication,)
+    ordering = ("-identificatie",)
+    pagination_class = ESPagination
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (IsAuthenticated,)
+    search_document = ZaakDocument
     serializer_class = SearchSerializer
+    pagination_class = ESPagination
+
+    @property
+    def paginator(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, "_paginator"):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        return self._paginator
+
+    def paginate_results(self, results):
+        return self.paginator.paginate_queryset(results, self.request, view=self)
+
+    def get_paginated_response(self, data, fields: List[str]):
+        """
+        Return a paginated style `Response` object for the given output data.
+        """
+        assert isinstance(self.pagination_class(), ESPagination)
+        return self.paginator.get_paginated_response(data, fields)
 
     @extend_schema(
         summary=_("Search zaken"),
@@ -125,7 +137,7 @@ class SearchView(PerformSearchMixin, ESOrderingMixin, ESPaginationMixin, views.A
         }
 
         results = self.perform_search(search_query)
-        page = self.paginate_queryset(results)
+        page = self.paginate_results(results)
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, input_serializer.validated_data["fields"]
@@ -158,15 +170,21 @@ class SearchView(PerformSearchMixin, ESOrderingMixin, ESPaginationMixin, views.A
     ),
 )
 class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
+    ordering = ("-identificatie",)
     permission_classes = (IsAuthenticated,)
-    serializer_class = SearchReportSerializer
     queryset = SearchReport.objects.all()
+    search_document = ZaakDocument
+    serializer_class = SearchReportSerializer
+
+    def get_paginated_response(self, *args):
+        assert isinstance(self.paginator, ESPagination)
+        return self.paginator.get_paginated_response(*args)
 
     def get_queryset(self):
         qs = super().get_queryset()
 
         # filter on allowed zaaktypen
-        allowed_zts = get_zaaktypen(self.request.user)
+        allowed_zts = get_zaaktypen(user=self.request.user)
         allowed_zt_urls = {zt.url for zt in allowed_zts}
 
         # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen
@@ -180,7 +198,11 @@ class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
 
         return qs.filter(id__in=allowed_report_ids)
 
-    @action(detail=True, permission_classes=(CanDownloadSearchReports,))
+    @action(
+        detail=True,
+        permission_classes=(IsAuthenticated & CanDownloadSearchReports,),
+        pagination_class=ESPagination,
+    )
     def results(self, request, *args, **kwargs):
         search_report = self.get_object()
         ordering = ESOrderingFilter().get_ordering(self.request, self)
@@ -189,7 +211,7 @@ class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
 
         results = self.perform_search(search_report.query)
         page = self.paginate_queryset(results)
-        serializer = self.get_serializer(page, many=True)
+        serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, search_report.query["fields"]
         )
