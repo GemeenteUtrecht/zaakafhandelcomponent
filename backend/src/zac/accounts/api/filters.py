@@ -7,6 +7,17 @@ class StringInFilter(filters.BaseInFilter, filters.CharFilter):
 
 
 class UserFilter(filters.FilterSet):
+    include = StringInFilter(
+        field_name="username",
+        widget=QueryArrayWidget,
+        help_text="Deprecated - please use 'include_username' instead.",
+    )
+    exclude = StringInFilter(
+        field_name="username",
+        widget=QueryArrayWidget,
+        exclude=True,
+        help_text="Deprecated - please use 'exclude_username' instead.",
+    )
     include_username = StringInFilter(field_name="username", widget=QueryArrayWidget)
     exclude_username = StringInFilter(
         field_name="username", widget=QueryArrayWidget, exclude=True
