@@ -88,3 +88,61 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(2, len(response.json()))
+
+
+@requests_mock.Mocker()
+class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
+
+        cls.objecttype_version = {
+            "url": f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725/versions/0",
+            "version": 0,
+            "object_type": f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725",
+            "status": "published",
+            "json_schema": {"title": "Restaurant"},
+            "created_at": "2019-08-24",
+            "modified_at": "2019-08-24",
+            "published_at": "2019-08-24",
+        }
+
+    def test_not_authenticated(self, m):
+        list_url = reverse(
+            "objecttypesversion-read",
+            kwargs={"uuid": "e0346ea0-75aa-47e0-9283-cfb35963b725", "version": "1"},
+        )
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_read_objecttype_version(self, m):
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725/versions/1",
+            json=self.objecttype_version,
+        )
+
+        config = CoreConfig.get_solo()
+        config.primary_objecttypes_api = self.objecttypes_service
+        config.save()
+
+        list_url = reverse(
+            "objecttypesversion-read",
+            kwargs={"uuid": "e0346ea0-75aa-47e0-9283-cfb35963b725", "version": "1"},
+        )
+        user = UserFactory.create()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        result = response.json()
+
+        self.assertEqual(0, result["version"])
+        self.assertEqual({"title": "Restaurant"}, result["jsonSchema"])
