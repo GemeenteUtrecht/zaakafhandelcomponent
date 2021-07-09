@@ -85,7 +85,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 0)
+        results = response.json()
+        self.assertEqual(results["count"], 0)
 
     def test_has_perm_but_not_for_zaaktype(self, m):
         zaaktype2 = generate_oas_component(
@@ -118,7 +119,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), 0)
+        results = response.json()
+        self.assertEqual(results["count"], 0)
 
     def test_is_superuser(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -133,9 +135,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
-
-        self.assertEqual(len(data), 1)
+        results = response.json()
+        self.assertEqual(results["count"], 1)
 
     def test_has_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -160,9 +161,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
-
-        self.assertEqual(len(data), 1)
+        results = response.json()
+        self.assertEqual(results["count"], 1)
 
 
 @requests_mock.Mocker()
@@ -200,6 +200,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Some zaak 1",
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+            bronorganisatie="123456789",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
         )
         zaaktype_model = factory(ZaakType, zaaktype)
         zaak1_model = factory(Zaak, zaak1)
@@ -229,7 +231,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         data = {
             "identificatie": "zaak1",
-            "zaaktype": {
+            "zaaktypen": {
                 "omschrijving": "ZT1",
                 "catalogus": CATALOGUS_URL,
             },
@@ -239,34 +241,56 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
-        self.assertEqual(len(data), 1)
+        results = response.json()
+
         self.assertEqual(
-            data,
-            [
-                {
-                    "url": zaak1_model.url,
-                    "identificatie": "zaak1",
-                    "bronorganisatie": zaak1_model.bronorganisatie,
-                    "zaaktype": {
-                        "url": zaaktype["url"],
-                        "catalogus": CATALOGUS_URL,
-                        "omschrijving": "ZT1",
-                        "versiedatum": zaaktype["versiedatum"],
-                    },
-                    "omschrijving": "Some zaak 1",
-                    "toelichting": zaak1_model.toelichting,
-                    "registratiedatum": zaak1_model.registratiedatum.isoformat(),
-                    "startdatum": zaak1_model.startdatum.isoformat(),
-                    "einddatum": None,
-                    "einddatumGepland": zaak1_model.einddatum_gepland,
-                    "uiterlijkeEinddatumAfdoening": None,
-                    "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
-                    "deadline": zaak1_model.deadline.isoformat(),
-                    "deadlineProgress": zaak1_model.deadline_progress(),
-                    "resultaat": None,
-                }
-            ],
+            results,
+            {
+                "fields": [
+                    "bronorganisatie",
+                    "deadline",
+                    "einddatum",
+                    "identificatie",
+                    "omschrijving",
+                    "registratiedatum",
+                    "rollen.betrokkene_identificatie.identificatie",
+                    "rollen.betrokkene_type",
+                    "rollen.omschrijving_generiek",
+                    "rollen.url",
+                    "startdatum",
+                    "url",
+                    "va_order",
+                    "vertrouwelijkheidaanduiding",
+                    "zaaktype.catalogus",
+                    "zaaktype.omschrijving",
+                    "zaaktype.url",
+                ],
+                "next": None,
+                "previous": None,
+                "count": 1,
+                "results": [
+                    {
+                        "url": "http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                        "zaaktype": {
+                            "url": "http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                            "catalogus": "http://catalogus.nl/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                            "omschrijving": "ZT1",
+                        },
+                        "identificatie": "zaak1",
+                        "bronorganisatie": "123456789",
+                        "omschrijving": "Some zaak 1",
+                        "vertrouwelijkheidaanduiding": "confidentieel",
+                        "vaOrder": 22,
+                        "rollen": [],
+                        "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
+                        "einddatum": None,
+                        "registratiedatum": zaak1_model.registratiedatum.isoformat()
+                        + "T00:00:00Z",
+                        "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
+                        "eigenschappen": [],
+                    }
+                ],
+            },
         )
 
     def test_search_on_eigenschappen(self, m):
@@ -301,6 +325,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             identificatie="zaak1",
             omschrijving="Some zaak 1",
+            bronorganisatie="123456789",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
         )
         zaak_eigenschap1 = generate_oas_component(
             "zrc",
@@ -359,35 +385,56 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         response = self.client.post(self.endpoint, data=input)
 
-        data = response.json()
-
-        self.assertEqual(len(data), 1)
+        results = response.json()
+        self.maxDiff = None
         self.assertEqual(
-            data,
-            [
-                {
-                    "url": zaak1_model.url,
-                    "identificatie": "zaak1",
-                    "bronorganisatie": zaak1_model.bronorganisatie,
-                    "zaaktype": {
-                        "url": zaaktype["url"],
-                        "catalogus": CATALOGUS_URL,
-                        "omschrijving": "ZT1",
-                        "versiedatum": zaaktype["versiedatum"],
-                    },
-                    "omschrijving": "Some zaak 1",
-                    "toelichting": zaak1_model.toelichting,
-                    "registratiedatum": zaak1_model.registratiedatum.isoformat(),
-                    "startdatum": zaak1_model.startdatum.isoformat(),
-                    "einddatum": None,
-                    "einddatumGepland": zaak1_model.einddatum_gepland,
-                    "uiterlijkeEinddatumAfdoening": None,
-                    "vertrouwelijkheidaanduiding": zaak1_model.vertrouwelijkheidaanduiding,
-                    "deadline": zaak1_model.deadline.isoformat(),
-                    "deadlineProgress": zaak1_model.deadline_progress(),
-                    "resultaat": None,
-                }
-            ],
+            results,
+            {
+                "fields": [
+                    "bronorganisatie",
+                    "deadline",
+                    "einddatum",
+                    "identificatie",
+                    "omschrijving",
+                    "registratiedatum",
+                    "rollen.betrokkene_identificatie.identificatie",
+                    "rollen.betrokkene_type",
+                    "rollen.omschrijving_generiek",
+                    "rollen.url",
+                    "startdatum",
+                    "url",
+                    "va_order",
+                    "vertrouwelijkheidaanduiding",
+                    "zaaktype.catalogus",
+                    "zaaktype.omschrijving",
+                    "zaaktype.url",
+                ],
+                "next": None,
+                "previous": None,
+                "count": 1,
+                "results": [
+                    {
+                        "url": "http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                        "zaaktype": {
+                            "url": "http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                            "catalogus": "http://catalogus.nl/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                            "omschrijving": "ZT1",
+                        },
+                        "identificatie": "zaak1",
+                        "bronorganisatie": "123456789",
+                        "omschrijving": "Some zaak 1",
+                        "vertrouwelijkheidaanduiding": "confidentieel",
+                        "vaOrder": 22,
+                        "rollen": [],
+                        "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
+                        "einddatum": None,
+                        "registratiedatum": zaak1_model.registratiedatum.isoformat()
+                        + "T00:00:00Z",
+                        "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
+                        "eigenschappen": [],
+                    }
+                ],
+            },
         )
 
     def test_search_without_input(self, m):
@@ -445,9 +492,9 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         data = response.json()
 
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]["url"], zaak2["url"])
-        self.assertEqual(data[1]["url"], zaak1["url"])
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["results"][0]["url"], zaak2["url"])
+        self.assertEqual(data["results"][1]["url"], zaak1["url"])
 
     def test_search_with_ordering(self, m):
         # set up catalogi api data
@@ -503,13 +550,13 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint + "?ordering=-deadline")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]["url"], zaak2["url"])
-        self.assertEqual(data[1]["url"], zaak1["url"])
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["results"][0]["url"], zaak2["url"])
+        self.assertEqual(data["results"][1]["url"], zaak1["url"])
 
         response = self.client.post(self.endpoint + "?ordering=deadline")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]["url"], zaak1["url"])
-        self.assertEqual(data[1]["url"], zaak2["url"])
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["results"][0]["url"], zaak1["url"])
+        self.assertEqual(data["results"][1]["url"], zaak2["url"])

@@ -5,7 +5,9 @@ from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, field
 
 
-def get_ordering_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
+def get_document_fields(
+    fields: Dict[str, Any], sortable: bool = False
+) -> Iterator[Tuple[str, str]]:
     """
     This (recursively) lists all the (nested) fields that can be sorted on.
 
@@ -17,12 +19,12 @@ def get_ordering_fields(fields: Dict[str, Any]) -> Iterator[Tuple[str, str]]:
         if field_type in [field.Nested.name, field.Object.name]:
             properties = field_value.get("properties")
             if properties:
-                nested_fields = get_ordering_fields(properties)
+                nested_fields = get_document_fields(properties, sortable=sortable)
                 for nested_field_name, nested_field_value in list(nested_fields):
                     yield (f"{field_name}.{nested_field_name}", nested_field_value)
 
         else:
-            if field_type == field.Text.name:
+            if sortable and field_type == field.Text.name:
                 try:
                     field_value["fields"][field.Keyword.name]
                     yield (field_name, field_type)
@@ -58,7 +60,7 @@ def es_document_to_ordering_parameters(
         return None
 
     else:
-        enum = [field[0] for field in get_ordering_fields(properties)]
+        enum = [field[0] for field in get_document_fields(properties, sortable=True)]
         return OpenApiParameter(
             name="ordering",
             type=str,

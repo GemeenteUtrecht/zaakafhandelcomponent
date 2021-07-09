@@ -20,7 +20,6 @@ urlpatterns = [
     path("forms/", include("zac.forms.urls")),
     path("contrib/", include("zac.contrib.kadaster.urls")),
     path("activities/", include("zac.activities.urls")),
-    path("reports/", include("zac.reports.urls")),
 ]
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie. no need to run collectstatic). Both the static

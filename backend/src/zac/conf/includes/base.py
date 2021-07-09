@@ -141,7 +141,6 @@ INSTALLED_APPS = [
     "zac.elasticsearch",
     "zac.notifications",
     "zac.forms",
-    "zac.reports",
     "zac.utils",
     "zac.contrib.brp",
     "zac.contrib.kadaster",

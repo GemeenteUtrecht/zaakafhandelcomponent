@@ -334,16 +334,16 @@ def get_zaken_es(
         raise ValueError("'user' parameter is required when 'only_allowed=True'")
 
     # ES search
-    zaak_urls = search(user=user, size=size, only_allowed=only_allowed, **find_kwargs)
+    es_results = search(user=user, size=size, only_allowed=only_allowed, **find_kwargs)
 
-    if not zaak_urls:
+    if not es_results:
         return []
 
     def _get_zaak(zaak_url):
         return get_zaak(zaak_url=zaak_url)
 
     with parallel(max_workers=10) as executor:
-        results = executor.map(_get_zaak, zaak_urls)
+        results = executor.map(_get_zaak, [hit.url for hit in es_results])
         zaken = list(results)
 
     # resolve zaaktype reference
@@ -467,7 +467,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     # try local search index first
     results = search(size=1, only_allowed=False, **query)
     if results:
-        zaak = get_zaak(zaak_url=results[0])
+        zaak = get_zaak(zaak_url=results[0].url)
     else:
         # not in cache -> check it in all known ZRCs
         zrcs = Service.objects.filter(api_type=APITypes.zrc)

@@ -5,10 +5,11 @@ from rest_framework import serializers
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.permissions import Blueprint
-from zac.reports.models import Report
+from zac.elasticsearch.models import SearchReport
+from zac.elasticsearch.searches import search
 
 
-class ReportBlueprint(Blueprint):
+class SearchReportBlueprint(Blueprint):
     zaaktypen = serializers.ListField(
         child=serializers.CharField(max_length=50),
         help_text=_(
@@ -16,8 +17,17 @@ class ReportBlueprint(Blueprint):
         ),
     )
 
-    def has_access(self, report: Report):
-        return set(report.zaaktypen).issubset(set(self.data["zaaktypen"]))
+    def has_access(self, search_report: SearchReport):
+        es_query = search_report.query
+        no_fields = {**es_query}
+
+        # Remove fields parameter of search as it's not required for these purposes
+        if "fields" in no_fields:
+            no_fields.pop("fields")
+
+        es_results = search(user=self.context["user"], **no_fields)
+        zaaktypen_in_report = [result.zaaktype.url for result in es_results]
+        return set(zaaktypen_in_report).issubset(set(self.data["zaaktypen"]))
 
     def search_query(self) -> Query:
         from zac.core.services import _get_from_catalogus

@@ -1,12 +1,8 @@
-from unittest.mock import patch
-
 from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
 import requests_mock
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service

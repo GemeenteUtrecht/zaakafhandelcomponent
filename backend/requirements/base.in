@@ -10,7 +10,6 @@ python-dateutil
 pyyaml
 isodate
 requests_mock
-tablib[xlsx]
 elasticsearch-dsl
 
 # zgw-integration

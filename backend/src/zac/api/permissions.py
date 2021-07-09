@@ -11,7 +11,7 @@ from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
-from zac.reports.models import Report
+from zac.elasticsearch.models import SearchReport
 
 logger = logging.getLogger(__name__)
 
@@ -127,18 +127,36 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
         return zaak
 
 
-class ReportDefinitionPermission(DefinitionBasePermission):
-    object_attr = "report"
-    object_type: str = PermissionObjectType.report
+class SearchReportDefinitionPermission(DefinitionBasePermission):
+    object_attr = "search_report"
+    object_type: str = PermissionObjectType.search_report
 
-    def get_object(self, pk: int):
+    def get_object(self, view):
+        # Mostly taken from get_object_or_404 but without obj permission checks.
+        queryset = view.filter_queryset(view.get_queryset())
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = view.lookup_url_kwarg or view.lookup_field
+
+        assert lookup_url_kwarg in view.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (view.__class__.__name__, lookup_url_kwarg)
+        )
+
         try:
-            report = Report.objects.get(pk=pk)
-        except ObjectDoesNotExist:
-            logger.info("Report with pk %s does not exist" % pk, exc_info=True)
+            search_report = queryset.filter(
+                **{view.lookup_field: view.kwargs[lookup_url_kwarg]}
+            )[0]
+        except IndexError:
+            logger.info(
+                "Search report with %s %s does not exist"
+                % (view.lookup_field, view.kwargs[lookup_url_kwarg]),
+                exc_info=True,
+            )
             return None
-
-        return report
+        return search_report
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
@@ -168,8 +186,7 @@ class ReportDefinitionPermission(DefinitionBasePermission):
         if not super().has_permission(request, view):
             return False
 
-        report_pk = serializer.validated_data[self.object_attr]
-        obj = self.get_object(report_pk)
+        obj = self.get_object(view)
         if not obj:
             return False
         return self.has_object_permission(request, view, obj)
