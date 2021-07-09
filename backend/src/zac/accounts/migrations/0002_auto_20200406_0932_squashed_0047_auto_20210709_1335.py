@@ -80,79 +80,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="PermissionSet",
-            fields=[
-                (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "name",
-                    models.CharField(max_length=255, unique=True, verbose_name="naam"),
-                ),
-                (
-                    "description",
-                    models.TextField(blank=True, verbose_name="description"),
-                ),
-                (
-                    "permissions",
-                    django.contrib.postgres.fields.ArrayField(
-                        base_field=models.CharField(max_length=255),
-                        blank=True,
-                        default=list,
-                        size=None,
-                        verbose_name="permissions",
-                    ),
-                ),
-                (
-                    "max_va",
-                    models.CharField(
-                        choices=[
-                            ("openbaar", "Openbaar"),
-                            ("beperkt_openbaar", "Beperkt openbaar"),
-                            ("intern", "Intern"),
-                            ("zaakvertrouwelijk", "Zaakvertrouwelijk"),
-                            ("vertrouwelijk", "Vertrouwelijk"),
-                            ("confidentieel", "Confidentieel"),
-                            ("geheim", "Geheim"),
-                            ("zeer_geheim", "Zeer geheim"),
-                        ],
-                        default="openbaar",
-                        help_text="Spans Zaken until and including this vertrouwelijkheidaanduiding.",
-                        max_length=100,
-                        verbose_name="maximale vertrouwelijkheidaanduiding",
-                    ),
-                ),
-                (
-                    "catalogus",
-                    models.URLField(
-                        blank=True,
-                        help_text="Zaaktypencatalogus waarin de zaaktypen voorkomen.",
-                        verbose_name="catalogus",
-                    ),
-                ),
-                (
-                    "zaaktype_identificaties",
-                    django.contrib.postgres.fields.ArrayField(
-                        base_field=models.CharField(max_length=100),
-                        blank=True,
-                        default=list,
-                        help_text="All permissions selected are scoped to these zaaktypen. If left empty, this applies to all zaaktypen.",
-                        size=None,
-                    ),
-                ),
-            ],
-            options={
-                "verbose_name": "permission set",
-                "verbose_name_plural": "permission sets",
-            },
-        ),
-        migrations.CreateModel(
             name="AuthorizationProfile",
             fields=[
                 (
@@ -169,14 +96,6 @@ class Migration(migrations.Migration):
                     models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
                 ("name", models.CharField(max_length=255, verbose_name="naam")),
-                (
-                    "permission_sets",
-                    models.ManyToManyField(
-                        help_text="Selecting multiple sets makes them add/merge all the permissions together.",
-                        to="accounts.PermissionSet",
-                        verbose_name="permission sets",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "authorization profile",
@@ -272,14 +191,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "handlers",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="users who can provide access to the zaak",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
                     "end_date",
                     models.DateField(blank=True, null=True, verbose_name="end date"),
                 ),
@@ -288,10 +199,6 @@ class Migration(migrations.Migration):
                     models.DateField(blank=True, null=True, verbose_name="start date"),
                 ),
             ],
-        ),
-        migrations.RemoveField(
-            model_name="accessrequest",
-            name="handlers",
         ),
         migrations.AddField(
             model_name="accessrequest",
@@ -305,70 +212,6 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
-        migrations.CreateModel(
-            name="InformatieobjecttypePermission",
-            fields=[
-                (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "catalogus",
-                    models.URLField(
-                        help_text="Informatieobjecttype catalogus waarin de informatieobjecttypen voorkomen.",
-                        max_length=1000,
-                        verbose_name="catalogus",
-                    ),
-                ),
-                (
-                    "omschrijving",
-                    models.CharField(
-                        blank=True,
-                        help_text="Informatieobjecttype omschrijving.",
-                        max_length=100,
-                        verbose_name="omschrijving",
-                    ),
-                ),
-                (
-                    "max_va",
-                    models.CharField(
-                        choices=[
-                            ("openbaar", "Openbaar"),
-                            ("beperkt_openbaar", "Beperkt openbaar"),
-                            ("intern", "Intern"),
-                            ("zaakvertrouwelijk", "Zaakvertrouwelijk"),
-                            ("vertrouwelijk", "Vertrouwelijk"),
-                            ("confidentieel", "Confidentieel"),
-                            ("geheim", "Geheim"),
-                            ("zeer_geheim", "Zeer geheim"),
-                        ],
-                        default="openbaar",
-                        help_text="Maximaal vertrouwelijkheidaanduiding.",
-                        max_length=100,
-                        verbose_name="maximaal vertrouwelijkheidaanduiding",
-                    ),
-                ),
-                (
-                    "permission_set",
-                    models.ForeignKey(
-                        help_text="Associated set of permissions for a zaaktype.",
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="accounts.PermissionSet",
-                        verbose_name="permission set",
-                    ),
-                ),
-            ],
-            options={
-                "verbose_name": "informatieobjecttype permission",
-                "verbose_name_plural": "informatieobjecttype permissions",
-                "unique_together": set(),
-            },
-        ),
         migrations.AlterField(
             model_name="authorizationprofile",
             name="name",
@@ -376,18 +219,6 @@ class Migration(migrations.Migration):
                 help_text="Use an easily recognizable name that maps to the function of users.",
                 max_length=255,
                 verbose_name="naam",
-            ),
-        ),
-        migrations.AddField(
-            model_name="authorizationprofile",
-            name="oo",
-            field=models.ForeignKey(
-                blank=True,
-                help_text="Limit access to data belonging to this OO. Leaving this blank means that there is no restriction on OO in place.",
-                null=True,
-                on_delete=django.db.models.deletion.PROTECT,
-                to="organisatieonderdelen.OrganisatieOnderdeel",
-                verbose_name="organisatieonderdeel",
             ),
         ),
         migrations.AlterField(
@@ -478,46 +309,11 @@ class Migration(migrations.Migration):
                         verbose_name="object URL",
                     ),
                 ),
-                (
-                    "policy",
-                    django.contrib.postgres.fields.jsonb.JSONField(
-                        blank=True,
-                        default=dict,
-                        help_text="Blueprint permission definitions, used to check the access to objects based on their properties i.e. zaaktype, informatieobjecttype",
-                        verbose_name="policy",
-                    ),
-                ),
-                (
-                    "start_date",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now,
-                        help_text="Start date of the permission",
-                        verbose_name="start date",
-                    ),
-                ),
-                (
-                    "end_date",
-                    models.DateTimeField(
-                        blank=True,
-                        help_text="End date of the permission",
-                        null=True,
-                        verbose_name="end date",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "permission definition",
                 "verbose_name_plural": "permission definitions",
             },
-        ),
-        migrations.AddField(
-            model_name="authorizationprofile",
-            name="permission_definitions",
-            field=models.ManyToManyField(
-                related_name="auth_profiles",
-                to="accounts.PermissionDefinition",
-                verbose_name="permission definitions",
-            ),
         ),
         migrations.AddField(
             model_name="user",
@@ -528,37 +324,6 @@ class Migration(migrations.Migration):
                 to="accounts.PermissionDefinition",
                 verbose_name="permission definitions",
             ),
-        ),
-        migrations.AddConstraint(
-            model_name="permissiondefinition",
-            constraint=models.CheckConstraint(
-                check=models.Q(
-                    models.Q(
-                        models.Q(
-                            models.Q(_negated=True, policy={}), ("object_url", "")
-                        ),
-                        models.Q(
-                            models.Q(_negated=True, object_url=""), ("policy", {})
-                        ),
-                        _connector="OR",
-                    )
-                ),
-                name="check_permission_type",
-            ),
-        ),
-        migrations.RemoveField(
-            model_name="authorizationprofile",
-            name="oo",
-        ),
-        migrations.RemoveField(
-            model_name="authorizationprofile",
-            name="permission_sets",
-        ),
-        migrations.DeleteModel(
-            name="InformatieobjecttypePermission",
-        ),
-        migrations.DeleteModel(
-            name="PermissionSet",
         ),
         migrations.CreateModel(
             name="BlueprintPermission",
@@ -596,23 +361,6 @@ class Migration(migrations.Migration):
                         verbose_name="policy",
                     ),
                 ),
-                (
-                    "start_date",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now,
-                        help_text="Start date of the permission",
-                        verbose_name="start date",
-                    ),
-                ),
-                (
-                    "end_date",
-                    models.DateTimeField(
-                        blank=True,
-                        help_text="End date of the permission",
-                        null=True,
-                        verbose_name="end date",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "blueprint definition",
@@ -627,18 +375,6 @@ class Migration(migrations.Migration):
                 to="accounts.BlueprintPermission",
                 verbose_name="blueprint permissions",
             ),
-        ),
-        migrations.RemoveConstraint(
-            model_name="permissiondefinition",
-            name="check_permission_type",
-        ),
-        migrations.RemoveField(
-            model_name="authorizationprofile",
-            name="permission_definitions",
-        ),
-        migrations.RemoveField(
-            model_name="permissiondefinition",
-            name="policy",
         ),
         migrations.AlterField(
             model_name="permissiondefinition",
@@ -868,25 +604,9 @@ class Migration(migrations.Migration):
                 verbose_name="start date",
             ),
         ),
-        migrations.RemoveField(
-            model_name="atomicpermission",
-            name="end_date",
-        ),
-        migrations.RemoveField(
-            model_name="atomicpermission",
-            name="start_date",
-        ),
         migrations.AlterUniqueTogether(
             name="atomicpermission",
             unique_together={("permission", "object_url")},
-        ),
-        migrations.RemoveField(
-            model_name="blueprintpermission",
-            name="end_date",
-        ),
-        migrations.RemoveField(
-            model_name="blueprintpermission",
-            name="start_date",
         ),
         migrations.AlterModelOptions(
             name="blueprintpermission",
