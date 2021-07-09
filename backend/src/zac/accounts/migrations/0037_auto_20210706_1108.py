@@ -24,14 +24,15 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(add_id_to_duplicate_email),
-        migrations.AlterModelOptions(
-            name="blueprintpermission",
-            options={
-                "ordering": ("policy__zaaktype_omschrijving", "permission"),
-                "verbose_name": "blueprint definition",
-                "verbose_name_plural": "blueprint definitions",
-            },
-        ),
+        # this operation is present in 0037_auto_20210625_1005
+        # migrations.AlterModelOptions(
+        #     name="blueprintpermission",
+        #     options={
+        #         "ordering": ("policy__zaaktype_omschrijving", "permission"),
+        #         "verbose_name": "blueprint definition",
+        #         "verbose_name_plural": "blueprint definitions",
+        #     },
+        # ),
         migrations.AddConstraint(
             model_name="user",
             constraint=models.UniqueConstraint(
