@@ -6,6 +6,7 @@ from .views import (
     InformatieObjectTypeListView,
     ListZaakDocumentsView,
     ObjecttypeListView,
+    ObjecttypeVersionReadView,
     RelatedZakenView,
     VertrouwelijkheidsAanduidingenView,
     ZaakAtomicPermissionsView,
@@ -82,4 +83,9 @@ urlpatterns = [
         name="confidentiality-classications",
     ),
     path("objecttypes", ObjecttypeListView.as_view(), name="objecttypes-list"),
+    path(
+        "objecttypes/<str:uuid>/versions/<int:version>",
+        ObjecttypeVersionReadView.as_view(),
+        name="objecttypesversion-read",
+    ),
 ]

@@ -5,7 +5,7 @@ from typing import Optional
 from zgw_consumers.api_models.base import ZGWModel
 
 
-# TODO Move to ZGW_consumers
+# TODO Move to ZGW_consumers?
 @dataclass
 class Objecttype(ZGWModel):
     url: str
@@ -25,3 +25,15 @@ class Objecttype(ZGWModel):
     created_at: Optional[date]
     modified_at: Optional[date]
     versions: Optional[list]
+
+
+@dataclass
+class ObjecttypeVersion(ZGWModel):
+    url: str
+    version: Optional[int]
+    object_type: Optional[str]
+    status: Optional[str]
+    json_schema: Optional[dict]
+    created_at: Optional[date]
+    modified_at: Optional[date]
+    published_at: Optional[date]

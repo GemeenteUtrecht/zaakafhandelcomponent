@@ -662,3 +662,14 @@ class ObjecttypeSerializer(serializers.Serializer):
         child=serializers.URLField(),
         help_text=_("List of URLs of the different object type versions"),
     )
+
+
+class ObjecttypeVersionSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    version = serializers.IntegerField()
+    object_type = serializers.URLField()
+    status = serializers.CharField()
+    json_schema = serializers.JSONField()
+    created_at = serializers.DateField()
+    modified_at = serializers.DateField()
+    published_at = serializers.DateField()

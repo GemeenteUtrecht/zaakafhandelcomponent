@@ -23,7 +23,7 @@ from rest_framework import (
     views,
 )
 from rest_framework.exceptions import APIException
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -36,7 +36,11 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-from zac.core.services import fetch_objecttypes, update_document
+from zac.core.services import (
+    fetch_objecttype_version,
+    fetch_objecttypes,
+    update_document,
+)
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -82,6 +86,7 @@ from .serializers import (
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
     ObjecttypeSerializer,
+    ObjecttypeVersionSerializer,
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
@@ -699,3 +704,16 @@ class ObjecttypeListView(ListAPIView):
 
     def get_queryset(self):
         return fetch_objecttypes()
+
+
+@extend_schema(
+    summary=_("Read Objecttype version"),
+    description=_("Read the details of a particular obecttype version"),
+)
+class ObjecttypeVersionReadView(RetrieveAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjecttypeVersionSerializer
+
+    def get_object(self):
+        return fetch_objecttype_version(**self.kwargs)

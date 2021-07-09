@@ -37,7 +37,7 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from .api.api_models import Objecttype
+from .api.api_models import Objecttype, ObjecttypeVersion
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol, get_naam_medewerker
@@ -1124,3 +1124,15 @@ def fetch_objecttypes() -> List[Objecttype]:
     objecttypes_data = client.list("objecttype")
 
     return factory(Objecttype, objecttypes_data)
+
+
+def fetch_objecttype_version(uuid: str, version: int) -> ObjecttypeVersion:
+    conf = CoreConfig.get_solo()
+    objecttype_service = conf.primary_objecttypes_api
+
+    client = objecttype_service.build_client()
+    objecttypes_version_data = client.retrieve(
+        "objectversion", **{"objecttype_uuid": uuid, "version": version}
+    )
+
+    return factory(ObjecttypeVersion, objecttypes_version_data)
