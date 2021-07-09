@@ -136,7 +136,6 @@ INSTALLED_APPS = [
     # Project applications.
     "zac.accounts",
     "zac.camunda",
-    "zac.regiezaken",
     "zac.core",
     "zac.elasticsearch",
     "zac.notifications",
@@ -187,7 +186,6 @@ TEMPLATES = [
                 "zac.utils.context_processors.settings",
             ],
             "loaders": TEMPLATE_LOADERS,
-            "builtins": ["zac.templatetags.zac"],
         },
     }
 ]
@@ -341,7 +339,7 @@ AUTHENTICATION_BACKENDS = [
 SESSION_COOKIE_NAME = "zac_sessionid"
 
 LOGIN_URL = reverse_lazy("accounts:login")
-LOGIN_REDIRECT_URL = reverse_lazy("index")
+LOGIN_REDIRECT_URL = "/ui"
 
 #
 # SECURITY settings

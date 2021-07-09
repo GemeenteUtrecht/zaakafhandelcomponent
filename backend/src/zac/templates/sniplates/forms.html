@@ -275,6 +275,6 @@ Actual input types
 Button interactions
 {% block submit %}
 <div class="input">
-    <button type="submit" class="btn btn--primary">{{ label|default:_("Submit") }}</button>
+    <button type="submit" class="btn {{ primary|yesno:'btn--primary,' }}">{{ label|default:_("Submit") }}</button>
 </div>
 {% endblock %}

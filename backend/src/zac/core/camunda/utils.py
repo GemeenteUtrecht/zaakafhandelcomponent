@@ -10,28 +10,14 @@ from django_camunda.client import get_client
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
 
-from ..forms import (
-    ConfigureAdviceRequestForm,
-    ConfigureApprovalRequestForm,
-    SelectDocumentsForm,
-    SelectUsersForm,
-    UsersReviewRequestFormSet,
-)
-
 User = get_user_model()
 
-
+# FIXME: cleanup
 FORM_KEYS = {
-    "zac:documentSelectie": {"form": SelectDocumentsForm},
-    "zac:gebruikerSelectie": {"form": SelectUsersForm},
-    "zac:configureAdviceRequest": {
-        "form": ConfigureAdviceRequestForm,
-        "formset": UsersReviewRequestFormSet,
-    },
-    "zac:configureApprovalRequest": {
-        "form": ConfigureApprovalRequestForm,
-        "formset": UsersReviewRequestFormSet,
-    },
+    "zac:documentSelectie": True,
+    "zac:gebruikerSelectie": True,
+    "zac:configureAdviceRequest": True,
+    "zac:configureApprovalRequest": True,
 }
 
 

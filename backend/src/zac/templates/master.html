@@ -28,31 +28,6 @@
         </header>
 
         <main class="main">
-            <nav class="main__nav nav-panel">
-
-                <div class="nav-panel__main-id">
-                    {% block nav-main-id %}{% endblock %}
-                </div>
-
-                <ul class="nav-panel__menu nav-menu">
-                    {% nav_menu_item 'index' _("Werkvoorraad") exact=True %}
-                    {% nav_menu_item 'core:index' _("Alle zaken") %}
-                    {% nav_menu_item 'core:search-index' _("Zoeken") %}
-                    {% nav_menu_item 'forms:select-form' _("Formulieren") %}
-                    {% nav_menu_item 'admin:index' _("Admin") %}
-                    {% if request.user.is_staff %}
-                        {% nav_menu_item 'api-docs' _("API documentation") %}
-                    {% endif %}
-                </ul>
-
-                <div class="nav-panel__controls">
-                    <form action="{% url 'core:flush-cache' %}" method="post">
-                        {% csrf_token %}
-                        <button class="btn">Flush cache</button>
-                    </form>
-                </div>
-
-            </nav>
 
             <section class="main__content content-panel">
                 {% block content %}
@@ -62,8 +37,6 @@
             </section>
 
         </main>
-
-        {% include "includes/footer.html" %}
 
         <script src="{% static 'js/main.js' %}"></script>
     </body>
