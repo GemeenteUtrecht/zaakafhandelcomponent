@@ -38,7 +38,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,
         django_filter.DjangoFilterBackend,
     )
-    search_fields = ["username", "first_name", "last_name"]
+    search_fields = ["username", "first_name", "last_name", "email"]
     filterset_class = UserFilter
 
     @extend_schema(summary=_("Current logged in user"))

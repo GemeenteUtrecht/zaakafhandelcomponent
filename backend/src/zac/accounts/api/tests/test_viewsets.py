@@ -36,16 +36,29 @@ class UserViewsetTests(APITestCase):
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 3)
 
-    def test_view_search_users_filter(self):
+    def test_view_search_users_filter_username(self):
         usernames = [self.users[i].username for i in range(2)]
 
-        params = {"search": "u", "exclude": usernames}
+        params = {"search": "u", "exclude_username": usernames}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 1)
 
-    def test_multiple_users(self):
+    def test_multiple_users_filter_username(self):
         usernames = [self.users[i].username for i in range(2)]
-        params = {"include": usernames}
+        params = {"include_username": usernames}
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_view_search_users_filter_email(self):
+        emails = [self.users[i].email for i in range(2)]
+
+        params = {"search": "u", "exclude_email": emails}
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_multiple_users_filter_email(self):
+        emails = [self.users[i].email for i in range(2)]
+        params = {"include_email": emails}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 2)
 
@@ -65,6 +78,6 @@ class UserViewsetTests(APITestCase):
             - ``?include[]=foo&include[]=bar`` (PHP style)
         """
         usernames = [self.users[i].username for i in range(2)]
-        params = {"include": ",".join(usernames)}
+        params = {"include_username": ",".join(usernames)}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 2)
