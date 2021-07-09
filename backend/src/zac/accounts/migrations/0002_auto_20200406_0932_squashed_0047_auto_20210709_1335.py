@@ -79,6 +79,116 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddConstraint(
+            model_name="user",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(_negated=True, email=""),
+                fields=("email",),
+                name="filled_email_unique",
+            ),
+        ),
+        migrations.CreateModel(
+            name="BlueprintPermission",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "object_type",
+                    models.CharField(
+                        choices=[
+                            ("zaak", "zaak"),
+                            ("document", "document"),
+                            ("search_report", "search report"),
+                        ],
+                        help_text="Type of the objects this permission applies to",
+                        max_length=50,
+                        verbose_name="object type",
+                    ),
+                ),
+                (
+                    "permission",
+                    models.CharField(
+                        help_text="Name of the permission",
+                        max_length=255,
+                        verbose_name="Permission",
+                    ),
+                ),
+                (
+                    "policy",
+                    django.contrib.postgres.fields.jsonb.JSONField(
+                        help_text="Blueprint permission definitions, used to check the access to objects based on their properties i.e. zaaktype, informatieobjecttype",
+                        verbose_name="policy",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ("policy__zaaktype_omschrijving", "permission"),
+                "verbose_name": "blueprint permission",
+                "verbose_name_plural": "blueprint permissions",
+            },
+        ),
+        migrations.AlterUniqueTogether(
+            name="blueprintpermission",
+            unique_together={("permission", "policy")},
+        ),
+        migrations.CreateModel(
+            name="AtomicPermission",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "object_type",
+                    models.CharField(
+                        choices=[
+                            ("zaak", "zaak"),
+                            ("document", "document"),
+                            ("search_report", "search report"),
+                        ],
+                        help_text="Type of the objects this permission applies to",
+                        max_length=50,
+                        verbose_name="object type",
+                    ),
+                ),
+                (
+                    "permission",
+                    models.CharField(
+                        help_text="Name of the permission",
+                        max_length=255,
+                        verbose_name="Permission",
+                    ),
+                ),
+                (
+                    "object_url",
+                    models.CharField(
+                        help_text="URL of the object in one of ZGW APIs this permission applies to",
+                        max_length=1000,
+                        verbose_name="object URL",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "atomic permission",
+                "verbose_name_plural": "atomic permissions",
+            },
+        ),
+        migrations.AlterUniqueTogether(
+            name="atomicpermission",
+            unique_together={("permission", "object_url")},
+        ),
         migrations.CreateModel(
             name="AuthorizationProfile",
             fields=[
@@ -103,10 +213,91 @@ class Migration(migrations.Migration):
                         verbose_name="name",
                     ),
                 ),
+                (
+                    "blueprint_permissions",
+                    models.ManyToManyField(
+                        related_name="auth_profiles",
+                        to="accounts.BlueprintPermission",
+                        verbose_name="blueprint permissions",
+                    ),
+                ),
             ],
             options={
                 "verbose_name": "authorization profile",
                 "verbose_name_plural": "authorization profiles",
+            },
+        ),
+        migrations.CreateModel(
+            name="UserAtomicPermission",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "comment",
+                    models.CharField(
+                        blank=True,
+                        help_text="Comment provided by the granter of the permission",
+                        max_length=1000,
+                        verbose_name="comment",
+                    ),
+                ),
+                (
+                    "reason",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("betrokkene", "betrokkene"),
+                            ("toegang verlenen", "toegang verlenen"),
+                            ("activiteit", "activiteit"),
+                            ("adviseur", "adviseur"),
+                            ("accordeur", "accordeur"),
+                        ],
+                        help_text="The reason why the permission was granted to the user",
+                        max_length=50,
+                        verbose_name="reason",
+                    ),
+                ),
+                (
+                    "atomic_permission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.AtomicPermission",
+                    ),
+                ),
+                (
+                    "start_date",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now,
+                        help_text="Start date of the permission",
+                        verbose_name="start date",
+                    ),
+                ),
+                (
+                    "end_date",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="End date of the permission",
+                        null=True,
+                        verbose_name="end date",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "db_table": "accounts_user_atomic_permissions",
             },
         ),
         migrations.CreateModel(
@@ -154,6 +345,17 @@ class Migration(migrations.Migration):
                 blank=True,
                 through="accounts.UserAuthorizationProfile",
                 to="accounts.AuthorizationProfile",
+            ),
+        ),
+        migrations.AddField(
+            model_name="user",
+            name="atomic_permissions",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="users",
+                through="accounts.UserAtomicPermission",
+                to="accounts.AtomicPermission",
+                verbose_name="atomic permissions",
             ),
         ),
         migrations.CreateModel(
@@ -231,220 +433,16 @@ class Migration(migrations.Migration):
                         verbose_name="requested date",
                     ),
                 ),
-            ],
-        ),
-        migrations.CreateModel(
-            name="AtomicPermission",
-            fields=[
                 (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "object_type",
-                    models.CharField(
-                        choices=[
-                            ("zaak", "zaak"),
-                            ("document", "document"),
-                            ("search_report", "search report"),
-                        ],
-                        help_text="Type of the objects this permission applies to",
-                        max_length=50,
-                        verbose_name="object type",
-                    ),
-                ),
-                (
-                    "permission",
-                    models.CharField(
-                        help_text="Name of the permission",
-                        max_length=255,
-                        verbose_name="Permission",
-                    ),
-                ),
-                (
-                    "object_url",
-                    models.CharField(
-                        help_text="URL of the object in one of ZGW APIs this permission applies to",
-                        max_length=1000,
-                        verbose_name="object URL",
-                    ),
-                ),
-            ],
-            options={
-                "verbose_name": "atomic permission",
-                "verbose_name_plural": "atomic permissions",
-            },
-        ),
-        migrations.CreateModel(
-            name="BlueprintPermission",
-            fields=[
-                (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "object_type",
-                    models.CharField(
-                        choices=[
-                            ("zaak", "zaak"),
-                            ("document", "document"),
-                            ("search_report", "search report"),
-                        ],
-                        help_text="Type of the objects this permission applies to",
-                        max_length=50,
-                        verbose_name="object type",
-                    ),
-                ),
-                (
-                    "permission",
-                    models.CharField(
-                        help_text="Name of the permission",
-                        max_length=255,
-                        verbose_name="Permission",
-                    ),
-                ),
-                (
-                    "policy",
-                    django.contrib.postgres.fields.jsonb.JSONField(
-                        help_text="Blueprint permission definitions, used to check the access to objects based on their properties i.e. zaaktype, informatieobjecttype",
-                        verbose_name="policy",
-                    ),
-                ),
-            ],
-            options={
-                "ordering": ("policy__zaaktype_omschrijving", "permission"),
-                "verbose_name": "blueprint permission",
-                "verbose_name_plural": "blueprint permissions",
-            },
-        ),
-        migrations.AddField(
-            model_name="authorizationprofile",
-            name="blueprint_permissions",
-            field=models.ManyToManyField(
-                related_name="auth_profiles",
-                to="accounts.BlueprintPermission",
-                verbose_name="blueprint permissions",
-            ),
-        ),
-        migrations.CreateModel(
-            name="UserAtomicPermission",
-            fields=[
-                (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "comment",
-                    models.CharField(
+                    "user_atomic_permission",
+                    models.OneToOneField(
                         blank=True,
-                        help_text="Comment provided by the granter of the permission",
-                        max_length=1000,
-                        verbose_name="comment",
-                    ),
-                ),
-                (
-                    "reason",
-                    models.CharField(
-                        blank=True,
-                        choices=[
-                            ("betrokkene", "betrokkene"),
-                            ("toegang verlenen", "toegang verlenen"),
-                            ("activiteit", "activiteit"),
-                            ("adviseur", "adviseur"),
-                            ("accordeur", "accordeur"),
-                        ],
-                        help_text="The reason why the permission was granted to the user",
-                        max_length=50,
-                        verbose_name="reason",
-                    ),
-                ),
-                (
-                    "atomic_permission",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="accounts.AtomicPermission",
-                    ),
-                ),
-                (
-                    "start_date",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now,
-                        help_text="Start date of the permission",
-                        verbose_name="start date",
-                    ),
-                ),
-                (
-                    "end_date",
-                    models.DateTimeField(
-                        blank=True,
-                        help_text="End date of the permission",
+                        help_text="Permission created if the access request is approved",
                         null=True,
-                        verbose_name="end date",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="accounts.UserAtomicPermission",
                     ),
                 ),
             ],
-            options={
-                "db_table": "accounts_user_atomic_permissions",
-            },
-        ),
-        migrations.AddField(
-            model_name="user",
-            name="atomic_permissions",
-            field=models.ManyToManyField(
-                blank=True,
-                related_name="users",
-                through="accounts.UserAtomicPermission",
-                to="accounts.AtomicPermission",
-                verbose_name="atomic permissions",
-            ),
-        ),
-        migrations.AddField(
-            model_name="accessrequest",
-            name="user_atomic_permission",
-            field=models.OneToOneField(
-                blank=True,
-                help_text="Permission created if the access request is approved",
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                to="accounts.UserAtomicPermission",
-            ),
-        ),
-        migrations.AlterUniqueTogether(
-            name="atomicpermission",
-            unique_together={("permission", "object_url")},
-        ),
-        migrations.AlterUniqueTogether(
-            name="blueprintpermission",
-            unique_together={("permission", "policy")},
-        ),
-        migrations.AddConstraint(
-            model_name="user",
-            constraint=models.UniqueConstraint(
-                condition=models.Q(_negated=True, email=""),
-                fields=("email",),
-                name="filled_email_unique",
-            ),
         ),
     ]
