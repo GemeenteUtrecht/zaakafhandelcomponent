@@ -91,7 +91,9 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
         self.access_request1 = AccessRequestFactory.create(zaak=zaak.url)
         self.access_request2 = AccessRequestFactory.create()
 
-        with patch("zac.werkvoorraad.views.get_behandelaar_zaken", return_value=[zaak]):
+        with patch(
+            "zac.werkvoorraad.api.utils.get_behandelaar_zaken", return_value=[zaak]
+        ):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, 200)
