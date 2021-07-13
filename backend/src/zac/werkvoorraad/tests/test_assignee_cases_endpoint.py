@@ -15,7 +15,7 @@ from zac.accounts.tests.factories import SuperUserFactory, UserFactory
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
-from ..views import get_behandelaar_zaken_unfinished
+from ..api.utils import get_behandelaar_zaken_unfinished
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -73,7 +73,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         with patch(
-            "zac.werkvoorraad.views.get_behandelaar_zaken",
+            "zac.werkvoorraad.api.utils.get_behandelaar_zaken",
             return_value=[zaak_model_1, zaak_model_2],
         ):
             unfinished_zaken = get_behandelaar_zaken_unfinished(user)
@@ -83,7 +83,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
 
     def test_get_unfinished_zaken_no_zaken(self):
         user = UserFactory.create()
-        with patch("zac.werkvoorraad.views.get_behandelaar_zaken", return_value=[]):
+        with patch("zac.werkvoorraad.api.utils.get_behandelaar_zaken", return_value=[]):
             unfinished_zaken = get_behandelaar_zaken_unfinished(user)
 
         self.assertEqual(len(unfinished_zaken), 0)
@@ -130,7 +130,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         with patch(
-            "zac.werkvoorraad.views.get_behandelaar_zaken",
+            "zac.werkvoorraad.api.utils.get_behandelaar_zaken",
             return_value=[zaak_model_1, zaak_model_2],
         ):
             response = self.client.get(self.endpoint)
