@@ -11,10 +11,11 @@ all the ZAC users have permission to perform necessary operations via these APIs
 
 Permission types
 ----------------
-Each permission has the object type the permission relates to. For now two object types are supported:
+Each permission has the object type the permission relates to. For now three object types are supported:
 
 * zaak (case)
 * document
+* report
 
 Each permission provides the right to perform one of the following types of operations:
 
@@ -33,6 +34,9 @@ Each permission provides the right to perform one of the following types of oper
 * document permissions:
     * ``zaken:download-documents`` - to see the metadata and content of the document
     * ``zaken:update-documents`` - to update the content of the document
+
+* report permissions:
+    * ``rapport:inzien`` - to see the report
 
 
 The permissions used only in the old version of the ZAC:
@@ -69,6 +73,9 @@ For now, two blueprints are supported:
 * for document permissions:
     * informatieobjecttype (``catalogus`` and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
+
+* for report permissions:
+   * list of zaaktype identifications (``identificatie``)
 
 The new blueprints can be easily defined for all kinds of objects and their properties.
 
