@@ -4,24 +4,15 @@
 #
 #    ./bin/compile_dependencies.sh
 #
-aiodns==2.0.0
-    # via -r requirements/base.txt
-aiohttp==3.7.4.post0
-    # via -r requirements/base.txt
 amqp==2.5.1
     # via
     #   -r requirements/base.txt
     #   kombu
 appdirs==1.4.4
     # via black
-async-timeout==3.0.1
-    # via
-    #   -r requirements/base.txt
-    #   aiohttp
 attrs==19.1.0
     # via
     #   -r requirements/base.txt
-    #   aiohttp
     #   jsonschema
 beautifulsoup4==4.8.2
     # via webtest
@@ -44,11 +35,9 @@ cffi==1.12.3
     # via
     #   -r requirements/base.txt
     #   cryptography
-    #   pycares
 chardet==3.0.4
     # via
     #   -r requirements/base.txt
-    #   aiohttp
     #   requests
 click==7.1.2
     # via black
@@ -185,7 +174,6 @@ idna==2.8
     # via
     #   -r requirements/base.txt
     #   requests
-    #   yarl
 importlib-metadata==0.23
     # via
     #   -r requirements/base.txt
@@ -222,11 +210,6 @@ more-itertools==7.2.0
     # via
     #   -r requirements/base.txt
     #   zipp
-multidict==4.5.2
-    # via
-    #   -r requirements/base.txt
-    #   aiohttp
-    #   yarl
 mypy-extensions==0.4.3
     # via black
 odfpy==1.4.0
@@ -245,10 +228,6 @@ pathspec==0.8.1
     # via black
 psycopg2==2.8.3
     # via -r requirements/base.txt
-pycares==3.0.0
-    # via
-    #   -r requirements/base.txt
-    #   aiodns
 pycparser==2.19
     # via
     #   -r requirements/base.txt
@@ -344,10 +323,7 @@ toml==0.10.2
 typed-ast==1.4.1
     # via black
 typing-extensions==3.7.4.3
-    # via
-    #   -r requirements/base.txt
-    #   aiohttp
-    #   black
+    # via black
 uritemplate==3.0.1
     # via
     #   -r requirements/base.txt
@@ -378,10 +354,6 @@ xlwt==1.3.0
     # via
     #   -r requirements/base.txt
     #   tablib
-yarl==1.3.0
-    # via
-    #   -r requirements/base.txt
-    #   aiohttp
 zgw-consumers[drf]==0.15.0
     # via -r requirements/base.txt
 zipp==0.6.0

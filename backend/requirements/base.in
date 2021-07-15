@@ -13,9 +13,6 @@ requests_mock
 elasticsearch-dsl
 
 # zgw-integration
-aiodns
-aiohttp
-
 gemma-zds-client>=1.0.0
 zgw-consumers[drf]~=0.15.0
 
