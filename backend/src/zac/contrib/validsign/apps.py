@@ -9,8 +9,4 @@ class ValidSignConfig(AppConfig):
 
         from . import camunda  # noqa
 
-        FORM_KEYS.update(
-            {
-                "zac:validSign:configurePackage": True
-            }
-        )
+        FORM_KEYS.update({"zac:validSign:configurePackage": True})

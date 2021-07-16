@@ -96,6 +96,4 @@ class AdhocActivitiesTests(APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(
-            sorted(["activities", "zaak"]), sorted(list(data[0].keys()))
-        )
+        self.assertEqual(sorted(["activities", "zaak"]), sorted(list(data[0].keys())))
