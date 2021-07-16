@@ -489,7 +489,7 @@ ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
 ]
 
 # Django-Hijack
-HIJACK_LOGIN_REDIRECT_URL = "/"
+HIJACK_LOGIN_REDIRECT_URL = "/ui"
 HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")
 # The Admin mixin is used because we use a custom User-model.
 HIJACK_REGISTER_ADMIN = False
