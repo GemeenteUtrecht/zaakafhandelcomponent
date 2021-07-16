@@ -1,9 +1,10 @@
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from django.http import Http404
 
 from furl import furl
 from rest_framework import status
+from rest_framework.request import Request
 from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
@@ -13,6 +14,7 @@ from zac.accounts.models import User
 from zac.client import Client
 from zac.utils.decorators import optional_service
 
+from .constants import DocFileTypes
 from .data import DowcResponse
 from .exceptions import DOWCCreateError
 from .models import DowcConfig
@@ -71,6 +73,18 @@ def create_doc(
             raise DOWCCreateError(err.args[0])
 
     return factory(DowcResponse, response), status_code
+
+
+@optional_service
+def get_open_documenten(user: User, referer: str) -> List[str]:
+    client = get_client(user)
+    operation_id = "documenten_list"
+    kwargs = {
+        "purpose": DocFileTypes.write,
+        "info_url": referer,
+    }
+    url = get_operation_url(client.schema, operation_id, **kwargs)
+    return client.request(url, operation_id, method="GET", expected_status=200)
 
 
 @optional_service

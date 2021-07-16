@@ -1,4 +1,5 @@
 from decimal import ROUND_05UP
+from typing import Optional
 
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
@@ -59,6 +60,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         source="get_vertrouwelijkheidaanduiding_display"
     )
     informatieobjecttype = InformatieObjectTypeSerializer()
+    current_user_is_editing = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -82,6 +84,14 @@ class GetZaakDocumentSerializer(APIModelSerializer):
                 "help_text": _("File size in bytes"),
             }
         }
+
+    def get_current_user_is_editing(self, obj) -> Optional[bool]:
+        if "open_documenten" in self.context:
+            if obj.url in self.context["open_documenten"]:
+                return True
+            else:
+                return False
+        return None
 
 
 class AddZaakDocumentSerializer(serializers.Serializer):

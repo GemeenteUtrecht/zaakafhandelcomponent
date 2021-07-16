@@ -127,7 +127,7 @@ class ZaakDocumentSerializer(serializers.Serializer):
     url = serializers.URLField(required=False)
     zaaktype = ZaakTypeDocumentSerializer(required=False)
     identificatie = serializers.CharField(required=False)
-    bronorganisatie = serializers.CharField(required=False)
+    bronorganisatie = serializers.CharField(required=True)
     omschrijving = serializers.CharField(required=False)
     vertrouwelijkheidaanduiding = serializers.CharField(required=False)
     va_order = serializers.IntegerField(required=False)
