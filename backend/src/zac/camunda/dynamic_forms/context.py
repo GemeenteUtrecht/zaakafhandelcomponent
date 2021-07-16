@@ -43,7 +43,7 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
     }
 
     if field_type == "enum":
-        choices = [get_choice(value) for value in field.getchildren()]
+        choices = [get_choice(value) for value in list(field)]
         field_definition["enum"] = choices
 
     return field_definition

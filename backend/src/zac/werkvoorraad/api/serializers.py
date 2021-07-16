@@ -29,26 +29,13 @@ class AccessRequestSerializer(serializers.ModelSerializer):
 
 class WorkStackAccessRequestsSerializer(APIModelSerializer):
     access_requests = AccessRequestSerializer(many=True)
-    url = serializers.SerializerMethodField(
-        help_text=_("This URL points to the case access requests."),
-    )
     zaak = ZaakSerializer()
 
     class Meta:
         model = AccessRequestGroup
         fields = (
             "access_requests",
-            "url",
             "zaak",
-        )
-
-    def get_url(self, obj) -> str:
-        return reverse(
-            "core:zaak-access-requests",
-            kwargs={
-                "bronorganisatie": obj.zaak.bronorganisatie,
-                "identificatie": obj.zaak.identificatie,
-            },
         )
 
 
@@ -60,26 +47,13 @@ class ActivityNameSerializer(serializers.ModelSerializer):
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
     activities = ActivityNameSerializer(many=True)
-    url = serializers.SerializerMethodField(
-        help_text=_("This URL points to the case adhoc activities."),
-    )
     zaak = ZaakSerializer()
 
     class Meta:
         model = ActivityGroup
         fields = (
             "activities",
-            "url",
             "zaak",
-        )
-
-    def get_url(self, obj) -> str:
-        return reverse(
-            "core:zaak-activiteiten",
-            kwargs={
-                "bronorganisatie": obj.zaak.bronorganisatie,
-                "identificatie": obj.zaak.identificatie,
-            },
         )
 
 

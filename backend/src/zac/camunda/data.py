@@ -45,8 +45,5 @@ class Task(_Task):
     def has_form(self) -> bool:
         return bool(self.form)
 
-    def execute_url(self) -> str:
-        return reverse("core:zaak-task", args=[self.id])
-
     def get_variable(self, name: str) -> Any:
         return get_task_variable(self.id, name)

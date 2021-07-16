@@ -23,7 +23,6 @@ class RecursiveField(serializers.Serializer):
 
 class TaskSerializer(serializers.Serializer):
     id = serializers.UUIDField()
-    execute_url = serializers.URLField()
     name = serializers.CharField(max_length=100)
     created = serializers.DateTimeField()
     has_form = serializers.BooleanField()

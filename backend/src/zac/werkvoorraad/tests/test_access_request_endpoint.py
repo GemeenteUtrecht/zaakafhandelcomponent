@@ -104,13 +104,6 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
             data,
             [
                 {
-                    "url": reverse(
-                        "core:zaak-access-requests",
-                        kwargs={
-                            "bronorganisatie": zaak.bronorganisatie,
-                            "identificatie": zaak.identificatie,
-                        },
-                    ),
                     "accessRequests": [
                         {
                             "id": self.access_request1.id,
