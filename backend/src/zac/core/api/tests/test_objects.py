@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 
 import requests_mock
@@ -12,6 +14,7 @@ from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 
 OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
+OBJECTS_ROOT = "http://object.nl/api/v1/"
 
 
 @requests_mock.Mocker()
@@ -146,3 +149,215 @@ class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(0, result["version"])
         self.assertEqual({"title": "Restaurant"}, result["jsonSchema"])
+
+
+@requests_mock.Mocker()
+class ObjectSearchTests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+
+        cls.object = {
+            "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
+            "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+            "record": {
+                "index": 1,
+                "typeVersion": 1,
+                "data": {
+                    "type": "Laadpaal",
+                    "adres": "Utrechtsestraat 41",
+                    "status": "Laadpaal in ontwikkeling",
+                    "objectid": 2,
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [5.114160150114911, 52.08850095597628],
+                },
+                "startAt": "2021-07-09",
+                "endAt": None,
+                "registrationAt": "2021-07-09",
+                "correctionFor": None,
+                "correctedBy": None,
+            },
+        }
+
+    def test_not_authenticated(self, m):
+        list_url = reverse("object-search")
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_invalid_geo_filter(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        m.post(f"{OBJECTS_ROOT}objects/search", status_code=400)
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url, {"geometry": {"within": {"type": "Polygon", "coordinates": [[]]}}}
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_no_geo_filter(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(list_url, {})
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn("geometry", response.json())
+
+    def test_filter_on_geo(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                }
+            },
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, len(response.json()))
+
+    def test_filter_on_type(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                },
+                "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+            },
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, len(response.json()))
+
+    def test_filter_on_data_attrs(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                },
+                "data_attrs": "adres__exact__Utrechtsestraat 41",
+            },
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, len(response.json()))
+
+    def test_filter_on_date(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                },
+                "date": "2021-07-19",
+            },
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, len(response.json()))
