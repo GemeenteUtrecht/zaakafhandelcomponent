@@ -162,6 +162,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "zac.accounts.middleware.HijackMiddleware",
 ]
 
 ROOT_URLCONF = "zac.urls"
@@ -497,6 +498,7 @@ HIJACK_REGISTER_ADMIN = False
 HIJACK_ALLOW_GET_REQUESTS = True
 HIJACK_AUTHORIZE_STAFF = True
 HIJACK_AUTHORIZE_STAFF_TO_HIJACK_STAFF = True
+HIJACK_HEADER = "X-Is-Hijacked"
 
 
 # ELASTICSEARCH CONFIG
