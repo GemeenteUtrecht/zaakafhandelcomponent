@@ -9,10 +9,10 @@
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   align-items: center;
-  min-height: 25px;
+  min-height: 22px;
   height: 1px;
   width: fit-content;
-  min-width: 25px;
+  min-width: 22px;
   font-size: 0.625rem;
   font-weight: 500;
   color: white;
@@ -21,7 +21,7 @@
   &--badge {
     padding: 0.45rem;
     border-radius: 50%;
-    top: -12px;
+    top: -10px;
   }
   &--primary {
     background-color: $color-blue;
