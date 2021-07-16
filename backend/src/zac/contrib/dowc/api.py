@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.http import Http404
 
@@ -76,7 +76,7 @@ def create_doc(
 
 
 @optional_service
-def get_open_documenten(user: User, referer: str) -> List[str]:
+def get_open_documenten(user: User, referer: str) -> List[Optional[DowcResponse]]:
     client = get_client(user)
     operation_id = "documenten_list"
     kwargs = {
@@ -84,7 +84,8 @@ def get_open_documenten(user: User, referer: str) -> List[str]:
         "info_url": referer,
     }
     url = get_operation_url(client.schema, operation_id, **kwargs)
-    return client.request(url, operation_id, method="GET", expected_status=200)
+    response = client.request(url, operation_id, method="GET", expected_status=200)
+    return factory(DowcResponse, response)
 
 
 @optional_service

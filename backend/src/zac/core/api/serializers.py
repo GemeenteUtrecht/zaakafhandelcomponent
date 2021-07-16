@@ -65,18 +65,19 @@ class GetZaakDocumentSerializer(APIModelSerializer):
     class Meta:
         model = Document
         fields = (
-            "url",
             "auteur",
-            "identificatie",
             "beschrijving",
             "bestandsnaam",
-            "versie",
-            "locked",
-            "informatieobjecttype",
-            "titel",
-            "vertrouwelijkheidaanduiding",
             "bestandsomvang",
+            "current_user_is_editing",
+            "identificatie",
+            "informatieobjecttype",
+            "locked",
             "read_url",
+            "titel",
+            "url",
+            "versie",
+            "vertrouwelijkheidaanduiding",
             "write_url",
         )
         extra_kwargs = {

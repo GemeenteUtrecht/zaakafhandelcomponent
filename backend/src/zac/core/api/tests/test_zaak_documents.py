@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from uuid import UUID, uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
@@ -20,6 +21,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.data import DowcResponse
 from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
@@ -30,6 +32,7 @@ CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
+DOWC_ROOT = "https://dowc.nl/"
 
 
 @requests_mock.Mocker()
@@ -107,6 +110,10 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         zaak = factory(Zaak, zaak)
         zaak.zaaktype = factory(ZaakType, zaaktype)
 
+        dowc = DowcResponse(
+            drc_url=doc_obj.url, magic_url="", purpose="write", uuid=uuid4()
+        )
+
         with patch(
             "zac.core.api.views.filter_documenten_for_permissions",
             return_value=[doc_obj],
@@ -115,26 +122,26 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 with patch(
                     "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
                 ):
-                    response = self.client.get(self.endpoint)
-
+                    with patch(
+                        "zac.core.api.views.get_open_documenten", return_value=[dowc]
+                    ):
+                        response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
             {
-                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
                 "auteur": "some-auteur",
-                "identificatie": "DOC-2020-007",
                 "beschrijving": "some-beschrijving",
                 "bestandsnaam": "some-bestandsnaam",
-                "versie": 1,
-                "locked": True,
+                "bestandsomvang": 10,
+                "currentUserIsEditing": True,
+                "identificatie": "DOC-2020-007",
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
                     "omschrijving": "bijlage",
                 },
-                "titel": "some-titel",
-                "vertrouwelijkheidaanduiding": "Openbaar",
-                "bestandsomvang": 10,
+                "versie": 1,
+                "locked": True,
                 "readUrl": reverse(
                     "dowc:request-doc",
                     kwargs={
@@ -143,6 +150,9 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                         "purpose": DocFileTypes.read,
                     },
                 ),
+                "titel": "some-titel",
+                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+                "vertrouwelijkheidaanduiding": "Openbaar",
                 "writeUrl": reverse(
                     "dowc:request-doc",
                     kwargs={
@@ -189,7 +199,10 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                     "zac.core.api.views.filter_documenten_for_permissions",
                     return_value=[],
                 ):
-                    response = self.client.get(self.endpoint)
+                    with patch(
+                        "zac.core.api.views.get_open_documenten", return_value=[]
+                    ):
+                        response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
@@ -266,6 +279,13 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             InformatieObjectType, cls.documenttype
         )
 
+        cls.dowc = DowcResponse(
+            drc_url=cls.doc_obj.url, magic_url="", purpose="write", uuid=uuid4()
+        )
+        cls.get_open_documenten_patcher = patch(
+            "zac.core.api.views.get_open_documenten", return_value=[cls.dowc]
+        )
+
         cls.endpoint = reverse(
             "zaak-documents",
             kwargs={
@@ -300,6 +320,9 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
+
+        self.get_open_documenten_patcher.start()
+        self.addCleanup(self.get_open_documenten_patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.get(self.endpoint)

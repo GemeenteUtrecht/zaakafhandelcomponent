@@ -503,21 +503,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         data = response.json()
         expected_data = {
-            "url": document["url"],
             "auteur": document["auteur"],
-            "identificatie": document["identificatie"],
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
-            "versie": 1,
-            "locked": document["locked"],
+            "bestandsomvang": document["bestandsomvang"],
+            "currentUserIsEditing": None,
+            "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
-            "titel": document["titel"],
-            "vertrouwelijkheidaanduiding": "Openbaar",
-            "bestandsomvang": document["bestandsomvang"],
+            "locked": document["locked"],
             "readUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/read',
+            "titel": document["titel"],
+            "url": document["url"],
+            "versie": 1,
+            "vertrouwelijkheidaanduiding": "Openbaar",
             "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
         }
         self.assertEqual(expected_data, data)
@@ -649,21 +650,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         expected_data = {
-            "url": "https://open-zaak.nl/documenten/api/v1/enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "auteur": document["auteur"],
-            "identificatie": document["identificatie"],
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
-            "versie": 1,
-            "locked": False,
+            "bestandsomvang": None,
+            "currentUserIsEditing": None,
+            "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": self.informatieobjecttype["url"],
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
-            "titel": document["titel"],
-            "vertrouwelijkheidaanduiding": "Zaakvertrouwelijk",
-            "bestandsomvang": None,
+            "locked": False,
             "readUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/read",
+            "titel": document["titel"],
+            "url": "https://open-zaak.nl/documenten/api/v1/enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "versie": 1,
+            "vertrouwelijkheidaanduiding": "Zaakvertrouwelijk",
             "writeUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/write",
         }
         self.assertEqual(data, expected_data)

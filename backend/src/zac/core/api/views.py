@@ -409,7 +409,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
         serializer = self.serializer_class(
             instance=filtered_documenten,
             many=True,
-            context={"open_documenten": [doc.url for doc in open_documenten]},
+            context={"open_documenten": [dowc.drc_url for dowc in open_documenten]},
         )
         return Response(serializer.data)
 
