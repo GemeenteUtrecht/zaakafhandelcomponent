@@ -2,6 +2,32 @@
 @import 'base/grid/mixins';
 
 .gu-sidenav {
+  @include media-breakpoint-up(lg) {
+    .menu-item__label {
+      opacity: 0;
+      white-space: nowrap;
+    }
+    &:hover .menu-item__label {
+      transition: opacity 0.3s linear;
+      opacity: 1;
+    }
+    .vertical-nav {
+      width: 50px;
+      pointer-events: all;
+      transition: width 0.3s;
+    }
+    &:hover .vertical-nav {
+      width: 240px;
+      transform: translateX(0);
+    }
+    .vertical-nav .logo {
+      opacity: 0;
+    }
+    &:hover .vertical-nav .logo {
+      transition: opacity 0.3s linear;
+      opacity: 1;
+    }
+  }
   .navigation-header {
     position: static;
     width: 100%;
@@ -53,11 +79,11 @@
     }
   }
   .vertical-nav {
+    position: absolute;
+    display: block;
     letter-spacing: 0;
-    position: sticky;
     top: 0;
     height: 100vh;
-    width: 240px;
     max-width: 100%;
     background: $background-lightgrey;
     color: $color-text;
@@ -83,11 +109,10 @@
     .menu-container {
       box-sizing: border-box;
       position: relative;
-      overflow-y: scroll;
+      overflow: scroll;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      padding: 8px 0;
       height: calc(100vh - 100px);
       @include media-breakpoint-down(md) {
         height: calc(100vh - calc(100px + 3.6rem));
@@ -98,7 +123,7 @@
       }
     }
     .bottom-navigation {
-      flex: 1 0 auto;
+      height: 100%;
       display: flex;
       justify-content: flex-end;
       flex-direction: column;
@@ -132,7 +157,7 @@
       justify-content: flex-start;
       color: var(--text-default, #141416);
       text-decoration: none;
-      min-height: 3.6rem;
+      height: 58px;
       padding: 0 12px;
       &.selected {
         background-color: $color-lightblue;

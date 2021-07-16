@@ -30,17 +30,21 @@
       <img [src]="logoUrl"/>
     </div>
     <div class="menu-container" *ngIf="menuItems">
-      <a *ngFor="let item of menuItems"
-         (click)="toggle()"
-         [routerLink]="!item.external ? [item.to] : null"
-         [href]="item.external ? item.to : null"
-         [target]="item.external ? '_blank' : null"
-         class="menu-item menu-link"
-         [ngClass]="{
+      <div class="top-navigation">
+        <a *ngFor="let item of menuItems"
+           (click)="toggle()"
+           [routerLink]="!item.external ? [item.to] : null"
+           [href]="item.external ? item.to : null"
+           [target]="item.external ? '_blank' : null"
+           class="menu-item menu-link"
+           [ngClass]="{
          'selected': !item.external && selectedParentMenu === subtractParentRoute(item.to),
          'mb-3': item.marginBottom === true
          }">
-        <gu-icon>{{item.icon}}</gu-icon>{{item.label}}</a>
+          <gu-icon>{{item.icon}}</gu-icon>
+          <span class="menu-item__label">{{item.label}}</span>
+        </a>
+      </div>
       <div class="bottom-navigation">
         <ng-container *ngFor="let bottomItem of bottomMenuItems">
           <a *ngIf="bottomItem.external"
@@ -53,7 +57,8 @@
              'mb-3': bottomItem.marginBottom === true
              }"
           >
-            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+            <gu-icon>{{bottomItem.icon}}</gu-icon>
+            <span class="menu-item__label">{{bottomItem.label}}</span>
           </a>
           <a *ngIf="!bottomItem.external"
              (click)="toggle()"
@@ -64,7 +69,8 @@
              'mb-3': bottomItem.marginBottom === true
              }"
           >
-            <gu-icon>{{bottomItem.icon}}</gu-icon>{{bottomItem.label}}
+            <gu-icon>{{bottomItem.icon}}</gu-icon>
+            <span class="menu-item__label">{{bottomItem.label}}</span>
           </a>
         </ng-container>
       </div>

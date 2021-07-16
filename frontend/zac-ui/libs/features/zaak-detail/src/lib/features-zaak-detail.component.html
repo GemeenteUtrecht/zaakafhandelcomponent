@@ -9,9 +9,10 @@
               *ngIf="activeActivities"
               (click)="openModal('activities-modal')">
         <span>
-          <gu-chip [type]="'primary'" [ngPlural]="activeActivities?.length">
-              <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit</ng-template>
-              <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten</ng-template>
+          <gu-chip icon="launch" [color]="'primary'" [ngPlural]="activeActivities?.length">
+              <ng-template ngPluralCase="0">Activiteit toevoegen</ng-template>
+              <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit actief</ng-template>
+              <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten actief</ng-template>
           </gu-chip>
         </span>
       </button>
@@ -66,10 +67,11 @@
           [identificatie]="identificatie"
           [zaakData]="zaakData"
           class="zaak-detail__section">
+          <gu-betrokkenen [bronorganisatie]="bronorganisatie"
+                          [identificatie]="identificatie"
+          >
+          </gu-betrokkenen>
         </gu-informatie>
-        <gu-betrokkenen [bronorganisatie]="bronorganisatie"
-                        [identificatie]="identificatie"
-                        class="zaak-detail__section"></gu-betrokkenen>
         <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
                                [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"

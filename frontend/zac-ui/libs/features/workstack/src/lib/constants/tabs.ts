@@ -7,17 +7,17 @@ export interface Tab {
 const tabs: Tab[] = [
   {
     component: 'zaken',
-    label: 'Zaken (behandelaar)',
+    label: 'In behandeling',
     endpoint: '/api/workstack/cases'
   },
   {
     component: 'tasks',
-    label: 'Taken (proces)',
+    label: 'Adhoc taken',
     endpoint: '/api/workstack/user-tasks'
   },
   {
     component: 'activities',
-    label: 'Activiteiten',
+    label: 'Zaakactiviteiten',
     endpoint: '/api/workstack/activities'
   },
   {

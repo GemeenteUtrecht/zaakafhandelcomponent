@@ -47,7 +47,7 @@
     <tab heading="Lopend">
       <div class="tab-content">
         <ng-template tabHeading>
-          <gu-chip [type]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
+          <gu-chip type="badge" [color]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
                    class="ml-1">
             {{ongoingData?.length > 0 ? ongoingData?.length : 0}}
           </gu-chip>
@@ -63,7 +63,7 @@
               <div class="activity__detail mb-4">
                 <gu-chip *ngIf="activity.assignee"
                          (click)="openAssigneeEditField = i; openNoteEditField = null"
-                         [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                         [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
                          icon="edit"
                          class="d-inline-block mb-1"
                 >
@@ -241,7 +241,8 @@
     <tab heading="Afgesloten">
       <div class="tab-content">
         <ng-template tabHeading>
-          <gu-chip type="tertiary"
+          <gu-chip type="badge"
+                   color="tertiary"
                    class="ml-1">
             {{finishedData?.length > 0 ? finishedData?.length : 0}}
           </gu-chip>
@@ -256,7 +257,7 @@
               <!--  Gebruiker toewijzen  -->
               <div class="activity__detail mb-4">
                 <gu-chip *ngIf="activity.assignee"
-                         [type]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                         [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
                          class="d-inline-block mb-1">
                   Toegewezene: {{activity.assignee}}
                 </gu-chip>

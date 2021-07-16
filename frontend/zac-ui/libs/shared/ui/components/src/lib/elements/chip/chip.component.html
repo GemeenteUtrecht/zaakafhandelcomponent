@@ -1,13 +1,16 @@
 <div
   class="chip"
   [ngClass]="{
-  'chip--primary': type == 'primary',
-  'chip--secondary': type == 'secondary',
-  'chip--tertiary': type == 'tertiary',
-  'chip--warn': type == 'warn',
+  'chip--primary': color == 'primary',
+  'chip--secondary': color == 'secondary',
+  'chip--tertiary': color == 'tertiary',
+  'chip--warn': color == 'warn',
+  'chip--badge': type == 'badge',
   'chip--hoverable': icon
   }"
 >
   <ng-content></ng-content>
-  <gu-icon *ngIf="icon" class="chip-icon">{{icon}}</gu-icon>
+  <gu-icon *ngIf="icon" class="chip-icon">
+    {{icon}}
+  </gu-icon>
 </div>

@@ -18,7 +18,7 @@ export class DocumentenComponent implements OnChanges {
   @Input() identificatie: string;
 
   tableData: Table = new Table([
-    'Op slot',
+    '',
     'Bestandsnaam',
     'Versie',
     'Acties',
@@ -53,16 +53,7 @@ export class DocumentenComponent implements OnChanges {
   fetchDocuments() {
     this.isLoading = true;
     this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
-      this.tableData = new Table([
-          'Op slot',
-          'Bestandsnaam',
-          'Versie',
-          'Acties',
-          '',
-          '',
-          'Type',
-          'Vertrouwelijkheid',
-      ], this.formatTableData(data));
+      this.tableData.bodyData = this.formatTableData(data);
       this.documentsData = data;
       this.isLoading = false;
     }, res => {
@@ -76,6 +67,7 @@ export class DocumentenComponent implements OnChanges {
     return data.map( (element: Document) => {
      const icon = element.locked ? 'lock' : 'lock_open'
      const iconColor = element.locked ? 'orange' : 'green'
+     const iconInfo = element.locked ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
      const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
      const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
      const showEditCell = !element.locked || this.docsInEditMode.includes(element.writeUrl);
@@ -101,7 +93,8 @@ export class DocumentenComponent implements OnChanges {
          opSlot: {
            type: 'icon',
            label: icon,
-           iconColor: iconColor
+           iconColor: iconColor,
+           iconInfo: iconInfo
          },
          bestandsnaam: element.bestandsnaam,
          versie: String(element.versie),

@@ -79,9 +79,19 @@
     padding-left: 0;
   }
 
+  .icon-wrapper {
+    position: relative;
+  }
+
   .icon {
+    position: relative;
     font-size: 1.25rem;
     vertical-align: middle;
+    cursor: default;
+
+    &:hover + .tooltip__content {
+      visibility: visible;
+    }
 
     &--orange {
       color: $color-orange;

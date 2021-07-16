@@ -7,14 +7,22 @@
   border: none;
   display: inline-flex;
   padding: 0.45rem 0.75rem;
-  border-radius: 16px;
+  border-radius: 8px;
   align-items: center;
-  min-height: 28px;
+  min-height: 25px;
   height: 1px;
-  font-size: 0.75rem;
+  width: fit-content;
+  min-width: 25px;
+  font-size: 0.625rem;
   font-weight: 500;
-  color: $color-white;
+  color: white;
   white-space: nowrap;
+  justify-content: center;
+  &--badge {
+    padding: 0.45rem;
+    border-radius: 50%;
+    top: -12px;
+  }
   &--primary {
     background-color: $color-blue;
     .chip-icon {
@@ -40,6 +48,13 @@
   }
   &--hoverable {
     cursor: pointer;
+    &--primary {
+      background-color: $color-blue;
+
+      &:hover {
+        background-color: $color-blue--hover;
+      }
+    }
     .chip-icon {
       display: none;
       ::ng-deep .mat-icon {

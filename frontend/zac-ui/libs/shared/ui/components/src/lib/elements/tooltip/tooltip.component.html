@@ -1,9 +1,9 @@
 <div
   class="tooltip"
   [ngClass]="{
-    'tooltip--primary': type == 'primary',
-    'tooltip--accent': type == 'accent',
-    'tooltip--warn': type == 'warn',
+    'tooltip--primary': type === 'primary',
+    'tooltip--accent': type === 'accent',
+    'tooltip--warn': type === 'warn',
     'tooltip--inline': inline
     }"
 >
