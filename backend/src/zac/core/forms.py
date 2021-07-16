@@ -7,14 +7,14 @@ from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+
 from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
 
 from zac.utils.sorting import sort
 from zgw.models.zrc import Zaak
+
 from .fields import AlfrescoDocumentField
-from .services import (
-    get_besluittypen_for_zaaktype,
-)
+from .services import get_besluittypen_for_zaaktype
 
 logger = logging.getLogger(__name__)
 
