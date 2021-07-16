@@ -39,6 +39,7 @@ from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
+    relate_object_to_zaak,
     search_objects,
     update_document,
 )
@@ -100,6 +101,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakEigenschapSerializer,
     ZaakObjectGroupSerializer,
+    ZaakObjectSerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
@@ -743,3 +745,25 @@ class ObjectSearchView(views.APIView):
 
         object_serializer = ObjectSerializer(objects, many=True)
         return Response(object_serializer.data)
+
+
+@extend_schema(
+    summary=_("Create Zaakobject"),
+    description=_("Relate an object to a zaak"),
+    responses={201: ZaakObjectSerializer},
+)
+class ZaakObjectCreateView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ZaakObjectSerializer
+
+    def post(self, request):
+        filter_serializer = self.serializer_class(data=request.data)
+        filter_serializer.is_valid(raise_exception=True)
+
+        try:
+            created_zaakobject = relate_object_to_zaak(filter_serializer.data)
+        except ClientError as exc:
+            raise ValidationError(detail=exc.args)
+
+        return Response(status=201, data=created_zaakobject)

@@ -1145,3 +1145,14 @@ def search_objects(filters: dict) -> List[Object]:
     client = object_service.build_client()
     results = client.operation(operation_id="object_search", data=filters)
     return factory(Object, results)
+
+
+def relate_object_to_zaak(relation_data: dict):
+    zrc_client = Service.get_client(relation_data["zaak"])
+    assert zrc_client is not None, "ZRC client not found"
+
+    response = zrc_client.create(
+        "zaakobject",
+        relation_data,
+    )
+    return response

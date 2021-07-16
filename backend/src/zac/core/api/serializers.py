@@ -699,3 +699,12 @@ class ObjectFilterSerializer(serializers.Serializer):
     data_attrs = serializers.CharField(required=False)
     date = serializers.DateField(required=False)
     registration_date = serializers.DateField(required=False)
+
+
+class ZaakObjectSerializer(serializers.Serializer):
+    object = serializers.URLField()
+    zaak = serializers.URLField()
+    object_type = serializers.CharField(required=False)
+    object_type_overige = serializers.CharField(required=False)
+    relatieomschrijving = serializers.CharField(required=False)
+    object_identificatie = serializers.JSONField()

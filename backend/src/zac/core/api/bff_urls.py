@@ -14,6 +14,7 @@ from .views import (
     ZaakDetailView,
     ZaakDocumentView,
     ZaakEigenschappenView,
+    ZaakObjectCreateView,
     ZaakObjectsView,
     ZaakRolesView,
     ZaakStatusesView,
@@ -93,5 +94,10 @@ urlpatterns = [
         "objects",
         ObjectSearchView.as_view(),
         name="object-search",
+    ),
+    path(
+        "zaakobjects",
+        ZaakObjectCreateView.as_view(),
+        name="zaakobject-create",
     ),
 ]
