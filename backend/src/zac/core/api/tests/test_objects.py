@@ -1,5 +1,3 @@
-import json
-
 from django.urls import reverse
 
 import requests_mock

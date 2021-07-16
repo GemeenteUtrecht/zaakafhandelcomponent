@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakObject
@@ -16,6 +17,7 @@ from zgw.models.zrc import Zaak
 
 OBJECTS_ROOT = "https://objects.nl/api/v1/"
 OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v1/"
+ZRC_ROOT = "https://zaken.nl/api/v1/"
 
 OBJECT_1 = {
     "url": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
@@ -101,10 +103,7 @@ OBJECTTYPE_2 = {
 }
 
 
-@patch(
-    "zac.core.api.views.ZaakObjectsView.get_object",
-)
-@patch("zac.core.api.views.get_zaakobjecten")
+@requests_mock.Mocker()
 class RelatedObjectsTests(APITransactionTestCase):
     """
     Test that related objects that live in the Objects API can be retrieved.
@@ -116,6 +115,9 @@ class RelatedObjectsTests(APITransactionTestCase):
 
         cls.user = SuperUserFactory.create()
 
+        cls.zrc_service = Service.objects.create(
+            api_type=APITypes.zrc, api_root=ZRC_ROOT
+        )
         cls.object_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
@@ -130,7 +132,7 @@ class RelatedObjectsTests(APITransactionTestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url="http://zaken.nl/api/v1/zaken/1",
+            url=f"{ZRC_ROOT}zaken/1",
             identificatie="ZAAK-2020-0010",
             bronorganisatie="123456782",
         )
@@ -153,8 +155,11 @@ class RelatedObjectsTests(APITransactionTestCase):
             "object_identificatie": None,
         }
 
-    @requests_mock.Mocker()
-    def test_relation_object_api(self, mock_get_zaakobjects, mock_zaak, m):
+    @patch(
+        "zac.core.api.views.ZaakObjectsView.get_object",
+    )
+    @patch("zac.core.api.views.get_zaakobjecten")
+    def test_relation_object_api(self, m, mock_get_zaakobjects, mock_zaak):
         mock_service_oas_get(m, url=self.object_service.api_root, service="objects")
         mock_service_oas_get(
             m, url=self.objecttype_service.api_root, service="objecttypes"
@@ -200,3 +205,59 @@ class RelatedObjectsTests(APITransactionTestCase):
         for group in object_groups:
             # Check that the items (the related objects) are dictionaries and not a string (URLs)
             self.assertTrue(isinstance(group["items"][0], dict))
+
+    def test_create_object_relation(self, m):
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        m.post(
+            f"{ZRC_ROOT}zaakobjecten",
+            status_code=201,
+            json={
+                "url": f"{ZRC_ROOT}zaakobjecten/bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "uuid": "bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "zaak": f"{self.zaak['url']}",
+                "object": f"{OBJECT_1['url']}",
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "relatieomschrijving": "",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+    def test_create_object_relation_invalid_data(self, m):
+        self.client.force_login(self.user)
+
+        # Missing objectIdentificatie
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+            },
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        errors = response.json()
+
+        self.assertIn("objectIdentificatie", errors)
