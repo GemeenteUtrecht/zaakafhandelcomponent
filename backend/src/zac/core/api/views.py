@@ -22,7 +22,7 @@ from rest_framework import (
     status,
     views,
 )
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -39,6 +39,7 @@ from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
+    search_objects,
     update_document,
 )
 from zac.utils.exceptions import PermissionDeniedSerializer
@@ -85,6 +86,8 @@ from .serializers import (
     ExtraInfoUpSerializer,
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
+    ObjectFilterSerializer,
+    ObjectSerializer,
     ObjecttypeSerializer,
     ObjecttypeVersionSerializer,
     RelatedZaakSerializer,
@@ -717,3 +720,26 @@ class ObjecttypeVersionReadView(RetrieveAPIView):
 
     def get_object(self):
         return fetch_objecttype_version(**self.kwargs)
+
+
+@extend_schema(
+    summary=_("Search objects"),
+    description=_("Search for objects in the Objects API"),
+    responses={200: ObjectSerializer(many=True)},
+)
+class ObjectSearchView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjectFilterSerializer
+
+    def post(self, request):
+        filter_serializer = self.serializer_class(data=request.data)
+        filter_serializer.is_valid(raise_exception=True)
+
+        try:
+            objects = search_objects(filters=filter_serializer.data)
+        except ClientError as exc:
+            raise ValidationError(detail=exc.args)
+
+        object_serializer = ObjectSerializer(objects, many=True)
+        return Response(object_serializer.data)

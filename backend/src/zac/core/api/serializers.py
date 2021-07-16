@@ -673,3 +673,29 @@ class ObjecttypeVersionSerializer(serializers.Serializer):
     created_at = serializers.DateField()
     modified_at = serializers.DateField()
     published_at = serializers.DateField()
+
+
+class RecordSerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    type_version = serializers.IntegerField()
+    data = serializers.JSONField()
+    geometry = serializers.JSONField()
+    start_at = serializers.DateField()
+    end_at = serializers.DateField()
+    registration_at = serializers.DateField()
+    correction_for = serializers.CharField()
+    corrected_by = serializers.CharField()
+
+
+class ObjectSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    type = serializers.URLField()
+    record = RecordSerializer()
+
+
+class ObjectFilterSerializer(serializers.Serializer):
+    geometry = serializers.JSONField()
+    type = serializers.URLField(required=False)
+    data_attrs = serializers.CharField(required=False)
+    date = serializers.DateField(required=False)
+    registration_date = serializers.DateField(required=False)

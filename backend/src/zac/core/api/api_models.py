@@ -37,3 +37,23 @@ class ObjecttypeVersion(ZGWModel):
     created_at: Optional[date]
     modified_at: Optional[date]
     published_at: Optional[date]
+
+
+@dataclass
+class Record(ZGWModel):
+    index: Optional[int]
+    type_version: Optional[int]
+    data: Optional[dict]
+    geometry: Optional[dict]
+    start_at: Optional[date]
+    end_at: Optional[date]
+    registration_at: Optional[date]
+    correction_for: Optional[str]
+    corrected_by: Optional[str]
+
+
+@dataclass
+class Object(ZGWModel):
+    url: str
+    type: str
+    record: Record

@@ -5,6 +5,7 @@ from .views import (
     EigenschappenView,
     InformatieObjectTypeListView,
     ListZaakDocumentsView,
+    ObjectSearchView,
     ObjecttypeListView,
     ObjecttypeVersionReadView,
     RelatedZakenView,
@@ -87,5 +88,10 @@ urlpatterns = [
         "objecttypes/<str:uuid>/versions/<int:version>",
         ObjecttypeVersionReadView.as_view(),
         name="objecttypesversion-read",
+    ),
+    path(
+        "objects",
+        ObjectSearchView.as_view(),
+        name="object-search",
     ),
 ]
