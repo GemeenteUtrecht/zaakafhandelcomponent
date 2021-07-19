@@ -7,7 +7,6 @@ from typing import Dict, List
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect

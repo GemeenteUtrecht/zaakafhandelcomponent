@@ -1,9 +1,6 @@
 import logging
 import uuid
 from typing import Optional
-from urllib.parse import urljoin
-
-from django.http.request import QueryDict
 
 import requests
 from zds_client import ClientError

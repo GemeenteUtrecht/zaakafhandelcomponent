@@ -1,7 +1,5 @@
 import logging
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -11,7 +9,6 @@ from zac.accounts.constants import PermissionObjectType
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
-from zac.elasticsearch.models import SearchReport
 
 logger = logging.getLogger(__name__)
 

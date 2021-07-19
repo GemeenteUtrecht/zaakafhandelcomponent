@@ -1,4 +1,3 @@
-from concurrent import futures
 from typing import Any, Dict
 
 import requests
