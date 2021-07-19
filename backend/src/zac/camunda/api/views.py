@@ -79,7 +79,7 @@ class UserTaskView(APIView):
     context for the UI. The shape of the context depends on the ``form`` value.
     """
 
-    # permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
+    permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
 
     def get_object(self) -> Task:
         if not hasattr(self, "_task"):
@@ -179,7 +179,6 @@ class UserTaskView(APIView):
             **serializer.get_process_variables(),
         }
 
-        print(variables)
         complete_task(task.id, variables)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
