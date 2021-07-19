@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
+from furl import furl
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
@@ -87,8 +88,10 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         }
 
     def get_current_user_is_editing(self, obj) -> Optional[bool]:
+        versioned_url = furl(obj.url)
+        versioned_url.args["versie"] = obj.versie
         if "open_documenten" in self.context:
-            if obj.url in self.context["open_documenten"]:
+            if versioned_url.url in self.context["open_documenten"]:
                 return True
             else:
                 return False
