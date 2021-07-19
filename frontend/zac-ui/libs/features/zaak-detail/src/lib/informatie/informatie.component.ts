@@ -1,8 +1,17 @@
 import {Component, Input, OnInit, OnChanges} from '@angular/core';
-import {InformatieService} from './informatie.service';
 import {Zaak} from '@gu/models';
-import {FieldConfiguration} from "../form/field";
+import {FieldConfiguration} from '../form/field';
+import {InformatieService} from './informatie.service';
 
+/**
+ * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" [zaakData]="zaakData"></gu-informatie>
+ *
+ * Shows case (zaak) informatie and allows inline editing.
+ *
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ * Requires zaakData: Zaak input for case (zaak) data.
+ */
 @Component({
   selector: 'gu-informatie',
   templateUrl: './informatie.component.html',
@@ -22,50 +31,12 @@ export class InformatieComponent implements OnInit, OnChanges {
   /** @type {Object[]} The confidentiality choices. */
   confidentialityChoices: Array<{ label: string, value: string }>;
 
-  constructor(private informatieService: InformatieService) {}
-
-  ngOnInit() {
-    this.fetchConfidentialityChoices();
+  constructor(private informatieService: InformatieService) {
   }
 
-  ngOnChanges(): void {
-    this.fetchProperties();
-  };
-
-  /**
-   * Fetches the confidentiality choices
-   */
-  fetchConfidentialityChoices() {
-    this.isLoading = true;
-
-    this.informatieService.getConfidentiality().subscribe(
-
-      (data) => {
-        this.confidentialityChoices = data;
-        this.isLoading = false;
-      },
-      (error) => {
-        console.error(error);
-        this.isLoading = false;
-      })
-  }
-
-  /**
-   * Fetches the properties to show (read
-   */
-  fetchProperties() {
-    this.isLoading = true;
-    this.informatieService.getProperties(this.bronorganisatie, this.identificatie).subscribe(
-
-      (data) => {
-        this.properties = data;
-        this.isLoading = false;
-
-      }, (error) => {
-        console.error(error);
-        this.isLoading = false;
-      })
-  }
+  //
+  // Getters / setters.
+  //
 
   /**
    * Returns the field configurations for the form..
@@ -117,12 +88,73 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Returns the field configurations for the (readonly) properties.
    */
   get propertyFieldConfigurations(): Array<FieldConfiguration> {
-    return this.properties.map((property:{eigenschap: {naam: string}, value: string}) => ({
+    return this.properties.map((property: { eigenschap: { naam: string }, value: string }) => ({
       label: property.eigenschap.naam,
       readonly: true,
       value: property.value,
     }))
   }
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit() {
+    this.fetchConfidentialityChoices();
+  }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(): void {
+    this.getContextData();
+  };
+
+  //
+  // Context.
+  //
+
+  /**
+   * Fetches the properties to show in the form.
+   */
+  getContextData() {
+    this.isLoading = true;
+    this.informatieService.getProperties(this.bronorganisatie, this.identificatie).subscribe(
+      (data) => {
+        this.properties = data;
+        this.isLoading = false;
+
+      }, (error) => {
+        console.error(error);
+        this.isLoading = false;
+      })
+  }
+
+  /**
+   * Fetches the confidentiality choices
+   */
+  fetchConfidentialityChoices() {
+    this.isLoading = true;
+
+    this.informatieService.getConfidentiality().subscribe(
+      (data) => {
+        this.confidentialityChoices = data;
+        this.isLoading = false;
+      },
+      (error) => {
+        console.error(error);
+        this.isLoading = false;
+      })
+  }
+
+  //
+  // Events.
+  //
 
   /***
    * Submits the form.
@@ -131,7 +163,6 @@ export class InformatieComponent implements OnInit, OnChanges {
   submitForm(data) {
     this.isLoading = true
     this.informatieService.patchCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
-
       () => {
         this.isLoading = false
       },
