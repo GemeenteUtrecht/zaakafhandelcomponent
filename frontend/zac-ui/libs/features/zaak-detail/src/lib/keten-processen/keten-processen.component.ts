@@ -131,7 +131,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.ketenProcessenService.sendMessage(formData).subscribe( () => {
       this.fetchProcesses();
     }, errorRes => {
-      this.sendMessageErrorMessage = errorRes.error.detail;
+      this.sendMessageErrorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
       this.sendMessageHasError = true;
       this.isLoading = false;
     })
