@@ -28,8 +28,6 @@ from .utils import ESMixin
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 
-from django.core.management import call_command
-
 import requests_mock
 
 from zac.accounts.constants import PermissionObjectType
@@ -338,7 +336,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "startdatum": None,
                         "einddatum": None,
                         "registratiedatum": None,
-                        "deadline": "2021-12-31T00:00:00Z",
+                        "deadline": "31-12-2021T00:00:00",
                         "eigenschappen": [],
                     },
                     {
@@ -372,7 +370,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "startdatum": None,
                         "einddatum": None,
                         "registratiedatum": None,
-                        "deadline": "2021-12-31T00:00:00Z",
+                        "deadline": "31-12-2021T00:00:00",
                         "eigenschappen": [],
                     },
                 ],
@@ -475,7 +473,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "startdatum": None,
                         "einddatum": None,
                         "registratiedatum": None,
-                        "deadline": "2021-12-31T00:00:00Z",
+                        "deadline": "31-12-2021T00:00:00",
                         "eigenschappen": [],
                     }
                 ],

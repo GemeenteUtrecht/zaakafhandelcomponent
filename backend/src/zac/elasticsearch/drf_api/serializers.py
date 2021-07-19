@@ -102,8 +102,8 @@ class SearchReportSerializer(serializers.ModelSerializer):
 class EigenschapDocumentSerializer(serializers.Serializer):
     tekst = serializers.CharField(required=False)
     getal = serializers.DecimalField(required=False, max_digits=10, decimal_places=2)
-    datum = serializers.DateField(required=False)
-    datum_tijd = serializers.DateTimeField(required=False)
+    datum = serializers.DateField(format="%d-%m-%Y", required=False)
+    datum_tijd = serializers.DateTimeField(format="%d-%m-%Y %H:%M:%S", required=False)
 
 
 class BetrokkeneIdentificatieSerializer(serializers.Serializer):
@@ -132,8 +132,10 @@ class ZaakDocumentSerializer(serializers.Serializer):
     vertrouwelijkheidaanduiding = serializers.CharField(required=False)
     va_order = serializers.IntegerField(required=False)
     rollen = RolDocumentSerializer(required=False, many=True)
-    startdatum = serializers.DateTimeField(required=False)
-    einddatum = serializers.DateTimeField(required=False)
-    registratiedatum = serializers.DateTimeField(required=False)
-    deadline = serializers.DateTimeField(required=False)
+    startdatum = serializers.DateTimeField(format="%d-%m-%YT%H:%M:%S", required=False)
+    einddatum = serializers.DateTimeField(format="%d-%m-%YT%H:%M:%S", required=False)
+    registratiedatum = serializers.DateTimeField(
+        format="%d-%m-%YT%H:%M:%S", required=False
+    )
+    deadline = serializers.DateTimeField(format="%d-%m-%YT%H:%M:%S", required=False)
     eigenschappen = EigenschapDocumentSerializer(many=True, required=False)

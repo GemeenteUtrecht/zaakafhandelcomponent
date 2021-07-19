@@ -1,4 +1,5 @@
 import datetime
+from datetime import datetime
 
 from django.urls import reverse
 
@@ -282,11 +283,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "vertrouwelijkheidaanduiding": "confidentieel",
                         "vaOrder": 22,
                         "rollen": [],
-                        "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
+                        "startdatum": zaak1_model.startdatum.strftime(
+                            "%d-%m-%YT%H:%M:%S"
+                        ),
                         "einddatum": None,
-                        "registratiedatum": zaak1_model.registratiedatum.isoformat()
-                        + "T00:00:00Z",
-                        "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
+                        "registratiedatum": zaak1_model.registratiedatum.strftime(
+                            "%d-%m-%YT%H:%M:%S"
+                        ),
+                        "deadline": zaak1_model.deadline.strftime("%d-%m-%YT%H:%M:%S"),
                         "eigenschappen": [],
                     }
                 ],
@@ -426,11 +430,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "vertrouwelijkheidaanduiding": "confidentieel",
                         "vaOrder": 22,
                         "rollen": [],
-                        "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
+                        "startdatum": zaak1_model.startdatum.strftime(
+                            "%d-%m-%YT%H:%M:%S"
+                        ),
                         "einddatum": None,
-                        "registratiedatum": zaak1_model.registratiedatum.isoformat()
-                        + "T00:00:00Z",
-                        "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
+                        "registratiedatum": zaak1_model.registratiedatum.strftime(
+                            "%d-%m-%YT%H:%M:%S"
+                        ),
+                        "deadline": zaak1_model.deadline.strftime("%d-%m-%YT%H:%M:%S"),
                         "eigenschappen": [],
                     }
                 ],
@@ -539,10 +546,10 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # index documents in es
         zaak1_model = factory(Zaak, zaak1)
         zaak1_model.zaaktype = factory(ZaakType, zaaktype)
-        zaak1_model.deadline = datetime.date(2020, 1, 1)
+        zaak1_model.deadline = datetime(2020, 1, 1)
         zaak2_model = factory(Zaak, zaak2)
         zaak2_model.zaaktype = factory(ZaakType, zaaktype)
-        zaak2_model.deadline = datetime.date(2020, 1, 2)
+        zaak2_model.deadline = datetime(2020, 1, 2)
         self.create_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
         self.refresh_index()
