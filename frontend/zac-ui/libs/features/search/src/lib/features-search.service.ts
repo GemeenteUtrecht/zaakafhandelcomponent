@@ -24,11 +24,11 @@ export class FeaturesSearchService {
     return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
   }
 
-  postSearchZaken(formData: Search, sortData?: TableSort): Observable<Zaak[]> {
+  postSearchZaken(formData: Search, sortData?: TableSort): Observable<any> {
     const sortOrder = sortData?.order === 'desc' ? '-' : '';
     const sortValue = sortData ? tableHeadMapping[sortData.value] : '';
     const sortParameter = sortData ? `?ordering=${sortOrder}${sortValue}` : '';
     const endpoint = encodeURI(`/api/search/zaken${sortParameter}`);
-    return this.http.Post<Zaak[]>(endpoint, formData);
+    return this.http.Post<any>(endpoint, formData);
   }
 }

@@ -2,7 +2,7 @@ const tableHead =  ['Zaaknummer', 'Zaaktype', 'Startdatum', 'Omschrijving', 'Sta
 
 const tableHeadMapping = {
   'Zaaknummer': 'identificatie',
-  'Zaaktype': 'zaaktypeOmschrijving',
+  'Zaaktype': 'zaaktype.omschrijving',
   'Startdatum': 'startdatum',
   'Omschrijving': 'omschrijving',
   'Status': 'status'

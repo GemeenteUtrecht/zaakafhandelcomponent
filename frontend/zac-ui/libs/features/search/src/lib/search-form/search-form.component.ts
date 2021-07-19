@@ -144,7 +144,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
   postSearchZaken(formData: Search, sortData?: TableSort) {
     this.isSubmitting = true;
     this.searchService.postSearchZaken(formData, sortData).subscribe(res =>{
-      this.loadResult.emit(res);
+      this.loadResult.emit(res.results);
       this.isSubmitting = false;
     }, error => {
       this.hasError = true;
