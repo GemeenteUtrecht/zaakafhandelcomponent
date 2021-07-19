@@ -6,9 +6,6 @@
 
 
 {% block content %}
-<h1 class="page-title">Inloggen</h1>
-
-
 {% get_solo 'django_auth_adfs_db.ADFSConfig' as adfs_config %}
 {% if adfs_config.enabled %}
     <div class="form form--centered form--centered-content">
@@ -34,7 +31,11 @@
     {% form_field form.username %}
     {% form_field form.password %}
 
-    {% widget 'form:submit' label=_("Log in") %}
+    {% if adfs_config.enabled %}
+        {% widget 'form:submit' label=_("Log in") primary=False %}
+    {% else %}
+        {% widget 'form:submit' label=_("Log in") primary=True %}
+    {% endif %}
 </form>
 
 {% endblock content %}

@@ -124,21 +124,5 @@ def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
     return formfields
 
 
-def extract_task_form(
-    task: Task, form_key_mapping: dict
-) -> Optional[Dict[str, Type[TaskFormMixin]]]:
-    if task.form_key in form_key_mapping:
-        return form_key_mapping[task.form_key]
-
-    formfields = extract_task_form_fields(task)
-    if formfields is None:
-        return None
-
-    # construct the Form class
-
-    _fields = {}
-    for definition in formfields:
-        name, field = formfield_from_xml(definition)
-        _fields[name] = field
-
-    return {"form": type("Form", (TaskFormMixin, forms.Form), _fields)}
+def extract_task_form(task: Task, form_key_mapping: dict) -> bool:
+    return form_key_mapping.get(task.form_key)

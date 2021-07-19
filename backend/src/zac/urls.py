@@ -4,8 +4,6 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
-from zac.werkvoorraad.views import SummaryView
-
 handler500 = "zac.utils.views.server_error"
 handler403 = "zac.utils.views.permission_denied"
 
@@ -14,10 +12,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("adfs/", include("django_auth_adfs.urls")),
     path("api/", include("zac.api.urls")),
-    path("", SummaryView.as_view(), name="index"),
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),
-    path("forms/", include("zac.forms.urls")),
     path("contrib/", include("zac.contrib.kadaster.urls")),
     path("activities/", include("zac.activities.urls")),
 ]

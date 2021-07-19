@@ -1,5 +1,5 @@
-@import "../lib/bem";
-@import "../lib/colors";
+@import "../../lib/bem";
+@import "../../lib/colors";
 
 $btn-background-color: #efefef !default;
 
@@ -67,6 +67,11 @@ $btn-background-color: #efefef !default;
       background: $color-secondary;
       color: $color-text;
     }
+  }
+
+  @include modifier("primary") {
+    background: $color-primary;
+    color: #fff;
   }
 
   @include modifier("choice-selected") {

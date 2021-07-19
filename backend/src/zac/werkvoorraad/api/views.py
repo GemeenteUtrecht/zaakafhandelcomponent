@@ -15,16 +15,16 @@ from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 
-from ..views import (
-    get_access_requests_groups,
-    get_behandelaar_zaken_unfinished,
-    get_camunda_user_tasks,
-)
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
     WorkStackTaskSerializer,
+)
+from .utils import (
+    get_access_requests_groups,
+    get_behandelaar_zaken_unfinished,
+    get_camunda_user_tasks,
 )
 
 

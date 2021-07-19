@@ -1,11 +1,1 @@
-import './bag-object-selection';
-import './links';
-import './checkbox-select-dynamic';
-import './tab';
-import './openUrl';
-import './processes';
-import './case-activities';
-import './validSign';
 import './alfresco-document-selection';
-import './review-user-select';
-import './informatieobjecttype-forms';
