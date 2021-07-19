@@ -1,10 +1,11 @@
 from unittest.mock import patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 
 import requests_mock
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.base import factory
@@ -109,9 +110,10 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
 
         zaak = factory(Zaak, zaak)
         zaak.zaaktype = factory(ZaakType, zaaktype)
-
+        doc_versioned_url = furl(doc_obj.url)
+        doc_versioned_url.args["versie"] = doc_obj.versie
         dowc = DowcResponse(
-            drc_url=doc_obj.url, magic_url="", purpose="write", uuid=uuid4()
+            drc_url=doc_versioned_url.url, magic_url="", purpose="write", uuid=uuid4()
         )
 
         with patch(
