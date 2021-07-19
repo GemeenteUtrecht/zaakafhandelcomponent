@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
-import { EMPTY, forkJoin, Observable, of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { Activity } from '../../models/activity';
 import { UserSearch } from '../../models/user-search';
-import { Tab } from '../../../../workstack/src/lib/constants/tabs';
-import { Document } from '@gu/models';
-import { ReadWriteDocument } from '../documenten/documenten.interface';
+import {ReadWriteDocument} from "@gu/models";
 
 @Injectable({
   providedIn: 'root'

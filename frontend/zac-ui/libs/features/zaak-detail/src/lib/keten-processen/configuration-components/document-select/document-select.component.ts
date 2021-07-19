@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import { ReadWriteDocument } from '../../../documenten/documenten.interface';
+import {ReadWriteDocument} from "@gu/models";
 
 @Component({
   selector: 'gu-document-select',

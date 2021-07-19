@@ -2,6 +2,7 @@ import {Component, Input, OnInit, OnChanges} from '@angular/core';
 import {Zaak} from '@gu/models';
 import {FieldConfiguration} from '../form/field';
 import {InformatieService} from './informatie.service';
+import {ZaakService} from "@gu/services";
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" [zaakData]="zaakData"></gu-informatie>
@@ -31,7 +32,10 @@ export class InformatieComponent implements OnInit, OnChanges {
   /** @type {Object[]} The confidentiality choices. */
   confidentialityChoices: Array<{ label: string, value: string }>;
 
-  constructor(private informatieService: InformatieService) {
+  constructor(
+    private informatieService: InformatieService,
+    private zaakService: ZaakService,
+  ) {
   }
 
   //
@@ -124,7 +128,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   getContextData() {
     this.isLoading = true;
-    this.informatieService.getProperties(this.bronorganisatie, this.identificatie).subscribe(
+    this.zaakService.listCaseProperties(this.bronorganisatie, this.identificatie).subscribe(
       (data) => {
         this.properties = data;
         this.isLoading = false;
@@ -162,7 +166,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   submitForm(data) {
     this.isLoading = true
-    this.informatieService.patchCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
+    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
         this.isLoading = false
       },

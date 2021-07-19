@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
+import {ApplicationHttpClient, ZaakService} from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { User, Zaak } from '@gu/models';
@@ -44,7 +44,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private modalService: ModalService,
-    private zaakDetailService: FeaturesZaakDetailService
+    private zaakDetailService: FeaturesZaakDetailService,
+    private zaakService: ZaakService,
   ) {
     this.zaakAccessRequestForm = this.fb.group({
       comment: this.fb.control(""),
@@ -64,7 +65,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   fetchInformation() {
     this.canRequestAccess = false
     this.isLoading = true;
-    this.zaakDetailService.getInformation(this.bronorganisatie, this.identificatie)
+    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
       .pipe(
         tap( res => {
           this.zaakData = res;

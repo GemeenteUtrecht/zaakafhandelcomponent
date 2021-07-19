@@ -1,8 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { Table, RowData, ExtensiveCell } from '@gu/models';
-import { ApplicationHttpClient } from '@gu/services';
-
-import { Document, DocumentUrls, ReadWriteDocument } from './documenten.interface';
+import {Document, DocumentUrls, ReadWriteDocument, Table, RowData, ExtensiveCell} from '@gu/models';
+import {ApplicationHttpClient, ZaakService} from '@gu/services';
 import { DocumentenService } from './documenten.service';
 import { ModalService } from '@gu/components';
 
@@ -43,7 +41,8 @@ export class DocumentenComponent implements OnChanges {
   constructor(
     private http: ApplicationHttpClient,
     private documentenService: DocumentenService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private zaakService: ZaakService,
   ) { }
 
   ngOnChanges(): void {
@@ -52,7 +51,7 @@ export class DocumentenComponent implements OnChanges {
 
   fetchDocuments() {
     this.isLoading = true;
-    this.documentenService.getDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
+    this.zaakService.listCaseDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
       this.tableData.bodyData = this.formatTableData(data);
       this.documentsData = data;
       this.isLoading = false;

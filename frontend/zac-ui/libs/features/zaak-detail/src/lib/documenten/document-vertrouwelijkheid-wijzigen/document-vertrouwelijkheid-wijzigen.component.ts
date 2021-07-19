@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angu
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentenService } from '../documenten.service';
 import { Document } from '@gu/models';
+import {ZaakService} from "@gu/services";
 
 @Component({
   selector: 'gu-document-vertrouwelijkheid-wijzigen',
@@ -30,7 +31,8 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
 
   constructor(
     private documentenService: DocumentenService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private zaakService: ZaakService,
   ) {
     this.confidentialityForm = this.fb.group({
       confidentialityType: this.fb.control("", Validators.required),
@@ -90,7 +92,7 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
     formData.append('url', this.selectedDocument.url);
     formData.append('zaak',  this.mainZaakUrl);
 
-    this.documentenService.patchConfidentiality(this.bronorganisatie, this.identificatie, formData).subscribe( () => {
+    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, formData).subscribe( () => {
       this.setConfidentialityType(this.confidentialityTypeControl.value);
       this.confidentialityForm.reset();
       this.reload.emit(true);

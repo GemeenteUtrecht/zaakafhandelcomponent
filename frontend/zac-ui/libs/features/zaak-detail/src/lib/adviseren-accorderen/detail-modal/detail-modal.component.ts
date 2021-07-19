@@ -2,9 +2,8 @@ import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { Review, ReviewDetail, ReviewDocument } from './detail-modal.interface';
-import { RowData, Table } from '@gu/models';
+import {ReadWriteDocument, RowData, Table} from '@gu/models';
 import { DatePipe } from '@angular/common';
-import { ReadWriteDocument } from '../../documenten/documenten.interface';
 
 @Component({
   selector: 'gu-detail-modal',

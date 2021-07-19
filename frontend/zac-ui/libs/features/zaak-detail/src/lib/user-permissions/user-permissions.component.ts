@@ -1,8 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {Table} from '@gu/models';
-import {Permission, UserPermission} from './user-permission';
-import {UserPermissionsService} from './user-permissions.service';
+import {Permission, UserPermission, Table} from '@gu/models';
+import {ZaakService} from "@gu/services";
 import {TableButtonClickEvent} from '../../../../../shared/ui/components/src/lib/components/table/table';
+import {PermissionsService} from './permissions.service';
 
 
 /**
@@ -14,7 +14,7 @@ import {TableButtonClickEvent} from '../../../../../shared/ui/components/src/lib
  * Requires identificatie: string input to identify the case (zaak).
  */
 @Component({
-    providers: [UserPermissionsService],
+    providers: [PermissionsService],
     selector: 'gu-user-permissions',
     styleUrls: ['./user-permissions.component.scss'],
     templateUrl: './user-permissions.component.html',
@@ -32,7 +32,10 @@ export class UserPermissionsComponent implements OnInit {
     /** @type {UserPermission[]} The user permissions. */
     userPermissions: UserPermission[] = [];
 
-    constructor(private userPermissionsService: UserPermissionsService) {
+    constructor(
+      private permissionsService: PermissionsService,
+      private zaakService: ZaakService,
+    ) {
     }
 
     //
@@ -59,7 +62,7 @@ export class UserPermissionsComponent implements OnInit {
      * Fetches the user permissions.
      */
     getContextData(): void {
-        this.userPermissionsService.getUserPermissions(this.bronorganisatie, this.identificatie).subscribe(
+        this.zaakService.listCaseUsers(this.bronorganisatie, this.identificatie).subscribe(
             (userPermissions: UserPermission[]): void => {
                 this.table = this.userPermissionsAsTable(userPermissions);
                 this.isLoading = false;
@@ -124,7 +127,7 @@ export class UserPermissionsComponent implements OnInit {
      */
     onButtonClick(event: TableButtonClickEvent): void {
         const permission = event.delete;
-        this.userPermissionsService.deletePermission(permission).subscribe(
+        this.permissionsService.deletePermission(permission).subscribe(
             (): void => {
                 this.getContextData();
             },

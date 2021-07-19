@@ -8,8 +8,3 @@ export interface Permission {
   "comment?": string,
   "reason": string,
 }
-
-export interface UserPermission {
-  permissions: Permission[],
-  username: string,
-}
