@@ -156,6 +156,23 @@ export class InformatieComponent implements OnInit, OnChanges {
       })
   }
 
+  /**
+   * Updates this.zaakData with latest values from API.
+   */
+  fetchZaak() {
+    this.isLoading = true;
+    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
+      (zaak: Zaak) => {
+        this.zaakData = zaak;
+        this.isLoading = false;
+      },
+      (error: any) => {
+        console.error(error);
+        this.isLoading = false;
+      }
+    );
+  }
+
   //
   // Events.
   //
@@ -168,10 +185,11 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isLoading = true
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
+        this.fetchZaak();
         this.isLoading = false
       },
 
-      (error) => {
+      (error: any) => {
         console.error(error);
         this.isLoading = false
       }
