@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 from xml.etree.ElementTree import Element
 
 from django import forms
@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from django_camunda.bpmn import CAMUNDA_NS
 from django_camunda.camunda_models import Task
-from django_camunda.forms import formfield_from_xml
 
 from .bpmn import get_bpmn
 from .user_tasks.context import REGISTRY

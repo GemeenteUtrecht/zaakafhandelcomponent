@@ -480,7 +480,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_user_task_no_permission(self, m, gt):
         user = UserFactory.create()
         self.client.force_authenticate(user)
-        response = self.client.get(self.task_endpoint)
+        response = self.client.put(self.task_endpoint)
         self.assertEqual(response.status_code, 403)
 
     @patch(

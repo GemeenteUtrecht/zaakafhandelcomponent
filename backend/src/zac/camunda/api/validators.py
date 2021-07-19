@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers, validators
+from rest_framework import serializers
 
 from zac.accounts.models import User
 

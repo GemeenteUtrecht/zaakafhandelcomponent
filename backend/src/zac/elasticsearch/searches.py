@@ -6,7 +6,6 @@ from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (
     Bool,
     Exists,
-    Match,
     Nested,
     Query,
     QueryString,
@@ -16,12 +15,7 @@ from elasticsearch_dsl.query import (
 )
 
 from zac.accounts.constants import PermissionObjectType
-from zac.accounts.models import (
-    AtomicPermission,
-    BlueprintPermission,
-    User,
-    UserAtomicPermission,
-)
+from zac.accounts.models import BlueprintPermission, User, UserAtomicPermission
 from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument

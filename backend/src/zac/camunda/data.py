@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from django.urls import reverse
-
 from django_camunda.api import get_process_instance_variable, get_task_variable
 from django_camunda.camunda_models import Model, Task as _Task
 from django_camunda.types import CamundaId
