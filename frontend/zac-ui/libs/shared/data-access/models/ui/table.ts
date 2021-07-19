@@ -25,6 +25,7 @@ export interface CellData {
 export interface ExtensiveCell {
   buttonType?: string;
   iconColor?: string;
+  iconInfo?: string;
   label?: string | number;
   target?: '_blank' | '_parent' | '_self' | '_top' | string
   type: 'button' | 'chip' | 'icon' | 'link' | 'table' | 'text';

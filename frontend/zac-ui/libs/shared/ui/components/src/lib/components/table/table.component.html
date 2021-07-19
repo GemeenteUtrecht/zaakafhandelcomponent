@@ -34,15 +34,24 @@
 
                     <!-- Chip -->
                     <ng-container *ngSwitchCase="'chip'">
-                        <gu-chip type="tertiary">{{dataRow[column.name].label}}</gu-chip>
+                        <gu-chip color="tertiary">{{dataRow[column.name].label}}</gu-chip>
                     </ng-container>
 
                     <!-- Icon -->
                     <ng-container *ngSwitchCase="'icon'">
-                        <mat-icon class="icon"
-                                  [ngClass]="(dataRow[column.name].iconColor ? 'icon--' + dataRow[column.name].iconColor : '')">
-                            {{dataRow[column.name].label}}
-                        </mat-icon>
+                        <div class="icon-wrapper">
+                            <mat-icon class="icon"
+                                      [ngClass]="(dataRow[column.name].iconColor ? 'icon--' + dataRow[column.name].iconColor : '')">
+                                {{dataRow[column.name].label}}
+                            </mat-icon>
+                            <div
+                              *ngIf="dataRow[column.name].iconInfo"
+                              role="tooltip"
+                              class="tooltip__content"
+                            >
+                              {{dataRow[column.name].iconInfo}}
+                            </div>
+                        </div>
                     </ng-container>
 
                     <!-- Link -->

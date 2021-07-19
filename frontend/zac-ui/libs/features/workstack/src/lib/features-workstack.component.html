@@ -10,9 +10,11 @@
             <!--                Zaken -->
             <ng-container *ngSwitchCase="'zaken'">
               <ng-template tabHeading>
-                <gu-chip [type]="zakenData?.length > 0 ? 'primary' : 'tertiary'"
+                <gu-chip *ngIf="zakenData?.length > 0"
+                         type="badge"
+                         color="primary"
                          class="ml-1">
-                  {{zakenData?.length > 0 ? zakenData?.length : 0}}
+                  {{zakenData?.length}}
                 </gu-chip>
               </ng-template>
 
@@ -29,9 +31,11 @@
             <!--                Taken -->
             <ng-container *ngSwitchCase="'tasks'">
               <ng-template tabHeading>
-                <gu-chip [type]="taskData?.length > 0 ? 'primary' : 'tertiary'"
+                <gu-chip *ngIf="taskData?.length > 0"
+                         type="badge"
+                         color="primary"
                          class="ml-1">
-                  {{taskData?.length > 0 ? taskData?.length : 0}}
+                  {{taskData?.length}}
                 </gu-chip>
               </ng-template>
 
@@ -50,9 +54,11 @@
             <!--                Activiteiten -->
             <ng-container *ngSwitchCase="'activities'">
               <ng-template tabHeading>
-                <gu-chip [type]="activitiesData?.length > 0 ? 'primary' : 'tertiary'"
+                <gu-chip *ngIf="activitiesData?.length > 0"
+                         type="badge"
+                         color="primary"
                          class="ml-1">
-                  {{activitiesData?.length > 0 ? activitiesData?.length : 0}}
+                  {{activitiesData?.length}}
                 </gu-chip>
               </ng-template>
 
@@ -71,9 +77,11 @@
             <!--                Toegangsverzoeken -->
             <ng-container *ngSwitchCase="'access-request'">
               <ng-template tabHeading>
-                <gu-chip [type]="accessRequestData?.length > 0 ? 'primary' : 'tertiary'"
+                <gu-chip *ngIf="accessRequestData?.length > 0"
+                         type="badge"
+                         color="primary"
                          class="ml-1">
-                  {{accessRequestData?.length > 0 ? accessRequestData?.length : 0}}
+                  {{accessRequestData?.length}}
                 </gu-chip>
               </ng-template>
               <gu-access-request [data]='accessRequestData' (reload)="reloadWorkstack('Toegangsverzoeken')"></gu-access-request>

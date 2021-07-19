@@ -7,7 +7,8 @@ import { Component, Input } from '@angular/core';
 })
 export class ChipComponent {
 
-  @Input() type: 'primary' | 'secondary' | 'tertiary' | 'warn'
+  @Input() color: 'primary' | 'secondary' | 'tertiary' | 'warn'
+  @Input() type: 'badge'
   @Input() icon: string;
 
 }

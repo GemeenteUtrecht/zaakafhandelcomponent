@@ -2,15 +2,10 @@
 
 .betrokkenen {
   &__role {
-    border: 1px solid $border-grey;
-    padding: 0.45rem 0.75rem;
-    border-radius: 5px;
+    padding: 0.45rem 0;
     margin-bottom: 0.625rem;
     p {
       margin: 0;
-      &.p--grey {
-        color: $color-text--gray;
-      }
     }
   }
 }

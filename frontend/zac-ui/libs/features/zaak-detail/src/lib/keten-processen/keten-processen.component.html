@@ -24,7 +24,7 @@
               <label class="label label--date">{{task.created | date:'fullDate'}}</label>
               <p class="p--marginsmall p--bold">{{task.name}}</p>
               <gu-chip *ngIf="!!task.assignee"
-                       [type]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
+                       [color]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
                        icon="edit"
                        (click)="assignTask(task)"
                        class="d-inline-block mb-2 chip--clickable">
@@ -65,7 +65,7 @@
                 <label class="label label--date">{{task.created | date:'fullDate'}}</label>
                 <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
                 <gu-chip *ngIf="!!task.assignee"
-                         [type]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
+                         [color]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
                          [icon]="task.name !== ('Adviseren' || 'Accorderen') ? 'edit' : null"
                          (click)="task.name !== ('Adviseren' || 'Accorderen') && assignTask(task)"
                          class="d-inline-block mb-2"

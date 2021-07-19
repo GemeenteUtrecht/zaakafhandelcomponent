@@ -7,7 +7,6 @@
   display: flex;
   @include media-breakpoint-down(md) {
     flex-direction: column;
-
   }
   gu-sidenav {
     display: block;
@@ -23,5 +22,9 @@
     width: 100%;
     z-index: 0;
     overflow: auto;
+    margin-left: 50px;
+    @include media-breakpoint-down(md) {
+      margin-left: 0;
+    }
   }
 }

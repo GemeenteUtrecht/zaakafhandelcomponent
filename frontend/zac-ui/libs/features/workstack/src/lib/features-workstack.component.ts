@@ -85,10 +85,11 @@ export class FeaturesWorkstackComponent implements OnInit {
             label: element.identificatie,
             url: zaakUrl,
           },
+          omschrijving: element.omschrijving,
           zaaktype: element.zaaktype.omschrijving,
           startdate: element.startdatum,
           deadline: element.deadline,
-          trust: element.vertrouwelijkheidaanduiding,
+          trust: element.vertrouwelijkheidaanduiding
         },
       };
       return cellData;
