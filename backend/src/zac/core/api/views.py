@@ -71,6 +71,7 @@ from ..views.utils import filter_documenten_for_permissions, get_source_doc_vers
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
+from .mixins import ListMixin
 from .pagination import BffPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
@@ -710,13 +711,13 @@ class EigenschappenView(ListAPIView):
     #     ),
     # },
 )
-class ObjecttypeListView(ListAPIView):
+class ObjecttypeListView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjecttypeSerializer
     action = "list"
 
-    def get_queryset(self):
+    def get_objects(self):
         return fetch_objecttypes()
 
 

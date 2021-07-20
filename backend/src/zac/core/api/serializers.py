@@ -1,12 +1,14 @@
-from decimal import ROUND_05UP
+from datetime import date, datetime, time
+from decimal import ROUND_05UP, Decimal
 from typing import Optional
+from uuid import UUID
 
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
 from furl import furl
-from rest_framework import serializers
+from rest_framework import fields, serializers
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
     Eigenschap,
@@ -23,7 +25,7 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
+from zgw_consumers.drf.serializers import APIModelSerializer as _APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
@@ -35,6 +37,7 @@ from zac.core.services import get_documenten, get_zaak
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
+from .api_models import Object, Objecttype, ObjecttypeVersion, Record
 from .data import VertrouwelijkheidsAanduidingData
 from .utils import (
     CSMultipleChoiceField,
@@ -43,6 +46,22 @@ from .utils import (
     ValidFieldChoices,
     get_informatieobjecttypen_for_zaak,
 )
+
+
+class APIModelSerializer(_APIModelSerializer):
+    serializer_field_mapping = {
+        str: fields.CharField,
+        int: fields.IntegerField,
+        float: fields.FloatField,
+        Decimal: fields.DecimalField,
+        date: fields.DateField,
+        datetime: fields.DateTimeField,
+        time: fields.TimeField,
+        bool: fields.BooleanField,
+        UUID: fields.UUIDField,
+        dict: fields.JSONField,
+        list: fields.ListField,
+    }
 
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
@@ -654,43 +673,71 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
         fields = ("username", "permissions")
 
 
-class ObjecttypeSerializer(serializers.Serializer):
-    url = serializers.URLField()
-    name = serializers.CharField()
-    description = serializers.CharField()
-    versions = serializers.ListField(
-        child=serializers.URLField(),
-        help_text=_("List of URLs of the different object type versions"),
-    )
+class ObjecttypeSerializer(APIModelSerializer):
+    class Meta:
+        model = Objecttype
+        fields = (
+            "url",
+            "name",
+            "name_plural",
+            "description",
+            "data_classification",
+            "maintainer_organization",
+            "maintainer_department",
+            "contact_person",
+            "contact_email",
+            "source",
+            "update_frequency",
+            "provider_organization",
+            "documentation_url",
+            "labels",
+            "created_at",
+            "modified_at",
+            "versions",
+        )
 
 
-class ObjecttypeVersionSerializer(serializers.Serializer):
-    url = serializers.URLField()
-    version = serializers.IntegerField()
-    object_type = serializers.URLField()
-    status = serializers.CharField()
-    json_schema = serializers.JSONField()
-    created_at = serializers.DateField()
-    modified_at = serializers.DateField()
-    published_at = serializers.DateField()
+class ObjecttypeVersionSerializer(APIModelSerializer):
+    class Meta:
+        model = ObjecttypeVersion
+        fields = (
+            "url",
+            "version",
+            "object_type",
+            "status",
+            "json_schema",
+            "created_at",
+            "modified_at",
+            "published_at",
+        )
 
 
-class RecordSerializer(serializers.Serializer):
-    index = serializers.IntegerField()
-    type_version = serializers.IntegerField()
-    data = serializers.JSONField()
-    geometry = serializers.JSONField()
-    start_at = serializers.DateField()
-    end_at = serializers.DateField()
-    registration_at = serializers.DateField()
-    correction_for = serializers.CharField()
-    corrected_by = serializers.CharField()
+class RecordSerializer(APIModelSerializer):
+    class Meta:
+        model = Record
+        fields = (
+            "index",
+            "type_version",
+            "data",
+            "geometry",
+            "start_at",
+            "end_at",
+            "registration_at",
+            "correction_for",
+            "corrected_by",
+        )
 
 
-class ObjectSerializer(serializers.Serializer):
-    url = serializers.URLField()
-    type = serializers.URLField()
+class ObjectSerializer(APIModelSerializer):
     record = RecordSerializer()
+
+    class Meta:
+        model = Object
+        fields = (
+            "url",
+            "type",
+            "record",
+        )
 
 
 class ObjectFilterSerializer(serializers.Serializer):
