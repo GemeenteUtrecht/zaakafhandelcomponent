@@ -4,7 +4,6 @@ from django.http import Http404
 
 from furl import furl
 from rest_framework import status
-from rest_framework.request import Request
 from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
@@ -79,13 +78,20 @@ def create_doc(
 def get_open_documenten(user: User, referer: str) -> List[Optional[DowcResponse]]:
     client = get_client(user)
     operation_id = "documenten_list"
-    kwargs = {
-        "purpose": DocFileTypes.write,
-        "info_url": referer,
-    }
-    url = get_operation_url(client.schema, operation_id, **kwargs)
-    response = client.request(url, operation_id, method="GET", expected_status=200)
-    return factory(DowcResponse, response)
+    url = get_operation_url(client.schema, operation_id)
+    url = furl(url).add(
+        {
+            "purpose": DocFileTypes.write,
+            "info_url": referer,
+        }
+    )
+    try:
+        response = client.request(
+            url.url, operation_id, method="GET", expected_status=200
+        )
+        return factory(DowcResponse, response)
+    except ClientError:
+        return []
 
 
 @optional_service
