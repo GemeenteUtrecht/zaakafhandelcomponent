@@ -1,6 +1,7 @@
 from decimal import ROUND_05UP
 from typing import Optional
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
@@ -23,11 +24,12 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer as _APIModelSerializer
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
@@ -35,7 +37,6 @@ from zac.core.services import get_documenten, get_zaak
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
-from .api_models import Object, Objecttype, ObjecttypeVersion, Record
 from .data import VertrouwelijkheidsAanduidingData
 from .utils import (
     CSMultipleChoiceField,
@@ -44,22 +45,6 @@ from .utils import (
     ValidFieldChoices,
     get_informatieobjecttypen_for_zaak,
 )
-
-
-class APIModelSerializer(_APIModelSerializer):
-    serializer_field_mapping = {
-        str: fields.CharField,
-        int: fields.IntegerField,
-        float: fields.FloatField,
-        Decimal: fields.DecimalField,
-        date: fields.DateField,
-        datetime: fields.DateTimeField,
-        time: fields.TimeField,
-        bool: fields.BooleanField,
-        UUID: fields.UUIDField,
-        dict: fields.JSONField,
-        list: fields.ListField,
-    }
 
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
@@ -671,85 +656,26 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
         fields = ("username", "permissions")
 
 
-class ObjecttypeSerializer(APIModelSerializer):
-    class Meta:
-        model = Objecttype
-        fields = (
-            "url",
-            "name",
-            "name_plural",
-            "description",
-            "data_classification",
-            "maintainer_organization",
-            "maintainer_department",
-            "contact_person",
-            "contact_email",
-            "source",
-            "update_frequency",
-            "provider_organization",
-            "documentation_url",
-            "labels",
-            "created_at",
-            "modified_at",
-            "versions",
-        )
+class ObjecttypeProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
+    PROXY_SCHEMA = ("/api/v1/objecttypes/", "get")
 
 
-class ObjecttypeVersionSerializer(APIModelSerializer):
-    class Meta:
-        model = ObjecttypeVersion
-        fields = (
-            "url",
-            "version",
-            "object_type",
-            "status",
-            "json_schema",
-            "created_at",
-            "modified_at",
-            "published_at",
-        )
+class ObjecttypeVersionProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
+    PROXY_SCHEMA = ("/api/v1/objecttypes/{objecttype_uuid}/versions", "get")
 
 
-class RecordSerializer(APIModelSerializer):
-    class Meta:
-        model = Record
-        fields = (
-            "index",
-            "type_version",
-            "data",
-            "geometry",
-            "start_at",
-            "end_at",
-            "registration_at",
-            "correction_for",
-            "corrected_by",
-        )
+class ObjectProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
+    PROXY_SCHEMA = ("/api/v1/objecttypes/{objecttype_uuid}/versions", "get")
 
 
-class ObjectSerializer(APIModelSerializer):
-    record = RecordSerializer()
-
-    class Meta:
-        model = Object
-        fields = (
-            "url",
-            "type",
-            "record",
-        )
+class ObjectFilterProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
+    PROXY_SCHEMA = ("/api/v1/objects/search", "post")
 
 
-class ObjectFilterSerializer(serializers.Serializer):
-    geometry = serializers.JSONField()
-    type = serializers.URLField(required=False)
-    data_attrs = serializers.CharField(required=False)
-    date = serializers.DateField(required=False)
-    registration_date = serializers.DateField(required=False)
-
-
-class ZaakObjectSerializer(serializers.Serializer):
-    object = serializers.URLField()
-    zaak = serializers.URLField()
-    object_type = serializers.CharField(required=False)
-    object_type_overige = serializers.CharField(required=False)
-    relatieomschrijving = serializers.CharField(required=False)
-    object_identificatie = serializers.JSONField()
+class ZaakObjectProxySerializer(serializers.Serializer):
+    PROXY_SCHEMA_BASE = settings.ZRC_API_SCHEMA
+    PROXY_SCHEMA = ("/zaakobjecten", "post")

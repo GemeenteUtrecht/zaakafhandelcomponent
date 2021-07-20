@@ -1116,17 +1116,17 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
 ###################################################
 
 
-def fetch_objecttypes() -> List[Objecttype]:
+def fetch_objecttypes() -> List[dict]:
     conf = CoreConfig.get_solo()
     objecttype_service = conf.primary_objecttypes_api
 
     client = objecttype_service.build_client()
     objecttypes_data = client.list("objecttype")
 
-    return factory(Objecttype, objecttypes_data)
+    return objecttypes_data
 
 
-def fetch_objecttype_version(uuid: str, version: int) -> ObjecttypeVersion:
+def fetch_objecttype_version(uuid: str, version: int) -> dict:
     conf = CoreConfig.get_solo()
     objecttype_service = conf.primary_objecttypes_api
 
@@ -1135,19 +1135,19 @@ def fetch_objecttype_version(uuid: str, version: int) -> ObjecttypeVersion:
         "objectversion", **{"objecttype_uuid": uuid, "version": version}
     )
 
-    return factory(ObjecttypeVersion, objecttypes_version_data)
+    return objecttypes_version_data
 
 
-def search_objects(filters: dict) -> List[Object]:
+def search_objects(filters: dict) -> List[dict]:
     conf = CoreConfig.get_solo()
     object_service = conf.primary_objects_api
 
     client = object_service.build_client()
     results = client.operation(operation_id="object_search", data=filters)
-    return factory(Object, results)
+    return results
 
 
-def relate_object_to_zaak(relation_data: dict):
+def relate_object_to_zaak(relation_data: dict) -> dict:
     zrc_client = Service.get_client(relation_data["zaak"])
     assert zrc_client is not None, "ZRC client not found"
 

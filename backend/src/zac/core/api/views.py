@@ -71,7 +71,7 @@ from ..views.utils import filter_documenten_for_permissions, get_source_doc_vers
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
-from .mixins import ListMixin
+from .mixins import ListMixin, RetrieveMixin
 from .pagination import BffPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
@@ -90,10 +90,10 @@ from .serializers import (
     ExtraInfoUpSerializer,
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
-    ObjectFilterSerializer,
-    ObjectSerializer,
-    ObjecttypeSerializer,
-    ObjecttypeVersionSerializer,
+    ObjectFilterProxySerializer,
+    ObjectProxySerializer,
+    ObjecttypeProxySerializer,
+    ObjecttypeVersionProxySerializer,
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
@@ -104,7 +104,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakEigenschapSerializer,
     ZaakObjectGroupSerializer,
-    ZaakObjectSerializer,
+    ZaakObjectProxySerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
@@ -714,10 +714,10 @@ class EigenschappenView(ListAPIView):
 class ObjecttypeListView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ObjecttypeSerializer
+    serializer_class = ObjecttypeProxySerializer
     action = "list"
 
-    def get_objects(self):
+    def get_objects(self) -> List[dict]:
         return fetch_objecttypes()
 
 
@@ -732,12 +732,12 @@ class ObjecttypeListView(ListMixin, views.APIView):
     #     ),
     # },
 )
-class ObjecttypeVersionReadView(RetrieveAPIView):
+class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ObjecttypeVersionSerializer
+    serializer_class = ObjecttypeVersionProxySerializer
 
-    def get_object(self):
+    def get_object(self) -> dict:
         return fetch_objecttype_version(**self.kwargs)
 
 
@@ -759,7 +759,7 @@ class ObjecttypeVersionReadView(RetrieveAPIView):
         ),
     },
     # TODO Fetching the external endpoint documentation gives an error
-    responses={200: ObjectSerializer(many=True)},
+    responses={200: ObjectProxySerializer(many=True)},
     # responses={
     #     (200, "application/json"): remote_schema_ref(
     #         settings.OBJECTS_API_SCHEMA,
@@ -770,18 +770,15 @@ class ObjecttypeVersionReadView(RetrieveAPIView):
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ObjectFilterSerializer
+    serializer_class = ObjectFilterProxySerializer
 
     def post(self, request):
-        filter_serializer = self.serializer_class(data=request.data)
-        filter_serializer.is_valid(raise_exception=True)
-
         try:
-            objects = search_objects(filters=filter_serializer.data)
+            objects = search_objects(filters=request.data)
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
 
-        object_serializer = ObjectSerializer(objects, many=True)
+        object_serializer = ObjectProxySerializer(objects, many=True)
         return Response(object_serializer.data)
 
 
@@ -796,7 +793,7 @@ class ObjectSearchView(views.APIView):
     #         ),
     #     },
     # TODO Fetching the external endpoint documentation gives an error
-    responses={201: ZaakObjectSerializer},
+    responses={201: ZaakObjectProxySerializer},
     # responses={
     #     (201, "application/json"): remote_schema_ref(
     #         settings.ZRC_API_SCHEMA,
@@ -807,14 +804,11 @@ class ObjectSearchView(views.APIView):
 class ZaakObjectCreateView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ZaakObjectSerializer
+    serializer_class = ZaakObjectProxySerializer
 
     def post(self, request):
-        filter_serializer = self.serializer_class(data=request.data)
-        filter_serializer.is_valid(raise_exception=True)
-
         try:
-            created_zaakobject = relate_object_to_zaak(filter_serializer.data)
+            created_zaakobject = relate_object_to_zaak(request.data)
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
 

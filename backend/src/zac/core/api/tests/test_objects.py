@@ -189,7 +189,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_invalid_geo_filter(self, m):
+    def test_invalid_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         m.post(f"{OBJECTS_ROOT}objects/search", status_code=400)
 
@@ -207,52 +207,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_no_geo_filter(self, m):
-        user = UserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        list_url = reverse("object-search")
-        response = self.client.post(list_url, {})
-
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn("geometry", response.json())
-
-    def test_filter_on_geo(self, m):
-        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
-
-        config = CoreConfig.get_solo()
-        config.primary_objects_api = self.objects_service
-        config.save()
-
-        user = UserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        list_url = reverse("object-search")
-        response = self.client.post(
-            list_url,
-            {
-                "geometry": {
-                    "within": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [5.040241219103334, 52.09434351690135],
-                                [5.145297981798648, 52.13018632964422],
-                                [5.196109749376771, 52.07409013759298],
-                                [5.084873177111147, 52.0386246041859],
-                                [5.040241219103334, 52.09434351690135],
-                            ]
-                        ],
-                    }
-                }
-            },
-        )
-
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(1, len(response.json()))
-
-    def test_filter_on_type(self, m):
+    def test_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
 
@@ -282,77 +237,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                     }
                 },
                 "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
-            },
-        )
-
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(1, len(response.json()))
-
-    def test_filter_on_data_attrs(self, m):
-        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
-
-        config = CoreConfig.get_solo()
-        config.primary_objects_api = self.objects_service
-        config.save()
-
-        user = UserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        list_url = reverse("object-search")
-        response = self.client.post(
-            list_url,
-            {
-                "geometry": {
-                    "within": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [5.040241219103334, 52.09434351690135],
-                                [5.145297981798648, 52.13018632964422],
-                                [5.196109749376771, 52.07409013759298],
-                                [5.084873177111147, 52.0386246041859],
-                                [5.040241219103334, 52.09434351690135],
-                            ]
-                        ],
-                    }
-                },
                 "data_attrs": "adres__exact__Utrechtsestraat 41",
-            },
-        )
-
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(1, len(response.json()))
-
-    def test_filter_on_date(self, m):
-        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
-
-        config = CoreConfig.get_solo()
-        config.primary_objects_api = self.objects_service
-        config.save()
-
-        user = UserFactory.create()
-        self.client.force_authenticate(user=user)
-
-        list_url = reverse("object-search")
-        response = self.client.post(
-            list_url,
-            {
-                "geometry": {
-                    "within": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [5.040241219103334, 52.09434351690135],
-                                [5.145297981798648, 52.13018632964422],
-                                [5.196109749376771, 52.07409013759298],
-                                [5.084873177111147, 52.0386246041859],
-                                [5.040241219103334, 52.09434351690135],
-                            ]
-                        ],
-                    }
-                },
                 "date": "2021-07-19",
             },
         )
