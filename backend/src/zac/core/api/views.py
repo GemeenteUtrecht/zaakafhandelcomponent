@@ -703,13 +703,6 @@ class EigenschappenView(ListAPIView):
 @extend_schema(
     summary=_("List Objecttypes"),
     description=_("Retrieves all object types from the configured Objecttypes API."),
-    # TODO Fetching the external endpoint documentation gives an error
-    # responses={
-    #     (200, "application/json"): remote_schema_ref(
-    #         settings.OBJECTTYPES_API_SCHEMA,
-    #         ["paths", "/api/v1/objecttypes", "get", "responses", "200", "content", "application/json", "schema"]
-    #     ),
-    # },
 )
 class ObjecttypeListView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -724,13 +717,6 @@ class ObjecttypeListView(ListMixin, views.APIView):
 @extend_schema(
     summary=_("Read Objecttype version"),
     description=_("Read the details of a particular objecttype version"),
-    # TODO Fetching the external endpoint documentation gives an error
-    # responses={
-    #     (200, "application/json"): remote_schema_ref(
-    #         settings.OBJECTTYPES_API_SCHEMA,
-    #         ["paths", "/api/v1/objecttypes/{objecttype_uuid}/versions", "get", "responses", "200", "content", "application/json", "schema"]
-    #     ),
-    # },
 )
 class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -744,28 +730,6 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 @extend_schema(
     summary=_("Search objects"),
     description=_("Search for objects in the Objects API"),
-    request={
-        "application/json": remote_schema_ref(
-            settings.OBJECTS_API_SCHEMA,
-            [
-                "paths",
-                "/api/v1/objects/search",
-                "post",
-                "requestBody",
-                "content",
-                "application/json",
-                "schema",
-            ],
-        ),
-    },
-    # TODO Fetching the external endpoint documentation gives an error
-    responses={200: ObjectProxySerializer(many=True)},
-    # responses={
-    #     (200, "application/json"): remote_schema_ref(
-    #         settings.OBJECTS_API_SCHEMA,
-    #         ["paths", "/api/v1/objects/search", "post", "responses", "200", "content", "application/json", "schema"],
-    #     ),
-    # },
 )
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -785,21 +749,6 @@ class ObjectSearchView(views.APIView):
 @extend_schema(
     summary=_("Create Zaakobject"),
     description=_("Relate an object to a zaak"),
-    # TODO Fetching the external endpoint documentation gives an error
-    # request={
-    #         "application/json": remote_schema_ref(
-    #             settings.ZRC_API_SCHEMA,
-    #             ["paths", "/zaakobjecten", "post", "requestBody", "content", "application/json", "schema"]
-    #         ),
-    #     },
-    # TODO Fetching the external endpoint documentation gives an error
-    responses={201: ZaakObjectProxySerializer},
-    # responses={
-    #     (201, "application/json"): remote_schema_ref(
-    #         settings.ZRC_API_SCHEMA,
-    #         ["paths", "/zaakobjecten", "post", "responses", "201", "content", "application/json", "schema"],
-    #     ),
-    # },
 )
 class ZaakObjectCreateView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
