@@ -5,7 +5,7 @@ import {InformatieService} from './informatie.service';
 import {ZaakService} from "@gu/services";
 
 /**
- * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" [zaakData]="zaakData"></gu-informatie>
+ * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
  *
  * Shows case (zaak) informatie and allows inline editing.
  *
