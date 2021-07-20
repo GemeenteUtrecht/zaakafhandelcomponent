@@ -1,14 +1,12 @@
-from datetime import date, datetime, time
-from decimal import ROUND_05UP, Decimal
+from decimal import ROUND_05UP
 from typing import Optional
-from uuid import UUID
 
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
 from furl import furl
-from rest_framework import fields, serializers
+from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
     Eigenschap,
