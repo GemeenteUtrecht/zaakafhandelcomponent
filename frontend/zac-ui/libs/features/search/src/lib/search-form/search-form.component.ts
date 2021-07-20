@@ -5,6 +5,7 @@ import { ZaaktypeEigenschap } from '../../models/zaaktype-eigenschappen';
 import { FeaturesSearchService } from '../features-search.service';
 import { Search } from '../../models/search';
 import { Zaak, TableSort } from '@gu/models';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'gu-search-form',
@@ -35,6 +36,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private searchService: FeaturesSearchService,
+    private router: Router,
   ) { }
 
   ngOnInit(): void {
@@ -66,6 +68,14 @@ export class SearchFormComponent implements OnInit, OnChanges {
       this.hasError = true;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het ophalen van zaaktypen."
     })
+  }
+
+  /**
+   * Navigate to the detail view directly if a zaak is selected using zaak select.
+   * @param {Object} zaak
+   */
+  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
+    this.router.navigate([zaak.bronorganisatie, zaak.identificatie]);
   }
 
   onZaaktypeSelect(zaaktype: Result) {
