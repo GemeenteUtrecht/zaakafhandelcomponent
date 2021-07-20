@@ -6,7 +6,7 @@
          [formControl]="control"
          [placeholder]="placeholder ? placeholder : 'Datum'"
          class="form-control form-control--datepicker"
-         [id]="id"
+         [id]="id ? id : label"
          bsDatepicker [container]="'html'"
          [bsValue]="value"
          [bsConfig]="bsConfig">

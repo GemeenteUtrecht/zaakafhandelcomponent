@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 
 @Component({
@@ -11,8 +11,9 @@ export class CheckboxComponent {
   @Input() id: string;
   @Input() label: string;
   @Input() control: AbstractControl;
-  @Input() ckeckboxFormArray: any;
   @Input() value: string;
+
+  @Output() change: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor() {}
 }

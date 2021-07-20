@@ -27,6 +27,7 @@
     position: absolute;
     font-size: 0.75rem;
     visibility: hidden;
+    z-index: 3;
   }
   &--primary {
     .tooltip__content {

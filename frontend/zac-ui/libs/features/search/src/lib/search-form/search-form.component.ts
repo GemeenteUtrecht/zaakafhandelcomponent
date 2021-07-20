@@ -1,11 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Result } from '../../models/zaaktype';
 import { ZaaktypeEigenschap } from '../../models/zaaktype-eigenschappen';
 import { FeaturesSearchService } from '../features-search.service';
 import { Search } from '../../models/search';
 import { Zaak, TableSort } from '@gu/models';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'gu-search-form',
@@ -29,15 +28,13 @@ export class SearchFormComponent implements OnInit, OnChanges {
   hasError: boolean;
   errorMessage: string;
 
-  isNotLoggedIn: boolean;
-  readonly NOT_LOGGED_IN_MESSAGE = "Authenticatiegegevens zijn niet opgegeven.";
-
-  loginUrl: string;
+  showQueryNameField: boolean;
+  reportName: string;
+  saveReportIsSuccess: boolean;
 
   constructor(
     private fb: FormBuilder,
     private searchService: FeaturesSearchService,
-    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -45,7 +42,9 @@ export class SearchFormComponent implements OnInit, OnChanges {
       zaaktype: [''],
       omschrijving: [''],
       eigenschapnaam: [''],
-      eigenschapwaarde: ['']
+      eigenschapwaarde: [''],
+      saveQuery: [''],
+      queryName: ['']
     })
     this.fetchZaaktypen();
   }
@@ -54,11 +53,6 @@ export class SearchFormComponent implements OnInit, OnChanges {
     if (changes.sortData.previousValue !== this.sortData ) {
       this.postSearchZaken(this.formData, this.sortData);
     }
-  }
-
-  setLoginUrl(): void {
-    const currentPath = this.router.url;
-    this.loginUrl = `/accounts/login/?next=/ui${currentPath}`;
   }
 
   fetchZaaktypen() {
@@ -71,21 +65,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
       this.isLoading = false;
       this.hasError = true;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het ophalen van zaaktypen."
-      if (this.errorMessage === this.NOT_LOGGED_IN_MESSAGE) {
-        this.setLoginUrl()
-        this.isNotLoggedIn = true;
-      } else {
-        this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het ophalen van zaaktypen."
-      }
     })
-  }
-
-  /**
-   * Navigate to the detail view directly if a zaak is selected using zaak select.
-   * @param {Object} zaak
-   */
-  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
-    this.router.navigate([zaak.bronorganisatie, zaak.identificatie]);
   }
 
   onZaaktypeSelect(zaaktype: Result) {
@@ -114,8 +94,28 @@ export class SearchFormComponent implements OnInit, OnChanges {
     this.selectedPropertyValue = property;
   }
 
+  onCheckboxChange() {
+    this.saveQueryControl.updateValueAndValidity({ onlySelf: false, emitEvent: true });
+    const sub = this.saveQueryControl.statusChanges.subscribe((res) => {
+      if (this.saveQueryControl.value) {
+        this.showQueryNameField = true;
+        this.queryNameControl.setValidators([Validators.required])
+      } else {
+        this.showQueryNameField = false;
+        this.queryNameControl.clearValidators();
+      }
+      sub.unsubscribe();
+      this.queryNameControl.updateValueAndValidity();
+    });
+  }
+
+  updateFormValidity() {
+    this.saveQueryControl.updateValueAndValidity()
+  }
+
   submitForm() {
     this.hasError = false;
+    this.saveReportIsSuccess = false;
 
     let zaaktype;
     if (this.zaaktype.value) {
@@ -139,6 +139,12 @@ export class SearchFormComponent implements OnInit, OnChanges {
     }
 
     this.postSearchZaken(this.formData)
+
+    console.log(this.saveQueryControl.value);
+    if (this.saveQueryControl.value) {
+      this.reportName = this.queryNameControl.value;
+      this.postCreateReport(this.reportName, this.formData)
+    }
   }
 
   postSearchZaken(formData: Search, sortData?: TableSort) {
@@ -151,6 +157,23 @@ export class SearchFormComponent implements OnInit, OnChanges {
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het zoeken."
       this.isSubmitting = false;
     })
+  }
+
+  postCreateReport(name: string, query: Search) {
+    const formData = {
+      name: name,
+      query: query
+    }
+    this.searchService.postCreateReport(formData).subscribe(
+      () => {
+        this.saveReportIsSuccess = true;
+        this.saveQueryControl.patchValue(false);
+        this.queryNameControl.patchValue('');
+      },
+      error => {
+        console.error(error);
+      }
+    )
   }
 
   get zaaktype(): FormControl {
@@ -167,5 +190,13 @@ export class SearchFormComponent implements OnInit, OnChanges {
 
   get eigenschapwaarde(): FormControl {
     return this.searchForm.get('eigenschapwaarde') as FormControl;
+  };
+
+  get saveQueryControl(): FormControl {
+    return this.searchForm.get('saveQuery') as FormControl;
+  };
+
+  get queryNameControl(): FormControl {
+    return this.searchForm.get('queryName') as FormControl;
   };
 }
