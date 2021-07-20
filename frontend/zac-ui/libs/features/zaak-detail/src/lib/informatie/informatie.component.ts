@@ -11,7 +11,6 @@ import {ZaakService} from "@gu/services";
  *
  * Requires bronorganisatie: string input to identify the organisation.
  * Requires identificatie: string input to identify the case (zaak).
- * Requires zaakData: Zaak input for case (zaak) data.
  */
 @Component({
   selector: 'gu-informatie',
@@ -21,16 +20,18 @@ import {ZaakService} from "@gu/services";
 export class InformatieComponent implements OnInit, OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
-  @Input() zaakData: Zaak;
 
   /** @type {boolean} Whether this component is loading. */
   isLoading: boolean;
 
+  /** @type {Object[]} The confidentiality choices. */
+  confidentialityChoices: Array<{ label: string, value: string }>;
+
   /** @type {Object[]} The properties to display as part of the form. */
   properties: Array<Object>;
 
-  /** @type {Object[]} The confidentiality choices. */
-  confidentialityChoices: Array<{ label: string, value: string }>;
+  /** @type {Zaak} The zaak object. */
+  zaak: Zaak = null;
 
   constructor(
     private informatieService: InformatieService,
@@ -63,21 +64,21 @@ export class InformatieComponent implements OnInit, OnChanges {
       {
         label: 'Vertrouwelijkheidaanduiding',
         name: 'vertrouwelijkheidaanduiding',
-        value: this.zaakData.vertrouwelijkheidaanduiding,
+        value: this.zaak.vertrouwelijkheidaanduiding,
         choices: this.confidentialityChoices,
       },
       {
         label: 'Omschrijving',
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
-        value: this.zaakData.omschrijving,
+        value: this.zaak.omschrijving,
       },
       {
         label: 'Toelichting',
         placeholder: ' ',
         name: 'toelichting',
         required: false,
-        value: this.zaakData.toelichting,
+        value: this.zaak.toelichting,
       },
       {
         label: 'reden',
@@ -127,6 +128,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Fetches the properties to show in the form.
    */
   getContextData() {
+    this.fetchZaak();
     this.isLoading = true;
     this.zaakService.listCaseProperties(this.bronorganisatie, this.identificatie).subscribe(
       (data) => {
@@ -163,7 +165,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak: Zaak) => {
-        this.zaakData = zaak;
+        this.zaak = zaak;
         this.isLoading = false;
       },
       (error: any) => {

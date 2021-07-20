@@ -5,7 +5,7 @@
   </ng-container>
   <!-- End loading -->
 
-  <div class='mb-4' *ngIf="zaakData && properties && !isLoading">
+  <div class='mb-4' *ngIf="zaak && properties && !isLoading">
     <gu-form [title]="'Zaak informatie'" [form]="form" [editable]="'toggle'" (submit)="submitForm($event)"></gu-form>
   </div>
 
