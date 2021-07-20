@@ -35,7 +35,7 @@ class HijackHeaderTests(ESMixin, TestCase):
 
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertIn(settings.HIJACK_HEADER, response)
-                self.assertEqual(response[settings.HIJACK_HEADER], "False")
+                self.assertEqual(response[settings.HIJACK_HEADER], "false")
 
     def test_response_hijacked(self):
         user_to_hijack = StaffUserFactory.create()
@@ -51,4 +51,4 @@ class HijackHeaderTests(ESMixin, TestCase):
                     response.status_code, status.HTTP_200_OK, response.json()
                 )
                 self.assertIn(settings.HIJACK_HEADER, response)
-                self.assertEqual(response[settings.HIJACK_HEADER], "True")
+                self.assertEqual(response[settings.HIJACK_HEADER], "true")

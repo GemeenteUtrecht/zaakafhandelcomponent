@@ -47,7 +47,7 @@ class AutoSchema(_AutoSchema):
             type=str,
             location=OpenApiParameter.HEADER,
             description=_("Header displays if the user is hijacked."),
-            enum=["False", "True"],
+            enum=["false", "true"],
             response=True,
         )
 
