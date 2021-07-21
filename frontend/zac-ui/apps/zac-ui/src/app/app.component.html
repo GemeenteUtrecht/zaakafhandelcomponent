@@ -1,11 +1,19 @@
-<!--<gu-home></gu-home>-->
 <div class="gu-dashboard">
   <gu-sidenav [menuItems]="menuItems"
               [bottomMenuItems]="bottomMenuItems"
               [selectedParentMenu]="selectedMenu"
               [logoUrl]="logoUrl"
               [mobileLogoUrl]="mobileLogoUrl"
-              [currentUser]="currentUser"></gu-sidenav>
+              [currentUser]="currentUser"
+              searchComponentName="gu-zaak-select"
+  >
+    <gu-zaak-select
+      label='Direct naar zaak'
+      placeholder='Zaaknummer'
+      role='searchbox'
+      (change)="onZaakSelect($event)"
+    ></gu-zaak-select>
+  </gu-sidenav>
   <div class="main-content-outer-wrapper">
     <router-outlet></router-outlet>
   </div>

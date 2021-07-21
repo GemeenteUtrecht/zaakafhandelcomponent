@@ -42,4 +42,8 @@ export class AppComponent implements OnInit {
     const endpoint = encodeURI('/api/accounts/users/me');
     return this.http.Get<User>(endpoint);
   }
+
+  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
+    this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie]);
+  }
 }
