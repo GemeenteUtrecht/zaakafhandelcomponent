@@ -18,8 +18,9 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..api import get_client
+from ..api import get_client, get_open_documenten
 from ..constants import DocFileTypes
+from ..data import DowcResponse
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -214,3 +215,31 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"errors": "this is already locked"})
+
+    def test_get_open_documenten(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        m.get(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=200,
+            json=[self.dowc_response],
+        )
+
+        response = get_open_documenten(self.user, referer="http://referer-link.test/")
+        self.assertEqual(
+            "https://dowc.nl/api/v1/documenten?purpose=write&info_url=http%3A%2F%2Freferer-link.test%2F",
+            m.last_request.url,
+        )
+        self.assertEqual(response, [factory(DowcResponse, self.dowc_response)])
+
+    def test_get_open_documenten_empty(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        m.get(f"{DOWC_API_ROOT}/api/v1/documenten", status_code=404, json=[])
+
+        response = get_open_documenten(self.user, referer="http://referer-link.test/")
+        self.assertEqual(
+            "https://dowc.nl/api/v1/documenten?purpose=write&info_url=http%3A%2F%2Freferer-link.test%2F",
+            m.last_request.url,
+        )
+        self.assertEqual(response, [])

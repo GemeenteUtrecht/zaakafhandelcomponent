@@ -1,9 +1,11 @@
 from decimal import ROUND_05UP
+from typing import Optional
 
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
+from furl import furl
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
@@ -59,22 +61,24 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         source="get_vertrouwelijkheidaanduiding_display"
     )
     informatieobjecttype = InformatieObjectTypeSerializer()
+    current_user_is_editing = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
         fields = (
-            "url",
             "auteur",
-            "identificatie",
             "beschrijving",
             "bestandsnaam",
-            "versie",
-            "locked",
-            "informatieobjecttype",
-            "titel",
-            "vertrouwelijkheidaanduiding",
             "bestandsomvang",
+            "current_user_is_editing",
+            "identificatie",
+            "informatieobjecttype",
+            "locked",
             "read_url",
+            "titel",
+            "url",
+            "versie",
+            "vertrouwelijkheidaanduiding",
             "write_url",
         )
         extra_kwargs = {
@@ -82,6 +86,16 @@ class GetZaakDocumentSerializer(APIModelSerializer):
                 "help_text": _("File size in bytes"),
             }
         }
+
+    def get_current_user_is_editing(self, obj) -> Optional[bool]:
+        versioned_url = furl(obj.url)
+        versioned_url.args["versie"] = obj.versie
+        if "open_documenten" in self.context:
+            if versioned_url.url in self.context["open_documenten"]:
+                return True
+            else:
+                return False
+        return None
 
 
 class AddZaakDocumentSerializer(serializers.Serializer):

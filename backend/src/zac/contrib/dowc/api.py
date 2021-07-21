@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.http import Http404
 
@@ -13,6 +13,7 @@ from zac.accounts.models import User
 from zac.client import Client
 from zac.utils.decorators import optional_service
 
+from .constants import DocFileTypes
 from .data import DowcResponse
 from .exceptions import DOWCCreateError
 from .models import DowcConfig
@@ -71,6 +72,26 @@ def create_doc(
             raise DOWCCreateError(err.args[0])
 
     return factory(DowcResponse, response), status_code
+
+
+@optional_service
+def get_open_documenten(user: User, referer: str) -> List[Optional[DowcResponse]]:
+    client = get_client(user)
+    operation_id = "documenten_list"
+    url = get_operation_url(client.schema, operation_id)
+    url = furl(url).add(
+        {
+            "purpose": DocFileTypes.write,
+            "info_url": referer,
+        }
+    )
+    try:
+        response = client.request(
+            url.url, operation_id, method="GET", expected_status=200
+        )
+        return factory(DowcResponse, response)
+    except ClientError:
+        return []
 
 
 @optional_service
