@@ -1,5 +1,9 @@
+from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
+
 from drf_spectacular.openapi import AutoSchema as _AutoSchema
 from drf_spectacular.plumbing import build_media_type_object, force_instance
+from drf_spectacular.utils import OpenApiParameter
 
 # ensure extensions are loaded
 from .drf_spectacular import polymorphic  # noqa
@@ -35,3 +39,16 @@ class AutoSchema(_AutoSchema):
         cls_summary = getattr(self.view.__class__, "schema_summary", None)
         action_or_method_summary = getattr(action_or_method, "schema_summary", None)
         return action_or_method_summary or cls_summary
+
+    def get_override_parameters(self):
+        """ Add hijack header"""
+        hijack_response_header = OpenApiParameter(
+            name=settings.HIJACK_HEADER,
+            type=str,
+            location=OpenApiParameter.HEADER,
+            description=_("Header displays if the user is hijacked."),
+            enum=["false", "true"],
+            response=True,
+        )
+
+        return [hijack_response_header]

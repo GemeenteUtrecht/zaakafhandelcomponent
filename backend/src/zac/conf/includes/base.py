@@ -161,6 +161,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "zac.accounts.middleware.HijackMiddleware",
 ]
 
 ROOT_URLCONF = "zac.urls"
@@ -486,7 +487,7 @@ ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
 ]
 
 # Django-Hijack
-HIJACK_LOGIN_REDIRECT_URL = "/"
+HIJACK_LOGIN_REDIRECT_URL = "/ui"
 HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")
 # The Admin mixin is used because we use a custom User-model.
 HIJACK_REGISTER_ADMIN = False
@@ -495,6 +496,7 @@ HIJACK_REGISTER_ADMIN = False
 HIJACK_ALLOW_GET_REQUESTS = True
 HIJACK_AUTHORIZE_STAFF = True
 HIJACK_AUTHORIZE_STAFF_TO_HIJACK_STAFF = True
+HIJACK_HEADER = "X-Is-Hijacked"
 
 
 # ELASTICSEARCH CONFIG
