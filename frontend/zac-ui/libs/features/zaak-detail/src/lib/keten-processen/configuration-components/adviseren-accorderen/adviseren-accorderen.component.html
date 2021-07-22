@@ -1,9 +1,7 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h1>{{taskContextData.context.title}}</h1>
-  <div class="card card--blue col-md-6 mb-4">
-    <h2>{{taskContextData.context.zaakInformatie.omschrijving}}</h2>
-    <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
-  </div>
+  <h1>{{taskContextData.context.zaakInformatie.omschrijving}}</h1>
+  <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
+
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Selecteer relevante documenten</label>
