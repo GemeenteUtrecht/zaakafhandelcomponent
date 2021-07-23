@@ -668,7 +668,7 @@ class ObjecttypeVersionProxySerializer(ProxySerializer):
 
 class ObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
-    PROXY_SCHEMA = ("/api/v1/objecttypes/{objecttype_uuid}/versions", "get")
+    PROXY_SCHEMA = ("/api/v1/objects", "get")
 
 
 class ObjectFilterProxySerializer(ProxySerializer):
