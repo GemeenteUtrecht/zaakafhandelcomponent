@@ -75,6 +75,27 @@ moment. Add a **Service** for it:
 - Header key: ``Authorization``
 - Header value: ``Token <insert open forms token>``
 
+Object and Objecttypes
+----------------------
+
+In order to search for objects and relate objects to a zaak, an object and objecttypes API have to be configured.
+One needs to add a **Service** for each of them:
+
+- Type: ORC (Overige)
+- Authorization type: API Key
+- Header key: ``Authorization``
+- Header value: ``Token <insert open forms token>``
+
+.. note::
+    The object and objecttype APIs include ``/api/v1`` as part of the path of all endpoints (see the API schemas `here`_).
+    This means that the field ``API root url`` should **NOT** include ``/api/v1``. For example, it should be https://objecttypes.nl/
+    and not https://objecttypes.nl/api/v1.
+
+After configuring the services, the global configuration should be updated to point to a default service for both the
+object and objecttype API. This can be done in the admin ``admin/core/coreconfig/``,
+by updating the fields ``Primary objects API`` and ``Primary objecttypes API``.
+
+
 Subscribing to notifications
 ============================
 
@@ -93,3 +114,4 @@ This will set up the ZAC to receive notifications sent from the other APIs and a
 accordingly.
 
 .. _Kownsl: https://github.com/GemeenteUtrecht/kownsl
+.. _here: https://objects-and-objecttypes-api.readthedocs.io/en/latest/api/index.html
