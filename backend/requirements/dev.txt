@@ -193,7 +193,7 @@ freezegun==0.3.15
     # via -r requirements/ci.txt
 furl==2.1.0
     # via -r requirements/ci.txt
-gemma-zds-client==1.0.0
+gemma-zds-client==1.0.1
     # via
     #   -r requirements/ci.txt
     #   zgw-consumers

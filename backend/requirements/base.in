@@ -13,7 +13,7 @@ requests_mock
 elasticsearch-dsl
 
 # zgw-integration
-gemma-zds-client>=1.0.0
+gemma-zds-client>=1.0.1
 zgw-consumers[drf]~=0.15.0
 
 # Framework libraries

@@ -113,7 +113,7 @@ faker==5.0.2
     # via zgw-consumers
 furl==2.1.0
     # via -r requirements/base.in
-gemma-zds-client==1.0.0
+gemma-zds-client==1.0.1
     # via
     #   -r requirements/base.in
     #   zgw-consumers
