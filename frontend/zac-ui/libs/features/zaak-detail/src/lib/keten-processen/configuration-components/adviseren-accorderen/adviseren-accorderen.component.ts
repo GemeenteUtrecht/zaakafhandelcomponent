@@ -6,7 +6,7 @@ import { Result } from '../../../../models/user-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import { ReadWriteDocument } from '../../../documenten/documenten.interface';
+import {ReadWriteDocument} from "@gu/models";
 
 @Component({
   selector: 'gu-config-adviseren-accorderen',

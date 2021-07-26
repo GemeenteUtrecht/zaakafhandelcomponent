@@ -3,9 +3,8 @@ import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
 import { AdviceForm } from '../../models/advice-form';
 import { HttpResponse } from '@angular/common/http';
-import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
 import { CloseDocument } from '../../models/close-document';
-import { Zaak } from '@gu/models';
+import {DocumentUrls, ReadWriteDocument} from "@gu/models";
 
 @Injectable({
   providedIn: 'root'
@@ -20,10 +19,6 @@ export class AdviceService {
       observe: 'response' as 'response'
     }
     return this.http.Get<any>(endpoint, options);
-  }
-
-  getZaakDetail(bronorganisatie: string, identificatie: string): Observable<Zaak> {
-    return this.http.Get<Zaak>(encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`));
   }
 
   postAdvice(formData: AdviceForm, uuid: string): Observable<AdviceForm> {

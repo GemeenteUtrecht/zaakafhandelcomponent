@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {GerelateerdeObjectenService} from "./gerelateerde-objecten.service";
 import {Table} from "@gu/models";
 import {GroupGerelateerdeObjecten, GerelateerdeObject} from '../../models/group-gerelateerde-objecten';
+import {ZaakService} from "@gu/services";
 
 @Component({
   selector: 'gu-gerelateerde-objecten',
@@ -21,7 +21,10 @@ export class GerelateerdeObjectenComponent implements OnInit {
   /* Each item in the array contains the label of the objecttype and a table with the objects of that type */
   tablesData: Array<object>;
 
-  constructor(private gerelateerdeObjectenService: GerelateerdeObjectenService) { }
+  constructor(
+    private zaakService: ZaakService,
+  ) {
+  }
 
   ngOnInit(): void {
     this.fetchRelatedObjects();
@@ -33,7 +36,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
   fetchRelatedObjects() {
     this.isLoading = true;
 
-    this.gerelateerdeObjectenService.getRelatedObjects(
+    this.zaakService.listRelatedObjects(
       this.bronorganisatie,
       this.identificatie
     ).subscribe(

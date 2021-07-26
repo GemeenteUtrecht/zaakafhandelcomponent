@@ -5,13 +5,13 @@ import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm } from '../../models/advice-form';
 import { ReviewRequest } from '../../models/review-request';
-import { RowData, Table, Zaak } from '@gu/models';
+import {DocumentUrls, ReadWriteDocument, RowData, Table, Zaak} from '@gu/models';
 import { Review } from '../../models/review';
 import { ZaakDocument } from '../../models/zaak-document';
-import { DocumentUrls, ReadWriteDocument } from '../../../../zaak-detail/src/lib/documenten/documenten.interface';
 import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+import {ZaakService} from '@gu/services'
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -57,6 +57,7 @@ export class AdviceComponent implements OnInit {
     private fb: FormBuilder,
     private adviceService: AdviceService,
     private route: ActivatedRoute,
+    private zaakService: ZaakService,
   ) { }
 
   ngOnInit(): void {
@@ -111,7 +112,7 @@ export class AdviceComponent implements OnInit {
   }
 
   getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
-    return this.adviceService.getZaakDetail(bronorganisatie, identificatie)
+    return this.zaakService.retrieveCaseDetails(bronorganisatie, identificatie)
       .pipe(
         switchMap(zaak => {
           this.zaakData = zaak;

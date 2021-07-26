@@ -1,19 +1,15 @@
-import { Injectable } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
-import { Observable } from 'rxjs';
-import { User, Zaak } from '@gu/models';
-import { Activity } from '../models/activity';
+import {Injectable} from '@angular/core';
+import {Observable} from 'rxjs';
+import {User} from '@gu/models';
+import {ApplicationHttpClient} from '@gu/services';
+import {Activity} from '../models/activity';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FeaturesZaakDetailService {
 
-  constructor(private http: ApplicationHttpClient) { }
-
-  getInformation(bronorganisatie, identificatie): Observable<Zaak> {
-    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`);
-    return this.http.Get<Zaak>(endpoint);
+  constructor(private http: ApplicationHttpClient) {
   }
 
   getActivities(zaakUrl): Observable<Activity[]> {

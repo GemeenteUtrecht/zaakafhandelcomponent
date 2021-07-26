@@ -2,10 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ActiviteitenService } from './activiteiten.service';
 import { Activity } from '../../models/activity';
 import { first } from 'rxjs/operators';
-import { User, ShortDocument } from '@gu/models';
+import {User, ShortDocument, ReadWriteDocument} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Result } from '../../models/user-search';
-import { Document, ReadWriteDocument } from '../documenten/documenten.interface';
+import {Document} from '@gu/models';
 
 @Component({
   selector: 'gu-activiteiten',

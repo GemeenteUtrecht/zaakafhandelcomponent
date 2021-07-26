@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ReadWriteDocument } from './documenten.interface';
-import { Document } from './documenten.interface';
+import {ReadWriteDocument} from "@gu/models";
+import { ApplicationHttpClient } from '@gu/services';
 
 @Injectable({
   providedIn: 'root'
@@ -11,11 +9,6 @@ import { Document } from './documenten.interface';
 export class DocumentenService {
 
   constructor(private http: ApplicationHttpClient) { }
-
-  getDocuments(bronorganisatie, identificatie): Observable<Document[]> {
-    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/documents`);
-    return this.http.Get<Document[]>(endpoint);
-  }
 
   readDocument(readUrl: string): Observable<ReadWriteDocument> {
     const endpoint = encodeURI(readUrl);
@@ -35,10 +28,5 @@ export class DocumentenService {
   getConfidentiality(): Observable<any> {
     const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
     return this.http.Get<any>(endpoint);
-  }
-
-  patchConfidentiality(bronorganisatie, identificatie, formData): Observable<any> {
-    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`);
-    return this.http.Patch<any>(endpoint, formData);
   }
 }

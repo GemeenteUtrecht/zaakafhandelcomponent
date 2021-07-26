@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { ReviewRequest } from '../../models/review-request';
-import { ApprovalService } from './approval.service';
-import { RowData, Table, Zaak } from '@gu/models';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApprovalForm } from '../../models/approval-form';
-import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, switchMap, tap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import {Component, OnInit} from '@angular/core';
+import {DatePipe} from '@angular/common';
+import {ReviewRequest} from '../../models/review-request';
+import {ApprovalService} from './approval.service';
+import {RowData, Table, Zaak} from '@gu/models';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {ApprovalForm} from '../../models/approval-form';
+import {ActivatedRoute} from '@angular/router';
+import {catchError, switchMap, tap} from 'rxjs/operators';
+import {Observable, of} from 'rxjs';
+import {ZaakService} from "@gu/services";
 
 @Component({
   selector: 'gu-features-kownsl-approval',
@@ -30,7 +31,7 @@ export class ApprovalComponent implements OnInit {
   zaakHasError: boolean;
   errorMessage: string;
 
-  tableData: Table = new Table ([], []);
+  tableData: Table = new Table([], []);
 
   approvalForm: FormGroup;
 
@@ -40,8 +41,9 @@ export class ApprovalComponent implements OnInit {
     private fb: FormBuilder,
     private approvalService: ApprovalService,
     private route: ActivatedRoute,
-    private router: Router
-  ) { }
+    private zaakService: ZaakService,
+  ) {
+  }
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
@@ -60,7 +62,7 @@ export class ApprovalComponent implements OnInit {
     this.isLoading = true;
     this.approvalService.getApproval(this.uuid)
       .pipe(
-        tap( res => {
+        tap(res => {
           this.setLayout(res);
         }),
         catchError(res => {
@@ -70,11 +72,11 @@ export class ApprovalComponent implements OnInit {
           return of(null)
         }),
         switchMap(res => {
-          const { zaak } = res?.body;
+          const {zaak} = res?.body;
           return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
         })
       )
-      .subscribe( () => {
+      .subscribe(() => {
         this.isLoading = false;
       }, error => {
         this.isLoading = false;
@@ -95,7 +97,7 @@ export class ApprovalComponent implements OnInit {
   }
 
   getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
-    return this.approvalService.getZaakDetail(bronorganisatie, identificatie)
+    return this.zaakService.retrieveCaseDetails(bronorganisatie, identificatie)
       .pipe(
         switchMap(zaak => {
           this.zaakData = zaak;
@@ -117,7 +119,7 @@ export class ApprovalComponent implements OnInit {
     const tableData: Table = new Table(['Accordeur', 'Gedaan op', 'Akkoord'], []);
 
     // Add table body data
-    tableData.bodyData = approvalData.reviews.map( review => {
+    tableData.bodyData = approvalData.reviews.map(review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const date = this.pipe.transform(review.created, 'short');
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';

@@ -1,8 +1,17 @@
 import {Component, Input, OnInit, OnChanges} from '@angular/core';
-import {InformatieService} from './informatie.service';
 import {Zaak} from '@gu/models';
-import {FieldConfiguration} from "../form/field";
+import {FieldConfiguration} from '../form/field';
+import {InformatieService} from './informatie.service';
+import {ZaakService} from "@gu/services";
 
+/**
+ * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
+ *
+ * Shows case (zaak) informatie and allows inline editing.
+ *
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ */
 @Component({
   selector: 'gu-informatie',
   templateUrl: './informatie.component.html',
@@ -11,61 +20,28 @@ import {FieldConfiguration} from "../form/field";
 export class InformatieComponent implements OnInit, OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
-  @Input() zaakData: Zaak;
 
   /** @type {boolean} Whether this component is loading. */
   isLoading: boolean;
 
-  /** @type {Object[]} The properties to display as part of the form. */
-  properties: Array<Object>;
-
   /** @type {Object[]} The confidentiality choices. */
   confidentialityChoices: Array<{ label: string, value: string }>;
 
-  constructor(private informatieService: InformatieService) {}
+  /** @type {Object[]} The properties to display as part of the form. */
+  properties: Array<Object>;
 
-  ngOnInit() {
-    this.fetchConfidentialityChoices();
+  /** @type {Zaak} The zaak object. */
+  zaak: Zaak = null;
+
+  constructor(
+    private informatieService: InformatieService,
+    private zaakService: ZaakService,
+  ) {
   }
 
-  ngOnChanges(): void {
-    this.fetchProperties();
-  };
-
-  /**
-   * Fetches the confidentiality choices
-   */
-  fetchConfidentialityChoices() {
-    this.isLoading = true;
-
-    this.informatieService.getConfidentiality().subscribe(
-
-      (data) => {
-        this.confidentialityChoices = data;
-        this.isLoading = false;
-      },
-      (error) => {
-        console.error(error);
-        this.isLoading = false;
-      })
-  }
-
-  /**
-   * Fetches the properties to show (read
-   */
-  fetchProperties() {
-    this.isLoading = true;
-    this.informatieService.getProperties(this.bronorganisatie, this.identificatie).subscribe(
-
-      (data) => {
-        this.properties = data;
-        this.isLoading = false;
-
-      }, (error) => {
-        console.error(error);
-        this.isLoading = false;
-      })
-  }
+  //
+  // Getters / setters.
+  //
 
   /**
    * Returns the field configurations for the form..
@@ -88,21 +64,21 @@ export class InformatieComponent implements OnInit, OnChanges {
       {
         label: 'Vertrouwelijkheidaanduiding',
         name: 'vertrouwelijkheidaanduiding',
-        value: this.zaakData.vertrouwelijkheidaanduiding,
+        value: this.zaak.vertrouwelijkheidaanduiding,
         choices: this.confidentialityChoices,
       },
       {
         label: 'Omschrijving',
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
-        value: this.zaakData.omschrijving,
+        value: this.zaak.omschrijving,
       },
       {
         label: 'Toelichting',
         placeholder: ' ',
         name: 'toelichting',
         required: false,
-        value: this.zaakData.toelichting,
+        value: this.zaak.toelichting,
       },
       {
         label: 'reden',
@@ -117,12 +93,91 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Returns the field configurations for the (readonly) properties.
    */
   get propertyFieldConfigurations(): Array<FieldConfiguration> {
-    return this.properties.map((property:{eigenschap: {naam: string}, value: string}) => ({
+    return this.properties.map((property: { eigenschap: { naam: string }, value: string }) => ({
       label: property.eigenschap.naam,
       readonly: true,
       value: property.value,
     }))
   }
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit() {
+    this.fetchConfidentialityChoices();
+  }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(): void {
+    this.getContextData();
+  };
+
+  //
+  // Context.
+  //
+
+  /**
+   * Fetches the properties to show in the form.
+   */
+  getContextData() {
+    this.fetchZaak();
+    this.isLoading = true;
+    this.zaakService.listCaseProperties(this.bronorganisatie, this.identificatie).subscribe(
+      (data) => {
+        this.properties = data;
+        this.isLoading = false;
+
+      }, (error) => {
+        console.error(error);
+        this.isLoading = false;
+      })
+  }
+
+  /**
+   * Fetches the confidentiality choices
+   */
+  fetchConfidentialityChoices() {
+    this.isLoading = true;
+
+    this.informatieService.getConfidentiality().subscribe(
+      (data) => {
+        this.confidentialityChoices = data;
+        this.isLoading = false;
+      },
+      (error) => {
+        console.error(error);
+        this.isLoading = false;
+      })
+  }
+
+  /**
+   * Updates this.zaakData with latest values from API.
+   */
+  fetchZaak() {
+    this.isLoading = true;
+    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
+      (zaak: Zaak) => {
+        this.zaak = zaak;
+        this.isLoading = false;
+      },
+      (error: any) => {
+        console.error(error);
+        this.isLoading = false;
+      }
+    );
+  }
+
+  //
+  // Events.
+  //
 
   /***
    * Submits the form.
@@ -130,13 +185,13 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   submitForm(data) {
     this.isLoading = true
-    this.informatieService.patchCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
-
+    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
+        this.fetchZaak();
         this.isLoading = false
       },
 
-      (error) => {
+      (error: any) => {
         console.error(error);
         this.isLoading = false
       }

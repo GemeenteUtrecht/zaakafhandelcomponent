@@ -3,8 +3,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
-import { User } from '@gu/models';
-import { ReadWriteDocument } from '../documenten/documenten.interface';
+import {ReadWriteDocument, User} from '@gu/models';
 
 export interface SendMessageForm {
   processInstanceId: string;
