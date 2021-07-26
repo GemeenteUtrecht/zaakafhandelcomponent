@@ -12,6 +12,7 @@
       <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
     </ng-template>
 
+    <!-- Summary -->
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
         <p class="p--marginsmall">{{zaakData.identificatie}}</p>
@@ -23,30 +24,29 @@
 
     <!-- Main content -->
     <ng-template [ngIf]="!!approvalData && !isLoading">
-      <section>
-        <div class="row no-gutters">
-          <div class="col-1 mr-2">
-            <p class="p p--bold">Ingediend op:</p>
-          </div>
-          <div class="col-6">
-            <p class="p">{{approvalData.created | date:'fullDate'}}</p>
-          </div>
+      <div class="row no-gutters">
+        <div class="col-1 mr-2">
+          <p class="p p--bold">Ingediend op:</p>
         </div>
-        <div class="row no-gutters">
-          <div class="col-1 mr-2">
-            <p class="p p--bold">Toelichting:</p>
-          </div>
-          <div class="col-6">
-            <p class="p p--nomargin">
-              {{approvalData.toelichting}}
-            </p>
-          </div>
+        <div class="col-6">
+          <p class="p">{{approvalData.created | date:'fullDate'}}</p>
         </div>
-      </section>
+      </div>
+
+      <div class="row no-gutters">
+        <div class="col-1 mr-2">
+          <p class="p p--bold">Toelichting:</p>
+        </div>
+        <div class="col-6">
+          <p class="p p--nomargin">
+            {{approvalData.toelichting}}
+          </p>
+        </div>
+      </div>
 
       <!-- Collapsible table with previous approvals -->
       <ng-template [ngIf]="!!approvalData.reviews">
-        <section *ngIf="approvalData.reviews.length > 0">
+        <section *ngIf="approvalData.reviews.length > 0" class="row no-gutters">
           <h2 class="mb-4">Vorige accorderingen</h2>
           <gu-table
                   [table]="tableData"
@@ -54,8 +54,9 @@
           ></gu-table>
         </section>
       </ng-template>
+
       <!-- Documents -->
-      <ng-template [ngIf]="!!approvalData.documents">
+      <ng-template [ngIf]="!!approvalData.documents" class="row no-gutters">
         <section *ngIf="approvalData.documents.length > 0">
           <h2 class="mb-4">Documenten</h2>
           <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
@@ -69,7 +70,8 @@
 
       <!-- Approval form -->
       <form [formGroup]="approvalForm">
-        <section>
+        <section class="row no-gutters">
+          <div class="col-6">
           <label class="h2 d-inline-block">Antwoord</label>
           <div class="row">
             <div class="col-12">
@@ -79,15 +81,20 @@
               <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approved"></gu-radio>
             </div>
           </div>
+        </div>
         </section>
 
-        <section>
+        <section class="row no-gutters">
+          <div class="col-6">
           <label class="h2 d-inline-block mb-0" for="textarea_approval">Toelichting</label>
           <span class="label label--optional">optioneel</span>
           <span class="label label--hint">Toelichting op uw antwoord</span>
           <textarea formControlName="toelichting" class="mb-0" id="textarea_approval"></textarea>
+        </div>
         </section>
-        <div class="d-flex justify-content-end">
+
+        <section class="row no-gutters">
+          <div class="col-6 d-flex justify-content-end">
           <button gu-button
             [disabled]="!approvalForm.valid"
             [loading]="isSubmitting"
@@ -97,9 +104,13 @@
             Accordering bevestigen
           </button>
         </div>
-        <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+        </section>
+
+        <section class="row no-gutters">
+          <div *ngIf="submitFailed" class="col-6 d-flex justify-content-end mt-2">
           <gu-message [message]="errorMessage" type="warn"></gu-message>
         </div>
+        </section>
       </form>
     </ng-template>
   </ng-template>
