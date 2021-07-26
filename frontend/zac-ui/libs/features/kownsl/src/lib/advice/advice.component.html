@@ -33,6 +33,15 @@
         </div>
       </div>
 
+      <div *ngIf="adviceData.created" class="row no-gutters">
+        <div class="col-1 mr-2">
+          <p class="p p--bold">Ingediend door:</p>
+        </div>
+        <div class="col-6">
+          <p class="p">{{adviceData.requester}}</p>
+        </div>
+      </div>
+
       <div *ngIf="adviceData.toelichting" class="row no-gutters">
         <div class="col-1 mr-2">
           <p class="p p--bold">Toelichting:</p>
