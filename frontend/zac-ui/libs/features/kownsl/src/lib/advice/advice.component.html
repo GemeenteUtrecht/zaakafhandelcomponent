@@ -15,7 +15,6 @@
     <!-- Summary -->
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
-        <p class="p--marginsmall">{{zaakData.identificatie}}</p>
         <h4>{{zaakData.zaaktype.omschrijving}}</h4>
         <p class="p--marginsmall">{{zaakData.omschrijving}}</p>
         <p class="p--marginsmall">{{zaakData.toelichting}}</p>
@@ -24,32 +23,43 @@
 
     <!-- Main content -->
     <ng-template [ngIf]="!!adviceData && !isLoading">
-      <div *ngIf="adviceData.created" class="row no-gutters">
-        <div class="col-1 mr-2">
-          <p class="p p--bold">Ingediend op:</p>
+      <div class="mb-4">
+        <div *ngIf="zaakData.identificatie" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Identificatie:</p>
+          </div>
+          <div class="col-6">
+            <p class="p">{{zaakData.identificatie}}</p>
+          </div>
         </div>
-        <div class="col-6">
-          <p class="p">{{adviceData.created | date:'fullDate'}}</p>
-        </div>
-      </div>
 
-      <div *ngIf="adviceData.created" class="row no-gutters">
-        <div class="col-1 mr-2">
-          <p class="p p--bold">Ingediend door:</p>
+        <div *ngIf="adviceData.created" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Ingediend op:</p>
+          </div>
+          <div class="col-6">
+            <p class="p">{{adviceData.created | date:'fullDate'}}</p>
+          </div>
         </div>
-        <div class="col-6">
-          <p class="p">{{adviceData.requester}}</p>
-        </div>
-      </div>
 
-      <div *ngIf="adviceData.toelichting" class="row no-gutters">
-        <div class="col-1 mr-2">
-          <p class="p p--bold">Toelichting:</p>
+        <div *ngIf="adviceData.created" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Ingediend door:</p>
+          </div>
+          <div class="col-6">
+            <p class="p">{{adviceData.requester}}</p>
+          </div>
         </div>
-        <div class="col-6">
-          <p class="p p--nomargin">
-            {{adviceData.toelichting}}
-          </p>
+
+        <div *ngIf="adviceData.toelichting" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Toelichting:</p>
+          </div>
+          <div class="col-6">
+            <p class="p p--nomargin">
+              {{adviceData.toelichting}}
+            </p>
+          </div>
         </div>
       </div>
 
