@@ -3,7 +3,8 @@ import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
-import {ReadWriteDocument, User} from '@gu/models';
+import { ReadWriteDocument, Task, User } from '@gu/models';
+
 
 export interface SendMessageForm {
   processInstanceId: string;
@@ -16,6 +17,59 @@ export interface SendMessageForm {
 export class KetenProcessenService {
 
   constructor(private http: ApplicationHttpClient) { }
+
+  /**
+   * Returns whether task is assigned.
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskAssigned(task: Task): boolean {
+    return Boolean(task.assignee)
+  }
+
+  /**
+   * Returns whether task is assigned to user.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskAssignedToUser(user: User, task: Task): boolean {
+    return this.isTaskAssigned(task) && user.username === task.assignee.username
+  }
+
+  /**
+   * Returns whether user can perform any actions on task.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskActionableByUser(user: User, task: Task): boolean {
+    return this.isUserAllowToExecuteTask(user, task) || this.isUserAllowToAssignTask(user, task)
+  }
+
+  /**
+   * Returns whether user is allowed to execute task.
+   * @param {Task} task
+   * @param {User} user
+   * @return {boolean}
+   */
+  isUserAllowToExecuteTask(user: User, task: Task): boolean {
+    if (task.assignee === null || task.assignee.username === null) {
+      return true;
+    }
+
+    return this.isTaskAssignedToUser(user, task);
+  }
+
+  /**
+   * Returns whether user is allowed to assign task.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isUserAllowToAssignTask(user: User, task: Task): boolean {
+    return user.username && !task.assignee
+  }
 
   getProcesses(mainZaakUrl: string): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);

@@ -68,6 +68,14 @@ gu-modal {
 
     z-index: 99;
   }
+
+  .row {
+    left: -15px;
+    margin-left: 0;
+    margin-right: 0;
+    position: relative;
+    width: calc(100% + 15px);
+  }
 }
 
 body.gu-modal-open {

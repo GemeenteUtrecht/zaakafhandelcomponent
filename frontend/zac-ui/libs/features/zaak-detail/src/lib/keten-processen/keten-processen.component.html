@@ -39,10 +39,10 @@
 
               <gu-chip *ngIf="!!task.assignee"
                        [color]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
-                       [icon]="isTaskActionableByUser(currentUser, task) ? 'edit' : null"
-                       (click)="isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
+                       [icon]="ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'edit' : null"
+                       (click)="ketenProcessenService.isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
                        class="d-inline-block mb-2"
-                       [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
+                       [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
                >
                 <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                   {{task.assignee.firstName}} {{task.assignee.lastName}}
@@ -56,7 +56,7 @@
 
             <!-- Actions -->
             <div class="d-flex flex-column justify-content-center">
-              <ng-container *ngIf="isUserAllowToExecuteTask(currentUser, task) || isUserAllowToAssignTask(currentUser, task)">
+              <ng-container *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, task) || ketenProcessenService.isUserAllowToAssignTask(currentUser, task)">
                 <button gu-button class="mb-2" type="secondary" size="small" (click)="executeTask(task.id)">
                   Behandelen
                 </button>
@@ -76,12 +76,12 @@
               <div class="taak__detail mr-md-2">
                 <label class="label label--date">{{task.created | date:'fullDate'}}</label>
                 <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
-                <gu-chip *ngIf="isTaskAssigned(task)"
-                         [color]="isTaskAssignedToUser(currentUser, task) ? 'primary' : 'tertiary'"
-                         [icon]="task.name !== ('Adviseren' || 'Accorderen') && isTaskActionableByUser(currentUser, task) ? 'edit' : null"
-                         (click)="task.name !== ('Adviseren' || 'Accorderen') && isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
+                <gu-chip *ngIf="ketenProcessenService.isTaskAssigned(task)"
+                         [color]="ketenProcessenService.isTaskAssignedToUser(currentUser, task) ? 'primary' : 'tertiary'"
+                         [icon]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'edit' : null"
+                         (click)="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
                          class="d-inline-block mb-2"
-                         [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
+                         [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
                 >
                   <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                     {{task.assignee.firstName}} {{task.assignee.lastName}}
@@ -94,7 +94,7 @@
 
                 <!-- Actions -->
                 <div class="d-flex flex-column justify-content-center">
-                  <ng-container *ngIf="isUserAllowToExecuteTask(currentUser, task) || isUserAllowToAssignTask(currentUser, task)">
+                  <ng-container *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, task) || ketenProcessenService.isUserAllowToAssignTask(currentUser, task)">
                     <button gu-button class="mb-2" type="secondary" size="small" (click)="executeTask(task.id)">
                       Behandelen
                     </button>
@@ -134,7 +134,7 @@
     <mat-tab-group mat-align-tabs="center">
 
       <!-- Execute task -->
-      <mat-tab label="Uitvoeren" *ngIf="isUserAllowToExecuteTask(currentUser, taskContextData.task)">
+      <mat-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, taskContextData.task)">
         <div class="pt-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
@@ -152,7 +152,7 @@
       </mat-tab>
 
       <!-- Assign task -->
-      <mat-tab label="Toewijzen" *ngIf="isUserAllowToAssignTask(currentUser, taskContextData.task)">
+      <mat-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowToAssignTask(currentUser, taskContextData.task)">
         <div class="pt-4">
           <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (reload)="fetchProcesses()"></gu-assign-task>
         </div>
