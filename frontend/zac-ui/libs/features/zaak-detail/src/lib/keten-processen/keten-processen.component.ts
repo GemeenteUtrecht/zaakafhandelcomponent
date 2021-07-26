@@ -100,16 +100,35 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
 
   /**
    * Fetch all the related processes from the zaak.
+   * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    */
-  fetchProcesses(): void {
+  fetchProcesses(openTask: boolean = false): void {
+    // Known tasks after initialization.
+    const taskIds = openTask && this.data && this.data.length ? this.data[0].tasks.map(task => task.id) : null;
+
     this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
     this.hasError = true;
+
+    // Fetch processes.
     this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe( data => {
+      // Update data.
       this.data = data;
       this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
+
+      // Execute newly created task.
+      if(openTask && taskIds && data && data.length) {
+        // Find first task if with id not in taskIds.
+        const newTask = data[0].tasks
+            .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
+            .find(task => taskIds.indexOf(task.id) === -1);
+
+        if (newTask) {
+          this.executeTask(newTask.id);
+        }
+      }
     }, errorRes => {
       this.errorMessage = errorRes.error.detail;
       this.hasError = true;
@@ -128,8 +147,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       processInstanceId: this.processInstanceId,
       message: message
     }
-    this.ketenProcessenService.sendMessage(formData).subscribe( () => {
-      this.fetchProcesses();
+    this.ketenProcessenService.sendMessage(formData).subscribe( (result) => {
+      this.fetchProcesses(true);
     }, errorRes => {
       this.sendMessageErrorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
       this.sendMessageHasError = true;
