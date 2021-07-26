@@ -3,9 +3,8 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Observable } from 'rxjs';
 import { Result, UserSearch } from '../../../models/user-search';
 import { ApplicationHttpClient } from '@gu/services';
-import { Task } from '../../../models/keten-processen'
-import { User } from '@gu/models';
 import { ModalService } from '@gu/components';
+import { Task, User } from '@gu/models';
 
 @Component({
   selector: 'gu-assign-task',

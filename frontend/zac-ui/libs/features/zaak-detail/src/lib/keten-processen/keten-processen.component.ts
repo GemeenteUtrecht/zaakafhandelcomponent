@@ -4,8 +4,8 @@ import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components'
 import { TaskContextData } from '../../models/task-context';
 import { KetenProcessenService } from './keten-processen.service';
-import { KetenProcessen, Task } from '../../models/keten-processen';
-import { User } from '@gu/models';
+import { KetenProcessen } from '../../models/keten-processen';
+import { Task, User } from '@gu/models';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -51,9 +51,6 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   contextHasError: boolean;
   contextErrorMessage: string;
 
-  // Assign task
-  assignTaskTask: Task;
-
   doRedirectTarget: '_blank' | '_self';
 
   constructor(
@@ -90,6 +87,63 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   }
 
   /**
+   * Returns whether task is assigned.
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskAssigned(task: Task): boolean {
+    return Boolean(task.assignee)
+  }
+
+  /**
+   * Returns whether task is assigned to user.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskAssignedToUser(user: User, task: Task): boolean {
+    return user.username === task.assignee.username
+  }
+
+  /**
+   * Returns whether user can perform any actions on task.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isTaskActionableByUser(user: User, task: Task): boolean {
+    return this.isUserAllowToExecuteTask(user, task) || this.isUserAllowToAssignTask(user, task)
+  }
+
+  /**
+   * Returns whether user is allowed to execute task.
+   * @param {Task} task
+   * @param {User} user
+   * @return {boolean}
+   */
+  isUserAllowToExecuteTask(user: User, task: Task): boolean {
+    try {
+      if (task.assignee.username === null) {
+        return true;
+      }
+
+      return this.isTaskAssignedToUser(user, task);
+    } catch(e) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns whether user is allowed to assign task.
+   * @param {User} user
+   * @param {Task} task
+   * @return {boolean}
+   */
+  isUserAllowToAssignTask(user: User, task: Task): boolean {
+    return user.username && !task.assignee
+  }
+
+  /**
    * Fetches the current user.
    */
   fetchCurrentUser(): void {
@@ -122,8 +176,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       if(openTask && taskIds && data && data.length) {
         // Find first task if with id not in taskIds.
         const newTask = data[0].tasks
-            .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
-            .find(task => taskIds.indexOf(task.id) === -1);
+            .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
+            .find((task: Task) => taskIds.indexOf(task.id) === -1);
 
         if (newTask) {
           this.executeTask(newTask.id);
@@ -162,16 +216,6 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
    */
   executeTask(taskId: string): void {
     this.fetchFormLayout(taskId);
-  }
-
-  /**
-   * Assign a selected task to user.
-   * Opens up a modal to assign a user to the task.
-   * @param {Task} task
-   */
-  assignTask(task: Task) {
-    this.assignTaskTask = task;
-    this.modalService.open('assignTaskModal');
   }
 
   /**
