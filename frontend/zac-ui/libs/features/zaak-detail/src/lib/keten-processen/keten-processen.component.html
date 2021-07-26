@@ -21,7 +21,9 @@
     </div>
 
     <!-- Feedback/error messages -->
-    <gu-message *ngIf="sendMessageHasError" type="warn" message="{{sendMessageErrorMessage}}"></gu-message>
+    <div *ngIf="sendMessageHasError" class="mb-4">
+      <gu-message type="warn" message="{{sendMessageErrorMessage}}"></gu-message>
+    </div>
 
     <!-- Task lists -->
     <div class="keten-processen__taken">
