@@ -25,18 +25,18 @@
     <ng-template [ngIf]="!!adviceData && !isLoading">
       <section>
         <div class="row no-gutters">
-          <div class="col-4">
+          <div class="col-1 mr-2">
             <p class="p p--bold">Ingediend op:</p>
           </div>
-          <div class="col-8">
+          <div class="col-6">
             <p class="p">{{adviceData.created | date:'fullDate'}}</p>
           </div>
         </div>
         <div class="row no-gutters">
-          <div class="col-4">
+          <div class="col-1 mr-2">
             <p class="p p--bold">Toelichting:</p>
           </div>
-          <div class="col-8">
+          <div class="col-6">
             <p class="p p--nomargin">
               {{adviceData.toelichting}}
             </p>
