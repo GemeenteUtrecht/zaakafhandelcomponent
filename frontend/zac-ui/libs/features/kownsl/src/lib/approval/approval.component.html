@@ -24,7 +24,7 @@
 
     <!-- Main content -->
     <ng-template [ngIf]="!!approvalData && !isLoading">
-      <div class="row no-gutters">
+      <div *ngIf="approvalData.created" class="row no-gutters">
         <div class="col-1 mr-2">
           <p class="p p--bold">Ingediend op:</p>
         </div>
@@ -33,10 +33,11 @@
         </div>
       </div>
 
-      <div class="row no-gutters">
+      <div *ngIf="approvalData.toelichting" class="row no-gutters">
         <div class="col-1 mr-2">
           <p class="p p--bold">Toelichting:</p>
         </div>
+
         <div class="col-6">
           <p class="p p--nomargin">
             {{approvalData.toelichting}}
@@ -45,7 +46,7 @@
       </div>
 
       <!-- Collapsible table with previous approvals -->
-      <ng-template [ngIf]="!!approvalData.reviews">
+      <ng-template [ngIf]="!!approvalData.reviews && approvalData.reviews.length > 0">
         <section *ngIf="approvalData.reviews.length > 0" class="row no-gutters">
           <h2 class="mb-4">Vorige accorderingen</h2>
           <gu-table
@@ -56,7 +57,7 @@
       </ng-template>
 
       <!-- Documents -->
-      <ng-template [ngIf]="!!approvalData.documents" class="row no-gutters">
+      <ng-template [ngIf]="!!approvalData.documents && approvalData.documents.length > 0" class="row no-gutters">
         <section *ngIf="approvalData.documents.length > 0">
           <h2 class="mb-4">Documenten</h2>
           <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
