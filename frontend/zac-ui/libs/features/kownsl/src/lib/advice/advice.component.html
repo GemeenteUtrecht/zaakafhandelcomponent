@@ -14,12 +14,10 @@
 
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
-        <div class="card card--blue">
-          <p class="p--marginsmall">{{zaakData.identificatie}}</p>
-          <h4>{{zaakData.zaaktype.omschrijving}}</h4>
-          <p class="p--marginsmall">{{zaakData.omschrijving}}</p>
-          <p class="p--marginsmall">{{zaakData.toelichting}}</p>
-        </div>
+        <p class="p--marginsmall">{{zaakData.identificatie}}</p>
+        <h4>{{zaakData.zaaktype.omschrijving}}</h4>
+        <p class="p--marginsmall">{{zaakData.omschrijving}}</p>
+        <p class="p--marginsmall">{{zaakData.toelichting}}</p>
       </div>
     </div>
 
