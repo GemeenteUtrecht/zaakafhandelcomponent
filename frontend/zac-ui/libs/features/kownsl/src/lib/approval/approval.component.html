@@ -9,7 +9,9 @@
 
     <!-- Error -->
     <ng-template [ngIf]="hasError && !isLoading">
-      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      <div class="mb-4">
+        <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      </div>
     </ng-template>
 
     <!-- Summary -->
@@ -24,7 +26,7 @@
     <!-- Main content -->
     <ng-template [ngIf]="!!approvalData && !isLoading">
       <div class="mb-4">
-        <div *ngIf="zaakData.identificatie" class="row no-gutters">
+        <div *ngIf="zaakData?.identificatie" class="row no-gutters">
           <div class="col-1 mr-2">
             <p class="p p--bold">Identificatie:</p>
           </div>

@@ -9,7 +9,9 @@
 
     <!-- Error -->
     <ng-template [ngIf]="hasError && !isLoading && !isSubmitting">
-      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      <div class="mb-4">
+        <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      </div>
     </ng-template>
 
     <!-- Summary -->
