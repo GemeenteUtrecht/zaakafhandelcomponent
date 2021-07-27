@@ -18,8 +18,6 @@ export class FeaturesReportsService {
   getReportCases(id, sortData): Observable<ReportCases> {
     const sortOrder = sortData?.order === 'desc' ? '-' : '';
     const sortValue = sortData ? tableHeadMapping[sortData.value] : '';
-    console.log(tableHeadMapping);
-    console.log(sortValue);
     const sortParameter = sortData ? `?ordering=${sortOrder}${sortValue}` : '';
     const endpoint = encodeURI(`/api/search/reports/${id}/results/${sortParameter}`);
     return this.http.Get<ReportCases>(endpoint);

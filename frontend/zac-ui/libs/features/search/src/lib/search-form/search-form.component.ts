@@ -6,7 +6,16 @@ import { FeaturesSearchService } from '../features-search.service';
 import { Search } from '../../models/search';
 import { Zaak, TableSort } from '@gu/models';
 import { Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 
+/**
+ * This component allows the user to search Zaken dynamically.
+ * Selecting a zaaktype will show its corresponding properties,
+ * which can be choosed to further refine the search query.
+ *
+ * The user can also save the given search input as a report by
+ * selecting the checkbox and give te report a name.
+ */
 @Component({
   selector: 'gu-search-form',
   templateUrl: './search-form.component.html',
@@ -29,7 +38,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
   hasError: boolean;
   errorMessage: string;
 
-  showQueryNameField: boolean;
+  showReportNameField: boolean;
   reportName: string;
   saveReportIsSuccess: boolean;
 
@@ -37,6 +46,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private searchService: FeaturesSearchService,
     private router: Router,
+    private datePipe: DatePipe
   ) { }
 
   ngOnInit(): void {
@@ -45,7 +55,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
       omschrijving: [''],
       eigenschapnaam: [''],
       eigenschapwaarde: [''],
-      saveQuery: [''],
+      saveReport: [''],
       queryName: ['']
     })
     this.fetchZaaktypen();
@@ -57,6 +67,9 @@ export class SearchFormComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Fetch all the different zaak types.
+   */
   fetchZaaktypen() {
     this.isLoading = true;
     this.hasError = false;
@@ -78,6 +91,10 @@ export class SearchFormComponent implements OnInit, OnChanges {
     this.router.navigate([zaak.bronorganisatie, zaak.identificatie]);
   }
 
+  /**
+   * Fetch the properties of a case type based on the selection.
+   * @param {Result} zaaktype
+   */
   onZaaktypeSelect(zaaktype: Result) {
     if (zaaktype) {
       this.isLoading = true;
@@ -100,33 +117,38 @@ export class SearchFormComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Set the selected property value
+   * @param {ZaaktypeEigenschap} property
+   */
   onPropertySelect(property: ZaaktypeEigenschap) {
     this.selectedPropertyValue = property;
   }
 
+
+  /**
+   * Show input for report name and set it as required for the form.
+   */
   onCheckboxChange() {
-    this.saveQueryControl.updateValueAndValidity({ onlySelf: false, emitEvent: true });
-    const sub = this.saveQueryControl.statusChanges.subscribe((res) => {
-      if (this.saveQueryControl.value) {
-        this.showQueryNameField = true;
-        this.queryNameControl.setValidators([Validators.required])
-      } else {
-        this.showQueryNameField = false;
-        this.queryNameControl.clearValidators();
-      }
-      sub.unsubscribe();
-      this.queryNameControl.updateValueAndValidity();
-    });
+    this.saveReportControl.updateValueAndValidity({ onlySelf: false, emitEvent: true });
+    if (this.saveReportControl.value) {
+      this.showReportNameField = true;
+      this.queryNameControl.setValidators([Validators.required])
+    } else {
+      this.showReportNameField = false;
+      this.queryNameControl.clearValidators();
+    }
+    this.queryNameControl.updateValueAndValidity();
   }
 
-  updateFormValidity() {
-    this.saveQueryControl.updateValueAndValidity()
-  }
-
+  /**
+   * Create form data.
+   */
   submitForm() {
     this.hasError = false;
     this.saveReportIsSuccess = false;
 
+    // Check if zaaktype has been filled in
     let zaaktype;
     if (this.zaaktype.value) {
       this.zaaktypenData.forEach( zaaktypeElement => {
@@ -137,11 +159,20 @@ export class SearchFormComponent implements OnInit, OnChanges {
           }
       });
     }
+
+    // Create object for eigenschappen
+    const eigenschapValue =
+      this.selectedPropertyValue.spec.format === 'date' ?
+        this.datePipe.transform(this.eigenschapwaarde.value, "yyyy-MM-dd") :
+        this.eigenschapwaarde.value;
+
     const eigenschappen = {
       [this.eigenschapnaam.value]: {
-        value: this.eigenschapwaarde.value
+        value: eigenschapValue
       }
     }
+
+    // Only add key with values if the values are present
     this.formData = {
       ...zaaktype && {zaaktype: zaaktype},
       ...this.omschrijving.value && {omschrijving: this.omschrijving.value},
@@ -150,13 +181,18 @@ export class SearchFormComponent implements OnInit, OnChanges {
 
     this.postSearchZaken(this.formData)
 
-    console.log(this.saveQueryControl.value);
-    if (this.saveQueryControl.value) {
+    // Check if the user wants to save the search query as a report
+    if (this.saveReportControl.value) {
       this.reportName = this.queryNameControl.value;
       this.postCreateReport(this.reportName, this.formData)
     }
   }
 
+  /**
+   * POST search query.
+   * @param {Search} formData
+   * @param {TableSort} sortData
+   */
   postSearchZaken(formData: Search, sortData?: TableSort) {
     this.isSubmitting = true;
     this.searchService.postSearchZaken(formData, sortData).subscribe(res =>{
@@ -169,6 +205,11 @@ export class SearchFormComponent implements OnInit, OnChanges {
     })
   }
 
+  /**
+   * Save the current search query as a Report.
+   * @param {string} name
+   * @param {Search} query
+   */
   postCreateReport(name: string, query: Search) {
     const formData = {
       name: name,
@@ -177,7 +218,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
     this.searchService.postCreateReport(formData).subscribe(
       () => {
         this.saveReportIsSuccess = true;
-        this.saveQueryControl.patchValue(false);
+        this.saveReportControl.patchValue(false);
         this.queryNameControl.patchValue('');
       },
       error => {
@@ -202,8 +243,8 @@ export class SearchFormComponent implements OnInit, OnChanges {
     return this.searchForm.get('eigenschapwaarde') as FormControl;
   };
 
-  get saveQueryControl(): FormControl {
-    return this.searchForm.get('saveQuery') as FormControl;
+  get saveReportControl(): FormControl {
+    return this.searchForm.get('saveReport') as FormControl;
   };
 
   get queryNameControl(): FormControl {
