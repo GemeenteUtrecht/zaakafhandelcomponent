@@ -4,12 +4,14 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {RouterModule} from '@angular/router';
 
 // Material Components
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
 import {MatIconModule} from '@angular/material/icon';
-import {MatTableModule} from '@angular/material/table';
+import {MatNativeDateModule} from '@angular/material/core';
 import {MatSortModule} from "@angular/material/sort";
-
-// External Components
-import {BsDatepickerModule, BsLocaleService} from 'ngx-bootstrap/datepicker';
+import {MatTableModule} from '@angular/material/table';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -32,7 +34,6 @@ import {ModalComponent} from './components/modal/modal.component';
 import {DatepickerComponent} from './components/datepicker/datepicker.component';
 import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 
 @NgModule({
@@ -40,11 +41,15 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatNativeDateModule,
         MatIconModule,
         MatTableModule,
-        BsDatepickerModule.forRoot(),
         RouterModule,
-        MatSortModule
+        MatSortModule,
+        MatCheckboxModule,
+        MatDatepickerModule
     ],
     declarations: [
         ButtonComponent,
@@ -86,9 +91,6 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
         InputFieldComponent,
         MessageComponent,
         SidenavComponent,
-    ],
-    providers: [
-        BsLocaleService
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

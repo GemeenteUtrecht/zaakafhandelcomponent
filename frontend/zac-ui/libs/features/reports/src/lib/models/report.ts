@@ -1,3 +1,5 @@
+import { Zaaktype } from '@gu/models';
+
 export interface ReportType {
   id: number;
   name: string;
@@ -27,10 +29,12 @@ export interface Eigenschappen {
 
 export interface ReportCase {
   identificatie: string;
+  bronorganisatie: string;
   omschrijving: string;
+  toelichting: string;
   startdatum: string;
   status: string;
-  zaaktypeOmschrijving: string;
+  zaaktype: Zaaktype;
   eigenschappen: Eigenschappen[];
 }
 

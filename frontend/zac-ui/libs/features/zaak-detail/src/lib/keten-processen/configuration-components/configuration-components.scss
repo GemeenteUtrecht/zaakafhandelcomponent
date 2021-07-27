@@ -12,10 +12,10 @@
   .configuration-form {
     margin-bottom: 1.25rem;
   }
+  .configuration-file {
+    border-bottom: 1px solid $border-grey;
+  }
   .configuration-details {
-    border: 1px solid $border-grey;
-    padding: 0.625rem;
-    border-radius: 10px;
     margin-bottom: 0.875rem;
   }
   .step-label {

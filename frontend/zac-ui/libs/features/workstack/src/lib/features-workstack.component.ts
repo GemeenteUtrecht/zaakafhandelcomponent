@@ -97,11 +97,7 @@ export class FeaturesWorkstackComponent implements OnInit {
   }
 
   createRouteLink(zaak: UserTaskZaak, task: Task) {
-    if (task.hasForm) {
-      return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`;
-    } else {
-      return task.executeUrl;
-    }
+    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
   }
 
   createActivityLink(zaak) {

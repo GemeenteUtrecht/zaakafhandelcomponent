@@ -1,11 +1,11 @@
-const tableHead =  ['Zaaknummer', 'Zaaktype', 'Startdatum', 'Omschrijving', 'Status']
+const tableHead =  ['Zaaknummer', 'Zaaktype', 'Datum', 'Status', 'Toelichting']
 
 const tableHeadMapping = {
-  'Zaaknummer': 'identificatie',
-  'Zaaktype': 'zaaktypeOmschrijving',
-  'Startdatum': 'startdatum',
-  'Omschrijving': 'omschrijving',
-  'Status': 'status'
+  'zaaknummer': 'identificatie',
+  'zaaktype': 'zaaktype.omschrijving',
+  'startdatum': 'startdatum',
+  'status': 'status',
+  'toelichting': 'omschrijving'
 }
 
 export { tableHead, tableHeadMapping }

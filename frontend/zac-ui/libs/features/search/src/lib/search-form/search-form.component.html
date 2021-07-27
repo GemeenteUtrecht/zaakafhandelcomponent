@@ -9,7 +9,6 @@
     </div>
   </div>
   <div class="form-group">
-
     <h4>Zoeken</h4>
     <div class="row">
       <div class="col-lg-6">
@@ -59,17 +58,18 @@
         <div class="form-group" *ngIf="eigenschapwaarde">
           <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
             <ng-container *ngSwitchCase="'string'">
-              <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date-time'">
+              <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date'">
                 <gu-input-field type="text"
                                 [control]="eigenschapwaarde"
                                 label="Eigenschapwaarde"
                                 autocomplete="off"
                 ></gu-input-field>
               </ng-container>
-              <ng-container *ngIf="selectedPropertyValue.spec.format === 'date-time'">
+              <ng-container *ngIf="selectedPropertyValue.spec.format === 'date'">
                 <gu-datepicker
                   [control]="eigenschapwaarde"
-                  placeholder="Datum">
+                  label="Datum"
+                  id="searchDatum">
                 </gu-datepicker>
               </ng-container>
             </ng-container>
@@ -85,15 +85,47 @@
       </div>
     </div>
   </ng-container>
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="form-group">
+        <gu-checkbox class="d-inline-block mr-1"
+                     [control]="saveReportControl"
+                     (change)="onCheckboxChange()"
+        >
+          Zoekopdracht opslaan als rapportage
+        </gu-checkbox>
+        <gu-tooltip type="primary" inline="true">
+          <p class="p--nomargin">De ingevulde zoekopdracht kan opgeslagen worden als een <strong>rapportage</strong>. Selecteer het vinkje en geef de rapportage een naam. De opgeslagen rapportage vindt u terug onder het menu <strong>Rapportage</strong>.</p>
+        </gu-tooltip>
+      </div>
+    </div>
+  </div>
+  <div class="row" *ngIf="showReportNameField">
+    <div class="col-lg-4">
+      <div class="form-group">
+        <gu-input-field type="text"
+                        [control]="queryNameControl"
+                        label="Rapportagenaam"
+                        autocomplete="off"
+        ></gu-input-field>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-4">
+      <gu-message class="d-block mb-4" type="success" *ngIf="saveReportIsSuccess">
+        <p class="p--marginsmall">Rapportage <strong>{{reportName}}</strong> is nu opgeslagen onder het menu "Rapportages".</p>
+        <a class="anchor d-inline-block" routerLink='/rapportages'>Naar Rapportages</a>
+        <gu-icon class="d-inline-block">navigate_next</gu-icon>
+      </gu-message>
+    </div>
+  </div>
   <div class="d-flex justify-content-end justify-content-lg-center">
     <button gu-button size="large"
                [disabled]="!searchForm.valid || isSubmitting"
                [loading]="isSubmitting"
                (click)="submitForm()">
-      Zoeken
+      {{showReportNameField ? 'Zoeken en rapportage opslaan' : 'Zoeken'}}
     </button>
   </div>
 </form>
-<gu-message *ngIf="hasError" type="warn" [message]="errorMessage">
-  <a class="anchor" *ngIf="isNotLoggedIn" [href]="loginUrl">Inloggen</a>
-</gu-message>
