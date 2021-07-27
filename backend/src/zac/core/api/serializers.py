@@ -659,23 +659,32 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
 class ObjecttypeProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
     PROXY_SCHEMA = ("/api/v1/objecttypes/", "get")
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectType"]
 
 
 class ObjecttypeVersionProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
-    PROXY_SCHEMA = ("/api/v1/objecttypes/{objecttype_uuid}/versions", "get")
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectVersion"]
 
 
 class ObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
-    PROXY_SCHEMA = ("/api/v1/objects", "get")
+    PROXY_SCHEMA_PATH = ["components", "schemas", "Object"]
 
 
 class ObjectFilterProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
-    PROXY_SCHEMA = ("/api/v1/objects/search", "post")
+    PROXY_SCHEMA_PATH = [
+        "paths",
+        "/api/v1/objects/search",
+        "post",
+        "requestBody",
+        "content",
+        "application/json",
+        "schema",
+    ]
 
 
-class ZaakObjectProxySerializer(serializers.Serializer):
+class ZaakObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.ZRC_API_SCHEMA
-    PROXY_SCHEMA = ("/zaakobjecten", "post")
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ZaakObject"]

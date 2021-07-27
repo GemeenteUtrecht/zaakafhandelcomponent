@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import (
     authentication,
     exceptions,
@@ -730,6 +730,7 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 @extend_schema(
     summary=_("Search objects"),
     description=_("Search for objects in the Objects API"),
+    responses={(200, "application/json"): ObjectProxySerializer},
 )
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -749,6 +750,7 @@ class ObjectSearchView(views.APIView):
 @extend_schema(
     summary=_("Create Zaakobject"),
     description=_("Relate an object to a zaak"),
+    responses={(201, "application/json"): ZaakObjectProxySerializer},
 )
 class ZaakObjectCreateView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
