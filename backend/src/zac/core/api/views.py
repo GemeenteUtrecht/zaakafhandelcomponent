@@ -701,8 +701,9 @@ class EigenschappenView(ListAPIView):
 
 
 @extend_schema(
-    summary=_("List Objecttypes"),
+    summary=_("List objecttypes"),
     description=_("Retrieves all object types from the configured Objecttypes API."),
+    tags=["objects"],
 )
 class ObjecttypeListView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -715,8 +716,9 @@ class ObjecttypeListView(ListMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("Read Objecttype version"),
+    summary=_("Read objecttype version"),
     description=_("Read the details of a particular objecttype version"),
+    tags=["objects"],
 )
 class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -731,6 +733,7 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
     summary=_("Search objects"),
     description=_("Search for objects in the Objects API"),
     responses={(200, "application/json"): ObjectProxySerializer},
+    tags=["objects"],
 )
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -748,9 +751,10 @@ class ObjectSearchView(views.APIView):
 
 
 @extend_schema(
-    summary=_("Create Zaakobject"),
+    summary=_("Create zaakobject"),
     description=_("Relate an object to a zaak"),
     responses={(201, "application/json"): ZaakObjectProxySerializer},
+    tags=["objects"],
 )
 class ZaakObjectCreateView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
