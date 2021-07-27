@@ -51,6 +51,10 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   contextHasError: boolean;
   contextErrorMessage: string;
 
+  // Tabs
+  selectedTabIndex = null;
+
+  // Links
   doRedirectTarget: '_blank' | '_self';
 
   constructor(
@@ -85,63 +89,6 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
         this.executeTask(userTaskId);
       }
     });
-  }
-
-  /**
-   * Returns whether task is assigned.
-   * @param {Task} task
-   * @return {boolean}
-   */
-  isTaskAssigned(task: Task): boolean {
-    return Boolean(task.assignee)
-  }
-
-  /**
-   * Returns whether task is assigned to user.
-   * @param {User} user
-   * @param {Task} task
-   * @return {boolean}
-   */
-  isTaskAssignedToUser(user: User, task: Task): boolean {
-    return user.username === task.assignee.username
-  }
-
-  /**
-   * Returns whether user can perform any actions on task.
-   * @param {User} user
-   * @param {Task} task
-   * @return {boolean}
-   */
-  isTaskActionableByUser(user: User, task: Task): boolean {
-    return this.isUserAllowToExecuteTask(user, task) || this.isUserAllowToAssignTask(user, task)
-  }
-
-  /**
-   * Returns whether user is allowed to execute task.
-   * @param {Task} task
-   * @param {User} user
-   * @return {boolean}
-   */
-  isUserAllowToExecuteTask(user: User, task: Task): boolean {
-    try {
-      if (task.assignee.username === null) {
-        return true;
-      }
-
-      return this.isTaskAssignedToUser(user, task);
-    } catch(e) {
-      return false;
-    }
-  }
-
-  /**
-   * Returns whether user is allowed to assign task.
-   * @param {User} user
-   * @param {Task} task
-   * @return {boolean}
-   */
-  isUserAllowToAssignTask(user: User, task: Task): boolean {
-    return user.username && !task.assignee
   }
 
   /**
@@ -214,8 +161,10 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   /**
    * Open a selected task.
    * @param {string} taskId
+   * @param {number} [tabIndex]
    */
-  executeTask(taskId: string): void {
+  executeTask(taskId: string, tabIndex: number = null): void {
+    this.selectedTabIndex = tabIndex;
     this.fetchFormLayout(taskId);
   }
 
@@ -248,5 +197,13 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       this.contextHasError = true;
       this.isLoadingContext = false;
     })
+  }
+
+  /**
+   * Closes modal and reloads services.
+   */
+  closeModal(): void {
+    this.modalService.close('ketenprocessenModal');
+    this.fetchProcesses()
   }
 }

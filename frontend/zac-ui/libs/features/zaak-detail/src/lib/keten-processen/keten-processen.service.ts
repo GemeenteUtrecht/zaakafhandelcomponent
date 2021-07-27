@@ -34,7 +34,7 @@ export class KetenProcessenService {
    * @return {boolean}
    */
   isTaskAssignedToUser(user: User, task: Task): boolean {
-    return this.isTaskAssigned(task) && user.username === task.assignee.username
+    return this.isTaskAssigned(task) && user.username === task.assignee.username;
   }
 
   /**
@@ -44,7 +44,7 @@ export class KetenProcessenService {
    * @return {boolean}
    */
   isTaskActionableByUser(user: User, task: Task): boolean {
-    return this.isUserAllowToExecuteTask(user, task) || this.isUserAllowToAssignTask(user, task)
+    return this.isUserAllowedToExecuteTask(user, task) || this.isUserAllowedToAssignTask(user, task)
   }
 
   /**
@@ -53,7 +53,7 @@ export class KetenProcessenService {
    * @param {User} user
    * @return {boolean}
    */
-  isUserAllowToExecuteTask(user: User, task: Task): boolean {
+  isUserAllowedToExecuteTask(user: User, task: Task): boolean {
     if (task.assignee === null || task.assignee.username === null) {
       return true;
     }
@@ -62,13 +62,16 @@ export class KetenProcessenService {
   }
 
   /**
-   * Returns whether user is allowed to assign task.
+   * Returns whether user is allowed to (re)assign a task.
    * @param {User} user
    * @param {Task} task
    * @return {boolean}
    */
-  isUserAllowToAssignTask(user: User, task: Task): boolean {
-    return user.username && !task.assignee
+  isUserAllowedToAssignTask(user: User, task: Task): boolean {
+    if(['Accorderen', 'Adviseren'].indexOf(task.name) > -1) {
+      return user.username && !task.assignee
+    }
+    return true;
   }
 
   getProcesses(mainZaakUrl: string): Observable<any> {
@@ -104,5 +107,4 @@ export class KetenProcessenService {
   readDocument(endpoint) {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }
-
 }

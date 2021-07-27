@@ -39,13 +39,14 @@
               <label class="label label--date">{{task.created | date:'fullDate'}}</label>
               <p class="p--marginsmall p--bold">{{task.name}}</p>
 
-              <gu-chip *ngIf="!!task.assignee"
-                       [color]="currentUser.username === task.assignee.username ? 'primary' : 'tertiary'"
-                       [icon]="ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'edit' : null"
-                       (click)="ketenProcessenService.isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
-                       class="d-inline-block mb-2"
-                       [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
-               >
+                <gu-chip *ngIf="ketenProcessenService.isTaskAssigned(task)"
+                         [color]="ketenProcessenService.isTaskAssignedToUser(currentUser, task) ? 'primary' : 'tertiary'"
+                         [icon]="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) ? 'edit' : null"
+                         (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
+                         class="d-inline-block mb-2"
+                         [class.chip--clickable]="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task)"
+                >
+
                 <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                   {{task.assignee.firstName}} {{task.assignee.lastName}}
                 </ng-container>
@@ -58,7 +59,7 @@
 
             <!-- Actions -->
             <div class="d-flex flex-column justify-content-center">
-              <ng-container *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, task) || ketenProcessenService.isUserAllowToAssignTask(currentUser, task)">
+              <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                 <button gu-button class="mb-2" type="secondary" size="small" (click)="executeTask(task.id)">
                   Behandelen
                 </button>
@@ -78,13 +79,15 @@
               <div class="taak__detail mr-md-2">
                 <label class="label label--date">{{task.created | date:'fullDate'}}</label>
                 <p class="p--marginsmall p--bold" *ngIf="task.name">{{task.name}}</p>
+
                 <gu-chip *ngIf="ketenProcessenService.isTaskAssigned(task)"
                          [color]="ketenProcessenService.isTaskAssignedToUser(currentUser, task) ? 'primary' : 'tertiary'"
-                         [icon]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'edit' : null"
-                         (click)="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) && executeTask(task.id)"
+                         [icon]="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) ? 'edit' : null"
+                         (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
                          class="d-inline-block mb-2"
-                         [ngClass]="task.name !== ('Adviseren' || 'Accorderen') && ketenProcessenService.isTaskActionableByUser(currentUser, task) ? 'chip--clickable' : null"
+                         [class.chip--clickable]="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task)"
                 >
+
                   <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
                     {{task.assignee.firstName}} {{task.assignee.lastName}}
                   </ng-container>
@@ -96,7 +99,7 @@
 
                 <!-- Actions -->
                 <div class="d-flex flex-column justify-content-center">
-                  <ng-container *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, task) || ketenProcessenService.isUserAllowToAssignTask(currentUser, task)">
+                  <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                     <button gu-button class="mb-2" type="secondary" size="small" (click)="executeTask(task.id)">
                       Behandelen
                     </button>
@@ -136,27 +139,27 @@
     <mat-tab-group mat-align-tabs="center">
 
       <!-- Execute task -->
-      <mat-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowToExecuteTask(currentUser, taskContextData.task)">
+      <mat-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowedToExecuteTask(currentUser, taskContextData.task)">
         <div class="pt-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
                                           (successReload)="fetchProcesses()"
           ></gu-config-adviseren-accorderen>
 
-          <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-document-select>
+          <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-document-select>
 
-          <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-sign-document>
+          <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-sign-document>
 
-          <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="fetchProcesses()"></gu-redirect>
+          <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="closeModal()"></gu-redirect>
 
-          <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="fetchProcesses()"></gu-dynamic-form>
+          <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-dynamic-form>
         </div>
       </mat-tab>
 
       <!-- Assign task -->
-      <mat-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowToAssignTask(currentUser, taskContextData.task)">
+      <mat-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowedToAssignTask(currentUser, taskContextData.task)">
         <div class="pt-4">
-          <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (reload)="fetchProcesses()"></gu-assign-task>
+          <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (reload)="closeModal()"></gu-assign-task>
         </div>
       </mat-tab>
     </mat-tab-group>
