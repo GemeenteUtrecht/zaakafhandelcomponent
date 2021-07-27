@@ -1,45 +1,59 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { ControlContainer, FormControl, NgForm } from '@angular/forms';
-import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
-import { defineLocale } from 'ngx-bootstrap/chronos';
-import { nlLocale } from 'ngx-bootstrap/locale';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
 
+export const APP_DATE_FORMATS =
+  {
+    parse: {
+      dateInput: { month: 'short', year: 'numeric', day: 'numeric' },
+    },
+    display: {
+      dateInput: { month: 'short', year: 'numeric', day: 'numeric' },
+      monthYearLabel: { year: 'numeric' }
+    }
+  };
+
+/**
+ * <gu-datepicker [control]="formControl" label="Datum">I'm a datepicker</gu-checkbox>
+ *
+ * Generic datepicker component, based on mat-datepicker.
+ *
+ * Requires control: Reactive Form Control
+ * Takes label: Label of the datepicker
+ * Takes id: Id of the datepicker
+ * Takes minDate: Minimum selectable date.
+ * Takes required: Sets the input on required.
+ *
+ */
 @Component({
   selector: 'gu-datepicker',
   templateUrl: './datepicker.component.html',
   styleUrls: ['./datepicker.component.scss'],
+  providers: [{ provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS }],
   viewProviders: [ { provide: ControlContainer, useExisting: NgForm } ]
 })
 export class DatepickerComponent implements OnInit, OnChanges {
   @Input() control: FormControl;
   @Input() label: string;
   @Input() id: string;
-  @Input() placeholder: string;
   @Input() minDate: Date = new Date();
   @Input() required: boolean;
-  @Input() value: Date;
 
-  bsConfig: Partial<BsDatepickerConfig>;
-
-  constructor(private localeService: BsLocaleService) {
-    defineLocale('nl', nlLocale);
-    this.localeService.use('nl');
-  }
+  constructor() { }
 
   ngOnInit() {
     this.checkValidValue();
   }
 
   ngOnChanges(changes:SimpleChanges) {
-    this.bsConfig = {
-      adaptivePosition: true,
-      dateInputFormat: 'DD-MM-YYYY',
-      minDate: this.minDate,
-      showWeekNumbers: false
-    }
     this.checkValidValue();
   }
 
+  /**
+   * Check if the value is not before the minimum date.
+   * If the selected value is before the minimum date,
+   * it will execute clearValue().
+   */
   checkValidValue() {
     const selectedValueDate = this.control.value ? new Date(this.control.value.toDateString()) : null;
     const minValueDate = new Date(this.minDate.toDateString());
@@ -48,6 +62,9 @@ export class DatepickerComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Clear the selected value.
+   */
   clearValue() {
     this.control.patchValue(null)
   }

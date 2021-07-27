@@ -1,10 +1,9 @@
-<input type="checkbox"
-       [formControl]="control"
-       [value]="value"
-       id="checkbox--{{id}}"
-       class="checkbox"
-       (change)="change.emit(true)"
+<mat-checkbox
+  [formControl]="control"
+  [disabled]="disabled"
+  [value]="value"
+  [color]="color"
+  (change)="change.emit(true)"
 >
-<label class="checkbox-label" for="checkbox--{{id}}">
   <ng-content></ng-content>
-</label>
+</mat-checkbox>

@@ -1,0 +1,11 @@
+@import '~@angular/material/theming';
+@include mat-core();
+
+/* ======== Angular material custom themes ======== */
+$gu-primary: mat-palette($mat-light-blue, 900);
+$gu-accent: mat-palette($mat-orange, A200, A100, A400);
+$gu-warn: mat-palette($mat-red);
+
+$gu-theme: mat-light-theme($gu-primary, $gu-accent, $gu-warn);
+
+@include angular-material-theme($gu-theme);

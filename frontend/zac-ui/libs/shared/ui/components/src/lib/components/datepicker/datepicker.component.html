@@ -1,18 +1,6 @@
-<label class="has-float-label">
-  <input type="text"
-         autocomplete="false"
-         readonly
-         [required]="required"
-         [formControl]="control"
-         [placeholder]="placeholder ? placeholder : 'Datum'"
-         class="form-control form-control--datepicker"
-         [id]="id ? id : label"
-         bsDatepicker [container]="'html'"
-         [bsValue]="value"
-         [bsConfig]="bsConfig">
-  <span>{{label}}</span>
-  <span *ngIf="(control.value !== null)"
-    class="dp-clear-wrapper" title="Alles verwijderen" (click)="clearValue()">
-    <span aria-hidden="true" class="dp-clear">×</span>
-  </span>
-</label>
+<mat-form-field appearance="outline">
+  <mat-label>{{label}}</mat-label>
+  <input matInput [matDatepicker]="id" [formControl]="control" [min]="minDate" [required]="required">
+  <mat-datepicker-toggle matSuffix [for]="id"></mat-datepicker-toggle>
+  <mat-datepicker #id></mat-datepicker>
+</mat-form-field>

@@ -9,7 +9,6 @@
     </div>
   </div>
   <div class="form-group">
-
     <h4>Zoeken</h4>
     <div class="row">
       <div class="col-lg-6">
@@ -59,18 +58,18 @@
         <div class="form-group" *ngIf="eigenschapwaarde">
           <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
             <ng-container *ngSwitchCase="'string'">
-              <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date-time'">
+              <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date'">
                 <gu-input-field type="text"
                                 [control]="eigenschapwaarde"
                                 label="Eigenschapwaarde"
                                 autocomplete="off"
                 ></gu-input-field>
               </ng-container>
-              <ng-container *ngIf="selectedPropertyValue.spec.format === 'date-time'">
+              <ng-container *ngIf="selectedPropertyValue.spec.format === 'date'">
                 <gu-datepicker
                   [control]="eigenschapwaarde"
-                  id="searchDatum"
-                  placeholder="Datum">
+                  label="Datum"
+                  id="searchDatum">
                 </gu-datepicker>
               </ng-container>
             </ng-container>
@@ -89,9 +88,10 @@
   <div class="row">
     <div class="col-lg-6">
       <div class="form-group">
-        <gu-checkbox class="d-inline-block mr-2"
-                     [control]="saveQueryControl"
-                     (change)="onCheckboxChange()">
+        <gu-checkbox class="d-inline-block mr-1"
+                     [control]="saveReportControl"
+                     (change)="onCheckboxChange()"
+        >
           Zoekopdracht opslaan als rapportage
         </gu-checkbox>
         <gu-tooltip type="primary" inline="true">
@@ -100,7 +100,7 @@
       </div>
     </div>
   </div>
-  <div class="row" *ngIf="showQueryNameField">
+  <div class="row" *ngIf="showReportNameField">
     <div class="col-lg-4">
       <div class="form-group">
         <gu-input-field type="text"
@@ -125,7 +125,7 @@
                [disabled]="!searchForm.valid || isSubmitting"
                [loading]="isSubmitting"
                (click)="submitForm()">
-      {{showQueryNameField ? 'Zoeken en rapportage opslaan' : 'Zoeken'}}
+      {{showReportNameField ? 'Zoeken en rapportage opslaan' : 'Zoeken'}}
     </button>
   </div>
 </form>
