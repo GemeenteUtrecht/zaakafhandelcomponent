@@ -87,7 +87,7 @@ One needs to add a **Service** for each of them:
 - Header value: ``Token <insert open forms token>``
 
 .. note::
-    The object and objecttype APIs include ``/api/v1`` as part of the path of all endpoints (see the API schemas `here`_).
+    The object API (at least up to v1.1.1) and objecttype API (at least up to v1.1.0) included ``/api/v1`` as part of the path of all endpoints (check the API schemas `here`_).
     This means that the field ``API root url`` should **NOT** include ``/api/v1``. For example, it should be https://objecttypes.nl/
     and not https://objecttypes.nl/api/v1.
 
