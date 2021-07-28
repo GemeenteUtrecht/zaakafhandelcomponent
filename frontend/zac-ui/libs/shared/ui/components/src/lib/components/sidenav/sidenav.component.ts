@@ -13,7 +13,6 @@ export class SidenavComponent {
   @Input() logoUrl: string;
   @Input() mobileLogoUrl: string;
   @Input() currentUser: string;
-  @Input() searchComponentName: string;
 
   expanded = false;
 
