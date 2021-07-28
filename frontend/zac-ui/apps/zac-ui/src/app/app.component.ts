@@ -4,7 +4,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter, first } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { User } from '@gu/models';
-import { ApplicationHttpClient } from '@gu/services';
+import { ApplicationHttpClient, ZaakService } from '@gu/services';
 
 @Component({
   selector: 'gu-zac-ui-root',
@@ -21,7 +21,10 @@ export class AppComponent implements OnInit {
   bottomMenuItems: MenuItem[] = bottomMenuItems;
   selectedMenu: string;
 
-  constructor(private router: Router, private http: ApplicationHttpClient) {}
+  constructor(
+    private http: ApplicationHttpClient,
+    private router: Router,
+    private zaakService: ZaakService,) {}
 
   ngOnInit() {
     this.router.events
@@ -43,7 +46,7 @@ export class AppComponent implements OnInit {
     return this.http.Get<User>(endpoint);
   }
 
-  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
-    this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie]);
+  navigateToZaak(zaak: {bronorganisatie: string, identificatie: string}) {
+    this.zaakService.navigateToCase(zaak);
   }
 }

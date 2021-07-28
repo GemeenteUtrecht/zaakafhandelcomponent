@@ -2,13 +2,24 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ApplicationHttpClient} from '@gu/services';
 import {Document, UserPermission, Zaak} from '@gu/models';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ZaakService {
 
-  constructor(private http: ApplicationHttpClient) {
+  constructor(
+    private http: ApplicationHttpClient,
+    private router: Router) {
+  }
+
+  /**
+   * Navigate to a case.
+   * @param {{bronorganisatie: string, identificatie: string}} zaak
+   */
+  navigateToCase(zaak: {bronorganisatie: string, identificatie: string}) {
+    this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie]);
   }
 
   /**
