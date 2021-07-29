@@ -24,7 +24,6 @@
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/@ng-select/ng-select/themes/default.theme.css",
-              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
               "node_modules/ngx-bootstrap/tabs/tabs.css",
               "apps/zac-ui/src/styles.scss",
               "apps/zac-ui/src/theme.scss"

@@ -11,6 +11,7 @@ import {FormControl} from "@angular/forms";
 export class ZaakSelectComponent {
   @Input() control?: FormControl;
   @Input() label = 'Zaaknummer';
+  @Input() placeholder? = '';
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
@@ -25,12 +26,14 @@ export class ZaakSelectComponent {
    * @param {string} query
    */
   onSearch(query) {
-    this.zaakSearchService.autocomplete(query).subscribe(
-      (suggestions) => this.choices = this.zaakSearchService.suggestionsAsChoices(suggestions),
-      (error) => console.error(error)
-    );
+    if (query) {
+      this.zaakSearchService.autocomplete(query).subscribe(
+        (suggestions) => this.choices = this.zaakSearchService.suggestionsAsChoices(suggestions),
+        (error) => console.error(error)
+      );
 
-    this.search.emit(query);
+      this.search.emit(query);
+    }
   }
 
   /**
@@ -38,10 +41,12 @@ export class ZaakSelectComponent {
    * @param choice
    */
   onChange(choice) {
-    if(this.control) {
-      this.control.setValue(choice.value);
-    }
+    if (choice) {
+      if (this.control) {
+        this.control.setValue(choice.value);
+      }
 
-    this.change.emit(choice.value);
+      this.change.emit(choice.value);
+    }
   }
 }

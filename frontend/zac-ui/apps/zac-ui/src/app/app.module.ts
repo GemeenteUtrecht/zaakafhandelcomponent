@@ -18,6 +18,7 @@ import { HomeComponent } from './components/home/home.component';
 import { KownslModule } from './components/kownsl/kownsl.module';
 import { ZakenModule } from './components/zaken/zaken.module';
 import { WorkstackModule } from './components/workstack/workstack.module';
+import { ZaakSelectModule } from '@gu/search';
 
 
 registerLocaleData(localeNL);
@@ -39,7 +40,8 @@ registerLocaleData(localeNL);
     SharedUiComponentsModule,
     KownslModule,
     ZakenModule,
-    WorkstackModule
+    WorkstackModule,
+    ZaakSelectModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

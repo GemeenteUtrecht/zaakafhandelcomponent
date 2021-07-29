@@ -26,11 +26,14 @@
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug
     </a>
-    <div class="logo">
+    <div class="logo mb-4">
       <img [src]="logoUrl"/>
     </div>
     <div class="menu-container" *ngIf="menuItems">
       <div class="top-navigation">
+        <div class="searchbox mb-4">
+          <ng-content select="gu-zaak-select"></ng-content>
+        </div>
         <a *ngFor="let item of menuItems"
            (click)="toggle()"
            [routerLink]="!item.external ? [item.to] : null"

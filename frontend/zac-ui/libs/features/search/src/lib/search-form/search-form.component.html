@@ -1,15 +1,7 @@
 <gu-loading-indicator *ngIf="isLoading" overlayGrey></gu-loading-indicator>
 <form class="search-form" [formGroup]="searchForm">
   <div class="form-group">
-    <div class="row">
-      <div class="col-lg-4">
-        <h4>Direct naar zaak</h4>
-        <gu-zaak-select (change)="onZaakSelect($event)"></gu-zaak-select>
-      </div>
-    </div>
-  </div>
-  <div class="form-group">
-    <h4>Zoeken</h4>
+    <p>Vind zaken op basis van hun eigenschappen.</p>
     <div class="row">
       <div class="col-lg-6">
         <gu-multiselect *ngIf="zaaktypenData"

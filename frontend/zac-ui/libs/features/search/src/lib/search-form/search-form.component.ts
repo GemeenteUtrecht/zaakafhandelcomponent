@@ -84,14 +84,6 @@ export class SearchFormComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Navigate to the detail view directly if a zaak is selected using zaak select.
-   * @param {Object} zaak
-   */
-  onZaakSelect(zaak: {bronorganisatie: string, identificatie: string}) {
-    this.router.navigate([zaak.bronorganisatie, zaak.identificatie]);
-  }
-
-  /**
    * Fetch the properties of a case type based on the selection.
    * @param {Result} zaaktype
    */

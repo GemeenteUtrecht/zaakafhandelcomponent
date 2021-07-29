@@ -8,8 +8,8 @@ const menuItems: MenuItem[] = [
   },
   {
     icon: 'search',
-    label: 'Zaken zoeken',
-    to: '/zaken',
+    label: 'Zoeken',
+    to: '/zoeken',
   },
   {
     icon: 'launch',
