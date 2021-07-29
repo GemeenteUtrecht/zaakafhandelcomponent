@@ -1,5 +1,5 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h1>{{taskContextData.context.zaakInformatie.omschrijving}}</h1>
+  <h2>{{taskContextData.task.name}}</h2>
   <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
 
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">

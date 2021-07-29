@@ -1,5 +1,5 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h1>{{taskContextData.task.name}}</h1>
+  <h2>{{taskContextData.task.name}}</h2>
   <form class="configuration-form" [formGroup]="dynamicForm">
     <article class="configuration-details" *ngFor="let formField of formFields">
       <div class="col-md-6 form-group">
