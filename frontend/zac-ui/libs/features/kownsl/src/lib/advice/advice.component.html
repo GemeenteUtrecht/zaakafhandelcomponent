@@ -9,46 +9,65 @@
 
     <!-- Error -->
     <ng-template [ngIf]="hasError && !isLoading && !isSubmitting">
-      <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      <div class="mb-4">
+        <gu-message *ngIf="hasError && errorMessage" type="warn" [message]="errorMessage"></gu-message>
+      </div>
     </ng-template>
 
+    <!-- Summary -->
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
-        <div class="card card--blue">
-          <p class="p--marginsmall">{{zaakData.identificatie}}</p>
-          <h4>{{zaakData.zaaktype.omschrijving}}</h4>
-          <p class="p--marginsmall">{{zaakData.omschrijving}}</p>
-          <p class="p--marginsmall">{{zaakData.toelichting}}</p>
-        </div>
+        <h4>{{zaakData.zaaktype.omschrijving}}</h4>
+        <p *ngIf="zaakData.omschrijving" class="p--marginsmall">{{zaakData.omschrijving}}</p>
+        <p *ngIf="zaakData.toelichting" class="p--marginsmall">{{zaakData.toelichting}}</p>
       </div>
     </div>
 
     <!-- Main content -->
     <ng-template [ngIf]="!!adviceData && !isLoading">
-      <section>
-        <div class="row no-gutters">
-          <div class="col-4">
+      <div class="mb-4">
+        <div *ngIf="zaakData.identificatie" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Identificatie:</p>
+          </div>
+          <div class="col-6">
+            <p class="p">{{zaakData.identificatie}}</p>
+          </div>
+        </div>
+
+        <div *ngIf="adviceData.created" class="row no-gutters">
+          <div class="col-1 mr-2">
             <p class="p p--bold">Ingediend op:</p>
           </div>
-          <div class="col-8">
+          <div class="col-6">
             <p class="p">{{adviceData.created | date:'fullDate'}}</p>
           </div>
         </div>
-        <div class="row no-gutters">
-          <div class="col-4">
+
+        <div *ngIf="adviceData.created" class="row no-gutters">
+          <div class="col-1 mr-2">
+            <p class="p p--bold">Ingediend door:</p>
+          </div>
+          <div class="col-6">
+            <p class="p">{{adviceData.requester}}</p>
+          </div>
+        </div>
+
+        <div *ngIf="adviceData.toelichting" class="row no-gutters">
+          <div class="col-1 mr-2">
             <p class="p p--bold">Toelichting:</p>
           </div>
-          <div class="col-8">
+          <div class="col-6">
             <p class="p p--nomargin">
               {{adviceData.toelichting}}
             </p>
           </div>
         </div>
-      </section>
+      </div>
 
       <!-- Collapsible table with previous advices -->
-      <ng-template [ngIf]="!!adviceData.reviews">
-        <section *ngIf="adviceData.reviews.length > 0">
+      <ng-template [ngIf]="!!adviceData.reviews && adviceData.reviews.length > 0">
+        <section *ngIf="adviceData.reviews.length > 0" class="row no-gutters">
           <h2 class="mb-4">Vorige adviezen</h2>
           <gu-table [table]="tableData"
                     [expandable]="true">
@@ -58,33 +77,38 @@
 
       <!-- Documents and document upload -->
       <form [formGroup]="adviceForm">
-        <ng-template [ngIf]="!!adviceData.documents">
-          <section *ngIf="adviceData.documents.length > 0">
-            <h2 class="mb-4 mr-2 d-inline-block">Documenten</h2>
-            <gu-table
-                    [table]="documentTableData"
-              (buttonOutput)="handleTableButtonOutput($event)"
-            ></gu-table>
+        <ng-template [ngIf]="!!adviceData.documents && adviceData.documents.length > 0">
+          <section *ngIf="adviceData.documents.length > 0" class="row no-gutters">
+            <div class="col-6">
+              <h2 class="mb-4">Documenten</h2>
+                <gu-table [table]="documentTableData" (buttonOutput)="handleTableButtonOutput($event)"
+              ></gu-table>
+            </div>
           </section>
         </ng-template>
 
         <!-- Advice text -->
-        <section>
-          <label class="h2 d-inline-block mb-0" for="textarea_advice">Uw advies</label>
-          <span class="label label--optional">optioneel</span>
-          <span class="label label--hint">Inhoudelijk advies</span>
-          <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
+        <section class="row no-gutters">
+          <div class="col-6">
+            <label class="h2 d-inline-block mb-0" for="textarea_advice">Uw advies</label>
+            <span class="label label--optional">niet verplicht</span>
+            <span class="label label--hint">Inhoudelijk advies</span>
+            <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
+          </div>
         </section>
-        <div class="d-flex justify-content-end">
-          <button gu-button
-            [disabled]="!adviceForm.valid || isSubmitting"
-            [loading]="isSubmitting"
-            type="primary"
-            size="large"
-            (click)="submitForm()">
-            Advisering bevestigen
-          </button>
-        </div>
+
+        <section class="row no-gutters">
+          <div class="col-6 d-flex justify-content-end">
+            <button gu-button
+              [disabled]="!adviceForm.valid || isSubmitting"
+              [loading]="isSubmitting"
+              type="primary"
+              size="large"
+              (click)="submitForm()">
+              Advisering bevestigen
+            </button>
+          </div>
+        </section>
         <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
           <gu-message [message]="errorMessage" type="warn"></gu-message>
         </div>
