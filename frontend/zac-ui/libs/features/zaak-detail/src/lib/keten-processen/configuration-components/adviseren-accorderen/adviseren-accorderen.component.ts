@@ -79,6 +79,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   submitForm() {
+    this.isSubmitting = true;
+
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
       .filter(v => v !== null);
@@ -102,7 +104,6 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   putForm(formData) {
-    this.isSubmitting = true;
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
       this.isSubmitting = false;
       this.submitSuccess = true;
