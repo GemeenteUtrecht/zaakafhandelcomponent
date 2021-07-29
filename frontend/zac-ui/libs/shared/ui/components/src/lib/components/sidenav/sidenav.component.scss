@@ -22,10 +22,16 @@
     }
     .vertical-nav .logo {
       opacity: 0;
+      img {
+        display: none;
+      }
     }
     &:hover .vertical-nav .logo {
       transition: opacity 0.3s linear;
       opacity: 1;
+      img {
+        display: inline-block;
+      }
     }
     .searchbox {
       opacity: 0;
