@@ -5,6 +5,7 @@ import { Result, UserSearch } from '../../../models/user-search';
 import { ApplicationHttpClient } from '@gu/services';
 import { Task } from '../../../models/keten-processen'
 import { User } from '@gu/models';
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-assign-task',
@@ -14,7 +15,7 @@ import { User } from '@gu/models';
 export class AssignTaskComponent implements OnChanges {
   @Input() taskData: Task;
   @Input() currentUser: User;
-  @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   assignTaskForm: FormGroup;
 
@@ -27,7 +28,8 @@ export class AssignTaskComponent implements OnChanges {
 
   constructor(
     private http: ApplicationHttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private modalService: ModalService
   ) { }
 
   ngOnChanges(): void {
@@ -74,7 +76,9 @@ export class AssignTaskComponent implements OnChanges {
       this.submitSuccess = true;
       this.submitHasError = false;
       this.isSubmitting = false;
-      this.reload.emit(true)
+      this.successReload.emit(true)
+
+      this.modalService.close('ketenprocessenModal');
     }, error => {
       this.submitHasError = true;
       this.submitErrorMessage =

@@ -5,7 +5,7 @@
   </ng-container>
 
   <!-- Loaded -->
-  <ng-container *ngIf="!!data && data?.length > 0 && !isLoading">
+  <ng-container *ngIf="!!data && data?.length > 0">
 
     <!-- Action buttons -->
     <div class="keten-processen__actie-buttons-container">
@@ -127,7 +127,6 @@
 <!-- Modal -->
 <gu-modal
   id="ketenprocessenModal"
-  type="right"
   [closeIcon]="true"
 >
   <ng-container *ngIf="isLoadingContext">
@@ -156,7 +155,7 @@
 <gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">
   <gu-assign-task [taskData]="assignTaskTask"
                   [currentUser]="currentUser"
-                  (reload)="fetchProcesses()"
+                  (successReload)="fetchProcesses()"
   >
   </gu-assign-task>
 </gu-modal>

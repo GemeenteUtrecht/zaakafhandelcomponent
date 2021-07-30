@@ -1,5 +1,5 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h1>{{taskContextData.task.name}}</h1>
+  <h2>{{taskContextData.task.name}}</h2>
   <form class="configuration-form" [formGroup]="signDocumentForm" *ngIf="signDocumentForm.controls['documents'].value">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Te ondertekenen documenten</label>
@@ -79,8 +79,3 @@
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
   </gu-message>
 </div>
-<!-- Success screen -->
-<gu-success *ngIf="submitSuccess">
-  <h3 class="mb-4">Voltooid</h3>
-</gu-success>
-

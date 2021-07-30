@@ -1,5 +1,5 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h1>{{taskContextData.task.name}}</h1>
+  <h2>{{taskContextData.task.name}}</h2>
   <gu-message type="primary" *ngIf="target === '_blank'" class='d-block mb-4'>
     <p>De taak is geopend in een nieuw pop-up venster. Zorg er voor dat uw browser pop-up blockers uitgeschakeld zijn.</p>
 
@@ -16,7 +16,3 @@
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
   </gu-message>
 </div>
-<!-- Success screen -->
-<gu-success *ngIf="submitSuccess">
-  <h3 class="mb-4">Voltooid</h3>
-</gu-success>

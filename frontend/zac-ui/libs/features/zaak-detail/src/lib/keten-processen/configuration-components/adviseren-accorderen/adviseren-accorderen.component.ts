@@ -7,6 +7,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument} from "@gu/models";
+import {ModalService} from "@gu/components";
 
 @Component({
   selector: 'gu-config-adviseren-accorderen',
@@ -37,10 +38,11 @@ export class AdviserenAccorderenComponent implements OnChanges {
   assignedUsersErrorMessage: string;
 
   constructor(
-    private http: ApplicationHttpClient,
+    private datePipe: DatePipe,
     private fb: FormBuilder,
+    private http: ApplicationHttpClient,
+    private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
-    private datePipe: DatePipe
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {
@@ -77,6 +79,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   submitForm() {
+    this.isSubmitting = true;
+
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
       .filter(v => v !== null);
@@ -100,11 +104,12 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   putForm(formData) {
-    this.isSubmitting = true;
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
+
+      this.modalService.close('ketenprocessenModal');
     }, error => {
       this.isSubmitting = false;
       this.assignedUsersErrorMessage = error.assignedUsers[0];

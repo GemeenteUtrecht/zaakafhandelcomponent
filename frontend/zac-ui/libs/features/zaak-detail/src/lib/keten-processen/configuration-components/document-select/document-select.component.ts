@@ -5,6 +5,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument} from "@gu/models";
+import { ModalService } from '@gu/components';
 
 @Component({
   selector: 'gu-document-select',
@@ -29,6 +30,7 @@ export class DocumentSelectComponent implements OnChanges {
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
+    private modalService: ModalService
   ) { }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -72,6 +74,7 @@ export class DocumentSelectComponent implements OnChanges {
 
   submitForm() {
     this.isSubmitting = true;
+
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? {
         document: this.taskContextData.context.documents[i].url,
@@ -90,6 +93,8 @@ export class DocumentSelectComponent implements OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
+
+      this.modalService.close('ketenprocessenModal');
     }, res => {
       this.isSubmitting = false;
       this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";
