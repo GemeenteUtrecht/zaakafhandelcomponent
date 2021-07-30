@@ -123,6 +123,13 @@ class ZaakTypeDocumentSerializer(serializers.Serializer):
     omschrijving = serializers.CharField(required=False)
 
 
+class StatusDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(required=False)
+    statustype = serializers.CharField(required=False)
+    datum_status_gezet = serializers.DateTimeField(required=False)
+    statustoelichting = serializers.CharField(required=False)
+
+
 class ZaakDocumentSerializer(serializers.Serializer):
     url = serializers.URLField(required=False)
     zaaktype = ZaakTypeDocumentSerializer(required=False)
@@ -137,3 +144,5 @@ class ZaakDocumentSerializer(serializers.Serializer):
     registratiedatum = serializers.DateTimeField(required=False)
     deadline = serializers.DateTimeField(required=False)
     eigenschappen = EigenschapDocumentSerializer(many=True, required=False)
+    status = StatusDocumentSerializer(required=False)
+    toelichting = serializers.CharField(required=False)

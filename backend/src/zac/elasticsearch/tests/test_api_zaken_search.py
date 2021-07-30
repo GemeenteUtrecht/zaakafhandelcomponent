@@ -258,6 +258,11 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "rollen.omschrijving_generiek",
                     "rollen.url",
                     "startdatum",
+                    "status.datum_status_gezet",
+                    "status.statustoelichting",
+                    "status.statustype",
+                    "status.url",
+                    "toelichting",
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
@@ -288,6 +293,13 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         + "T00:00:00Z",
                         "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": zaak1_model.toelichting,
                     }
                 ],
             },
@@ -386,7 +398,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, data=input)
 
         results = response.json()
-        self.maxDiff = None
         self.assertEqual(
             results,
             {
@@ -402,6 +413,11 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "rollen.omschrijving_generiek",
                     "rollen.url",
                     "startdatum",
+                    "status.datum_status_gezet",
+                    "status.statustoelichting",
+                    "status.statustype",
+                    "status.url",
+                    "toelichting",
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
@@ -432,6 +448,13 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         + "T00:00:00Z",
                         "deadline": zaak1_model.deadline.isoformat() + "T00:00:00Z",
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": zaak1_model.toelichting,
                     }
                 ],
             },

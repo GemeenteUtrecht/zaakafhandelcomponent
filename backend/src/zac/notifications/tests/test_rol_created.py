@@ -22,6 +22,10 @@ from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
+    STATUS,
+    STATUS_RESPONSE,
+    STATUSTYPE,
+    STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
@@ -65,10 +69,18 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
 
         path = reverse("notifications:callback")
+
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+
         self.assertEqual(zaak_document.rollen, [])
 
         # set up mocks
@@ -90,8 +102,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
             f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
@@ -109,24 +119,22 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(zaak_document.rollen[0]["url"], ROL)
 
     def test_rol_created_add_permission_for_behandelaar(self, rm):
-        user = User.objects.create(
-            username="notifs", first_name="Mona Yoko", last_name="Surname"
-        )
-        self.client.force_authenticate(user=user)
-
+        # Setup mocks
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-
-        path = reverse("notifications:callback")
-        # create zaak document in ES
-        zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        create_zaak_document(zaak)
-        # set up mocks
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        user = User.objects.create(
+            username="notifs", first_name="Mona Yoko", last_name="Surname"
+        )
         rol = {
             "url": ROL,
             "zaak": ZAAK,
@@ -145,16 +153,19 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
             f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
         rm.get(ROL, json=rol)
 
+        # create zaak document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+
+        self.client.force_authenticate(user=user)
+        path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -170,30 +181,28 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(user_atomic_permission.reason, PermissionReason.betrokkene)
 
     def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(self, rm):
-        user = User.objects.create(
-            username="notifs", first_name="Mona Yoko", last_name="Surname"
-        )
-        self.client.force_authenticate(user=user)
-
+        # set up mocks
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
 
-        path = reverse("notifications:callback")
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        self.assertEqual(zaak_document.rollen, [])
 
-        # set up mocks
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-
+        # Some more mocks
+        user = User.objects.create(
+            username="notifs", first_name="Mona Yoko", last_name="Surname"
+        )
         rol_old = {
             "url": ROL,
             "zaak": ZAAK,
@@ -231,16 +240,17 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
-
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(ROL, json=rol_old)
-
         rol_1 = factory(Rol, rol_old)
         rol_1.zaak = zaak
-
         rol_2 = factory(Rol, rol_new)
         rol_2.zaak = zaak
 
+        zaak_document = create_zaak_document(zaak)
+        self.assertEqual(zaak_document.rollen, [])
+
+        self.client.force_authenticate(user=user)
+        path = reverse("notifications:callback")
         with patch(
             "zac.notifications.handlers.get_rollen", return_value=[rol_1]
         ) as mock_handlers_get_rollen:

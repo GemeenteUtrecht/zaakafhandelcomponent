@@ -566,3 +566,65 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             ]["type"],
             "keyword",
         )
+
+    def test_index_zaken_with_status(self, m):
+        # mock API requests
+        status = f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e"
+        statustype = f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74"
+        status_response = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=status,
+            statustype=statustype,
+            statustoelichting="some-statustoelichting",
+        )
+        statustype_response = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=statustype,
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK1",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[],
+            status=status,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(zaaktype["url"], json=zaaktype)
+        m.get(status, json=status_response)
+        m.get(statustype, json=statustype_response)
+        call_command("index_zaken")
+
+        # check zaak_document exists
+        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        self.assertEqual(
+            zaak_document.status.statustoelichting, "some-statustoelichting"
+        )

@@ -220,7 +220,6 @@ class RelatedCasesResponseTests(APITestCase):
                 },
             }
         ]
-        self.maxDiff = None
         self.assertEqual(response_data, expected)
 
     def test_no_related(self):

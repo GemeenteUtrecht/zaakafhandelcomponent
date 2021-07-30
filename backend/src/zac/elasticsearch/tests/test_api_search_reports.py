@@ -3,8 +3,8 @@ from unittest.mock import patch
 from django.conf import settings
 from django.urls import reverse
 
+import requests_mock
 from elasticsearch_dsl import Index
-from furl import furl
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
@@ -12,6 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import PermissionObjectType
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -20,6 +21,7 @@ from zac.accounts.tests.factories import (
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..documents import ZaakDocument, ZaakTypeDocument
+from ..drf_api.permissions import zoek_rapport_inzien
 from ..drf_api.serializers import DEFAULT_ES_FIELDS
 from ..models import SearchReport
 from .factories import SearchReportFactory
@@ -27,14 +29,6 @@ from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
-
-from django.core.management import call_command
-
-import requests_mock
-
-from zac.accounts.constants import PermissionObjectType
-
-from ..drf_api.permissions import zoek_rapport_inzien
 
 
 class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
@@ -294,7 +288,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
-
         results = response.json()
         self.assertEqual(
             results,
@@ -317,6 +310,11 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "einddatum",
                     "registratiedatum",
                     "deadline",
+                    "status.url",
+                    "status.statustype",
+                    "status.datum_status_gezet",
+                    "status.statustoelichting",
+                    "toelichting",
                 ],
                 "next": None,
                 "previous": None,
@@ -340,6 +338,13 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "registratiedatum": None,
                         "deadline": "2021-12-31T00:00:00Z",
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": None,
                     },
                     {
                         "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
@@ -374,6 +379,13 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "registratiedatum": None,
                         "deadline": "2021-12-31T00:00:00Z",
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": None,
                     },
                 ],
             },
@@ -439,6 +451,11 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "einddatum",
                     "registratiedatum",
                     "deadline",
+                    "status.url",
+                    "status.statustype",
+                    "status.datum_status_gezet",
+                    "status.statustoelichting",
+                    "toelichting",
                 ],
                 "next": None,
                 "previous": None,
@@ -477,6 +494,13 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "registratiedatum": None,
                         "deadline": "2021-12-31T00:00:00Z",
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": None,
                     }
                 ],
             },
@@ -554,6 +578,13 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "registratiedatum": None,
                         "deadline": None,
                         "eigenschappen": [],
+                        "status": {
+                            "url": None,
+                            "statustype": None,
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                        },
+                        "toelichting": None,
                     }
                 ],
             },
@@ -583,6 +614,11 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "rollen.omschrijving_generiek",
                 "rollen.url",
                 "startdatum",
+                "status.datum_status_gezet",
+                "status.statustoelichting",
+                "status.statustype",
+                "status.url",
+                "toelichting",
                 "url",
                 "va_order",
                 "vertrouwelijkheidaanduiding",

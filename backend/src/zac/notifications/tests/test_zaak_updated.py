@@ -20,7 +20,17 @@ from zac.elasticsearch.documents import RolDocument, ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
-from .utils import BRONORGANISATIE, ZAAK, ZAAK_RESPONSE, ZAAKTYPE, ZAAKTYPE_RESPONSE
+from .utils import (
+    BRONORGANISATIE,
+    STATUS,
+    STATUS_RESPONSE,
+    STATUSTYPE,
+    STATUSTYPE_RESPONSE,
+    ZAAK,
+    ZAAK_RESPONSE,
+    ZAAKTYPE,
+    ZAAKTYPE_RESPONSE,
+)
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -63,6 +73,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
     def test_get_zaak_resultaat_created(self, rm, mock_zaaktype):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
@@ -98,6 +110,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
         #  create zaak_document in ES
         old_response = ZAAK_RESPONSE.copy()
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         zaak = factory(Zaak, old_response)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
@@ -130,13 +144,18 @@ class ZaakUpdateTests(ESMixin, APITestCase):
 
     def test_zaak_with_rollen_updated_indexed_in_es(self, rm):
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
+
         #  create zaak_document
         old_response = ZAAK_RESPONSE.copy()
         zaak = factory(Zaak, old_response)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+
         #  set rollen
         zaak_document.rollen = [
             RolDocument(

@@ -20,6 +20,7 @@ from zac.elasticsearch.api import (
     delete_zaak_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
+    update_status_in_zaak_document,
     update_zaak_document,
 )
 from zgw.models.zrc import Zaak
@@ -38,7 +39,10 @@ class ZakenHandler:
         elif data["resource"] == "zaakeigenschap":
             self._handle_zaakeigenschap_change(data["hoofd_object"])
 
-        elif data["resource"] in ["resultaat", "status"] and data["actie"] == "create":
+        elif data["resource"] == "status" and data["actie"] == "create":
+            self._handle_status_creation(data["hoofd_object"])
+
+        elif data["resource"] == "resultaat" and data["actie"] == "create":
             self._handle_related_creation(data["hoofd_object"])
 
         elif data["resource"] == "rol":
@@ -76,11 +80,18 @@ class ZakenHandler:
         # index in ES
         delete_zaak_document(zaak_url)
 
-    def _handle_related_creation(self, zaak_url):
+    def _handle_related_creation(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-    def _handle_rol_change(self, zaak_url):
+    def _handle_status_creation(self, zaak_url: str):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaak_cache(zaak)
+
+        # index in ES
+        update_status_in_zaak_document(zaak)
+
+    def _handle_rol_change(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
 
         # Invalidate cache for get_rollen in update_medewerker_identificatie_rol
@@ -97,7 +108,7 @@ class ZakenHandler:
         # index in ES
         update_rollen_in_zaak_document(zaak)
 
-    def _handle_zaakeigenschap_change(self, zaak_url):
+    def _handle_zaakeigenschap_change(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 

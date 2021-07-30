@@ -89,7 +89,6 @@ class UserTasksTests(APITestCase):
         self.assertEqual(response.json(), [])
 
     def test_user_tasks_endpoint(self):
-        self.maxDiff = None
 
         with patch(
             "zac.werkvoorraad.api.views.get_zaak_context",

@@ -26,6 +26,13 @@ class ZaakTypeDocument(InnerDoc):
     omschrijving = field.Keyword()
 
 
+class StatusDocument(InnerDoc):
+    url = field.Keyword()
+    statustype = field.Keyword()
+    datum_status_gezet = field.Date()
+    statustoelichting = field.Text(fields={"keyword": field.Keyword()})
+
+
 class ZaakDocument(Document):
     url = field.Keyword()
     zaaktype = field.Object(ZaakTypeDocument)
@@ -35,13 +42,13 @@ class ZaakDocument(Document):
     vertrouwelijkheidaanduiding = field.Text(fields={"keyword": field.Keyword()})
     va_order = field.Integer()
     rollen = Nested(RolDocument)
-
     startdatum = field.Date()
     einddatum = field.Date()
     registratiedatum = field.Date()
     deadline = field.Date()
-
     eigenschappen = field.Object(EigenschapDocument)
+    status = field.Object(StatusDocument)
+    toelichting = field.Text(fields={"keyword": field.Keyword()})
 
     class Index:
         name = settings.ES_INDEX_ZAKEN

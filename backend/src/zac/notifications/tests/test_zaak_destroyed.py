@@ -1,10 +1,12 @@
 from django.urls import reverse
 from django.utils import timezone
 
+import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.activities.models import Activity, Event
@@ -14,7 +16,16 @@ from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
-from .utils import BRONORGANISATIE, ZAAK_RESPONSE, ZAAKTYPE, ZAAKTYPE_RESPONSE
+from .utils import (
+    BRONORGANISATIE,
+    STATUS,
+    STATUS_RESPONSE,
+    STATUSTYPE,
+    STATUSTYPE_RESPONSE,
+    ZAAK_RESPONSE,
+    ZAAKTYPE,
+    ZAAKTYPE_RESPONSE,
+)
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -39,6 +50,12 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory.create(username="notifs")
+        cls.ztc = Service.objects.create(
+            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
+        )
+        cls.zrc = Service.objects.create(
+            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
+        )
 
     def setUp(self):
         super().setUp()
@@ -59,11 +76,18 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         self.assertFalse(Activity.objects.exists())
         self.assertFalse(Event.objects.exists())
 
-    def test_remove_es_document(self):
+    @requests_mock.Mocker()
+    def test_remove_es_document(self, rm):
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
+
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.meta.id, "f3ff2713-2f53-42ff-a154-16842309ad60")
 
