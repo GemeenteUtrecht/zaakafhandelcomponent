@@ -5,8 +5,8 @@
       <label class="h4 d-inline-block mr-2">Documenten</label>
       <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
       <div class="configuration-files" formArrayName="documents">
-        <div class="row">
-          <div class="col-md-6 form-group configuration-file" *ngFor="let document of documents.controls; let i = index">
+        <div class="row pl-3">
+          <div class="col-12 form-group configuration-file" *ngFor="let document of documents.controls; let i = index">
             <gu-checkbox class="mb-2" id="kp-docs-select-{{i}}"
                          [value]="taskContextData.context.documents[i].url"
                          [control]="document">
@@ -17,7 +17,7 @@
               </span>
             </gu-checkbox>
             <div>
-              <p class="d-inline p--bold">{{taskContextData.context.documents[i].documentType}}</p>
+              <p class="d-inline">Documenttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
               <button gu-button *ngIf="!openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Documenttype wijzigen</button>
               <button gu-button *ngIf="openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
               <ng-container *ngIf="openSelectorsArray.includes(i)">
