@@ -159,16 +159,9 @@
       <!-- Assign task -->
       <mat-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowedToAssignTask(currentUser, taskContextData.task)">
         <div class="pt-4">
-          <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (reload)="closeModal()"></gu-assign-task>
+          <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (successReload)="closeModal()"></gu-assign-task>
         </div>
       </mat-tab>
     </mat-tab-group>
   </ng-container>
-</gu-modal>
-<gu-modal id="assignTaskModal" title="Taak toewijzen" size="small">
-  <gu-assign-task [taskData]="assignTaskTask"
-                  [currentUser]="currentUser"
-                  (successReload)="fetchProcesses()"
-  >
-  </gu-assign-task>
 </gu-modal>
