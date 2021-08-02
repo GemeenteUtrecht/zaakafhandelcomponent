@@ -37,6 +37,7 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
+from .api.api_models import Object, Objecttype, ObjecttypeVersion
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol, get_naam_medewerker
@@ -1108,3 +1109,50 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
         },
     )
     return factory(BesluitDocument, bio_data)
+
+
+###################################################
+#               Objecttypes                       #
+###################################################
+
+
+def fetch_objecttypes() -> List[dict]:
+    conf = CoreConfig.get_solo()
+    objecttype_service = conf.primary_objecttypes_api
+
+    client = objecttype_service.build_client()
+    objecttypes_data = client.list("objecttype")
+
+    return objecttypes_data
+
+
+def fetch_objecttype_version(uuid: str, version: int) -> dict:
+    conf = CoreConfig.get_solo()
+    objecttype_service = conf.primary_objecttypes_api
+
+    client = objecttype_service.build_client()
+    objecttypes_version_data = client.retrieve(
+        "objectversion", **{"objecttype_uuid": uuid, "version": version}
+    )
+
+    return objecttypes_version_data
+
+
+def search_objects(filters: dict) -> List[dict]:
+    conf = CoreConfig.get_solo()
+    object_service = conf.primary_objects_api
+
+    client = object_service.build_client()
+    results = client.operation(operation_id="object_search", data=filters)
+    return results
+
+
+def relate_object_to_zaak(relation_data: dict) -> dict:
+    zrc_client = Service.get_client(relation_data["zaak"])
+    assert zrc_client is not None, "ZRC client not found"
+
+    response = zrc_client.create(
+        "zaakobject",
+        relation_data,
+    )
+    return response

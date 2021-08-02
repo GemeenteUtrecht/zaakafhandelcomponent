@@ -3,7 +3,8 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
-from rest_framework.test import APITransactionTestCase
+from rest_framework import status
+from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
@@ -16,6 +17,7 @@ from zgw.models.zrc import Zaak
 
 OBJECTS_ROOT = "https://objects.nl/api/v1/"
 OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v1/"
+ZRC_ROOT = "https://zaken.nl/api/v1/"
 
 OBJECT_1 = {
     "url": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
@@ -101,21 +103,15 @@ OBJECTTYPE_2 = {
 }
 
 
-@patch(
-    "zac.core.api.views.ZaakObjectsView.get_object",
-)
-@patch("zac.core.api.views.get_zaakobjecten")
-class RelatedObjectsTests(APITransactionTestCase):
-    """
-    Test that related objects that live in the Objects API can be retrieved.
-    """
-
+@requests_mock.Mocker()
+class RelateObjectsToZaakTests(APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = SuperUserFactory.create()
-
+        cls.zrc_service = Service.objects.create(
+            api_type=APITypes.zrc, api_root=ZRC_ROOT
+        )
         cls.object_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
@@ -130,22 +126,113 @@ class RelatedObjectsTests(APITransactionTestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url="http://zaken.nl/api/v1/zaken/1",
+            url=f"{ZRC_ROOT}zaken/1",
             identificatie="ZAAK-2020-0010",
             bronorganisatie="123456782",
         )
-        cls.zaakobject_1 = {
+
+    def test_create_object_relation(self, m):
+        user = SuperUserFactory.create()
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        m.post(
+            f"{ZRC_ROOT}zaakobjecten",
+            status_code=201,
+            json={
+                "url": f"{ZRC_ROOT}zaakobjecten/bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "uuid": "bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "zaak": f"{self.zaak['url']}",
+                "object": f"{OBJECT_1['url']}",
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "relatieomschrijving": "",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+
+        self.client.force_authenticate(user)
+
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+    def test_create_object_relation_invalid_data(self, m):
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        m.post(
+            f"{ZRC_ROOT}zaakobjecten",
+            status_code=400,
+        )
+
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+
+        # Missing objectIdentificatie
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+            },
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+
+@requests_mock.Mocker()
+class ZaakObjectTests(APITransactionTestCase):
+    @patch(
+        "zac.core.api.views.ZaakObjectsView.get_object",
+    )
+    @patch("zac.core.api.views.get_zaakobjecten")
+    def test_relation_object_api(self, m, mock_get_zaakobjects, mock_zaak):
+        user = SuperUserFactory.create()
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
+        object_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        objecttype_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = object_service
+        config.primary_objecttypes_api = objecttype_service
+        config.save()
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZRC_ROOT}zaken/1",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+        )
+        zaakobject_1 = {
             "url": "http://zaken.nl/zaakobject/1",
-            "zaak": cls.zaak["url"],
+            "zaak": zaak["url"],
             "object": OBJECT_1["url"],
             "object_type": "overige",
             "object_type_overige": "Laadpaal uitbreiding",
             "relatieomschrijving": "",
             "object_identificatie": None,
         }
-        cls.zaakobject_2 = {
+        zaakobject_2 = {
             "url": "http://zaken.nl/zaakobject/2",
-            "zaak": cls.zaak["url"],
+            "zaak": zaak["url"],
             "object": OBJECT_2["url"],
             "object_type": "overige",
             "object_type_overige": "Laadpaal",
@@ -153,16 +240,12 @@ class RelatedObjectsTests(APITransactionTestCase):
             "object_identificatie": None,
         }
 
-    @requests_mock.Mocker()
-    def test_relation_object_api(self, mock_get_zaakobjects, mock_zaak, m):
-        mock_service_oas_get(m, url=self.object_service.api_root, service="objects")
-        mock_service_oas_get(
-            m, url=self.objecttype_service.api_root, service="objecttypes"
-        )
+        mock_service_oas_get(m, url=object_service.api_root, service="objects")
+        mock_service_oas_get(m, url=objecttype_service.api_root, service="objecttypes")
 
-        mock_zaak.return_value = factory(Zaak, self.zaak)
+        mock_zaak.return_value = factory(Zaak, zaak)
         mock_get_zaakobjects.return_value = factory(
-            ZaakObject, [self.zaakobject_1, self.zaakobject_2]
+            ZaakObject, [zaakobject_1, zaakobject_2]
         )
 
         m.get(OBJECT_1["url"], json=OBJECT_1)
@@ -183,7 +266,7 @@ class RelatedObjectsTests(APITransactionTestCase):
             ],
         )
 
-        self.client.force_login(self.user)
+        self.client.force_authenticate(user)
 
         response = self.client.get(
             reverse(

@@ -16,7 +16,16 @@ from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
 
 class KownslReviewRequestSerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = "https://kownsl.utrechtproeftuin.nl/api/v1"
-    PROXY_SCHEMA = ("/api/v1/review-requests/{uuid}", "get")
+    PROXY_SCHEMA_PATH = [
+        "paths",
+        "/api/v1/review-requests/{uuid}",
+        "get",
+        "responses",
+        200,
+        "content",
+        "application/json",
+        "schema",
+    ]
     zaak = ZaakSerializer()
 
 

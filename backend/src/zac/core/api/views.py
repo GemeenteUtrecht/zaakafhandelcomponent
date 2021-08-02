@@ -4,6 +4,7 @@ from datetime import date
 from itertools import groupby
 from typing import Dict, List
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
@@ -13,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import (
     authentication,
     exceptions,
@@ -22,8 +23,8 @@ from rest_framework import (
     status,
     views,
 )
-from rest_framework.exceptions import APIException
-from rest_framework.generics import ListAPIView
+from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -33,10 +34,17 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User, UserAtomicPermission
+from zac.api.utils import remote_schema_ref
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
-from zac.core.services import update_document
+from zac.core.services import (
+    fetch_objecttype_version,
+    fetch_objecttypes,
+    relate_object_to_zaak,
+    search_objects,
+    update_document,
+)
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -63,6 +71,7 @@ from ..views.utils import filter_documenten_for_permissions, get_source_doc_vers
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
+from .mixins import ListMixin, RetrieveMixin
 from .pagination import BffPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
@@ -81,6 +90,10 @@ from .serializers import (
     ExtraInfoUpSerializer,
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
+    ObjectFilterProxySerializer,
+    ObjectProxySerializer,
+    ObjecttypeProxySerializer,
+    ObjecttypeVersionProxySerializer,
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
@@ -91,6 +104,7 @@ from .serializers import (
     ZaakDetailSerializer,
     ZaakEigenschapSerializer,
     ZaakObjectGroupSerializer,
+    ZaakObjectProxySerializer,
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
@@ -679,3 +693,78 @@ class EigenschappenView(ListAPIView):
         )
 
         return eigenschappen_aggregated
+
+
+#
+# Objects endpoints
+#
+
+
+@extend_schema(
+    summary=_("List objecttypes"),
+    description=_("Retrieves all object types from the configured Objecttypes API."),
+    tags=["objects"],
+)
+class ObjecttypeListView(ListMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjecttypeProxySerializer
+    action = "list"
+
+    def get_objects(self) -> List[dict]:
+        return fetch_objecttypes()
+
+
+@extend_schema(
+    summary=_("Read objecttype version"),
+    description=_("Read the details of a particular objecttype version"),
+    tags=["objects"],
+)
+class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjecttypeVersionProxySerializer
+
+    def get_object(self) -> dict:
+        return fetch_objecttype_version(**self.kwargs)
+
+
+@extend_schema(
+    summary=_("Search objects"),
+    description=_("Search for objects in the Objects API"),
+    responses={(200, "application/json"): ObjectProxySerializer},
+    tags=["objects"],
+)
+class ObjectSearchView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ObjectFilterProxySerializer
+
+    def post(self, request):
+        try:
+            objects = search_objects(filters=request.data)
+        except ClientError as exc:
+            raise ValidationError(detail=exc.args)
+
+        object_serializer = ObjectProxySerializer(objects, many=True)
+        return Response(object_serializer.data)
+
+
+@extend_schema(
+    summary=_("Create zaakobject"),
+    description=_("Relate an object to a zaak"),
+    responses={(201, "application/json"): ZaakObjectProxySerializer},
+    tags=["objects"],
+)
+class ZaakObjectCreateView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ZaakObjectProxySerializer
+
+    def post(self, request):
+        try:
+            created_zaakobject = relate_object_to_zaak(request.data)
+        except ClientError as exc:
+            raise ValidationError(detail=exc.args)
+
+        return Response(status=201, data=created_zaakobject)

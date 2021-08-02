@@ -1,6 +1,7 @@
 from decimal import ROUND_05UP
 from typing import Optional
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
@@ -28,6 +29,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
@@ -652,3 +654,37 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("username", "permissions")
+
+
+class ObjecttypeProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
+    PROXY_SCHEMA = ("/api/v1/objecttypes/", "get")
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectType"]
+
+
+class ObjecttypeVersionProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTTYPES_API_SCHEMA
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectVersion"]
+
+
+class ObjectProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
+    PROXY_SCHEMA_PATH = ["components", "schemas", "Object"]
+
+
+class ObjectFilterProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
+    PROXY_SCHEMA_PATH = [
+        "paths",
+        "/api/v1/objects/search",
+        "post",
+        "requestBody",
+        "content",
+        "application/json",
+        "schema",
+    ]
+
+
+class ZaakObjectProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.ZRC_API_SCHEMA
+    PROXY_SCHEMA_PATH = ["components", "schemas", "ZaakObject"]
