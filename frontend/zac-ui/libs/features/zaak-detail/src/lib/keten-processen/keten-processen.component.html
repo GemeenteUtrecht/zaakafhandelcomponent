@@ -136,10 +136,10 @@
 
   <!-- Loaded -->
   <ng-container *ngIf="!isLoadingContext && taskContextData" [ngSwitch]="taskContextData.form">
-    <mat-tab-group mat-align-tabs="center">
+    <gu-tab-group alignTabs="center" [selectedIndex]="selectedTabIndex || 0">
 
       <!-- Execute task -->
-      <mat-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowedToExecuteTask(currentUser, taskContextData.task)">
+      <gu-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowedToExecuteTask(currentUser, taskContextData.task)">
         <div class="pt-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
@@ -154,14 +154,14 @@
 
           <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-dynamic-form>
         </div>
-      </mat-tab>
+      </gu-tab>
 
       <!-- Assign task -->
-      <mat-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowedToAssignTask(currentUser, taskContextData.task)">
+      <gu-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowedToAssignTask(currentUser, taskContextData.task)">
         <div class="pt-4">
           <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (successReload)="closeModal()"></gu-assign-task>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </gu-tab>
+    </gu-tab-group>
   </ng-container>
 </gu-modal>

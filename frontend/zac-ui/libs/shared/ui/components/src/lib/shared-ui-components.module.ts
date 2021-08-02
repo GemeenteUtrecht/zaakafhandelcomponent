@@ -12,6 +12,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatNativeDateModule} from '@angular/material/core';
 import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from '@angular/material/table';
+import {MatTabsModule} from '@angular/material/tabs';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -34,6 +35,8 @@ import {ModalComponent} from './components/modal/modal.component';
 import {DatepickerComponent} from './components/datepicker/datepicker.component';
 import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
+import {TabComponent} from './components/tabs/tab.component';
+import {TabGroupComponent} from './components/tabs/tab-group.component';
 
 
 @NgModule({
@@ -49,7 +52,8 @@ import {SidenavComponent} from './components/sidenav/sidenav.component';
         RouterModule,
         MatSortModule,
         MatCheckboxModule,
-        MatDatepickerModule
+        MatDatepickerModule,
+        MatTabsModule,
     ],
     declarations: [
         ButtonComponent,
@@ -70,6 +74,8 @@ import {SidenavComponent} from './components/sidenav/sidenav.component';
         InputFieldComponent,
         MessageComponent,
         SidenavComponent,
+        TabComponent,
+        TabGroupComponent
     ],
     exports: [
         ButtonComponent,
@@ -91,6 +97,8 @@ import {SidenavComponent} from './components/sidenav/sidenav.component';
         InputFieldComponent,
         MessageComponent,
         SidenavComponent,
+        TabComponent,
+        TabGroupComponent,
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
