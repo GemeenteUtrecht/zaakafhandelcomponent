@@ -13,6 +13,7 @@ from .models import (
     AtomicPermission,
     AuthorizationProfile,
     BlueprintPermission,
+    Role,
     User,
     UserAuthorizationProfile,
 )
@@ -163,3 +164,8 @@ class BlueprintPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAd
         return self.display_related_as_list_of_links(obj, "auth_profiles")
 
     get_auth_profiles_display.short_description = _("authorization profiles")
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ("name", "permissions")

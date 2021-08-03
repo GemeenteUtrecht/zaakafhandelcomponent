@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -340,3 +340,21 @@ class BlueprintPermission(models.Model):
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
         return blueprint.search_query()
+
+
+class Role(models.Model):
+    name = models.CharField(
+        _("name"), max_length=100, unique=True, help_text=_("Name of the role")
+    )
+    permissions = ArrayField(
+        models.CharField(_("permission"), max_length=255),
+        help_text=_("List of the permissions"),
+        default=list,
+    )
+
+    class Meta:
+        verbose_name = _("role")
+        verbose_name_plural = _("roles")
+
+    def __str__(self):
+        return self.name
