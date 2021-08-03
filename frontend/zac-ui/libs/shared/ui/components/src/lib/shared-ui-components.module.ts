@@ -99,6 +99,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         SidenavComponent,
         TabComponent,
         TabGroupComponent,
+        MatTabsModule
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

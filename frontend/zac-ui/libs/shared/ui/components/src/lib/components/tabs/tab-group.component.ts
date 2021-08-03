@@ -34,7 +34,7 @@ export class TabGroupComponent implements AfterViewInit {
 
   constructor(private cdRef: ChangeDetectorRef) {}
 
-  public ngAfterViewInit() {
+  ngAfterViewInit() {
     const matTabsFromQueryList = this.tabs.map(tab => tab.matTab);
     const list = new QueryList<MatTab>();
     list.reset([matTabsFromQueryList]);
