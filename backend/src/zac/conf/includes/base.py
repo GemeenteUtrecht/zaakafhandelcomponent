@@ -133,6 +133,7 @@ INSTALLED_APPS = [
     "compat",  # Part of hijack
     "hijack_admin",
     "django_better_admin_arrayfield",
+    "django_scim",
     # Project applications.
     "zac.accounts",
     "zac.camunda",
@@ -159,6 +160,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.accounts.middleware.HijackMiddleware",
@@ -518,3 +520,13 @@ ELASTICSEARCH_DSL = {
     "default": {"hosts": config("ES_HOST", "localhost:9200")},
 }
 ES_INDEX_ZAKEN = "zaken"
+
+
+# SCIM
+SCIM_SERVICE_PROVIDER = {
+    "NETLOC": "localhost",
+    "AUTHENTICATION_SCHEMES": [],
+    "GROUP_ADAPTER": "zac.accounts.adapters.AuthorizationProfileAdapter",
+    "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
+    "USER_ADAPTER": "zac.accounts.adapters.UserAdapter",
+}

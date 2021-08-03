@@ -31,6 +31,7 @@ django-hijack-admin
 django-import-export
 django-redis
 django-sniplates
+django-scim2
 
 # Restful API
 djangorestframework
