@@ -14,7 +14,7 @@ from elasticsearch_dsl.query import (
     Terms,
 )
 
-from zac.accounts.constants import PermissionObjectType
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, User, UserAtomicPermission
 from zac.core.permissions import zaken_inzien
 
@@ -34,7 +34,7 @@ SUPPORTED_QUERY_PARAMS = (
 
 def query_allowed_for_user(
     user: User,
-    object_type: str = PermissionObjectType.zaak,
+    object_type: str = PermissionObjectTypeChoices.zaak,
     permission: str = zaken_inzien.name,
 ) -> Query:
     """

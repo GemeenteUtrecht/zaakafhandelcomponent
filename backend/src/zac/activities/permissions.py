@@ -1,5 +1,4 @@
 from zac.accounts.permissions import Permission
-from zac.core.blueprints import ZaakTypeBlueprint
 
 activiteiten_schrijven = Permission(
     name="activiteiten:schrijven",
@@ -8,12 +7,10 @@ activiteiten_schrijven = Permission(
         "willekeurige activiteiten die niet in een BPMN-proces gevat kunnen worden, "
         "en worden geregistreerd bij een specifieke zaak."
     ),
-    blueprint_class=ZaakTypeBlueprint,
 )
 
 
 activities_read = Permission(
     name="activities:read",
     description="",
-    blueprint_class=ZaakTypeBlueprint,
 )

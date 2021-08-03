@@ -7,14 +7,14 @@ from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
 from zgw.models.zrc import Zaak
 
-from .constants import PermissionObjectType, PermissionReason
+from .constants import PermissionObjectTypeChoices, PermissionReason
 from .models import AtomicPermission, User, UserAtomicPermission
 
 
 def add_atomic_permission_to_user(
     user: User,
     object_url: str,
-    object_type: str = PermissionObjectType.zaak,
+    object_type: str = PermissionObjectTypeChoices.zaak,
     permission_name: str = zaken_inzien.name,
     reason: str = "",
 ) -> Optional[UserAtomicPermission]:

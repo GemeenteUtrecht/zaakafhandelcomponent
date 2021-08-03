@@ -29,7 +29,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.constants import PermissionObjectType
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
@@ -125,7 +125,7 @@ def get_zaaktypen(
     # filter out zaaktypen from permissions
     zaaktypen_policies = (
         BlueprintPermission.objects.for_user(user)
-        .filter(object_type=PermissionObjectType.zaak)
+        .filter(object_type=PermissionObjectTypeChoices.zaak)
         .actual()
         .values_list("policy", flat=True)
         .distinct()

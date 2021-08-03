@@ -14,9 +14,13 @@ from elasticsearch_dsl.query import Query
 from zac.core.permissions import zaken_request_access
 from zac.utils.exceptions import get_error_list
 
-from .constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from .constants import (
+    AccessRequestResult,
+    PermissionObjectTypeChoices,
+    PermissionReason,
+)
 from .managers import UserManager
-from .permissions import registry
+from .permissions import object_type_registry, registry
 from .query import (
     AccessRequestQuerySet,
     AtomicPermissionQuerySet,
@@ -225,7 +229,7 @@ class AtomicPermission(models.Model):
     object_type = models.CharField(
         _("object type"),
         max_length=50,
-        choices=PermissionObjectType.choices,
+        choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the objects this permission applies to"),
     )
     permission = models.CharField(
@@ -287,7 +291,7 @@ class BlueprintPermission(models.Model):
     object_type = models.CharField(
         _("object type"),
         max_length=50,
-        choices=PermissionObjectType.choices,
+        choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the objects this permission applies to"),
     )
     permission = models.CharField(
@@ -318,8 +322,8 @@ class BlueprintPermission(models.Model):
         return f"{self.permission}: {blueprint.short_display()}"
 
     def get_blueprint_class(self):
-        permission = registry[self.permission]
-        return permission.blueprint_class
+        object_type = object_type_registry[self.object_type]
+        return object_type.blueprint_class
 
     def clean(self):
         super().clean()
@@ -331,10 +335,10 @@ class BlueprintPermission(models.Model):
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
-    def has_access(self, obj, user=None) -> bool:
+    def has_access(self, obj, user=None, permission=None) -> bool:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy, context={"user": user})
-        return blueprint.has_access(obj)
+        return blueprint.has_access(obj, permission)
 
     def get_search_query(self) -> Query:
         blueprint_class = self.get_blueprint_class()
