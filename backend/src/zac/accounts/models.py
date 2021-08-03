@@ -294,8 +294,8 @@ class BlueprintPermission(models.Model):
         choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the objects this permission applies to"),
     )
-    permission = models.CharField(
-        _("Permission"), max_length=255, help_text=_("Name of the permission")
+    role = models.ForeignKey(
+        "Role", on_delete=models.CASCADE, related_name="blueprint_permissions"
     )
     policy = JSONField(
         _("policy"),
@@ -310,16 +310,16 @@ class BlueprintPermission(models.Model):
     class Meta:
         verbose_name = _("blueprint permission")
         verbose_name_plural = _("blueprint permissions")
-        ordering = ("policy__zaaktype_omschrijving", "permission")
-        unique_together = ("permission", "policy")
+        ordering = ("role", "policy__zaaktype_omschrijving")
+        unique_together = ("role", "policy")
 
     def __str__(self):
-        if not self.permission or not self.policy:
-            return f"{self.permission}"
+        if not self.policy:
+            return f"{self.role}"
 
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
-        return f"{self.permission}: {blueprint.short_display()}"
+        return f"{self.role}: {blueprint.short_display()}"
 
     def get_blueprint_class(self):
         object_type = object_type_registry[self.object_type]

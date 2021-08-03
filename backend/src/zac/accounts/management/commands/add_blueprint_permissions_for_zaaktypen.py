@@ -6,7 +6,7 @@ from zac.accounts.permissions import registry
 from zac.core.blueprints import ZaakTypeBlueprint
 from zac.core.services import get_zaaktypen
 
-from ...constants import PermissionObjectType
+from ...constants import PermissionObjectTypeChoices
 from ...models import BlueprintPermission
 
 
@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 obj, created = BlueprintPermission.objects.get_or_create(
                     permission=permission,
                     policy=policy,
-                    object_type=PermissionObjectType.zaak,
+                    object_type=PermissionObjectTypeChoices.zaak,
                 )
                 if created:
                     added.append(obj)

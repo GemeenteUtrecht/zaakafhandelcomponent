@@ -57,7 +57,7 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
 @admin.register(AuthorizationProfile)
 class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
     list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
-    list_filter = ("blueprint_permissions__permission",)
+    list_filter = ("blueprint_permissions__role",)
     search_fields = ("name", "uuid")
     inlines = (UserAuthorizationProfileInline,)
     filter_horizontal = ("blueprint_permissions",)
@@ -139,19 +139,24 @@ class AuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(BlueprintPermission)
-class BlueprintPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAdmin):
+class BlueprintPermissionAdmin(RelatedLinksMixin, admin.ModelAdmin):
     list_display = (
-        "permission",
+        "role",
         "object_type",
         "get_policy_list_display",
         "get_auth_profiles_display",
     )
-    list_filter = ("permission", "object_type", "auth_profiles")
+    list_filter = ("role", "object_type", "auth_profiles")
     formfield_overrides = {JSONField: {"widget": PolicyWidget}}
     inlines = (AuthorizationProfileInline,)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("auth_profiles")
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("role")
+            .prefetch_related("auth_profiles")
+        )
 
     def get_policy_list_display(self, obj):
         blueprint_class = obj.get_blueprint_class()
@@ -167,5 +172,21 @@ class BlueprintPermissionAdmin(PermissionMixin, RelatedLinksMixin, admin.ModelAd
 
 
 @admin.register(Role)
-class RoleAdmin(admin.ModelAdmin):
-    list_display = ("name", "permissions")
+class RoleAdmin(RelatedLinksMixin, admin.ModelAdmin):
+    list_display = ("name", "permissions", "get_blueprint_permissions_display")
+
+    def get_blueprint_permissions_display(self, obj):
+        return self.display_related_as_count_with_link(obj, "blueprint_permissions")
+
+    get_blueprint_permissions_display.short_description = _("total permissions")
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "permissions":
+            permission_choices = [(name, name) for name, permission in registry.items()]
+            return forms.MultipleChoiceField(
+                label=db_field.verbose_name.capitalize(),
+                choices=permission_choices,
+                help_text=db_field.help_text,
+            )
+
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

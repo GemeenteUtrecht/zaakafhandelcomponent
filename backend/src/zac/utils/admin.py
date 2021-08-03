@@ -56,6 +56,11 @@ class RelatedLinksMixin:
         changelist_url = reverse(
             f"admin:{model._meta.app_label}_{model._meta.model_name}_changelist"
         )
-        query = {f"{field.query_field_name}__id__exact": obj.id}
+        field_name = (
+            field.query_field_name
+            if hasattr(field, "query_field_name")
+            else field.field.name
+        )
+        query = {f"{field_name}__id__exact": obj.id}
         url = f"{changelist_url}?{urlencode(query)}"
         return format_html('<a href="{}">{}</a>', url, field.count())
