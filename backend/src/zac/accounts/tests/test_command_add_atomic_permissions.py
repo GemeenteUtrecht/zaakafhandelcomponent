@@ -11,7 +11,7 @@ from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ..constants import PermissionObjectType
+from ..constants import PermissionObjectTypeChoices
 from ..models import AtomicPermission
 from .factories import UserFactory
 
@@ -86,7 +86,9 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         atomic_permission = AtomicPermission.objects.for_user(self.user).get()
 
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.object_url, zaak["url"])
 
     def test_add_permission_for_advisor(self, m):
@@ -139,5 +141,5 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         self.assertEqual(permission_execute.permission, zaakproces_usertasks.name)
 
         for permission in [permission_read, permission_execute]:
-            self.assertEqual(permission.object_type, PermissionObjectType.zaak)
+            self.assertEqual(permission.object_type, PermissionObjectTypeChoices.zaak)
             self.assertEqual(permission.object_url, zaak["url"])

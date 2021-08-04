@@ -62,7 +62,7 @@ def query_allowed_for_user(
     for blueprint_permission in (
         BlueprintPermission.objects.for_user(user)
         .actual()
-        .filter(object_type=object_type, permission=permission)
+        .filter(object_type=object_type, role__permissions__contains=[permission])
     ):
         allowed.append(blueprint_permission.get_search_query())
 

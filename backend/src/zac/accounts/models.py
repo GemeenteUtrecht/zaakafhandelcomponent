@@ -113,7 +113,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         blueprint_permissions = (
             BlueprintPermission.objects.for_user(self)
             .actual()
-            .filter(permission=zaken_request_access.name)
+            .filter(role__permissions__contains=[zaken_request_access.name])
         )
         for permission in blueprint_permissions:
             if permission.has_access(zaak, self):

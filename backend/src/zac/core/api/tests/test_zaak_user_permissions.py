@@ -91,11 +91,33 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_zaaktype(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": user.username,
+            },
+        }
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=user,
             policy={
                 "catalogus": "",
@@ -109,11 +131,33 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_but_not_for_va(self):
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_va(self, m):
         user = UserFactory.create()
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": user.username,
+            },
+        }
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
         # gives them access to the page and zaaktype, but insufficient VA
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -152,7 +196,7 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
             json=paginated_response([rol]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],

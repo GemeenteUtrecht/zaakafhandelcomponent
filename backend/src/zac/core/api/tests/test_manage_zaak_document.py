@@ -14,7 +14,7 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.constants import PermissionObjectType
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -152,21 +152,11 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self._setupMocks(m)
 
         # set up user permissions
-        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         BlueprintPermissionFactory.create(
-            permission=zaken_wijzigen.name,
+            role__permissions=[zaken_wijzigen.name, zaken_add_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-        BlueprintPermissionFactory.create(
-            permission=zaken_add_documents.name,
-            for_user=user,
-            policy={
-                "catalogus": catalogus,
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -206,7 +196,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self._setupMocks(m)
 
         BlueprintPermissionFactory.create(
-            permission=zaken_add_documents.name,
+            role__permissions=[zaken_add_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -239,7 +229,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
         self._setupMocks(m)
         BlueprintPermissionFactory.create(
-            permission=zaken_wijzigen.name,
+            role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -276,8 +266,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
         self._setupMocks(m)
         BlueprintPermissionFactory.create(
-            object_type=PermissionObjectType.document,
-            permission=zaken_update_documents.name,
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.informatieobjecttype["catalogus"],
@@ -314,7 +304,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
         self._setupMocks(m)
         BlueprintPermissionFactory.create(
-            permission=zaken_wijzigen.name,
+            role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -323,8 +313,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
         BlueprintPermissionFactory.create(
-            object_type=PermissionObjectType.document,
-            permission=zaken_update_documents.name,
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.informatieobjecttype["catalogus"],

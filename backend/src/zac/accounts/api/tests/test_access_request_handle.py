@@ -18,7 +18,11 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien, zaken_reques
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from ...constants import (
+    AccessRequestResult,
+    PermissionObjectTypeChoices,
+    PermissionReason,
+)
 from ...models import AtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
@@ -83,7 +87,7 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -105,7 +109,7 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
 
         BlueprintPermissionFactory.create(
-            permission=zaken_request_access.name,
+            role__permissions=[zaken_request_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -143,7 +147,7 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -223,7 +227,9 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
         data = response.json()

@@ -11,6 +11,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
@@ -103,7 +104,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         user = UserFactory.create()
 
         BlueprintPermissionFactory.create(
-            permission=zaken_download_documents.name,
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.iot_1["catalogus"],
@@ -133,7 +135,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
 
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_download_documents.name,
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.iot_1["catalogus"],
@@ -150,7 +153,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
 
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_download_documents.name,
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.iot_1["catalogus"],

@@ -12,6 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -106,7 +107,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -147,7 +148,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         user = UserFactory.create()
         # todo remove after auth refactoring
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -285,7 +286,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456789",
                         "omschrijving": "Some zaak 1",
                         "vertrouwelijkheidaanduiding": "confidentieel",
-                        "vaOrder": 22,
+                        "vaOrder": VA_ORDER["confidentieel"],
                         "rollen": [],
                         "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
                         "einddatum": None,
@@ -440,7 +441,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456789",
                         "omschrijving": "Some zaak 1",
                         "vertrouwelijkheidaanduiding": "confidentieel",
-                        "vaOrder": 22,
+                        "vaOrder": VA_ORDER["confidentieel"],
                         "rollen": [],
                         "startdatum": zaak1_model.startdatum.isoformat() + "T00:00:00Z",
                         "einddatum": None,

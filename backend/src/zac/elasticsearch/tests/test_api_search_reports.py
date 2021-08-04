@@ -12,7 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.constants import PermissionObjectType
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -735,7 +735,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # Create permission
         BlueprintPermissionFactory.create(
-            permission=zoek_rapport_inzien.name,
+            role__permissions=[zoek_rapport_inzien.name],
             for_user=user,
             policy={
                 "zaaktypen": [
@@ -743,7 +743,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
                 ],
             },
-            object_type=PermissionObjectType.search_report,
+            object_type=PermissionObjectTypeChoices.search_report,
         )
 
         response = self.client.get(endpoint)

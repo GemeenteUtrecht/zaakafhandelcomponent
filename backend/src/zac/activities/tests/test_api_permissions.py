@@ -104,7 +104,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activities_read.name,
+            role__permissions=[activities_read.name],
             for_user=user,
             policy={
                 "catalogus": catalogus,
@@ -143,7 +143,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activities_read.name,
+            role__permissions=[activities_read.name],
             for_user=user,
             policy={
                 "catalogus": catalogus,
@@ -264,7 +264,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activities_read.name,
+            role__permissions=[activities_read.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -289,7 +289,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activities_read.name,
+            role__permissions=[activities_read.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -390,7 +390,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -417,7 +417,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -491,7 +491,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -520,7 +520,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -636,7 +636,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -662,7 +662,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            permission=activiteiten_schrijven.name,
+            role__permissions=[activiteiten_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,

@@ -10,7 +10,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 
-from zac.accounts.constants import PermissionObjectType, PermissionReason
+from zac.accounts.constants import PermissionObjectTypeChoices, PermissionReason
 from zac.accounts.models import AtomicPermission, User
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
@@ -174,7 +174,9 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         atomic_permission = AtomicPermission.objects.for_user(user).get()
 
         self.assertEqual(atomic_permission.object_url, ZAAK)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
         user_atomic_permission = atomic_permission.useratomicpermission_set.get()

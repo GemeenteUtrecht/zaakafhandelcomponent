@@ -33,7 +33,7 @@ class PermissionsBackend:
 
         blueprint_permissions = (
             BlueprintPermission.objects.for_user(user_obj)
-            .filter(permission=perm)
+            .filter(role__permissions__contains=[perm])
             .actual()
         )
 

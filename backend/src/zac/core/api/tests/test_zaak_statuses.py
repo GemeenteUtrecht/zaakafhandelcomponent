@@ -270,7 +270,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": "",
@@ -304,7 +304,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -328,7 +328,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],

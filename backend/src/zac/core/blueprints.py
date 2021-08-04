@@ -47,7 +47,7 @@ class ZaakTypeBlueprint(Blueprint):
         if permission == zaken_handle_access.name:
             user = self.context.get("user")
 
-            if not user or self.is_zaak_behandelaar(user, zaak):
+            if not user or not self.is_zaak_behandelaar(user, zaak):
                 return False
 
         zaaktype = zaak.zaaktype
