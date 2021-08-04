@@ -10,7 +10,7 @@ export interface Task {
   id: string;
   executeUrl: string;
   name: string;
-  created: string;
+  created: Date;
   hasForm: boolean;
   assignee: Assignee;
 }

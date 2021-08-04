@@ -1,95 +1,108 @@
 <div class="workstack">
   <h1>Werkvoorraad</h1>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-  <tabset *ngIf="!isLoading">
+  <gu-tab-group *ngIf="!isLoading" [selectedIndex]="currentActiveTab || 0">
     <ng-container *ngFor="let tab of tabs; let i = index">
-      <tab [heading]="tab.label" [active]="currentActiveTab ? tab.label === currentActiveTab : i === 0">
-        <div class="tab-content">
-          <ng-container [ngSwitch]="tab.component">
+      <gu-tab>
+        <ng-container [ngSwitch]="tab.component">
 
-            <!--                Zaken -->
-            <ng-container *ngSwitchCase="'zaken'">
-              <ng-template tabHeading>
-                <gu-chip *ngIf="zakenData?.length > 0"
-                         type="badge"
-                         color="primary"
-                         class="ml-1">
-                  {{zakenData?.length}}
-                </gu-chip>
-              </ng-template>
+          <!-- Zaken -->
+          <div class="tab-content" *ngSwitchCase="'zaken'">
 
-              <gu-table *ngIf="zakenTableData.bodyData.length > 0; else noZaken"
-                        (sortOutput)="fetchZaken($event)"
-                        [sortable]="true"
-                        [table]="zakenTableData"
-              ></gu-table>
-              <ng-template #noZaken>
-                <p>Er zijn geen zaken gevonden.</p>
-              </ng-template>
-            </ng-container>
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="zakenData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{zakenData?.length}}
+              </gu-chip>
+            </ng-template>
 
-            <!--                Taken -->
-            <ng-container *ngSwitchCase="'tasks'">
-              <ng-template tabHeading>
-                <gu-chip *ngIf="taskData?.length > 0"
-                         type="badge"
-                         color="primary"
-                         class="ml-1">
-                  {{taskData?.length}}
-                </gu-chip>
-              </ng-template>
+            <!-- Content -->
+            <gu-table *ngIf="zakenTableData.bodyData.length > 0; else noZaken"
+                      (sortOutput)="fetchZaken($event)"
+                      [sortable]="true"
+                      [table]="zakenTableData"
+            ></gu-table>
+            <ng-template #noZaken>
+              <p>Er zijn geen zaken gevonden.</p>
+            </ng-template>
+          </div>
 
-              <ng-container *ngIf="taskData?.length > 0; else noTasks" >
-                  <a *ngFor="let userTask of taskData"
-                     class="anchor mb-2 task-link"
-                     href="{{createRouteLink(userTask.zaak, userTask.task)}}">
-                    {{userTask.zaak.identificatie}}: {{userTask.task.name}}
-                  </a>
-                </ng-container>
-              <ng-template #noTasks>
-                <p>Er zijn geen taken gevonden.</p>
-              </ng-template>
-            </ng-container>
+          <!-- Taken -->
+          <div class="tab-content" *ngSwitchCase="'tasks'">
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="taskData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{taskData?.length}}
+              </gu-chip>
+            </ng-template>
 
-            <!--                Activiteiten -->
-            <ng-container *ngSwitchCase="'activities'">
-              <ng-template tabHeading>
-                <gu-chip *ngIf="activitiesData?.length > 0"
-                         type="badge"
-                         color="primary"
-                         class="ml-1">
-                  {{activitiesData?.length}}
-                </gu-chip>
-              </ng-template>
-
-              <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
-                <a *ngFor="let activity of activitiesData"
+            <!-- Content -->
+            <ng-container *ngIf="taskData?.length > 0; else noTasks" >
+                <a *ngFor="let userTask of taskData"
                    class="anchor mb-2 task-link"
-                   href="{{createActivityLink(activity.zaak)}}">
-                  {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
+                   href="{{createRouteLink(userTask.zaak, userTask.task)}}">
+                  {{userTask.zaak.identificatie}}: {{userTask.task.name}}
                 </a>
               </ng-container>
-              <ng-template #noActivity>
-                <p>Er zijn geen ad-hoc activiteiten gevonden.</p>
-              </ng-template>
-            </ng-container>
+            <ng-template #noTasks>
+              <p>Er zijn geen taken gevonden.</p>
+            </ng-template>
+          </div>
 
-            <!--                Toegangsverzoeken -->
-            <ng-container *ngSwitchCase="'access-request'">
-              <ng-template tabHeading>
-                <gu-chip *ngIf="accessRequestData?.length > 0"
-                         type="badge"
-                         color="primary"
-                         class="ml-1">
-                  {{accessRequestData?.length}}
-                </gu-chip>
-              </ng-template>
-              <gu-access-request [data]='accessRequestData' (reload)="reloadWorkstack('Toegangsverzoeken')"></gu-access-request>
-            </ng-container>
+          <!-- Activiteiten -->
+          <div class="tab-content" *ngSwitchCase="'activities'">
 
-          </ng-container>
-        </div>
-      </tab>
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="activitiesData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{activitiesData?.length}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
+              <a *ngFor="let activity of activitiesData"
+                 class="anchor mb-2 task-link"
+                 href="{{createActivityLink(activity.zaak)}}">
+                {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
+              </a>
+            </ng-container>
+            <ng-template #noActivity>
+              <p>Er zijn geen ad-hoc activiteiten gevonden.</p>
+            </ng-template>
+          </div>
+
+          <!-- Toegangsverzoeken -->
+          <div class="tab-content" *ngSwitchCase="'access-request'">
+
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="accessRequestData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{accessRequestData?.length}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <gu-access-request [data]='accessRequestData' (reload)="reloadWorkstack(3)"></gu-access-request>
+          </div>
+        </ng-container>
+      </gu-tab>
     </ng-container>
-  </tabset>
+  </gu-tab-group>
 </div>

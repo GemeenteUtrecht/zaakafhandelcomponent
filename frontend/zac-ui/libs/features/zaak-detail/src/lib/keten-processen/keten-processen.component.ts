@@ -1,11 +1,11 @@
-import { Component, Input, OnChanges, AfterViewInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { DatePipe } from '@angular/common';
-import { ModalService } from '@gu/components'
-import { TaskContextData } from '../../models/task-context';
-import { KetenProcessenService } from './keten-processen.service';
-import { KetenProcessen, Task } from '../../models/keten-processen';
-import { User } from '@gu/models';
+import {Component, Input, OnChanges, AfterViewInit} from '@angular/core';
+import {ActivatedRoute} from '@angular/router';
+import {DatePipe} from '@angular/common';
+import {ModalService} from '@gu/components'
+import {TaskContextData} from '../../models/task-context';
+import {KetenProcessenService} from './keten-processen.service';
+import {KetenProcessen} from '../../models/keten-processen';
+import {Task, User} from '@gu/models';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -51,23 +51,25 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   contextHasError: boolean;
   contextErrorMessage: string;
 
-  // Assign task
-  assignTaskTask: Task;
+  // Tabs
+  selectedTabIndex = null;
 
+  // Links
   doRedirectTarget: '_blank' | '_self';
 
   constructor(
     private route: ActivatedRoute,
     private modalService: ModalService,
-    private ketenProcessenService: KetenProcessenService,
-  ) { }
+    public ketenProcessenService: KetenProcessenService,
+  ) {
+  }
 
   /**
    * Detect a change in the url to get the current url params.
    * Updated data will be fetched if the params change.
    */
   ngOnChanges(): void {
-    this.route.params.subscribe( params => {
+    this.route.params.subscribe(params => {
       this.bronorganisatie = params['bronorganisatie'];
       this.identificatie = params['identificatie'];
 
@@ -93,7 +95,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
    * Fetches the current user.
    */
   fetchCurrentUser(): void {
-    this.ketenProcessenService.getCurrentUser().subscribe( res => {
+    this.ketenProcessenService.getCurrentUser().subscribe(res => {
       this.currentUser = res;
     })
   }
@@ -112,18 +114,18 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.hasError = true;
 
     // Fetch processes.
-    this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe( data => {
+    this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
       // Update data.
       this.data = data;
       this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
 
       // Execute newly created task.
-      if(openTask && taskIds && data && data.length) {
+      if (openTask && taskIds && data && data.length) {
         // Find first task if with id not in taskIds.
         const newTask = data[0].tasks
-            .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
-            .find(task => taskIds.indexOf(task.id) === -1);
+          .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
+          .find((task: Task) => taskIds.indexOf(task.id) === -1);
 
         if (newTask) {
           this.executeTask(newTask.id);
@@ -147,7 +149,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       processInstanceId: this.processInstanceId,
       message: message
     }
-    this.ketenProcessenService.sendMessage(formData).subscribe( (result) => {
+    this.ketenProcessenService.sendMessage(formData).subscribe((result) => {
       this.fetchProcesses(true);
     }, errorRes => {
       this.sendMessageErrorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
@@ -159,19 +161,11 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   /**
    * Open a selected task.
    * @param {string} taskId
+   * @param {number} [tabIndex]
    */
-  executeTask(taskId: string): void {
+  executeTask(taskId: string, tabIndex: number = null): void {
+    this.selectedTabIndex = tabIndex;
     this.fetchFormLayout(taskId);
-  }
-
-  /**
-   * Assign a selected task to user.
-   * Opens up a modal to assign a user to the task.
-   * @param {Task} task
-   */
-  assignTask(task: Task) {
-    this.assignTaskTask = task;
-    this.modalService.open('assignTaskModal');
   }
 
   /**
@@ -203,5 +197,13 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       this.contextHasError = true;
       this.isLoadingContext = false;
     })
+  }
+
+  /**
+   * Closes modal and reloads services.
+   */
+  closeModal(): void {
+    this.modalService.close('ketenprocessenModal');
+    this.fetchProcesses()
   }
 }

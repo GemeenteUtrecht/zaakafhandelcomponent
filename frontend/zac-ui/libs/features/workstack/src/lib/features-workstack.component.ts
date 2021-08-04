@@ -24,7 +24,7 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   isLoading: boolean;
 
-  currentActiveTab: string;
+  currentActiveTab: number = 0;
 
   constructor(private workstackService: FeaturesWorkstackService) {}
 
