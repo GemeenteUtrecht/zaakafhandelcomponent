@@ -34,6 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     Use the built-in user model.
     """
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     username = models.CharField(
         _("username"),
         max_length=150,
