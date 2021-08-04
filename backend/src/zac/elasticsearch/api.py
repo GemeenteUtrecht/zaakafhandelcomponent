@@ -32,20 +32,14 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         if isinstance(zaak.zaaktype, ZaakType)
         else fetch_zaaktype(zaak.zaaktype)
     )
-    zaak.zaaktype = zaaktype
+
     zaaktype_document = ZaakTypeDocument(
         url=zaaktype.url,
         omschrijving=zaaktype.omschrijving,
         catalogus=zaaktype.catalogus,
     )
-    status = zaak.status if isinstance(zaak.status, Status) else get_status(zaak)
-    if status:
-        status_document = StatusDocument(
-            url=status.url,
-            statustype=status.statustype.omschrijving,
-            datum_status_gezet=status.datum_status_gezet,
-            statustoelichting=status.statustoelichting,
-        )
+    if zaak.status:
+        status_document = _create_status_document(zaak)
     else:
         status_document = None
 
