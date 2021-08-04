@@ -27,16 +27,15 @@ def _get_uuid_from_url(url: str):
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaaktype = (
+    zaak.zaaktype = (
         zaak.zaaktype
         if isinstance(zaak.zaaktype, ZaakType)
         else fetch_zaaktype(zaak.zaaktype)
     )
-
     zaaktype_document = ZaakTypeDocument(
-        url=zaaktype.url,
-        omschrijving=zaaktype.omschrijving,
-        catalogus=zaaktype.catalogus,
+        url=zaak.zaaktype.url,
+        omschrijving=zaak.zaaktype.omschrijving,
+        catalogus=zaak.zaaktype.catalogus,
     )
     if zaak.status:
         status_document = _create_status_document(zaak)
