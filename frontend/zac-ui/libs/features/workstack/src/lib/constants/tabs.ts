@@ -12,7 +12,7 @@ const tabs: Tab[] = [
   },
   {
     component: 'tasks',
-    label: 'Adhoc taken',
+    label: 'Taken',
     endpoint: '/api/workstack/user-tasks'
   },
   {

@@ -1,5 +1,5 @@
 import {
-  AfterViewInit, ChangeDetectorRef,
+  AfterViewInit,
   Component,
   ContentChildren,
   Input,
@@ -10,6 +10,14 @@ import {
 import { MAT_TAB_GROUP, MatTab, MatTabGroup } from '@angular/material/tabs';
 import { TabComponent } from './tab.component';
 
+/**
+ * <gu-tab-group></gu-tab-group>
+ *
+ * Generic tab group component, based on mat-tab-group.
+ *
+ * Takes: alignTabs: position of the tabs.
+ * Takes: selectedIndex: index of selected tab.
+ */
 @Component({
   selector: 'gu-tab-group',
   templateUrl: './tab-group.component.html',
@@ -18,13 +26,13 @@ import { TabComponent } from './tab.component';
       provide: MAT_TAB_GROUP,
       useValue: undefined,
     },
-  ],
+  ]
 })
 export class TabGroupComponent implements AfterViewInit {
   @Input() alignTabs: 'start' | 'center' | 'end' = 'start'
   @Input() selectedIndex = 0;
 
-  @ViewChild('tabBodyWrapper')
+  @ViewChild(MatTabGroup)
   tabBodyWrapper: MatTabGroup;
 
   @ContentChildren(TabComponent)
@@ -32,8 +40,12 @@ export class TabGroupComponent implements AfterViewInit {
 
   @ViewChild('outlet', { read: ViewContainerRef }) container;
 
-  constructor(private cdRef: ChangeDetectorRef) {}
-
+  /**
+   * After completing loading the view of the tab group,
+   * all the tabs will assigned to the group.
+   * This workaround is required because of using a custom
+   * wrapper component.
+   */
   ngAfterViewInit() {
     const matTabsFromQueryList = this.tabs.map(tab => tab.matTab);
     const list = new QueryList<MatTab>();
@@ -41,6 +53,5 @@ export class TabGroupComponent implements AfterViewInit {
     this.tabBodyWrapper._tabs = list;
     this.tabBodyWrapper.selectedIndex = this.selectedIndex;
     this.tabBodyWrapper.ngAfterContentChecked();
-    this.cdRef.detectChanges();
   }
 }
