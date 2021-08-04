@@ -21,7 +21,7 @@ Each permission provides the right to perform one of the following types of oper
 
 * zaak permissions:
     * ``zaken:inzien`` - to see the case details. It's the most used permission in the ZAC
-    * ``zaken:wijzigen`` - to modify the case, for example, to change the confidential level
+    * ``zaken:wijzigen`` - to modify the case, for example, to change the confidentiality level
     * ``zaakproces:usertasks-uitvoeren`` - to perform Camunda tasks
     * ``zaakproces:send-bpmn-message`` - to send messages in the Camunda process
     * ``zaken:add-documents`` - to add documents to the case
