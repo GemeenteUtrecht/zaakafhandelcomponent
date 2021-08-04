@@ -1,6 +1,6 @@
 from django_scim.adapters import SCIMGroup, SCIMUser
 from django_scim.constants import SchemaURI
-from django_scim.utils import get_user_adapter
+from django_scim.utils import get_group_adapter, get_user_adapter
 
 from zac.core.utils import build_absolute_url
 
@@ -45,8 +45,51 @@ class AuthorizationProfileAdapter(SCIMGroup):
 
 
 class UserAdapter(SCIMUser):
-    id_field = "username"
+    id_field = "id"
 
     @property
     def location(self):
         return build_absolute_url(path=self.path, request=self.request)
+
+    def delete(self):
+        User.objects.filter(username=self.obj.username).delete()
+
+    @property
+    def groups(self):
+        """
+        Return the groups of the user per the SCIM spec.
+        """
+        groups = self.obj.auth_profiles.all()
+        scim_groups = [get_group_adapter()(group, self.request) for group in groups]
+
+        dicts = []
+        for group in scim_groups:
+            d = {
+                "value": group.id,
+                "$ref": group.location,
+                "display": group.display_name,
+            }
+            dicts.append(d)
+
+        return dicts
+
+    def to_dict(self):
+        """
+        Return a ``dict`` conforming to the SCIM User Schema,
+        ready for conversion to a JSON object.
+        """
+        return {
+            "id": self.id,
+            "schemas": [SchemaURI.USER],
+            "userName": self.obj.username,
+            "name": {
+                "givenName": self.obj.first_name,
+                "familyName": self.obj.last_name,
+                "formatted": self.name_formatted,
+            },
+            "displayName": self.display_name,
+            "emails": self.emails,
+            "active": self.obj.is_active,
+            "groups": self.groups,
+            "meta": self.meta,
+        }
