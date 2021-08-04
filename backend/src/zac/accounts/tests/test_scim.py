@@ -2,12 +2,8 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from zac.accounts.models import AuthorizationProfile, User
-from zac.accounts.tests.factories import (
-    AuthorizationProfileFactory,
-    BlueprintPermissionFactory,
-    SuperUserFactory,
-)
+from zac.accounts.models import User
+from zac.accounts.tests.factories import AuthorizationProfileFactory, SuperUserFactory
 
 
 class AuthorizationProfileSCIMTests(APITestCase):
@@ -41,8 +37,8 @@ class AuthorizationProfileSCIMTests(APITestCase):
             },
             "members": [
                 {
-                    "value": str(user.id),
-                    "$ref": f"http://testserver/scim/v2/Users/{user.id}",
+                    "value": str(user.uuid),
+                    "$ref": f"http://testserver/scim/v2/Users/{user.uuid}",
                     "display": "John Doe",
                 }
             ],
@@ -66,12 +62,12 @@ class AuthorizationProfileSCIMTests(APITestCase):
                     "value": [
                         {
                             "display": user1.get_full_name(),
-                            "$ref": f"https://testserver/scim/v2/Users/{user1.id}",
+                            "$ref": f"https://testserver/scim/v2/Users/{user1.uuid}",
                             "value": str(user1.id),
                         },
                         {
                             "display": user2.get_full_name(),
-                            "$ref": f"https://testserver/scim/v2/Users/{user2.id}",
+                            "$ref": f"https://testserver/scim/v2/Users/{user2.uuid}",
                             "value": str(user2.id),
                         },
                     ],
@@ -107,8 +103,8 @@ class AuthorizationProfileSCIMTests(APITestCase):
                     "value": [
                         {
                             "display": user2.get_full_name(),
-                            "$ref": f"https://testserver/scim/v2/Users/{user2.id}",
-                            "value": str(user2.id),
+                            "$ref": f"https://testserver/scim/v2/Users/{user2.uuid}",
+                            "value": str(user2.uuid),
                         }
                     ],
                 }
@@ -142,14 +138,14 @@ class UserSCIMTests(APITestCase):
         user.save()
 
         self.client.force_login(user=user)
-        response = self.client.get(f"/scim/v2/Users/{user.id}")
+        response = self.client.get(f"/scim/v2/Users/{user.uuid}")
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         actual_data = response.json()
 
         expected_data = {
-            "id": f"{user.id}",
+            "id": f"{user.uuid}",
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": f"{user.username}",
             "name": {"givenName": "John", "familyName": "Doe", "formatted": "John Doe"},
@@ -167,7 +163,7 @@ class UserSCIMTests(APITestCase):
                 "resourceType": "User",
                 "created": "2021-08-04T09:26:22.746996+00:00",
                 "lastModified": "2021-08-04T09:26:22.746996+00:00",
-                "location": f"http://testserver/scim/v2/Users/{user.id}",
+                "location": f"http://testserver/scim/v2/Users/{user.uuid}",
             },
         }
 
@@ -203,7 +199,7 @@ class UserSCIMTests(APITestCase):
 
         new_user = User.objects.get(username="ttoast")
         expected_data = {
-            "id": str(new_user.id),
+            "id": str(new_user.uuid),
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": "ttoast",
             "name": {
@@ -219,7 +215,7 @@ class UserSCIMTests(APITestCase):
                 "resourceType": "User",
                 "created": "2021-08-04T09:26:22.746996+00:00",
                 "lastModified": "2021-08-04T09:26:22.746996+00:00",
-                "location": f"http://testserver/scim/v2/Users/{new_user.id}",
+                "location": f"http://testserver/scim/v2/Users/{new_user.uuid}",
             },
         }
 
@@ -246,7 +242,7 @@ class UserSCIMTests(APITestCase):
         }
 
         self.client.force_login(user=user)
-        response = self.client.put(f"/scim/v2/Users/{user.id}", data=new_user_data)
+        response = self.client.put(f"/scim/v2/Users/{user.uuid}", data=new_user_data)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -267,7 +263,7 @@ class UserSCIMTests(APITestCase):
         }
 
         self.client.force_login(user=user)
-        response = self.client.patch(f"/scim/v2/Users/{user.id}", data=new_user_data)
+        response = self.client.patch(f"/scim/v2/Users/{user.uuid}", data=new_user_data)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -287,7 +283,7 @@ class UserSCIMTests(APITestCase):
         user2 = SuperUserFactory.create(first_name="Jane", last_name="Doe")
 
         self.client.force_login(user=user2)
-        response = self.client.delete(f"/scim/v2/Users/{user1.id}")
+        response = self.client.delete(f"/scim/v2/Users/{user1.uuid}")
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(1, User.objects.all().count())

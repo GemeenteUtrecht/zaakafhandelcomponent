@@ -1,5 +1,6 @@
 from django_scim.adapters import SCIMGroup, SCIMUser
 from django_scim.constants import SchemaURI
+from django_scim.exceptions import BadRequestError, NotImplementedError
 from django_scim.utils import get_group_adapter, get_user_adapter
 
 from zac.core.utils import build_absolute_url
@@ -43,16 +44,31 @@ class AuthorizationProfileAdapter(SCIMGroup):
             "meta": self.meta,
         }
 
+    def handle_remove(self, path, value, operation):
+        if path.first_path == ("members", None, None):
+            members = value or []
+            uuids = [member.get("value") for member in members]
+            users = User.objects.filter(uuid__in=uuids)
+
+            if len(uuids) != users.count():
+                raise BadRequestError("Can not remove a non-existent user from group")
+
+            for user in users:
+                self.obj.user_set.remove(user)
+
+        else:
+            raise NotImplementedError
+
 
 class UserAdapter(SCIMUser):
-    id_field = "id"
+    id_field = "uuid"
 
     @property
     def location(self):
         return build_absolute_url(path=self.path, request=self.request)
 
     def delete(self):
-        User.objects.filter(username=self.obj.username).delete()
+        User.objects.filter(uuid=self.id).delete()
 
     @property
     def groups(self):
