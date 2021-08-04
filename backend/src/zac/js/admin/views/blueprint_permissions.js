@@ -2,7 +2,7 @@ import { JSONEditor } from '@json-editor/json-editor';
 import { jsonScriptToVar } from "../../utils/json-script";
 
 
-const displayPolicy = (editor_node, role_node, policy_node) => {
+const displayPolicy = (editor_node, objecttype_node, policy_node) => {
     const jsonSchemas = jsonScriptToVar("jsonSchemas");
 
     const displayJsonEditor = (object_type) => {
@@ -32,12 +32,11 @@ const displayPolicy = (editor_node, role_node, policy_node) => {
         return jsonEditor;
     };
 
-    let editor = displayJsonEditor(role_node.value);
+    let editor = displayJsonEditor(objecttype_node.value);
 
-    role_node.addEventListener('change', function() {
-        console.log("change role node");
+    objecttype_node.addEventListener('change', function() {
         editor.destroy();
-        editor = displayJsonEditor(role_node.value);
+        editor = displayJsonEditor(objecttype_node.value);
     });
 
 };
@@ -45,9 +44,9 @@ const displayPolicy = (editor_node, role_node, policy_node) => {
 
 // initialize
 const editor_node = document.getElementById("policy_editor");
-const role_node = document.getElementById("id_role");
+const objecttype_node = document.getElementById("id_object_type");
 const policy_node = document.getElementById("id_policy");
 
 if (editor_node) {
-    displayPolicy(editor_node, role_node, policy_node);
+    displayPolicy(editor_node, objecttype_node, policy_node);
 }
