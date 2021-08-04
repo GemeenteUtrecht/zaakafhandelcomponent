@@ -185,6 +185,7 @@ class RoleAdmin(RelatedLinksMixin, admin.ModelAdmin):
             permission_choices = [(name, name) for name, permission in registry.items()]
             return forms.MultipleChoiceField(
                 label=db_field.verbose_name.capitalize(),
+                widget=forms.SelectMultiple,
                 choices=permission_choices,
                 help_text=db_field.help_text,
             )
