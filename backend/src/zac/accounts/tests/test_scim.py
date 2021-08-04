@@ -2,8 +2,12 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from zac.accounts.models import User
-from zac.accounts.tests.factories import AuthorizationProfileFactory, SuperUserFactory
+from zac.accounts.models import AuthorizationProfile, User
+from zac.accounts.tests.factories import (
+    AuthorizationProfileFactory,
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+)
 
 
 class AuthorizationProfileSCIMTests(APITestCase):
