@@ -187,5 +187,4 @@ class ProcessInstanceTests(TestCase):
             }
         ]
 
-        self.maxDiff = None
         self.assertEqual(data, expected_data)

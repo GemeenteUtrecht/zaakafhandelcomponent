@@ -19,6 +19,10 @@ from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
+    STATUS,
+    STATUS_RESPONSE,
+    STATUSTYPE,
+    STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
@@ -62,27 +66,18 @@ NOTIFICATION_DESTROY = {
 @requests_mock.Mocker()
 class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_zaakeigenschap_created_indexed_in_es(self, rm):
-        user = User.objects.create(
-            username="notifs", first_name="Mona Yoko", last_name="Surname"
-        )
-        self.client.force_authenticate(user=user)
-
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-
-        path = reverse("notifications:callback")
-
-        # create zaak document in ES
-        zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        self.assertEqual(zaak_document.eigenschappen, {})
-
-        # mock api calls
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         eigenschap = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
@@ -105,38 +100,54 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
             naam="propname",
             waarde="propvalue",
         )
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(
             f"https://some.ztc.nl/api/v1/eigenschappen?zaaktype={ZAAKTYPE}",
             json=paginated_response([eigenschap]),
         )
         rm.get(f"{ZAAK}/zaakeigenschappen", json=[zaakeigenschap])
 
+        # create zaak document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+        self.assertEqual(zaak_document.eigenschappen, {})
+
+        user = User.objects.create(
+            username="notifs", first_name="Mona Yoko", last_name="Surname"
+        )
+        self.client.force_authenticate(user=user)
+        path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_CREATE)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-
         self.assertEqual(
             zaak_document.eigenschappen, {"tekst": {"propname": "propvalue"}}
         )
 
     def test_zaakeigenschap_destroyed_indexed_in_es(self, rm):
-        user = User.objects.create(
-            username="notifs", first_name="Mona Yoko", last_name="Surname"
-        )
-        self.client.force_authenticate(user=user)
-
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        rm.get(
+            f"https://some.ztc.nl/api/v1/eigenschappen?zaaktype={ZAAKTYPE}",
+            json=paginated_response([]),
+        )
+        rm.get(f"{ZAAK}/zaakeigenschappen", json=[])
+
+        user = User.objects.create(
+            username="notifs", first_name="Mona Yoko", last_name="Surname"
+        )
+        self.client.force_authenticate(user=user)
 
         path = reverse("notifications:callback")
 
@@ -145,17 +156,6 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         zaak_document.eigenschappen = {"tekst": {"propname": "propvalue"}}
-
-        # mock api calls
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(
-            f"https://some.ztc.nl/api/v1/eigenschappen?zaaktype={ZAAKTYPE}",
-            json=paginated_response([]),
-        )
-        rm.get(f"{ZAAK}/zaakeigenschappen", json=[])
 
         response = self.client.post(path, NOTIFICATION_DESTROY)
 

@@ -111,7 +111,6 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.maxDiff = None
 
         self.patch_get_resultaat.start()
         self.addCleanup(self.patch_get_resultaat.stop)

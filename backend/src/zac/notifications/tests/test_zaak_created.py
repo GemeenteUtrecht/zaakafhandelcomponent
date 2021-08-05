@@ -18,6 +18,10 @@ from zac.elasticsearch.tests.utils import ESMixin
 from .utils import (
     BRONORGANISATIE,
     IDENTIFICATIE,
+    STATUS,
+    STATUS_RESPONSE,
+    STATUSTYPE,
+    STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
@@ -64,9 +68,13 @@ class ZaakCreatedTests(ESMixin, APITestCase):
     def test_zaak_created_invalidate_list_cache(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         zrc_client = self.zrc.build_client()
+
         path = reverse("notifications:callback")
 
         matrix = [
@@ -102,9 +110,13 @@ class ZaakCreatedTests(ESMixin, APITestCase):
     def test_max_va_cache_key(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         zrc_client = self.zrc.build_client()
+
         path = reverse("notifications:callback")
 
         matrix = [
@@ -130,8 +142,11 @@ class ZaakCreatedTests(ESMixin, APITestCase):
     def test_zaak_created_indexed_in_es(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
 
         zaak_document = ZaakDocument.get(

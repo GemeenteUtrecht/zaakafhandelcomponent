@@ -23,7 +23,10 @@ ZAAKTYPE = "https://some.ztc.nl/api/v1/zaaktypen/ad4573d0-4d99-4e90-a05c-e08911e
 CATALOGUS = (
     "https://some.ztc.nl/api/v1/catalogussen/2bd772a5-f1a4-458b-8c13-d2f85c2bfa89"
 )
-
+STATUS = "https://some.zrc.nl/api/v1/statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e"
+STATUSTYPE = (
+    "https://some.ztc.nl/api/v1/statustypen/c612f300-8e16-4811-84f4-78c99fdebe74"
+)
 IDENTIFICATIE = "ZAAK-123"
 BRONORGANISATIE = "123456782"
 
@@ -42,7 +45,7 @@ ZAAK_RESPONSE = {
     "uiterlijke_einddatum_afdoening": None,
     "publicatiedatum": None,
     "vertrouwelijkheidaanduiding": "geheim",
-    "status": None,
+    "status": STATUS,
     "relevante_andere_zaken": [],
     "zaakgeometrie": None,
 }
@@ -55,4 +58,18 @@ ZAAKTYPE_RESPONSE = generate_oas_component(
     identificatie="zt",
     omschrijving="some zaaktype",
     catalogus=CATALOGUS,
+)
+
+STATUSTYPE_RESPONSE = generate_oas_component(
+    "ztc",
+    "schemas/StatusType",
+    url=STATUSTYPE,
+)
+
+STATUS_RESPONSE = generate_oas_component(
+    "zrc",
+    "schemas/Status",
+    url=STATUS,
+    statustype=STATUSTYPE,
+    statustoelichting="some-statustoelichting",
 )
