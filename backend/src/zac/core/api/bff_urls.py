@@ -9,6 +9,7 @@ from .views import (
     ObjecttypeListView,
     ObjecttypeVersionReadView,
     RelatedZakenView,
+    StatusTypenView,
     VertrouwelijkheidsAanduidingenView,
     ZaakAtomicPermissionsView,
     ZaakDetailView,
@@ -100,4 +101,5 @@ urlpatterns = [
         ZaakObjectCreateView.as_view(),
         name="zaakobject-create",
     ),
+    path("statustypes", StatusTypenView.as_view(), name="statustypen-list"),
 ]
