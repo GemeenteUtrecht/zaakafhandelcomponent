@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { RowData, Table, Zaak } from '@gu/models';
 import { tableHead } from './constants/table';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-search-results',
@@ -13,7 +14,7 @@ export class SearchResultsComponent implements OnChanges {
 
   tableData: Table = new Table([], []);
 
-  constructor() { }
+  constructor(private datePipe: DatePipe) { }
 
   ngOnChanges(): void {
     if (this.resultData) {
@@ -36,7 +37,7 @@ export class SearchResultsComponent implements OnChanges {
           },
           zaaktype: result.zaaktype.omschrijving,
           omschrijving: result.omschrijving,
-          deadline: result.deadline,
+          deadline: this.datePipe.transform(result.deadline, "dd-MM-yyyy")
         },
         expandData: result.toelichting
       }

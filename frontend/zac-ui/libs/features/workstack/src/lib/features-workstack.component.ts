@@ -5,6 +5,7 @@ import { tableHead, tableHeadMapping } from './constants/zaken-tablehead';
 import { RowData, Zaak, Table, UserTask, UserTaskZaak, Task } from '@gu/models';
 import { AccessRequests } from './models/access-request';
 import { AdHocActivities } from './models/activities';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-features-workstack',
@@ -24,9 +25,12 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   isLoading: boolean;
 
-  currentActiveTab: number = 0;
+  currentActiveTab = 0;
 
-  constructor(private workstackService: FeaturesWorkstackService) {}
+  constructor(
+    private workstackService: FeaturesWorkstackService,
+    private datePipe: DatePipe
+  ) { }
 
   ngOnInit(): void {
     this.fetchWorkstack();
@@ -87,8 +91,8 @@ export class FeaturesWorkstackComponent implements OnInit {
           },
           omschrijving: element.omschrijving,
           zaaktype: element.zaaktype.omschrijving,
-          startdate: element.startdatum,
-          deadline: element.deadline,
+          startdate: this.datePipe.transform(element.startdatum, "dd-MM-yyyy"),
+          deadline: this.datePipe.transform(element.deadline, "dd-MM-yyyy"),
           trust: element.vertrouwelijkheidaanduiding
         },
       };
