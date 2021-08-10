@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
@@ -38,8 +37,6 @@ export class AdviceComponent implements OnInit {
   tableData: Table = new Table(['Adviseur', 'Gedaan op'], []);
 
   documentTableData: Table = new Table(['Acties', '', 'Documentnaam'], []);
-
-  pipe = new DatePipe("nl-NL");
 
   adviceForm: FormGroup;
   adviceFormData: AdviceForm = {
@@ -135,11 +132,13 @@ export class AdviceComponent implements OnInit {
     // Add table body data
     return reviews.map( review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
-      const date = this.pipe.transform(review.created, 'short');
       const rowData: RowData = {
         cellData: {
           author: author ? author : '',
-          created: date
+          created: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          }
         },
         expandData: review.advice
       }

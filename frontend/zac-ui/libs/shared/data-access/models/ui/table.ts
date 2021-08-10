@@ -28,9 +28,10 @@ export interface ExtensiveCell {
   iconInfo?: string;
   label?: string | number;
   target?: '_blank' | '_parent' | '_self' | '_top' | string
-  type: 'button' | 'chip' | 'icon' | 'link' | 'table' | 'text';
+  type: 'button' | 'chip' | 'icon' | 'link' | 'table' | 'text' | 'date';
   url?: string;
   value?: any;
+  date?: string;
 }
 
 export interface TableSort {

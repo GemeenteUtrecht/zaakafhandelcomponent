@@ -3,7 +3,6 @@ import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import { Review, ReviewDetail, ReviewDocument } from './detail-modal.interface';
 import {ReadWriteDocument, RowData, Table} from '@gu/models';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-detail-modal',
@@ -24,8 +23,6 @@ export class DetailModalComponent implements OnChanges {
   tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
 
   isLoading: boolean;
-
-  pipe = new DatePipe("nl-NL");
 
   constructor(private http: ApplicationHttpClient) { }
 
@@ -62,7 +59,6 @@ export class DetailModalComponent implements OnChanges {
       const author = review.author['firstName']
         ? `${review.author['firstName']} ${review.author['lastName']}`
         : review.author['username'];
-      const date = this.pipe.transform(review.created, 'short');
       const docAdviezen = review.documents ? review.documents.length.toString() : '-';
 
       const reviewDocumentTableData = review.documents?.length > 0 ? this.formatTableReviewDoc(review.documents) : null;
@@ -71,7 +67,10 @@ export class DetailModalComponent implements OnChanges {
         cellData: {
           advies: review.advice,
           van: author,
-          datum: date,
+          datum: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          },
           docAdviezen: docAdviezen
         },
         nestedTableData: reviewDocumentTableData,
@@ -113,7 +112,6 @@ export class DetailModalComponent implements OnChanges {
       const author = review.author['firstName']
         ? `${review.author['firstName']} ${review.author['lastName']}`
         : review.author['username'];
-      const date = this.pipe.transform(review.created, 'short');
 
       const cellData: RowData = {
         cellData: {
@@ -123,7 +121,10 @@ export class DetailModalComponent implements OnChanges {
             iconColor: iconColor
           },
           van: author,
-          datum: date,
+          datum: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          },
           toelichting: review.toelichting
         }
       }

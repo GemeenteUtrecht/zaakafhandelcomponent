@@ -1,6 +1,5 @@
 import {Component, Input, OnChanges, AfterViewInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {DatePipe} from '@angular/common';
 import {ModalService} from '@gu/components'
 import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
@@ -38,8 +37,6 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   isLoading = true;
   hasError: boolean;
   errorMessage: string;
-
-  pipe = new DatePipe("nl-NL");
 
   // Send Message
   sendMessageErrorMessage: string;

@@ -4,7 +4,6 @@ import { ReportCase, ReportCases, ReportType } from './models/report';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RowData, Table } from '@gu/models';
 import { tableHead } from './constants/table';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-features-reports',
@@ -27,7 +26,6 @@ export class FeaturesReportsComponent implements OnInit {
   constructor(
     private reportsService: FeaturesReportsService,
     private fb: FormBuilder,
-    private datePipe: DatePipe
   ) {
     this.reportForm = this.fb.group({
       reportType: this.fb.control(""),
@@ -58,7 +56,10 @@ export class FeaturesReportsComponent implements OnInit {
             url: url
           },
           zaaktype: element.zaaktype.omschrijving,
-          startdatum: this.datePipe.transform(element.startdatum, "dd-MM-yyyy"),
+          startdatum: {
+            type: element.startdatum ? 'date' : 'text',
+            date: element.startdatum
+          },
           status: element.status,
           toelichting: element.toelichting
         },

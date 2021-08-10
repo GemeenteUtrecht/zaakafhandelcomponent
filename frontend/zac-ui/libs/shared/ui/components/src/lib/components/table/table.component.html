@@ -60,6 +60,11 @@
                            target="{{ dataRow[column.name].target || '_self' }}">{{ dataRow[column.name].label }}</a>
                     </ng-container>
 
+                    <!-- Date -->
+                  <ng-container *ngSwitchCase="'date'">
+                    {{dataRow[column.name].date | date:"dd-MM-yyyy" }}
+                  </ng-container>
+
                     <!-- Text -->
                     <ng-template ngSwitchDefault>
                         {{dataRow[column.name].label}}

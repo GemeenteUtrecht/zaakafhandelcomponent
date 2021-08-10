@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {DatePipe} from '@angular/common';
 import {ReviewRequest} from '../../models/review-request';
 import {ApprovalService} from './approval.service';
 import {RowData, Table, Zaak} from '@gu/models';
@@ -34,8 +33,6 @@ export class ApprovalComponent implements OnInit {
   tableData: Table = new Table([], []);
 
   approvalForm: FormGroup;
-
-  pipe = new DatePipe("nl-NL");
 
   constructor(
     private fb: FormBuilder,
@@ -121,12 +118,14 @@ export class ApprovalComponent implements OnInit {
     // Add table body data
     tableData.bodyData = approvalData.reviews.map(review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
-      const date = this.pipe.transform(review.created, 'short');
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
       const rowData: RowData = {
         cellData: {
           author: author ? author : '',
-          created: date ? date : '',
+          created: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          },
           approved: approved
         },
         expandData: review.toelichting
