@@ -154,7 +154,7 @@ export class SearchFormComponent implements OnInit, OnChanges {
 
     // Create object for eigenschappen
     const eigenschapValue =
-      this.selectedPropertyValue.spec.format === 'date' ?
+      this.selectedPropertyValue?.spec.format === 'date' ?
         this.datePipe.transform(this.eigenschapwaarde.value, "yyyy-MM-dd") :
         this.eigenschapwaarde.value;
 
