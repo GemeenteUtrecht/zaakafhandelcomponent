@@ -36,7 +36,10 @@ export class SearchResultsComponent implements OnChanges {
           },
           zaaktype: result.zaaktype.omschrijving,
           omschrijving: result.omschrijving,
-          deadline: result.deadline,
+          deadline: {
+            type: result.deadline ? 'date' : 'text',
+            date: result.deadline
+          }
         },
         expandData: result.toelichting
       }

@@ -24,9 +24,11 @@ export class FeaturesWorkstackComponent implements OnInit {
 
   isLoading: boolean;
 
-  currentActiveTab: number = 0;
+  currentActiveTab = 0;
 
-  constructor(private workstackService: FeaturesWorkstackService) {}
+  constructor(
+    private workstackService: FeaturesWorkstackService,
+  ) { }
 
   ngOnInit(): void {
     this.fetchWorkstack();
@@ -87,8 +89,14 @@ export class FeaturesWorkstackComponent implements OnInit {
           },
           omschrijving: element.omschrijving,
           zaaktype: element.zaaktype.omschrijving,
-          startdate: element.startdatum,
-          deadline: element.deadline,
+          startdate: {
+            type: element.startdatum ? 'date' : 'text',
+            date: element.startdatum
+          },
+          deadline: {
+            type: element.deadline ? 'date' : 'text',
+            date: element.deadline
+          },
           trust: element.vertrouwelijkheidaanduiding
         },
       };

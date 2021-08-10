@@ -25,7 +25,7 @@ export class FeaturesReportsComponent implements OnInit {
 
   constructor(
     private reportsService: FeaturesReportsService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {
     this.reportForm = this.fb.group({
       reportType: this.fb.control(""),
@@ -56,7 +56,10 @@ export class FeaturesReportsComponent implements OnInit {
             url: url
           },
           zaaktype: element.zaaktype.omschrijving,
-          startdatum: element.startdatum,
+          startdatum: {
+            type: element.startdatum ? 'date' : 'text',
+            date: element.startdatum
+          },
           status: element.status,
           toelichting: element.toelichting
         },

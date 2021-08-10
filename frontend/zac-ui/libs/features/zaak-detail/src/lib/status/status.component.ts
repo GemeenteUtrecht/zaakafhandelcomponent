@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { ApplicationHttpClient } from '@gu/services';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'gu-status',
@@ -20,8 +19,6 @@ export class StatusComponent implements OnInit {
   isLoading: boolean;
 
   isExpanded = false;
-
-  pipe = new DatePipe("nl-NL");
 
   constructor(
     private http: ApplicationHttpClient,
