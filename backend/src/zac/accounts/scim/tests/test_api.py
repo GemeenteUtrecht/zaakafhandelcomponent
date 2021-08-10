@@ -221,6 +221,20 @@ class UserSCIMTests(APITestCase):
             with self.subTest(key):
                 self.assertEqual(value, actual_data[key])
 
+    def test_get_user_with_filter(self):
+        user1 = SuperUserFactory.create(username="hazelnut")
+        user2 = SuperUserFactory.create(username="pistachio")
+
+        self.client.force_login(user=user1)
+        response = self.client.get('/scim/v2/Users?filter=userName eq "pistachio"')
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response_data = response.json()
+
+        self.assertEqual(1, response_data["totalResults"])
+        self.assertEqual(str(user2.uuid), response_data["Resources"][0]["id"])
+
     @freeze_time("2021-08-04T09:26:22.746996+00:00")
     def test_create_user(self):
         user = SuperUserFactory.create()
