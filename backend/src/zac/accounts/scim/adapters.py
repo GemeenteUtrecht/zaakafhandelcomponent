@@ -5,7 +5,7 @@ from django_scim.utils import get_group_adapter, get_user_adapter
 
 from zac.core.utils import build_absolute_url
 
-from .models import User
+from ..models import User
 
 
 class AuthorizationProfileAdapter(SCIMGroup):
