@@ -13,6 +13,7 @@ import {MatNativeDateModule} from '@angular/material/core';
 import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -38,7 +39,6 @@ import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
 
-
 @NgModule({
     imports: [
         CommonModule,
@@ -54,6 +54,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         MatCheckboxModule,
         MatDatepickerModule,
         MatTabsModule,
+        MatSnackBarModule
     ],
     declarations: [
         ButtonComponent,

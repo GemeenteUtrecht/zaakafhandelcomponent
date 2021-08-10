@@ -1,9 +1,20 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import {Document, DocumentUrls, ReadWriteDocument, Table, RowData, ExtensiveCell} from '@gu/models';
+import { Component, HostListener, Input, OnChanges } from '@angular/core';
+import {Document, ReadWriteDocument, Table } from '@gu/models';
 import {ApplicationHttpClient, ZaakService} from '@gu/services';
 import { DocumentenService } from './documenten.service';
-import { ModalService } from '@gu/components';
+import { ModalService, SnackbarService } from '@gu/components';
+import { catchError, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
+/**
+ * <gu-documenten [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-documenten>
+ *
+ * This section displays the documents for a zaak and allow to add documents.
+ *
+ * Requires mainZaakUrl: string input to identify the url of the case (zaak).
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ */
 @Component({
   selector: 'gu-documenten',
   templateUrl: './documenten.component.html',
@@ -15,7 +26,10 @@ export class DocumentenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  tableData: Table = new Table([
+  readonly alertText = "U heeft uw documenten niet opgeslagen. Klik op 'Bewerkingen opslaan' in de documenten sectie om uw wijzigingen op te slaan."
+  readonly errorMessage = "Er is een fout opgetreden bij het laden van de documenten.";
+
+  tableHead = [
     '',
     'Bestandsnaam',
     'Versie',
@@ -24,16 +38,13 @@ export class DocumentenComponent implements OnChanges {
     '',
     'Type',
     'Vertrouwelijkheid',
-  ], []);
+  ]
 
-  documentsData: any;
+  tableData: Table = new Table(this.tableHead, []);
 
   isLoading = true;
-  hasError: boolean;
-  errorMessage: string;
 
-  docsInEditMode: string[] = [];
-  deleteUrls: DocumentUrls[] = [];
+  documentsData: any;
 
   selectedDocument: Document;
   selectedDocumentUrl: string;
@@ -43,75 +54,51 @@ export class DocumentenComponent implements OnChanges {
     private documentenService: DocumentenService,
     private modalService: ModalService,
     private zaakService: ZaakService,
+    private snackbarService: SnackbarService
   ) { }
 
   ngOnChanges(): void {
     this.fetchDocuments()
   }
 
+  /**
+   * Show an alert if the user refreshes or closes the browser without saving the edited documents.
+   * Only fires if the user has had activity on the documents component.
+   * @param $event
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  warnDocsInEditMode($event) {
+    // Check if there are any documents in edit mode
+    const hasOpenDoc = this.documentsData?.some((doc: Document) => doc.currentUserIsEditing);
+    if (hasOpenDoc) {
+      this.snackbarService.openSnackBar(this.alertText, 'Sluiten', 'warn', 10);
+      $event.preventDefault();
+      $event.returnValue = this.alertText;
+    }
+  }
+
+  /**
+   * Fetch all the documents related to the case.
+   */
   fetchDocuments() {
     this.isLoading = true;
+
     this.zaakService.listCaseDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
-      this.tableData.bodyData = this.formatTableData(data);
+      this.tableData = this.documentenService.formatTableData(data, this.tableHead);
       this.documentsData = data;
+
       this.isLoading = false;
     }, res => {
-      this.errorMessage = res.error.detail;
-      this.hasError = true;
+      const message = res.error.detail || this.errorMessage;
+      this.snackbarService.openSnackBar(message, "Sluiten", 'warn')
       this.isLoading = false;
     })
   }
 
-  formatTableData(data): RowData[] {
-    return data.map( (element: Document) => {
-     const icon = element.locked ? 'lock' : 'lock_open'
-     const iconColor = element.locked ? 'orange' : 'green'
-     const iconInfo = element.locked ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
-     const editLabel = this.docsInEditMode.includes(element.writeUrl) ? 'Bewerkingen opslaan' : 'Bewerken';
-     const editButtonStyle = this.docsInEditMode.includes(element.writeUrl) ? 'primary' : 'tertiary';
-     const showEditCell = !element.locked || this.docsInEditMode.includes(element.writeUrl);
-     const editCell: ExtensiveCell = {
-       type: 'button',
-       label: editLabel,
-       value: element.writeUrl,
-       buttonType: editButtonStyle
-     };
-     const overwriteCell: ExtensiveCell = {
-        type: 'button',
-        label: 'Overschrijven',
-        value: element.url
-      };
-     const confidentialityButton: ExtensiveCell | string = element.locked ? element.vertrouwelijkheidaanduiding : {
-       type: 'button',
-       label: element.vertrouwelijkheidaanduiding,
-       value: element
-     }
-
-     const cellData: RowData = {
-       cellData: {
-         opSlot: {
-           type: 'icon',
-           label: icon,
-           iconColor: iconColor,
-           iconInfo: iconInfo
-         },
-         bestandsnaam: element.bestandsnaam,
-         versie: String(element.versie),
-         lezen: {
-           type: 'button',
-           label: 'Lezen',
-           value: element.readUrl
-         },
-         bewerken: showEditCell ? editCell : '',
-         overschrijven:  element.locked ? '' : overwriteCell,
-         type: element.informatieobjecttype['omschrijving'],
-         vertrouwelijkheid: confidentialityButton
-       }
-     }
-     return cellData;
-    })
-  }
-
+  /**
+   * Chains the button action to the matching function
+   * @param {object} action
+   */
   handleTableButtonOutput(action: object) {
     const actionType = Object.keys(action)[0];
     const actionUrl = action[actionType];
@@ -130,95 +117,121 @@ export class DocumentenComponent implements OnChanges {
         this.patchConfidentiality(actionUrl);
         break;
     }
-    if (actionType === 'bewerken') {
-      this.editDocument(actionUrl);
-    }
   }
 
+  /**
+   * Opens the document in another browser or application.
+   * @param readUrl
+   */
   readDocument(readUrl) {
     this.isLoading = true;
     this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
       this.isLoading = false;
       window.open(res.magicUrl, "_blank");
-    }, errorResponse => {
+    }, () => {
+      this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
       this.isLoading = false;
     })
   }
 
+  /**
+   * Opens the selected document in edit mode or closes the edit mode.
+   * A user is only allowed to edit one file at a time.
+   * @param writeUrl
+   */
   editDocument(writeUrl) {
-    if (!this.docsInEditMode.includes(writeUrl)) {
-      this.docsInEditMode.push(writeUrl);
+    const selectedDoc: Document = this.documentsData.find((doc: Document) => doc.writeUrl === writeUrl);
+    const hasOpenDoc = this.documentsData.some((doc: Document) => doc.currentUserIsEditing);
+
+    // Open the document if the current user is not already editing it and has no other files open.
+    if (!selectedDoc.currentUserIsEditing && !hasOpenDoc) {
       this.openDocumentEdit(writeUrl);
+      // Show message if the user is already editing another document.
+    } else if (!selectedDoc.currentUserIsEditing && hasOpenDoc) {
+      const message = "U kunt maar één document tegelijk bewerken."
+      this.snackbarService.openSnackBar(message, "Sluiten")
+      // Exit edit mode
     } else {
-      this.deleteUrls.forEach( (document, index) => {
-        if (document.writeUrl === writeUrl) {
-          this.closeDocumentEdit(document.deleteUrl, writeUrl);
-          this.deleteUrls.splice(index, 1);
-        }
-      })
+      this.closeDocumentEdit(writeUrl);
     }
   }
 
+  /**
+   * Opens the "gu-document-toevoegen" component
+   * @param documentUrl
+   */
   patchDocument(documentUrl) {
     this.selectedDocumentUrl = documentUrl;
     this.openModal('document-overschrijven-modal')
   }
 
+  /**
+   * Opens the "gu-document-vertrouwelijkheid-wijzigen" component
+   * @param {Document} document
+   */
   patchConfidentiality(document: Document) {
     this.selectedDocument = document;
     this.openModal('document-vertrouwelijkheid-wijzigen-modal')
   }
 
+  /**
+   * Fetches the document url to open the document.
+   * @param writeUrl
+   */
   openDocumentEdit(writeUrl) {
     this.isLoading = true;
     this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
       // Open document
       window.open(res.magicUrl, "_blank");
 
-      // Change table layout so "Bewerkingen opslaan" button will be shown
+      // Refresh table layout so "Bewerkingen opslaan" button will be shown
       this.fetchDocuments();
-
-      // Map received deleteUrl to the writeUrl
-      this.addDeleteUrlsMapping(writeUrl, res.deleteUrl);
-
-      this.isLoading = false;
-    }, errorResponse => {
+    }, () => {
+      this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
       this.isLoading = false;
     })
   }
 
-  closeDocumentEdit(deleteUrl, writeUrl) {
+  /**
+   * Save edited documents.
+   * @param writeUrl
+   */
+  closeDocumentEdit(writeUrl) {
     this.isLoading = true;
-    return this.documentenService.closeDocumentEdit(deleteUrl).subscribe( res => {
-      // Remove deleteUrl mapping from local array
-      this.deleteUrls.forEach( (document, index) => {
-        if (document.deleteUrl === deleteUrl) {
-          this.deleteUrls.splice(index, 1);
-        }
+    // Retrieve the deleteUrl of the selected document. This url is required to close the edit mode.
+    this.documentenService.openDocumentEdit(writeUrl)
+      .pipe(
+        switchMap((res: ReadWriteDocument) => {
+          const { deleteUrl } = res;
+          return this.documentenService.closeDocumentEdit(deleteUrl)
+        }),
+        catchError( () => {
+          this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
+          this.isLoading = false;
+          return of(null)
+        })
+      )
+      .subscribe( () => {
+        // Refresh section
+        this.fetchDocuments();
+      }, () => {
+        this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
+        this.isLoading = false;
       })
-
-      // Remove editMode
-      this.docsInEditMode = this.docsInEditMode.filter(e => e !== writeUrl);
-      this.fetchDocuments();
-
-      this.isLoading = false;
-    }, errorResponse => {
-      this.isLoading = false;
-    })
   }
 
-  addDeleteUrlsMapping(writeUrl, deleteUrl) {
-    const urlMapping = {
-      writeUrl: writeUrl,
-      deleteUrl: deleteUrl
-    }
-    this.deleteUrls.push(urlMapping);
-  }
-
+  /**
+   * Open a modal.
+   * @param {string} id
+   */
   openModal(id: string) {
     this.modalService.open(id);
   }
 
+  /**
+   * Close a modal.
+   * @param {string} id
+   */
   closeModal(id: string) {
     this.modalService.close(id);
   }

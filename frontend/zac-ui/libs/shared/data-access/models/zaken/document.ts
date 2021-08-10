@@ -3,6 +3,7 @@ export interface Document {
   beschrijving: string;
   bestandsnaam: string;
   bestandsomvang: number;
+  currentUserIsEditing: boolean;
   identificatie: string;
   informatieobjecttype: InformatieObjectType;
   locked: boolean;
