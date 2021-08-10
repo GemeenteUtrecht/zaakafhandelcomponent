@@ -155,6 +155,23 @@ class AuthorizationProfileSCIMTests(APITestCase):
 
         self.assertEqual(2, response_data["totalResults"])
 
+    def test_cant_create_auth_profile(self):
+        user = SuperUserFactory.create()
+
+        self.client.force_login(user=user)
+        response = self.client.post("/scim/v2/Groups")
+
+        self.assertEqual(status.HTTP_405_METHOD_NOT_ALLOWED, response.status_code)
+
+    def test_cant_delete_auth_profile(self):
+        user = SuperUserFactory.create()
+        profile = AuthorizationProfileFactory.create()
+
+        self.client.force_login(user=user)
+        response = self.client.delete(f"/scim/v2/Groups/{profile.uuid}")
+
+        self.assertEqual(status.HTTP_405_METHOD_NOT_ALLOWED, response.status_code)
+
 
 class UserSCIMTests(APITestCase):
     def test_user_authenticated(self):
