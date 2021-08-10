@@ -529,4 +529,5 @@ SCIM_SERVICE_PROVIDER = {
     "GROUP_ADAPTER": "zac.accounts.adapters.AuthorizationProfileAdapter",
     "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
     "USER_ADAPTER": "zac.accounts.adapters.UserAdapter",
+    "GROUP_FILTER_PARSER": "zac.accounts.filters.AuthorizationProfileFilterQuery",
 }

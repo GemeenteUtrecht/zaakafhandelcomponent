@@ -122,6 +122,39 @@ class AuthorizationProfileSCIMTests(APITestCase):
 
         self.assertEqual(0, user2.auth_profiles.count())
 
+    def test_search_auth_profile(self):
+        profile1 = AuthorizationProfileFactory.create(name="test1")
+        profile2 = AuthorizationProfileFactory.create(name="test2")
+
+        search_query = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:SearchRequest"],
+            "filter": 'displayName eq "test1"',
+        }
+
+        user = SuperUserFactory.create()
+        self.client.force_login(user=user)
+        response = self.client.post("/scim/v2/Groups/.search", data=search_query)
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response_data = response.json()
+
+        self.assertEqual(1, response_data["totalResults"])
+        self.assertEqual(response_data["Resources"][0]["id"], str(profile1.uuid))
+
+        search_query = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:SearchRequest"],
+            "filter": 'displayName co "test"',
+        }
+
+        response = self.client.post("/scim/v2/Groups/.search", data=search_query)
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response_data = response.json()
+
+        self.assertEqual(2, response_data["totalResults"])
+
 
 class UserSCIMTests(APITestCase):
     def test_user_authenticated(self):
@@ -287,3 +320,35 @@ class UserSCIMTests(APITestCase):
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(1, User.objects.all().count())
+
+    def test_search_user(self):
+        user1 = SuperUserFactory.create(username="test1")
+        SuperUserFactory.create(username="test2")
+
+        search_query = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:SearchRequest"],
+            "filter": 'userName eq "test1"',
+        }
+
+        self.client.force_login(user=user1)
+        response = self.client.post("/scim/v2/Users/.search", data=search_query)
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response_data = response.json()
+
+        self.assertEqual(1, response_data["totalResults"])
+        self.assertEqual(response_data["Resources"][0]["id"], str(user1.uuid))
+
+        search_query = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:SearchRequest"],
+            "filter": 'userName co "test"',
+        }
+
+        response = self.client.post("/scim/v2/Users/.search", data=search_query)
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response_data = response.json()
+
+        self.assertEqual(2, response_data["totalResults"])
