@@ -3,6 +3,7 @@ import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
+from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
@@ -692,15 +693,21 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
         if rol.betrokkene_type == RolTypes.medewerker:
             identificatie = rol.betrokkene_identificatie["identificatie"]
             try:  # Try to get user data
-                user = User.objects.get(username=identificatie)
-                new_rol = UpdateRolSerializer(instance=rol, context={"user": user}).data
+                try:
+                    medewerker = User.objects.get(username=identificatie)
+                except User.DoesNotExist:
+                    medewerker = Group.objects.get(name=identificatie)
+
+                new_rol = UpdateRolSerializer(
+                    instance=rol, context={"medewerker": medewerker}
+                ).data
                 if get_naam_medewerker(factory(Rol, new_rol)) != get_naam_medewerker(
                     rol
                 ):
                     new_rollen.append((rol.url, new_rol))
             except ObjectDoesNotExist:
                 logger.warning(
-                    "Couldn't find user with identificatie %s" % identificatie
+                    "Couldn't find user or group with identificatie %s" % identificatie
                 )
 
     # If any new rollen can be made - 'update' the rol

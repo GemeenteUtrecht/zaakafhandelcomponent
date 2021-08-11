@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, send_message
@@ -252,7 +253,26 @@ class SetTaskAssigneeView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = SetTaskAssigneeSerializer
 
-    def _create_rol(self, zaak: Zaak, user: User):
+    def _resolve_betrokkene_identificatie(self, name: str) -> dict:
+        user_or_group, _name = name.split(":")[0], ":".join(name.split(":")[1:])
+        if user_or_group == "user":
+            user = User.objects.get(username=_name)
+            return {
+                "identificatie": user.username,
+                "achternaam": user.last_name.capitalize(),
+                "voorletters": "".join(
+                    [part[0].upper() + "." for part in user.first_name.split()]
+                ).strip(),
+            }
+        else:
+            group = Group.objects.get(name=_name)
+            return {
+                "identificatie": group.name,
+                "achternaam": group.name,
+                "voorletters": "Groep",
+            }
+
+    def _create_rol(self, zaak: Zaak, name: str):
         # fetch roltype
         roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
         if not roltypen:
@@ -260,14 +280,17 @@ class SetTaskAssigneeView(APIView):
         roltype = roltypen[0]
 
         zrc_client = _client_from_url(zaak.url)
-        voorletters = " ".join([part[0] for part in user.first_name.split()])
+
+        betrokkene_identificatie = self._resolve_betrokkene_identificatie(name)
 
         # check if the betrokkene already exists
         existing = zrc_client.list(
             "rol",
             query_params={
                 "zaak": zaak.url,
-                "betrokkeneIdentificatie__medewerker__identificatie": user.username,
+                "betrokkeneIdentificatie__medewerker__identificatie": betrokkene_identificatie[
+                    "identificatie"
+                ],
             },
         )
         if existing["count"]:
@@ -278,11 +301,7 @@ class SetTaskAssigneeView(APIView):
             "betrokkeneType": "medewerker",
             "roltype": roltype.url,
             "roltoelichting": "task claiming",
-            "betrokkeneIdentificatie": {
-                "identificatie": user.username,
-                "achternaam": user.last_name,
-                "voorletters": voorletters,
-            },
+            "betrokkeneIdentificatie": betrokkene_identificatie,
         }
         zrc_client.create("rol", data)
 
@@ -308,20 +327,18 @@ class SetTaskAssigneeView(APIView):
         # If assignee is given, set assignee.
         assignee = serializer.validated_data["assignee"]
         if assignee:
-            assignee = User.objects.get(username=assignee)
             camunda_client.post(
                 f"task/{task.id}/assignee",
-                json={"userId": assignee.username},
+                json={"userId": assignee},
             )
             self._create_rol(zaak, assignee)
 
         # If delegate is given, set delegate.
         delegate = serializer.validated_data["delegate"]
         if delegate:
-            delegate = User.objects.get(username=delegate)
             camunda_client.post(
                 f"task/{task.id}/delegate",
-                json={"userId": delegate.username},
+                json={"userId": delegate},
             )
             self._create_rol(zaak, delegate)
 

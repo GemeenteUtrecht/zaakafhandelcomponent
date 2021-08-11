@@ -2,6 +2,7 @@ from decimal import ROUND_05UP
 from typing import Optional
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
@@ -518,18 +519,22 @@ class MedewerkerIdentificatieSerializer(serializers.Serializer):
     voorvoegsel_achternaam = serializers.CharField()
 
     def get_voorletters(self, attrs):
-        user = self.context.get("user")
-        if user:
-            voorletters = " ".join(
-                [name[0].upper() for name in user.first_name.split()]
+        medewerker = self.context.get("medewerker")
+        if isinstance(medewerker, User):
+            voorletters = "".join(
+                [part[0].upper() + "." for part in medewerker.first_name.split()]
             ).strip()
             return voorletters or attrs["voorletters"]
+        elif isinstance(medewerker, Group):
+            return "Groep"
         return attrs["voorletters"]
 
     def get_achternaam(self, attrs):
-        user = self.context.get("user")
-        if user:
-            return user.last_name or attrs["achternaam"]
+        medewerker = self.context.get("medewerker")
+        if isinstance(medewerker, User):
+            return medewerker.last_name.capitalize() or attrs["achternaam"]
+        elif isinstance(medewerker, Group):
+            return medewerker.name
         return attrs["achternaam"]
 
 

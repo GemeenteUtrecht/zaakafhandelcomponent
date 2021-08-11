@@ -97,7 +97,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": "123456",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -148,7 +148,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": user.username,
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -235,7 +235,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": user.username,
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -273,7 +273,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "betrokkene": None,
                 "betrokkene_identificatie": {
-                    "voorletters": "M Y",
+                    "voorletters": "M.Y.",
                     "achternaam": "Surname",
                     "identificatie": "notifs",
                     "voorvoegsel_achternaam": "",
@@ -298,7 +298,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             zaak_document.rollen[0]["betrokkene_identificatie"],
             {
                 "identificatie": "notifs",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },

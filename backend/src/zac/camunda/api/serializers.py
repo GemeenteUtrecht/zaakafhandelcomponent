@@ -1,10 +1,12 @@
 from typing import Any, Dict, List
 
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
 from zac.accounts.api.serializers import UserSerializer
+from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
@@ -130,8 +132,7 @@ class MessageSerializer(serializers.Serializer):
 class SetTaskAssigneeSerializer(serializers.Serializer):
     task = TaskField(
         label=_("Task ID"),
-        help_text=_("The ID of the task which assignee/delegate is to be set."),
-        required=False,
+        help_text=_("The ID of the task to which the assignee/delegate is to be set."),
     )
     assignee = serializers.CharField(
         label=_("assignee"),
@@ -145,3 +146,24 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
         allow_blank=True,
         validators=(OrValidator(UserValidator(), GroupValidator()),),
     )
+
+    def _resolve_name(self, name: str) -> str:
+        try:
+            User.objects.get(username=name)
+            return f"user:{name}"
+        except User.DoesNotExist:
+            pass
+
+        try:
+            Group.objects.get(name=name)
+            return f"group:{name}"
+        except Group.DoesNotExist:
+            pass
+
+        return name
+
+    def validate_assignee(self, assignee: str) -> str:
+        return self._resolve_name(assignee)
+
+    def validate_delegate(self, delegate: str) -> str:
+        return self._resolve_name(delegate)
