@@ -69,17 +69,18 @@ class SetTaskAssigneeSerializerTests(APITestCase):
         with self.assertRaises(exceptions.ValidationError) as exc:
             serializer.is_valid(raise_exception=True)
 
+        self.maxDiff = None
         self.assertEqual(
             exc.exception.detail["task"][0],
             "The task with given task ID does not exist (anymore).",
         )
         self.assertEqual(
             exc.exception.detail["assignee"][0],
-            "A user with username some-user does not exist.",
+            "A user with username some-user does not exist. A group with name some-user does not exist.",
         )
         self.assertEqual(
             exc.exception.detail["delegate"][0],
-            "A user with username some-delegate does not exist.",
+            "A user with username some-delegate does not exist. A group with name some-delegate does not exist.",
         )
 
     def test_serializer_success(self):

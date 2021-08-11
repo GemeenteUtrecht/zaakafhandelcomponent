@@ -9,7 +9,7 @@ from zac.api.polymorphism import PolymorphicSerializer
 
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
-from .validators import UserValidator
+from .validators import GroupValidator, OrValidator, UserValidator
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -131,16 +131,17 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
     task = TaskField(
         label=_("Task ID"),
         help_text=_("The ID of the task which assignee/delegate is to be set."),
+        required=False,
     )
     assignee = serializers.CharField(
         label=_("assignee"),
-        help_text=_("User assigned to the task."),
+        help_text=_("Assignee of the task."),
         allow_blank=True,
-        validators=(UserValidator(),),
+        validators=(OrValidator(UserValidator(), GroupValidator()),),
     )
     delegate = serializers.CharField(
         label=_("delegate"),
-        help_text=_("User delegated to the task."),
+        help_text=_("Delegate of the task."),
         allow_blank=True,
-        validators=(UserValidator(),),
+        validators=(OrValidator(UserValidator(), GroupValidator()),),
     )
