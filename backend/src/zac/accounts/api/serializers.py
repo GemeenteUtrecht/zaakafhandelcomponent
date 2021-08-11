@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils.timezone import make_aware
@@ -32,6 +33,15 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "email",
             "groups",
+        )
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = (
+            "id",
+            "name",
         )
 
 

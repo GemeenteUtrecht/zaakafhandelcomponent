@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
@@ -21,6 +22,7 @@ from .serializers import (
     AtomicPermissionSerializer,
     CreateAccessRequestSerializer,
     GrantPermissionSerializer,
+    GroupSerializer,
     HandleAccessRequestSerializer,
     UserSerializer,
 )
@@ -46,6 +48,17 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     def me(self, request, *args, **kwargs):
         self.kwargs["pk"] = self.request.user.id
         return self.retrieve(request, *args, **kwargs)
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List user groups")),
+)
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Group.objects.all().order_by("name")
+    serializer_class = GroupSerializer
+    pagination_class = BffPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ["name"]
 
 
 @extend_schema_view(
