@@ -19,6 +19,7 @@ from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="get_full_name")
+    groups = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = User
@@ -30,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "is_staff",
             "email",
+            "groups",
         )
 
 
