@@ -1,21 +1,22 @@
-<div class="card" *ngIf="isLoading || data?.length > 0">
+<div class="card" *ngIf="isSummariesLoading || reviewRequestSummaries?.length > 0">
   <h2>Adviseren en Accorderen</h2>
   <!-- Loading -->
-  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <gu-loading-indicator *ngIf="isSummariesLoading"></gu-loading-indicator>
 
   <!-- Table -->
-  <ng-container *ngIf="data && !isLoading">
+  <ng-container *ngIf="reviewRequestSummaries && !isSummariesLoading">
     <gu-table
-      *ngIf="(data.length > 0) && tableData"
-      [table]="tableData"
-      (tableOutput)="handleTableClickOutput($event)">
+      *ngIf="(reviewRequestSummaries.length > 0) && table"
+      [sortable]="true"
+      [table]="table"
+      (tableOutput)="tableClick($event)">
     </gu-table>
-    <p *ngIf="(data.length === 0)">Er is niets gevonden.</p>
+    <p *ngIf="(reviewRequestSummaries.length === 0)">Er is niets gevonden.</p>
   </ng-container>
 </div>
 <gu-modal
   id="adviseren-accorderen-detail-modal"
   [closeIcon]="true"
 >
-  <gu-detail-modal [uuid]="selectedUuid"></gu-detail-modal>
+  <gu-detail-modal [reviewRequestDetails]="selectedReviewRequestDetails"></gu-detail-modal>
 </gu-modal>

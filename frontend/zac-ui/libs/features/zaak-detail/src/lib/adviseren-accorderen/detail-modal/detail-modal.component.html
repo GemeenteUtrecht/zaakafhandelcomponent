@@ -1,16 +1,10 @@
-<ng-container *ngIf="isLoading">
-  <gu-loading-indicator></gu-loading-indicator>
-</ng-container>
-<h1 *ngIf="title && !isLoading">{{title}}</h1>
+<h1 *ngIf="title">{{title}}</h1>
 <div class="gu-adviseren-accorderen-detail">
-  <ng-container *ngIf="data && !isLoading">
-    <gu-table
-      *ngIf="(data.length > 0) && tableData"
-      [table]="tableData"
-      [expandable]="true"
-      [wrap]="true"
-      (buttonOutput)="handleTableButtonOutput($event)">
-    </gu-table>
-    <p *ngIf="(data.length === 0)">Er zijn geen gegevens.</p>
-  </ng-container>
+
+  <gu-table [table]="table"
+            [expandable]="true"
+            [wrap]="true"
+            (buttonOutput)="tableClick($event)"
+  >
+  </gu-table>
 </div>

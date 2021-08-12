@@ -150,7 +150,7 @@
         <div class="pt-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
-                                          (successReload)="fetchProcesses()"
+                                          (successReload)="closeModal()"
           ></gu-config-adviseren-accorderen>
 
           <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-document-select>
