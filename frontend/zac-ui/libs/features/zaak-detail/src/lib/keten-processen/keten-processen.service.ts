@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
 import { ReadWriteDocument, Task, User } from '@gu/models';
+import { KetenProcessen } from '../../models/keten-processen';
 
 
 export interface SendMessageForm {
@@ -72,6 +73,20 @@ export class KetenProcessenService {
       return user.username && !task.assignee
     }
     return true;
+  }
+
+  /**
+   * Aggregates all the tasks of the main processes and sub processes
+   * @param {KetenProcessen[]} ketenProcessenData
+   * @returns {Task[]}
+   */
+  mergeTaskData(ketenProcessenData: KetenProcessen[]): Task[] {
+    const mainTasksArray = ketenProcessenData[0].tasks;
+    const subTasksArray = [];
+    ketenProcessenData[0].subProcesses.forEach( subProcess => {
+      subProcess.tasks.forEach( task => subTasksArray.push(task))
+    })
+    return mainTasksArray.concat(subTasksArray);
   }
 
   getProcesses(mainZaakUrl: string): Observable<any> {

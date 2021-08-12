@@ -32,6 +32,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   @Input() currentUser: User;
 
   data: KetenProcessen[];
+  allTaskData: Task[];
   processInstanceId: string;
 
   isLoading = true;
@@ -114,6 +115,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
       // Update data.
       this.data = data;
+      this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
       this.processInstanceId = data.length > 0 ? data[0].id : null;
       this.isLoading = false;
 
