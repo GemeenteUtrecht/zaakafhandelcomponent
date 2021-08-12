@@ -7,7 +7,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
@@ -129,10 +129,15 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
 
         call_command("add_atomic_permissions")
 
-        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 2)
 
-        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
+        permission_read, permission_execute = AtomicPermission.objects.for_user(
+            self.user
+        )
 
-        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
-        self.assertEqual(atomic_permission.object_url, zaak["url"])
+        self.assertEqual(permission_read.permission, zaken_inzien.name)
+        self.assertEqual(permission_execute.permission, zaakproces_usertasks.name)
+
+        for permission in [permission_read, permission_execute]:
+            self.assertEqual(permission.object_type, PermissionObjectType.zaak)
+            self.assertEqual(permission.object_url, zaak["url"])

@@ -21,7 +21,7 @@ Each permission provides the right to perform one of the following types of oper
 
 * zaak permissions:
     * ``zaken:inzien`` - to see the case details. It's the most used permission in the ZAC
-    * ``zaken:wijzigen`` - to modify the case, for example, to add documents to the case
+    * ``zaken:wijzigen`` - to modify the case, for example, to change the confidentiality level
     * ``zaakproces:usertasks-uitvoeren`` - to perform Camunda tasks
     * ``zaakproces:send-bpmn-message`` - to send messages in the Camunda process
     * ``zaken:add-documents`` - to add documents to the case
@@ -42,7 +42,7 @@ Each permission provides the right to perform one of the following types of oper
 The permissions used only in the old version of the ZAC:
 
 * zaak permissions:
-    * ``zaken:afsluiten`` - to close the case.
+    * ``zaken:afsluiten`` - to close the case
     * ``zaken:set-result`` - to set result to the case
     * ``zaken:create-status`` - to add status to the case
 
@@ -55,7 +55,7 @@ Blueprint permissions
 The permissions in the ZAC can be divided into two groups:
 
 * blueprint permissions
-* atomic permissions.
+* atomic permissions
 
 The blueprint permission allows a user to perform a particular operation on the defined subset of the objects.
 This is the main type of the permissions. Blueprint permissions are defined by functional managers
@@ -150,16 +150,16 @@ Atomic permissions
 Sometimes users should have extra rights for particular objects. For example, if the user should have rights
 to read only particular cases of a certain case type then atomic permissions can be used.
 
-Unlike blueprint permissions there are several sources of the atomic permissions for the users:
+Unlike blueprint permissions there are several sources of the atomic permissions for the users.
 
-* the user is a **behandelaar** of the case. When this role is created (and the notification is received
+* The user is a **behandelaar** of the case. When this role is created (and the notification is received
   by the ZAC) the user receives a permission to read the case automatically.
-* the user is required to be an **adviser** or **approver** of the case. When the review request is created
-  the users mentioned there receive a permission to read the case automatically.
-* the user is assigned to a case **activity**. When the user is assigned to the activity they
-  receive permissions to read and update activities automatically.
-* the user **requests access** to the particular case and this request was approved.
-* the functional manager grants permission to the user.
+* The user is required to be an **adviser** or **approver** of the case. When the review request is created
+  the users mentioned there receive a permission to read the case and to perform Camunda tasks automatically.
+* The user is assigned to a case **activity**. When the user is assigned to the activity they
+  receive permissions to read the case and to read and update activities automatically.
+* The user **requests access** to the particular case and this request was approved.
+* The functional manager grants permission to the user.
 
 The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
 
