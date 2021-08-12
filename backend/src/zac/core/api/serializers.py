@@ -519,22 +519,18 @@ class MedewerkerIdentificatieSerializer(serializers.Serializer):
     voorvoegsel_achternaam = serializers.CharField()
 
     def get_voorletters(self, attrs):
-        medewerker = self.context.get("medewerker")
-        if isinstance(medewerker, User):
+        user = self.context.get("user")
+        if user:
             voorletters = "".join(
-                [part[0].upper() + "." for part in medewerker.first_name.split()]
+                [part[0].upper() + "." for part in user.first_name.split()]
             ).strip()
             return voorletters or attrs["voorletters"]
-        elif isinstance(medewerker, Group):
-            return "Groep"
         return attrs["voorletters"]
 
     def get_achternaam(self, attrs):
-        medewerker = self.context.get("medewerker")
-        if isinstance(medewerker, User):
-            return medewerker.last_name.capitalize() or attrs["achternaam"]
-        elif isinstance(medewerker, Group):
-            return medewerker.name
+        user = self.context.get("user")
+        if user:
+            return user.last_name.capitalize() or attrs["achternaam"]
         return attrs["achternaam"]
 
 

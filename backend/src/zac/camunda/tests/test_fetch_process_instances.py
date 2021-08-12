@@ -167,6 +167,7 @@ class ProcessInstanceTests(TestCase):
                                     "id": self.user.id,
                                     "isStaff": self.user.is_staff,
                                     "email": self.user.email,
+                                    "groups": [],
                                 },
                             }
                         ],

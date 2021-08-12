@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
@@ -11,7 +12,8 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.constants import PermissionObjectType, PermissionReason
-from zac.accounts.models import AtomicPermission, User
+from zac.accounts.models import AtomicPermission
+from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
@@ -56,7 +58,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     """
 
     def test_rol_created_indexed_in_es(self, rm):
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         self.client.force_authenticate(user=user)
@@ -132,7 +134,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         rol = {
@@ -200,7 +202,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
 
         # Some more mocks
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         rol_old = {
@@ -300,6 +302,89 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "identificatie": "notifs",
                 "voorletters": "M.Y.",
                 "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        )
+
+    def test_rol_group_does_not_trigger_update_rol(self, rm):
+        # set up mocks
+        Service.objects.create(
+            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
+        )
+        Service.objects.create(
+            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
+        )
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(STATUS, json=STATUS_RESPONSE)
+        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
+        # create zaak document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+
+        # Some more mocks
+        user = UserFactory.create()
+        group = GroupFactory.create(name="some-group")
+        rol_old = {
+            "url": ROL,
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": group.name,
+                "voorletters": "Groep",
+                "achternaam": group.name,
+                "voorvoegsel_achternaam": "",
+            },
+        }
+
+        rm.get(ROL, json=rol_old)
+        rol = factory(Rol, rol_old)
+        rol.zaak = zaak
+
+        zaak_document = create_zaak_document(zaak)
+        self.assertEqual(zaak_document.rollen, [])
+
+        self.client.force_authenticate(user=user)
+        path = reverse("notifications:callback")
+        with patch(
+            "zac.notifications.handlers.get_rollen", return_value=[rol]
+        ) as mock_handlers_get_rollen:
+            with patch(
+                "zac.core.services.get_rollen", return_value=[rol]
+            ) as mock_services_get_rollen:
+                with patch(
+                    "zac.core.services.update_rol", return_value=None
+                ) as mock_update_rol:
+                    with patch(
+                        "zac.elasticsearch.api.get_rollen", return_value=[rol]
+                    ) as mock_es_get_rollen:
+                        response = self.client.post(path, NOTIFICATION)
+
+        mock_handlers_get_rollen.assert_called_once_with(zaak)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_services_get_rollen.assert_called_once_with(zaak)
+        mock_update_rol.assert_not_called()
+        mock_es_get_rollen.assert_called_once_with(zaak)
+
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
+        self.assertEqual(len(zaak_document.rollen), 1)
+        self.assertEqual(zaak_document.rollen[0]["url"], ROL)
+        self.assertEqual(
+            zaak_document.rollen[0]["betrokkene_identificatie"],
+            {
+                "identificatie": "some-group",
+                "voorletters": "Groep",
+                "achternaam": "some-group",
                 "voorvoegsel_achternaam": "",
             },
         )
