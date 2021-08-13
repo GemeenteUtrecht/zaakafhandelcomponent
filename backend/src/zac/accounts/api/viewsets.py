@@ -170,3 +170,4 @@ class AuthProfileViewSet(
     permission_classes = [IsAuthenticated]
     queryset = AuthorizationProfile.objects.all()
     serializer_class = AuthProfileSerializer
+    lookup_field = "uuid"

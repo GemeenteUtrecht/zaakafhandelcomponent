@@ -413,12 +413,15 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     object_type = serializers.ChoiceField(choices=PermissionObjectTypeChoices.choices)
 
 
-class AuthProfileSerializer(serializers.ModelSerializer):
-    group_permissions = GroupBlueprintSerializer(many=True)
+class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
+    blueprint_permissions = GroupBlueprintSerializer(
+        many=True, source="group_permissions"
+    )
 
     class Meta:
         model = AuthorizationProfile
-        fields = ("name", "group_permissions")
+        fields = ("url", "uuid", "name", "blueprint_permissions")
+        extra_kwargs = {"url": {"lookup_field": "uuid"}, "uuid": {"read_only": True}}
 
     @transaction.atomic
     def create(self, validated_data):
