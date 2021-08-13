@@ -1,4 +1,5 @@
 <div class="keten-processen card">
+  <h2>Acties</h2>
   <!-- Loading -->
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
@@ -9,7 +10,6 @@
 
     <!-- Action buttons -->
     <div class="keten-processen__actie-buttons-container">
-      <h3>Acties</h3>
       <ng-container *ngFor="let message of data[0].messages; let i = index">
         <button gu-button
                 [hidden]="!isExpanded && i >= 3"
