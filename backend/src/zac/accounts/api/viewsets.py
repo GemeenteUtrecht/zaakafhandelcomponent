@@ -1,5 +1,6 @@
 from django.contrib.auth.models import Group
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
@@ -14,12 +15,19 @@ from zac.utils.mixins import PatchModelMixin
 
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
-from ..models import AccessRequest, User, UserAtomicPermission
+from ..models import (
+    AccessRequest,
+    AuthorizationProfile,
+    BlueprintPermission,
+    User,
+    UserAtomicPermission,
+)
 from .filters import UserFilter
 from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess
 from .serializers import (
     AccessRequestDetailSerializer,
     AtomicPermissionSerializer,
+    AuthProfileSerializer,
     CreateAccessRequestSerializer,
     GrantPermissionSerializer,
     GroupSerializer,
@@ -151,3 +159,12 @@ class AtomicPermissionViewSet(
                 ui=True,
             )
         )
+
+
+class AuthProfileViewSet(
+    mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = AuthorizationProfile.objects.all()
+    serializer_class = AuthProfileSerializer

@@ -6,6 +6,7 @@ from .views import InformatieobjecttypenJSONView
 from .viewsets import (
     AccessRequestViewSet,
     AtomicPermissionViewSet,
+    AuthProfileViewSet,
     GroupViewSet,
     UserViewSet,
 )
@@ -15,6 +16,7 @@ router.register("groups", GroupViewSet, basename="groups")
 router.register("users", UserViewSet, basename="users")
 router.register("access-requests", AccessRequestViewSet)
 router.register("cases/access", AtomicPermissionViewSet, basename="accesses")
+router.register("auth-profiles", AuthProfileViewSet, basename="authprofiles")
 
 urlpatterns = router.urls + [
     path(

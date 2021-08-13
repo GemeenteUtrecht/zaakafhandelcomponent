@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from itertools import groupby
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -156,6 +157,26 @@ class AuthorizationProfile(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def group_permissions(self) -> list:
+        """
+        Permissions are grouped by role and object_type
+        """
+        permissions = self.blueprint_permissions.order_by()
+
+        groups = []
+        for (role, object_type), permissions in groupby(
+            permissions, key=lambda a: (a.role, a.object_type)
+        ):
+            groups.append(
+                {
+                    "role": role,
+                    "object_type": object_type,
+                    "policies": [perm.policy for perm in permissions],
+                }
+            )
+        return groups
+
 
 class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
@@ -310,7 +331,7 @@ class BlueprintPermission(models.Model):
     class Meta:
         verbose_name = _("blueprint permission")
         verbose_name_plural = _("blueprint permissions")
-        ordering = ("role", "policy__zaaktype_omschrijving")
+        ordering = ("role", "object_type", "policy__zaaktype_omschrijving")
         unique_together = ("role", "policy")
 
     def __str__(self):

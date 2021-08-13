@@ -19,7 +19,15 @@ from ..constants import (
     PermissionReason,
 )
 from ..email import send_email_to_requester
-from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
+from ..models import (
+    AccessRequest,
+    AtomicPermission,
+    AuthorizationProfile,
+    BlueprintPermission,
+    Role,
+    User,
+    UserAtomicPermission,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -388,3 +396,36 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             )
         )
         return access_request
+
+
+class GroupBlueprintSerializer(serializers.Serializer):
+    role = serializers.SlugRelatedField(slug_field="name", queryset=Role.objects.all())
+    object_type = serializers.ChoiceField(choices=PermissionObjectTypeChoices.choices)
+    policies = serializers.ListField(child=serializers.JSONField())
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+
+        return result
+
+
+class AuthProfileSerializer(serializers.ModelSerializer):
+    group_permissions = GroupBlueprintSerializer(many=True)
+
+    class Meta:
+        model = AuthorizationProfile
+        fields = ("name", "group_permissions")
+
+    @transaction.atomic
+    def create(self, validated_data):
+        group_permissions = validated_data.pop("group_permissions")
+        auth_profile = super().create(validated_data)
+
+        for group in group_permissions:
+            for policy in group["policies"]:
+                permission, created = BlueprintPermission.objects.get_or_create(
+                    role=group["role"], object_type=group["object_type"], policy=policy
+                )
+                auth_profile.blueprint_permissions.add(permission)
+
+        return auth_profile
