@@ -134,10 +134,10 @@ INSTALLED_APPS = [
     "hijack_admin",
     "django_better_admin_arrayfield",
     # Project applications.
+    "zac.elasticsearch",
     "zac.accounts",
     "zac.camunda",
     "zac.core",
-    "zac.elasticsearch",
     "zac.notifications",
     "zac.forms",
     "zac.utils",

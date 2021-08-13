@@ -161,6 +161,12 @@ class AtomicPermissionViewSet(
         )
 
 
+@extend_schema_view(
+    list=extend_schema(summary=_("List authorization profiles")),
+    retrieve=extend_schema(summary=_("Retrieve authorization profile")),
+    create=extend_schema(summary=_("Create authorization profile")),
+    update=extend_schema(summary=_("Update authorization profile")),
+)
 class AuthProfileViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,

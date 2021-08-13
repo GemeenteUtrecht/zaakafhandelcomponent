@@ -407,15 +407,22 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     }
     discriminator_field = "object_type"
     group_field = "policies"
-    group_field_kwargs = {"many": True}
+    group_field_kwargs = {"many": True, "help_text": _("List of blueprint shapes")}
 
-    role = serializers.SlugRelatedField(slug_field="name", queryset=Role.objects.all())
-    object_type = serializers.ChoiceField(choices=PermissionObjectTypeChoices.choices)
+    role = serializers.SlugRelatedField(
+        slug_field="name", queryset=Role.objects.all(), help_text=_("Name of the role")
+    )
+    object_type = serializers.ChoiceField(
+        choices=PermissionObjectTypeChoices.choices,
+        help_text=_("Type of the permission object"),
+    )
 
 
 class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
     blueprint_permissions = GroupBlueprintSerializer(
-        many=True, source="group_permissions"
+        many=True,
+        source="group_permissions",
+        help_text=_("List of blueprint permissions"),
     )
 
     class Meta:
