@@ -162,7 +162,9 @@ class AtomicPermissionViewSet(
 
 
 class AuthProfileViewSet(
-    mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.ReadOnlyModelViewSet,
 ):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]

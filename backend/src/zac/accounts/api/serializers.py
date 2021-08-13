@@ -433,3 +433,17 @@ class AuthProfileSerializer(serializers.ModelSerializer):
                 auth_profile.blueprint_permissions.add(permission)
 
         return auth_profile
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        group_permissions = validated_data.pop("group_permissions")
+        auth_profile = super().update(instance, validated_data)
+
+        auth_profile.blueprint_permissions.clear()
+        for group in group_permissions:
+            for policy in group["policies"]:
+                permission, created = BlueprintPermission.objects.get_or_create(
+                    role=group["role"], object_type=group["object_type"], policy=policy
+                )
+                auth_profile.blueprint_permissions.add(permission)
+        return auth_profile
