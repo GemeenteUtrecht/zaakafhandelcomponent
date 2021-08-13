@@ -10,12 +10,22 @@
     <!-- Action buttons -->
     <div class="keten-processen__actie-buttons-container">
       <h3>Acties</h3>
+      <ng-container *ngFor="let message of data[0].messages; let i = index">
+        <button gu-button
+                [hidden]="!isExpanded && i >= 3"
+                (click)="sendMessage(message)"
+                type="action-link"
+                class="mr-2 mb-3">
+          {{message}}
+        </button>
+      </ng-container>
       <button gu-button
-              *ngFor="let message of data[0].messages"
-              (click)="sendMessage(message)"
-              type="action-link"
-              class="d-inline-block mr-2 mb-3">
-        {{message}}
+              type="tertiary"
+              size="extrasmall"
+              class="d-block"
+              [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+              (click)="isExpanded = !isExpanded">
+        {{isExpanded ? 'Toon minder' : 'Meer acties'}}
       </button>
     </div>
 

@@ -14,10 +14,16 @@ export class ButtonComponent {
   @Input() icon?: string;
   @Input() class = '';
   @Input() disabled?: boolean;
+  @Input() hidden?: boolean;
 
   @HostBinding('attr.disabled')
   get disable() {
     return this.disabled ? 'disabled' : null;
+  }
+
+  @HostBinding('attr.hidden')
+  get hide() {
+    return this.hidden ? 'hidden' : null;
   }
 
   @HostBinding('attr.class')

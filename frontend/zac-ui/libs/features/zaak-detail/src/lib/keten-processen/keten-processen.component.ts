@@ -31,6 +31,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   @Input() identificatie: string;
   @Input() currentUser: User;
 
+  isExpanded = false;
+
   data: KetenProcessen[];
   allTaskData: Task[];
   processInstanceId: string;
