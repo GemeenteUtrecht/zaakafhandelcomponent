@@ -676,7 +676,7 @@ class ObjectFilterProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.OBJECTS_API_SCHEMA
     PROXY_SCHEMA_PATH = [
         "paths",
-        "/api/v1/objects/search",
+        "/objects/search",
         "post",
         "requestBody",
         "content",
