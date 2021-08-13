@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
 from zac.core.services import find_zaak, get_zaak
 from zgw.models.zrc import Zaak
@@ -28,6 +29,7 @@ from ..models import (
     User,
     UserAtomicPermission,
 )
+from ..permissions import object_type_registry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -398,15 +400,17 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         return access_request
 
 
-class GroupBlueprintSerializer(serializers.Serializer):
+class GroupBlueprintSerializer(GroupPolymorphicSerializer):
+    serializer_mapping = {
+        object_type.name: object_type.blueprint_class
+        for object_type in list(object_type_registry.values())
+    }
+    discriminator_field = "object_type"
+    group_field = "policies"
+    group_field_kwargs = {"many": True}
+
     role = serializers.SlugRelatedField(slug_field="name", queryset=Role.objects.all())
     object_type = serializers.ChoiceField(choices=PermissionObjectTypeChoices.choices)
-    policies = serializers.ListField(child=serializers.JSONField())
-
-    def to_representation(self, instance):
-        result = super().to_representation(instance)
-
-        return result
 
 
 class AuthProfileSerializer(serializers.ModelSerializer):
