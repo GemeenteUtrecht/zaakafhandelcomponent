@@ -115,6 +115,7 @@ class UserTasksTests(APITestCase):
                             "isStaff": self.user.is_staff,
                             "lastName": self.user.last_name,
                             "username": self.user.username,
+                            "groups": [],
                         },
                         "created": TASK_DATA["created"],
                         "hasForm": False,

@@ -2,12 +2,13 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 import requests_mock
 from django_camunda.models import CamundaConfig
 from rest_framework import status
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
 
 ZAAK_URL = "https://some.zrc.nl/api/v1/zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
@@ -31,6 +32,7 @@ class ProcessInstanceTests(TestCase):
         config.save()
 
         cls.user = UserFactory.create()
+        cls.group = GroupFactory.create()
 
     def setUp(self) -> None:
         super().setUp()
@@ -88,7 +90,7 @@ class ProcessInstanceTests(TestCase):
                 {
                     "id": "a0555196-d26f-11ea-86dc-e22fafe5f405",
                     "name": "Accorderen",
-                    "assignee": self.user.username,
+                    "assignee": f"user:{self.user.username}",
                     "created": "2020-07-30T14:19:06.000+0000",
                     "due": None,
                     "follow_up": None,
@@ -107,7 +109,53 @@ class ProcessInstanceTests(TestCase):
                     "suspended": False,
                     "form_key": "zac:doRedirect",
                     "tenant_id": None,
-                }
+                },
+                {
+                    "id": "a0555196-d26f-11ea-86dc-e22fafe5f404",
+                    "name": "Accorderen",
+                    "assignee": f"group:{self.group.name}",
+                    "created": "2020-07-30T14:19:06.000+0000",
+                    "due": None,
+                    "follow_up": None,
+                    "delegation_state": None,
+                    "description": None,
+                    "execution_id": "a055518b-d26f-11ea-86dc-e22fafe5f404",
+                    "owner": None,
+                    "parent_task_id": None,
+                    "priority": 50,
+                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f404",
+                    "process_instance_id": "905abd5f-d26f-11ea-86dc-e22fafe5f404",
+                    "task_definition_key": "Activity_0iwp63d",
+                    "case_execution_id": None,
+                    "case_instance_id": None,
+                    "case_definition_id": None,
+                    "suspended": False,
+                    "form_key": "zac:doRedirect",
+                    "tenant_id": None,
+                },
+                {
+                    "id": "a0555196-d26f-11ea-86dc-e22fafe5f403",
+                    "name": "Accorderen",
+                    "assignee": "",
+                    "created": "2020-07-30T14:19:06.000+0000",
+                    "due": None,
+                    "follow_up": None,
+                    "delegation_state": None,
+                    "description": None,
+                    "execution_id": "a055518b-d26f-11ea-86dc-e22fafe5f403",
+                    "owner": None,
+                    "parent_task_id": None,
+                    "priority": 50,
+                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f403",
+                    "process_instance_id": "905abd5f-d26f-11ea-86dc-e22fafe5f403",
+                    "task_definition_key": "Activity_0iwp63g",
+                    "case_execution_id": None,
+                    "case_instance_id": None,
+                    "case_definition_id": None,
+                    "suspended": False,
+                    "form_key": "zac:doRedirect",
+                    "tenant_id": None,
+                },
             ],
             [],
         ]
@@ -138,7 +186,7 @@ class ProcessInstanceTests(TestCase):
         response = self.client.get(url, {"zaak_url": ZAAK_URL})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+        self.maxDiff = None
         data = response.json()
         expected_data = [
             {
@@ -169,7 +217,28 @@ class ProcessInstanceTests(TestCase):
                                     "email": self.user.email,
                                     "groups": [],
                                 },
-                            }
+                                "assigneeType": "user",
+                            },
+                            {
+                                "id": self.task_data[1][1]["id"],
+                                "name": "Accorderen",
+                                "created": "2020-07-30T14:19:06Z",
+                                "hasForm": False,
+                                "assignee": {
+                                    "name": self.group.name,
+                                    "fullName": _("Group") + ": " + self.group.name,
+                                    "id": self.user.id,
+                                },
+                                "assigneeType": "group",
+                            },
+                            {
+                                "id": self.task_data[1][2]["id"],
+                                "name": "Accorderen",
+                                "created": "2020-07-30T14:19:06Z",
+                                "hasForm": False,
+                                "assignee": "",
+                                "assigneeType": "",
+                            },
                         ],
                         "subProcesses": [
                             {

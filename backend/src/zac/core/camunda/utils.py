@@ -1,7 +1,8 @@
 import warnings
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 import requests
 from django_camunda.camunda_models import factory
@@ -21,12 +22,20 @@ FORM_KEYS = {
 }
 
 
-def _resolve_assignee(username: str) -> User:
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        user = User.objects.create_user(username=username)
-    return user
+def _resolve_assignee(name: str) -> Union[Group, User]:
+    user_or_group, _name = name.split(":")[0], ":".join(name.split(":")[1:])
+    if user_or_group == "group":
+        try:
+            group = Group.objects.get(name=_name)
+        except Group.DoesNotExist:
+            group = Group.objects.create(name=_name)
+        return group
+    else:
+        try:
+            user = User.objects.get(username=_name)
+        except User.DoesNotExist:
+            user = User.objects.create_user(username=_name)
+        return user
 
 
 def get_process_tasks(process: ProcessInstance) -> List[Task]:

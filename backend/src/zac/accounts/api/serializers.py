@@ -37,12 +37,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField(
+        help_text=_("Human readable name that identifies the group.")
+    )
+
     class Meta:
         model = Group
         fields = (
             "id",
             "name",
+            "full_name",
         )
+
+    def get_full_name(self, obj) -> str:
+        return _("Group") + ": " + obj.name
 
 
 class CatalogusURLSerializer(serializers.Serializer):

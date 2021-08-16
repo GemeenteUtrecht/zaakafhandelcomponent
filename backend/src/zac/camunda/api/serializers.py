@@ -5,10 +5,11 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from zac.accounts.api.serializers import UserSerializer
+from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
-from zac.api.polymorphism import PolymorphicSerializer
+from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
 
+from ..constants import AssigneeTypeChoices
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
 from .validators import GroupValidator, OrValidator, UserValidator
@@ -23,12 +24,36 @@ class RecursiveField(serializers.Serializer):
         return self.parent.parent.to_representation(instance)
 
 
-class TaskSerializer(serializers.Serializer):
+class TaskAssigneeUserSerializer(serializers.Serializer):
+    assignee = UserSerializer()
+
+
+class TaskAssigneeGroupSerializer(serializers.Serializer):
+    assignee = GroupSerializer()
+
+
+class TaskAssigneeFallbackSerializer(serializers.Serializer):
+    assignee = serializers.CharField(default="", allow_blank=True)
+
+
+class TaskSerializer(PolymorphicSerializer):
+    serializer_mapping = {
+        AssigneeTypeChoices.user: TaskAssigneeUserSerializer,
+        AssigneeTypeChoices.group: TaskAssigneeGroupSerializer,
+        "": TaskAssigneeFallbackSerializer,
+    }
+    discriminator_field = "assignee_type"
+    fallback_distriminator_value = ""
+
     id = serializers.UUIDField()
     name = serializers.CharField(max_length=100)
     created = serializers.DateTimeField()
     has_form = serializers.BooleanField()
-    assignee = UserSerializer(allow_null=True, required=False)
+    assignee_type = serializers.ChoiceField(
+        required=True,
+        choices=AssigneeTypeChoices.choices + ("", ""),
+        help_text=_("The assignee type that was assigned to the user task."),
+    )
 
 
 class ProcessInstanceSerializer(serializers.Serializer):
