@@ -117,6 +117,7 @@ class UserTasksTests(APITestCase):
                             "username": self.user.username,
                             "groups": [],
                         },
+                        "assigneeType": "user",
                         "created": TASK_DATA["created"],
                         "hasForm": False,
                         "id": TASK_DATA["id"],

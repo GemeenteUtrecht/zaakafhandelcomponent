@@ -227,7 +227,7 @@ class ProcessInstanceTests(TestCase):
                                 "assignee": {
                                     "name": self.group.name,
                                     "fullName": _("Group") + ": " + self.group.name,
-                                    "id": self.user.id,
+                                    "id": self.group.id,
                                 },
                                 "assigneeType": "group",
                             },
