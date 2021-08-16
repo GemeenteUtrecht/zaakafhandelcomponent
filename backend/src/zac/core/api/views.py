@@ -241,7 +241,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
     serializer_class = ZaakStatusSerializer
 
     @extend_schema(summary=_("List case statussen"))
