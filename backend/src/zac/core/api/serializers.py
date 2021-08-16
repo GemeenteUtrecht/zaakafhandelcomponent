@@ -33,7 +33,7 @@ from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
-from zac.core.services import get_documenten, get_zaak
+from zac.core.services import fetch_zaaktype, get_documenten, get_statustypen, get_zaak
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -352,6 +352,23 @@ class StatusTypeSerializer(APIModelSerializer):
             "volgnummer",
             "is_eindstatus",
         )
+        extra_kwargs = {
+            "omschrijving": {"read_only": True},
+            "omschrijving_generiek": {"read_only": True},
+            "statustekst": {"read_only": True},
+            "volgnummer": {"read_only": True},
+            "is_eindstatus": {"read_only": True},
+        }
+
+    def validate_url(self, url: str) -> str:
+        zaaktype = self.context["zaaktype"]
+        if not isinstance(zaaktype, ZaakType):
+            zaaktype = fetch_zaaktype(zaaktype)
+
+        statustypen = get_statustypen(zaaktype)
+        if not url in [st.url for st in statustypen]:
+            raise serializers.ValidationError("Invalid statustype URL given.")
+        return url
 
 
 class ZaakStatusSerializer(APIModelSerializer):
@@ -365,6 +382,10 @@ class ZaakStatusSerializer(APIModelSerializer):
             "statustoelichting",
             "statustype",
         )
+        extra_kwargs = {
+            "url": {"read_only": True},
+            "datum_status_gezet": {"read_only": True},
+        }
 
 
 class EigenschapSpecificatieSerializer(APIModelSerializer):
