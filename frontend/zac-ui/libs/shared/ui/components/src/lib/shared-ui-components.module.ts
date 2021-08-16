@@ -31,6 +31,7 @@ import {IconComponent} from './elements/icon/icon.component';
 // UI Components
 import {FileComponent} from './components/file/file.component';
 import {FileUploadComponent} from './components/file-upload/file-upload.component';
+import {FormComponent} from './components/form/form.component';
 import {SuccessComponent} from './components/success/success.component';
 import {ModalComponent} from './components/modal/modal.component';
 import {DatepickerComponent} from './components/datepicker/datepicker.component';
@@ -62,6 +63,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         CollapsibleComponent,
         FileComponent,
         FileUploadComponent,
+        FormComponent,
         LoadingIndicatorComponent,
         RadioComponent,
         TableComponent,
@@ -84,6 +86,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         CollapsibleComponent,
         FileComponent,
         FileUploadComponent,
+        FormComponent,
         LoadingIndicatorComponent,
         RadioComponent,
         TableComponent,
