@@ -7,7 +7,12 @@
   'btn__spinner--tertiary': type == 'tertiary'
   }"
 ></span>
-<mat-icon *ngIf="icon">{{icon}}</mat-icon>
+<mat-icon *ngIf="icon || type === 'action-link'">
+  {{
+    icon ? icon :
+    type === 'action-link' ? 'chevron_right' : null
+  }}
+</mat-icon>
 <span class='d-inline-flex'>
   <ng-content></ng-content>
 </span>

@@ -21,6 +21,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
   border-radius: 0.25rem;
   text-transform: none;
   transition: background-color .1s,color .1s,fill .1s,stroke .1s;
+  white-space: nowrap;
 }
 
 @mixin button--primary {
@@ -154,6 +155,22 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
         outline: none;
         outline: 0;
       }
+    }
+  }
+  &.action-link {
+    color: $color-blue;
+    background-color: transparent;
+    display: inline-block;
+    font-size: 0.875rem;
+    border: none;
+    white-space: nowrap;
+    &:hover {
+      text-decoration: underline;
+    }
+    .mat-icon {
+      font-size: 1.4rem;
+      font-weight: bold;
+      vertical-align: middle;
     }
   }
 }
