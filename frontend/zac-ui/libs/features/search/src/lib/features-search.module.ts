@@ -9,6 +9,7 @@ import { FeaturesSearchComponent } from './features-search.component';
 import { SearchFormComponent } from './search-form/search-form.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
 import {ZaakSelectModule} from "./zaak-select/zaak-select.module";
+import {PropertySearchFormComponent} from "./search-form/property-search-form/property-search-form.component";
 
 @NgModule({
   imports: [
@@ -30,6 +31,7 @@ import {ZaakSelectModule} from "./zaak-select/zaak-select.module";
   ],
   declarations: [
     FeaturesSearchComponent,
+    PropertySearchFormComponent,
     SearchFormComponent,
     SearchResultsComponent
   ],
