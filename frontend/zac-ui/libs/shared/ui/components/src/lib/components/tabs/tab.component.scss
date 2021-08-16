@@ -1,3 +1,10 @@
 ::ng-deep.mat-tab-label.mat-tab-label-active {
   opacity: 1;
 }
+
+::ng-deep.mat-tab-body-content .row {
+  width: calc(100% + 15px);
+}
+::ng-deep.mat-tab-body-content .row [class*=col-] {
+  padding-right: 0;
+}
