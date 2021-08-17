@@ -75,7 +75,7 @@ export class ZaakObjectSearchFormComponent {
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
 
-  constructor(public zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
+  constructor(private zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
   }
 
   //
