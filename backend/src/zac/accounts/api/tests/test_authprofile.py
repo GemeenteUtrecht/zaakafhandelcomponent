@@ -10,11 +10,41 @@ from ...tests.factories import (
     AuthorizationProfileFactory,
     BlueprintPermissionFactory,
     RoleFactory,
+    StaffUserFactory,
     SuperUserFactory,
+    UserFactory,
 )
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d"
+
+
+class AuthProfilePermissionsTests(APITestCase):
+    url = reverse_lazy("authorizationprofile-list")
+
+    def test_no_staff_user(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_staff_user(self):
+        user = StaffUserFactory.create()
+        self.client.force_authenticate(user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_superuser(self):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class AuthProfileAPITests(APITestCase):
@@ -415,11 +445,9 @@ class AuthProfileAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         auth_profile.refresh_from_db()
-
         self.assertEqual(auth_profile.blueprint_permissions.count(), 1)
 
         permission = auth_profile.blueprint_permissions.get()
-
         self.assertEqual(
             permission.policy,
             {
