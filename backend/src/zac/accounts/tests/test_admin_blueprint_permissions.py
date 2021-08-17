@@ -8,22 +8,22 @@ from django.urls import reverse_lazy
 from django_webtest import WebTest
 from rest_framework import serializers
 
-from ..constants import PermissionObjectType
+from ..constants import PermissionObjectTypeChoices
 from ..models import BlueprintPermission
 from ..permissions import Blueprint
-from .factories import SuperUserFactory
+from .factories import RoleFactory, SuperUserFactory
 
-test_registry = {}
+# create a test object type in the separate registry
+test_object_type_registry = {}
 
-# create a test permission in the separate registry
+
 @dataclass(frozen=True)
-class TestPermission:
+class TestObjectType:
     name: str
-    description: str
     blueprint_class: Optional[Type[Blueprint]] = None
 
     def __post_init__(self):
-        test_registry[self.name] = self
+        test_object_type_registry[self.name] = self
 
 
 class TestBlueprint1(Blueprint):
@@ -31,8 +31,8 @@ class TestBlueprint1(Blueprint):
     type_version = serializers.IntegerField(required=False)
 
 
-permission1 = TestPermission(
-    name="permission1", description="only for tests", blueprint_class=TestBlueprint1
+object_type1 = TestObjectType(
+    name=PermissionObjectTypeChoices.zaak, blueprint_class=TestBlueprint1
 )
 
 
@@ -44,40 +44,32 @@ class BlueprintPermissionAdminTests(WebTest):
         super().setUpTestData()
 
         cls.user = SuperUserFactory.create()
+        cls.role = RoleFactory.create()
 
     def setUp(self) -> None:
         super().setUp()
 
         self.app.set_user(self.user)
 
-        patcher_registry_admin = patch("zac.accounts.admin.registry", new=test_registry)
+        patcher_registry_widget = patch(
+            "zac.accounts.widgets.object_type_registry", new=test_object_type_registry
+        )
         patcher_registry_model = patch(
-            "zac.accounts.models.registry", new=test_registry
+            "zac.accounts.models.object_type_registry", new=test_object_type_registry
         )
 
-        self.mocked_registry_admin = patcher_registry_admin.start()
+        self.mocked_registry_widget = patcher_registry_widget.start()
         self.mocked_registry_model = patcher_registry_model.start()
 
-        self.addCleanup(patcher_registry_admin.stop)
+        self.addCleanup(patcher_registry_widget.stop)
         self.addCleanup(patcher_registry_model.stop)
-
-    def test_get_permission_choices(self):
-        response = self.app.get(self.url)
-        form = response.form
-
-        permission_choices = form["permission"].options
-
-        self.assertEqual(len(permission_choices), 2)
-        self.assertEqual(
-            [choice[0] for choice in permission_choices], ["", "permission1"]
-        )
 
     def test_add_perm_definition_with_policy(self):
         get_response = self.app.get(self.url)
 
         form = get_response.form
-        form["object_type"] = PermissionObjectType.zaak
-        form["permission"] = "permission1"
+        form["object_type"] = PermissionObjectTypeChoices.zaak
+        form["role"] = self.role.id
         form["policy"] = json.dumps({"some_type": "new type"})
 
         response = form.submit()
@@ -87,15 +79,15 @@ class BlueprintPermissionAdminTests(WebTest):
 
         blueprint_permission = BlueprintPermission.objects.get()
 
-        self.assertEqual(blueprint_permission.permission, "permission1")
+        self.assertEqual(blueprint_permission.role, self.role)
         self.assertEqual(blueprint_permission.policy, {"some_type": "new type"})
 
     def test_add_perm_definition_with_policy_not_valid_for_blueprint(self):
         get_response = self.app.get(self.url)
 
         form = get_response.form
-        form["object_type"] = PermissionObjectType.zaak
-        form["permission"] = "permission1"
+        form["object_type"] = PermissionObjectTypeChoices.zaak
+        form["role"] = self.role.id
         form["policy"] = json.dumps({"some_type": "new type", "type_version": "v1"})
 
         response = form.submit()

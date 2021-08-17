@@ -2,11 +2,11 @@ import { JSONEditor } from '@json-editor/json-editor';
 import { jsonScriptToVar } from "../../utils/json-script";
 
 
-const displayPolicy = (editor_node, permission_node, policy_node) => {
+const displayPolicy = (editor_node, objecttype_node, policy_node) => {
     const jsonSchemas = jsonScriptToVar("jsonSchemas");
 
-    const displayJsonEditor = (permission_name) => {
-        const schema = jsonSchemas[permission_name] || {};
+    const displayJsonEditor = (object_type) => {
+        const schema = jsonSchemas[object_type] || {};
         schema.title = "Blueprint data";
         const jsonEditor = new JSONEditor(
             editor_node,
@@ -32,11 +32,11 @@ const displayPolicy = (editor_node, permission_node, policy_node) => {
         return jsonEditor;
     };
 
-    let editor = displayJsonEditor(permission_node.value);
+    let editor = displayJsonEditor(objecttype_node.value);
 
-    permission_node.addEventListener('change', function() {
+    objecttype_node.addEventListener('change', function() {
         editor.destroy();
-        editor = displayJsonEditor(permission_node.value);
+        editor = displayJsonEditor(objecttype_node.value);
     });
 
 };
@@ -44,9 +44,9 @@ const displayPolicy = (editor_node, permission_node, policy_node) => {
 
 // initialize
 const editor_node = document.getElementById("policy_editor");
-const permission_node = document.getElementById("id_permission");
+const objecttype_node = document.getElementById("id_object_type");
 const policy_node = document.getElementById("id_policy");
 
 if (editor_node) {
-    displayPolicy(editor_node, permission_node, policy_node);
+    displayPolicy(editor_node, objecttype_node, policy_node);
 }

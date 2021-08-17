@@ -95,7 +95,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -147,7 +147,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,

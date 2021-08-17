@@ -9,6 +9,7 @@ class CoreConfig(AppConfig):
     verbose_name = _("zaakafhandelcomponent")
 
     def ready(self):
+        from . import blueprints  # noqa
         from .camunda.select_documents import context  # noqa
 
         request_finished.connect(clear_request_cache)

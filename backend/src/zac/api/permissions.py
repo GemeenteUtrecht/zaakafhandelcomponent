@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from zds_client import ClientError
 
-from zac.accounts.constants import PermissionObjectType
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.core.permissions import Permission
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class DefinitionBasePermission(permissions.BasePermission):
     permission: Permission
-    object_type: str = PermissionObjectType.zaak
+    object_type: str = PermissionObjectTypeChoices.zaak
 
     def get_permission(self, request):
         assert self.permission is not None, (
@@ -47,10 +47,13 @@ class DefinitionBasePermission(permissions.BasePermission):
         # then check blueprint permissions
         for permission in (
             BlueprintPermission.objects.for_user(request.user)
-            .filter(permission=permission_name, object_type=self.object_type)
+            .filter(
+                role__permissions__contains=[permission_name],
+                object_type=self.object_type,
+            )
             .actual()
         ):
-            if permission.has_access(obj, request.user):
+            if permission.has_access(obj, request.user, permission_name):
                 return True
 
         return False
@@ -63,7 +66,10 @@ class DefinitionBasePermission(permissions.BasePermission):
         # check if the user has permissions for any object
         if (
             not BlueprintPermission.objects.for_user(request.user)
-            .filter(permission=permission_name, object_type=self.object_type)
+            .filter(
+                role__permissions__contains=[permission_name],
+                object_type=self.object_type,
+            )
             .actual()
             .exists()
         ) and (
@@ -76,7 +82,6 @@ class DefinitionBasePermission(permissions.BasePermission):
             .actual()
             .exists()
         ):
-
             return False
 
         return super().has_permission(request, view)
@@ -126,7 +131,7 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
 
 class SearchReportDefinitionPermission(DefinitionBasePermission):
     object_attr = "search_report"
-    object_type: str = PermissionObjectType.search_report
+    object_type: str = PermissionObjectTypeChoices.search_report
 
     def get_object(self, view):
         # Mostly taken from get_object_or_404 but without obj permission checks.
@@ -162,10 +167,13 @@ class SearchReportDefinitionPermission(DefinitionBasePermission):
         # check blueprint permissions
         for permission in (
             BlueprintPermission.objects.for_user(request.user)
-            .filter(permission=self.permission.name, object_type=self.object_type)
+            .filter(
+                role__permissions__contains=[self.permission.name],
+                object_type=self.object_type,
+            )
             .actual()
         ):
-            if permission.has_access(obj, request.user):
+            if permission.has_access(obj, request.user, self.permission.name):
                 return True
 
         return False
@@ -191,7 +199,7 @@ class SearchReportDefinitionPermission(DefinitionBasePermission):
 
 class DocumentDefinitionPermission(ObjectDefinitionBasePermission):
     object_attr = "url"
-    object_type = PermissionObjectType.document
+    object_type = PermissionObjectTypeChoices.document
 
     def get_object(self, request: Request, obj_url: str):
         try:

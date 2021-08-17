@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -14,9 +14,13 @@ from elasticsearch_dsl.query import Query
 from zac.core.permissions import zaken_request_access
 from zac.utils.exceptions import get_error_list
 
-from .constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from .constants import (
+    AccessRequestResult,
+    PermissionObjectTypeChoices,
+    PermissionReason,
+)
 from .managers import UserManager
-from .permissions import registry
+from .permissions import object_type_registry, registry
 from .query import (
     AccessRequestQuerySet,
     AtomicPermissionQuerySet,
@@ -109,7 +113,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         blueprint_permissions = (
             BlueprintPermission.objects.for_user(self)
             .actual()
-            .filter(permission=zaken_request_access.name)
+            .filter(role__permissions__contains=[zaken_request_access.name])
         )
         for permission in blueprint_permissions:
             if permission.has_access(zaak, self):
@@ -225,7 +229,7 @@ class AtomicPermission(models.Model):
     object_type = models.CharField(
         _("object type"),
         max_length=50,
-        choices=PermissionObjectType.choices,
+        choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the objects this permission applies to"),
     )
     permission = models.CharField(
@@ -287,11 +291,11 @@ class BlueprintPermission(models.Model):
     object_type = models.CharField(
         _("object type"),
         max_length=50,
-        choices=PermissionObjectType.choices,
+        choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the objects this permission applies to"),
     )
-    permission = models.CharField(
-        _("Permission"), max_length=255, help_text=_("Name of the permission")
+    role = models.ForeignKey(
+        "Role", on_delete=models.CASCADE, related_name="blueprint_permissions"
     )
     policy = JSONField(
         _("policy"),
@@ -306,20 +310,20 @@ class BlueprintPermission(models.Model):
     class Meta:
         verbose_name = _("blueprint permission")
         verbose_name_plural = _("blueprint permissions")
-        ordering = ("policy__zaaktype_omschrijving", "permission")
-        unique_together = ("permission", "policy")
+        ordering = ("role", "policy__zaaktype_omschrijving")
+        unique_together = ("role", "policy")
 
     def __str__(self):
-        if not self.permission or not self.policy:
-            return f"{self.permission}"
+        if not self.policy:
+            return f"{self.role}"
 
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
-        return f"{self.permission}: {blueprint.short_display()}"
+        return f"{self.role}: {blueprint.short_display()}"
 
     def get_blueprint_class(self):
-        permission = registry[self.permission]
-        return permission.blueprint_class
+        object_type = object_type_registry[self.object_type]
+        return object_type.blueprint_class
 
     def clean(self):
         super().clean()
@@ -331,12 +335,30 @@ class BlueprintPermission(models.Model):
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
-    def has_access(self, obj, user=None) -> bool:
+    def has_access(self, obj, user=None, permission=None) -> bool:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy, context={"user": user})
-        return blueprint.has_access(obj)
+        return blueprint.has_access(obj, permission)
 
     def get_search_query(self) -> Query:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
         return blueprint.search_query()
+
+
+class Role(models.Model):
+    name = models.CharField(
+        _("name"), max_length=100, unique=True, help_text=_("Name of the role")
+    )
+    permissions = ArrayField(
+        models.CharField(_("permission"), max_length=255),
+        help_text=_("List of the permissions"),
+        default=list,
+    )
+
+    class Meta:
+        verbose_name = _("role")
+        verbose_name_plural = _("roles")
+
+    def __str__(self):
+        return self.name

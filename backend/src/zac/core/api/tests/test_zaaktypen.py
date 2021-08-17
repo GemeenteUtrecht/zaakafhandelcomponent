@@ -78,7 +78,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -102,7 +102,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -145,7 +145,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         for zaaktype_omschrijving in ["ZT1", "ZT2"]:
             BlueprintPermissionFactory.create(
-                permission=zaken_inzien.name,
+                role__permissions=[zaken_inzien.name],
                 for_user=user,
                 policy={
                     "catalogus": CATALOGUS_URL,

@@ -17,6 +17,9 @@ Each permission has the object type the permission relates to. For now three obj
 * document
 * report
 
+Each object type has its required shape for a blueprint permission.
+It is explained in the details in :ref:`authorization_blueprints`.
+
 Each permission provides the right to perform one of the following types of operations:
 
 * zaak permissions:
@@ -46,8 +49,11 @@ The permissions used only in the old version of the ZAC:
     * ``zaken:set-result`` - to set result to the case
     * ``zaken:create-status`` - to add status to the case
 
-Each operation type has its required shape for a blueprint permission.
+
+They can be grouped into roles for blueprint permissions.
 It is explained in the details in the "Blueprint permission" subsection.
+
+.. _authorization_blueprints:
 
 Blueprint permissions
 ---------------------
@@ -57,24 +63,24 @@ The permissions in the ZAC can be divided into two groups:
 * blueprint permissions
 * atomic permissions
 
-The blueprint permission allows a user to perform a particular operation on the defined subset of the objects.
+The blueprint permission allows a user to perform a set of operations on the defined subset of the objects.
 This is the main type of the permissions. Blueprint permissions are defined by functional managers
 in the admin interface of the ZAC.
 
 The user interface to manage them in the app is **WIP**.
 
-The subset of the objects (or "blueprint") is defined based on object properties and unique for every permission type.
-For now, two blueprints are supported:
+The subset of the objects (or "blueprint") is defined based on object properties and unique for every object type.
+For now, three blueprints are supported:
 
-* for zaak permissions:
+* for zaak:
     * zaaktype (``catalogus`` and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
 
-* for document permissions:
+* for document:
     * informatieobjecttype (``catalogus`` and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
 
-* for report permissions:
+* for report:
    * list of zaaktype identifications (``identificatie``)
 
 The new blueprints can be easily defined for all kinds of objects and their properties.
@@ -87,17 +93,37 @@ The new blueprints can be easily defined for all kinds of objects and their prop
 
       python src/manage.py add_blueprint_permissions_for_zaaktypen
 
+Roles
+^^^^^
+
+Blueprint permissions link the shape of the object (blueprint) with the set of operations.
+Roles represent sets of operations. It is possible to include multiple (or all) operations in one role.
+Using roles simplifies re-using the same permissions for different blueprints.
+
 Example
 ^^^^^^^
 
 For example, we want to create a permission to read all cases with the case type "Beleid opstellen".
 
+First we need to define a role.
+In the admin page click on the "Toevoegen" button for "Roles":
+
+.. image:: _assets/authorization_role_add.png
+    :alt: Click on the "Toevoegen" button for "Roles"
+
+You will see the list of all available permissions. After filling in the name of the role and
+selecting the required permission click on "opslaan" button.
+
+.. image:: _assets/authorization_role_form.png
+    :alt: Fill in role data
+
+After the role is saved we can create a blueprint permission.
 In the admin page click on the "Toevoegen" button for "Blueprint definitions":
 
 .. image:: _assets/authorization_blueprint_add.png
     :alt: Click on the "Toevoegen" button for "Blueprint definitions"
 
-After selecting ``permission`` field a ``policy`` fieldset appears. It represents the blueprint and
+After selecting ``object_type`` field a ``policy`` fieldset appears. It represents the blueprint and
 shows which objects properties this permission applies to. Fill in all the fields and click on
 "opslaan" button.
 
@@ -110,10 +136,9 @@ The blueprint permission is created.
 Authorization profiles
 ----------------------
 
-Blueprint permissions can be grouped into authorization profiles that represent "roles" in the ZAC
-authorization model. Each user can relate to one of many authorization profiles. Therefore it is
-possible to create several profiles with typical permission groups (read-only, admin, etc.) and then
-to relate users to them.
+Blueprint permissions can be grouped into authorization profiles. Each user can relate to one of many
+authorization profiles. Therefore it is possible to create several profiles with typical
+permission groups (read-only, admin, etc.) and then to relate users to them.
 
 Like blueprint permissions authorization profiles are also managed by functional managers in the ZAC admin.
 
@@ -161,7 +186,14 @@ Unlike blueprint permissions there are several sources of the atomic permissions
 * The user **requests access** to the particular case and this request was approved.
 * The functional manager grants permission to the user.
 
-The display of all the users and their atomic permissions for the case in the ZAC is **WIP** now.
+Unlike blueprint permissions atomic permissions don't use roles, since a part of them is created automatically
+and can't rely on user-defined roles.
+
+The display of all the users and their atomic permissions for the case is available in the ZAC user interface.
+
+.. image:: _assets/authorization_atomic_permissions_ui.png
+    :alt: Atomic permissions in the UI
+
 
 .. note::
 
@@ -174,6 +206,7 @@ The display of all the users and their atomic permissions for the case in the ZA
 
 Example
 ^^^^^^^
+
 For example, a user John has a blueprint permission to read all the cases of the "Beleid opstellen" case
 type. But one of these cases has a related case with another case type ("Bestuurlijke besluitvorming").
 John should not see all "Bestuurlijke besluitvorming" cases, but he can be granted an

@@ -192,7 +192,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -230,7 +230,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],

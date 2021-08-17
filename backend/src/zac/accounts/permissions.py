@@ -12,6 +12,7 @@ from rest_framework.serializers import Serializer
 from drf_jsonschema import to_jsonschema
 
 registry = {}
+object_type_registry = {}
 
 
 class Blueprint(Serializer):
@@ -32,7 +33,7 @@ class Blueprint(Serializer):
         json_schema = to_jsonschema(cls())
         return json_schema
 
-    def has_access(self, obj):
+    def has_access(self, obj, permission=None):
         raise NotImplementedError("This method must be implemented by a subclass")
 
     def search_query(self) -> Query:
@@ -43,10 +44,22 @@ class Blueprint(Serializer):
 
 
 @dataclass(frozen=True)
+class PermissionObjectType:
+    name: str
+    blueprint_class: Optional[Type[Blueprint]] = None
+
+    def __post_init__(self):
+        if self.name in object_type_registry:
+            raise ImproperlyConfigured(
+                "Object type with name '%s' already exists" % self.name
+            )
+        object_type_registry[self.name] = self
+
+
+@dataclass(frozen=True)
 class Permission:
     name: str
     description: str
-    blueprint_class: Optional[Type[Blueprint]] = None
 
     def __post_init__(self):
         if self.name in registry:

@@ -125,7 +125,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         self.refresh_index()
 
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": catalogus_url,
@@ -256,7 +256,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
         # Give permissions to the user
         for permission_name in [zaken_inzien.name, zaken_add_relations.name]:
             BlueprintPermissionFactory.create(
-                permission=permission_name,
+                role__permissions=[permission_name],
                 for_user=user,
                 policy={
                     "catalogus": catalogus_url,
@@ -333,7 +333,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
 
         # Give permissions to the zaken, but not to create relations
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": catalogus_url,

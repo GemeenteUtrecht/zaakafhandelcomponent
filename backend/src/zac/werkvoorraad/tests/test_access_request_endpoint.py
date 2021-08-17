@@ -79,7 +79,7 @@ class AccessRequestsTests(ClearCachesMixin, APITestCase):
             json=paginated_response([zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.user,
             policy={
                 "catalogus": catalogus,

@@ -19,7 +19,11 @@ from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ...constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from ...constants import (
+    AccessRequestResult,
+    PermissionObjectTypeChoices,
+    PermissionReason,
+)
 from ...models import AtomicPermission, UserAtomicPermission
 from ...tests.factories import (
     AccessRequestFactory,
@@ -86,7 +90,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -102,13 +106,29 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_permission_but_for_other_zaaktype(self, m):
         # mock ZTC and ZRC data
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.handler.username,
+            },
+        }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
+        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -146,7 +166,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -209,7 +229,9 @@ class GrantAccessAPITests(APITransactionTestCase):
         atomic_permission = AtomicPermission.objects.for_user(self.requester).get()
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
         user_atomic_permission = atomic_permission.useratomicpermission_set.get()
@@ -261,7 +283,7 @@ class GrantAccessAPITests(APITransactionTestCase):
     def test_grant_access_with_existing_permission(self):
         AtomicPermissionFactory.create(
             object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
+            object_type=PermissionObjectTypeChoices.zaak,
             permission=zaken_inzien.name,
             for_user=self.requester,
         )
@@ -289,7 +311,7 @@ class GrantAccessAPITests(APITransactionTestCase):
 
         UserAtomicPermissionFactory.create(
             atomic_permission__object_url=ZAAK_URL,
-            atomic_permission__object_type=PermissionObjectType.zaak,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
             atomic_permission__permission=zaken_inzien.name,
             user=self.requester,
             end_date=timezone.make_aware(datetime(2019, 12, 31)),
@@ -313,7 +335,9 @@ class GrantAccessAPITests(APITransactionTestCase):
         atomic_permission = user_atomic_permission.atomic_permission
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
         self.assertIsNone(user_atomic_permission.end_date)
@@ -358,7 +382,9 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(pending_request.user_atomic_permission, user_atomic_permission)
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(atomic_permission.object_type, PermissionObjectType.zaak)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(atomic_permission.permission, zaken_inzien.name)
 
         self.assertEqual(user_atomic_permission.end_date.date(), date(2021, 1, 1))
