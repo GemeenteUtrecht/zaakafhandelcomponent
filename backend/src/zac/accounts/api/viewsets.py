@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from zac.core.api.pagination import BffPagination
-from zac.utils.mixins import PatchModelMixin
+from zac.utils.mixins import PatchModelMixin, UpdateModelMixin
 
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
@@ -162,7 +162,7 @@ class AtomicPermissionViewSet(
 )
 class AuthProfileViewSet(
     mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
+    UpdateModelMixin,
     viewsets.ReadOnlyModelViewSet,
 ):
     authentication_classes = [SessionAuthentication]
