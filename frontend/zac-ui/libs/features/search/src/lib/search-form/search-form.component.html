@@ -3,7 +3,17 @@
     <gu-tab-group>
       <!-- Case (zaak) by property. -->
       <gu-tab label="Zoeken op eigenschap">
-        <gu-property-search-form [sortData]="sortData" (loadResult)="loadResult.emit($event)"></gu-property-search-form>
+        <div class="mt-4">
+          <gu-property-search-form [sortData]="sortData"
+                                   (loadResult)="loadResult.emit($event)"></gu-property-search-form>
+        </div>
+      </gu-tab>
+
+      <!-- Case (zaak) by object object. -->
+      <gu-tab label="Zoeken op zaakobject">
+        <div class="mt-4">
+          <gu-object-search-form (selectZaakObject)="selectZaakObject($event)"></gu-object-search-form>
+        </div>
       </gu-tab>
     </gu-tab-group>
   </div>

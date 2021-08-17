@@ -40,10 +40,9 @@
       ></gu-input-field>
       <!-- End regular field. -->
 
-
       <!-- Select field. -->
       <gu-multiselect
-        *ngIf="field.widgetType == 'select' && edit"
+        *ngIf="field.widgetType === 'select' && edit"
         [items]="field.choices"
         [selectedValue]="field.control.value"
         [label]="field.label"
@@ -57,8 +56,8 @@
   </fieldset>
 
   <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2" [disabled]="!formGroup.valid">
-      Opslaan
+    <button *ngIf="edit" gu-button type="primary" size="large" class="d-inline-block" [disabled]="!formGroup.valid">
+      {{buttonLabel}}
     </button>
   </footer>
 </form>

@@ -16,13 +16,14 @@ export class FormComponent implements OnInit {
   payLoad = '';
   resolvedKeys = [];
 
-  @Input() title: string = '';
+  @Input() title = '';
+  @Input() buttonLabel = 'Opslaan';
   @Input() editable: boolean | string = true;
   @Input() form: FieldConfiguration[] = [];
   @Input() keys?: string[] = null;
   @Input() readonlyKeys?: string[] = [];
 
-  @Output() submit: EventEmitter<any> = new EventEmitter<any>();
+  @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(private fs: FormService) {
   }
@@ -74,7 +75,7 @@ export class FormComponent implements OnInit {
   }
 
   _submit() {
-    this.submit.emit(this.formGroup.getRawValue())
+    this.formSubmit.emit(this.formGroup.getRawValue())
   }
 
 }

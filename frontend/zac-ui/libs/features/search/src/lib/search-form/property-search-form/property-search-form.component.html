@@ -1,6 +1,6 @@
 <form [formGroup]="searchForm">
   <div class="row">
-    <div class="col-12 mt-4">
+    <div class="col-12">
       <gu-multiselect *ngIf="zaaktypenData"
                       [control]="zaaktype"
                       (change)="onZaaktypeSelect($event)"

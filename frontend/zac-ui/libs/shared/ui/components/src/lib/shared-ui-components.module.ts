@@ -39,6 +39,7 @@ import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
+import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 @NgModule({
     imports: [
@@ -55,7 +56,8 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         MatCheckboxModule,
         MatDatepickerModule,
         MatTabsModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MultiselectModule,
     ],
     declarations: [
         ButtonComponent,
