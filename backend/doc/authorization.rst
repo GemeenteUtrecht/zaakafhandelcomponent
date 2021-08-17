@@ -18,7 +18,7 @@ Each permission has the object type the permission relates to. For now three obj
 * report
 
 Each object type has its required shape for a blueprint permission.
-It is explained in the details in the "Blueprint permission" subsection.
+It is explained in the details in :ref:`authorization_blueprints`.
 
 Each permission provides the right to perform one of the following types of operations:
 
@@ -52,6 +52,8 @@ The permissions used only in the old version of the ZAC:
 
 They can be grouped into roles for blueprint permissions.
 It is explained in the details in the "Blueprint permission" subsection.
+
+.. _authorization_blueprints:
 
 Blueprint permissions
 ---------------------
@@ -95,8 +97,8 @@ Roles
 ^^^^^
 
 Blueprint permissions link the shape of the object (blueprint) with the set of operations.
-Sets of operations represent roles. It is possible to include several (or all) operations in one role.
-Using roles makes it easy to add the same permissions for different blueprints.
+Roles represent sets of operations. It is possible to include multiple (or all) operations in one role.
+Using roles simplifies re-using the same permissions for different blueprints.
 
 Example
 ^^^^^^^
