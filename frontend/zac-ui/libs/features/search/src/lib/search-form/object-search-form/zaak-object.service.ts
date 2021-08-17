@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
-import {ApplicationHttpClient} from "@gu/services";
-import {Observable} from "rxjs";
-import {ZaakObject} from "./object";
-import {Geometry} from "./geojson/geojson";
+import {ApplicationHttpClient} from '@gu/services';
+import {Observable} from 'rxjs';
+import {ZaakObject} from './zaak-object';
+import {Geometry} from './geojson/geojson';
 
 @Injectable({
   providedIn: 'root'
@@ -30,14 +30,6 @@ export class ZaakObjectService {
     }
 
     return this.http.Post<ZaakObject[]>(endpoint, search);
-  }
-
-  stringifyZaakObject(zaakObject: ZaakObject): string {
-    return Object.entries(zaakObject.record.data)
-      .filter(([key, value]) => ['objectid'].indexOf(key.toLowerCase()) === -1)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)
-      .sort()
-      .join(', ');
   }
 
   /**

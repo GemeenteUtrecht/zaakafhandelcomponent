@@ -9,8 +9,9 @@ import { SearchFormComponent } from './search-form/search-form.component';
 import { SearchResultsComponent } from './search-results/search-results.component';
 import {ZaakSelectModule} from './zaak-select/zaak-select.module';
 import {PropertySearchFormComponent} from './search-form/property-search-form/property-search-form.component';
-import {ObjectSearchFormComponent} from './search-form/object-search-form/object-search-form.component';
+import {ZaakObjectSearchFormComponent} from './search-form/object-search-form/zaak-object-search-form.component';
 import {MatListModule} from "@angular/material/list";
+import {ZaakObjectStringPipe} from "./search-form/object-search-form/zaak-object-string.pipe";
 
 @NgModule({
     imports: [
@@ -33,10 +34,11 @@ import {MatListModule} from "@angular/material/list";
   ],
   declarations: [
     FeaturesSearchComponent,
-    ObjectSearchFormComponent,
+    ZaakObjectSearchFormComponent,
     PropertySearchFormComponent,
     SearchFormComponent,
-    SearchResultsComponent
+    SearchResultsComponent,
+    ZaakObjectStringPipe,
   ],
   providers: [FormGroupDirective]
 })

@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, Output} from '@angular/core';
-import { Zaak, TableSort } from '@gu/models';
-import {ZaakObject} from "./object-search-form/object";
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Zaak, TableSort} from '@gu/models';
+import {ZaakObject} from './object-search-form/zaak-object';
 
 /**
  * This component allows the user to search Zaken dynamically.

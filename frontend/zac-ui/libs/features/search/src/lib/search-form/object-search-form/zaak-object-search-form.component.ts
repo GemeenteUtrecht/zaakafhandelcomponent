@@ -1,10 +1,11 @@
 import {Component, EventEmitter, Output} from '@angular/core';
-import {Choice, FieldConfiguration, SnackbarService} from "@gu/components";
-import {ZaakObjectService} from "./zaak-object.service";
-import {ZaakObject} from "./object";
-import {excludeTownShipByName, getTownshipByName} from "./geojson/townships";
+import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
+import {ZaakObjectService} from './zaak-object.service';
+import {ZaakObject} from './zaak-object';
+import {excludeTownShipByName, getTownshipByName} from './geojson/townships';
 import {Feature, Geometry} from "./geojson/geojson";
-import {excludeProvinceByName, getProvinceByName} from "./geojson/provinces";
+import {excludeProvinceByName, getProvinceByName} from './geojson/provinces';
+
 
 /** @type {string} The name of utrecht in the provinces object. */
 const PROVINCE_UTRECHT_NAME = 'Utrecht';
@@ -38,17 +39,17 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
 ];
 
 /**
- * <gu-object-search-form></gu-object-search-form>
+ * <gu-zaak-object-search-form></gu-zaak-object-search-form>
  *
- * Shows a search form for objects.
+ * Shows a search form for zaak (case) objects.
  *
  * Emits selectZaakObject: ZaakObject after selecting a result zaak object.
  */
 @Component({
-  selector: 'gu-object-search-form',
-  templateUrl: './object-search-form.component.html',
+  selector: 'gu-zaak-object-search-form',
+  templateUrl: './zaak-object-search-form.component.html',
 })
-export class ObjectSearchFormComponent {
+export class ZaakObjectSearchFormComponent {
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
