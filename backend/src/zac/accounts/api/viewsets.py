@@ -14,7 +14,13 @@ from zac.utils.mixins import PatchModelMixin, UpdateModelMixin
 
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
-from ..models import AccessRequest, AuthorizationProfile, User, UserAtomicPermission
+from ..models import (
+    AccessRequest,
+    AuthorizationProfile,
+    Role,
+    User,
+    UserAtomicPermission,
+)
 from .filters import UserFilter
 from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess
 from .serializers import (
@@ -25,6 +31,7 @@ from .serializers import (
     GrantPermissionSerializer,
     GroupSerializer,
     HandleAccessRequestSerializer,
+    RoleSerializer,
     UserSerializer,
 )
 
@@ -170,3 +177,20 @@ class AuthProfileViewSet(
     queryset = AuthorizationProfile.objects.all()
     serializer_class = AuthProfileSerializer
     lookup_field = "uuid"
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List roles")),
+    retrieve=extend_schema(summary=_("Retrieve role")),
+    create=extend_schema(summary=_("Create role")),
+    update=extend_schema(summary=_("Update role")),
+)
+class RoleViewSet(
+    mixins.CreateModelMixin,
+    UpdateModelMixin,
+    viewsets.ReadOnlyModelViewSet,
+):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer

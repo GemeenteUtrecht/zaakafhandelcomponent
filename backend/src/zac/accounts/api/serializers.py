@@ -463,3 +463,9 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
 
         return auth_profile
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ("name", "permissions")
