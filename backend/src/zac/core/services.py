@@ -37,7 +37,6 @@ from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
-from .api.api_models import Object, Objecttype, ObjecttypeVersion
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol, get_naam_medewerker
