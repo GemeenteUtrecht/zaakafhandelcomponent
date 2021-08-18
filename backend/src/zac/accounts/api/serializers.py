@@ -29,7 +29,7 @@ from ..models import (
     User,
     UserAtomicPermission,
 )
-from ..permissions import object_type_registry
+from ..permissions import object_type_registry, registry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -465,7 +465,16 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         return auth_profile
 
 
+def get_permission_choices():
+    return [(name, permission.description) for name, permission in registry.items()]
+
+
 class RoleSerializer(serializers.ModelSerializer):
+    permissions = serializers.ListSerializer(
+        child=serializers.ChoiceField(choices=get_permission_choices()),
+        help_text=_("List of the permissions"),
+    )
+
     class Meta:
         model = Role
-        fields = ("name", "permissions")
+        fields = ("id", "name", "permissions")
