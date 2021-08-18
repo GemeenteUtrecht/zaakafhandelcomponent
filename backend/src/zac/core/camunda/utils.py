@@ -1,3 +1,4 @@
+import logging
 import warnings
 from typing import List, Optional, Union
 
@@ -8,8 +9,11 @@ import requests
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -23,12 +27,13 @@ FORM_KEYS = {
 
 
 def _resolve_assignee(name: str) -> Union[Group, User]:
-    user_or_group, _name = name.split(":")[0], ":".join(name.split(":")[1:])
-    if user_or_group == "group":
+    user_or_group, _name = name.split(":", 1)
+    if user_or_group == AssigneeTypeChoices.group:
         try:
             group = Group.objects.get(name=_name)
         except Group.DoesNotExist:
             group = Group.objects.create(name=_name)
+            logger.info(f"Created group {group.name}.")
         return group
     else:
         try:

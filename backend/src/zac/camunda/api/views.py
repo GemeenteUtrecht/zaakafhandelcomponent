@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from zac.accounts.models import User
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
@@ -253,26 +254,11 @@ class SetTaskAssigneeView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanPerformTasks,)
     serializer_class = SetTaskAssigneeSerializer
 
-    def _resolve_betrokkene_identificatie(self, name: str) -> dict:
-        user_or_group, _name = name.split(":")[0], ":".join(name.split(":")[1:])
-        if user_or_group == "user":
-            user = User.objects.get(username=_name)
-            return {
-                "identificatie": user.username,
-                "achternaam": user.last_name.capitalize(),
-                "voorletters": "".join(
-                    [part[0].upper() + "." for part in user.first_name.split()]
-                ).strip(),
-            }
-        else:
-            group = Group.objects.get(name=_name)
-            return {
-                "identificatie": group.name,
-                "achternaam": group.name,
-                "voorletters": "Groep",
-            }
+    def _create_rol(self, zaak: Zaak, name: str) -> None:
+        user_or_group, _name = name.split(":", 1)
+        if user_or_group == AssigneeTypeChoices.group:
+            return
 
-    def _create_rol(self, zaak: Zaak, name: str):
         # fetch roltype
         roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
         if not roltypen:
@@ -281,7 +267,15 @@ class SetTaskAssigneeView(APIView):
 
         zrc_client = _client_from_url(zaak.url)
 
-        betrokkene_identificatie = self._resolve_betrokkene_identificatie(name)
+        user = User.objects.get(username=_name)
+
+        betrokkene_identificatie = {
+            "identificatie": user.username,
+            "achternaam": user.last_name.capitalize(),
+            "voorletters": "".join(
+                [part[0].upper() + "." for part in user.first_name.split()]
+            ).strip(),
+        }
 
         # check if the betrokkene already exists
         existing = zrc_client.list(

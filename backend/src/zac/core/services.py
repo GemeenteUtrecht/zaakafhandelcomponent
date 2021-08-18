@@ -693,26 +693,16 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
         if rol.betrokkene_type == RolTypes.medewerker:
             identificatie = rol.betrokkene_identificatie["identificatie"]
             try:  # Try to get user data
-                try:
-                    user = User.objects.get(username=identificatie)
-                    new_rol = UpdateRolSerializer(
-                        instance=rol, context={"user": user}
-                    ).data
-                    if get_naam_medewerker(
-                        factory(Rol, new_rol)
-                    ) != get_naam_medewerker(rol):
-                        new_rollen.append((rol.url, new_rol))
-                except User.DoesNotExist:
-                    group = Group.objects.get(name=identificatie)
-                    continue
-                    # Do nothing if "medewerker" is a group.
-                    # Groups are only currently assigned roles within the
-                    # zac with all the information needed to proceed.
-                    # TODO: Create group roles?
+                user = User.objects.get(username=identificatie)
+                new_rol = UpdateRolSerializer(instance=rol, context={"user": user}).data
+                if get_naam_medewerker(factory(Rol, new_rol)) != get_naam_medewerker(
+                    rol
+                ):
+                    new_rollen.append((rol.url, new_rol))
 
             except ObjectDoesNotExist:
                 logger.warning(
-                    "Couldn't find user or group with identificatie %s" % identificatie
+                    "Couldn't find user with identificatie %s" % identificatie
                 )
 
     # If any new rollen can be made - 'update' the rol
