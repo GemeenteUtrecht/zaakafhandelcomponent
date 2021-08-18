@@ -6,7 +6,7 @@ from django.utils import timezone
 from zac.core.services import get_zaaktypen
 from zac.core.permissions import zaken_download_documents
 
-from ..constants import AccessRequestResult, PermissionObjectType
+from ..constants import AccessRequestResult, PermissionObjectTypeChoices
 
 
 def migrate_to_permission_definitions(apps, _):
@@ -32,7 +32,7 @@ def migrate_to_permission_definitions(apps, _):
                 # exclude permissions with different shape
                 if permission_name != zaken_download_documents.name:
                     zaak_permission_definition = PermissionDefinition.objects.create(
-                        object_type=PermissionObjectType.zaak,
+                        object_type=PermissionObjectTypeChoices.zaak,
                         permission=permission_name,
                         policy={
                             "catalogus": permission_set.catalogus,
@@ -50,7 +50,7 @@ def migrate_to_permission_definitions(apps, _):
             # exclude permissions with different shape
             if zaken_download_documents.name in permission_set.permissions:
                 doc_permission_definition = PermissionDefinition.objects.create(
-                    object_type=PermissionObjectType.document,
+                    object_type=PermissionObjectTypeChoices.document,
                     permission=zaken_download_documents.name,
                     policy={
                         "catalogus": doc_permission.catalogus,
@@ -81,7 +81,7 @@ def migrate_to_permission_definitions(apps, _):
             else None
         )
         atomic_permission = PermissionDefinition.objects.create(
-            object_type=PermissionObjectType.zaak,
+            object_type=PermissionObjectTypeChoices.zaak,
             object_url=AccessRequest.zaak,
             permission="zaken:inzien",
             start_date=start_date,

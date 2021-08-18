@@ -119,7 +119,7 @@ class SearchZakenTests(ESMixin, TestCase):
     def test_search_only_allowed_blueprint(self):
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             policy={
                 "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                 "zaaktype_omschrijving": "zaaktype1",
@@ -175,7 +175,7 @@ class SearchZakenTests(ESMixin, TestCase):
     def test_combined(self):
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             policy={
                 "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                 "zaaktype_omschrijving": "zaaktype1",

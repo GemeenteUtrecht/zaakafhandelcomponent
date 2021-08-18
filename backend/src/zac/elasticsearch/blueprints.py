@@ -4,7 +4,8 @@ from elasticsearch_dsl.query import Query, Term
 from rest_framework import serializers
 from zgw_consumers.concurrent import parallel
 
-from zac.accounts.permissions import Blueprint
+from zac.accounts.constants import PermissionObjectTypeChoices
+from zac.accounts.permissions import Blueprint, PermissionObjectType
 from zac.elasticsearch.models import SearchReport
 from zac.elasticsearch.searches import search
 
@@ -17,7 +18,7 @@ class SearchReportBlueprint(Blueprint):
         ),
     )
 
-    def has_access(self, search_report: SearchReport):
+    def has_access(self, search_report: SearchReport, permission: str = None):
         es_query = search_report.query
         no_fields = {**es_query}
 
@@ -50,3 +51,9 @@ class SearchReportBlueprint(Blueprint):
 
     def short_display(self):
         return f"{self.data['zaaktypen']}"
+
+
+search_report_object_type = PermissionObjectType(
+    name=PermissionObjectTypeChoices.search_report,
+    blueprint_class=SearchReportBlueprint,
+)

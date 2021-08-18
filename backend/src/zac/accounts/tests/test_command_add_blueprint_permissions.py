@@ -11,7 +11,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ..models import BlueprintPermission
-from .factories import UserFactory
+from .factories import RoleFactory, UserFactory
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 
@@ -23,6 +23,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TestCase):
         super().setUpTestData()
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        cls.role = RoleFactory.create()
         cls.user = UserFactory.create(username="test_user")
 
     def test_add_blueprint_permissions_for_zaaktype(self, m):
@@ -38,13 +39,16 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TestCase):
 
         call_command("add_blueprint_permissions_for_zaaktypen")
 
-        self.assertEqual(BlueprintPermission.objects.count(), 13)
-        for permission in BlueprintPermission.objects.all():
-            self.assertEqual(
-                permission.policy,
-                {
-                    "catalogus": zaaktype["catalogus"],
-                    "zaaktype_omschrijving": "ZT1",
-                    "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-                },
-            )
+        self.assertEqual(BlueprintPermission.objects.count(), 1)
+
+        permission = BlueprintPermission.objects.get()
+
+        self.assertEqual(permission.role, self.role)
+        self.assertEqual(
+            permission.policy,
+            {
+                "catalogus": zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )

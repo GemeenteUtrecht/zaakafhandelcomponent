@@ -4,7 +4,6 @@ from datetime import date
 from itertools import groupby
 from typing import Dict, List
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
@@ -14,7 +13,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import (
     authentication,
     exceptions,
@@ -24,7 +23,7 @@ from rest_framework import (
     views,
 )
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -34,7 +33,6 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User, UserAtomicPermission
-from zac.api.utils import remote_schema_ref
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
@@ -52,6 +50,7 @@ from zgw.models.zrc import Zaak
 from ..cache import invalidate_zaak_cache
 from ..services import (
     create_document,
+    fetch_zaaktype,
     find_zaak,
     get_document,
     get_documenten,
@@ -61,11 +60,14 @@ from ..services import (
     get_resultaat,
     get_rollen,
     get_statussen,
+    get_statustype,
+    get_statustypen,
     get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
     get_zaaktypen,
     relate_document_to_zaak,
+    zet_status,
 )
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
@@ -97,6 +99,7 @@ from .serializers import (
     RelatedZaakSerializer,
     RolSerializer,
     SearchEigenschapSerializer,
+    StatusTypeSerializer,
     UpdateZaakDetailSerializer,
     UpdateZaakDocumentSerializer,
     UserAtomicPermissionSerializer,
@@ -238,15 +241,31 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
     serializer_class = ZaakStatusSerializer
-    schema_summary = _("List case statuses")
 
+    @extend_schema(summary=_("List case statussen"))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
         serializer = self.serializer_class(instance=statussen, many=True)
         return Response(serializer.data)
+
+    @extend_schema(summary=_("Add case status"))
+    def post(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        serializer = self.serializer_class(
+            data=request.data, context={"zaaktype": zaak.zaaktype}
+        )
+        serializer.is_valid(raise_exception=True)
+        statustype = get_statustype(serializer.validated_data["statustype"]["url"])
+        new_status = zet_status(
+            zaak,
+            statustype,
+            toelichting=serializer.validated_data["statustoelichting"],
+        )
+        serializer = self.serializer_class(instance=new_status)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ZaakEigenschappenView(GetZaakMixin, views.APIView):
@@ -611,6 +630,40 @@ class VertrouwelijkheidsAanduidingenView(ListAPIView):
             VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
             for choice in VertrouwelijkheidsAanduidingen.choices
         ]
+
+
+@extend_schema(
+    summary=_("List statustypes"),
+    tags=["meta"],
+    parameters=[
+        OpenApiParameter(
+            name="zaak",
+            required=True,
+            type=OpenApiTypes.URI,
+            description=_("Zaak to list available statustypes for"),
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+)
+class StatusTypenView(views.APIView):
+    """
+    List the available statustypen for the zaak.
+
+    """
+
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = StatusTypeSerializer
+
+    def get(self, request):
+        zaak_url = request.query_params.get("zaak")
+        if not zaak_url:
+            raise exceptions.ValidationError("'zaak' query parameter is required.")
+        zaak = get_zaak(zaak_url=zaak_url)
+        zaaktype = fetch_zaaktype(zaak.zaaktype)
+        statusstypen = get_statustypen(zaaktype)
+        serializer = self.serializer_class(statusstypen, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])

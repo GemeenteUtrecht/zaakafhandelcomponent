@@ -164,7 +164,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         # gives them access to the page, zaaktype and VA specified -> visible
         # and allows them to send messages
         BlueprintPermissionFactory.create(
-            permission=zaakproces_send_message.name,
+            role__permissions=[zaakproces_send_message.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],

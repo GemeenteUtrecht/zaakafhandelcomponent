@@ -81,7 +81,7 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -96,13 +96,29 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_has_permission_but_for_other_zaaktype(self, m):
         # mock ZTC and ZRC data
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.handler.username,
+            },
+        }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
+        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -139,7 +155,7 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
-            permission=zaken_handle_access.name,
+            role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,

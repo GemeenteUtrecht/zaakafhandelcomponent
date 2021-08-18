@@ -2,7 +2,7 @@ from django.db import migrations
 from zac.accounts.constants import (
     PermissionReason,
     AccessRequestResult,
-    PermissionObjectType,
+    PermissionObjectTypeChoices,
 )
 from zac.core.services import get_zaak, get_rollen
 from zac.contrib.kownsl.api import get_review_requests
@@ -52,7 +52,9 @@ def load_permission_reason(apps, _):
 
     for user_atomic_permission in UserAtomicPermission.objects.select_related(
         "user", "atomic_permission"
-    ).filter(reason="", atomic_permission__object_type=PermissionObjectType.zaak):
+    ).filter(
+        reason="", atomic_permission__object_type=PermissionObjectTypeChoices.zaak
+    ):
         reason = get_reason(user_atomic_permission)
         if reason:
             user_atomic_permission.reason = reason

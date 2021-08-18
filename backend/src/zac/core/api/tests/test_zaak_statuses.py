@@ -61,6 +61,7 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
             zaaktype=cls.zaaktype["url"],
             volgnummer=1,
+            isEindstatus=False,
         )
         cls.statustype_2 = generate_oas_component(
             "ztc",
@@ -167,6 +168,72 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_add_status(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={
+                "next": None,
+                "previous": None,
+                "count": 2,
+                "results": [
+                    self.statustype_1,
+                    self.statustype_2,
+                ],
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            json=self.statustype_1,
+        )
+        status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            zaak=self.zaak["url"],
+            statustype=self.statustype_1["url"],
+            datumStatusGezet="2020-12-25T00:00:00Z",
+        )
+        m.post(
+            f"{ZAKEN_ROOT}statussen",
+            json=status,
+            status_code=201,
+        )
+        request_data = {
+            "statustype": {"url": self.statustype_1["url"]},
+            "statustoelichting": "Some-toelichting",
+        }
+        response = self.client.post(self.endpoint, request_data)
+        self.assertEqual(response.status_code, 201)
+
+    def test_add_status_invalid_statustype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={
+                "next": None,
+                "previous": None,
+                "count": 1,
+                "results": [
+                    self.statustype_2,
+                ],
+            },
+        )
+        request_data = {
+            "statustype": {"url": self.statustype_1["url"]},
+            "statustoelichting": "Some-toelichting",
+        }
+        response = self.client.post(self.endpoint, request_data)
+        self.assertEqual(
+            400,
+            response.status_code,
+        )
+        self.assertEqual(
+            {"statustype": {"url": ["Invalid statustype URL given."]}}, response.json()
+        )
+
 
 class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
     @classmethod
@@ -270,7 +337,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": "",
@@ -304,7 +371,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -328,7 +395,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
-            permission=zaken_inzien.name,
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],

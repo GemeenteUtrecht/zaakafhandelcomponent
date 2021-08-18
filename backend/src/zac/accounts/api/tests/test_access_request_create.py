@@ -19,7 +19,7 @@ from zac.core.permissions import zaken_inzien, zaken_request_access
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
-from ...constants import PermissionObjectType
+from ...constants import PermissionObjectTypeChoices
 from ...models import AccessRequest
 from ...tests.factories import (
     AccessRequestFactory,
@@ -94,7 +94,7 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
 
         BlueprintPermissionFactory.create(
-            permission=zaken_request_access.name,
+            role__permissions=[zaken_request_access.name],
             for_user=self.requester,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -116,7 +116,7 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
 
         BlueprintPermissionFactory.create(
-            permission=zaken_request_access.name,
+            role__permissions=[zaken_request_access.name],
             for_user=self.requester,
             policy={
                 "catalogus": CATALOGUS_URL,
@@ -208,7 +208,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
     def test_request_access_with_existing_permission(self):
         AtomicPermissionFactory.create(
             object_url=ZAAK_URL,
-            object_type=PermissionObjectType.zaak,
+            object_type=PermissionObjectTypeChoices.zaak,
             permission=zaken_inzien.name,
             for_user=self.requester,
         )
@@ -238,7 +238,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
 
         UserAtomicPermissionFactory.create(
             atomic_permission__object_url=ZAAK_URL,
-            atomic_permission__object_type=PermissionObjectType.zaak,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
             atomic_permission__permission=zaken_inzien.name,
             user=self.requester,
             end_date=timezone.make_aware(datetime(2019, 12, 31)),

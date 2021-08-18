@@ -1,19 +1,20 @@
 from typing import List, Optional, Union
 
+from zac.camunda.api.permissions import zaakproces_usertasks
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
 from zgw.models.zrc import Zaak
 
-from .constants import PermissionObjectType, PermissionReason
+from .constants import PermissionObjectTypeChoices, PermissionReason
 from .models import AtomicPermission, User, UserAtomicPermission
 
 
 def add_atomic_permission_to_user(
     user: User,
     object_url: str,
-    object_type: str = PermissionObjectType.zaak,
+    object_type: str = PermissionObjectTypeChoices.zaak,
     permission_name: str = zaken_inzien.name,
     reason: str = "",
 ) -> Optional[UserAtomicPermission]:
@@ -85,10 +86,11 @@ def add_permissions_for_advisors(
     )
     user_atomic_permissions = []
     for user in rr_users:
-        user_atomic_permission = add_atomic_permission_to_user(
-            user, zaak_url, reason=reason
-        )
-        if user_atomic_permission:
-            user_atomic_permissions.append(user_atomic_permission)
+        for permission in [zaken_inzien, zaakproces_usertasks]:
+            user_atomic_permission = add_atomic_permission_to_user(
+                user, zaak_url, reason=reason, permission_name=permission.name
+            )
+            if user_atomic_permission:
+                user_atomic_permissions.append(user_atomic_permission)
 
     return user_atomic_permissions

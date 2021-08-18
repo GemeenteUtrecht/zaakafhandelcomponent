@@ -7,28 +7,41 @@ import { Component, HostBinding, Input } from '@angular/core';
   styleUrls: ['./button.component.scss']
 })
 export class ButtonComponent {
-  @Input() type: 'primary' | 'secondary' | 'tertiary' = 'primary';
+  @Input() type: 'primary' | 'secondary' | 'tertiary' | 'action-link' = 'primary';
   @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
   @Input() noPadding?: boolean;
   @Input() loading?: boolean;
   @Input() icon?: string;
   @Input() class = '';
   @Input() disabled?: boolean;
+  @Input() hidden?: boolean;
 
   @HostBinding('attr.disabled')
   get disable() {
     return this.disabled ? 'disabled' : null;
   }
 
+  @HostBinding('attr.hidden')
+  get hide() {
+    return this.hidden ? 'hidden' : null;
+  }
+
   @HostBinding('attr.class')
   get buttonType() {
-    return [
-      'btn',
-      `btn--${this.type}`,
-      `btn--${this.size}`,
-      this.loading ? `btn__spinner` : null,
-      this.loading ? `btn__spinner--${this.type}` : null,
-      this.class
-    ].filter(Boolean).join(' ')
+    if (this.type === 'action-link') {
+      return [
+        'action-link',
+        this.class
+      ].filter(Boolean).join(' ')
+    } else {
+      return [
+        'btn',
+        `btn--${this.type}`,
+        `btn--${this.size}`,
+        this.loading ? `btn__spinner` : null,
+        this.loading ? `btn__spinner--${this.type}` : null,
+        this.class
+      ].filter(Boolean).join(' ')
+    }
   };
 }

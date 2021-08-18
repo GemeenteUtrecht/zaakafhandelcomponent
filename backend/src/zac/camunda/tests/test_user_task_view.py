@@ -191,7 +191,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -241,7 +241,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -281,7 +281,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -325,7 +325,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -464,7 +464,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         BlueprintPermissionFactory.create(
-            permission=zaakproces_usertasks.name,
+            role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,

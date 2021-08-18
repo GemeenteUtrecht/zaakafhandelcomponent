@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 import factory
 import factory.fuzzy
 
-from ..constants import PermissionObjectType, PermissionReason
+from ..constants import PermissionObjectTypeChoices, PermissionReason
 from ..models import UserAuthorizationProfile
 
 
@@ -46,7 +46,7 @@ class AccessRequestFactory(factory.django.DjangoModelFactory):
 
 
 class AtomicPermissionFactory(factory.django.DjangoModelFactory):
-    object_type = PermissionObjectType.zaak
+    object_type = PermissionObjectTypeChoices.zaak
     permission = factory.Faker("word")
     object_url = factory.Faker("url")
 
@@ -61,9 +61,17 @@ class AtomicPermissionFactory(factory.django.DjangoModelFactory):
             extracted.atomic_permissions.add(obj)
 
 
+class RoleFactory(factory.django.DjangoModelFactory):
+    name = factory.Faker("word")
+    permissions = factory.List([factory.Faker("word")])
+
+    class Meta:
+        model = "accounts.Role"
+
+
 class BlueprintPermissionFactory(factory.django.DjangoModelFactory):
-    object_type = PermissionObjectType.zaak
-    permission = factory.Faker("word")
+    object_type = PermissionObjectTypeChoices.zaak
+    role = factory.SubFactory(RoleFactory)
     policy = {"somefield": "somevalue"}
 
     class Meta:

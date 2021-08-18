@@ -13,7 +13,11 @@ from zac.core.permissions import zaken_inzien
 from zac.core.services import find_zaak, get_zaak
 from zgw.models.zrc import Zaak
 
-from ..constants import AccessRequestResult, PermissionObjectType, PermissionReason
+from ..constants import (
+    AccessRequestResult,
+    PermissionObjectTypeChoices,
+    PermissionReason,
+)
 from ..email import send_email_to_requester
 from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
 
@@ -152,7 +156,7 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
         request = self.context["request"]
 
         atomic_permission_data = validated_data.pop("atomic_permission")
-        atomic_permission_data.update({"object_type": PermissionObjectType.zaak})
+        atomic_permission_data.update({"object_type": PermissionObjectTypeChoices.zaak})
         atomic_permission, created = AtomicPermission.objects.get_or_create(
             **atomic_permission_data
         )
@@ -354,7 +358,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             # add permission definition
             atomic_permission, created = AtomicPermission.objects.get_or_create(
                 object_url=access_request.zaak,
-                object_type=PermissionObjectType.zaak,
+                object_type=PermissionObjectTypeChoices.zaak,
                 permission=zaken_inzien.name,
             )
             user_atomic_permission = UserAtomicPermission.objects.create(
