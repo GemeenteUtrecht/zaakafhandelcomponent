@@ -357,7 +357,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
-        zaakobjecten = get_zaakobjecten(zaak.url)
+        zaakobjecten = get_zaakobjecten(zaak)
 
         def group_key(zo):
             if zo.object_type == "overige":

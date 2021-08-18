@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
 from django.core.cache import cache
@@ -610,18 +610,13 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
 
 
 @cache_result("get_zaak_objecten:{zaak.url}", timeout=AN_HOUR)
-def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
-    if isinstance(zaak, Zaak):
-        zaak_url = zaak.url
-    else:
-        zaak_url = zaak
-
-    client = _client_from_url(zaak_url)
+def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
+    client = _client_from_url(zaak.url)
 
     zaakobjecten = get_paginated_results(
         client,
         "zaakobject",
-        query_params={"zaak": zaak_url},
+        query_params={"zaak": zaak.url},
     )
 
     return factory(ZaakObject, zaakobjecten)
