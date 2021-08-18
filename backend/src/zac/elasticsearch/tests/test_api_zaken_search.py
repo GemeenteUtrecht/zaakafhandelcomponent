@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -24,6 +25,7 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
+OBJECTS_ROOT = "http://objects.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -60,6 +62,13 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaaktype_model = factory(ZaakType, self.zaaktype)
         zaak_model = factory(Zaak, self.zaak)
         zaak_model.zaaktype = zaaktype_model
+
+        patch_get_zaakobjecten = patch(
+            "zac.elasticsearch.api.get_zaakobjecten",
+            return_value=[],
+        )
+        patch_get_zaakobjecten.start()
+        self.addCleanup(patch_get_zaakobjecten.stop)
 
         self.create_zaak_document(zaak_model)
         self.refresh_index()
@@ -222,8 +231,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
+            json=paginated_response([]),
+        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
+
         # index documents in es
         self.create_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
@@ -242,7 +260,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.json()
-
         self.assertEqual(
             results,
             {
@@ -266,6 +283,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
+                    "zaakobjecten.object",
+                    "zaakobjecten.url",
                     "zaaktype.catalogus",
                     "zaaktype.omschrijving",
                     "zaaktype.url",
@@ -300,6 +319,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": zaak1_model.toelichting,
+                        "zaakobjecten": [],
                     }
                 ],
             },
@@ -376,6 +396,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
+            json=paginated_response([]),
+        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
@@ -421,6 +449,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
+                    "zaakobjecten.object",
+                    "zaakobjecten.url",
                     "zaaktype.catalogus",
                     "zaaktype.omschrijving",
                     "zaaktype.url",
@@ -455,6 +485,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": zaak1_model.toelichting,
+                        "zaakobjecten": [],
                     }
                 ],
             },
@@ -496,6 +527,13 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}", json=paginated_response([])
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
+        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
         m.get(zaak2["url"], json=zaak2)
@@ -555,6 +593,12 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}", json=paginated_response([])
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
+        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
         m.get(zaak2["url"], json=zaak2)
@@ -583,3 +627,77 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(data["count"], 2)
         self.assertEqual(data["results"][0]["url"], zaak1["url"])
         self.assertEqual(data["results"][1]["url"], zaak2["url"])
+
+    def test_search_on_object(self, m):
+        # set up catalogi api data
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        # set up zaken API data
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak1",
+            omschrijving="Some zaak 1",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+        )
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak2",
+            omschrijving="Other zaak 2",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
+        )
+        zaakobject = {
+            "url": f"{ZAKEN_ROOT}zaakobjecten/4abe87ea-3670-42c8-afc7-5e9fb071971d",
+            "object": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
+            "zaak": zaak1["url"],
+            "object_type": "",
+            "object_type_overige": "",
+            "relatieomschrijving": "",
+            "object_identificatie": {},
+        }
+
+        # mock requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}",
+            json=paginated_response([zaakobject]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
+        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(zaak1["url"], json=zaak1)
+        m.get(zaak2["url"], json=zaak2)
+
+        # index documents in es
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak1_model.deadline = datetime.date(2020, 1, 1)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2_model.deadline = datetime.date(2020, 1, 2)
+        self.create_zaak_document(zaak1_model)
+        self.create_zaak_document(zaak2_model)
+        self.refresh_index()
+
+        input = {"object": zaakobject["object"]}
+        response = self.client.post(self.endpoint, data=input)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["url"], zaak1["url"])

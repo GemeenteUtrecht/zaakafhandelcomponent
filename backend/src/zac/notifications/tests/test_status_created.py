@@ -12,6 +12,7 @@ from zgw_consumers.models import APITypes, Service
 from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 
 from .utils import (
     BRONORGANISATIE,
@@ -27,11 +28,13 @@ from .utils import (
     mock_service_oas_get,
 )
 
+ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
+
 NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
     "resource": "status",
-    "resourceUrl": "https://some.zrc.nl/api/v1/statussen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": f"{ZAKEN_ROOT}statussen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -55,7 +58,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
         cls.zrc = Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
+            api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc
         )
 
     def setUp(self):
@@ -65,14 +68,14 @@ class StatusCreatedTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    def test_find_zaak_resultaat_created(self, rm, mock_zaaktype):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_find_zaak_resultaat_created(self, rm, *mocks):
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(STATUS, json=STATUS_RESPONSE)
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-
         path = reverse("notifications:callback")
 
         with patch(
@@ -88,8 +91,9 @@ class StatusCreatedTests(ESMixin, APITestCase):
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
             self.assertEqual(m.call_count, 2)
 
-    def test_get_zaak_status_created(self, rm):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_get_zaak_status_created(self, rm, *mocks):
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)

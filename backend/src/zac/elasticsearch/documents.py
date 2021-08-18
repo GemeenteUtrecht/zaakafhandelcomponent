@@ -35,6 +35,7 @@ class StatusDocument(InnerDoc):
 
 class ZaakObjectDocument(InnerDoc):
     url = field.Keyword()
+    object = field.Keyword()
 
 
 class ZaakDocument(Document):
@@ -53,7 +54,7 @@ class ZaakDocument(Document):
     eigenschappen = field.Object(EigenschapDocument)
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
-    objecten = Nested(ZaakObjectDocument)
+    zaakobjecten = Nested(ZaakObjectDocument)
 
     class Index:
         name = settings.ES_INDEX_ZAKEN

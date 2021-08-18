@@ -18,6 +18,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -33,7 +34,9 @@ from .utils import (
     mock_service_oas_get,
 )
 
-ROL = "https://some.zrc.nl/api/v1/rollen/69e98129-1f0d-497f-bbfb-84b88137edbc"
+ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
+
+ROL = f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc"
 NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
@@ -61,9 +64,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         self.client.force_authenticate(user=user)
 
-        Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        Service.objects.create(api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc)
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
@@ -74,11 +75,12 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
 
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         rm.get(STATUS, json=STATUS_RESPONSE)
 
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
 
         self.assertEqual(zaak_document.rollen, [])
@@ -104,7 +106,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         }
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
-            f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
@@ -120,13 +122,11 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_rol_created_add_permission_for_behandelaar(self, rm):
         # Setup mocks
-        Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        Service.objects.create(api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc)
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
@@ -154,13 +154,14 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         rm.get(
-            f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
         rm.get(ROL, json=rol)
 
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
 
@@ -182,13 +183,11 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(self, rm):
         # set up mocks
-        Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        Service.objects.create(api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc)
         Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
@@ -245,7 +244,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rol_1.zaak = zaak
         rol_2 = factory(Rol, rol_new)
         rol_2.zaak = zaak
-
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.rollen, [])
 
@@ -285,8 +284,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "registratiedatum": "2020-09-01T00:00:00Z",
                 "roltoelichting": "some description",
                 "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-                "url": "https://some.zrc.nl/api/v1/rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
-                "zaak": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+                "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
+                "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
             },
         )
         mock_es_get_rollen.assert_called_once_with(zaak)

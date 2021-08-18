@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 from django.utils import timezone
 
@@ -77,7 +79,8 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         self.assertFalse(Event.objects.exists())
 
     @requests_mock.Mocker()
-    def test_remove_es_document(self, rm):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_remove_es_document(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)

@@ -52,9 +52,9 @@ class SearchSerializer(serializers.Serializer):
             "ZAAK-EIGENSCHAPpen in format `<property name>:{'value': <property value>}`"
         ),
     )
-    zaakobject = serializers.URLField(
+    object = serializers.URLField(
         required=False,
-        help_text=_("URL of ZAAK-OBJECT"),
+        help_text=_("URL of OBJECT"),
     )
     fields = OrderedMultipleChoiceField(
         required=False,
@@ -134,6 +134,11 @@ class StatusDocumentSerializer(serializers.Serializer):
     statustoelichting = serializers.CharField(required=False)
 
 
+class ZaakObjectDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(required=False)
+    object = serializers.URLField(required=False)
+
+
 class ZaakDocumentSerializer(serializers.Serializer):
     url = serializers.URLField(required=False)
     zaaktype = ZaakTypeDocumentSerializer(required=False)
@@ -150,3 +155,4 @@ class ZaakDocumentSerializer(serializers.Serializer):
     eigenschappen = EigenschapDocumentSerializer(many=True, required=False)
     status = StatusDocumentSerializer(required=False)
     toelichting = serializers.CharField(required=False)
+    zaakobjecten = ZaakObjectDocumentSerializer(many=True, required=False)

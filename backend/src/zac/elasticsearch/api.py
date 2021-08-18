@@ -49,7 +49,13 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
     else:
         status_document = None
 
-    zaakobjecten = [ZaakObjectDocument(url=zo.url) for zo in get_zaakobjecten(zaak)]
+    zaakobjecten = [
+        ZaakObjectDocument(
+            url=zo.url,
+            object=zo.object,
+        )
+        for zo in get_zaakobjecten(zaak)
+    ]
 
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
@@ -68,7 +74,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         deadline=zaak.deadline,
         status=status_document,
         toelichting=zaak.toelichting,
-        objecten=zaakobjecten,
+        zaakobjecten=zaakobjecten,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -177,7 +183,11 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
 def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.objecten = [
-        ZaakObjectDocument(url=zo.url) for zo in get_zaakobjecten(zaak)
+        ZaakObjectDocument(
+            url=zo.url,
+            object=zo.object,
+        )
+        for zo in get_zaakobjecten(zaak)
     ]
     zaak_document.save()
 
