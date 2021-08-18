@@ -38,6 +38,7 @@ export class DatepickerComponent implements OnInit, OnChanges {
   @Input() id: string;
   @Input() minDate: Date = new Date();
   @Input() required: boolean;
+  @Input() placeholder: string;
 
   constructor() { }
 
@@ -67,6 +68,14 @@ export class DatepickerComponent implements OnInit, OnChanges {
    */
   clearValue() {
     this.control.patchValue(null)
+  }
+
+  /**
+   * Creates input label.
+   * @returns {string}
+   */
+  getLabel() {
+    return this.required ? this.label : (this.label + ' (niet verplicht)')
   }
 }
 

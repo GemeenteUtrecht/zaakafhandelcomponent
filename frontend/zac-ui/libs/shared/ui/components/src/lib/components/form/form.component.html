@@ -29,15 +29,16 @@
       <!-- End read-only field. -->
 
       <!-- Regular field. -->
-      <gu-input-field
+      <gu-input
         *ngIf="field.widgetType == 'input'"
         [control]="field.control"
         [label]="field.label"
         [placeholder]="field.placeholder"
         [type]="field.type"
+        [required]="field.required"
         [value]="field.control.value"
         class="mb-4"
-      ></gu-input-field>
+      ></gu-input>
       <!-- End regular field. -->
 
       <!-- Select field. -->

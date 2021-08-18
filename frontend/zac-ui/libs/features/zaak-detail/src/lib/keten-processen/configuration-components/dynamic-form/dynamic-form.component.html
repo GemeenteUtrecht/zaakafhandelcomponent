@@ -17,19 +17,21 @@
             </gu-multiselect>
           </ng-container>
 <!--          string-->
-          <gu-input-field *ngSwitchCase="'string'"
-                          type="text"
-                          [control]="dynamicFormField(formField.name)"
-                          [value]="formField.value"
-                          id="dyn-form-str-{{formField.name}}"
-          ></gu-input-field>
+          <gu-input *ngSwitchCase="'string'"
+                    type="text"
+                    [required]="true"
+                    [control]="dynamicFormField(formField.name)"
+                    [value]="formField.value"
+                    id="dyn-form-str-{{formField.name}}"
+          ></gu-input>
 <!--          number-->
-          <gu-input-field *ngSwitchCase="'int'"
-                          type="number"
-                          [control]="dynamicFormField(formField.name)"
-                          [value]="formField.value"
-                          id="dyn-form-int-{{formField.name}}"
-          ></gu-input-field>
+          <gu-input *ngSwitchCase="'int'"
+                    type="number"
+                    [required]="true"
+                    [control]="dynamicFormField(formField.name)"
+                    [value]="formField.value"
+                    id="dyn-form-int-{{formField.name}}"
+          ></gu-input>
 <!--          boolean-->
           <ng-container *ngSwitchCase="'boolean'">
             <gu-multiselect [searchable]="false"
@@ -45,7 +47,8 @@
           <ng-container *ngSwitchCase="'date'">
             <gu-datepicker
               [control]="dynamicFormField(formField.name)"
-              placeholder="Datum"></gu-datepicker>
+              [required]="true"
+            ></gu-datepicker>
           </ng-container>
         </ng-container>
       </div>

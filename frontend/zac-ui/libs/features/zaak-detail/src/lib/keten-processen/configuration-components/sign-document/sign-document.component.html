@@ -41,26 +41,29 @@
             </gu-multiselect>
           </div>
           <div class="col-md-6 form-group">
-            <gu-input-field [control] = "assignedUsersEmail(i)"
-                            type="text"
-                            label="E-mail"
-                            id="sign-doc-email--{{i}}">
-            </gu-input-field>
+            <gu-input [control] = "assignedUsersEmail(i)"
+                      type="text"
+                      label="E-mail"
+                      [required]="true"
+                      id="sign-doc-email--{{i}}">
+            </gu-input>
             <p class="form-control-error" *ngIf="assignedUsersEmail(i).value !== '' && assignedUsersEmail(i).invalid">Geen geldige e-mail</p>
           </div>
           <div class="col-md-6 form-group">
-            <gu-input-field [control] = "assignedUsersFirstname(i)"
-                            type="text"
-                            label="Voornaam"
-                            id="sign-doc-firstname--{{i}}">
-            </gu-input-field>
+            <gu-input [control] = "assignedUsersFirstname(i)"
+                      type="text"
+                      label="Voornaam"
+                      [required]="true"
+                      id="sign-doc-firstname--{{i}}">
+            </gu-input>
           </div>
           <div class="col-md-6 form-group">
-            <gu-input-field [control] = "assignedUsersLastname(i)"
-                            type="text"
-                            label="Achternaam"
-                            id="sign-doc-lastname--{{i}}">
-            </gu-input-field>
+            <gu-input [control] = "assignedUsersLastname(i)"
+                      type="text"
+                      label="Achternaam"
+                      [required]="true"
+                      id="sign-doc-lastname--{{i}}">
+            </gu-input>
           </div>
         </div>
       </div>

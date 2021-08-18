@@ -17,7 +17,7 @@
     <!-- Summary -->
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
-        <h4>{{zaakData.zaaktype.omschrijving}}</h4>
+        <h3>{{zaakData.zaaktype.omschrijving}}</h3>
         <p *ngIf="zaakData.omschrijving" class="p--marginsmall">{{zaakData.omschrijving}}</p>
         <p *ngIf="zaakData.toelichting" class="p--marginsmall">{{zaakData.toelichting}}</p>
       </div>
@@ -27,38 +27,38 @@
     <ng-template [ngIf]="!!approvalData && !isLoading">
       <div class="mb-4">
         <div *ngIf="zaakData?.identificatie" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Identificatie:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{zaakData.identificatie}}</p>
           </div>
         </div>
 
         <div *ngIf="approvalData.created" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Ingediend op:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{approvalData.created | date:'fullDate'}}</p>
           </div>
         </div>
 
         <div *ngIf="approvalData.created" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Ingediend door:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{approvalData.requester}}</p>
           </div>
         </div>
 
         <div *ngIf="approvalData.toelichting" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Toelichting:</p>
           </div>
 
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p p--nomargin">
               {{approvalData.toelichting}}
             </p>
@@ -93,29 +93,24 @@
       <!-- Approval form -->
       <form [formGroup]="approvalForm">
         <section class="row no-gutters">
-          <div class="col-6">
-          <label class="h2 d-inline-block">Geef advies</label>
-          <div class="row">
-            <div class="col-12">
-              <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approved"></gu-radio>
-            </div>
-            <div class="col-12">
-              <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approved"></gu-radio>
+          <div class="col-12 col-lg-6">
+            <label class="h2 d-inline-block">Geef akkoord</label>
+            <div class="row">
+              <div class="col-12">
+                <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approved"></gu-radio>
+              </div>
+              <div class="col-12 mb-4">
+                <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approved"></gu-radio>
+              </div>
+              <div class="col-12">
+                <gu-textarea label="Toelichting op uw akkoord" [control]="toelichtingControl" class="mb-0" id="textarea_approval"></gu-textarea>
+              </div>
             </div>
           </div>
-        </div>
         </section>
 
         <section class="row no-gutters">
-          <div class="col-6">
-          <label class="h2" for="textarea_approval">Toelichting op uw antwoord</label>
-          <span class="label label--optional">niet verplicht</span>
-          <textarea formControlName="toelichting" class="mb-0" id="textarea_approval"></textarea>
-        </div>
-        </section>
-
-        <section class="row no-gutters">
-          <div class="col-6 d-flex justify-content-end">
+          <div class="col-12 col-lg-6 d-flex justify-content-end">
           <button gu-button
             [disabled]="!approvalForm.valid"
             [loading]="isSubmitting"
@@ -128,7 +123,7 @@
         </section>
 
         <section class="row no-gutters">
-          <div *ngIf="submitFailed" class="col-6 d-flex justify-content-end mt-2">
+          <div *ngIf="submitFailed" class="col-12 col-lg-6 d-flex justify-content-end mt-2">
           <gu-message [message]="errorMessage" type="warn"></gu-message>
         </div>
         </section>

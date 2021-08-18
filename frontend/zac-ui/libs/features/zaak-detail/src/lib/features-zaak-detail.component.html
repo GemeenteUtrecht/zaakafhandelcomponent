@@ -34,11 +34,11 @@
         ></gu-message>
       <div *ngIf="canRequestAccess && !accessRequestSuccess">
         <h2>Toegang vragen tot deze zaak</h2>
-        <gu-input-field [control]="commentControl"
-                        type="text"
-                        label="Opmerking (niet verplicht)"
-                        class="mb-4">
-        </gu-input-field>
+        <gu-input [control]="commentControl"
+                  type="text"
+                  label="Opmerking"
+                  class="mb-4">
+        </gu-input>
         <button gu-button
                 (click)="submitAccessRequest()"
                 [disabled]='isSubmittingAccessRequest'

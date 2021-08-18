@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ReviewRequest} from '../../models/review-request';
 import {ApprovalService} from './approval.service';
 import {RowData, Table, Zaak} from '@gu/models';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {ApprovalForm} from '../../models/approval-form';
 import {ActivatedRoute} from '@angular/router';
 import {catchError, switchMap, tap} from 'rxjs/operators';
@@ -155,4 +155,8 @@ export class ApprovalComponent implements OnInit {
       this.isSubmitting = false;
     })
   }
+
+  get toelichtingControl(): FormControl {
+    return this.approvalForm.get('toelichting') as FormControl;
+  };
 }

@@ -29,17 +29,16 @@
     </p>
 
     <fieldset class="form__body">
-      <gu-input-field
+      <gu-input
         [control]="handlerCommentControl"
-        label="Opmerking (niet verplicht)"
+        label="Opmerking"
         type="text"
         class="mb-3"
-      ></gu-input-field>
+      ></gu-input>
 
       <gu-datepicker
-        label='Verloopdatum toegang (niet verplicht)'
+        label='Verloopdatum toegang'
         [control]="endDateControl"
-        placeholder="Datum"
         class='d-block mb-4'
       ></gu-datepicker>
     </fieldset>

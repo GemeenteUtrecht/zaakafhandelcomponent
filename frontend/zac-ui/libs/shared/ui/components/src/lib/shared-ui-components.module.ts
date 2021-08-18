@@ -27,6 +27,8 @@ import {CheckboxComponent} from './elements/checkbox/checkbox.component';
 import {InputFieldComponent} from './elements/input-field/input-field.component';
 import {MessageComponent} from './elements/message/message.component';
 import {IconComponent} from './elements/icon/icon.component';
+import {InputComponent, patchMatFormField} from './elements/input/input.component';
+import {TextareaComponent} from './elements/textarea/textarea.component';
 
 // UI Components
 import {FileComponent} from './components/file/file.component';
@@ -40,6 +42,9 @@ import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
 import {MultiselectModule} from "./elements/multiselect/multiselect.module";
+
+// Customise Material Form Fields
+patchMatFormField();
 
 @NgModule({
     imports: [
@@ -80,7 +85,9 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
         MessageComponent,
         SidenavComponent,
         TabComponent,
-        TabGroupComponent
+        TabGroupComponent,
+        InputComponent,
+        TextareaComponent
     ],
     exports: [
         ButtonComponent,
@@ -105,7 +112,9 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
         SidenavComponent,
         TabComponent,
         TabGroupComponent,
-        MatTabsModule
+        MatTabsModule,
+        InputComponent,
+        TextareaComponent
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

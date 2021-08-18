@@ -12,16 +12,17 @@
         <div class="row">
           <div class="col-lg-6">
             <h4>Activiteit toevoegen</h4>
-            <gu-input-field [control]="addActivityName"
-                            type="text"
-                            label="Naam activiteit"
-                            class="mb-4">
-            </gu-input-field>
-            <gu-input-field [control]="addActivityRemarks"
-                            type="text"
-                            label="Opmerkingen (niet verplicht)"
-                            class="mb-2">
-            </gu-input-field>
+            <gu-input [control]="addActivityName"
+                      type="text"
+                      label="Naam activiteit"
+                      [required]="true"
+                      class="mb-4">
+            </gu-input>
+            <gu-input [control]="addActivityRemarks"
+                      type="text"
+                      label="Opmerkingen"
+                      class="mb-2">
+            </gu-input>
             <div class="d-flex justify-content-end">
               <button gu-button
                       type="tertiary"

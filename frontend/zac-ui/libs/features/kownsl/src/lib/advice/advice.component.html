@@ -17,7 +17,7 @@
     <!-- Summary -->
     <div class="row mb-5" *ngIf="zaakData">
       <div class="col-md-8 col-xl-6">
-        <h4>{{zaakData.zaaktype.omschrijving}}</h4>
+        <h3>{{zaakData.zaaktype.omschrijving}}</h3>
         <p *ngIf="zaakData.omschrijving" class="p--marginsmall">{{zaakData.omschrijving}}</p>
         <p *ngIf="zaakData.toelichting" class="p--marginsmall">{{zaakData.toelichting}}</p>
       </div>
@@ -27,37 +27,37 @@
     <ng-template [ngIf]="!!adviceData && !isLoading">
       <div class="mb-4">
         <div *ngIf="zaakData.identificatie" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Identificatie:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{zaakData.identificatie}}</p>
           </div>
         </div>
 
         <div *ngIf="adviceData.created" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Ingediend op:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{adviceData.created | date:'fullDate'}}</p>
           </div>
         </div>
 
         <div *ngIf="adviceData.created" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Ingediend door:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p">{{adviceData.requester}}</p>
           </div>
         </div>
 
         <div *ngIf="adviceData.toelichting" class="row no-gutters">
-          <div class="col-1 mr-2">
+          <div class="col-12 col-lg-1 mr-2">
             <p class="p p--bold">Toelichting:</p>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-lg-6">
             <p class="p p--nomargin">
               {{adviceData.toelichting}}
             </p>
@@ -79,7 +79,7 @@
       <form [formGroup]="adviceForm">
         <ng-template [ngIf]="!!adviceData.documents && adviceData.documents.length > 0">
           <section *ngIf="adviceData.documents.length > 0" class="row no-gutters">
-            <div class="col-6">
+            <div class="col-12 col-lg-6">
               <h2 class="mb-4">Documenten</h2>
                 <gu-table [table]="documentTableData" (buttonOutput)="handleTableButtonOutput($event)"
               ></gu-table>
@@ -89,16 +89,14 @@
 
         <!-- Advice text -->
         <section class="row no-gutters">
-          <div class="col-6">
-            <label class="h2 d-inline-block mb-0" for="textarea_advice">Uw advies</label>
-            <span class="label label--optional">niet verplicht</span>
-            <span class="label label--hint">Inhoudelijk advies</span>
-            <textarea formControlName="advice" class="mb-0" id="textarea_advice"></textarea>
+          <div class="col-12 col-lg-6">
+            <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
+            <gu-textarea label="Inhoudelijk advies" [control]="adviceControl" class="mb-0" id="textarea_advice"></gu-textarea>
           </div>
         </section>
 
         <section class="row no-gutters">
-          <div class="col-6 d-flex justify-content-end">
+          <div class="col-12 col-lg-6 d-flex justify-content-end">
             <button gu-button
               [disabled]="!adviceForm.valid || isSubmitting"
               [loading]="isSubmitting"

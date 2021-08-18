@@ -1,6 +1,15 @@
-<mat-form-field appearance="outline">
-  <mat-label>{{label}}</mat-label>
-  <input matInput [matDatepicker]="id" [formControl]="control" [min]="minDate" [required]="required">
+<mat-form-field
+  appearance="outline"
+  [hideRequiredMarker]="true"
+  [floatLabel]="'always'"
+  class="mat-form-field--full-width">
+  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+  <input matInput
+         [matDatepicker]="id"
+         [formControl]="control"
+         [min]="minDate"
+         [placeholder]="placeholder"
+         [required]="required">
   <mat-datepicker-toggle matSuffix [for]="id"></mat-datepicker-toggle>
   <mat-datepicker #id></mat-datepicker>
 </mat-form-field>

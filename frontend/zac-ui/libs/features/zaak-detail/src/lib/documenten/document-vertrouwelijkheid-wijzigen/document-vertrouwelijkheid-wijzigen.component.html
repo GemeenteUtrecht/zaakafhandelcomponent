@@ -16,12 +16,13 @@
       [control]="confidentialityTypeControl"
       class="mb-4"
     ></gu-multiselect>
-    <gu-input-field [control]="reasonControl"
-                    type="text"
-                    label="Reden"
-                    id="conf-reden"
-                    class="mb-2">
-    </gu-input-field>
+    <gu-input [control]="reasonControl"
+              type="text"
+              label="Reden"
+              [required]="true"
+              id="conf-reden"
+              class="mb-2">
+    </gu-input>
     <div class="d-flex justify-content-end">
       <button gu-button type="primary"
               size="small"
