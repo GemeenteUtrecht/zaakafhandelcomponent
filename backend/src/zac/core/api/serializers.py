@@ -580,7 +580,7 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
         child=serializers.JSONField(),
         help_text=_(
             "Collection of object-type specific items. "
-            "The schema is determined by the usptream API(s). "
+            "The schema is determined by the upstream API(s). "
             "See `zac.core.zaakobjecten` for the available implementations."
         ),
     )

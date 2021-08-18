@@ -609,6 +609,7 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
     return results
 
 
+@cache_result("get_zaak_objecten:{zaak.url}", timeout=AN_HOUR)
 def get_zaakobjecten(zaak: Union[Zaak, str]) -> List[ZaakObject]:
     if isinstance(zaak, Zaak):
         zaak_url = zaak.url

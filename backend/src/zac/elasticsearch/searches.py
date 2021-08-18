@@ -27,6 +27,7 @@ SUPPORTED_QUERY_PARAMS = (
     "zaaktypen",
     "behandelaar",
     "eigenschappen",
+    "zaakobject",
     "ordering",
     "fields",
 )
@@ -85,6 +86,7 @@ def search(
     include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
     fields=None,
+    zaakobject=None,
 ) -> List[ZaakDocument]:
 
     size = size or 10000
@@ -125,6 +127,10 @@ def search(
                     query=eigenschap_value,
                 )
             )
+    if zaakobject:
+        s = s.filter(
+            Nested(path="objecten", query=Bool(filter=Term(objecten__url=zaakobject)))
+        )
 
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))

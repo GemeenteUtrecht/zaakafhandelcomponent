@@ -52,6 +52,10 @@ class SearchSerializer(serializers.Serializer):
             "ZAAK-EIGENSCHAPpen in format `<property name>:{'value': <property value>}`"
         ),
     )
+    zaakobject = serializers.URLField(
+        required=False,
+        help_text=_("URL of ZAAK-OBJECT"),
+    )
     fields = OrderedMultipleChoiceField(
         required=False,
         help_text=_(

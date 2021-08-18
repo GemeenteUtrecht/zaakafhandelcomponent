@@ -70,10 +70,7 @@ class PerformSearchMixin:
         return results
 
 
-class SearchView(
-    PerformSearchMixin,
-    views.APIView,
-):
+class SearchView(PerformSearchMixin, views.APIView):
     authentication_classes = (SessionAuthentication,)
     ordering = ("-identificatie",)
     pagination_class = ESPagination

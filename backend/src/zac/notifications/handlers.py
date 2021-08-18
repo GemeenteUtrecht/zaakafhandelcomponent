@@ -8,6 +8,7 @@ from zac.core.cache import (
     invalidate_rollen_cache,
     invalidate_zaak_cache,
     invalidate_zaak_list_cache,
+    invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
 from zac.core.services import (
@@ -22,6 +23,7 @@ from zac.elasticsearch.api import (
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
     update_zaak_document,
+    update_zaakobjecten_in_zaak_document,
 )
 from zgw.models.zrc import Zaak
 
@@ -50,6 +52,9 @@ class ZakenHandler:
             # TODO should we remove permission if the rol is deleted?
             if data["actie"] == "create":
                 add_permission_for_behandelaar(rol=data["resource_url"])
+
+        elif data["resource"] == "zaakobject":
+            self._handle_zaakobject_change(data["hoofd_object"])
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
@@ -114,6 +119,13 @@ class ZakenHandler:
 
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)
+
+    def _handle_zaakobject_change(self, zaak_url: str):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaakobjecten_cache(zaak)
+
+        # index in ES
+        update_zaakobjecten_in_zaak_document(zaak)
 
 
 class ZaaktypenHandler:

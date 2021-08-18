@@ -83,3 +83,8 @@ def invalidate_rollen_cache(zaak: Zaak, rollen: Optional[List[Rol]] = None):
             cache_keys.append(f"rol:{rol.url}")
 
         cache.delete_many(cache_keys)
+
+
+def invalidate_zaakobjecten_cache(zaak: Zaak):
+    key = f"get_zaak_objecten:{zaak.url}"
+    cache.delete(key)
