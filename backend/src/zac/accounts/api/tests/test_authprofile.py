@@ -102,7 +102,7 @@ class AuthProfileAPITests(APITestCase):
                     "name": auth_profile1.name,
                     "blueprintPermissions": [
                         {
-                            "role": role1.name,
+                            "role": role1.id,
                             "objectType": PermissionObjectTypeChoices.zaak,
                             "policies": [
                                 {
@@ -125,7 +125,7 @@ class AuthProfileAPITests(APITestCase):
                     "name": auth_profile2.name,
                     "blueprintPermissions": [
                         {
-                            "role": role2.name,
+                            "role": role2.id,
                             "objectType": PermissionObjectTypeChoices.document,
                             "policies": [
                                 {
@@ -186,7 +186,7 @@ class AuthProfileAPITests(APITestCase):
                 "name": auth_profile.name,
                 "blueprintPermissions": [
                     {
-                        "role": role1.name,
+                        "role": role1.id,
                         "objectType": PermissionObjectTypeChoices.zaak,
                         "policies": [
                             {
@@ -202,7 +202,7 @@ class AuthProfileAPITests(APITestCase):
                         ],
                     },
                     {
-                        "role": role2.name,
+                        "role": role2.id,
                         "objectType": PermissionObjectTypeChoices.document,
                         "policies": [
                             {
@@ -223,7 +223,7 @@ class AuthProfileAPITests(APITestCase):
             "name": "some name",
             "blueprintPermissions": [
                 {
-                    "role": role1.name,
+                    "role": role1.id,
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
@@ -239,7 +239,7 @@ class AuthProfileAPITests(APITestCase):
                     ],
                 },
                 {
-                    "role": role2.name,
+                    "role": role2.id,
                     "objectType": PermissionObjectTypeChoices.document,
                     "policies": [
                         {
@@ -330,7 +330,7 @@ class AuthProfileAPITests(APITestCase):
             "name": "some name",
             "blueprintPermissions": [
                 {
-                    "role": role1.name,
+                    "role": role1.id,
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
@@ -346,7 +346,7 @@ class AuthProfileAPITests(APITestCase):
                     ],
                 },
                 {
-                    "role": role2.name,
+                    "role": role2.id,
                     "objectType": PermissionObjectTypeChoices.document,
                     "policies": [
                         {
@@ -386,7 +386,7 @@ class AuthProfileAPITests(APITestCase):
             "name": "some name",
             "blueprintPermissions": [
                 {
-                    "role": role.name,
+                    "role": role.id,
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
@@ -427,7 +427,7 @@ class AuthProfileAPITests(APITestCase):
             "name": auth_profile.name,
             "blueprintPermissions": [
                 {
-                    "role": role.name,
+                    "role": role.id,
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
