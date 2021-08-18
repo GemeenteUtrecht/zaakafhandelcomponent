@@ -3,7 +3,6 @@ import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin
 
-from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
