@@ -166,7 +166,8 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         )
 
     @requests_mock.Mocker()
-    def test_cases_ordering_endpoint(self, m):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_cases_ordering_endpoint(self, m, *mocks):
         Service.objects.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
