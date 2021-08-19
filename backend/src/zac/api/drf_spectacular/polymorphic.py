@@ -31,7 +31,7 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
         auto_schema.registry.register(main)
 
         # build the components for the polymorphic extra fields
-        for discriminator_value in list(serializer.serializer_mapping.keys()):
+        for discriminator_value in serializer.serializer_mapping.keys():
 
             sub_serializer = serializer._discriminator_serializer(discriminator_value)
             resolved = auto_schema.resolve_serializer(sub_serializer, direction)
