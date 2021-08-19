@@ -100,11 +100,25 @@ export class ReviewRequestsService {
     // Whether all approved.
     const isApproved = this.isReviewRequestCompleted(reviewRequestSummary) &&
       responses.length &&
-      responses.every(a => String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.APPROVED.value.toLowerCase());
+      responses.every(a => {
+        if(reviewRequestSummary.reviewType === 'approval') {
+          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.APPROVED.value.toLowerCase();
+        }
+        return true;
+      });
 
     // Whether one or or more did not approve.
     const isNotApproved = responses.length &&
-      responses.some(a => String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.NOT_APPROVED.value.toLowerCase());
+      responses.some(a => {
+        if(reviewRequestSummary.reviewType === 'approval') {
+          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.NOT_APPROVED.value.toLowerCase();
+        }
+      });
+
+    console.log(reviewRequestSummary, {
+      isApproved,
+      isNotApproved,
+    })
 
     if (isApproved) {
       return REVIEW_REQUEST_STATUSES.APPROVED;
