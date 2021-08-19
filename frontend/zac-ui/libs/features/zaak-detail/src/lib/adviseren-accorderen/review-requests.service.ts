@@ -115,11 +115,6 @@ export class ReviewRequestsService {
         }
       });
 
-    console.log(reviewRequestSummary, {
-      isApproved,
-      isNotApproved,
-    })
-
     if (isApproved) {
       return REVIEW_REQUEST_STATUSES.APPROVED;
     } else if (isNotApproved) {
