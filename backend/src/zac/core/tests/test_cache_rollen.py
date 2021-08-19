@@ -30,7 +30,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
                 zaak=ZAAK_URL,
                 betrokkene_identificatie={
                     "identificatie": "123456",
-                    "voorletters": "M Y",
+                    "voorletters": "M.Y.",
                     "achternaam": "Surname",
                     "voorvoegsel_achternaam": "",
                 },
@@ -69,7 +69,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
             url=f"{ZAKEN_ROOT}rollen/482de5b2-4779-4b29-b84f-add888352183",
             betrokkene_identificatie={
                 "identificatie": "123456",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -97,7 +97,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
                 zaak=ZAAK_URL,
                 betrokkene_identificatie={
                     "identificatie": "123456",
-                    "voorletters": "M Y",
+                    "voorletters": "M.Y.",
                     "achternaam": "Surname",
                     "voorvoegsel_achternaam": "",
                 },
@@ -144,7 +144,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
             url=f"{ZAKEN_ROOT}rollen/482de5b2-4779-4b29-b84f-add888352183",
             betrokkene_identificatie={
                 "identificatie": "123456",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },

@@ -697,6 +697,7 @@ def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
                     rol
                 ):
                     new_rollen.append((rol.url, new_rol))
+
             except ObjectDoesNotExist:
                 logger.warning(
                     "Couldn't find user with identificatie %s" % identificatie

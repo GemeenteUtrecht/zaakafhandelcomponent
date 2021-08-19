@@ -1,10 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+from django.contrib.auth.models import Group
+
 from django_camunda.api import get_process_instance_variable, get_task_variable
 from django_camunda.camunda_models import Model, Task as _Task
 from django_camunda.types import CamundaId
 
+from zac.accounts.models import User
+
+from .constants import AssigneeTypeChoices
 from .history import get_historical_variable
 
 
@@ -45,3 +50,11 @@ class Task(_Task):
 
     def get_variable(self, name: str) -> Any:
         return get_task_variable(self.id, name)
+
+    def assignee_type(self) -> str:
+        if self.assignee:
+            if isinstance(self.assignee, User):
+                return AssigneeTypeChoices.user
+            elif isinstance(self.assignee, Group):
+                return AssigneeTypeChoices.group
+        return ""

@@ -75,11 +75,11 @@ class SetTaskAssigneeSerializerTests(APITestCase):
         )
         self.assertEqual(
             exc.exception.detail["assignee"][0],
-            "A user with username some-user does not exist.",
+            "A user with username some-user does not exist. A group with name some-user does not exist.",
         )
         self.assertEqual(
             exc.exception.detail["delegate"][0],
-            "A user with username some-delegate does not exist.",
+            "A user with username some-delegate does not exist. A group with name some-delegate does not exist.",
         )
 
     def test_serializer_success(self):
@@ -222,7 +222,8 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         )
 
     @requests_mock.Mocker()
-    def test_has_perm_set_assignee_and_delegate(self, m):
+    @patch("zac.camunda.api.views.SetTaskAssigneeView._create_rol", return_value=None)
+    def test_has_perm_set_assignee_and_delegate(self, m, mock_create_rol):
         self.patch_get_task.start()
         self.addCleanup(self.patch_get_task.stop)
 
@@ -257,27 +258,24 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
             "delegate": "",
         }
 
-        with patch(
-            "zac.camunda.api.views.SetTaskAssigneeView._create_rol", return_value=None
-        ):
-            # data with assignee
-            response = self.client.post(
-                self.endpoint,
-                data=data,
-            )
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # data with assignee
+        response = self.client.post(
+            self.endpoint,
+            data=data,
+        )
 
-            expected_payload = {"userId": user.username}
-            self.assertEqual(m.last_request.json(), expected_payload)
-            self.assertIn("assignee", m.last_request.url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-            # data with delegate
-            data.update({"assignee": "", "delegate": user.username})
-            response = self.client.post(
-                self.endpoint,
-                data=data,
-            )
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-            expected_payload = {"userId": user.username}
-            self.assertEqual(m.last_request.json(), expected_payload)
-            self.assertIn("delegate", m.last_request.url)
+        expected_payload = {"userId": f"user:{user.username}"}
+        self.assertEqual(m.last_request.json(), expected_payload)
+        self.assertIn("assignee", m.last_request.url)
+
+        # data with delegate
+        data.update({"assignee": "", "delegate": user.username})
+        response = self.client.post(
+            self.endpoint,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(m.last_request.json(), expected_payload)
+        self.assertIn("delegate", m.last_request.url)

@@ -1,3 +1,5 @@
+from django.contrib.auth.models import Group
+
 import factory
 import factory.fuzzy
 
@@ -11,6 +13,13 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.User"
+
+
+class GroupFactory(factory.django.DjangoModelFactory):
+    name = factory.sequence(lambda n: f"group-{n}")
+
+    class Meta:
+        model = Group
 
 
 class StaffUserFactory(UserFactory):

@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils.timezone import make_aware
@@ -23,6 +24,7 @@ from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="get_full_name")
+    groups = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = User
@@ -34,7 +36,25 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "is_staff",
             "email",
+            "groups",
         )
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField(
+        help_text=_("Human readable name that identifies the group.")
+    )
+
+    class Meta:
+        model = Group
+        fields = (
+            "id",
+            "name",
+            "full_name",
+        )
+
+    def get_full_name(self, obj) -> str:
+        return _("Group") + ": " + obj.name
 
 
 class CatalogusURLSerializer(serializers.Serializer):

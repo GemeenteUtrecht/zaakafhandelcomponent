@@ -69,7 +69,7 @@ def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
         rol.betrokkene_identificatie["voorvoegsel_geslachtsnaam"],
         rol.betrokkene_identificatie["geslachtsnaam"],
     ]
-    return " ".join(bits).strip() or _("(not set)")
+    return " ".join([bit for bit in bits if bit != ""]).strip() or _("(not set)")
 
 
 def get_naam_medewerker(rol: Rol) -> Optional[str]:
@@ -84,7 +84,10 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
         rol.betrokkene_identificatie["voorvoegsel_achternaam"],
         rol.betrokkene_identificatie["achternaam"],
     ]
-    return " ".join(bits).strip() or rol.betrokkene_identificatie["identificatie"]
+    return (
+        " ".join([bit for bit in bits if bit != ""]).strip()
+        or rol.betrokkene_identificatie["identificatie"]
+    )
 
 
 def get_naam_organisatorische_eenheid(rol: Rol) -> str:

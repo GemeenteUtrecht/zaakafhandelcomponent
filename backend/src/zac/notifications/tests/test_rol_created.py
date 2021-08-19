@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
@@ -11,7 +12,8 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 
 from zac.accounts.constants import PermissionObjectTypeChoices, PermissionReason
-from zac.accounts.models import AtomicPermission, User
+from zac.accounts.models import AtomicPermission
+from zac.accounts.tests.factories import UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
@@ -56,7 +58,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     """
 
     def test_rol_created_indexed_in_es(self, rm):
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         self.client.force_authenticate(user=user)
@@ -97,7 +99,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": "123456",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -132,7 +134,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         rm.get(ZAAK, json=ZAAK_RESPONSE)
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         rol = {
@@ -148,7 +150,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": user.username,
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -202,7 +204,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
 
         # Some more mocks
-        user = User.objects.create(
+        user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
         )
         rol_old = {
@@ -237,7 +239,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": user.username,
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -275,7 +277,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "betrokkene": None,
                 "betrokkene_identificatie": {
-                    "voorletters": "M Y",
+                    "voorletters": "M.Y.",
                     "achternaam": "Surname",
                     "identificatie": "notifs",
                     "voorvoegsel_achternaam": "",
@@ -300,7 +302,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             zaak_document.rollen[0]["betrokkene_identificatie"],
             {
                 "identificatie": "notifs",
-                "voorletters": "M Y",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },

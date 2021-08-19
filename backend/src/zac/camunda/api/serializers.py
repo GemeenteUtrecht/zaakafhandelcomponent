@@ -1,15 +1,18 @@
 from typing import Any, Dict, List
 
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from zac.accounts.api.serializers import UserSerializer
-from zac.api.polymorphism import PolymorphicSerializer
+from zac.accounts.api.serializers import GroupSerializer, UserSerializer
+from zac.accounts.models import User
+from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
 
+from ..constants import AssigneeTypeChoices
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
-from .validators import UserValidator
+from .validators import GroupValidator, OrValidator, UserValidator
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -21,12 +24,36 @@ class RecursiveField(serializers.Serializer):
         return self.parent.parent.to_representation(instance)
 
 
-class TaskSerializer(serializers.Serializer):
+class TaskAssigneeUserSerializer(serializers.Serializer):
+    assignee = UserSerializer()
+
+
+class TaskAssigneeGroupSerializer(serializers.Serializer):
+    assignee = GroupSerializer()
+
+
+class TaskAssigneeFallbackSerializer(serializers.Serializer):
+    assignee = serializers.CharField(default="", allow_blank=True)
+
+
+class TaskSerializer(PolymorphicSerializer):
+    serializer_mapping = {
+        AssigneeTypeChoices.user: TaskAssigneeUserSerializer,
+        AssigneeTypeChoices.group: TaskAssigneeGroupSerializer,
+        "": TaskAssigneeFallbackSerializer,
+    }
+    discriminator_field = "assignee_type"
+    fallback_distriminator_value = ""
+
     id = serializers.UUIDField()
     name = serializers.CharField(max_length=100)
     created = serializers.DateTimeField()
     has_form = serializers.BooleanField()
-    assignee = UserSerializer(allow_null=True, required=False)
+    assignee_type = serializers.ChoiceField(
+        required=True,
+        choices=AssigneeTypeChoices.choices + ("", ""),
+        help_text=_("The assignee type that was assigned to the user task."),
+    )
 
 
 class ProcessInstanceSerializer(serializers.Serializer):
@@ -130,17 +157,38 @@ class MessageSerializer(serializers.Serializer):
 class SetTaskAssigneeSerializer(serializers.Serializer):
     task = TaskField(
         label=_("Task ID"),
-        help_text=_("The ID of the task which assignee/delegate is to be set."),
+        help_text=_("The ID of the task to which the assignee/delegate is to be set."),
     )
     assignee = serializers.CharField(
         label=_("assignee"),
-        help_text=_("User assigned to the task."),
+        help_text=_("Assignee of the task."),
         allow_blank=True,
-        validators=(UserValidator(),),
+        validators=(OrValidator(UserValidator(), GroupValidator()),),
     )
     delegate = serializers.CharField(
         label=_("delegate"),
-        help_text=_("User delegated to the task."),
+        help_text=_("Delegate of the task."),
         allow_blank=True,
-        validators=(UserValidator(),),
+        validators=(OrValidator(UserValidator(), GroupValidator()),),
     )
+
+    def _resolve_name(self, name: str) -> str:
+        try:
+            User.objects.get(username=name)
+            return f"user:{name}"
+        except User.DoesNotExist:
+            pass
+
+        try:
+            Group.objects.get(name=name)
+            return f"group:{name}"
+        except Group.DoesNotExist:
+            pass
+
+        return name
+
+    def validate_assignee(self, assignee: str) -> str:
+        return self._resolve_name(assignee)
+
+    def validate_delegate(self, delegate: str) -> str:
+        return self._resolve_name(delegate)
