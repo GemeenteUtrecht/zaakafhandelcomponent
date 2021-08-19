@@ -1,8 +1,7 @@
 import {Injectable} from '@angular/core';
 import {ApplicationHttpClient} from '@gu/services';
 import {Observable} from 'rxjs';
-import {ZaakObject} from './zaak-object';
-import {Geometry} from './geojson/geojson';
+import {Geometry, ZaakObject} from "@gu/models";
 
 @Injectable({
   providedIn: 'root'

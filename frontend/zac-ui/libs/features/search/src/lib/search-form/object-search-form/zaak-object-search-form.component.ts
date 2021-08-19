@@ -1,10 +1,16 @@
 import {Component, EventEmitter, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
 import {ZaakObjectService} from './zaak-object.service';
-import {ZaakObject} from './zaak-object';
-import {excludeTownShipByName, getTownshipByName} from './geojson/townships';
-import {Feature, Geometry} from "./geojson/geojson";
-import {excludeProvinceByName, getProvinceByName} from './geojson/provinces';
+import {SearchService} from "../../search.service";
+import {
+  Feature,
+  Geometry,
+  Zaak,
+  ZaakObject,
+  UtrechtNeighbourhoods,
+  getProvinceByName,
+  getTownshipByName,
+} from '@gu/models';
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -16,26 +22,19 @@ const TOWNSHIP_UTRECHT_NAME = 'Utrecht (Ut)';
 
 const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
   {
-    label: `Gemeente ${TOWNSHIP_UTRECHT_NAME}`,
+    label: `Gemeente: ${TOWNSHIP_UTRECHT_NAME}`,
     value: JSON.stringify(getTownshipByName(TOWNSHIP_UTRECHT_NAME).geometry),
   },
 
   {
-    label: `Provincie ${PROVINCE_UTRECHT_NAME}`,
+    label: `Provincie: ${PROVINCE_UTRECHT_NAME}`,
     value: JSON.stringify(getProvinceByName(PROVINCE_UTRECHT_NAME).geometry),
   },
 
-  // ...excludeTownShipByName(TOWNSHIP_UTRECHT_NAME)
-  //   .map((feature: Feature) => ({
-  //     label: `Gemeente ${feature.properties.name}`,
-  //     value: JSON.stringify(feature.geometry)
-  //   })),
-  //
-  ...excludeProvinceByName(PROVINCE_UTRECHT_NAME)
-    .map((feature: Feature) => ({
-      label: `Provincie ${feature.properties.name}`,
-      value: JSON.stringify(feature.geometry)
-    })),
+  ...UtrechtNeighbourhoods.features.map((feature: Feature) => ({
+    label: `Wijk: ${feature.properties.name}`,
+    value: JSON.stringify(feature.geometry)
+  })),
 ];
 
 /**
@@ -43,14 +42,17 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
  *
  * Shows a search form for zaak (case) objects.
  *
- * Emits selectZaakObject: ZaakObject after selecting a result zaak object.
+ * Emits loadResult: Zaak[] after selecting a Zaakobject.
  */
 @Component({
   selector: 'gu-zaak-object-search-form',
   templateUrl: './zaak-object-search-form.component.html',
 })
 export class ZaakObjectSearchFormComponent {
-  @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
+  @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
+
+  /** @type {boolean} Whether to show the zaak objecten. */
+  showZaakObjecten = false;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
 
@@ -75,7 +77,7 @@ export class ZaakObjectSearchFormComponent {
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
 
-  constructor(private zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
+  constructor(private searchService: SearchService, private zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
   }
 
   //
@@ -94,14 +96,46 @@ export class ZaakObjectSearchFormComponent {
   // Events.
   //
 
+  /**
+   * Gers called when form is submitted.
+   * @param {Object}} data
+   */
   submitForm(data) {
     const geometry: Geometry = JSON.parse(data.geometry);
+
+
+    this.zaakObjects = [];
+    this.loadResult.emit([]);
+    this.showZaakObjecten = true;
 
     this.zaakObjectService.searchObjects(geometry, data.query).subscribe(
       (zaakObjects: ZaakObject[]) => this.zaakObjects = zaakObjects,
       this.reportError.bind(this),
     );
   }
+
+  /**
+   * Gets called when a ZaakObject is selected.
+   * @param {Event} event
+   * @param {ZaakObject} zaakObject
+   */
+  selectZaakObject(event: Event, zaakObject: ZaakObject) {
+    const search = {
+      object: zaakObject.url
+    }
+
+    this.loadResult.emit([]);
+    this.showZaakObjecten = false;
+
+    this.searchService.searchZaken(search).subscribe(
+      (data) => this.loadResult.emit(data.results as Zaak[]),
+      this.reportError.bind(this)
+    );
+  }
+
+  //
+  // Error handling.
+  //
 
   /**
    * Error callback.

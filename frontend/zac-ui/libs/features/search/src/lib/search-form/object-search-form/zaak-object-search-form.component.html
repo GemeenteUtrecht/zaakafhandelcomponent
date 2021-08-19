@@ -1,6 +1,6 @@
 <gu-form [form]="form" buttonLabel="Zoeken" (formSubmit)="submitForm($event)"></gu-form>
-<mat-action-list>
-  <mat-list-item *ngFor="let zaakObject of zaakObjects" (click)="selectZaakObject.emit(zaakObject)">
+<mat-action-list *ngIf="showZaakObjecten">
+  <mat-list-item *ngFor="let zaakObject of zaakObjects" (click)="selectZaakObject($event, zaakObject)">
     {{ zaakObject | zaakObjectString }}
   </mat-list-item>
 </mat-action-list>

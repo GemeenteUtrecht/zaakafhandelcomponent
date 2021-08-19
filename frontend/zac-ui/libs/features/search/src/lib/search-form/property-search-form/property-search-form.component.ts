@@ -6,7 +6,8 @@ import { Zaak, TableSort } from '@gu/models';
 import { Search } from '../../../models/search';
 import { Result } from '../../../models/zaaktype';
 import { ZaaktypeEigenschap } from '../../../models/zaaktype-eigenschappen';
-import { FeaturesSearchService } from '../../features-search.service';
+import { SearchService } from '../../search.service';
+import {tableHeadMapping} from "../../search-results/constants/table";
 
 
 /**
@@ -26,7 +27,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
 
   searchForm: FormGroup
-  formData: Search;
+  search: Search;
 
   zaaktypenData: Result[];
   zaaktypeEigenschappenData: ZaaktypeEigenschap[] = [];
@@ -44,7 +45,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   constructor(
     private fb: FormBuilder,
-    private searchService: FeaturesSearchService,
+    private searchService: SearchService,
     private router: Router,
     private datePipe: DatePipe
   ) { }
@@ -63,7 +64,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.sortData.previousValue !== this.sortData ) {
-      this.postSearchZaken(this.formData, this.sortData);
+      this.postSearchZaken(this.search, this.sortData);
     }
   }
 
@@ -165,18 +166,18 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     }
 
     // Only add key with values if the values are present
-    this.formData = {
+    this.search = {
       ...zaaktype && {zaaktype: zaaktype},
       ...this.omschrijving.value && {omschrijving: this.omschrijving.value},
       ...(this.eigenschapnaam.value && this.eigenschapwaarde.value) && {eigenschappen: eigenschappen}
     }
 
-    this.postSearchZaken(this.formData)
+    this.postSearchZaken(this.search)
 
     // Check if the user wants to save the search query as a report
     if (this.saveReportControl.value) {
       this.reportName = this.queryNameControl.value;
-      this.postCreateReport(this.reportName, this.formData)
+      this.postCreateReport(this.reportName, this.search)
     }
   }
 
@@ -187,7 +188,12 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
    */
   postSearchZaken(formData: Search, sortData?: TableSort) {
     this.isSubmitting = true;
-    this.searchService.postSearchZaken(formData, sortData).subscribe(res =>{
+
+    const orderingDirection = sortData?.order === 'desc' ? '-' : '';
+    const orderingParam = sortData ? tableHeadMapping[sortData.value] : '';
+    const ordering = sortData ? `${orderingDirection}${orderingParam}` : null;
+
+    this.searchService.searchZaken(formData, ordering).subscribe(res =>{
       this.loadResult.emit(res.results);
       this.isSubmitting = false;
     }, error => {

@@ -1,8 +1,5 @@
-/**
- * Returns feature for township specified by name.
- * @param {string} name
- */
-import {Feature, FeatureCollection, Position} from "./geojson";
+import {Feature, FeatureCollection, Position} from './geojson';
+
 
 /**
  * Returns a feature describing a township by name.

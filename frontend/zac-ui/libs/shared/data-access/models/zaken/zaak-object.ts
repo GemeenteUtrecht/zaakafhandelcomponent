@@ -1,4 +1,4 @@
-import {Geometry} from "./geojson/geojson";
+import {Geometry} from "../geojson/geojson";
 
 export interface ZaakObject {
   record: {

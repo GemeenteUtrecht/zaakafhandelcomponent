@@ -14,4 +14,7 @@ export interface Search {
   zaaktype?: Zaaktype;
   omschrijving?: string;
   eigenschappen?: Eigenschappen;
+  object?: string
+  fields?: string[]
+  includeClosed?: boolean
 }

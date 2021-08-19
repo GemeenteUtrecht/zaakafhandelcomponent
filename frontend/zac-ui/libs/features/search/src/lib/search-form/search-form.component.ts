@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Zaak, TableSort} from '@gu/models';
-import {ZaakObject} from './object-search-form/zaak-object';
+
 
 /**
  * This component allows the user to search Zaken dynamically.
@@ -18,13 +18,4 @@ import {ZaakObject} from './object-search-form/zaak-object';
 export class SearchFormComponent {
   @Input() sortData: TableSort;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
-
-  //
-  // Events.
-  //
-
-  selectZaakObject(zaakObject: ZaakObject) {
-    console.log(zaakObject);
-    this.loadResult.emit(null);
-  }
 }

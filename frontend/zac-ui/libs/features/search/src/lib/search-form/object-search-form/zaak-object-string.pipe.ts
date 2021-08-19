@@ -1,5 +1,5 @@
-import {Pipe} from "@angular/core";
-import {ZaakObject} from './zaak-object';
+import {Pipe} from '@angular/core';
+import {ZaakObject} from '@gu/models';
 
 /**
  * Turns a ZaakObject into a human-readable string.

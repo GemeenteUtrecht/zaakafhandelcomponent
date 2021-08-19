@@ -1,8 +1,5 @@
-/**
- * Returns feature for province specified by name.
- * @param {string} name
- */
-import {Feature, FeatureCollection, Position} from "./geojson";
+import {Feature, FeatureCollection, Position} from './geojson';
+
 
 /**
  * Returns a feature describing a province by name.
