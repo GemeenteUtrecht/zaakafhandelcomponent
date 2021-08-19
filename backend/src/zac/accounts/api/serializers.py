@@ -478,3 +478,8 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ("id", "name", "permissions")
+
+
+class PermissionSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100, help_text="Name of the permission")
+    description = serializers.CharField(help_text=_("Description of the permission"))

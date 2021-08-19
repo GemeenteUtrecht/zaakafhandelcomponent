@@ -2,7 +2,7 @@ from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 
-from .views import InformatieobjecttypenJSONView
+from .views import InformatieobjecttypenJSONView, PermissionView
 from .viewsets import (
     AccessRequestViewSet,
     AtomicPermissionViewSet,
@@ -26,4 +26,5 @@ urlpatterns = router.urls + [
         InformatieobjecttypenJSONView.as_view(),
         name="informatieobjecttypen",
     ),
+    path("permissions", PermissionView.as_view(), name="permissions"),
 ]
