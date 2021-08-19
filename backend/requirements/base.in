@@ -35,4 +35,5 @@ django-sniplates
 # Restful API
 djangorestframework
 djangorestframework-camel-case
+drf-nested-routers
 drf-spectacular

@@ -92,6 +92,7 @@ django==2.2.24
     #   django-relativedelta
     #   django-sniplates
     #   djangorestframework
+    #   drf-nested-routers
     #   drf-spectacular
     #   zgw-consumers
 djangorestframework-camel-case==1.2.0
@@ -99,8 +100,11 @@ djangorestframework-camel-case==1.2.0
 djangorestframework==3.12.2
     # via
     #   -r requirements/base.in
+    #   drf-nested-routers
     #   drf-spectacular
     #   zgw-consumers
+drf-nested-routers==0.93.3
+    # via -r requirements/base.in
 drf-spectacular==0.17.2
     # via -r requirements/base.in
 elasticsearch-dsl==7.3.0
