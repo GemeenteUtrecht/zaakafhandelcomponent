@@ -104,7 +104,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         }
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(
-            "https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
+            f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
@@ -154,7 +154,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         rm.get(
-            "https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
+            f"https://some.zrc.nl/api/v1/rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
         rm.get(ROL, json=rol)

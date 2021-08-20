@@ -28,7 +28,6 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
-OBJECTS_ROOT = "http://objects.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"

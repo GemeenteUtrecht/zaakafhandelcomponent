@@ -31,7 +31,7 @@ NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
     "resource": "status",
-    "resourceUrl": f"{ZAKEN_ROOT}statussen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": "https://some.zrc.nl/api/v1/statussen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
