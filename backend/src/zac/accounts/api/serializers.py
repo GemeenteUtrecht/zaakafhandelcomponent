@@ -430,17 +430,26 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("url", "uuid", "name", "blueprint_permissions")
         extra_kwargs = {"url": {"lookup_field": "uuid"}, "uuid": {"read_only": True}}
 
-    @transaction.atomic
-    def create(self, validated_data):
-        group_permissions = validated_data.pop("group_permissions")
-        auth_profile = super().create(validated_data)
+    @staticmethod
+    def create_blueprint_permissions(group_permissions):
+        blueprint_permissions = []
 
         for group in group_permissions:
             for policy in group["policies"]:
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=group["role"], object_type=group["object_type"], policy=policy
                 )
-                auth_profile.blueprint_permissions.add(permission)
+                blueprint_permissions.append(permission)
+
+        return blueprint_permissions
+
+    @transaction.atomic
+    def create(self, validated_data):
+        group_permissions = validated_data.pop("group_permissions")
+        auth_profile = super().create(validated_data)
+
+        blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        auth_profile.blueprint_permissions.add(*blueprint_permissions)
 
         return auth_profile
 
@@ -450,10 +459,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         auth_profile = super().update(instance, validated_data)
 
         auth_profile.blueprint_permissions.clear()
-        for group in group_permissions:
-            for policy in group["policies"]:
-                permission, created = BlueprintPermission.objects.get_or_create(
-                    role=group["role"], object_type=group["object_type"], policy=policy
-                )
-                auth_profile.blueprint_permissions.add(permission)
+        blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        auth_profile.blueprint_permissions.add(*blueprint_permissions)
+
         return auth_profile
