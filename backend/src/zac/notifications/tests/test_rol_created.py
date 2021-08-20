@@ -18,7 +18,6 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -80,7 +79,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
 
         self.assertEqual(zaak_document.rollen, [])
@@ -161,7 +159,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
-        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
 
@@ -244,7 +241,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rol_1.zaak = zaak
         rol_2 = factory(Rol, rol_new)
         rol_2.zaak = zaak
-        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.rollen, [])
 

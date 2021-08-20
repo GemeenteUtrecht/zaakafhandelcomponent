@@ -65,7 +65,6 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_created_invalidate_list_cache(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
@@ -108,7 +107,6 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_max_va_cache_key(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
@@ -141,8 +139,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_zaak_created_indexed_in_es(self, rm, *mocks):
+    def test_zaak_created_indexed_in_es(self, rm):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)

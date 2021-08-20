@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.urls import reverse_lazy
 
 import requests_mock
@@ -34,7 +32,6 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_valid_request_without_permissions(self, m, *mocks):
         user = UserFactory.create()
         self.client.force_authenticate(user)
@@ -90,7 +87,6 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(len(response.data), 0)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_valid_request_with_permissions(self, m, *mocks):
         user = UserFactory.create()
         self.client.force_authenticate(user)

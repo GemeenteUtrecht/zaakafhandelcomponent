@@ -12,7 +12,6 @@ from zgw_consumers.models import APITypes, Service
 from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
 
 from .utils import (
     BRONORGANISATIE,
@@ -57,9 +56,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
         cls.ztc = Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-        cls.zrc = Service.objects.create(
-            api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc
-        )
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()
@@ -68,9 +65,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_find_zaak_resultaat_created(self, rm, *mocks):
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
@@ -91,9 +87,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
             self.assertEqual(m.call_count, 2)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_get_zaak_status_created(self, rm, *mocks):
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
+    def test_get_zaak_status_created(self, rm):
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)

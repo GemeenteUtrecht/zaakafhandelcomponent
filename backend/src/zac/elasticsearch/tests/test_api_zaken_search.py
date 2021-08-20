@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -9,6 +8,7 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -20,7 +20,10 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import update_eigenschappen_in_zaak_document
+from zac.elasticsearch.api import (
+    update_eigenschappen_in_zaak_document,
+    update_zaakobjecten_in_zaak_document,
+)
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -62,13 +65,6 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaaktype_model = factory(ZaakType, self.zaaktype)
         zaak_model = factory(Zaak, self.zaak)
         zaak_model.zaaktype = zaaktype_model
-
-        patch_get_zaakobjecten = patch(
-            "zac.elasticsearch.api.get_zaakobjecten",
-            return_value=[],
-        )
-        patch_get_zaakobjecten.start()
-        self.addCleanup(patch_get_zaakobjecten.stop)
 
         self.create_zaak_document(zaak_model)
         self.refresh_index()
@@ -231,14 +227,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
-            json=paginated_response([]),
-        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
 
@@ -396,14 +384,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
-            json=paginated_response([]),
-        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
@@ -527,13 +507,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}", json=paginated_response([])
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
-        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
         m.get(zaak2["url"], json=zaak2)
@@ -593,12 +566,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}", json=paginated_response([])
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
-        )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
         m.get(zaak2["url"], json=zaak2)
@@ -691,7 +658,10 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak2_model = factory(Zaak, zaak2)
         zaak2_model.zaaktype = factory(ZaakType, zaaktype)
         zaak2_model.deadline = datetime.date(2020, 1, 2)
+        zaak2_model.zaakobjecten = []
+        zaak1_model.zaakobjecten = [factory(ZaakObject, zaakobject)]
         self.create_zaak_document(zaak1_model)
+        update_zaakobjecten_in_zaak_document(zaak1_model)
         self.create_zaak_document(zaak2_model)
         self.refresh_index()
 

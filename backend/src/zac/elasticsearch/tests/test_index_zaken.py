@@ -1,9 +1,13 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
 import requests_mock
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -26,6 +30,17 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        cls.patch_get_zaakobjecten = patch(
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakobjecten",
+            return_value=[],
+        )
+
+    def setUp(self):
+        super().setUp()
+
+        self.patch_get_zaakobjecten.start()
+        self.addCleanup(self.patch_get_zaakobjecten.stop)
 
     def test_index_zaken_without_rollen(self, m):
         # mock API requests
@@ -62,9 +77,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json={"count": 0, "previous": None, "next": None, "results": []},
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
@@ -645,4 +657,64 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
         self.assertEqual(
             zaak_document.status.statustoelichting, "some-statustoelichting"
+        )
+
+    def test_index_zaken_with_zaakobjecten(self, m):
+        # mock API requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK1",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[],
+        )
+        zaakobject = {
+            "url": f"{ZAKEN_ROOT}zaakobjecten/4abe87ea-3670-42c8-afc7-5e9fb071971d",
+            "object": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
+            "zaak": zaak["url"],
+            "object_type": "",
+            "object_type_overige": "",
+            "relatieomschrijving": "",
+            "object_identificatie": {},
+        }
+
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(zaaktype["url"], json=zaaktype)
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakobjecten",
+            return_value=[factory(ZaakObject, zaakobject)],
+        ):
+            call_command("index_zaken")
+
+        # check zaak_document exists
+        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        self.assertEqual(
+            zaak_document.zaakobjecten[0].object,
+            "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
         )

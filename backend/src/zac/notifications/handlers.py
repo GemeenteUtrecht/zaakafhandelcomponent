@@ -14,6 +14,7 @@ from zac.core.cache import (
 from zac.core.services import (
     _client_from_url,
     get_rollen,
+    get_zaakobjecten,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
@@ -124,6 +125,8 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
 
+        zaakobjecten = get_zaakobjecten(zaak)
+        zaak.zaakobjecten = zaakobjecten
         # index in ES
         update_zaakobjecten_in_zaak_document(zaak)
 

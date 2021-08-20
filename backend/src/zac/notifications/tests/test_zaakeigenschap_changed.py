@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.urls import reverse
 from django.utils import timezone
 
@@ -67,8 +65,7 @@ NOTIFICATION_DESTROY = {
 
 @requests_mock.Mocker()
 class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_zaakeigenschap_created_indexed_in_es(self, rm, *mocks):
+    def test_zaakeigenschap_created_indexed_in_es(self, rm):
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )
@@ -128,8 +125,7 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
             zaak_document.eigenschappen, {"tekst": {"propname": "propvalue"}}
         )
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_zaakeigenschap_destroyed_indexed_in_es(self, rm, *mocks):
+    def test_zaakeigenschap_destroyed_indexed_in_es(self, rm):
         Service.objects.create(
             api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
         )

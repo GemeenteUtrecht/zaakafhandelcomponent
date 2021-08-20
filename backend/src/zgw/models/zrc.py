@@ -13,6 +13,7 @@ class Zaak(_Zaak):
     statussen: list = field(default_factory=list)
     eigenschappen: list = field(default_factory=list)
     tasks: list = field(default_factory=list)
+    zaakobjecten: list = field(default_factory=list)
 
     @cached_property
     def deadline(self) -> datetime.date:

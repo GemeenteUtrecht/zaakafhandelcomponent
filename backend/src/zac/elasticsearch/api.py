@@ -14,7 +14,6 @@ from zac.core.services import (
     get_status,
     get_statustype,
     get_zaak_eigenschappen,
-    get_zaakobjecten,
 )
 from zgw.models.zrc import Zaak
 
@@ -49,14 +48,6 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
     else:
         status_document = None
 
-    zaakobjecten = [
-        ZaakObjectDocument(
-            url=zo.url,
-            object=zo.object,
-        )
-        for zo in get_zaakobjecten(zaak)
-    ]
-
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
@@ -74,7 +65,6 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         deadline=zaak.deadline,
         status=status_document,
         toelichting=zaak.toelichting,
-        zaakobjecten=zaakobjecten,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -182,12 +172,12 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
 
 def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
-    zaak_document.objecten = [
+    zaak_document.zaakobjecten = [
         ZaakObjectDocument(
             url=zo.url,
             object=zo.object,
         )
-        for zo in get_zaakobjecten(zaak)
+        for zo in zaak.zaakobjecten
     ]
     zaak_document.save()
 

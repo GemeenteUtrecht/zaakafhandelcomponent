@@ -43,7 +43,7 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-    def test_zaaktype_created_invalidate_list_cache(self, m, *mocks):
+    def test_zaaktype_created_invalidate_list_cache(self, m):
         mock_service_oas_get(m, "https://some.ztc.nl/api/v1/", "ztc")
         m.get(
             f"https://some.ztc.nl/api/v1/zaaktypen?catalogus={CATALOGUS}",

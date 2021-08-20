@@ -2,13 +2,15 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from elasticsearch_dsl import Index
+from zgw_consumers.concurrent import parallel
 
-from zac.core.services import get_rollen_all, get_zaken_all
+from zac.core.services import get_rollen_all, get_zaakobjecten, get_zaken_all
 
 from ...api import (
     append_rol_to_document,
     create_zaak_document,
     update_eigenschappen_in_zaak_document,
+    update_zaakobjecten_in_zaak_document,
 )
 from ...documents import ZaakDocument
 
@@ -25,6 +27,7 @@ class Command(BaseCommand):
         self.index_zaken(zaken)
         self.index_rollen()
         self.index_zaak_eigenschappen(zaken)
+        self.index_zaakobjecten(zaken)
 
         self.stdout.write("Zaken have been indexed")
 
@@ -57,3 +60,24 @@ class Command(BaseCommand):
                 len([zaak for zaak in zaken if zaak.eigenschappen])
             )
         )
+
+    def index_zaakobjecten(self, zaken):
+        with parallel() as executor:
+            results = executor.map(get_zaakobjecten, zaken)
+
+        list_of_zaakobjecten = list(results)
+        dict_of_zaakobjecten = {
+            zaakobjecten[0].zaak: zaakobjecten
+            for zaakobjecten in list_of_zaakobjecten
+            if zaakobjecten
+        }
+        self.stdout.write(
+            "zaakobjecten were indexed for {} zaken".format(
+                len(dict_of_zaakobjecten.keys())
+            )
+        )
+        zaken = {zaak.url: zaak for zaak in zaken}
+        for zaak_url, zaakobjecten in dict_of_zaakobjecten.items():
+            zaak = zaken[zaak_url]
+            zaak.zaakobjecten = zaakobjecten
+            update_zaakobjecten_in_zaak_document(zaak)
