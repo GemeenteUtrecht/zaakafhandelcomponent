@@ -1,117 +1,116 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApplicationHttpClient } from '@gu/services';
-import { Review, ReviewDetail, ReviewDocument } from './detail-modal.interface';
-import {ReadWriteDocument, RowData, Table} from '@gu/models';
+import {Component, Input} from '@angular/core';
+import {Observable} from 'rxjs';
+import {Author, ReviewRequestDetails} from "@gu/kownsl";
+import {ExtensiveCell, ReadWriteDocument, RowData, Table} from '@gu/models';
+import {ApplicationHttpClient} from '@gu/services';
+import {Review, ReviewDocument} from './detail-modal.interface';
 
+
+/**
+ * <gu-detail-modal [reviewRequestDetails]="reviewRequestDetails"></gu-gu-detail-modal>
+ *
+ * Show review details.
+ *
+ * Requires reviewRequestDetails: ReviewRequestDetails input to show in a modal.
+ */
 @Component({
   selector: 'gu-detail-modal',
   templateUrl: './detail-modal.component.html',
   styleUrls: ['./detail-modal.component.scss']
 })
-export class DetailModalComponent implements OnChanges {
-  @Input() uuid: string;
+export class DetailModalComponent  {
+  @Input() reviewRequestDetails: ReviewRequestDetails;
 
-  data: Review[];
-  title: string;
-  readonly ACCORDERINGEN = "Accorderingen";
-  readonly ADVIEZEN = "Adviezen";
 
-  tableData: Table = new Table([], []);
+  constructor(private http: ApplicationHttpClient) {
+  }
 
-  tableHeadApproval = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
-  tableHeadAdvice = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
+  //
+  // Getters / setters.
+  //
 
-  isLoading: boolean;
-
-  constructor(private http: ApplicationHttpClient) { }
-
-  ngOnChanges(): void {
-    if(this.uuid) {
-      this.fetchReviewDetails()
+  /**
+   * Returns the title to render.
+   * @return {string}
+   */
+  get title(): string {
+    switch (this.reviewRequestDetails?.reviewType) {
+      case 'approval':
+        return 'Accorderingen';
+      case 'advice':
+        return 'Adviezen';
+      default:
+        return '';
     }
   }
 
-  fetchReviewDetails() {
-    this.isLoading = true;
-    this.getReviewRequestDetail(this.uuid).subscribe(res => {
-      switch (res.reviewType) {
-        case 'approval':
-          this.formatTableDataApproval(res);
-          this.title = this.ACCORDERINGEN;
-          this.data = res.approvals;
-          break;
-        case 'advice':
-          this.formatTableDataAdvice(res);
-          this.title = this.ADVIEZEN;
-          this.data = res.advices;
-          break;
-      }
-      this.isLoading = false;
-    }, errorRes => {
+  /**
+   * Return the table to render.
+   * @return {Table}
+   */
+  get table(): Table {
+    if(this.reviewRequestDetails?.approvals) {
+      return this.formatTableDataApproval(this.reviewRequestDetails)
+    }
 
-    })
+    if(this.reviewRequestDetails?.advices){
+      return this.formatTableDataAdvice(this.reviewRequestDetails)
+    }
+
+    return null;
   }
 
-  formatTableDataAdvice(data): void {
-    this.tableData.headData = this.tableHeadAdvice;
-    this.tableData.bodyData = data.advices.map( (review: Review) => {
-      const author = review.author['firstName']
-        ? `${review.author['firstName']} ${review.author['lastName']}`
-        : review.author['username'];
-      const docAdviezen = review.documents ? review.documents.length.toString() : '-';
+  //
+  // Context.
+  //
 
+
+  /**
+   * Returns table for advices of reviewRequestDetails.
+   * @param {ReviewRequestDetails} reviewRequestDetails
+   * @return {Table}
+   */
+  formatTableDataAdvice(reviewRequestDetails: ReviewRequestDetails): Table {
+    const headData = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
+
+    const bodyData = reviewRequestDetails.advices.map((review: Review) => {
+      const author = this.getAuthorName(review.author);
+      const docAdviezen = review.documents ? review.documents.length.toString() : '-';
       const reviewDocumentTableData = review.documents?.length > 0 ? this.formatTableReviewDoc(review.documents) : null;
 
       const cellData: RowData = {
         cellData: {
           advies: review.advice,
           van: author,
+
           datum: {
             type: review.created ? 'date' : 'text',
             date: review.created
-          },
+          } as ExtensiveCell,
+
           docAdviezen: docAdviezen
         },
         nestedTableData: reviewDocumentTableData,
-        // expandData: ''
       }
       return cellData;
     })
+
+    return new Table(headData, bodyData);
   }
 
-  formatTableReviewDoc(reviewDocuments: ReviewDocument[]): Table {
-    const reviewDocumentTable = new Table(['Document', 'Originele versie', 'Aangepaste versie'], []);
+  /**
+   * Returns table for approvals of reviewRequestDetails.
+   * @param {ReviewRequestDetails} reviewRequestDetails
+   * @return {Table}
+   */
+  formatTableDataApproval(reviewRequestDetails: ReviewRequestDetails): Table {
+    const headData = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
 
-    reviewDocumentTable.bodyData = reviewDocuments.map( (doc: ReviewDocument) => {
-      return {
-        cellData: {
-          title: doc.title,
-          source: {
-            type: 'button',
-            label: doc.sourceVersion.toString(10),
-            value: doc.sourceUrl
-          },
-          advice: {
-            type: 'button',
-            label: doc.adviceVersion.toString(10),
-            value: doc.adviceUrl
-          },
-        }
-      }
-    })
+    const bodyData = reviewRequestDetails.approvals.map((review: Review) => {
+      const author = this.getAuthorName(review.author);
 
-    return reviewDocumentTable
-  }
-
-  formatTableDataApproval(data): void {
-    this.tableData.headData = this.tableHeadApproval;
-    this.tableData.bodyData = data.approvals.map( (review: Review) => {
       const icon = review.status === 'Akkoord' ? 'done' : 'close'
       const iconColor = review.status === 'Akkoord' ? 'green' : 'red'
-      const author = review.author['firstName']
-        ? `${review.author['firstName']} ${review.author['lastName']}`
-        : review.author['username'];
 
       const cellData: RowData = {
         cellData: {
@@ -119,20 +118,72 @@ export class DetailModalComponent implements OnChanges {
             type: 'icon',
             label: icon,
             iconColor: iconColor
-          },
+          } as ExtensiveCell,
+
           van: author,
           datum: {
             type: review.created ? 'date' : 'text',
             date: review.created
-          },
+          } as ExtensiveCell,
+
           toelichting: review.toelichting
         }
       }
+
       return cellData;
     })
+
+    return new Table(headData, bodyData);
   }
 
-  handleTableButtonOutput(action: object) {
+  /**
+   * Returns table for review documents.
+   * @param {ReviewDocument[]} reviewDocumentss
+   * @return {Table}
+   */
+  formatTableReviewDoc(reviewDocuments: ReviewDocument[]): Table {
+    const headData = ['Document', 'Originele versie', 'Aangepaste versie'];
+
+    const bodyData = reviewDocuments.map((doc: ReviewDocument) => {
+      return {
+        cellData: {
+          title: doc.title,
+
+          source: {
+            type: 'button',
+            label: doc.sourceVersion.toString(10),
+            value: doc.sourceUrl
+          } as ExtensiveCell,
+
+          advice: {
+            type: 'button',
+            label: doc.adviceVersion.toString(10),
+            value: doc.adviceUrl
+          } as ExtensiveCell,
+        }
+      }
+    })
+
+    return new Table(headData, bodyData);
+  }
+
+  /**
+   * Returns the string representation for the author.
+   * @param {Author} author
+   * @return {string}
+   */
+  getAuthorName(author: Author): string {
+    return author['firstName'] ? `${author['firstName']} ${author['lastName']}` : author['username'];
+  }
+
+  //
+  // Events.
+  //
+  /**
+   * Gets called when a table row is clicked.
+   * @param {Object} action
+   */
+  tableClick(action: object): void {
     const actionType = Object.keys(action)[0];
     const endpoint = action[actionType];
     this.readDocument(endpoint).subscribe((res: ReadWriteDocument) => {
@@ -140,13 +191,7 @@ export class DetailModalComponent implements OnChanges {
     });
   }
 
-  readDocument(endpoint) {
+  readDocument(endpoint): Observable<ReadWriteDocument> {
     return this.http.Post<ReadWriteDocument>(endpoint);
-  }
-
-
-  getReviewRequestDetail(uuid): Observable<ReviewDetail> {
-    const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${uuid}/detail`);
-    return this.http.Get<ReviewDetail>(endpoint);
   }
 }

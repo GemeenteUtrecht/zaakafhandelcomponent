@@ -9,6 +9,6 @@
 
   <!-- Form -->
   <ng-container *ngIf="!isLoading">
-    <gu-table [expandable]="true" [table]="table" (buttonOutput)="onButtonClick($event)"></gu-table>
+    <gu-table [expandable]="true" [table]="table" (buttonOutput)="buttonClick($event)"></gu-table>
   </ng-container>
 </div>

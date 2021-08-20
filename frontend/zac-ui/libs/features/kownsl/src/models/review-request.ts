@@ -1,6 +1,8 @@
 import { Review } from './review';
 import { ZaakDocument } from './zaak-document';
 import { Zaak } from './zaak';
+import {Approval} from "./approval";
+import {Advice} from "./advice";
 
 export interface Metadata {
   taskDefinitionId: string;
@@ -26,3 +28,16 @@ export interface ReviewRequest {
   zaak: Zaak;
 }
 
+export interface ReviewRequestSummary {
+  id: string,
+  reviewType: 'advice' | 'approval',
+  completed: number,
+  numAssignedUsers: number,
+}
+
+export interface ReviewRequestDetails {
+  id: string,
+  reviewType: string,
+  approvals?: Approval[]
+  advices?: Advice[]
+}

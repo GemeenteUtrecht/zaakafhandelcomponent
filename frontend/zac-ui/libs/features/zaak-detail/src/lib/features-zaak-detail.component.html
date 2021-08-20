@@ -98,6 +98,7 @@
                             [currentUser]="currentUser"
                             [bronorganisatie]="bronorganisatie"
                             [identificatie]="identificatie"
+                            (update)="ketenProcessenUpdate($event)"
                             class="zaak-detail__section">
         </gu-keten-processen>
         <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"

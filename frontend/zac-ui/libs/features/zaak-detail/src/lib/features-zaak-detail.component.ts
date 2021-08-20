@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {ApplicationHttpClient, ZaakService} from '@gu/services';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -8,6 +8,7 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Activity } from '../models/activity';
 import { FeaturesZaakDetailService } from './features-zaak-detail.service';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-accorderen.component";
 
 @Component({
   selector: 'gu-features-zaak-detail',
@@ -15,6 +16,8 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
   styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
+  @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
+
   bronorganisatie: string;
   identificatie: string;
   mainZaakUrl: string;
@@ -162,4 +165,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
     })
   }
 
+  ketenProcessenUpdate(event) {
+    this.adviserenAccorderenComponent.update();
+  }
 }

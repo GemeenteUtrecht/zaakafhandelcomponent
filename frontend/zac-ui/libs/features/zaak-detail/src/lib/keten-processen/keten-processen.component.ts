@@ -1,4 +1,4 @@
-import {Component, Input, OnChanges, AfterViewInit} from '@angular/core';
+import {Component, Input, Output, OnChanges, AfterViewInit, EventEmitter} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService} from '@gu/components'
 import {TaskContextData} from '../../models/task-context';
@@ -31,12 +31,13 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   @Input() identificatie: string;
   @Input() currentUser: User;
 
-  isExpanded = false;
+  @Output() update = new EventEmitter<any>();
 
   data: KetenProcessen[];
   allTaskData: Task[];
   processInstanceId: string;
 
+  isExpanded = false;
   isLoading = true;
   hasError: boolean;
   errorMessage: string;
@@ -132,6 +133,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
           this.executeTask(newTask.id);
         }
       }
+
+      this.update.emit(data);
     }, errorRes => {
       this.errorMessage = errorRes.error.detail;
       this.hasError = true;
