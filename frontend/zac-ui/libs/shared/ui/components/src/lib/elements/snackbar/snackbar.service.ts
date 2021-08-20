@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import {MatSnackBarRef} from '@angular/material/snack-bar/snack-bar-ref';
 
 /**
  * Generic snackbar service, based on Material Snackbar.
@@ -17,9 +18,9 @@ export class SnackbarService {
    * @param {string} message
    * @param {string} action
    * @param {"primary" | "accent" | "warn"} type
-   * @param {number} duration
+   * @param {number} duration (in seconds)
    */
-  openSnackBar(message: string, action?: string, type?: 'primary' | 'accent' | 'warn', duration: number = this.durationInSeconds) {
+  openSnackBar(message: string, action?: string, type?: 'primary' | 'accent' | 'warn', duration: number = this.durationInSeconds): MatSnackBarRef<any> {
     const config: MatSnackBarConfig = {
       duration: duration * 1000,
       panelClass: [
@@ -27,7 +28,7 @@ export class SnackbarService {
         type ? `mat-${type}` : null
       ]
     }
-    this._snackBar.open(message, action, config);
+    return this._snackBar.open(message, action, config);
   }
 
 }
