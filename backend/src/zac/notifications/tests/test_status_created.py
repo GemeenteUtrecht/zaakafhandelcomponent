@@ -27,8 +27,6 @@ from .utils import (
     mock_service_oas_get,
 )
 
-ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
-
 NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
@@ -56,7 +54,9 @@ class StatusCreatedTests(ESMixin, APITestCase):
         cls.ztc = Service.objects.create(
             api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
         )
-        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        cls.zrc = Service.objects.create(
+            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
+        )
 
     def setUp(self):
         super().setUp()
@@ -65,8 +65,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    def test_find_zaak_resultaat_created(self, rm, *mocks):
-        mock_service_oas_get(rm, ZAKEN_ROOT, "zaken")
+    def test_find_zaak_resultaat_created(self, rm, mock_zaaktype):
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
@@ -88,7 +88,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
             self.assertEqual(m.call_count, 2)
 
     def test_get_zaak_status_created(self, rm):
-        mock_service_oas_get(rm, ZAKEN_ROOT, "zaken")
+        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)

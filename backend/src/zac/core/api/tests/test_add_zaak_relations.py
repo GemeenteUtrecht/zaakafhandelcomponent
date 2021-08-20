@@ -32,7 +32,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_valid_request_without_permissions(self, m, *mocks):
+    def test_valid_request_without_permissions(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user)
 
@@ -87,7 +87,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(len(response.data), 0)
 
-    def test_valid_request_with_permissions(self, m, *mocks):
+    def test_valid_request_with_permissions(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user)
 

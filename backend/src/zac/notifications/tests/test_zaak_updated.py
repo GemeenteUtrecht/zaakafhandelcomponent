@@ -70,7 +70,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    def test_get_zaak_resultaat_created(self, rm, *mocks):
+    def test_get_zaak_resultaat_created(self, rm, mock_zaaktype):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
