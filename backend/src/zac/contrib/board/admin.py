@@ -1,0 +1,25 @@
+from django.contrib import admin
+
+from .models import Board, BoardColumn, BoardItem
+
+
+@admin.register(Board)
+class BoardAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "created", "modified")
+    search_fields = ("uuid",)
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(BoardColumn)
+class BoardColumnAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "board", "created", "modified")
+    list_filter = ("board__slug",)
+    search_fields = ("uuid", "slug")
+    prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(BoardItem)
+class BoardItemAdmin(admin.ModelAdmin):
+    list_display = ("object_type", "object", "board", "column")
+    list_filter = ("object_type", "board__slug")
+    search_fields = ("uuid", "object")

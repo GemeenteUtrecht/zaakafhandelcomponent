@@ -142,6 +142,7 @@ INSTALLED_APPS = [
     "zac.notifications",
     "zac.forms",
     "zac.utils",
+    "zac.contrib.board",
     "zac.contrib.brp",
     "zac.contrib.kadaster",
     "zac.contrib.kownsl",
