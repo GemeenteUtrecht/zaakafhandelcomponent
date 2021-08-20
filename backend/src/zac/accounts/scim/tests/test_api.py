@@ -350,7 +350,9 @@ class UserSCIMTests(APITestCase):
         response = self.client.delete(f"/scim/v2/Users/{user1.uuid}")
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
-        self.assertEqual(1, User.objects.all().count())
+        self.assertEqual(1, User.objects.filter(is_active=True).count())
+
+        # Check that the user is
 
     def test_search_user(self):
         user1 = SuperUserFactory.create(username="test1")

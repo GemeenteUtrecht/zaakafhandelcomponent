@@ -68,7 +68,7 @@ class UserAdapter(SCIMUser):
         return build_absolute_url(path=self.path, request=self.request)
 
     def delete(self):
-        User.objects.filter(uuid=self.id).delete()
+        User.objects.filter(uuid=self.id).update(is_active=False)
 
     @property
     def groups(self):
