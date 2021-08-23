@@ -8,3 +8,7 @@
 ::ng-deep.mat-tab-body-content .row [class*=col-] {
   padding-right: 0;
 }
+
+::ng-deep .mat-tab-body-wrapper {
+  min-height: 308px;
+}
