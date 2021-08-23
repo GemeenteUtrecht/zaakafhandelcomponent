@@ -85,7 +85,7 @@ export class AppComponent implements OnInit {
         this.currentUser = this.userService.stringifyUser(user);
 
         if (isHijacked) {
-          this.snackbarService.openSnackBar(`Je werkt nu namens ${this.currentUser}`, 'Stoppen', 'warn', 0)
+          this.snackbarService.openSnackBar(`Je werkt nu namens ${this.currentUser}`, 'Stoppen', 'accent', 0)
             .afterDismissed()
             .subscribe(this.hijackSnackBarDismissed.bind(this));
         }
