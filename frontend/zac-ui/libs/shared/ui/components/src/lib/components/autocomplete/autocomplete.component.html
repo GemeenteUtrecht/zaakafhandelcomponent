@@ -1,0 +1,46 @@
+<mat-form-field
+  [style.width.%]="fullWidth ? 100 : null"
+  appearance="outline"
+  [hideRequiredMarker]="true"
+  [floatLabel]="'always'"
+>
+  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+
+  <!--  Single selections -->
+  <input *ngIf="!multiple"
+    type="text"
+    matInput
+    [formControl]="control"
+    [required]="required"
+    [disabled]="disabled"
+    [placeholder]="placeholder"
+    [matAutocomplete]="auto"
+  >
+
+  <!--  Multiple selections -->
+  <mat-chip-list *ngIf="multiple" #chipList aria-label="{{this.label}} + selection">
+    <mat-chip
+      *ngFor="let option of options"
+      [selectable]="selectable"
+      [removable]="removable"
+      (removed)="remove(option)">
+      {{option[bindLabel]}}
+      <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+    </mat-chip>
+    <input
+      #guInput
+      [formControl]="control"
+      [required]="required"
+      [disabled]="disabled"
+      [placeholder]="placeholder"
+      [matAutocomplete]="auto"
+      [matChipInputFor]="chipList"
+      [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+      (matChipInputTokenEnd)="add($event)">
+  </mat-chip-list>
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+    <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+      {{option[bindLabel]}}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>

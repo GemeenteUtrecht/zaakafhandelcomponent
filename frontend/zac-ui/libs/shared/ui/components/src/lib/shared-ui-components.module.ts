@@ -14,6 +14,8 @@ import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatChipsModule} from '@angular/material/chips';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -41,6 +43,7 @@ import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
+import { AutocompleteComponent } from './components/autocomplete/autocomplete.component';
 import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 // Customise Material Form Fields
@@ -62,6 +65,8 @@ patchMatFormField();
         MatDatepickerModule,
         MatTabsModule,
         MatSnackBarModule,
+        MatAutocompleteModule,
+        MatChipsModule,
         MultiselectModule,
     ],
     declarations: [
@@ -87,7 +92,8 @@ patchMatFormField();
         TabComponent,
         TabGroupComponent,
         InputComponent,
-        TextareaComponent
+        TextareaComponent,
+        AutocompleteComponent
     ],
     exports: [
         ButtonComponent,
@@ -114,7 +120,8 @@ patchMatFormField();
         TabGroupComponent,
         MatTabsModule,
         InputComponent,
-        TextareaComponent
+        TextareaComponent,
+        AutocompleteComponent
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

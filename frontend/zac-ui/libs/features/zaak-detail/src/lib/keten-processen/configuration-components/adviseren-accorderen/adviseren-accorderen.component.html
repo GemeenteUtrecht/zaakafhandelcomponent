@@ -1,11 +1,19 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h2>{{taskContextData.task.name}}</h2>
+  <h2>{{taskContextData.task.name}} voor {{taskContextData.context.zaakInformatie.omschrijving}}</h2>
   <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
+
+  <p *ngIf="taskContextData.context.reviewType === 'advice'">
+    Met de gegevens hieronder kun je collega’s vragen advies te geven over jouw documenten. De collega(‘s) die jij selecteert ontvangen een mail, waarna ze opmerkingen over/in jouw document kunnen toevoegen.
+  </p>
+
+  <p *ngIf="taskContextData.context.reviewType === 'approval'">
+    Met de gegevens hieronder kun je akkoord vragen aan een collega/manager. Deze collega/manager ontvangt hiervoor een mail met een link naar de zaak.
+  </p>
 
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">
     <article class="configuration-details">
-      <label class="h4 d-inline-block">Selecteer relevante documenten</label>
-      <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
+      <label class="h4 d-inline-block">Documenten</label>
+      <p>Over welke documenten gaat het?</p>
       <div class="configuration-files">
         <div class="row pl-3">
           <div class="col-12" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
