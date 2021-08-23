@@ -20,7 +20,7 @@ export class ZaakObjectStringPipe {
    */
   transform(zaakObject: ZaakObject): string {
     return Object.entries(zaakObject.record.data)
-      .filter(([key, value]) => ['objectid'].indexOf(key.toLowerCase()) === -1)
+      .filter(([key, value]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)
       .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)
       .sort()
       .join(', ');
