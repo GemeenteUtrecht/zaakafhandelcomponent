@@ -119,7 +119,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @freeze_time("2020-12-26T12:00:00Z")
-    def test_get_zaak_detail_indexed_in_es(self, m):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_get_zaak_detail_indexed_in_es(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)

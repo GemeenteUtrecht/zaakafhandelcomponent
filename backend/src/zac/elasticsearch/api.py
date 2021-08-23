@@ -14,10 +14,17 @@ from zac.core.services import (
     get_status,
     get_statustype,
     get_zaak_eigenschappen,
+    get_zaakobjecten,
 )
 from zgw.models.zrc import Zaak
 
-from .documents import RolDocument, StatusDocument, ZaakDocument, ZaakTypeDocument
+from .documents import (
+    RolDocument,
+    StatusDocument,
+    ZaakDocument,
+    ZaakObjectDocument,
+    ZaakTypeDocument,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +49,14 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
     else:
         status_document = None
 
+    zaakobjecten = [
+        ZaakObjectDocument(
+            url=zo.url,
+            object=zo.object,
+        )
+        for zo in get_zaakobjecten(zaak)
+    ]
+
     zaak_document = ZaakDocument(
         meta={"id": zaak.uuid},
         url=zaak.url,
@@ -59,6 +74,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         deadline=zaak.deadline,
         status=status_document,
         toelichting=zaak.toelichting,
+        zaakobjecten=zaakobjecten,
     )
     zaak_document.save()
     # TODO check rollen in case of update
@@ -83,7 +99,8 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
 
     # Don't include zaaktype and identificatie since they are immutable.
-    # Don't include status as that is handled through a different handler in the notifications api.
+    # Don't include status or objecten as those are handled through a
+    # different handler in the notifications api.
     zaak_document.update(
         refresh=True,
         bronorganisatie=zaak.bronorganisatie,
@@ -158,6 +175,20 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
         )
 
     zaak_document.eigenschappen = eigenschappen_doc
+    zaak_document.save()
+
+    return
+
+
+def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
+    zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
+    zaak_document.objecten = [
+        ZaakObjectDocument(
+            url=zo.url,
+            object=zo.object,
+        )
+        for zo in get_zaakobjecten(zaak)
+    ]
     zaak_document.save()
 
     return

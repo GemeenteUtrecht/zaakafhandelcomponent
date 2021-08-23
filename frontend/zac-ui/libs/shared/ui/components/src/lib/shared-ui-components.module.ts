@@ -31,6 +31,7 @@ import {IconComponent} from './elements/icon/icon.component';
 // UI Components
 import {FileComponent} from './components/file/file.component';
 import {FileUploadComponent} from './components/file-upload/file-upload.component';
+import {FormComponent} from './components/form/form.component';
 import {SuccessComponent} from './components/success/success.component';
 import {ModalComponent} from './components/modal/modal.component';
 import {DatepickerComponent} from './components/datepicker/datepicker.component';
@@ -38,6 +39,7 @@ import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
+import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 @NgModule({
     imports: [
@@ -54,7 +56,8 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         MatCheckboxModule,
         MatDatepickerModule,
         MatTabsModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MultiselectModule,
     ],
     declarations: [
         ButtonComponent,
@@ -62,6 +65,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         CollapsibleComponent,
         FileComponent,
         FileUploadComponent,
+        FormComponent,
         LoadingIndicatorComponent,
         RadioComponent,
         TableComponent,
@@ -84,6 +88,7 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
         CollapsibleComponent,
         FileComponent,
         FileUploadComponent,
+        FormComponent,
         LoadingIndicatorComponent,
         RadioComponent,
         TableComponent,

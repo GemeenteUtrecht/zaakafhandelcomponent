@@ -63,6 +63,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}rollen",
             json={"count": 0, "previous": None, "next": None, "results": []},
         )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+        )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
@@ -153,6 +156,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
@@ -249,6 +255,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
@@ -416,6 +425,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
                 zaak_eigenschap_datum_tijd,
             ],
         )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+        )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
@@ -532,6 +544,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+        )
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
 
@@ -617,6 +632,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
         m.get(status, json=status_response)

@@ -18,7 +18,6 @@ import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail
 import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.component';
 import { ActiviteitenComponent } from './activiteiten/activiteiten.component';
 import { TabsModule } from 'ngx-bootstrap/tabs';
-import { FormModule } from './form/form.module';
 import { UserPermissionsModule } from './user-permissions/user-permissions.module';
 
 @NgModule({
@@ -29,7 +28,6 @@ import { UserPermissionsModule } from './user-permissions/user-permissions.modul
       cookieName: 'csrftoken',
       headerName: 'X-CSRFToken',
     }),
-    FormModule,
     FormsModule,
     ReactiveFormsModule,
     SharedUiComponentsModule,

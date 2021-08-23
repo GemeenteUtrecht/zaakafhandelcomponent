@@ -1,5 +1,5 @@
-<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_submit()">
-  <button gu-button class="form__edit-toggle" type="tertiary" size="extrasmall" icon="edit" (click)="toggleEdit($event)" *ngIf="editable === 'toggle'">
+<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_formSubmit()">
+  <button gu-button class="form__edit-toggle" type="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="editable === 'toggle'">
     {{edit ? 'Annuleren' : 'Bewerken' }}
   </button>
 
@@ -40,10 +40,9 @@
       ></gu-input-field>
       <!-- End regular field. -->
 
-
       <!-- Select field. -->
       <gu-multiselect
-        *ngIf="field.widgetType == 'select' && edit"
+        *ngIf="field.widgetType === 'select' && edit"
         [items]="field.choices"
         [selectedValue]="field.control.value"
         [label]="field.label"
@@ -57,8 +56,8 @@
   </fieldset>
 
   <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="primary" size="small" class="d-inline-block mr-2 mb-2" [disabled]="!formGroup.valid">
-      Opslaan
+    <button *ngIf="edit" gu-button type="primary" size="large" class="d-inline-block" [disabled]="!formGroup.valid">
+      {{buttonLabel}}
     </button>
   </footer>
 </form>

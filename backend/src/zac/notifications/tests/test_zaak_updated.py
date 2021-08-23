@@ -70,7 +70,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    def test_get_zaak_resultaat_created(self, rm, mock_zaaktype):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_get_zaak_resultaat_created(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
@@ -104,7 +105,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
                 self.assertNotEqual(rm.last_request, first_retrieve)
                 self.assertEqual(len(rm.request_history), num_calls_before + 1)
 
-    def test_zaak_updated_indexed_in_es(self, rm):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_zaak_updated_indexed_in_es(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
         path = reverse("notifications:callback")
@@ -142,7 +144,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         )
         self.assertEqual(zaak_document.meta.version, 2)
 
-    def test_zaak_with_rollen_updated_indexed_in_es(self, rm):
+    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
+    def test_zaak_with_rollen_updated_indexed_in_es(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)

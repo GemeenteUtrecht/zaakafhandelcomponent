@@ -1,3 +1,9 @@
+// Geojson
+export * from './geojson/geojson';
+export * from './geojson/provinces';
+export * from './geojson/townships';
+export * from './geojson/utrecht';
+
 // UI models
 export * from './ui/table';
 export * from './ui/file-upload';
@@ -14,3 +20,4 @@ export * from './zaken/document'
 export * from './zaken/permission'
 export * from './zaken/task'
 export * from './zaken/zaak'
+export * from './zaken/zaak-object'

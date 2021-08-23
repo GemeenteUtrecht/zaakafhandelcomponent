@@ -8,7 +8,7 @@ export class FormService {
    * @param {FieldConfiguration[]} form
    * @return {string[]}
    */
-  keysFromForm(form: Object[]): Array<string> {
+  keysFromForm(form: FieldConfiguration[]): string[] {
     return form.map((fieldConfiguration: FieldConfiguration) => this.keyFromFieldConfiguration(fieldConfiguration));
   }
 
@@ -16,7 +16,7 @@ export class FormService {
    * @param {FieldConfiguration} fieldConfiguration
    * @return {string}
    */
-  keyFromFieldConfiguration(fieldConfiguration: FieldConfiguration|Field<any>) {
+  keyFromFieldConfiguration(fieldConfiguration: FieldConfiguration|Field): string {
     return fieldConfiguration.name || fieldConfiguration.label;
   }
 
@@ -26,7 +26,7 @@ export class FormService {
    * @param {string[]} keys
    * @return {FormGroup}
    */
-  objectToFormGroup(form: Object[], keys: Array<string> = this.keysFromForm(form)): FormGroup {
+  objectToFormGroup(form: FieldConfiguration[], keys: string[] = this.keysFromForm(form)): FormGroup {
     const formControls = form
 
       // Filter FieldConfigurations on keys.
@@ -56,7 +56,7 @@ export class FormService {
    * @param {boolean} editable Whether the form is editable.
    * @return {Field}
    */
-  formGroupToFields(formGroup: FormGroup, form: Object[], keys: Array<string> = this.keysFromForm(form), editable: boolean): Array<Field<any>> {
+  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.keysFromForm(form), editable: boolean): Field[] {
     return keys
       .map(key => {
         const fieldConfiguration = this.fieldConfigurationByKey(form, key);
@@ -72,7 +72,7 @@ export class FormService {
    * @param {string} key
    * @return {FieldConfiguration}
    */
-  fieldConfigurationByKey(form, key) {
+  fieldConfigurationByKey(form: FieldConfiguration[], key: string): FieldConfiguration {
     return form.find((fieldConfiguration: FieldConfiguration) => this.keyFromFieldConfiguration(fieldConfiguration) === key);
   }
 }

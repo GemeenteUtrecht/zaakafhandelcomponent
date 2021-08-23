@@ -1,14 +1,25 @@
-import {FormControl} from "@angular/forms";
+import {AbstractControl} from '@angular/forms';
 
+/**
+ * Choices of a select field.
+ */
+export interface Choice {
+  label: string,
+  value: string,
+}
+
+/**
+ * Configuration of a field.
+ */
 export interface FieldConfiguration {
-  choices?: Array<{ label: string, value: string }>;
-  control?: FormControl;
-  name? : string;
+  choices?: Choice[];
+  control?: AbstractControl;
+  name?: string;
   label?: string;
   placeholder?: string;
-  readonly? : boolean;
+  readonly?: boolean;
   required?: boolean
-  type? : string;
+  type?: string;
   value?: string;
   writeonly?: boolean;
 }
@@ -17,13 +28,13 @@ export interface FieldConfiguration {
  * A combination of various properties that make up a form field.
  * @class
  */
-export class Field<T> {
+export class Field {
   choices: Array<Object>;
-  control: T;
-  name? : string;
+  control: AbstractControl;
+  name?: string;
   label: string;
   placeholder: string;
-  readonly? : boolean;
+  readonly?: boolean;
   required: true
   type: string;
   value: any;

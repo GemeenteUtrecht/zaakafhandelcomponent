@@ -1,6 +1,6 @@
 import {Component, Input, OnInit, OnChanges} from '@angular/core';
 import {Zaak} from '@gu/models';
-import {FieldConfiguration} from '../form/field';
+import {FieldConfiguration} from '@gu/components';
 import {InformatieService} from './informatie.service';
 import {ZaakService} from "@gu/services";
 

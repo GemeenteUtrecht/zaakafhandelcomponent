@@ -37,6 +37,11 @@
                         <gu-chip color="tertiary">{{dataRow[column.name].label}}</gu-chip>
                     </ng-container>
 
+                    <!-- Date -->
+                  <ng-container *ngSwitchCase="'date'">
+                    {{dataRow[column.name].date | date:"dd-MM-yyyy" }}
+                  </ng-container>
+
                     <!-- Icon -->
                     <ng-container *ngSwitchCase="'icon'">
                         <div class="icon-wrapper">
@@ -60,10 +65,12 @@
                            target="{{ dataRow[column.name].target || '_self' }}">{{ dataRow[column.name].label }}</a>
                     </ng-container>
 
-                    <!-- Date -->
-                  <ng-container *ngSwitchCase="'date'">
-                    {{dataRow[column.name].date | date:"dd-MM-yyyy" }}
-                  </ng-container>
+                    <!-- Table -->
+                    <ng-container *ngSwitchCase="'table'">
+                      <ng-container *ngIf="dataRow[column.name].value">
+                        <gu-table [table]="dataRow[column.name].value"></gu-table>
+                      </ng-container>
+                    </ng-container>
 
                     <!-- Text -->
                     <ng-template ngSwitchDefault>

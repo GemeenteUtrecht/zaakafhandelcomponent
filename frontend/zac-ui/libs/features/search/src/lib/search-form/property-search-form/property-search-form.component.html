@@ -1,0 +1,118 @@
+<form [formGroup]="searchForm">
+  <div class="row">
+    <div class="col-12">
+      <gu-multiselect *ngIf="zaaktypenData"
+                      [control]="zaaktype"
+                      (change)="onZaaktypeSelect($event)"
+                      [searchable]="true"
+                      [items]="zaaktypenData"
+                      [multiple]="false"
+                      bindLabel="omschrijving"
+                      bindValue="identificatie"
+                      label="Zaaktype">
+      </gu-multiselect>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 mt-4">
+      <gu-input-field type="text"
+                      [control]="omschrijving"
+                      label="Omschrijving"
+                      autocomplete="off"
+      ></gu-input-field>
+    </div>
+  </div>
+
+  <div *ngIf="zaaktypeEigenschappenData.length" class="row">
+    <div class="col-12 mt-4">
+      <gu-multiselect (change)="onPropertySelect($event)"
+                      [control]="eigenschapnaam"
+                      [searchable]="true"
+                      [items]="zaaktypeEigenschappenData"
+                      [multiple]="false"
+                      bindLabel="name"
+                      bindValue="name"
+                      label="Eigenschapnaam">
+      </gu-multiselect>
+    </div>
+  </div>
+
+  <div *ngIf="selectedPropertyValue && eigenschapnaam.value && eigenschapwaarde" class="row">
+    <div class="col-12 mt-4">
+      <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
+        <ng-container *ngSwitchCase="'string'">
+          <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date'">
+            <gu-input-field type="text"
+                            [control]="eigenschapwaarde"
+                            label="Eigenschapwaarde"
+                            autocomplete="off"
+            ></gu-input-field>
+          </ng-container>
+          <ng-container *ngIf="selectedPropertyValue.spec.format === 'date'">
+            <gu-datepicker
+              [control]="eigenschapwaarde"
+              label="Datum"
+              id="searchDatum">
+            </gu-datepicker>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngSwitchCase="'number'">
+          <gu-input-field type="number"
+                          [control]="eigenschapwaarde"
+                          label="Eigenschapwaarde"
+                          autocomplete="off"
+          ></gu-input-field>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-6 mt-4">
+      <gu-checkbox class="d-inline-block mr-1"
+                   [control]="saveReportControl"
+                   (change)="onCheckboxChange()">
+        Zoekopdracht opslaan als rapportage
+      </gu-checkbox>
+
+      <gu-tooltip type="primary" inline="true">
+        <p class="p--nomargin">De ingevulde zoekopdracht kan opgeslagen worden als een
+          <strong>rapportage</strong>.
+          Selecteer het vinkje en geef de rapportage een naam. De opgeslagen rapportage vindt u terug onder het
+          menu
+          <strong>Rapportage</strong>.</p>
+      </gu-tooltip>
+    </div>
+
+    <div *ngIf="showReportNameField" class="col-6 mt-4">
+      <gu-input-field type="text"
+                      [control]="queryNameControl"
+                      label="Rapportagenaam"
+                      autocomplete="off"
+      ></gu-input-field>
+    </div>
+  </div>
+
+  <div *ngIf="saveReportIsSuccess" class="row">
+    <div class="col-12 mt-4">
+      <gu-message class="d-block mb-4" type="success">
+        <p class="p--marginsmall">Rapportage <strong>{{reportName}}</strong> is nu opgeslagen onder het menu
+          "Rapportages".</p>
+        <a class="anchor d-inline-block" routerLink='/rapportages'>Naar Rapportages</a>
+        <gu-icon class="d-inline-block">navigate_next</gu-icon>
+      </gu-message>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 mt-4 d-flex justify-content-end">
+      <button gu-button size="large"
+              [disabled]="!searchForm.valid || isSubmitting"
+              [loading]="isSubmitting"
+              (click)="submitForm()">
+        {{showReportNameField ? 'Zoeken en rapportage opslaan' : 'Zoeken'}}
+      </button>
+    </div>
+  </div>
+</form>
