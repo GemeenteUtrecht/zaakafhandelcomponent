@@ -252,6 +252,8 @@ As you can see there are many-to-many relations between models:
 This structure helps to create unique blueprint and atomic permissions and relate users to these
 objects.
 
+.. _authorization_scim:
+
 SCIM Interface
 --------------
 
