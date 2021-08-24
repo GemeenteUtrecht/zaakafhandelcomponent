@@ -528,7 +528,14 @@ SCIM_SERVICE_PROVIDER = {
     "NETLOC": config(
         "SCIM_NETLOC", default=ALLOWED_HOSTS[0] if ALLOWED_HOSTS else "localhost"
     ),
-    "AUTHENTICATION_SCHEMES": [],
+    "AUTHENTICATION_SCHEMES": [
+        {
+            "name": "API Key",
+            "type": "apiKey",
+            "description": "Authorization header with token",
+            "documentationUrl": "https://zaakafhandelcomponent.readthedocs.io/en/latest/config.html",
+        }
+    ],
     "GROUP_ADAPTER": "zac.accounts.scim.adapters.AuthorizationProfileAdapter",
     "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
     "USER_ADAPTER": "zac.accounts.scim.adapters.UserAdapter",
