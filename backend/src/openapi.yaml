@@ -1,0 +1,5565 @@
+openapi: 3.0.3
+info:
+  title: ZAC BFF
+  version: 1.0.0
+  description: Internal backend-for-frontend API documentation.
+  contact:
+    url: https://github.com/GemeenteUtrecht/zaakafhandelcomponent
+  license:
+    name: EUPL-1.2
+paths:
+  /activities/api/activities:
+    get:
+      operationId: activities_api_activities_list
+      description: ''
+      summary: List activities
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - finished
+          - on_going
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        description: The url of the case related to the activities.
+        required: true
+      tags:
+      - activities
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+          description: ''
+    post:
+      operationId: activities_api_activities_create
+      description: ''
+      summary: Create activity
+      tags:
+      - activities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Activity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Activity'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+  /activities/api/activities/{id}:
+    get:
+      operationId: activities_api_activities_retrieve
+      description: ''
+      summary: Retrieve activity
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activiteit.
+        required: true
+      tags:
+      - activities
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+    patch:
+      operationId: activities_api_activities_partial_update
+      description: ''
+      summary: Update activity
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activiteit.
+        required: true
+      tags:
+      - activities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedActivity'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+    delete:
+      operationId: activities_api_activities_destroy
+      description: ''
+      summary: Destroy activity
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this activiteit.
+        required: true
+      tags:
+      - activities
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /activities/api/events:
+    post:
+      operationId: activities_api_events_create
+      description: ''
+      summary: Create event
+      tags:
+      - activities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/accounts/access-requests:
+    post:
+      operationId: accounts_access_requests_create
+      description: Access request for a particular zaak
+      summary: Create an access request
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAccessRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAccessRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAccessRequest'
+          description: ''
+  /api/accounts/access-requests/{id}:
+    get:
+      operationId: accounts_access_requests_retrieve
+      description: Access request for a particular zaak
+      summary: Retrieve access requests
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this access request.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessRequestDetail'
+          description: ''
+    patch:
+      operationId: accounts_access_requests_partial_update
+      description: Access request for a particular zaak
+      summary: Handle an access request
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this access request.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHandleAccessRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHandleAccessRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHandleAccessRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HandleAccessRequest'
+          description: ''
+  /api/accounts/auth-profiles:
+    get:
+      operationId: accounts_auth_profiles_list
+      description: ''
+      summary: List authorization profiles
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthProfile'
+          description: ''
+    post:
+      operationId: accounts_auth_profiles_create
+      description: ''
+      summary: Create authorization profile
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+          description: ''
+  /api/accounts/auth-profiles/{uuid}:
+    get:
+      operationId: accounts_auth_profiles_retrieve
+      description: ''
+      summary: Retrieve authorization profile
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+          description: ''
+    put:
+      operationId: accounts_auth_profiles_update
+      description: ''
+      summary: Update authorization profile
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthProfile'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthProfile'
+          description: ''
+  /api/accounts/cases/access:
+    post:
+      operationId: accounts_cases_access_create
+      description: Create and delete an atomic permission for a particular user
+      summary: Grant atomic permission to zaak
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantPermission'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrantPermission'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrantPermission'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantPermission'
+          description: ''
+  /api/accounts/cases/access/{id}:
+    get:
+      operationId: accounts_cases_access_retrieve
+      description: Create and delete an atomic permission for a particular user
+      summary: Retrieve atomic permission
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user atomic permission.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AtomicPermission'
+          description: ''
+    delete:
+      operationId: accounts_cases_access_destroy
+      description: Create and delete an atomic permission for a particular user
+      summary: Delete atomic permission
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user atomic permission.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/groups:
+    get:
+      operationId: accounts_groups_list
+      description: ''
+      summary: List user groups
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupList'
+          description: ''
+  /api/accounts/groups/{id}:
+    get:
+      operationId: accounts_groups_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this groep.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: ''
+  /api/accounts/permissions:
+    get:
+      operationId: accounts_permissions_list
+      description: Return all available permissions and their description
+      summary: List permissions
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+          description: ''
+  /api/accounts/roles:
+    get:
+      operationId: accounts_roles_list
+      description: ''
+      summary: List roles
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+    post:
+      operationId: accounts_roles_create
+      description: ''
+      summary: Create role
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Role'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Role'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/accounts/roles/{id}:
+    get:
+      operationId: accounts_roles_retrieve
+      description: ''
+      summary: Retrieve role
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this role.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    put:
+      operationId: accounts_roles_update
+      description: ''
+      summary: Update role
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this role.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Role'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Role'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/accounts/users:
+    get:
+      operationId: accounts_users_list
+      description: ''
+      summary: List user accounts
+      parameters:
+      - in: query
+        name: exclude
+        schema:
+          type: array
+          items:
+            type: string
+        description: Deprecated - please use 'exclude_username' instead.
+        explode: false
+        style: form
+      - in: query
+        name: exclude_email
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: exclude_username
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: include
+        schema:
+          type: array
+          items:
+            type: string
+        description: Deprecated - please use 'include_username' instead.
+        explode: false
+        style: form
+      - in: query
+        name: include_email
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: include_username
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+  /api/accounts/users/{id}:
+    get:
+      operationId: accounts_users_retrieve
+      description: ''
+      summary: Retrieve user account
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this gebruiker.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/accounts/users/me:
+    get:
+      operationId: accounts_users_me_retrieve
+      description: ''
+      summary: Current logged in user
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/camunda/claim-task:
+    post:
+      operationId: camunda_claim_task_create
+      description: ''
+      summary: Set task assignee or delegate
+      tags:
+      - camunda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetTaskAssignee'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetTaskAssignee'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetTaskAssignee'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          description: No response body
+  /api/camunda/fetch-process-instances:
+    get:
+      operationId: camunda_fetch_process_instances_list
+      description: |-
+        Get the Camunda process instances for a given zaak.
+
+        Retrieve the process instances where the zaak URL is matches the process
+        `zaakUrl` variable. Process instances return the available message that can be
+        sent into the process and the available user tasks. The response includes the
+        child-process instances of each matching process instance.
+      summary: List process instances for a zaak
+      parameters:
+      - in: query
+        name: zaak_url
+        schema:
+          type: string
+          format: uri
+        required: true
+      tags:
+      - camunda
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessInstance'
+          description: ''
+        '400':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/camunda/send-message:
+    post:
+      operationId: camunda_send_message_create
+      description: |-
+        Send a BPMN message into a running process instance.
+
+        Typically this will start an embedded sub process in the running process
+        instance.
+
+        Note that the available/valid messages depend on the specific process
+        definition and are validated at run-time.
+      summary: Send BPMN message
+      tags:
+      - camunda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Message'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Message'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          description: No response body
+        '403':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/camunda/task-data/{task_id}:
+    get:
+      operationId: camunda_task_data_retrieve
+      description: |-
+        Get the user task context from Camunda and perform the user task on Camunda.
+
+        Given the task ID, retrieve the task details from Camunda and enrich this with
+        context for the UI. The shape of the context depends on the ``form`` value.
+      summary: Retrieve user task data and context
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - camunda
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTaskContext'
+          description: ''
+        '403':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    put:
+      operationId: camunda_task_data_update
+      description: |-
+        Submit user task data for Camunda user tasks.
+
+        The exact shape of the data depends on the Camunda task type. On succesful,
+        valid submission, the user task in Camunda is completed and the resulting
+        process variables are set.
+
+        The ZAC always injects its own ``bptlAppId`` process variable so that BPTL
+        executes tasks from the right context.
+
+        This endpoint is only available if you have permissions to perform user tasks.
+      summary: Submit user task data
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - camunda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitUserTask'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubmitUserTask'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitUserTask'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          description: No response body
+        '400':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '500':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}:
+    get:
+      operationId: core_cases_retrieve
+      description: ''
+      summary: Retrieve case details
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakDetail'
+          description: ''
+        '403':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+          description: ''
+    patch:
+      operationId: core_cases_partial_update
+      description: ''
+      summary: Update case details
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateZaakDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateZaakDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateZaakDetail'
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          description: No response body
+        '403':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionDenied'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/atomic-permissions:
+    get:
+      operationId: core_cases_atomic_permissions_list
+      description: ''
+      summary: List case users and atomic permissions
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAtomicPermission'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/document:
+    post:
+      operationId: core_cases_document_create
+      description: Upload a document to the Documenten API and relate it to a case.
+      summary: Add document to case
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddZaakDocument'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetZaakDocument'
+          description: ''
+    patch:
+      operationId: core_cases_document_partial_update
+      description: Patch an already uploaded document on the Documenten API.
+      summary: Edit case document
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateZaakDocument'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetZaakDocument'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/documents:
+    get:
+      operationId: core_cases_documents_retrieve
+      description: ''
+      summary: List case documents
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetZaakDocument'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/objects:
+    get:
+      operationId: core_cases_objects_retrieve
+      description: ''
+      summary: List related objects of a case
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakObjectGroup'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/properties:
+    get:
+      operationId: core_cases_properties_retrieve
+      description: ''
+      summary: List case properties (eigenschappen)
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakEigenschap'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/related-cases:
+    get:
+      operationId: core_cases_related_cases_retrieve
+      description: ''
+      summary: List related cases
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatedZaak'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/roles:
+    get:
+      operationId: core_cases_roles_retrieve
+      description: ''
+      summary: List case roles
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rol'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/statuses:
+    get:
+      operationId: core_cases_statuses_retrieve
+      description: ''
+      summary: List case statussen
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakStatus'
+          description: ''
+    post:
+      operationId: core_cases_statuses_create
+      description: ''
+      summary: Add case status
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZaakStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ZaakStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ZaakStatus'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakStatus'
+          description: ''
+  /api/core/cases/related-case:
+    post:
+      operationId: core_cases_related_case_create
+      description: ''
+      summary: Add related zaak
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddZaakRelation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddZaakRelation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddZaakRelation'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddZaakRelation'
+          description: ''
+  /api/core/document-types:
+    get:
+      operationId: core_document_types_list
+      description: |-
+        List the available document types for a given zaak.
+
+        TODO: permissions checks on zaak - can this user read/mutate the zaak?
+      summary: List document types
+      parameters:
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        description: Zaak to list available document types for
+        required: true
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InformatieObjectType'
+          description: ''
+  /api/core/eigenschappen:
+    get:
+      operationId: core_eigenschappen_list
+      description: |-
+        List the available eigenschappen for a given zaaktype.
+
+        Given the `zaaktype_omschrijving`, all versions of the matching zaaktype are
+        considered. Returns the eigenschappen available for the aggregated set of zaaktype
+        versions.
+
+        Note that only the zaaktypen that the authenticated user has read-permissions for
+        are considered.
+      summary: List zaaktype eigenschappen
+      parameters:
+      - in: query
+        name: catalogus
+        schema:
+          type: string
+          format: uri
+          description: Url reference of related CATALOGUS
+        description: Url reference of related CATALOGUS
+        required: true
+      - in: query
+        name: zaaktype_omschrijving
+        schema:
+          type: string
+          description: Description of ZAAKTYPE, used as an aggregator of different
+            versions of ZAAKTYPE
+        description: Description of ZAAKTYPE, used as an aggregator of different versions
+          of ZAAKTYPE
+        required: true
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchEigenschap'
+          description: ''
+  /api/core/objects:
+    post:
+      operationId: core_objects_create
+      description: Search for objects in the Objects API
+      summary: Search objects
+      tags:
+      - objects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectFilterProxy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ObjectFilterProxy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ObjectFilterProxy'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectProxy'
+          description: ''
+  /api/core/objecttypes:
+    get:
+      operationId: core_objecttypes_list
+      description: Retrieves all object types from the configured Objecttypes API.
+      summary: List objecttypes
+      tags:
+      - objects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjecttypeProxy'
+          description: ''
+  /api/core/objecttypes/{uuid}/versions/{version}:
+    get:
+      operationId: core_objecttypes_versions_retrieve
+      description: Read the details of a particular objecttype version
+      summary: Read objecttype version
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: integer
+        required: true
+      tags:
+      - objects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjecttypeVersionProxy'
+          description: ''
+  /api/core/statustypes:
+    get:
+      operationId: core_statustypes_retrieve
+      description: List the available statustypen for the zaak.
+      summary: List statustypes
+      parameters:
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        description: Zaak to list available statustypes for
+        required: true
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusType'
+          description: ''
+  /api/core/vertrouwelijkheidsaanduidingen:
+    get:
+      operationId: core_vertrouwelijkheidsaanduidingen_list
+      description: List the available confidentiality classification.
+      summary: List confidentiality classifications
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VertrouwelijkheidsAanduiding'
+          description: ''
+  /api/core/zaakobjects:
+    post:
+      operationId: core_zaakobjects_create
+      description: Relate an object to a zaak
+      summary: Create zaakobject
+      tags:
+      - objects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZaakObjectProxy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ZaakObjectProxy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ZaakObjectProxy'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakObjectProxy'
+          description: ''
+  /api/core/zaaktypen:
+    get:
+      operationId: core_zaaktypen_list
+      description: |-
+        List a collection of zaaktypen available to the end user.
+
+        Different versions of the same zaaktype are aggregated. Only the zaaktypen that
+        the authenticated user has read-permissions for are returned.
+      summary: List zaaktypen
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+          description: '`icontains` on `omschrijving` field'
+        description: '`icontains` on `omschrijving` field'
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedZaakTypeAggregateList'
+          description: ''
+  /api/dowc/{bronorganisatie}/{identificatie}/{purpose}:
+    post:
+      operationId: dowc_create
+      description: Create a dowc object in the dowc API and expose the document through
+        a URL.
+      summary: Open document for viewing or editing
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: purpose
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: versie
+        schema:
+          type: string
+          format: uri
+        description: Version of the document.
+      tags:
+      - dowc
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DowcResponse'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DowcResponse'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DowcResponse'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DowcResponse'
+          description: ''
+  /api/dowc/{dowc_uuid}/:
+    delete:
+      operationId: dowc_destroy
+      description: |-
+        Delete the dowc object in the dowc API. This implies that the dowc will
+        attempt to patch the document in the DRC API.
+      summary: Finalize opened document
+      parameters:
+      - in: path
+        name: dowc_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - dowc
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fdowc.utrechtproeftuin.nl%2Fapi%2Fv1#/components/schemas/UnlockedDocument
+          description: ''
+  /api/forms/:
+    get:
+      operationId: forms_list
+      description: ''
+      tags:
+      - forms
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Form'
+          description: ''
+  /api/kownsl/review-requests/{request_uuid}/advice:
+    get:
+      operationId: kownsl_review_requests_advice_retrieve
+      description: |-
+        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+        and post their advice/approval to the kownsl component.
+
+        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
+      summary: Retrieve advice review request
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KownslReviewRequest'
+          description: ''
+    post:
+      operationId: kownsl_review_requests_advice_create
+      description: |-
+        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+        and post their advice/approval to the kownsl component.
+
+        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
+      summary: Register advice for review request
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.utrechtproeftuin.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/requestBody/content/application%2Fjson/schema
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.utrechtproeftuin.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/responses/201/content/application%2Fjson/schema
+          description: ''
+  /api/kownsl/review-requests/{request_uuid}/approval:
+    get:
+      operationId: kownsl_review_requests_approval_retrieve
+      description: |-
+        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+        and post their advice/approval to the kownsl component.
+
+        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
+      summary: Retrieve approval review request
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KownslReviewRequest'
+          description: ''
+    post:
+      operationId: kownsl_review_requests_approval_create
+      description: |-
+        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
+        and post their advice/approval to the kownsl component.
+
+        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
+      summary: Register approval for review request
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.utrechtproeftuin.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/requestBody/content/application%2Fjson/schema
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.utrechtproeftuin.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/responses/201/content/application%2Fjson/schema
+          description: ''
+  /api/kownsl/zaak-review-requests/{bronorganisatie}/{identificatie}/summary:
+    get:
+      operationId: kownsl_zaak_review_requests_summary_list
+      description: ''
+      summary: List review requests summary for a case
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - kownsl
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ZaakRevReqSummary'
+          description: ''
+  /api/kownsl/zaak-review-requests/{request_uuid}/detail:
+    get:
+      operationId: kownsl_zaak_review_requests_detail_retrieve
+      description: ''
+      summary: Retrieve review request details
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakRevReqDetail'
+          description: ''
+  /api/search/reports/:
+    get:
+      operationId: search_reports_list
+      description: ''
+      summary: Retrieve a list of search reports
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchReport'
+          description: ''
+    post:
+      operationId: search_reports_create
+      description: ''
+      summary: Create a search report
+      tags:
+      - search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchReport'
+          description: ''
+  /api/search/reports/{id}/:
+    get:
+      operationId: search_reports_retrieve
+      description: ''
+      summary: Retrieve a search report
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this search report.
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchReport'
+          description: ''
+    put:
+      operationId: search_reports_update
+      description: ''
+      summary: Update a search report
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this search report.
+        required: true
+      tags:
+      - search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SearchReport'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchReport'
+          description: ''
+    patch:
+      operationId: search_reports_partial_update
+      description: ''
+      summary: Partially update a search report
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this search report.
+        required: true
+      tags:
+      - search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSearchReport'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSearchReport'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSearchReport'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchReport'
+          description: ''
+    delete:
+      operationId: search_reports_destroy
+      description: ''
+      summary: Destroy a search report
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this search report.
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/search/reports/{id}/results/:
+    get:
+      operationId: search_reports_results
+      description: ''
+      summary: Retrieve the results of a search report
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this search report.
+        required: true
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - bronorganisatie
+          - deadline
+          - einddatum
+          - identificatie
+          - omschrijving
+          - registratiedatum
+          - rollen.betrokkene_identificatie.identificatie
+          - rollen.betrokkene_type
+          - rollen.omschrijving_generiek
+          - rollen.url
+          - startdatum
+          - status.datum_status_gezet
+          - status.statustoelichting
+          - status.statustype
+          - status.url
+          - toelichting
+          - url
+          - va_order
+          - vertrouwelijkheidaanduiding
+          - zaaktype.catalogus
+          - zaaktype.omschrijving
+          - zaaktype.url
+        description: Possible ordering parameters. Multiple values are possible and
+          should be separated by a comma.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page of paginated response.
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedZaakDocumentList'
+          description: ''
+  /api/search/zaken:
+    post:
+      operationId: search_zaken_create
+      description: |-
+        Retrieve a list of zaken based on input data.
+        The response contains only zaken the user has permissions to see.
+      summary: Search zaken
+      parameters:
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - bronorganisatie
+          - deadline
+          - einddatum
+          - identificatie
+          - omschrijving
+          - registratiedatum
+          - rollen.betrokkene_identificatie.identificatie
+          - rollen.betrokkene_type
+          - rollen.omschrijving_generiek
+          - rollen.url
+          - startdatum
+          - status.datum_status_gezet
+          - status.statustoelichting
+          - status.statustype
+          - status.url
+          - toelichting
+          - url
+          - va_order
+          - vertrouwelijkheidaanduiding
+          - zaaktype.catalogus
+          - zaaktype.omschrijving
+          - zaaktype.url
+        description: Possible ordering parameters. Multiple values are possible and
+          should be separated by a comma.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page of paginated response.
+      tags:
+      - search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Search'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedZaakDocumentList'
+          description: ''
+  /api/search/zaken/autocomplete:
+    get:
+      operationId: search_zaken_autocomplete_list
+      description: Retrieve a list of zaken based on autocomplete search.
+      summary: Autocomplete search zaken
+      parameters:
+      - in: query
+        name: identificatie
+        schema:
+          type: string
+        description: Enter a (part) of the zaak identification you wish to find, case
+          insensitive.
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Zaak'
+          description: ''
+  /api/workstack/access-requests:
+    get:
+      operationId: workstack_access_requests_list
+      description: ''
+      summary: List access requests
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkStackAccessRequests'
+          description: ''
+  /api/workstack/activities:
+    get:
+      operationId: workstack_activities_list
+      description: ''
+      summary: List adhoc activities
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkStackAdhocActivities'
+          description: ''
+  /api/workstack/cases:
+    get:
+      operationId: workstack_cases_list
+      description: ''
+      summary: List active cases
+      parameters:
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - bronorganisatie
+          - deadline
+          - einddatum
+          - identificatie
+          - omschrijving
+          - registratiedatum
+          - rollen.betrokkene_identificatie.identificatie
+          - rollen.betrokkene_type
+          - rollen.omschrijving_generiek
+          - rollen.url
+          - startdatum
+          - status.datum_status_gezet
+          - status.statustoelichting
+          - status.statustype
+          - status.url
+          - toelichting
+          - url
+          - va_order
+          - vertrouwelijkheidaanduiding
+          - zaaktype.catalogus
+          - zaaktype.omschrijving
+          - zaaktype.url
+        description: Possible ordering parameters. Multiple values are possible and
+          should be separated by a comma.
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ZaakDetail'
+          description: ''
+  /api/workstack/user-tasks:
+    get:
+      operationId: workstack_user_tasks_list
+      description: ''
+      summary: List user tasks
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays if the user is hijacked.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkStackTask'
+          description: ''
+components:
+  schemas:
+    AardRelatieEnum:
+      enum:
+      - vervolg
+      - bijdrage
+      - onderwerp
+      type: string
+    AccessRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        requester:
+          type: string
+          description: Username of access requester/grantee
+      required:
+      - id
+      - requester
+    AccessRequestDetail:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        requester:
+          type: string
+          description: Username of access requester/grantee
+        handler:
+          type: string
+          readOnly: true
+          description: Username of access handler/granter
+        zaak:
+          allOf:
+          - $ref: '#/components/schemas/ZaakShort'
+          description: Zaak to request access for
+        comment:
+          type: string
+          title: Toelichting
+          description: Comment provided by the requester
+          maxLength: 1000
+        result:
+          title: Resultaat
+          description: Result of the access request
+          oneOf:
+          - $ref: '#/components/schemas/ResultEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        requestedDate:
+          type: string
+          format: date
+          description: Date when the access request was created
+        handledDate:
+          type: string
+          format: date
+          nullable: true
+          title: Verloopdatum
+          description: Date when the access request was handled
+      required:
+      - handler
+      - requester
+      - url
+      - zaak
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        zaak:
+          type: string
+          format: uri
+          title: Zaak-URL
+          description: URL-referentie naar de zaak in de API
+          maxLength: 1000
+        name:
+          type: string
+          title: Naam
+          maxLength: 100
+        remarks:
+          type: string
+          title: Opmerkingen
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        assignee:
+          type: string
+        document:
+          type: string
+          format: uri
+          title: Document-URL
+          description: Document in de Documtenten API.
+          maxLength: 1000
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          readOnly: true
+      required:
+      - created
+      - events
+      - id
+      - name
+      - url
+      - zaak
+    ActivityName:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Naam
+          maxLength: 100
+      required:
+      - name
+    AddZaakDocument:
+      type: object
+      properties:
+        beschrijving:
+          type: string
+        file:
+          type: string
+        informatieobjecttype:
+          type: string
+          format: uri
+        zaak:
+          type: string
+          format: uri
+          description: URL of the case.
+      required:
+      - file
+      - informatieobjecttype
+      - zaak
+    AddZaakRelation:
+      type: object
+      properties:
+        relationZaak:
+          type: string
+          format: uri
+        aardRelatie:
+          $ref: '#/components/schemas/AardRelatieEnum'
+        mainZaak:
+          type: string
+          format: uri
+      required:
+      - aardRelatie
+      - mainZaak
+      - relationZaak
+    Advice:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Author'
+          description: Author of review.
+        advice:
+          type: string
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdviceDocument'
+          title: advice documents
+          description: Documents relevant to the advice.
+      required:
+      - advice
+      - author
+      - created
+      - documents
+    AdviceApprovalContext:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentUserTask'
+        title:
+          type: string
+        zaakInformatie:
+          $ref: '#/components/schemas/ZaakInformatieTask'
+        reviewType:
+          $ref: '#/components/schemas/ReviewTypeEnum'
+      required:
+      - documents
+      - reviewType
+      - title
+      - zaakInformatie
+    AdviceApprovalTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/AdviceApprovalContext'
+          nullable: true
+          title: User task context
+          description: The task context shape depends on the `form` property. The
+            value will be `null` if the backend does not 'know' the user task `formKey`.
+      required:
+      - context
+    AdviceDocument:
+      type: object
+      properties:
+        adviceUrl:
+          type: string
+          readOnly: true
+          description: URL that points to the advice version of the document on the
+            DoWC.
+        adviceVersion:
+          type: integer
+          description: The version of the document after advice is given.
+        sourceUrl:
+          type: string
+          readOnly: true
+          description: URL that points to the advice version of the document on the
+            DoWC.
+        sourceVersion:
+          type: integer
+          description: The version of the document before advice is given
+        title:
+          type: string
+          description: The name of the document.
+      required:
+      - adviceUrl
+      - adviceVersion
+      - sourceUrl
+      - sourceVersion
+      - title
+    AdviceReviews:
+      type: object
+      properties:
+        advices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advice'
+      required:
+      - advices
+    Approval:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Author'
+          description: Author of review.
+        status:
+          type: string
+          readOnly: true
+          description: Status of approval.
+        toelichting:
+          type: string
+      required:
+      - author
+      - created
+      - status
+      - toelichting
+    ApprovalReviews:
+      type: object
+      properties:
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Approval'
+      required:
+      - approvals
+    AssigneeTypeEnum:
+      enum:
+      - user
+      - group
+      type: string
+    AtomicPermission:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        requester:
+          type: string
+          description: User to give the permission to
+        permission:
+          type: string
+          default: zaken:inzien
+          description: Name of the permission
+          maxLength: 255
+        zaak:
+          type: string
+          format: uri
+          description: URL of the zaak this permission applies to
+          maxLength: 1000
+        startDate:
+          type: string
+          format: date-time
+          title: Startdatum
+          description: Start date of the permission
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          title: Verloopdatum
+          description: End date of the permission
+        comment:
+          type: string
+          title: Toelichting
+          description: Comment provided by the granter of the permission
+          maxLength: 1000
+        reason:
+          allOf:
+          - $ref: '#/components/schemas/ReasonEnum'
+          readOnly: true
+          description: The reason why the permission was granted to the user
+      required:
+      - id
+      - reason
+      - requester
+      - zaak
+    AuthProfile:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Naam
+          description: Gebruik een herkenbare naam die overeenkomt met de functie
+            van gebruikers.
+          maxLength: 255
+        blueprintPermissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupBlueprint'
+          description: List of blueprint permissions
+      required:
+      - blueprintPermissions
+      - name
+      - url
+      - uuid
+    Author:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        username:
+          type: string
+      required:
+      - firstName
+      - lastName
+      - username
+    BetrokkeneIdentificatie:
+      type: object
+      properties:
+        identificatie:
+          type: string
+    BetrokkeneTypeEnum:
+      enum:
+      - natuurlijk_persoon
+      - niet_natuurlijk_persoon
+      - vestiging
+      - organisatorische_eenheid
+      - medewerker
+      type: string
+    BlankEnum:
+      enum:
+      - ''
+    Boolean:
+      type: object
+      properties:
+        value:
+          type: boolean
+          nullable: true
+          title: Field value
+          description: Current or default value.
+      required:
+      - value
+    CharValue:
+      type: object
+      properties:
+        value:
+          type: string
+          title: property value
+      required:
+      - value
+    ConfigureReviewRequest:
+      type: object
+      description: |-
+        This serializes configure review requests such as
+        advice and approval review requests.
+
+        Must have a ``task`` and ``request`` in its ``context``.
+      properties:
+        assignedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectUsersRevReq'
+        selectedDocuments:
+          type: array
+          items:
+            type: string
+            format: uri
+          title: Selecteer de relevante documenten
+          description: Dit zijn de documenten die bij de zaak horen. Selecteer de
+            relevante documenten.
+        toelichting:
+          type: string
+      required:
+      - assignedUsers
+      - selectedDocuments
+      - toelichting
+    CreateAccessRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        zaak:
+          allOf:
+          - $ref: '#/components/schemas/ZaakShort'
+          description: Zaak to request access for
+        comment:
+          type: string
+          title: Toelichting
+          description: Comment provided by the requester
+          maxLength: 1000
+        requester:
+          type: string
+          readOnly: true
+          description: Username of access requester/grantee
+      required:
+      - requester
+      - url
+      - zaak
+    DateTimeValue:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date-time
+          title: property value
+      required:
+      - value
+    DateValue:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date
+          title: property value
+      required:
+      - value
+    Datetime:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date-time
+          nullable: true
+          title: Field value
+          description: Current or default value.
+      required:
+      - value
+    Document:
+      type: object
+      properties:
+        beschrijving:
+          type: string
+        bestandsnaam:
+          type: string
+        bestandsomvang:
+          type: integer
+        documentType:
+          type: string
+        readUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document read URL
+          description: The document read URL that allows a document to be opened by
+            the MS Office WebDAV client.
+        url:
+          type: string
+        versie:
+          type: integer
+      required:
+      - beschrijving
+      - bestandsnaam
+      - bestandsomvang
+      - documentType
+      - readUrl
+      - url
+      - versie
+    DocumentSelectContext:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+        informatieobjecttypen:
+          type: array
+          items:
+            $ref: '#/components/schemas/InformatieObjectType'
+      required:
+      - documents
+      - informatieobjecttypen
+    DocumentSelectTask:
+      type: object
+      description: |-
+        Serializes the selected documents for the task.
+
+        Requires ``task`` to be in serializer ``context``.
+      properties:
+        selectedDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedDocument'
+      required:
+      - selectedDocuments
+    DocumentSelectTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/DocumentSelectContext'
+          nullable: true
+          title: User task context
+          description: The task context shape depends on the `form` property. The
+            value will be `null` if the backend does not 'know' the user task `formKey`.
+      required:
+      - context
+    DocumentUserTask:
+      type: object
+      properties:
+        beschrijving:
+          type: string
+        bestandsnaam:
+          type: string
+        readUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document read URL
+          description: The document read URL that allows a document to be opened by
+            the MS Office WebDAV client.
+        url:
+          type: string
+      required:
+      - beschrijving
+      - bestandsnaam
+      - readUrl
+      - url
+    DowcResponse:
+      type: object
+      properties:
+        drcUrl:
+          type: string
+        purpose:
+          type: string
+          readOnly: true
+        magicUrl:
+          type: string
+          readOnly: true
+        deleteUrl:
+          type: string
+          readOnly: true
+          title: deletion url
+          description: A DELETE request to this URL will update, if necessary, and
+            delete the resource.
+      required:
+      - deleteUrl
+      - drcUrl
+      - magicUrl
+      - purpose
+    DynamicForm:
+      type: object
+      properties:
+        formFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormField'
+          readOnly: true
+      required:
+      - formFields
+    DynamicFormTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/DynamicForm'
+          nullable: true
+          title: User task context
+          description: The task context shape depends on the `form` property. The
+            value will be `null` if the backend does not 'know' the user task `formKey`.
+      required:
+      - context
+    Eigenschap:
+      type: object
+      properties:
+        url:
+          type: string
+        naam:
+          type: string
+        toelichting:
+          type: string
+        specificatie:
+          allOf:
+          - $ref: '#/components/schemas/EigenschapSpecificatie'
+          title: property definition
+      required:
+      - naam
+      - specificatie
+      - toelichting
+      - url
+    EigenschapDocument:
+      type: object
+      properties:
+        tekst:
+          type: string
+        getal:
+          type: string
+          format: decimal
+          pattern: ^\d{0,8}(\.\d{0,2})?$
+        datum:
+          type: string
+          format: date
+        datumTijd:
+          type: string
+          format: date-time
+    EigenschapSpecificatie:
+      type: object
+      properties:
+        groep:
+          type: string
+        formaat:
+          allOf:
+          - $ref: '#/components/schemas/FormaatEnum'
+          title: data type
+        lengte:
+          type: string
+        kardinaliteit:
+          type: string
+        waardenverzameling:
+          type: array
+          items:
+            type: string
+      required:
+      - formaat
+      - groep
+      - kardinaliteit
+      - lengte
+      - waardenverzameling
+    Enum:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+          title: Field value
+          description: Current or default value.
+        enum:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+            title: Possible enum choice
+            description: First element is the value, second element is the label.
+          title: Possible enum choices
+      required:
+      - enum
+      - value
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        activity:
+          type: integer
+        notes:
+          type: string
+          title: Opmerkingen
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+      required:
+      - activity
+      - created
+      - id
+      - notes
+    FieldsEnum:
+      enum:
+      - url
+      - zaaktype.url
+      - zaaktype.catalogus
+      - zaaktype.omschrijving
+      - identificatie
+      - bronorganisatie
+      - omschrijving
+      - vertrouwelijkheidaanduiding
+      - va_order
+      - rollen.url
+      - rollen.betrokkene_type
+      - rollen.omschrijving_generiek
+      - rollen.betrokkene_identificatie.identificatie
+      - startdatum
+      - einddatum
+      - registratiedatum
+      - deadline
+      - status.url
+      - status.statustype
+      - status.datum_status_gezet
+      - status.statustoelichting
+      - toelichting
+      type: string
+    Form:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        layouts:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - layouts
+      - name
+      - slug
+    FormEnum:
+      enum:
+      - zac:doRedirect
+      - zac:documentSelectie
+      - zac:configureAdviceRequest
+      - zac:configureApprovalRequest
+      - zac:validSign:configurePackage
+      type: string
+    FormField:
+      oneOf:
+      - $ref: '#/components/schemas/FormFieldInt'
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldBoolean'
+      discriminator:
+        propertyName: inputType
+        mapping:
+          enum: '#/components/schemas/FormFieldEnum'
+          string: '#/components/schemas/FormFieldString'
+          int: '#/components/schemas/FormFieldInt'
+          boolean: '#/components/schemas/FormFieldBoolean'
+          date: '#/components/schemas/FormFieldDatetime'
+    FormFieldBoolean:
+      allOf:
+      - $ref: '#/components/schemas/FormFieldShared'
+      - $ref: '#/components/schemas/Boolean'
+    FormFieldDatetime:
+      allOf:
+      - $ref: '#/components/schemas/FormFieldShared'
+      - $ref: '#/components/schemas/Datetime'
+    FormFieldEnum:
+      allOf:
+      - $ref: '#/components/schemas/FormFieldShared'
+      - $ref: '#/components/schemas/Enum'
+    FormFieldInt:
+      allOf:
+      - $ref: '#/components/schemas/FormFieldShared'
+      - $ref: '#/components/schemas/Int'
+    FormFieldShared:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Field name/identifier
+        label:
+          type: string
+          title: Field label
+          description: Human-readable field title. Defaults to `name` property if
+            not provided.
+        inputType:
+          allOf:
+          - $ref: '#/components/schemas/InputTypeEnum'
+          title: Input data type
+      required:
+      - inputType
+      - label
+      - name
+    FormFieldString:
+      allOf:
+      - $ref: '#/components/schemas/FormFieldShared'
+      - $ref: '#/components/schemas/String'
+    FormaatEnum:
+      enum:
+      - tekst
+      - getal
+      - datum
+      - datum_tijd
+      type: string
+    GenericObject:
+      type: object
+      description: Generic object
+      additionalProperties: true
+    GetZaakDocument:
+      type: object
+      properties:
+        auteur:
+          type: string
+        beschrijving:
+          type: string
+        bestandsnaam:
+          type: string
+        bestandsomvang:
+          type: integer
+          description: File size in bytes
+        currentUserIsEditing:
+          type: boolean
+          nullable: true
+          readOnly: true
+        identificatie:
+          type: string
+        informatieobjecttype:
+          $ref: '#/components/schemas/InformatieObjectType'
+        locked:
+          type: boolean
+        readUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document read URL
+          description: The document read URL that allows a document to be opened by
+            the MS Office WebDAV client.
+        titel:
+          type: string
+        url:
+          type: string
+        versie:
+          type: integer
+        vertrouwelijkheidaanduiding:
+          type: string
+        writeUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document write URL
+          description: The document write URL that allows a document to be opened
+            by the MS Office WebDAV client.
+      required:
+      - auteur
+      - beschrijving
+      - bestandsnaam
+      - bestandsomvang
+      - currentUserIsEditing
+      - identificatie
+      - informatieobjecttype
+      - locked
+      - readUrl
+      - titel
+      - url
+      - versie
+      - vertrouwelijkheidaanduiding
+      - writeUrl
+    GrantPermission:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        requester:
+          type: string
+          description: User to give the permission to
+        permission:
+          type: string
+          default: zaken:inzien
+          description: Name of the permission
+          maxLength: 255
+        zaak:
+          type: string
+          format: uri
+          description: URL of the zaak this permission applies to
+          maxLength: 1000
+        startDate:
+          type: string
+          format: date-time
+          title: Startdatum
+          description: Start date of the permission
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          title: Verloopdatum
+          description: End date of the permission
+        comment:
+          type: string
+          title: Toelichting
+          description: Comment provided by the granter of the permission
+          maxLength: 1000
+        reason:
+          allOf:
+          - $ref: '#/components/schemas/ReasonEnum'
+          readOnly: true
+          description: The reason why the permission was granted to the user
+      required:
+      - id
+      - reason
+      - requester
+      - zaak
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Naam
+          maxLength: 150
+        fullName:
+          type: string
+          readOnly: true
+          description: Human readable name that identifies the group.
+      required:
+      - fullName
+      - id
+      - name
+    GroupBlueprint:
+      oneOf:
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesSearchReportBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      discriminator:
+        propertyName: objectType
+        mapping:
+          search_report: '#/components/schemas/GroupBlueprintPoliciesSearchReportBlueprint'
+          zaak: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
+          document: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+    GroupBlueprintPoliciesInformatieObjectTypeBlueprint:
+      allOf:
+      - $ref: '#/components/schemas/GroupBlueprintShared'
+      - $ref: '#/components/schemas/PoliciesInformatieObjectTypeBlueprint'
+    GroupBlueprintPoliciesSearchReportBlueprint:
+      allOf:
+      - $ref: '#/components/schemas/GroupBlueprintShared'
+      - $ref: '#/components/schemas/PoliciesSearchReportBlueprint'
+    GroupBlueprintPoliciesZaakTypeBlueprint:
+      allOf:
+      - $ref: '#/components/schemas/GroupBlueprintShared'
+      - $ref: '#/components/schemas/PoliciesZaakTypeBlueprint'
+    GroupBlueprintShared:
+      type: object
+      description: polymorhic fields are grouped into one particular field
+      properties:
+        role:
+          type: integer
+          description: Name of the role
+        objectType:
+          allOf:
+          - $ref: '#/components/schemas/ObjectTypeEnum'
+          description: Type of the permission object
+      required:
+      - objectType
+      - role
+    HandleAccessRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        requester:
+          type: string
+          readOnly: true
+          description: Username of access requester/grantee
+        handler:
+          type: string
+          readOnly: true
+          description: Username of access handler/granter
+        result:
+          allOf:
+          - $ref: '#/components/schemas/ResultEnum'
+          title: Resultaat
+          description: Result of the access request
+        handlerComment:
+          type: string
+          description: Comment of the handler
+        startDate:
+          type: string
+          format: date
+          description: Start date of the access
+        endDate:
+          type: string
+          format: date
+          description: End date of the access
+      required:
+      - handler
+      - requester
+      - url
+    InformatieObjectType:
+      type: object
+      properties:
+        url:
+          type: string
+        omschrijving:
+          type: string
+      required:
+      - omschrijving
+      - url
+    InformatieObjectTypeBlueprint:
+      type: object
+      description: class to validate and manage blueprint permissions
+      properties:
+        catalogus:
+          type: string
+          format: uri
+          description: Catalog where informatieobjecttypen are located
+        iotypeOmschrijving:
+          type: string
+          description: Informatieobjecttype to which the connected permission applies
+            to
+          maxLength: 100
+        maxVa:
+          allOf:
+          - $ref: '#/components/schemas/MaxVaEnum'
+          description: Maximum confidential level of the informatieobject
+      required:
+      - catalogus
+      - iotypeOmschrijving
+      - maxVa
+    InputTypeEnum:
+      enum:
+      - enum
+      - string
+      - int
+      - boolean
+      - date
+      type: string
+    Int:
+      type: object
+      properties:
+        value:
+          type: integer
+          nullable: true
+          title: Field value
+          description: Current or default value.
+      required:
+      - value
+    KownslReviewRequest:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.utrechtproeftuin.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Buuid%7D/get/responses/200/content/application%2Fjson/schema
+      - $ref: '#/components/schemas/KownslReviewRequestExtras'
+    KownslReviewRequestExtras:
+      type: object
+      properties:
+        zaak:
+          $ref: '#/components/schemas/Zaak'
+      required:
+      - zaak
+    MaxVaEnum:
+      enum:
+      - openbaar
+      - beperkt_openbaar
+      - intern
+      - zaakvertrouwelijk
+      - vertrouwelijk
+      - confidentieel
+      - geheim
+      - zeer_geheim
+      type: string
+    Message:
+      type: object
+      properties:
+        processInstanceId:
+          type: string
+          format: uuid
+          description: The ID of the process instance where the message is sent to.
+        message:
+          title: Bericht
+          description: The message that is sent to the process instance.
+          oneOf:
+          - $ref: '#/components/schemas/MessageEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+      required:
+      - message
+      - processInstanceId
+    MessageEnum:
+      enum: []
+      type: string
+    NumberValue:
+      type: object
+      properties:
+        value:
+          type: string
+          format: decimal
+          pattern: ^\d{0,98}(\.\d{0,2})?$
+          title: property value
+      required:
+      - value
+    ObjectFilterProxy:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.utrechtproeftuin.nl%2Fapi%2Fv1%2Fschema%2Fopenapi.yaml#/paths/%2Fobjects%2Fsearch/post/requestBody/content/application%2Fjson/schema
+      - $ref: '#/components/schemas/ObjectFilterProxyExtras'
+    ObjectFilterProxyExtras:
+      type: object
+    ObjectProxy:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.utrechtproeftuin.nl%2Fapi%2Fv1%2Fschema%2Fopenapi.yaml#/components/schemas/Object
+      - $ref: '#/components/schemas/ObjectProxyExtras'
+    ObjectProxyExtras:
+      type: object
+    ObjectTypeEnum:
+      enum:
+      - zaak
+      - document
+      - search_report
+      type: string
+    ObjecttypeProxy:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.utrechtproeftuin.nl%2Fapi%2Fv1%2Fschema%2Fopenapi.yaml#/components/schemas/ObjectType
+      - $ref: '#/components/schemas/ObjecttypeProxyExtras'
+    ObjecttypeProxyExtras:
+      type: object
+    ObjecttypeVersionProxy:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.utrechtproeftuin.nl%2Fapi%2Fv1%2Fschema%2Fopenapi.yaml#/components/schemas/ObjectVersion
+      - $ref: '#/components/schemas/ObjecttypeVersionProxyExtras'
+    ObjecttypeVersionProxyExtras:
+      type: object
+    PaginatedGroupList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    PaginatedUserList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PaginatedZaakDocumentList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakDocument'
+        fields:
+          type: array
+          items: string
+          nullable: false
+          default:
+          - url
+          - zaaktype.url
+          - zaaktype.catalogus
+          - zaaktype.omschrijving
+          - identificatie
+          - bronorganisatie
+          - omschrijving
+          - vertrouwelijkheidaanduiding
+          - va_order
+          - rollen.url
+          - rollen.betrokkene_type
+          - rollen.omschrijving_generiek
+          - rollen.betrokkene_identificatie.identificatie
+          - startdatum
+          - einddatum
+          - registratiedatum
+          - deadline
+          - status.url
+          - status.statustype
+          - status.datum_status_gezet
+          - status.statustoelichting
+          - toelichting
+    PaginatedZaakTypeAggregateList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakTypeAggregate'
+    PatchedActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        zaak:
+          type: string
+          format: uri
+          title: Zaak-URL
+          description: URL-referentie naar de zaak in de API
+          maxLength: 1000
+        name:
+          type: string
+          title: Naam
+          maxLength: 100
+        remarks:
+          type: string
+          title: Opmerkingen
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        assignee:
+          type: string
+        document:
+          type: string
+          format: uri
+          title: Document-URL
+          description: Document in de Documtenten API.
+          maxLength: 1000
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          readOnly: true
+    PatchedHandleAccessRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        requester:
+          type: string
+          readOnly: true
+          description: Username of access requester/grantee
+        handler:
+          type: string
+          readOnly: true
+          description: Username of access handler/granter
+        result:
+          allOf:
+          - $ref: '#/components/schemas/ResultEnum'
+          title: Resultaat
+          description: Result of the access request
+        handlerComment:
+          type: string
+          description: Comment of the handler
+        startDate:
+          type: string
+          format: date
+          description: Start date of the access
+        endDate:
+          type: string
+          format: date
+          description: End date of the access
+    PatchedSearchReport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Naam
+          maxLength: 100
+        query:
+          $ref: '#/components/schemas/Search'
+    PatchedUpdateZaakDetail:
+      type: object
+      properties:
+        einddatum:
+          type: string
+          format: date
+        einddatumGepland:
+          type: string
+          format: date
+        omschrijving:
+          type: string
+        reden:
+          type: string
+          description: Reason for the edit, used in audit trail.
+        toelichting:
+          type: string
+        uiterlijkeEinddatumAfdoening:
+          type: string
+          format: date
+        vertrouwelijkheidaanduiding:
+          allOf:
+          - $ref: '#/components/schemas/VertrouwelijkheidaanduidingEnum'
+          description: The confidentiality level of the case.
+    PatchedUpdateZaakDocument:
+      type: object
+      properties:
+        beschrijving:
+          type: string
+        file:
+          type: string
+        reden:
+          type: string
+          nullable: true
+          description: Reason for the edit, used in audit trail.
+        url:
+          type: string
+          format: uri
+          description: URL of document
+        vertrouwelijkheidaanduiding:
+          allOf:
+          - $ref: '#/components/schemas/VertrouwelijkheidaanduidingEnum'
+          description: Confidentiality classification.
+        zaak:
+          type: string
+          format: uri
+          description: URL of the case.
+    Permission:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the permission
+          maxLength: 100
+        description:
+          type: string
+          description: Description of the permission
+      required:
+      - description
+      - name
+    PermissionDenied:
+      type: object
+      properties:
+        canRequestAccess:
+          type: boolean
+          description: Boolean indicating if the user can request access for the zaak
+        reason:
+          type: string
+          description: Reason why the user can't request access for the zaak
+          maxLength: 1000
+      required:
+      - canRequestAccess
+      - reason
+    PermissionsEnum:
+      enum:
+      - zaken:inzien
+      - zaken:wijzigen
+      - zaakproces:usertasks-uitvoeren
+      - zaakproces:send-bpmn-message
+      - zaken:afsluiten
+      - zaken:set-result
+      - zaken:create-status
+      - zaken:download-documents
+      - zaken:update-documents
+      - zaken:add-documents
+      - zaken:toegang-verlenen
+      - zaken:toegang-aanvragen
+      - zaken:nieuwe-relaties-toevoegen
+      type: string
+    PoliciesInformatieObjectTypeBlueprint:
+      type: object
+      properties:
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/InformatieObjectTypeBlueprint'
+          description: List of blueprint shapes
+      required:
+      - policies
+    PoliciesSearchReportBlueprint:
+      type: object
+      properties:
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchReportBlueprint'
+          description: List of blueprint shapes
+      required:
+      - policies
+    PoliciesZaakTypeBlueprint:
+      type: object
+      properties:
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakTypeBlueprint'
+          description: List of blueprint shapes
+      required:
+      - policies
+    ProcessInstance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        definitionId:
+          type: string
+          maxLength: 1000
+        title:
+          type: string
+          maxLength: 100
+        messages:
+          type: array
+          items:
+            type: string
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+      required:
+      - definitionId
+      - id
+      - messages
+      - tasks
+      - title
+    ReasonEnum:
+      enum:
+      - betrokkene
+      - toegang verlenen
+      - activiteit
+      - adviseur
+      - accordeur
+      type: string
+    RedirectContext:
+      type: object
+      properties:
+        redirectTo:
+          type: string
+        openInNewWindow:
+          type: boolean
+      required:
+      - openInNewWindow
+      - redirectTo
+    RedirectTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/RedirectContext'
+          nullable: true
+          title: User task context
+          description: The task context shape depends on the `form` property. The
+            value will be `null` if the backend does not 'know' the user task `formKey`.
+      required:
+      - context
+    RelatedZaak:
+      type: object
+      properties:
+        aardRelatie:
+          type: string
+        zaak:
+          $ref: '#/components/schemas/RelatedZaakDetail'
+      required:
+      - aardRelatie
+      - zaak
+    RelatedZaakDetail:
+      type: object
+      properties:
+        url:
+          type: string
+        identificatie:
+          type: string
+        bronorganisatie:
+          type: string
+        zaaktype:
+          $ref: '#/components/schemas/ZaakType'
+        omschrijving:
+          type: string
+        toelichting:
+          type: string
+        registratiedatum:
+          type: string
+          format: date
+        startdatum:
+          type: string
+          format: date
+        einddatum:
+          type: string
+          format: date
+        einddatumGepland:
+          type: string
+          format: date
+        uiterlijkeEinddatumAfdoening:
+          type: string
+          format: date
+        vertrouwelijkheidaanduiding:
+          type: string
+        deadline:
+          type: string
+          format: date
+          readOnly: true
+        deadlineProgress:
+          type: number
+          format: float
+          readOnly: true
+          title: Progress towards deadline
+          description: Value between 0-100, representing a percentage. 100 means the
+            deadline has been reached or exceeded.
+        resultaat:
+          $ref: '#/components/schemas/Resultaat'
+        status:
+          $ref: '#/components/schemas/ZaakStatus'
+      required:
+      - bronorganisatie
+      - deadline
+      - deadlineProgress
+      - einddatum
+      - einddatumGepland
+      - identificatie
+      - omschrijving
+      - registratiedatum
+      - resultaat
+      - startdatum
+      - status
+      - toelichting
+      - uiterlijkeEinddatumAfdoening
+      - url
+      - vertrouwelijkheidaanduiding
+      - zaaktype
+    ResultEnum:
+      enum:
+      - approve
+      - reject
+      type: string
+    Resultaat:
+      type: object
+      properties:
+        url:
+          type: string
+        resultaattype:
+          $ref: '#/components/schemas/ResultaatType'
+        toelichting:
+          type: string
+      required:
+      - resultaattype
+      - toelichting
+      - url
+    ResultaatType:
+      type: object
+      properties:
+        url:
+          type: string
+        omschrijving:
+          type: string
+      required:
+      - omschrijving
+      - url
+    ReviewTypeEnum:
+      enum:
+      - advice
+      - approval
+      type: string
+    Rol:
+      type: object
+      properties:
+        url:
+          type: string
+        betrokkeneType:
+          $ref: '#/components/schemas/BetrokkeneTypeEnum'
+        betrokkeneTypeDisplay:
+          type: string
+        omschrijving:
+          type: string
+        omschrijvingGeneriek:
+          type: string
+        roltoelichting:
+          type: string
+        registratiedatum:
+          type: string
+          format: date-time
+        name:
+          type: string
+        identificatie:
+          type: string
+      required:
+      - betrokkeneType
+      - betrokkeneTypeDisplay
+      - identificatie
+      - name
+      - omschrijving
+      - omschrijvingGeneriek
+      - registratiedatum
+      - roltoelichting
+      - url
+    RolDocument:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        betrokkeneType:
+          type: string
+        omschrijvingGeneriek:
+          type: string
+        betrokkeneIdentificatie:
+          $ref: '#/components/schemas/BetrokkeneIdentificatie'
+      required:
+      - betrokkeneType
+      - omschrijvingGeneriek
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Naam
+          description: Name of the role
+          maxLength: 100
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionsEnum'
+          description: List of the permissions
+      required:
+      - id
+      - name
+      - permissions
+    Search:
+      type: object
+      properties:
+        identificatie:
+          type: string
+          description: Unique identifier of ZAAK within `bronorganisatie`
+        zaaktype:
+          allOf:
+          - $ref: '#/components/schemas/SearchZaaktype'
+          description: Properties to identify ZAAKTYPEn
+        omschrijving:
+          type: string
+          description: Brief description of ZAAK
+        eigenschappen:
+          type: object
+          additionalProperties: {}
+          description: 'ZAAK-EIGENSCHAPpen in format `<property name>:{''value'':
+            <property value>}`'
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldsEnum'
+          default:
+          - bronorganisatie
+          - deadline
+          - einddatum
+          - identificatie
+          - omschrijving
+          - registratiedatum
+          - rollen.betrokkene_identificatie.identificatie
+          - rollen.betrokkene_type
+          - rollen.omschrijving_generiek
+          - rollen.url
+          - startdatum
+          - status.datum_status_gezet
+          - status.statustoelichting
+          - status.statustype
+          - status.url
+          - toelichting
+          - url
+          - va_order
+          - vertrouwelijkheidaanduiding
+          - zaaktype.catalogus
+          - zaaktype.omschrijving
+          - zaaktype.url
+          description: Fields that will be returned with the search results. Default
+            returns all fields. Will always include <identificatie>.
+        includeClosed:
+          type: boolean
+          default: false
+          description: Include closed ZAKEN.
+    SearchEigenschap:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of EIGENSCHAP
+        spec:
+          allOf:
+          - $ref: '#/components/schemas/SearchEigenschapSpecificatie'
+          title: property definition
+          description: JSON schema-ish specification of related ZAAK-EIGENSCHAP values
+      required:
+      - name
+      - spec
+    SearchEigenschapSpecificatie:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          description: According to JSON schema date values have `string` type
+        format:
+          type: string
+          description: Used to differentiate `date` and `date-time` values from other
+            strings
+        minLength:
+          type: integer
+          description: Only for strings
+        maxLength:
+          type: integer
+          description: Only for strings
+        enum:
+          type: array
+          items: {}
+          description: An array of possible values
+      required:
+      - type
+    SearchReport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Naam
+          maxLength: 100
+        query:
+          $ref: '#/components/schemas/Search'
+      required:
+      - id
+      - name
+      - query
+    SearchReportBlueprint:
+      type: object
+      description: class to validate and manage blueprint permissions
+      properties:
+        zaaktypen:
+          type: array
+          items:
+            type: string
+          description: List of identifications of zaaktypen to which permission is
+            granted.
+      required:
+      - zaaktypen
+    SearchZaaktype:
+      type: object
+      properties:
+        omschrijving:
+          type: string
+          description: Description of ZAAKTYPE, used as an aggregator of different
+            versions of ZAAKTYPE
+        catalogus:
+          type: string
+          format: uri
+          description: Url reference of related CATALOGUS
+      required:
+      - catalogus
+      - omschrijving
+    SelectUsersRevReq:
+      type: object
+      description: |-
+        Select users and assign deadlines to those users in the configuration of
+        review requests such as the advice and approval review requests.
+      properties:
+        users:
+          type: array
+          items:
+            type: string
+        deadline:
+          type: string
+          format: date
+      required:
+      - deadline
+      - users
+    SelectedDocument:
+      type: object
+      properties:
+        document:
+          type: string
+          format: uri
+          title: Selected document
+          description: The URL of the selected document from the relevant case.
+        documentType:
+          type: string
+          format: uri
+          title: Selected document type
+          description: The URL of the selected document type.
+      required:
+      - document
+      - documentType
+    SetTaskAssignee:
+      type: object
+      properties:
+        task:
+          type: string
+          format: uuid
+          title: Task ID
+          description: The ID of the task to which the assignee/delegate is to be
+            set.
+        assignee:
+          type: string
+          title: verantwoordelijke
+          description: Assignee of the task.
+        delegate:
+          type: string
+          description: Delegate of the task.
+      required:
+      - assignee
+      - delegate
+      - task
+    StatusDocument:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        statustype:
+          type: string
+        datumStatusGezet:
+          type: string
+          format: date-time
+        statustoelichting:
+          type: string
+    StatusEnum:
+      enum:
+      - on_going
+      - finished
+      type: string
+    StatusType:
+      type: object
+      properties:
+        url:
+          type: string
+        omschrijving:
+          type: string
+          readOnly: true
+        omschrijvingGeneriek:
+          type: string
+          readOnly: true
+        statustekst:
+          type: string
+          readOnly: true
+        volgnummer:
+          type: integer
+          readOnly: true
+        isEindstatus:
+          type: boolean
+          readOnly: true
+      required:
+      - isEindstatus
+      - omschrijving
+      - omschrijvingGeneriek
+      - statustekst
+      - url
+      - volgnummer
+    String:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+          title: Field value
+          description: Current or default value.
+      required:
+      - value
+    SubmitUserTask:
+      oneOf:
+      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
+      discriminator:
+        propertyName: form
+        mapping:
+          ? ''
+          : '#/components/schemas/SubmitUserTaskGenericObject'
+          zac:documentSelectie: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
+          zac:configureAdviceRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+          zac:configureApprovalRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+          zac:validSign:configurePackage: '#/components/schemas/SubmitUserTaskValidSignTask'
+    SubmitUserTaskConfigureReviewRequest:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/ConfigureReviewRequest'
+    SubmitUserTaskDocumentSelectTask:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/DocumentSelectTask'
+    SubmitUserTaskGenericObject:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/GenericObject'
+    SubmitUserTaskShared:
+      type: object
+      properties:
+        form:
+          title: Form to render
+          description: The form key of the form to render. Note that unknown form
+            keys (= not present in the enum) will be returned as is.
+          oneOf:
+          - $ref: '#/components/schemas/FormEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+      required:
+      - form
+    SubmitUserTaskValidSignTask:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/ValidSignTask'
+    Task:
+      oneOf:
+      - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
+      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      discriminator:
+        propertyName: assigneeType
+        mapping:
+          user: '#/components/schemas/TaskTaskAssigneeUser'
+          group: '#/components/schemas/TaskTaskAssigneeGroup'
+          ? ''
+          : '#/components/schemas/TaskTaskAssigneeFallback'
+    TaskAssigneeFallback:
+      type: object
+      properties:
+        assignee:
+          type: string
+          default: ''
+    TaskAssigneeGroup:
+      type: object
+      properties:
+        assignee:
+          $ref: '#/components/schemas/Group'
+      required:
+      - assignee
+    TaskAssigneeUser:
+      type: object
+      properties:
+        assignee:
+          $ref: '#/components/schemas/User'
+      required:
+      - assignee
+    TaskShared:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        created:
+          type: string
+          format: date-time
+        hasForm:
+          type: boolean
+        assigneeType:
+          description: The assignee type that was assigned to the user task.
+          oneOf:
+          - $ref: '#/components/schemas/AssigneeTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+      required:
+      - assigneeType
+      - created
+      - hasForm
+      - id
+      - name
+    TaskTaskAssigneeFallback:
+      allOf:
+      - $ref: '#/components/schemas/TaskShared'
+      - $ref: '#/components/schemas/TaskAssigneeFallback'
+    TaskTaskAssigneeGroup:
+      allOf:
+      - $ref: '#/components/schemas/TaskShared'
+      - $ref: '#/components/schemas/TaskAssigneeGroup'
+    TaskTaskAssigneeUser:
+      allOf:
+      - $ref: '#/components/schemas/TaskShared'
+      - $ref: '#/components/schemas/TaskAssigneeUser'
+    TypeEnum:
+      enum:
+      - string
+      - number
+      type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: Gebruikersnaam
+          description: Required. 150 characters or fewer.
+          maxLength: 150
+        firstName:
+          type: string
+          title: Voornaam
+          maxLength: 255
+        fullName:
+          type: string
+        lastName:
+          type: string
+          title: Achternaam
+          maxLength: 255
+        isStaff:
+          type: boolean
+          title: Stafstatus
+          description: Bepaalt of de gebruiker zich op deze beheerwebsite kan aanmelden.
+        email:
+          type: string
+          format: email
+          title: E-mailadres
+          maxLength: 254
+        groups:
+          type: array
+          items:
+            type: string
+      required:
+      - fullName
+      - groups
+      - id
+      - username
+    UserAtomicPermission:
+      type: object
+      properties:
+        username:
+          type: string
+          title: Gebruikersnaam
+          description: Required. 150 characters or fewer.
+          maxLength: 150
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AtomicPermission'
+          description: Atomic permissions for the case
+      required:
+      - permissions
+      - username
+    UserTaskContext:
+      oneOf:
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
+      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      discriminator:
+        propertyName: form
+        mapping:
+          ? ''
+          : '#/components/schemas/UserTaskContextDynamicFormTaskData'
+          zac:doRedirect: '#/components/schemas/UserTaskContextRedirectTaskData'
+          zac:documentSelectie: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+          zac:configureAdviceRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+          zac:configureApprovalRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+          zac:validSign:configurePackage: '#/components/schemas/UserTaskContextValidSignTaskData'
+    UserTaskContextAdviceApprovalTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/AdviceApprovalTaskData'
+    UserTaskContextDocumentSelectTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/DocumentSelectTaskData'
+    UserTaskContextDynamicFormTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/DynamicFormTaskData'
+    UserTaskContextRedirectTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/RedirectTaskData'
+    UserTaskContextShared:
+      type: object
+      properties:
+        form:
+          title: Form to render
+          description: The form key of the form to render. Note that unknown form
+            keys (= not present in the enum) will be returned as is.
+          oneOf:
+          - $ref: '#/components/schemas/FormEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        task:
+          allOf:
+          - $ref: '#/components/schemas/Task'
+          title: User task summary
+      required:
+      - form
+      - task
+    UserTaskContextValidSignTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/ValidSignTaskData'
+    ValidSignContext:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+      required:
+      - documents
+    ValidSignTask:
+      type: object
+      description: |-
+        Serialize assigned users and selected documents.
+        Must have a ``task`` in its ``context``.
+      properties:
+        selectedDocuments:
+          type: array
+          items:
+            type: string
+            format: uri
+          title: Selecteer de relevante documenten
+          description: Dit zijn de documenten die bij de zaak horen. Selecteer de
+            relevante documenten.
+        assignedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidSignUser'
+      required:
+      - assignedUsers
+      - selectedDocuments
+    ValidSignTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/ValidSignContext'
+          nullable: true
+          title: User task context
+          description: The task context shape depends on the `form` property. The
+            value will be `null` if the backend does not 'know' the user task `formKey`.
+      required:
+      - context
+    ValidSignUser:
+      type: object
+      properties:
+        username:
+          type: string
+          title: gebruikersnaam
+          description: Username of signer.
+        email:
+          type: string
+          format: email
+          title: e-mailadres
+          description: Email of signer.
+        firstName:
+          type: string
+          title: voornaam
+          description: First name of signer.
+        lastName:
+          type: string
+          title: achternaam
+          description: Last name of signer.
+    VertrouwelijkheidaanduidingEnum:
+      enum:
+      - openbaar
+      - beperkt_openbaar
+      - intern
+      - zaakvertrouwelijk
+      - vertrouwelijk
+      - confidentieel
+      - geheim
+      - zeer_geheim
+      type: string
+    VertrouwelijkheidsAanduiding:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Human readable label of classication
+        value:
+          type: string
+          description: Value of classication
+      required:
+      - label
+      - value
+    WorkStackAccessRequests:
+      type: object
+      properties:
+        accessRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessRequest'
+        zaak:
+          $ref: '#/components/schemas/Zaak'
+      required:
+      - accessRequests
+      - zaak
+    WorkStackAdhocActivities:
+      type: object
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityName'
+        zaak:
+          $ref: '#/components/schemas/Zaak'
+      required:
+      - activities
+      - zaak
+    WorkStackTask:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/Task'
+        zaak:
+          $ref: '#/components/schemas/Zaak'
+      required:
+      - task
+      - zaak
+    Zaak:
+      type: object
+      properties:
+        identificatie:
+          type: string
+        bronorganisatie:
+          type: string
+        url:
+          type: string
+          format: uri
+      required:
+      - bronorganisatie
+      - identificatie
+      - url
+    ZaakDetail:
+      type: object
+      properties:
+        url:
+          type: string
+        identificatie:
+          type: string
+        bronorganisatie:
+          type: string
+        zaaktype:
+          $ref: '#/components/schemas/ZaakType'
+        omschrijving:
+          type: string
+        toelichting:
+          type: string
+        registratiedatum:
+          type: string
+          format: date
+        startdatum:
+          type: string
+          format: date
+        einddatum:
+          type: string
+          format: date
+        einddatumGepland:
+          type: string
+          format: date
+        uiterlijkeEinddatumAfdoening:
+          type: string
+          format: date
+        vertrouwelijkheidaanduiding:
+          type: string
+        deadline:
+          type: string
+          format: date
+          readOnly: true
+        deadlineProgress:
+          type: number
+          format: float
+          readOnly: true
+          title: Progress towards deadline
+          description: Value between 0-100, representing a percentage. 100 means the
+            deadline has been reached or exceeded.
+        resultaat:
+          $ref: '#/components/schemas/Resultaat'
+      required:
+      - bronorganisatie
+      - deadline
+      - deadlineProgress
+      - einddatum
+      - einddatumGepland
+      - identificatie
+      - omschrijving
+      - registratiedatum
+      - resultaat
+      - startdatum
+      - toelichting
+      - uiterlijkeEinddatumAfdoening
+      - url
+      - vertrouwelijkheidaanduiding
+      - zaaktype
+    ZaakDocument:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        zaaktype:
+          $ref: '#/components/schemas/ZaakTypeDocument'
+        identificatie:
+          type: string
+        bronorganisatie:
+          type: string
+        omschrijving:
+          type: string
+        vertrouwelijkheidaanduiding:
+          type: string
+        vaOrder:
+          type: integer
+        rollen:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolDocument'
+        startdatum:
+          type: string
+          format: date-time
+        einddatum:
+          type: string
+          format: date-time
+        registratiedatum:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        eigenschappen:
+          type: array
+          items:
+            $ref: '#/components/schemas/EigenschapDocument'
+        status:
+          $ref: '#/components/schemas/StatusDocument'
+        toelichting:
+          type: string
+      required:
+      - bronorganisatie
+    ZaakEigenschap:
+      oneOf:
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
+      discriminator:
+        propertyName: formaat
+        mapping:
+          tekst: '#/components/schemas/ZaakEigenschapCharValue'
+          getal: '#/components/schemas/ZaakEigenschapNumberValue'
+          datum: '#/components/schemas/ZaakEigenschapDateValue'
+          datum_tijd: '#/components/schemas/ZaakEigenschapDateTimeValue'
+    ZaakEigenschapCharValue:
+      allOf:
+      - $ref: '#/components/schemas/ZaakEigenschapShared'
+      - $ref: '#/components/schemas/CharValue'
+    ZaakEigenschapDateTimeValue:
+      allOf:
+      - $ref: '#/components/schemas/ZaakEigenschapShared'
+      - $ref: '#/components/schemas/DateTimeValue'
+    ZaakEigenschapDateValue:
+      allOf:
+      - $ref: '#/components/schemas/ZaakEigenschapShared'
+      - $ref: '#/components/schemas/DateValue'
+    ZaakEigenschapNumberValue:
+      allOf:
+      - $ref: '#/components/schemas/ZaakEigenschapShared'
+      - $ref: '#/components/schemas/NumberValue'
+    ZaakEigenschapShared:
+      type: object
+      properties:
+        url:
+          type: string
+        formaat:
+          allOf:
+          - $ref: '#/components/schemas/FormaatEnum'
+          readOnly: true
+          title: Data type of the value
+          description: Matches `eigenschap.specificatie.formaat` - used as API schema
+            discriminator.
+        eigenschap:
+          $ref: '#/components/schemas/Eigenschap'
+      required:
+      - eigenschap
+      - formaat
+      - url
+    ZaakInformatieTask:
+      type: object
+      properties:
+        omschrijving:
+          type: string
+        toelichting:
+          type: string
+      required:
+      - omschrijving
+      - toelichting
+    ZaakObjectGroup:
+      type: object
+      properties:
+        objectType:
+          type: string
+        label:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: Collection of object-type specific items. The schema is determined
+            by the usptream API(s). See `zac.core.zaakobjecten` for the available
+            implementations.
+      required:
+      - items
+      - label
+      - objectType
+    ZaakObjectProxy:
+      allOf:
+      - $ref: /api/_get-remote-schema/?schema=https%3A%2F%2Fopenzaak.utrechtproeftuin.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/ZaakObject
+      - $ref: '#/components/schemas/ZaakObjectProxyExtras'
+    ZaakObjectProxyExtras:
+      type: object
+    ZaakRevReqDetail:
+      oneOf:
+      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      discriminator:
+        propertyName: reviewType
+        mapping:
+          advice: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
+          approval: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+    ZaakRevReqDetailAdviceReviews:
+      allOf:
+      - $ref: '#/components/schemas/ZaakRevReqDetailShared'
+      - $ref: '#/components/schemas/AdviceReviews'
+    ZaakRevReqDetailApprovalReviews:
+      allOf:
+      - $ref: '#/components/schemas/ZaakRevReqDetailShared'
+      - $ref: '#/components/schemas/ApprovalReviews'
+    ZaakRevReqDetailShared:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The uuid of the review request.
+        reviewType:
+          allOf:
+          - $ref: '#/components/schemas/ReviewTypeEnum'
+          description: The review type.
+      required:
+      - id
+      - reviewType
+    ZaakRevReqSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reviewType:
+          type: string
+        completed:
+          type: integer
+          readOnly: true
+          title: completed requests
+          description: The number of completed requests.
+        numAssignedUsers:
+          type: integer
+      required:
+      - completed
+      - id
+      - numAssignedUsers
+      - reviewType
+    ZaakShort:
+      type: object
+      properties:
+        url:
+          type: string
+          readOnly: true
+        identificatie:
+          type: string
+        bronorganisatie:
+          type: string
+      required:
+      - bronorganisatie
+      - identificatie
+      - url
+    ZaakStatus:
+      type: object
+      properties:
+        url:
+          type: string
+          readOnly: true
+        datumStatusGezet:
+          type: string
+          format: date-time
+          readOnly: true
+        statustoelichting:
+          type: string
+        statustype:
+          $ref: '#/components/schemas/StatusType'
+      required:
+      - datumStatusGezet
+      - statustoelichting
+      - statustype
+      - url
+    ZaakType:
+      type: object
+      properties:
+        url:
+          type: string
+        catalogus:
+          type: string
+        omschrijving:
+          type: string
+        versiedatum:
+          type: string
+          format: date
+      required:
+      - catalogus
+      - omschrijving
+      - url
+      - versiedatum
+    ZaakTypeAggregate:
+      type: object
+      properties:
+        omschrijving:
+          type: string
+          description: Description of ZAAKTYPE, used as an aggregator of different
+            versions of ZAAKTYPE
+        identificatie:
+          type: string
+          description: Identifier of ZAAKTYPE, different ZAAKTYPE versions can share
+            the same identifier
+        catalogus:
+          type: string
+          format: uri
+          description: Url reference of related CATALOGUS
+      required:
+      - catalogus
+      - identificatie
+      - omschrijving
+    ZaakTypeBlueprint:
+      type: object
+      description: class to validate and manage blueprint permissions
+      properties:
+        catalogus:
+          type: string
+          format: uri
+          description: Catalog where zaaktypen are located
+        zaaktypeOmschrijving:
+          type: string
+          description: Zaaktype to which the connected permission applies to
+          maxLength: 100
+        maxVa:
+          allOf:
+          - $ref: '#/components/schemas/MaxVaEnum'
+          description: Omvat Zaken tot en met deze vertrouwelijkheidaanduiding.
+      required:
+      - catalogus
+      - maxVa
+      - zaaktypeOmschrijving
+    ZaakTypeDocument:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        catalogus:
+          type: string
+        omschrijving:
+          type: string
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Session
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
+externalDocs:
+  url: https://zaakafhandelcomponent.readthedocs.io/
