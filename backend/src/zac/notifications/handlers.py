@@ -18,7 +18,9 @@ from zac.core.services import (
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
+    create_status_document,
     create_zaak_document,
+    create_zaaktype_document,
     delete_zaak_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
@@ -79,7 +81,10 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
         # index in ES
-        create_zaak_document(zaak)
+        zaak_document = create_zaak_document(zaak)
+        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
+        zaak_document.status = create_status_document(zaak.status)
+        zaak_document.save()
 
     def _handle_zaak_destroy(self, zaak_url: str):
         Activity.objects.filter(zaak=zaak_url).delete()
