@@ -16,6 +16,7 @@ urlpatterns = [
     path("core/", include("zac.core.urls")),
     path("contrib/", include("zac.contrib.kadaster.urls")),
     path("activities/", include("zac.activities.urls")),
+    path("scim/v2/", include("zac.accounts.scim.urls")),
 ]
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie. no need to run collectstatic). Both the static

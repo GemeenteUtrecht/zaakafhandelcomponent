@@ -35,6 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     Use the built-in user model.
     """
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -86,6 +87,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             models.UniqueConstraint(
                 fields=["email"], condition=~Q(email=""), name="filled_email_unique"
             )
+        ]
+        permissions = [
+            ("use_scim", _("Can use the SCIM endpoints")),
         ]
 
     def get_full_name(self):

@@ -133,6 +133,7 @@ INSTALLED_APPS = [
     "compat",  # Part of hijack
     "hijack_admin",
     "django_better_admin_arrayfield",
+    "django_scim",
     # Project applications.
     "zac.elasticsearch",
     "zac.accounts",
@@ -159,6 +160,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "zac.accounts.scim.middleware.SCIMAuthMiddleware",
+    "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.accounts.middleware.HijackMiddleware",
@@ -518,3 +521,24 @@ ELASTICSEARCH_DSL = {
     "default": {"hosts": config("ES_HOST", "localhost:9200")},
 }
 ES_INDEX_ZAKEN = "zaken"
+
+
+# SCIM
+SCIM_SERVICE_PROVIDER = {
+    "NETLOC": config(
+        "SCIM_NETLOC", default=ALLOWED_HOSTS[0] if ALLOWED_HOSTS else "localhost"
+    ),
+    "AUTHENTICATION_SCHEMES": [
+        {
+            "name": "API Key",
+            "type": "apiKey",
+            "description": "Authorization header with token",
+            "documentationUrl": "https://zaakafhandelcomponent.readthedocs.io/en/latest/config.html",
+        }
+    ],
+    "GROUP_ADAPTER": "zac.accounts.scim.adapters.AuthorizationProfileAdapter",
+    "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
+    "USER_ADAPTER": "zac.accounts.scim.adapters.UserAdapter",
+    "GROUP_FILTER_PARSER": "zac.accounts.scim.filters.AuthorizationProfileFilterQuery",
+    "WWW_AUTHENTICATE_HEADER": "Token",
+}
