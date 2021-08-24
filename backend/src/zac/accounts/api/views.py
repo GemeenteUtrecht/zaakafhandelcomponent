@@ -5,8 +5,8 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import views
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
+from zac.core.api.mixins import ListMixin
 from zac.core.services import get_informatieobjecttypen
 
 from ..permissions import registry
@@ -44,16 +44,14 @@ class InformatieobjecttypenJSONView(views.APIView):
         return JsonResponse(response_data)
 
 
-class PermissionView(views.APIView):
+@extend_schema(
+    summary=_("List permissions"),
+    description=_("Return all available permissions and their description"),
+)
+class PermissionView(ListMixin, views.APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = PermissionSerializer
 
-    @extend_schema(
-        summary=_("List permissions"), responses={200: serializer_class(many=True)}
-    )
-    def get(self, request):
-        """Return all available permissions and their description"""
-        permissions = list(registry.values())
-        serializer = self.serializer_class(permissions, many=True)
-        return Response(serializer.data)
+    def get_objects(self):
+        return list(registry.values())
