@@ -1,16 +1,51 @@
+from django.contrib.auth.models import Permission
+
 from freezegun import freeze_time
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from zac.accounts.models import User
-from zac.accounts.tests.factories import AuthorizationProfileFactory, SuperUserFactory
+from ...models import User
+from ...tests.factories import (
+    AuthorizationProfileFactory,
+    SuperUserFactory,
+    UserFactory,
+)
 
 
 class AuthorizationProfileSCIMTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.user = UserFactory.create()
+        cls.token = Token.objects.create(user=cls.user)
+        permission = Permission.objects.get(
+            codename="use_scim", content_type__app_label="accounts"
+        )
+        cls.user.user_permissions.add(permission)
+
     def test_user_authenticated(self):
         response = self.client.get("/scim/v2/Groups")
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_token_auth(self):
+        response = self.client.get(
+            "/scim/v2/Groups", HTTP_AUTHORIZATION=f"Token {self.token.key}"
+        )
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+    def test_token_auth_without_required_permission(self):
+        user = UserFactory.create()
+        token = Token.objects.create(user=user)
+
+        response = self.client.get(
+            "/scim/v2/Groups", HTTP_AUTHORIZATION=f"Token {token.key}"
+        )
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
 
     def test_get_auth_profile(self):
         user = SuperUserFactory.create(

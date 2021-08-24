@@ -87,6 +87,9 @@ class User(AbstractBaseUser, PermissionsMixin):
                 fields=["email"], condition=~Q(email=""), name="filled_email_unique"
             )
         ]
+        permissions = [
+            ("use_scim", _("Can use the SCIM endpoints")),
+        ]
 
     def get_full_name(self):
         """

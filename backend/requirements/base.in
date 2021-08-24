@@ -24,6 +24,7 @@ django-better-admin-arrayfield
 django-camunda
 django-choices
 django-cors-headers
+django-decorator-include
 django-extra-views
 django-filter
 django-hijack

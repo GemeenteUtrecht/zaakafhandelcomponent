@@ -85,6 +85,8 @@ django-compat==1.0.15
     #   django-hijack-admin
 django-cors-headers==3.5.0
     # via -r requirements/base.txt
+django-decorator-include==3.0
+    # via -r requirements/base.txt
 django-extra-views==0.13.0
     # via -r requirements/base.txt
 django-filter==2.3.0
@@ -129,6 +131,7 @@ django==2.2.24
     #   django-camunda
     #   django-choices
     #   django-cors-headers
+    #   django-decorator-include
     #   django-extra-views
     #   django-filter
     #   django-import-export

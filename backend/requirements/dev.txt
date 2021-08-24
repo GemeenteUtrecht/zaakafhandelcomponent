@@ -104,6 +104,8 @@ django-cors-headers==3.5.0
     # via -r requirements/ci.txt
 django-debug-toolbar==3.2.1
     # via -r requirements/dev.in
+django-decorator-include==3.0
+    # via -r requirements/ci.txt
 django-elasticsearch-debug-toolbar==2.0.0
     # via -r requirements/dev.in
 django-extensions==2.1.6
@@ -154,6 +156,7 @@ django==2.2.24
     #   django-choices
     #   django-cors-headers
     #   django-debug-toolbar
+    #   django-decorator-include
     #   django-extra-views
     #   django-filter
     #   django-import-export

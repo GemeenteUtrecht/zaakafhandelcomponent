@@ -160,6 +160,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "zac.accounts.scim.middleware.SCIMAuthMiddleware",
     "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -524,10 +525,13 @@ ES_INDEX_ZAKEN = "zaken"
 
 # SCIM
 SCIM_SERVICE_PROVIDER = {
-    "NETLOC": "localhost",
+    "NETLOC": config(
+        "SCIM_NETLOC", default=ALLOWED_HOSTS[0] if ALLOWED_HOSTS else "localhost"
+    ),
     "AUTHENTICATION_SCHEMES": [],
     "GROUP_ADAPTER": "zac.accounts.scim.adapters.AuthorizationProfileAdapter",
     "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
     "USER_ADAPTER": "zac.accounts.scim.adapters.UserAdapter",
     "GROUP_FILTER_PARSER": "zac.accounts.scim.filters.AuthorizationProfileFilterQuery",
+    "WWW_AUTHENTICATE_HEADER": "Token",
 }
