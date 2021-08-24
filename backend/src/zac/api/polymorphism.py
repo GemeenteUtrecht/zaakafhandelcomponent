@@ -144,3 +144,24 @@ class PolymorphicSerializer(serializers.Serializer):
         )
         serializer = self._discriminator_serializer(discriminator_value)
         return serializer
+
+
+class GroupPolymorphicSerializer(PolymorphicSerializer):
+    """
+    polymorhic fields are grouped into one particular field
+    """
+
+    group_field = None
+    group_field_kwargs = {}
+
+    def _discriminator_serializer(self, discriminator_value: str):
+        serializer = super()._discriminator_serializer(discriminator_value)
+
+        group_name = f"{self.group_field.capitalize()}{serializer.__class__.__name__}"
+        group_field = serializer.__class__(**self.group_field_kwargs)
+        group_serializer_class = type(
+            group_name,
+            (serializers.Serializer,),
+            {self.group_field: group_field},
+        )
+        return group_serializer_class()

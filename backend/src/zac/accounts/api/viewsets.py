@@ -7,19 +7,20 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, mixins, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from zac.core.api.pagination import BffPagination
-from zac.utils.mixins import PatchModelMixin
+from zac.utils.mixins import PatchModelMixin, UpdateModelMixin
 
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
-from ..models import AccessRequest, User, UserAtomicPermission
+from ..models import AccessRequest, AuthorizationProfile, User, UserAtomicPermission
 from .filters import UserFilter
 from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess
 from .serializers import (
     AccessRequestDetailSerializer,
     AtomicPermissionSerializer,
+    AuthProfileSerializer,
     CreateAccessRequestSerializer,
     GrantPermissionSerializer,
     GroupSerializer,
@@ -151,3 +152,21 @@ class AtomicPermissionViewSet(
                 ui=True,
             )
         )
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List authorization profiles")),
+    retrieve=extend_schema(summary=_("Retrieve authorization profile")),
+    create=extend_schema(summary=_("Create authorization profile")),
+    update=extend_schema(summary=_("Update authorization profile")),
+)
+class AuthProfileViewSet(
+    mixins.CreateModelMixin,
+    UpdateModelMixin,
+    viewsets.ReadOnlyModelViewSet,
+):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = AuthorizationProfile.objects.all()
+    serializer_class = AuthProfileSerializer
+    lookup_field = "uuid"

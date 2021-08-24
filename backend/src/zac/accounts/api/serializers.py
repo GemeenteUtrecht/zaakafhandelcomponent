@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
 from zac.core.services import find_zaak, get_zaak
 from zgw.models.zrc import Zaak
@@ -19,7 +20,16 @@ from ..constants import (
     PermissionReason,
 )
 from ..email import send_email_to_requester
-from ..models import AccessRequest, AtomicPermission, User, UserAtomicPermission
+from ..models import (
+    AccessRequest,
+    AtomicPermission,
+    AuthorizationProfile,
+    BlueprintPermission,
+    Role,
+    User,
+    UserAtomicPermission,
+)
+from ..permissions import object_type_registry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -388,3 +398,68 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             )
         )
         return access_request
+
+
+class GroupBlueprintSerializer(GroupPolymorphicSerializer):
+    serializer_mapping = {
+        object_type.name: object_type.blueprint_class
+        for object_type in list(object_type_registry.values())
+    }
+    discriminator_field = "object_type"
+    group_field = "policies"
+    group_field_kwargs = {"many": True, "help_text": _("List of blueprint shapes")}
+
+    role = serializers.PrimaryKeyRelatedField(
+        queryset=Role.objects.all(), help_text=_("Name of the role")
+    )
+    object_type = serializers.ChoiceField(
+        choices=PermissionObjectTypeChoices.choices,
+        help_text=_("Type of the permission object"),
+    )
+
+
+class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
+    blueprint_permissions = GroupBlueprintSerializer(
+        many=True,
+        source="group_permissions",
+        help_text=_("List of blueprint permissions"),
+    )
+
+    class Meta:
+        model = AuthorizationProfile
+        fields = ("url", "uuid", "name", "blueprint_permissions")
+        extra_kwargs = {"url": {"lookup_field": "uuid"}, "uuid": {"read_only": True}}
+
+    @staticmethod
+    def create_blueprint_permissions(group_permissions):
+        blueprint_permissions = []
+
+        for group in group_permissions:
+            for policy in group["policies"]:
+                permission, created = BlueprintPermission.objects.get_or_create(
+                    role=group["role"], object_type=group["object_type"], policy=policy
+                )
+                blueprint_permissions.append(permission)
+
+        return blueprint_permissions
+
+    @transaction.atomic
+    def create(self, validated_data):
+        group_permissions = validated_data.pop("group_permissions")
+        auth_profile = super().create(validated_data)
+
+        blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        auth_profile.blueprint_permissions.add(*blueprint_permissions)
+
+        return auth_profile
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        group_permissions = validated_data.pop("group_permissions")
+        auth_profile = super().update(instance, validated_data)
+
+        auth_profile.blueprint_permissions.clear()
+        blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        auth_profile.blueprint_permissions.add(*blueprint_permissions)
+
+        return auth_profile
