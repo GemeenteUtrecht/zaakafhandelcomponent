@@ -544,4 +544,4 @@ SCIM_SERVICE_PROVIDER = {
 }
 
 # Custom settings
-UI_ROOT_URL = config("UI_ROOT_URL", default="/ui/")
+UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
