@@ -24,7 +24,7 @@ from ...api import (
     create_rol_document,
     create_status_document,
     create_zaak_document,
-    create_zaakobjecten_document,
+    create_zaakobject_document,
     create_zaaktype_document,
 )
 from ...documents import (
@@ -138,7 +138,7 @@ class Command(BaseCommand):
         )
         return eigenschappen_documenten
 
-    def create_zaakobjecten_documenten(
+    def create_zaakobject_documenten(
         self, zaken: List[Zaak]
     ) -> Dict[str, ZaakObjectDocument]:
         # Prefetch zaakobjecten
@@ -146,7 +146,9 @@ class Command(BaseCommand):
             results = executor.map(get_zaakobjecten, zaken)
         list_of_zon = list(results)
         zaakobjecten_documenten = {
-            zon[0].zaak: create_zaakobjecten_document(zon) for zon in list_of_zon if zon
+            zon[0].zaak: [create_zaakobject_document(zo) for zo in zon]
+            for zon in list_of_zon
+            if zon
         }
         self.stdout.write(
             f"{sum([len(zon) for zon in list_of_zon])} zaakobjecten are found for {len(zaakobjecten_documenten.keys())} zaken."

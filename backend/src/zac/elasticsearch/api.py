@@ -183,23 +183,19 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
     return
 
 
-def create_zaakobjecten_document(
-    zaakobjecten: List[ZaakObject],
-) -> List[ZaakObjectDocument]:
-    return [
-        ZaakObjectDocument(
-            url=zo.url,
-            object=zo.object,
-        )
-        for zo in zaakobjecten
-    ]
+def create_zaakobject_document(
+    zaakobject: ZaakObject,
+) -> ZaakObjectDocument:
+    return ZaakObjectDocument(url=zaakobject.url, object=zaakobject.object)
 
 
 def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak.zaakobjecten = get_zaakobjecten(zaak)
 
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
-    zaak_document.zaakobjecten = create_zaakobjecten_document(zaak.zaakobjecten)
+    zaak_document.zaakobjecten = [
+        create_zaakobject_document(zo) for zo in zaak.zaakobjecten
+    ]
     zaak_document.save()
 
     return
