@@ -80,9 +80,9 @@ class Command(BaseCommand):
     def create_zaaktype_documenten(
         self, zaken: List[Zaak]
     ) -> Dict[str, ZaakTypeDocument]:
-        unfetched_zaaktypen = [
+        unfetched_zaaktypen = {
             zaak.zaaktype for zaak in zaken if isinstance(zaak.zaaktype, str)
-        ]
+        }
         with parallel(max_workers=10) as executor:
             results = executor.map(fetch_zaaktype, unfetched_zaaktypen)
         zaaktypen = {zaaktype.url: zaaktype for zaaktype in list(results)}
