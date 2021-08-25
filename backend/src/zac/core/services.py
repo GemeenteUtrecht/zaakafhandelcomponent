@@ -835,7 +835,9 @@ def fetch_documents(
     return factory(Document, documenten), gone
 
 
-def resolve_documenten_informatieobjecttypen(documents: List[Document]) -> List[Document]:
+def resolve_documenten_informatieobjecttypen(
+    documents: List[Document],
+) -> List[Document]:
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
     # figure out relevant ztcs
     informatieobjecttypen = {document.informatieobjecttype for document in documents}
@@ -875,7 +877,7 @@ def get_documenten(
     # retrieve the documents themselves, in parallel
     zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
-    
+
     # Add version to zio_url if found in doc_versions
     found, gone = fetch_documents(zios, doc_versions)
     return found, gone

@@ -4,9 +4,9 @@ from zac.camunda.user_tasks import register
 from zac.core.services import (
     fetch_zaaktype,
     get_documenten,
-    resolve_documenten_informatieobjecttypen,
     get_informatieobjecttypen_for_zaaktype,
     get_zaak,
+    resolve_documenten_informatieobjecttypen,
 )
 
 from .serializers import (

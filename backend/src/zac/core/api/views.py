@@ -436,7 +436,9 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
         doc_versions = get_source_doc_versions(review_requests)
         documents, gone = get_documenten(zaak, doc_versions)
         filtered_documenten = filter_documenten_for_permissions(documents, request)
-        resolved_documenten = resolve_documenten_informatieobjecttypen(filtered_documenten)
+        resolved_documenten = resolve_documenten_informatieobjecttypen(
+            filtered_documenten
+        )
         referer = request.headers.get("referer", "")
         open_documenten = get_open_documenten(request.user, referer)
 
