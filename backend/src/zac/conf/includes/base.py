@@ -542,3 +542,6 @@ SCIM_SERVICE_PROVIDER = {
     "GROUP_FILTER_PARSER": "zac.accounts.scim.filters.AuthorizationProfileFilterQuery",
     "WWW_AUTHENTICATE_HEADER": "Token",
 }
+
+# Custom settings
+UI_ROOT_URL = config("UI_ROOT_URL", default="/ui/")

@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 handler500 = "zac.utils.views.server_error"
 handler403 = "zac.utils.views.permission_denied"
@@ -17,6 +18,7 @@ urlpatterns = [
     path("contrib/", include("zac.contrib.kadaster.urls")),
     path("activities/", include("zac.activities.urls")),
     path("scim/v2/", include("zac.accounts.scim.urls")),
+    path("", RedirectView.as_view(url=settings.UI_ROOT_URL)),
 ]
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie. no need to run collectstatic). Both the static

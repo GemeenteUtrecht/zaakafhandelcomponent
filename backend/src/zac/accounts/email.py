@@ -9,8 +9,6 @@ from django.utils.translation import ugettext_lazy as _
 from zac.core.services import get_zaak
 from zac.core.utils import build_absolute_url, get_ui_url
 
-from .models import AccessRequest
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +19,9 @@ def send_email_to_requester(user, zaak_url, result, request=None, ui=False):
 
     zaak = get_zaak(zaak_url=zaak_url)
     zaak_url = (
-        get_ui_url(["ui", "zaken", zaak.bronorganisatie, zaak.identificatie])
+        get_ui_url(
+            [settings.UI_ROOT_URL, "zaken", zaak.bronorganisatie, zaak.identificatie]
+        )
         if ui
         else reverse(
             "core:zaak-detail",

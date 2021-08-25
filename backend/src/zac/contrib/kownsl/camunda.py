@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, List, Union
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -235,7 +236,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
         kownsl_frontend_url = get_ui_url(
             [
-                "ui",
+                settings.UI_ROOT_URL,
                 "kownsl",
                 "review-request",
                 self.review_request.review_type,
