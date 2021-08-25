@@ -20,6 +20,6 @@ class BoardColumnAdmin(admin.ModelAdmin):
 
 @admin.register(BoardItem)
 class BoardItemAdmin(admin.ModelAdmin):
-    list_display = ("object_type", "object", "board", "column")
-    list_filter = ("object_type", "board__slug")
+    list_display = ("object_type", "object", "column")
+    list_filter = ("object_type", "column__board__slug")
     search_fields = ("uuid", "object")

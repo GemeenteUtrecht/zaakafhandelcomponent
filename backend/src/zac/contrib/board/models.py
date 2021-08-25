@@ -63,6 +63,7 @@ class BoardColumn(models.Model):
         verbose_name = _("board column")
         verbose_name_plural = _("board columns")
         unique_together = ("board", "slug")
+        ordering = ("board", "order", "slug")
 
     def __str__(self):
         return f"{self.board}: {self.slug}"
@@ -72,7 +73,6 @@ class BoardItem(models.Model):
     uuid = models.UUIDField(
         unique=True, default=uuid.uuid4, help_text=_("Unique identifier (UUID4)")
     )
-    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name="items")
     column = models.ForeignKey(
         BoardColumn, on_delete=models.CASCADE, related_name="items"
     )
@@ -80,18 +80,15 @@ class BoardItem(models.Model):
         _("object type"),
         max_length=50,
         choices=BoardObjectTypes.choices,
+        default=BoardObjectTypes.zaak,
         help_text=_("Type of the board item"),
     )
     object = models.URLField(
         _("object"),
+        db_index=True,
         help_text=_("URL of the object in one of ZGW APIs this board item relates to"),
     )
 
     class Meta:
         verbose_name = _("board item")
         verbose_name_plural = _("board items")
-        unique_together = ("board", "object")
-
-    def clean(self):
-        if self.board != self.column.board:
-            raise ValidationError("Item board should not differ from the column board")
