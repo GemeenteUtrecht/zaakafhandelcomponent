@@ -556,7 +556,6 @@ class MedewerkerIdentificatieSerializer(serializers.Serializer):
 
 
 class UpdateRolSerializer(APIModelSerializer):
-    zaak = serializers.CharField(source="zaak.url")
     betrokkene_identificatie = MedewerkerIdentificatieSerializer()
 
     class Meta:

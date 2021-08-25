@@ -4,6 +4,7 @@ from zac.camunda.user_tasks import register
 from zac.core.services import (
     fetch_zaaktype,
     get_documenten,
+    resolve_documenten_informatieobjecttypen,
     get_informatieobjecttypen_for_zaaktype,
     get_zaak,
 )
@@ -26,11 +27,12 @@ def get_context(task: Task) -> DocumentSelectContext:
     zaak_url = process_instance.get_variable("hoofdZaakUrl")
     zaak = get_zaak(zaak_url=zaak_url)
     documenten, gone = get_documenten(zaak)
+    resolved_documenten = resolve_documenten_informatieobjecttypen(documenten)
 
     related_zaaktype_url = process_instance.get_variable("zaaktype")
     related_zaaktype = fetch_zaaktype(related_zaaktype_url)
     informatieobjecttypen = get_informatieobjecttypen_for_zaaktype(related_zaaktype)
 
     return DocumentSelectContext(
-        documents=documenten, informatieobjecttypen=informatieobjecttypen
+        documents=resolved_documenten, informatieobjecttypen=informatieobjecttypen
     )

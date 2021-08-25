@@ -206,9 +206,13 @@ class GetUserTaskContextViewTests(APITestCase):
         ):
             with patch(
                 "zac.core.camunda.select_documents.context.get_documenten",
-                return_value=[[self.document], []],
+                return_value=[[], []],
             ):
-                response = self.client.get(self.task_endpoint)
+                with patch(
+                    "zac.core.camunda.select_documents.context.resolve_documenten_informatieobjecttypen",
+                    return_value=[self.document],
+                ):
+                    response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -424,6 +428,10 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             ],
         )
         cls.patch_get_documenten_validator = patch(
+            "zac.core.api.validators.get_documenten",
+            return_value=([cls.document], []),
+        )
+        cls.patch_resolve_document_informatieobjecttypen = patch(
             "zac.core.api.validators.get_documenten",
             return_value=([cls.document], []),
         )
