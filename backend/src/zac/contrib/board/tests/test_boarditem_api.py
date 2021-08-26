@@ -2,14 +2,23 @@ import uuid
 
 from django.urls import reverse
 
+import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.test import generate_oas_component
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import SuperUserFactory
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+    UserFactory,
+)
+from zac.core.permissions import zaken_inzien
+from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
@@ -21,6 +30,242 @@ CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
+
+
+@requests_mock.Mocker()
+class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user = UserFactory.create()
+        self.client.force_authenticate(user=self.user)
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        # data for ES documents
+        self.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        self.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=ZAAK_URL,
+            zaaktype=self.zaaktype["url"],
+            identificatie="zaak1",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            eigenschappen=[],
+        )
+        zaaktype_model = factory(ZaakType, self.zaaktype)
+        zaak_model = factory(Zaak, self.zaak)
+        zaak_model.zaaktype = zaaktype_model
+
+        self.create_zaak_document(zaak_model)
+        self.refresh_index()
+
+    def _setUpMock(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json=self.zaak)
+
+    def test_list_no_permissions(self, m):
+        BoardItemFactory.create(object=ZAAK_URL)
+        url = reverse("boarditem-list")
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), [])
+
+    def test_list_only_allowed(self, m):
+        item = BoardItemFactory.create(object=ZAAK_URL)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        url = reverse("boarditem-list")
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(
+            data[0]["url"],
+            f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
+        )
+
+    def test_retrieve_other_permission(self, m):
+        self._setUpMock(m)
+
+        item = BoardItemFactory.create(object=ZAAK_URL)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_has_permission(self, m):
+        self._setUpMock(m)
+
+        item = BoardItemFactory.create(object=ZAAK_URL)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_create_other_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        column = BoardColumnFactory.create()
+        url = reverse("boarditem-list")
+        data = {"object": ZAAK_URL, "column_uuid": str(column.uuid)}
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_has_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        column = BoardColumnFactory.create()
+        url = reverse("boarditem-list")
+        data = {"object": ZAAK_URL, "column_uuid": str(column.uuid)}
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_update_other_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        old_col = BoardColumnFactory.create()
+        new_col = BoardColumnFactory.create(board=old_col.board)
+        item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.patch(url, {"column_uuid": new_col.uuid})
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_has_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        old_col = BoardColumnFactory.create()
+        new_col = BoardColumnFactory.create(board=old_col.board)
+        item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.patch(url, {"column_uuid": new_col.uuid})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_other_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        item = BoardItemFactory.create(object=ZAAK_URL)
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_has_permission(self, m):
+        self._setUpMock(m)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        item = BoardItemFactory.create(object=ZAAK_URL)
+        url = reverse("boarditem-detail", args=[item.uuid])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class BoardItemAPITests(ESMixin, APITestCase):
@@ -46,10 +291,8 @@ class BoardItemAPITests(ESMixin, APITestCase):
             url=ZAAK_URL,
             zaaktype=self.zaaktype["url"],
             identificatie="zaak1",
-            omschrijving="Some zaak 1",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             eigenschappen=[],
-            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
         zaaktype_model = factory(ZaakType, self.zaaktype)
         zaak_model = factory(Zaak, self.zaak)
@@ -67,9 +310,9 @@ class BoardItemAPITests(ESMixin, APITestCase):
             },
             "identificatie": "zaak1",
             "bronorganisatie": zaak_model.bronorganisatie,
-            "omschrijving": "Some zaak 1",
+            "omschrijving": zaak_model.omschrijving,
             "vertrouwelijkheidaanduiding": "openbaar",
-            "vaOrder": 28,
+            "vaOrder": 27,
             "rollen": [],
             "startdatum": zaak_model.startdatum.isoformat() + "T00:00:00Z",
             "einddatum": None,
