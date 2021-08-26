@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
+from zac.core.api.permissions import CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.services import get_zaaktypen
 
@@ -49,7 +50,7 @@ class GetZakenView(views.APIView):
         serializer = ZaakIdentificatieSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         zaken = autocomplete_zaak_search(
-            identificatie=serializer.validated_data["identificatie"]
+            request.user, identificatie=serializer.validated_data["identificatie"]
         )
         zaak_serializer = self.get_serializer(instance=zaken)
         return Response(data=zaak_serializer.data)

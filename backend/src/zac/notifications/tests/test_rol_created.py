@@ -84,6 +84,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+        self.refresh_index()
 
         self.assertEqual(zaak_document.rollen, [])
 
@@ -166,6 +168,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+        self.refresh_index()
 
         self.client.force_authenticate(user=user)
         path = reverse("notifications:callback")
@@ -248,6 +252,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         rol_2 = factory(Rol, rol_new)
         rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+        self.refresh_index()
         self.assertEqual(zaak_document.rollen, [])
 
         self.client.force_authenticate(user=user)

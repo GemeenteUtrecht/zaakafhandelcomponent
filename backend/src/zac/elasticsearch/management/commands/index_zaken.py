@@ -51,7 +51,7 @@ class Command(BaseCommand):
         status_documenten = self.create_status_documenten(zaken)
         rollen_documenten = self.create_rollen_documenten()
         eigenschappen_documenten = self.create_eigenschappen_documenten(zaken)
-        zaakobjecten_documenten = self.create_zaakobjecten_documenten(zaken)
+        zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
 
         final = []
         for zaak in zaken:
@@ -125,8 +125,7 @@ class Command(BaseCommand):
     ) -> Dict[str, EigenschapDocument]:
         # Prefetch zaakeigenschappen
         with parallel(max_workers=10) as executor:
-            results = executor.map(get_zaak_eigenschappen, zaken)
-        list_of_eigenschappen = list(results)
+            list_of_eigenschappen = list(executor.map(get_zaak_eigenschappen, zaken))
 
         eigenschappen_documenten = {
             zen[0].zaak.url: create_eigenschappen_document(zen)
@@ -143,8 +142,8 @@ class Command(BaseCommand):
     ) -> Dict[str, ZaakObjectDocument]:
         # Prefetch zaakobjecten
         with parallel(max_workers=10) as executor:
-            results = executor.map(get_zaakobjecten, zaken)
-        list_of_zon = list(results)
+            list_of_zon = list(executor.map(get_zaakobjecten, zaken))
+
         zaakobjecten_documenten = {
             zon[0].zaak: [create_zaakobject_document(zo) for zo in zon]
             for zon in list_of_zon

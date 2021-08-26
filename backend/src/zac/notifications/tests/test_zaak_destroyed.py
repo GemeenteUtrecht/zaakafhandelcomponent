@@ -7,6 +7,7 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
@@ -92,9 +93,16 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
 
         # create zaak document in ES
-        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak = factory(
+            Zaak, {**ZAAK_RESPONSE, "zaaktype": factory(ZaakType, ZAAKTYPE_RESPONSE)}
+        )
         zaak_document = create_zaak_document(zaak)
-        self.assertEqual(zaak_document.meta.id, "f3ff2713-2f53-42ff-a154-16842309ad60")
+        self.refresh_index()
+
+        zaak_document.save()
+        self.assertEqual(
+            str(zaak_document.meta.id), "f3ff2713-2f53-42ff-a154-16842309ad60"
+        )
 
         response = self.client.post(path, NOTIFICATION)
 

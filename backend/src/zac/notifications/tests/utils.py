@@ -45,7 +45,7 @@ ZAAK_RESPONSE = {
     "uiterlijke_einddatum_afdoening": None,
     "publicatiedatum": None,
     "vertrouwelijkheidaanduiding": "geheim",
-    "status": STATUS,
+    "status": None,
     "relevante_andere_zaken": [],
     "zaakgeometrie": None,
 }

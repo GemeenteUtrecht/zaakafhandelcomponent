@@ -10,6 +10,7 @@ from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 from zac.core.rollen import Rol
 from zac.core.services import (
     get_rollen,
+    get_status,
     get_statustype,
     get_zaak_eigenschappen,
     get_zaakobjecten,
@@ -63,6 +64,8 @@ def _get_zaak_document(
             return
         else:
             zaak_document = create_zaak_document(create_zaak)
+            zaak_document.save()
+
     return zaak_document
 
 
@@ -129,11 +132,12 @@ def create_status_document(status: Status) -> StatusDocument:
 
 
 def update_status_in_zaak_document(zaak: Zaak) -> None:
-    status_document = create_status_document(zaak.status) if zaak.status else None
-
-    zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
-    zaak_document.status = status_document
-    zaak_document.save()
+    if zaak.status:
+        zaak.status = get_status(zaak) if isinstance(zaak.status, str) else zaak.status
+        status_document = create_status_document(zaak.status)
+        zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
+        zaak_document.status = status_document
+        zaak_document.save()
 
     return
 

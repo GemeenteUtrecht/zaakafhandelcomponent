@@ -69,7 +69,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_find_zaak_resultaat_created(self, rm, *mocks):
+    def test_find_zaak_status_created(self, rm, *mocks):
         mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(ZAAK, json=ZAAK_RESPONSE)

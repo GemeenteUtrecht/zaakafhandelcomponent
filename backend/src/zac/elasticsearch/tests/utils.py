@@ -2,11 +2,11 @@ from django.conf import settings
 
 from elasticsearch_dsl import Index
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 
-from zac.core.rollen import Rol
 from zgw.models.zrc import Zaak
 
-from ..api import append_rol_to_document, create_zaak_document
+from ..api import create_zaak_document, create_zaaktype_document
 from ..documents import ZaakDocument
 
 
@@ -27,13 +27,13 @@ class ESMixin:
     def create_zaak_document(zaak):
         if not isinstance(zaak, Zaak):
             zaak = factory(Zaak, zaak)
-        create_zaak_document(zaak)
+        return create_zaak_document(zaak)
 
     @staticmethod
-    def add_rol_to_document(rol):
-        if not isinstance(rol, Rol):
-            rol = factory(Rol, rol)
-        append_rol_to_document(rol)
+    def create_zaaktype_document(zaaktype):
+        if not isinstance(zaaktype, ZaakType):
+            zaaktype = factory(ZaakType, zaaktype)
+        return create_zaaktype_document(zaaktype)
 
     def setUp(self):
         super().setUp()

@@ -34,7 +34,6 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_valid_request_without_permissions(self, m, *mocks):
         user = UserFactory.create()
         self.client.force_authenticate(user)
@@ -81,16 +80,18 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
+        zaak["zaaktype"] = factory(ZaakType, zaaktype)
         zaak_model = factory(Zaak, zaak)
-        zaak_model.zaaktype = factory(ZaakType, zaaktype)
-        self.create_zaak_document(zaak_model)
+        zaak_document = self.create_zaak_document(zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(zaak_model.zaaktype)
+        zaak_document.save()
+        self.refresh_index()
 
         response = self.client.get(self.endpoint, {"identificatie": zaak_identificatie})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(len(response.data), 0)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_valid_request_with_permissions(self, m, *mocks):
         user = UserFactory.create()
         self.client.force_authenticate(user)
@@ -123,9 +124,11 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
+        zaak["zaaktype"] = factory(ZaakType, zaaktype)
         zaak_model = factory(Zaak, zaak)
-        zaak_model.zaaktype = factory(ZaakType, zaaktype)
-        self.create_zaak_document(zaak_model)
+        zaak_document = self.create_zaak_document(zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(zaak_model.zaaktype)
+        zaak_document.save()
         self.refresh_index()
 
         BlueprintPermissionFactory.create(

@@ -21,7 +21,10 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import update_eigenschappen_in_zaak_document
+from zac.elasticsearch.api import (
+    update_eigenschappen_in_zaak_document,
+    update_zaakobjecten_in_zaak_document,
+)
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -60,9 +63,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
-        zaaktype_model = factory(ZaakType, self.zaaktype)
         zaak_model = factory(Zaak, self.zaak)
-        zaak_model.zaaktype = zaaktype_model
+        zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
 
         patch_get_zaakobjecten = patch(
             "zac.elasticsearch.api.get_zaakobjecten",
@@ -71,7 +73,9 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         patch_get_zaakobjecten.start()
         self.addCleanup(patch_get_zaakobjecten.stop)
 
-        self.create_zaak_document(zaak_model)
+        zaak_document = self.create_zaak_document(zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(zaak_model.zaaktype)
+        zaak_document.save()
         self.refresh_index()
 
         self.endpoint = reverse("search")
@@ -213,9 +217,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456789",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
         )
-        zaaktype_model = factory(ZaakType, zaaktype)
-        zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = zaaktype_model
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -226,26 +227,35 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
         )
-        zaak2_model = factory(Zaak, zaak2)
-        zaak2_model.zaaktype = zaaktype_model
 
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}",
             json=paginated_response([]),
         )
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}",
             json=paginated_response([]),
         )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(zaak1["url"], json=zaak1)
 
         # index documents in es
-        self.create_zaak_document(zaak1_model)
-        self.create_zaak_document(zaak2_model)
+        zaaktype_model = factory(ZaakType, zaaktype)
+
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = zaaktype_model
+        zaak1_document = self.create_zaak_document(zaak1_model)
+        zaak1_document.zaaktype = self.create_zaaktype_document(zaak1_model.zaaktype)
+        zaak1_document.save()
+
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = zaaktype_model
+        zaak1_document = self.create_zaak_document(zaak1_model)
+        zaak1_document.zaaktype = self.create_zaaktype_document(zaak2_model.zaaktype)
+        zaak1_document.save()
         self.refresh_index()
 
         data = {
@@ -361,7 +371,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456789",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
         )
-        zaak_eigenschap1 = generate_oas_component(
+        zaak1_eigenschap = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{zaak1['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
@@ -370,7 +380,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             naam="Buurt",
             waarde="Leidsche Rijn",
         )
-        zaak1["eigenschappen"] = [zaak_eigenschap1["url"]]
+        zaak1["eigenschappen"] = [zaak1_eigenschap["url"]]
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -379,9 +389,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             identificatie="zaak2",
             omschrijving="Other zaak 2",
         )
-        zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
-        zaak_eigenschap2 = generate_oas_component(
+        zaak2_eigenschap = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{zaak1['url']}/eigenschappen/3c008fe4-2aa4-46dc-9bf2-a4590f25c865",
@@ -390,19 +398,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             naam="Adres",
             waarde="Leidsche Rijn",
         )
-        zaak2["eigenschappen"] = [zaak_eigenschap2["url"]]
-        zaak2_model = factory(Zaak, zaak2)
-        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2["eigenschappen"] = [zaak2_eigenschap["url"]]
 
         # mock requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1_model.url}",
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}",
             json=paginated_response([]),
         )
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2_model.url}",
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}",
             json=paginated_response([]),
         )
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
@@ -412,12 +418,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         m.get(zaak1["url"], json=zaak1)
         m.get(zaak2["url"], json=zaak2)
-        m.get(f"{zaak1['url']}/zaakeigenschappen", json=[zaak_eigenschap1])
-        m.get(f"{zaak2['url']}/zaakeigenschappen", json=[zaak_eigenschap2])
+        m.get(f"{zaak1['url']}/zaakeigenschappen", json=[zaak1_eigenschap])
+        m.get(f"{zaak2['url']}/zaakeigenschappen", json=[zaak2_eigenschap])
 
         # index documents in es
-        self.create_zaak_document(zaak1_model)
-        self.create_zaak_document(zaak2_model)
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak2_model = factory(Zaak, zaak2)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
         update_eigenschappen_in_zaak_document(zaak1_model)
         update_eigenschappen_in_zaak_document(zaak2_model)
         self.refresh_index()
@@ -463,9 +471,9 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     {
                         "url": "http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                         "zaaktype": {
-                            "url": "http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                            "catalogus": "http://catalogus.nl/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-                            "omschrijving": "ZT1",
+                            "url": None,
+                            "catalogus": None,
+                            "omschrijving": None,
                         },
                         "identificatie": "zaak1",
                         "bronorganisatie": "123456789",
@@ -540,12 +548,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(zaak2["url"], json=zaak2)
 
         # index documents in es
+        zaaktype_model = factory(ZaakType, zaaktype)
+
         zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        zaak1_model.zaaktype = zaaktype_model
+        zaak1_document = self.create_zaak_document(zaak1_model)
+        zaak1_document.save()
+
         zaak2_model = factory(Zaak, zaak2)
-        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
-        self.create_zaak_document(zaak1_model)
-        self.create_zaak_document(zaak2_model)
+        zaak2_model.zaaktype = zaaktype_model
+        zaak2_document = self.create_zaak_document(zaak2_model)
+        zaak2_document.save()
         self.refresh_index()
 
         response = self.client.post(self.endpoint)
@@ -606,13 +619,16 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # index documents in es
         zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
         zaak1_model.deadline = datetime.date(2020, 1, 1)
         zaak2_model = factory(Zaak, zaak2)
-        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
         zaak2_model.deadline = datetime.date(2020, 1, 2)
-        self.create_zaak_document(zaak1_model)
-        self.create_zaak_document(zaak2_model)
+        zaaktype_document = self.create_zaaktype_document(zaaktype)
+        zaak1_document = self.create_zaak_document(zaak1_model)
+        zaak1_document.zaaktype = zaaktype_document
+        zaak1_document.save()
+        zaak2_document = self.create_zaak_document(zaak2_model)
+        zaak2_document.zaaktype = zaaktype_document
+        zaak2_document.save()
         self.refresh_index()
 
         response = self.client.post(self.endpoint + "?ordering=-deadline")
@@ -687,13 +703,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # index documents in es
         zaak1_model = factory(Zaak, zaak1)
-        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
         zaak1_model.deadline = datetime.date(2020, 1, 1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
         zaak2_model = factory(Zaak, zaak2)
-        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
         zaak2_model.deadline = datetime.date(2020, 1, 2)
-        self.create_zaak_document(zaak1_model)
-        self.create_zaak_document(zaak2_model)
+        zaak2_model.zaaktype = factory(ZaakType, zaaktype)
+
+        update_zaakobjecten_in_zaak_document(zaak1_model)
+        update_zaakobjecten_in_zaak_document(zaak2_model)
         self.refresh_index()
 
         input = {"object": zaakobject["object"]}
