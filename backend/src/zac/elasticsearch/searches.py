@@ -156,7 +156,9 @@ def search(
     return response.hits
 
 
-def autocomplete_zaak_search(identificatie: str) -> List[ZaakDocument]:
+def autocomplete_zaak_search(
+    user: User, identificatie: str, only_allowed: bool = True
+) -> List[ZaakDocument]:
     search = ZaakDocument.search().query(
         Regexp(
             identificatie={
@@ -165,5 +167,8 @@ def autocomplete_zaak_search(identificatie: str) -> List[ZaakDocument]:
             }
         )
     )
+    if only_allowed:
+        search = search.filter(query_allowed_for_user(user))
+
     response = search.execute()
     return response.hits
