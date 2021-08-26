@@ -17,11 +17,3 @@ class CanUseBoardItem(ZaakDefinitionPermission):
         if isinstance(obj, BoardItem):
             obj = self.get_object(request, obj.object)
         return super().has_object_permission(request, view, obj)
-
-    # def get_object(self, request: Request, obj_url: str):
-    #     try:
-    #         zaak = get_zaak(zaak_url=obj_url)
-    #     except ClientError:
-    #         logger.info("Invalid Zaak specified", exc_info=True)
-    #         return None
-    #     return zaak
