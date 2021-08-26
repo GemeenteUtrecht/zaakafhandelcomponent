@@ -44,9 +44,9 @@ def _resolve_assignee(name: str) -> Union[Group, User]:
             return user
     except ValueError:
         try:
-            user = User.objects.get(username=_name)
+            user = User.objects.get(username=name)
         except User.DoesNotExist:
-            user = User.objects.create_user(username=_name)
+            user = User.objects.create_user(username=name)
         return user
 
 
