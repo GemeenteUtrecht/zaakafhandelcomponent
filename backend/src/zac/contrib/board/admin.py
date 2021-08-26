@@ -3,11 +3,18 @@ from django.contrib import admin
 from .models import Board, BoardColumn, BoardItem
 
 
+class BoardColumnInline(admin.TabularInline):
+    model = BoardColumn
+    prepopulated_fields = {"slug": ("name",)}
+    extra = 0
+
+
 @admin.register(Board)
 class BoardAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "created", "modified")
     search_fields = ("uuid",)
     prepopulated_fields = {"slug": ("name",)}
+    inlines = [BoardColumnInline]
 
 
 @admin.register(BoardColumn)
