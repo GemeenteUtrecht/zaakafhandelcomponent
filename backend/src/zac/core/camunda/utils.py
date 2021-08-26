@@ -27,15 +27,22 @@ FORM_KEYS = {
 
 
 def _resolve_assignee(name: str) -> Union[Group, User]:
-    user_or_group, _name = name.split(":", 1)
-    if user_or_group == AssigneeTypeChoices.group:
-        try:
-            group = Group.objects.get(name=_name)
-        except Group.DoesNotExist:
-            group = Group.objects.create(name=_name)
-            logger.info(f"Created group {group.name}.")
-        return group
-    else:
+    try: # Encapsulate in a try-except to not cause breaking changes
+        user_or_group, _name = name.split(":", 1)
+        if user_or_group == AssigneeTypeChoices.group:
+            try:
+                group = Group.objects.get(name=_name)
+            except Group.DoesNotExist:
+                group = Group.objects.create(name=_name)
+                logger.info(f"Created group {group.name}.")
+            return group
+        else:
+            try:
+                user = User.objects.get(username=_name)
+            except User.DoesNotExist:
+                user = User.objects.create_user(username=_name)
+            return user
+    except ValueError:
         try:
             user = User.objects.get(username=_name)
         except User.DoesNotExist:
