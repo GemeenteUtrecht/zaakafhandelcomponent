@@ -1,8 +1,9 @@
 import uuid
 
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+
+from zac.elasticsearch.api import get_zaak_document
 
 from .constants import BoardObjectTypes
 
@@ -92,3 +93,9 @@ class BoardItem(models.Model):
     class Meta:
         verbose_name = _("board item")
         verbose_name_plural = _("board items")
+
+    def zaak_document(self):
+        if self.object_type != BoardObjectTypes.zaak:
+            return None
+
+        return get_zaak_document(self.object)

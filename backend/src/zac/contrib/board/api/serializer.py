@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import Board, BoardColumn, BoardItem
@@ -40,6 +41,9 @@ class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
         help_text=_("UUID4 of the board column"),
     )
     column = BoardColumnSerializer(help_text=_("Column of the board"), read_only=True)
+    zaak = ZaakDocumentSerializer(
+        source="zaak_document", read_only=True, help_text=_("Details of the zaak")
+    )
 
     class Meta:
         model = BoardItem
@@ -51,6 +55,7 @@ class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
             "board",
             "column",
             "column_uuid",
+            "zaak",
         )
         extra_kwargs = {
             "url": {"lookup_field": "uuid"},

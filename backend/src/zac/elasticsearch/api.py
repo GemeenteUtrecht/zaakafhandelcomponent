@@ -95,6 +95,11 @@ def _get_zaak_document(
     return zaak_document
 
 
+def get_zaak_document(zaak_url: str):
+    zaak_uuid = _get_uuid_from_url(zaak_url)
+    return _get_zaak_document(zaak_uuid, zaak_url)
+
+
 def update_zaak_document(zaak: Zaak) -> ZaakDocument:
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
 

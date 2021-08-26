@@ -4,26 +4,89 @@ from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import SuperUserFactory
+from zac.elasticsearch.tests.utils import ESMixin
+from zgw.models.zrc import Zaak
 
 from ..constants import BoardObjectTypes
 from ..models import BoardItem
 from .factories import BoardColumnFactory, BoardItemFactory
 
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
 
 
-class BoardItemAPITests(APITestCase):
+class BoardItemAPITests(ESMixin, APITestCase):
     def setUp(self):
         super().setUp()
 
         self.user = SuperUserFactory.create()
         self.client.force_authenticate(user=self.user)
 
+        # data for ES documents
+        self.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        self.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=ZAAK_URL,
+            zaaktype=self.zaaktype["url"],
+            identificatie="zaak1",
+            omschrijving="Some zaak 1",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+        )
+        zaaktype_model = factory(ZaakType, self.zaaktype)
+        zaak_model = factory(Zaak, self.zaak)
+        zaak_model.zaaktype = zaaktype_model
+
+        self.create_zaak_document(zaak_model)
+        self.refresh_index()
+
+        self.zaak_data = {
+            "url": ZAAK_URL,
+            "zaaktype": {
+                "url": zaaktype_model.url,
+                "catalogus": CATALOGUS_URL,
+                "omschrijving": "ZT1",
+            },
+            "identificatie": "zaak1",
+            "bronorganisatie": zaak_model.bronorganisatie,
+            "omschrijving": "Some zaak 1",
+            "vertrouwelijkheidaanduiding": "openbaar",
+            "vaOrder": 28,
+            "rollen": [],
+            "startdatum": zaak_model.startdatum.isoformat() + "T00:00:00Z",
+            "einddatum": None,
+            "registratiedatum": zaak_model.registratiedatum.isoformat() + "T00:00:00Z",
+            "deadline": zaak_model.deadline.isoformat() + "T00:00:00Z",
+            "eigenschappen": [],
+            "status": {
+                "url": None,
+                "statustype": None,
+                "datumStatusGezet": None,
+                "statustoelichting": None,
+            },
+            "toelichting": zaak_model.toelichting,
+        }
+
     def test_list_items(self):
-        item1 = BoardItemFactory.create(column__name="wip")
+        item1 = BoardItemFactory.create(column__name="wip", object=ZAAK_URL)
         item2 = BoardItemFactory.create(column__name="done")
         url = reverse("boarditem-list")
 
@@ -47,6 +110,7 @@ class BoardItemAPITests(APITestCase):
                         "created": item2.column.created.isoformat()[:-6] + "Z",
                         "modified": item2.column.modified.isoformat()[:-6] + "Z",
                     },
+                    "zaak": None,
                 },
                 {
                     "url": f"http://testserver{reverse('boarditem-detail', args=[item1.uuid])}",
@@ -62,12 +126,13 @@ class BoardItemAPITests(APITestCase):
                         "created": item1.column.created.isoformat()[:-6] + "Z",
                         "modified": item1.column.modified.isoformat()[:-6] + "Z",
                     },
+                    "zaak": self.zaak_data,
                 },
             ],
         )
 
     def test_list_items_filter_on_board_uuid(self):
-        item = BoardItemFactory.create()
+        item = BoardItemFactory.create(object=ZAAK_URL)
         BoardItemFactory.create()
         url = reverse("boarditem-list")
 
@@ -84,7 +149,7 @@ class BoardItemAPITests(APITestCase):
         )
 
     def test_list_items_filter_on_board_slug(self):
-        item = BoardItemFactory.create(column__board__slug="scrum")
+        item = BoardItemFactory.create(column__board__slug="scrum", object=ZAAK_URL)
         BoardItemFactory.create()
         url = reverse("boarditem-list")
 
@@ -101,7 +166,7 @@ class BoardItemAPITests(APITestCase):
         )
 
     def test_retrieve_item(self):
-        item = BoardItemFactory.create()
+        item = BoardItemFactory.create(object=ZAAK_URL)
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.get(url)
@@ -123,6 +188,7 @@ class BoardItemAPITests(APITestCase):
                     "created": item.column.created.isoformat()[:-6] + "Z",
                     "modified": item.column.modified.isoformat()[:-6] + "Z",
                 },
+                "zaak": self.zaak_data,
             },
         )
 
@@ -168,7 +234,7 @@ class BoardItemAPITests(APITestCase):
     def test_update_item_column_success(self):
         old_col = BoardColumnFactory.create()
         new_col = BoardColumnFactory.create(board=old_col.board)
-        item = BoardItemFactory.create(column=old_col)
+        item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.patch(url, {"column_uuid": str(new_col.uuid)})
@@ -181,7 +247,7 @@ class BoardItemAPITests(APITestCase):
 
     def test_update_item_change_column_from_another_board(self):
         old_col, new_col = BoardColumnFactory.create_batch(2)
-        item = BoardItemFactory.create(column=old_col)
+        item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.patch(url, {"column_uuid": str(new_col.uuid)})
