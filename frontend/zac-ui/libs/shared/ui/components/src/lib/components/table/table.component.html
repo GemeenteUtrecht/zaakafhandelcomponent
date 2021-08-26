@@ -18,7 +18,7 @@
 
         <!-- Data -->
         <ng-container *ngFor="let column of columns" [matColumnDef]="column.name">
-            <th class="table__cell" mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label}}</th>
+            <th class="table__cell" mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label|titlecase}}</th>
             <td class="table__cell" mat-cell *matCellDef="let dataRow">
                 <div [ngSwitch]="dataRow[column.name].type">
 

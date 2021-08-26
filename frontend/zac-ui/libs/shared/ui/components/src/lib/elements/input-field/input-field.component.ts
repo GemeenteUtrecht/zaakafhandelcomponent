@@ -7,12 +7,13 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['./input-field.component.scss']
 })
 export class InputFieldComponent {
-  @Input() type: 'text' | 'number'
+  @Input() autocomplete: 'off';
   @Input() control: FormControl;
-  @Input() label: string;
   @Input() id: string;
+  @Input() label: string;
+  @Input() pattern: null;
   @Input() placeholder: string;
   @Input() required: boolean;
+  @Input() type: 'text' | 'number'
   @Input() value: string | number;
-  @Input() autocomplete: 'off';
 }

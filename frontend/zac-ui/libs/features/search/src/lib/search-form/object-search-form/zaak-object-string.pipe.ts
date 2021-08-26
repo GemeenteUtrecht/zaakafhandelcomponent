@@ -1,5 +1,6 @@
 import {Pipe} from '@angular/core';
 import {ZaakObject} from '@gu/models';
+import {ZaakObjectService} from "@gu/services";
 
 /**
  * Turns a ZaakObject into a human-readable string.
@@ -13,16 +14,15 @@ import {ZaakObject} from '@gu/models';
   name: 'zaakObjectString'
 })
 export class ZaakObjectStringPipe {
+  constructor(private zaakObjectService: ZaakObjectService) {
+  }
+
   /**
    * Transforms the object.
    * @param {ZaakObject} zaakObject
    * @return {string}
    */
   transform(zaakObject: ZaakObject): string {
-    return Object.entries(zaakObject.record.data)
-      .filter(([key, value]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)
-      .sort()
-      .join(', ');
+    return this.zaakObjectService.stringifyZaakObject(zaakObject);
   }
 }

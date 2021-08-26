@@ -16,6 +16,7 @@ export interface FieldConfiguration {
   control?: AbstractControl;
   name?: string;
   label?: string;
+  pattern?: string;
   placeholder?: string;
   readonly?: boolean;
   required?: boolean
@@ -33,6 +34,7 @@ export class Field {
   control: AbstractControl;
   name?: string;
   label: string;
+  pattern?: string;
   placeholder: string;
   readonly?: boolean;
   required: true

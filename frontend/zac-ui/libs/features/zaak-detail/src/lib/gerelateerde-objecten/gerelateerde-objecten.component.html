@@ -1,20 +1,48 @@
 <div class="gerelateerde-objecten card">
+
+  <header class="card__actions">
+    <button (click)="addClick($event)"
+            gu-button
+            class="card__action"
+            icon="add"
+            size="extrasmall"
+            type="tertiary">
+      Gerelateerd object toevoegen
+    </button>
+  </header>
+
   <h2 class="d-inline-block mr-2">Gerelateerde objecten</h2>
   <gu-tooltip type="primary" inline="true">Objecten die gerelateerd zijn aan deze zaak zoals een pand</gu-tooltip>
+
   <!-- Loading -->
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
 
-    <!-- Table -->
-    <ng-container *ngIf="relatedObjects && !isLoading">
-      <div *ngFor="let tableData of tablesData">
-        <h3>{{tableData.title}}</h3>
-        <gu-table [table]="tableData.table"
-                  class="mb-4">
-        </gu-table>
-      </div>
-      <p *ngIf="(relatedObjects.length === 0)">Er zijn geen gerelateerde objecten.</p>
-    </ng-container>
+  <!-- Table -->
+  <ng-container *ngIf="relatedObjects && !isLoading">
+    <div *ngFor="let table of tables">
+      <h3>{{table.title}}</h3>
+      <gu-table [table]="table.table" (buttonOutput)="tableButtonClick($event)" class="mb-4"></gu-table>
+    </div>
+    <p *ngIf="(relatedObjects.length === 0)">Er zijn geen gerelateerde objecten.</p>
+  </ng-container>
+  <!-- End table -->
+
+  <!-- Modal object search -->
+  <gu-modal [closeIcon]="true"
+            [id]="modalObjectSearchId"
+            size="small">
+    <gu-zaak-object-search-form (selectZaakObject)="selectZaakObject($event)"></gu-zaak-object-search-form>
+  </gu-modal>
+  <!-- End modal object search -->
+
+  <!-- Modal form -->
+  <gu-modal [closeIcon]="true"
+            [id]="modalFormId"
+            size="small">
+      <gu-form *ngIf="activeZaakObject" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+  </gu-modal>
+  <!-- End modal form -->
 </div>
