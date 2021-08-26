@@ -27,7 +27,7 @@ FORM_KEYS = {
 
 
 def _resolve_assignee(name: str) -> Union[Group, User]:
-    try: # Encapsulate in a try-except to not cause breaking changes
+    try:  # Encapsulate in a try-except to not cause breaking changes
         user_or_group, _name = name.split(":", 1)
         if user_or_group == AssigneeTypeChoices.group:
             try:
