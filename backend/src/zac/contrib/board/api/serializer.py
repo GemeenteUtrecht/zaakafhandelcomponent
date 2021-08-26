@@ -2,6 +2,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+from zac.utils.validators import ImmutableFieldValidator
+
 from ..models import Board, BoardColumn, BoardItem
 
 
@@ -23,6 +25,13 @@ class BoardSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
+    board = serializers.HyperlinkedRelatedField(
+        source="column.board",
+        read_only=True,
+        lookup_field="uuid",
+        view_name="board-detail",
+        help_text=_("Url of the board"),
+    )
     column_uuid = serializers.SlugRelatedField(
         queryset=BoardColumn.objects.all(),
         source="column",
@@ -46,8 +55,29 @@ class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             "url": {"lookup_field": "uuid"},
             "uuid": {"read_only": True},
-            "board": {
-                "lookup_field": "uuid",
-                "read_only": True,
-            },
+            "object": {"validators": [ImmutableFieldValidator()]},
         }
+
+    def validate(self, attrs):
+        validated_attrs = super().validate(attrs)
+
+        object = validated_attrs.get("object")
+        column = validated_attrs.get("column")
+
+        if (
+            not self.instance
+            and BoardItem.objects.filter(
+                object=object, column__board=column.board
+            ).exists()
+        ):
+            raise serializers.ValidationError(_("This object is already on the board"))
+
+        return validated_attrs
+
+    def validate_column_uuid(self, value):
+        if self.instance and value.board != self.instance.column.board:
+            raise serializers.ValidationError(
+                _("The board of the item can't be changed")
+            )
+
+        return value

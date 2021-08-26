@@ -1,10 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from ..models import Board, BoardItem
@@ -35,7 +33,9 @@ class BoardViewSet(ReadOnlyModelViewSet):
 class BoardItemViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = BoardItem.objects.select_related("column").order_by("-pk")
+    queryset = BoardItem.objects.select_related("column", "column__board").order_by(
+        "-pk"
+    )
     serializer_class = BoardItemSerializer
     filterset_class = BoardItemFilter
     lookup_field = "uuid"
