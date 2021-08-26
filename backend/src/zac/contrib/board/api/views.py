@@ -7,6 +7,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from ..models import Board, BoardItem
 from .filters import BoardItemFilter
+from .permissions import CanUseBoardItem
 from .serializer import BoardItemSerializer, BoardSerializer
 
 
@@ -32,10 +33,18 @@ class BoardViewSet(ReadOnlyModelViewSet):
 )
 class BoardItemViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanUseBoardItem]
     queryset = BoardItem.objects.select_related("column", "column__board").order_by(
         "-pk"
     )
     serializer_class = BoardItemSerializer
     filterset_class = BoardItemFilter
     lookup_field = "uuid"
+
+    def get_queryset(self):
+        base = super().get_queryset()
+
+        if self.action != "list":
+            return base
+
+        return base.for_user(self.request.user)

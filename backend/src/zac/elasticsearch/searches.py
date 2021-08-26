@@ -82,6 +82,7 @@ def search(
     zaaktypen=None,
     behandelaar=None,
     eigenschappen=None,
+    urls=None,
     only_allowed=True,
     include_closed=True,
     ordering=("-identificatie", "-startdatum", "-registratiedatum"),
@@ -137,6 +138,9 @@ def search(
 
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))
+
+    if urls:
+        s = s.filter(Terms(url=urls))
 
     # display only allowed zaken
     if only_allowed:

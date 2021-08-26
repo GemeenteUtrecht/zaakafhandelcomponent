@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from zac.elasticsearch.api import get_zaak_document
 
 from .constants import BoardObjectTypes
+from .query import BoardItemQuerySet
 
 
 class Board(models.Model):
@@ -89,6 +90,8 @@ class BoardItem(models.Model):
         db_index=True,
         help_text=_("URL of the object in one of ZGW APIs this board item relates to"),
     )
+
+    objects = BoardItemQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("board item")
