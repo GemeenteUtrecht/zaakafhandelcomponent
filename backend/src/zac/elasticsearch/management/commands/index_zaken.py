@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Dict, List
 
 from django.conf import settings
@@ -8,14 +9,17 @@ from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 from zgw_consumers.concurrent import parallel
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
 
 from zac.core.services import (
     fetch_zaaktype,
-    get_rollen_all,
+    get_rollen,
     get_status,
     get_zaak_eigenschappen,
     get_zaakobjecten,
-    get_zaken_all,
+    get_zaaktypen,
+    get_zaken_all_paginated,
 )
 from zgw.models import Zaak
 
@@ -36,24 +40,42 @@ from ...documents import (
     ZaakTypeDocument,
 )
 
+logging.disable(logging.CRITICAL)
+
 
 class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
 
-    def handle(self, **options):
-        self.clear_zaken_index()
+    def batch_index_zaken(self) -> List[Zaak]:
+        ZaakDocument.init()
+        zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
 
-        zaken = get_zaken_all()
-        self.stdout.write(f"{len(zaken)} zaken are received from Zaken API.")
+        zrcs = Service.objects.filter(api_type=APITypes.zrc)
+        clients = [zrc.build_client() for zrc in zrcs]
+        then = time.time()
+        for client in clients:
+            get_more = True
+            query_params = {}
+            while get_more:
+                zaken, query_params = get_zaken_all_paginated(
+                    client, query_params=query_params
+                )
+                get_more = query_params.get("page", None)
+                for zaak in zaken:
+                    zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
+                yield from self.zaakdocumenten_generator(zaken)
+        now = time.time()
+        print(f"IT TOOK {now-then}s.")
+
+    def zaakdocumenten_generator(self, zaken: List[Zaak]) -> List[ZaakDocument]:
         zaak_documenten = self.create_zaak_documenten(zaken)
         zaaktype_documenten = self.create_zaaktype_documenten(zaken)
         status_documenten = self.create_status_documenten(zaken)
-        rollen_documenten = self.create_rollen_documenten()
+        rollen_documenten = self.create_rollen_documenten(zaken)
         eigenschappen_documenten = self.create_eigenschappen_documenten(zaken)
         zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
 
-        final = []
         for zaak in zaken:
             zaakdocument = zaak_documenten[zaak.url]
             zaakdocument.zaaktype = zaaktype_documenten[zaak.url]
@@ -61,18 +83,24 @@ class Command(BaseCommand):
             zaakdocument.rollen = rollen_documenten.get(zaak.url, [])
             zaakdocument.eigenschappen = eigenschappen_documenten.get(zaak.url, {})
             zaakdocument.zaakobjecten = zaakobjecten_documenten.get(zaak.url, [])
-            final.append(zaakdocument.to_dict(True))
+            zd = zaakdocument.to_dict(True)
+            yield zd
 
-        bulk(connections.get_connection(), final)
-        self.stdout.write(f"All zaken have been indexed.")
+    def handle(self, **options):
+        self.clear_zaken_index()
+        bulk(
+            connections.get_connection(),
+            self.batch_index_zaken(),
+        )
+
+        count = ZaakDocument.search().count()
+        self.stdout.write(f"{count} zaken are received from Zaken API.")
 
     def clear_zaken_index(self):
         zaken = Index(settings.ES_INDEX_ZAKEN)
         zaken.delete(ignore=404)
 
     def create_zaak_documenten(self, zaken: List[Zaak]) -> Dict[str, ZaakDocument]:
-        ZaakDocument.init()
-
         # Build the zaak_documenten
         zaak_documenten = {zaak.url: create_zaak_document(zaak) for zaak in zaken}
         return zaak_documenten
@@ -109,14 +137,18 @@ class Command(BaseCommand):
         )
         return status_documenten
 
-    def create_rollen_documenten(self) -> Dict[str, RolDocument]:
-        rollen = get_rollen_all()
-        rollen_documenten = {rol.zaak: [] for rol in rollen}
+    def create_rollen_documenten(self, zaken: List[Zaak]) -> Dict[str, RolDocument]:
+        with parallel(max_workers=10) as executor:
+            results = list(executor.map(get_rollen, zaken))
 
-        for rol in rollen:
-            rollen_documenten[rol.zaak].append(create_rol_document(rol))
+        list_of_rollen = [rollen for rollen in results if rollen]
+
+        rollen_documenten = {
+            rollen[0].zaak.url: [create_rol_document(rol) for rol in rollen]
+            for rollen in list_of_rollen
+        }
         self.stdout.write(
-            f"{len(rollen)} rollen are received for {len(rollen_documenten.keys())} zaken."
+            f"{sum([len(rollen) for rollen in list_of_rollen])} rollen are received for {len(rollen_documenten.keys())} zaken."
         )
         return rollen_documenten
 
