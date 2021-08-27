@@ -1,5 +1,3 @@
-import logging
-import time
 from typing import Dict, List
 
 from django.conf import settings
@@ -40,8 +38,6 @@ from ...documents import (
     ZaakTypeDocument,
 )
 
-logging.disable(logging.CRITICAL)
-
 
 class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
@@ -52,7 +48,6 @@ class Command(BaseCommand):
 
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         clients = [zrc.build_client() for zrc in zrcs]
-        then = time.time()
         for client in clients:
             get_more = True
             query_params = {}
@@ -65,8 +60,6 @@ class Command(BaseCommand):
                     zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
                 yield from self.zaakdocumenten_generator(zaken)
-        now = time.time()
-        print(f"IT TOOK {now-then}s.")
 
     def zaakdocumenten_generator(self, zaken: List[Zaak]) -> List[ZaakDocument]:
         zaak_documenten = self.create_zaak_documenten(zaken)
