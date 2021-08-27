@@ -13,6 +13,8 @@ from zgw_consumers.test import mock_service_oas_get
 from zac.accounts.tests.factories import UserFactory
 from zac.activities.models import Activity, Event
 from zac.activities.tests.factories import ActivityFactory, EventFactory
+from zac.contrib.board.models import BoardItem
+from zac.contrib.board.tests.factories import BoardItemFactory
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
@@ -100,3 +102,14 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
 
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id, ignore=404)
         self.assertIsNone(zaak_document)
+
+    def test_board_item_deleted(self):
+        path = reverse("notifications:callback")
+        BoardItemFactory(
+            object="https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
+        )
+
+        response = self.client.post(path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(BoardItem.objects.exists())
