@@ -3,8 +3,7 @@ import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'gu-paginator',
-  templateUrl: './paginator.component.html',
-  styleUrls: ['./paginator.component.scss']
+  templateUrl: './paginator.component.html'
 })
 export class PaginatorComponent {
 
