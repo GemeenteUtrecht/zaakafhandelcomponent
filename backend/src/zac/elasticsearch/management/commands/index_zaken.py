@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
@@ -42,7 +42,17 @@ from ...documents import (
 class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
 
-    def batch_index_zaken(self) -> List[Zaak]:
+    def handle(self, **options):
+        self.clear_zaken_index()
+        bulk(
+            connections.get_connection(),
+            self.batch_index_zaken(),
+        )
+
+        count = ZaakDocument.search().count()
+        self.stdout.write(f"{count} zaken are received from Zaken API.")
+
+    def batch_index_zaken(self) -> Iterator[ZaakDocument]:
         ZaakDocument.init()
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
 
@@ -61,7 +71,7 @@ class Command(BaseCommand):
 
                 yield from self.zaakdocumenten_generator(zaken)
 
-    def zaakdocumenten_generator(self, zaken: List[Zaak]) -> List[ZaakDocument]:
+    def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
         zaak_documenten = self.create_zaak_documenten(zaken)
         zaaktype_documenten = self.create_zaaktype_documenten(zaken)
         status_documenten = self.create_status_documenten(zaken)
@@ -78,16 +88,6 @@ class Command(BaseCommand):
             zaakdocument.zaakobjecten = zaakobjecten_documenten.get(zaak.url, [])
             zd = zaakdocument.to_dict(True)
             yield zd
-
-    def handle(self, **options):
-        self.clear_zaken_index()
-        bulk(
-            connections.get_connection(),
-            self.batch_index_zaken(),
-        )
-
-        count = ZaakDocument.search().count()
-        self.stdout.write(f"{count} zaken are received from Zaken API.")
 
     def clear_zaken_index(self):
         zaken = Index(settings.ES_INDEX_ZAKEN)

@@ -1,7 +1,7 @@
 import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -358,8 +358,6 @@ def get_zaken_all_paginated(
     Used to index Zaken in ES.
     Should not be used for searches with user permissions
     """
-    from urllib.parse import parse_qs, urlparse
-
     response = client.list("zaak", query_params=query_params)
     zaken = factory(Zaak, response["results"])
 
