@@ -223,10 +223,6 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
 
     roltypen = factory(RolType, roltypen)
 
-    # resolve relations
-    for roltype in roltypen:
-        roltype.zaaktype = zaaktype
-
     return roltypen
 
 
@@ -543,7 +539,6 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
 
     # resolve relations
     for zaak_eigenschap in zaak_eigenschappen:
-        zaak_eigenschap.zaak = zaak
         zaak_eigenschap.eigenschap = eigenschappen[zaak_eigenschap.eigenschap]
 
     return zaak_eigenschappen
@@ -633,7 +628,6 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
 
     # resolve relations
     _resultaattypen = {rt.url: rt for rt in get_resultaattypen(zaak.zaaktype)}
-    resultaat.zaak = zaak
     resultaat.resultaattype = _resultaattypen[resultaat.resultaattype]
 
     return resultaat
@@ -646,10 +640,6 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
 
     rollen = factory(Rol, _rollen)
-
-    # convert URL references into objects
-    for rol in rollen:
-        rol.zaak = zaak
 
     return rollen
 
@@ -718,34 +708,6 @@ def get_zaak_informatieobjecten(zaak: Zaak) -> list:
     return zaak_informatieobjecten
 
 
-def zet_resultaat(
-    zaak: Zaak, resultaattype: ResultaatType, toelichting: str = ""
-) -> Resultaat:
-    assert (
-        not zaak.resultaat
-    ), "Can't set a new resultaat for a zaak, must delete the old one first"
-    assert len(toelichting) <= 1000, "Toelichting is > 1000 characters"
-
-    client = _client_from_object(zaak)
-    resultaat = client.create(
-        "resultaat",
-        {
-            "zaak": zaak.url,
-            "resultaattype": resultaattype.url,
-            "toelichting": toelichting,
-        },
-    )
-    resultaat = factory(Resultaat, resultaat)
-
-    # resolve relations
-    resultaat.zaak = zaak
-    resultaat.resultaattype = resultaattype
-    zaak.resultaat = resultaat
-
-    invalidate_zaak_cache(zaak)
-    return resultaat
-
-
 def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Status:
     assert len(toelichting) <= 1000, "Toelichting is > 1000 characters"
 
@@ -763,9 +725,7 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
     status = factory(Status, status)
 
     # resolve relations
-    status.zaak = zaak
     status.statustype = statustype
-    zaak.status = status
 
     invalidate_zaak_cache(zaak)
     return status
@@ -875,20 +835,12 @@ def fetch_documents(
     return factory(Document, documenten), gone
 
 
-def get_documenten(
-    zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
-) -> Tuple[List[Document], List[str]]:
-    logger.debug("Retrieving documents linked to zaak %r", zaak)
-    # get zaakinformatieobjecten
-    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
-    # retrieve the documents themselves, in parallel
-    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
-    logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
-    # Add version to zio_url if found in doc_versions
-    found, gone = fetch_documents(zios, doc_versions)
+def resolve_documenten_informatieobjecttypen(
+    documents: List[Document],
+) -> List[Document]:
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
     # figure out relevant ztcs
-    informatieobjecttypen = {document.informatieobjecttype for document in found}
+    informatieobjecttypen = {document.informatieobjecttype for document in documents}
     _iot = list(informatieobjecttypen)
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     relevant_ztcs = []
@@ -907,10 +859,27 @@ def get_documenten(
         for iot in all_informatieobjecttypen
     }
     # resolve relations
-    for document in found:
+    for document in documents:
         document.informatieobjecttype = informatieobjecttypen[
             document.informatieobjecttype
         ]
+    return documents
+
+
+def get_documenten(
+    zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
+) -> Tuple[List[Document], List[str]]:
+    logger.debug("Retrieving documents linked to zaak %r", zaak)
+
+    # get zaakinformatieobjecten
+    zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
+
+    # retrieve the documents themselves, in parallel
+    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
+    logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
+
+    # Add version to zio_url if found in doc_versions
+    found, gone = fetch_documents(zios, doc_versions)
     return found, gone
 
 

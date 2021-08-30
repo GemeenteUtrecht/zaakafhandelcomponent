@@ -245,9 +245,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         }
         rm.get(ROL, json=rol_old)
         rol_1 = factory(Rol, rol_old)
-        rol_1.zaak = zaak
         rol_2 = factory(Rol, rol_new)
-        rol_2.zaak = zaak
         rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak.url}", json=paginated_response([]))
         zaak_document = create_zaak_document(zaak)
         self.assertEqual(zaak_document.rollen, [])

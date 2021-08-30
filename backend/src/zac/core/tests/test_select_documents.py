@@ -104,7 +104,11 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         cls.document.informatieobjecttype = factory(InformatieObjectType, documenttype)
         cls.patch_get_documenten = patch(
             "zac.core.camunda.select_documents.context.get_documenten",
-            return_value=[[cls.document], []],
+            return_value=[[], []],
+        )
+        cls.patch_resolve_documenten = patch(
+            "zac.core.camunda.select_documents.context.resolve_documenten_informatieobjecttypen",
+            return_value=[cls.document],
         )
 
         process_instance_id = uuid.uuid4()
@@ -151,6 +155,9 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
 
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
+
+        self.patch_resolve_documenten.start()
+        self.addCleanup(self.patch_resolve_documenten.stop)
 
         self.patch_get_process_instance.start()
         self.addCleanup(self.patch_get_process_instance.stop)

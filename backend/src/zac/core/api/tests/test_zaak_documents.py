@@ -121,13 +121,16 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             return_value=[doc_obj],
         ):
             with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch(
-                    "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
-                ):
+                with patch("zac.core.api.views.get_documenten", return_value=([], [])):
                     with patch(
-                        "zac.core.api.views.get_open_documenten", return_value=[dowc]
+                        "zac.core.api.views.resolve_documenten_informatieobjecttypen",
+                        return_value=([doc_obj]),
                     ):
-                        response = self.client.get(self.endpoint)
+                        with patch(
+                            "zac.core.api.views.get_open_documenten",
+                            return_value=[dowc],
+                        ):
+                            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
