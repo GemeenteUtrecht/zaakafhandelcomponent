@@ -26,12 +26,15 @@ export class SearchService {
 
   /**
    * Retrieve a list of zaken based on input data. The response contains only zaken the user has permissions to see.
-   * @param search
-   * @param sortData
+   * @param {Search} search
+   * @param {number} page
+   * @param {string | null} ordering
+   * @returns {Observable<any>}
    */
-  searchZaken(search: Search, ordering?: string|null): Observable<any> {
-    const query = ordering ? `?ordering=${ordering}` : '';
-    const endpoint = encodeURI(`/api/search/zaken${query}`);
+  searchZaken(search: Search, page: number, ordering?: string|null): Observable<any> {
+    const pageValue = `?page=${page}`;
+    const query = ordering ? `&ordering=${ordering}` : '';
+    const endpoint = encodeURI(`/api/search/zaken${pageValue}${query}`);
     return this.http.Post<any>(endpoint, search);
   }
 

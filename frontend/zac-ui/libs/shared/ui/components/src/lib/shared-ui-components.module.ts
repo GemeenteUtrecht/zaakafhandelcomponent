@@ -14,6 +14,7 @@ import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import { MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -27,6 +28,9 @@ import {CheckboxComponent} from './elements/checkbox/checkbox.component';
 import {InputFieldComponent} from './elements/input-field/input-field.component';
 import {MessageComponent} from './elements/message/message.component';
 import {IconComponent} from './elements/icon/icon.component';
+import {InputComponent, patchMatFormField} from './elements/input/input.component';
+import {TextareaComponent} from './elements/textarea/textarea.component';
+import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 // UI Components
 import {FileComponent} from './components/file/file.component';
@@ -39,7 +43,11 @@ import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
-import {MultiselectModule} from "./elements/multiselect/multiselect.module";
+import {PaginatorComponent} from './components/paginator/paginator.component';
+import { CustomPaginatorLabels } from './components/paginator/custom-paginator-labels';
+
+// Customise Material Form Fields
+patchMatFormField();
 
 @NgModule({
     imports: [
@@ -58,6 +66,7 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
         MatTabsModule,
         MatSnackBarModule,
         MultiselectModule,
+        MatPaginatorModule
     ],
     declarations: [
         ButtonComponent,
@@ -80,7 +89,10 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
         MessageComponent,
         SidenavComponent,
         TabComponent,
-        TabGroupComponent
+        TabGroupComponent,
+        InputComponent,
+        TextareaComponent,
+        PaginatorComponent,
     ],
     exports: [
         ButtonComponent,
@@ -105,8 +117,15 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
         SidenavComponent,
         TabComponent,
         TabGroupComponent,
-        MatTabsModule
+        MatTabsModule,
+        InputComponent,
+        TextareaComponent,
+        PaginatorComponent
     ],
+    providers: [{
+      provide: MatPaginatorIntl,
+      useClass: CustomPaginatorLabels
+    }],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SharedUiComponentsModule {

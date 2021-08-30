@@ -8,6 +8,7 @@ import { Result } from '../../../models/zaaktype';
 import { ZaaktypeEigenschap } from '../../../models/zaaktype-eigenschappen';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
+import { PageEvent } from '@angular/material/paginator';
 
 
 /**
@@ -24,7 +25,9 @@ import {tableHeadMapping} from "../../search-results/constants/table";
 })
 export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Input() sortData: TableSort;
+  @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
+  @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
 
   searchForm: FormGroup
   search: Search;
@@ -42,6 +45,8 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   showReportNameField: boolean;
   reportName: string;
   saveReportIsSuccess: boolean;
+
+  page = 1;
 
   constructor(
     private fb: FormBuilder,
@@ -63,8 +68,11 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.sortData.previousValue !== this.sortData ) {
-      this.postSearchZaken(this.search, this.sortData);
+    const pageHasChanged = changes.pageData?.previousValue !== this.pageData;
+    const sortHasChanged = changes.sortData?.previousValue !== this.pageData;
+    if (sortHasChanged || pageHasChanged) {
+      this.page = this.pageData.pageIndex + 1;
+      this.postSearchZaken(this.search, this.page, this.sortData);
     }
   }
 
@@ -172,7 +180,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       ...(this.eigenschapnaam.value && this.eigenschapwaarde.value) && {eigenschappen: eigenschappen}
     }
 
-    this.postSearchZaken(this.search)
+    this.postSearchZaken(this.search, this.page)
 
     // Check if the user wants to save the search query as a report
     if (this.saveReportControl.value) {
@@ -184,17 +192,19 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   /**
    * POST search query.
    * @param {Search} formData
+   * @param {Number} page
    * @param {TableSort} sortData
    */
-  postSearchZaken(formData: Search, sortData?: TableSort) {
+  postSearchZaken(formData: Search, page, sortData?: TableSort) {
     this.isSubmitting = true;
 
     const orderingDirection = sortData?.order === 'desc' ? '-' : '';
     const orderingParam = sortData ? tableHeadMapping[sortData.value] : '';
     const ordering = sortData ? `${orderingDirection}${orderingParam}` : null;
 
-    this.searchService.searchZaken(formData, ordering).subscribe(res =>{
+    this.searchService.searchZaken(formData, page, ordering).subscribe(res =>{
       this.loadResult.emit(res.results);
+      this.resultLength.emit(res.count);
       this.isSubmitting = false;
     }, error => {
       this.hasError = true;

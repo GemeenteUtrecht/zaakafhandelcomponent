@@ -16,11 +16,11 @@
 
   <div class="row">
     <div class="col-12 mt-4">
-      <gu-input-field type="text"
-                      [control]="omschrijving"
-                      label="Omschrijving"
-                      autocomplete="off"
-      ></gu-input-field>
+      <gu-input type="text"
+                [control]="omschrijving"
+                label="Omschrijving"
+                autocomplete="off"
+      ></gu-input>
     </div>
   </div>
 
@@ -43,11 +43,11 @@
       <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
         <ng-container *ngSwitchCase="'string'">
           <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date'">
-            <gu-input-field type="text"
-                            [control]="eigenschapwaarde"
-                            label="Eigenschapwaarde"
-                            autocomplete="off"
-            ></gu-input-field>
+            <gu-input type="text"
+                      [control]="eigenschapwaarde"
+                      label="Eigenschapwaarde"
+                      autocomplete="off"
+            ></gu-input>
           </ng-container>
           <ng-container *ngIf="selectedPropertyValue.spec.format === 'date'">
             <gu-datepicker
@@ -58,22 +58,22 @@
           </ng-container>
         </ng-container>
         <ng-container *ngSwitchCase="'number'">
-          <gu-input-field type="number"
+          <gu-input type="number"
                           [control]="eigenschapwaarde"
                           label="Eigenschapwaarde"
                           autocomplete="off"
-          ></gu-input-field>
+          ></gu-input>
         </ng-container>
       </ng-container>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-6 mt-4">
+  <div class="row pl-3">
+    <div class="col-lg-6 mt-2">
       <gu-checkbox class="d-inline-block mr-1"
                    [control]="saveReportControl"
                    (change)="onCheckboxChange()">
-        Zoekopdracht opslaan als rapportage
+        <p class="mb-0">Zoekopdracht opslaan als rapportage</p>
       </gu-checkbox>
 
       <gu-tooltip type="primary" inline="true">
@@ -85,12 +85,13 @@
       </gu-tooltip>
     </div>
 
-    <div *ngIf="showReportNameField" class="col-6 mt-4">
-      <gu-input-field type="text"
-                      [control]="queryNameControl"
-                      label="Rapportagenaam"
-                      autocomplete="off"
-      ></gu-input-field>
+    <div *ngIf="showReportNameField" class="col-lg-6 mt-2">
+      <gu-input type="text"
+                [control]="queryNameControl"
+                label="Rapportagenaam"
+                autocomplete="off"
+                [required]="true"
+      ></gu-input>
     </div>
   </div>
 

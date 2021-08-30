@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { RowData, Table, Zaak } from '@gu/models';
 import { tableHead } from './constants/table';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'gu-search-results',
@@ -9,7 +10,9 @@ import { tableHead } from './constants/table';
 })
 export class SearchResultsComponent implements OnChanges {
   @Input() resultData: Zaak[];
+  @Input() resultLength: number;
   @Output() sortOutput = new EventEmitter<any>();
+  @Output() pageOutput = new EventEmitter<PageEvent>();
 
   tableData: Table = new Table([], []);
 

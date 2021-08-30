@@ -23,6 +23,9 @@ export class FeaturesReportsComponent implements OnInit {
   hasError: boolean;
   errorMessage: string;
 
+  page = 1;
+  resultLength = 0;
+
   constructor(
     private reportsService: FeaturesReportsService,
     private fb: FormBuilder,
@@ -40,7 +43,7 @@ export class FeaturesReportsComponent implements OnInit {
     this.reportCases = null;
     const selectedReport = this.reportType.value;
     if (selectedReport) {
-      this.fetchReportCases(selectedReport)
+      this.fetchReportCases(selectedReport, this.page)
     }
   }
 
@@ -60,8 +63,8 @@ export class FeaturesReportsComponent implements OnInit {
             type: element.startdatum ? 'date' : 'text',
             date: element.startdatum
           },
-          status: element.status,
-          toelichting: element.toelichting
+          status: element.status.statustype,
+          toelichting: element.status.statustoelichting
         },
         expandData: eigenschappen
       };
@@ -71,7 +74,13 @@ export class FeaturesReportsComponent implements OnInit {
 
   sortTable(sortValue) {
     const selectedReport = this.reportType.value;
-    this.fetchReportCases(selectedReport, sortValue);
+    this.fetchReportCases(selectedReport, this.page, sortValue);
+  }
+
+  onPageSelect(page) {
+    this.page = page.pageIndex + 1;
+    const selectedReport = this.reportType.value;
+    this.fetchReportCases(selectedReport, this.page)
   }
 
   fetchReportTypes() {
@@ -85,11 +94,12 @@ export class FeaturesReportsComponent implements OnInit {
     });
   }
 
-  fetchReportCases(reportId, sortValue?) {
+  fetchReportCases(reportId, page?, sortValue?) {
     this.isLoading = true;
-    this.reportsService.getReportCases(reportId, sortValue).subscribe((res) => {
+    this.reportsService.getReportCases(reportId, page, sortValue).subscribe((res) => {
       this.reportCases = res;
-      this.reportCasesTableData.bodyData = this.formatReportTable(res.results);
+      this.resultLength = res.count;
+      this.reportCasesTableData = new Table(tableHead, this.formatReportTable(res.results));
       this.isLoading = false;
       this.hasError = false;
     }, res => {

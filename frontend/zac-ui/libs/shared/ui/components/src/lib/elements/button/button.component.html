@@ -2,15 +2,15 @@
   *ngIf="loading"
   class="btn__spinner"
   [ngClass]="{
-  'btn__spinner--primary': type == 'primary',
-  'btn__spinner--secondary': type == 'secondary',
-  'btn__spinner--tertiary': type == 'tertiary'
+  'btn__spinner--primary': buttonStyle == 'primary',
+  'btn__spinner--secondary': buttonStyle == 'secondary',
+  'btn__spinner--tertiary': buttonStyle == 'tertiary'
   }"
 ></span>
-<mat-icon *ngIf="icon || type === 'action-link'">
+<mat-icon *ngIf="icon || buttonStyle === 'action-link'">
   {{
     icon ? icon :
-    type === 'action-link' ? 'chevron_right' : null
+      buttonStyle === 'action-link' ? 'chevron_right' : null
   }}
 </mat-icon>
 <span class='d-inline-flex'>

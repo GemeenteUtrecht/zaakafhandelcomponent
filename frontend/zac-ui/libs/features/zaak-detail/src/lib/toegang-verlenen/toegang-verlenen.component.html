@@ -16,7 +16,7 @@
       <button gu-button
         [disabled]="!grantAccessForm.valid || isSubmitting"
         [loading]="isSubmitting"
-        type="primary"
+        buttonStyle="primary"
         size="large"
         (click)="submitForm()">
         Versturen
@@ -26,6 +26,6 @@
   </form>
   <gu-success *ngIf="submitSuccess">
     <p class="mb-4">U heeft gebruiker {{requesterUser.fullName}} succesvol toegang verleend tot <strong>{{identificatie}}</strong></p>
-    <button gu-button type="tertiary" size="small" (click)="submitSuccess=false">Sluiten</button>
+    <button gu-button buttonStyle="tertiary" size="small" (click)="submitSuccess=false">Sluiten</button>
   </gu-success>
 </div>

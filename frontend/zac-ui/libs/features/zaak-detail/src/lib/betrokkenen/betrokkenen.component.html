@@ -23,12 +23,14 @@
       </div>
       <p class="p--nomargin">{{role.name}}</p>
     </div>
-    <button gu-button *ngIf="hiddenRoleData?.length > 0"
-            type="tertiary"
-            size="extrasmall"
-            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-            (click)="isExpanded = !isExpanded">
-      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
-    </button>
+    <div class="d-flex justify-content-end">
+      <button gu-button *ngIf="hiddenRoleData?.length > 0"
+              buttonStyle="tertiary"
+              size="extrasmall"
+              [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+              (click)="isExpanded = !isExpanded">
+        {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+      </button>
+    </div>
   </ng-container>
 </div>

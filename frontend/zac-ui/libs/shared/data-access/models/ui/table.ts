@@ -24,6 +24,7 @@ export interface CellData {
 
 export interface ExtensiveCell {
   buttonType?: string;
+  buttonInfo?: string;
   iconColor?: string;
   iconInfo?: string;
   label?: string | number;

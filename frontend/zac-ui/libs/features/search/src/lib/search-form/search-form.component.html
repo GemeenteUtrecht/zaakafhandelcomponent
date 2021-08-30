@@ -4,7 +4,7 @@
       <!-- Case (zaak) by property. -->
       <gu-tab label="Zoeken op eigenschap">
         <div class="mt-4">
-          <gu-property-search-form [sortData]="sortData" (loadResult)="loadResult.emit($event)"></gu-property-search-form>
+          <gu-property-search-form [sortData]="sortData" [pageData]="pageData" (loadResult)="loadResult.emit($event)" (resultLength)="resultLength.emit($event)"></gu-property-search-form>
         </div>
       </gu-tab>
 

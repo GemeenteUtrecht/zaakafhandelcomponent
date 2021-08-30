@@ -1,0 +1,14 @@
+<mat-form-field
+  appearance="outline"
+  [hideRequiredMarker]="true"
+  [floatLabel]="'always'"
+>
+  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+  <textarea matInput
+            [placeholder]="placeholder"
+            [value]="value"
+            [disabled]="disabled"
+            [formControl]="control"
+            [required]="required"
+  ></textarea>
+</mat-form-field>

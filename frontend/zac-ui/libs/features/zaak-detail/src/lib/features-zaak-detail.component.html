@@ -3,7 +3,7 @@
     <div class="d-flex">
       <h1>{{zaakData.zaaktype.omschrijving}}</h1>
       <button gu-button
-              type="tertiary"
+              buttonStyle="tertiary"
               size="extrasmall"
               class="ml-2 p-0"
               *ngIf="activeActivities"
@@ -17,7 +17,7 @@
         </span>
       </button>
     </div>
-    <button gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
+    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
   </div>
 
 <!--  Loading -->
@@ -34,11 +34,11 @@
         ></gu-message>
       <div *ngIf="canRequestAccess && !accessRequestSuccess">
         <h2>Toegang vragen tot deze zaak</h2>
-        <gu-input-field [control]="commentControl"
-                        type="text"
-                        label="Opmerking (niet verplicht)"
-                        class="mb-4">
-        </gu-input-field>
+        <gu-input [control]="commentControl"
+                  type="text"
+                  label="Opmerking"
+                  class="mb-4">
+        </gu-input>
         <button gu-button
                 (click)="submitAccessRequest()"
                 [disabled]='isSubmittingAccessRequest'

@@ -27,13 +27,19 @@ export interface Eigenschappen {
   value: Date;
 }
 
+export interface Status {
+  datumStatusGezet: string;
+  statustoelichting: string;
+  statustype: string;
+}
+
 export interface ReportCase {
   identificatie: string;
   bronorganisatie: string;
   omschrijving: string;
   toelichting: string;
   startdatum: string;
-  status: string;
+  status: Status;
   zaaktype: Zaaktype;
   eigenschappen: Eigenschappen[];
 }

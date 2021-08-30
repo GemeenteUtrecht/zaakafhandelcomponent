@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm } from '../../models/advice-form';
 import { ReviewRequest } from '../../models/review-request';
@@ -261,4 +261,8 @@ export class AdviceComponent implements OnInit {
     })
 
   }
+
+  get adviceControl(): FormControl {
+    return this.adviceForm.get('advice') as FormControl;
+  };
 }

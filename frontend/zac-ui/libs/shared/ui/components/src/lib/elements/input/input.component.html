@@ -1,0 +1,16 @@
+<mat-form-field
+  appearance="outline"
+  [hideRequiredMarker]="true"
+  [floatLabel]="'always'"
+>
+  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+  <input matInput
+         [type]="type"
+         [placeholder]="placeholder"
+         [value]="value"
+         [formControl]="control"
+         [autocomplete]="autocomplete"
+         [required]="required"
+         [disabled]="disabled"
+  >
+</mat-form-field>

@@ -20,8 +20,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   readonly assignedUsersTitle = {
-    advice: 'Adviseur(s)',
-    approval: 'Accordeur(s)'
+    advice: 'Adviseurs',
+    approval: 'Accordeurs'
   }
   reviewType: 'advice' | 'approval';
 
@@ -56,9 +56,13 @@ export class AdviserenAccorderenComponent implements OnChanges {
     }
   }
 
-  addStep() {
-    this.steps++
-    this.assignedUsers.push(this.addAssignUsersStep());
+  addStep(i) {
+    if (this.extraStepControl(i).value) {
+      this.steps++
+      this.assignedUsers.push(this.addAssignUsersStep());
+    } else {
+      this.deleteStep();
+    }
   }
 
   deleteStep() {
@@ -86,8 +90,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
       .filter(v => v !== null);
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
-        const deadline = this.datePipe.transform(this.assignedUsersDeadline(i).value, "yyyy-MM-dd");
-        const users = this.assignedUsersUsers(i).value;
+        const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
+        const users = this.assignedUsersControl(i).value;
         return {
           deadline: deadline,
           users: users
@@ -128,7 +132,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
   addAssignUsersStep() {
     return this.fb.group({
       deadline: [undefined, Validators.required],
-      users: [[], Validators.minLength(1)]
+      users: [[], Validators.minLength(1)],
+      extraStep: ['']
     })
   }
 
@@ -144,15 +149,19 @@ export class AdviserenAccorderenComponent implements OnChanges {
     return this.assignUsersForm.get('toelichting') as FormControl;
   };
 
-  assignedUsersUsers(index: number): FormControl {
+  assignedUsersControl(index: number): FormControl {
     return this.assignedUsers.at(index).get('users') as FormControl;
   }
 
-  assignedUsersDeadline(index: number): FormControl {
+  assignedDeadlineControl(index: number): FormControl {
     return this.assignedUsers.at(index).get('deadline') as FormControl;
   }
 
-  assignedUsersMinDate(index: number): Date {
+  extraStepControl(index: number): FormControl {
+    return this.assignedUsers.at(index).get('extraStep') as FormControl;
+  }
+
+  assignedMinDateControl(index: number): Date {
     const today = new Date();
     if (this.assignedUsers.at(index - 1)) {
       const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value ? this.assignedUsers.at(index - 1).get('deadline').value : today;

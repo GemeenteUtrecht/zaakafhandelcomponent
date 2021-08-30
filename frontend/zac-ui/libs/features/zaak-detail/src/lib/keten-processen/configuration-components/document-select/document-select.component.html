@@ -18,8 +18,8 @@
             </gu-checkbox>
             <div>
               <p class="d-inline">Documenttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
-              <button gu-button *ngIf="!openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Documenttype wijzigen</button>
-              <button gu-button *ngIf="openSelectorsArray.includes(i)" type="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
+              <button gu-button *ngIf="!openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Documenttype wijzigen</button>
+              <button gu-button *ngIf="openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
               <ng-container *ngIf="openSelectorsArray.includes(i)">
                 <div class="row">
                   <div class="col-4">

@@ -5,7 +5,7 @@
     <ul>
       <li *ngFor='let request of accessRequest.accessRequests' class='mb-2'>
         <gu-icon>add_moderator</gu-icon>
-        <button gu-button type='tertiary' size='extrasmall' (click)='openRequestHandler(accessRequest, request)'>{{request.requester}}</button>
+        <button gu-button buttonStyle='tertiary' size='extrasmall' (click)='openRequestHandler(accessRequest, request)'>{{request.requester}}</button>
       </li>
     </ul>
   </div>
@@ -29,31 +29,30 @@
     </p>
 
     <fieldset class="form__body">
-      <gu-input-field
+      <gu-input
         [control]="handlerCommentControl"
-        label="Opmerking (niet verplicht)"
+        label="Opmerking"
         type="text"
         class="mb-3"
-      ></gu-input-field>
+      ></gu-input>
 
       <gu-datepicker
-        label='Verloopdatum toegang (niet verplicht)'
+        label='Verloopdatum toegang'
         [control]="endDateControl"
-        placeholder="Datum"
         class='d-block mb-4'
       ></gu-datepicker>
     </fieldset>
 
     <footer class="form__footer d-flex justify-content-end">
       <button gu-button
-              type="primary"
+              buttonStyle="primary"
               size="small"
               class="d-inline-block mr-2"
               [loading]='isSubmitting'
               (click)="submitForm('approve', openedRequest)">
         Goedkeuren
       </button>
-      <button gu-button type="secondary" size="small" class="d-inline-block" (click)="submitForm('reject', openedRequest)">
+      <button gu-button buttonStyle="secondary" size="small" class="d-inline-block" (click)="submitForm('reject', openedRequest)">
         Afwijzen
       </button>
     </footer>

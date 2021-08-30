@@ -56,7 +56,8 @@ export class DocumentenService {
       const overwriteCell: ExtensiveCell = {
         type: 'button',
         label: 'Overschrijven',
-        value: element.url
+        value: element.url,
+        buttonInfo: 'Met deze knop kan je een oud document vervangen door een nieuw document'
       };
       const confidentialityButton: ExtensiveCell | string = element.locked ? element.vertrouwelijkheidaanduiding : {
         type: 'button',
@@ -79,7 +80,7 @@ export class DocumentenService {
             value: element.readUrl
           },
           bewerken: showEditCell ? editCell : '',
-          overschrijven:  element.locked ? '' : overwriteCell,
+          overschrijven: element.locked ? '' : overwriteCell,
           type: element.informatieobjecttype['omschrijving'],
           vertrouwelijkheid: confidentialityButton
         }

@@ -80,7 +80,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
     &--tertiary {
       @include button--tertiary;
 
-      &:hover span {
+      &:hover:not([disabled]) span {
         text-decoration: underline;
       }
 
