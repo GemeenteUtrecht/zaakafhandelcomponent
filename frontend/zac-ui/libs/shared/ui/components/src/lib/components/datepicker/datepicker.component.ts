@@ -14,7 +14,7 @@ export const APP_DATE_FORMATS =
   };
 
 /**
- * <gu-datepicker [control]="formControl" label="Datum">I'm a datepicker</gu-checkbox>
+ * <gu-datepicker [control]="formControl" label="Datum">I'm a datepicker</gu-datepicker>
  *
  * Generic datepicker component, based on mat-datepicker.
  *
@@ -28,7 +28,7 @@ export const APP_DATE_FORMATS =
 @Component({
   selector: 'gu-datepicker',
   templateUrl: './datepicker.component.html',
-  styleUrls: ['./datepicker.component.scss'],
+  styleUrls: ['../../elements/input/input.component.scss'],
   providers: [{ provide: MAT_DATE_FORMATS, useValue: APP_DATE_FORMATS }],
   viewProviders: [ { provide: ControlContainer, useExisting: NgForm } ]
 })

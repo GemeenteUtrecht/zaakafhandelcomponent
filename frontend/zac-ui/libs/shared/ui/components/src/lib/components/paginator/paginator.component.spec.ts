@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AutocompleteComponent } from './autocomplete.component';
+import { PaginatorComponent } from './paginator.component';
 
-describe('AutocompleteComponent', () => {
-  let component: AutocompleteComponent;
-  let fixture: ComponentFixture<AutocompleteComponent>;
+describe('PaginatorComponent', () => {
+  let component: PaginatorComponent;
+  let fixture: ComponentFixture<PaginatorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AutocompleteComponent ]
+      declarations: [ PaginatorComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AutocompleteComponent);
+    fixture = TestBed.createComponent(PaginatorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

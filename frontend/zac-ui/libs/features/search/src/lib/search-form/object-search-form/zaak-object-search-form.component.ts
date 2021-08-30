@@ -98,7 +98,7 @@ export class ZaakObjectSearchFormComponent {
 
   /**
    * Gers called when form is submitted.
-   * @param {Object}} data
+   * @param {Object} data
    */
   submitForm(data) {
     const geometry: Geometry = JSON.parse(data.geometry);
@@ -127,7 +127,7 @@ export class ZaakObjectSearchFormComponent {
     this.loadResult.emit([]);
     this.showZaakObjecten = false;
 
-    this.searchService.searchZaken(search).subscribe(
+    this.searchService.searchZaken(search, 1).subscribe(
       (data) => this.loadResult.emit(data.results as Zaak[]),
       this.reportError.bind(this)
     );

@@ -15,11 +15,12 @@ export class FeaturesReportsService {
     return this.http.Get<ReportType[]>(endpoint);
   }
 
-  getReportCases(id, sortData): Observable<ReportCases> {
+  getReportCases(id, page, sortData): Observable<ReportCases> {
+    const pageValue = `?page=${page}`;
     const sortOrder = sortData?.order === 'desc' ? '-' : '';
     const sortValue = sortData ? tableHeadMapping[sortData.value] : '';
-    const sortParameter = sortData ? `?ordering=${sortOrder}${sortValue}` : '';
-    const endpoint = encodeURI(`/api/search/reports/${id}/results/${sortParameter}`);
+    const sortParameter = sortData ? `&ordering=${sortOrder}${sortValue}` : '';
+    const endpoint = encodeURI(`/api/search/reports/${id}/results/${pageValue}${sortParameter}`);
     return this.http.Get<ReportCases>(endpoint);
   }
 

@@ -1,9 +1,12 @@
 <ng-container *ngIf="resultData && tableData">
-  <h3 class="mb-4">Resultaten ({{resultData.length}})</h3>
+  <h3 class="mb-4">Resultaten ({{resultLength}})</h3>
   <section *ngIf="resultData.length > 0">
     <gu-table [table]="tableData"
               [sortable]="true"
               [expandable]="true"
               (sortOutput)="sortOutput.emit($event)"></gu-table>
+    <gu-paginator (page)="pageOutput.emit($event)"
+                  [length]="resultLength"
+    ></gu-paginator>
   </section>
 </ng-container>

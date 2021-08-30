@@ -81,32 +81,40 @@
 
   .icon-wrapper {
     position: relative;
+    .icon {
+      position: relative;
+      font-size: 1.25rem;
+      vertical-align: middle;
+      cursor: default;
+
+      &:hover + .tooltip__content {
+        visibility: visible;
+      }
+
+      &--gray {
+        color: $color-disabled;
+      }
+
+      &--orange {
+        color: $color-orange;
+      }
+
+      &--green {
+        color: $color-success;
+      }
+
+      &--red {
+        color: $color-warn;
+      }
+    }
   }
 
-  .icon {
+  .button-wrapper {
     position: relative;
-    font-size: 1.25rem;
-    vertical-align: middle;
-    cursor: default;
-
-    &:hover + .tooltip__content {
-      visibility: visible;
-    }
-
-    &--gray {
-      color: $color-disabled;
-    }
-
-    &--orange {
-      color: $color-orange;
-    }
-
-    &--green {
-      color: $color-success;
-    }
-
-    &--red {
-      color: $color-warn;
+    button {
+      &:hover + .tooltip__content {
+        visibility: visible;
+      }
     }
   }
 

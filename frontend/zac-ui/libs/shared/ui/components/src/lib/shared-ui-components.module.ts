@@ -14,8 +14,7 @@ import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatChipsModule} from '@angular/material/chips';
+import { MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 
 // UI Elements
 import {ButtonComponent} from './elements/button/button.component';
@@ -31,6 +30,7 @@ import {MessageComponent} from './elements/message/message.component';
 import {IconComponent} from './elements/icon/icon.component';
 import {InputComponent, patchMatFormField} from './elements/input/input.component';
 import {TextareaComponent} from './elements/textarea/textarea.component';
+import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 // UI Components
 import {FileComponent} from './components/file/file.component';
@@ -43,8 +43,8 @@ import {TableComponent} from './components/table/table.component';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
-import { AutocompleteComponent } from './components/autocomplete/autocomplete.component';
-import {MultiselectModule} from "./elements/multiselect/multiselect.module";
+import {PaginatorComponent} from './components/paginator/paginator.component';
+import { CustomPaginatorLabels } from './components/paginator/custom-paginator-labels';
 
 // Customise Material Form Fields
 patchMatFormField();
@@ -65,9 +65,8 @@ patchMatFormField();
         MatDatepickerModule,
         MatTabsModule,
         MatSnackBarModule,
-        MatAutocompleteModule,
-        MatChipsModule,
         MultiselectModule,
+        MatPaginatorModule
     ],
     declarations: [
         ButtonComponent,
@@ -93,7 +92,7 @@ patchMatFormField();
         TabGroupComponent,
         InputComponent,
         TextareaComponent,
-        AutocompleteComponent
+        PaginatorComponent,
     ],
     exports: [
         ButtonComponent,
@@ -121,8 +120,12 @@ patchMatFormField();
         MatTabsModule,
         InputComponent,
         TextareaComponent,
-        AutocompleteComponent
+        PaginatorComponent
     ],
+    providers: [{
+      provide: MatPaginatorIntl,
+      useClass: CustomPaginatorLabels
+    }],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SharedUiComponentsModule {

@@ -2,9 +2,9 @@ import { Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
 /**
- * <gu-textarea [control]="formControl" label="Textarea">I'm a textarea</gu-checkbox>
+ * <gu-textarea [control]="formControl" label="Textarea">I'm a textarea</gu-textarea>
  *
- * Generic datepicker component, based on mat-datepicker.
+ * Generic textarea component, based on mat-textarea.
  *
  * Requires control: Reactive Form Control
  * Requires type: Type of the input field.
@@ -19,7 +19,7 @@ import { FormControl } from '@angular/forms';
 @Component({
   selector: 'gu-textarea',
   templateUrl: './textarea.component.html',
-  styleUrls: ['./textarea.component.scss']
+  styleUrls: ['../../elements/input/input.component.scss']
 })
 export class TextareaComponent {
   @Input() control: FormControl;

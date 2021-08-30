@@ -24,7 +24,8 @@
               class="mb-2">
     </gu-input>
     <div class="d-flex justify-content-end">
-      <button gu-button type="primary"
+      <button gu-button
+              buttonStyle="primary"
               size="small"
               [loading]="isSubmitting"
               [disabled]="!confidentialityForm.valid || confidentialityTypeControl.value === currentConfidentialityType.value || isSubmitting"

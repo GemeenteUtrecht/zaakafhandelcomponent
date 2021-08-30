@@ -1,5 +1,5 @@
-<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_formSubmit()">
-  <button gu-button class="form__edit-toggle" type="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="editable === 'toggle'">
+<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
+  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="editable === 'toggle'  && isHovered">
     {{edit ? 'Annuleren' : 'Bewerken' }}
   </button>
 
@@ -7,57 +7,72 @@
 
 
   <fieldset class="form__body">
-    <div *ngFor="let field of fields">
-      <!-- Read-only field. -->
-      <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
-        <div class="col-12">
-          <p class="p--bold mb-0">{{field.label}}</p>
-        </div>
+    <div *ngFor="let field of fields; let i = index">
+      <div [hidden]="!isExpanded && i > 3 && !edit">
+        <!-- Read-only field. -->
+        <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
+          <div class="col-12">
+            <p class="p--bold mb-0">{{field.label}}</p>
+          </div>
 
-        <div class="col-12" *ngIf="!field.choices">
-          <p class="p--pre-wrap " *ngIf="field.value">{{field.value}}</p>
-          <p class="p--pre-wrap " *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
-        </div>
+          <div class="col-12" *ngIf="!field.choices">
+            <p class="p--pre-wrap " *ngIf="field.value">{{field.value}}</p>
+            <p class="p--pre-wrap " *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+          </div>
 
 
-        <div class="col-12" *ngIf="field.choices">
-          <p class="mt-2">
-            <gu-chip color="tertiary">{{field.control.value}}</gu-chip>
-          </p>
+          <div class="col-12" *ngIf="field.choices">
+            <p class="mt-2">
+              <gu-chip color="tertiary">{{field.control.value}}</gu-chip>
+            </p>
+          </div>
         </div>
+        <!-- End read-only field. -->
+
+        <!-- Regular field. -->
+        <gu-input
+          *ngIf="field.widgetType == 'input'"
+          [control]="field.control"
+          [label]="field.label"
+          [placeholder]="field.placeholder"
+          [type]="field.type"
+          [required]="field.required"
+          [value]="field.control.value"
+          class="mb-4"
+        ></gu-input>
+        <!-- End regular field. -->
+
+
+        <!-- Select field. -->
+        <gu-multiselect
+          *ngIf="field.widgetType == 'select' && edit"
+          [items]="field.choices"
+          [selectedValue]="field.control.value"
+          [label]="field.label"
+          bindLabel="label"
+          bindValue="value"
+          (change)="selectChanged($event, field)"
+          class="mb-4"
+        ></gu-multiselect>
+        <!-- End select field. -->
       </div>
-      <!-- End read-only field. -->
-
-      <!-- Regular field. -->
-      <gu-input
-        *ngIf="field.widgetType == 'input'"
-        [control]="field.control"
-        [label]="field.label"
-        [placeholder]="field.placeholder"
-        [type]="field.type"
-        [required]="field.required"
-        [value]="field.control.value"
-        class="mb-4"
-      ></gu-input>
-      <!-- End regular field. -->
-
-      <!-- Select field. -->
-      <gu-multiselect
-        *ngIf="field.widgetType === 'select' && edit"
-        [items]="field.choices"
-        [selectedValue]="field.control.value"
-        [label]="field.label"
-        bindLabel="label"
-        bindValue="value"
-        (change)="selectChanged($event, field)"
-        class="mb-4"
-      ></gu-multiselect>
-      <!-- End select field. -->
     </div>
   </fieldset>
 
+  <div class="d-flex justify-content-end">
+    <button gu-button
+            *ngIf="showLess && fields?.length > 3 && !edit"
+            type="button"
+            buttonStyle="tertiary"
+            size="extrasmall"
+            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+            (click)="isExpanded = !isExpanded">
+      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+    </button>
+  </div>
+
   <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="primary" size="large" class="d-inline-block" [disabled]="!formGroup.valid">
+    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" size="large" class="d-inline-block" [disabled]="!formGroup.valid">
       {{buttonLabel}}
     </button>
   </footer>

@@ -24,12 +24,21 @@
 
                     <!-- Button -->
                     <ng-container *ngSwitchCase="'button'">
-                        <button gu-button [type]=" dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
-                                size="extrasmall"
-                                noPadding
-                                (click)="onButtonClick(column.name, dataRow[column.name].value)">
-                            {{ dataRow[column.name].label }}
-                        </button>
+                        <div class="button-wrapper">
+                            <button gu-button [buttonStyle]="dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
+                                    size="extrasmall"
+                                    noPadding
+                                    (click)="onButtonClick(column.name, dataRow[column.name].value)">
+                                {{ dataRow[column.name].label }}
+                            </button>
+                            <div
+                              *ngIf="dataRow[column.name].buttonInfo"
+                              role="tooltip"
+                              class="tooltip__content"
+                            >
+                              {{dataRow[column.name].buttonInfo}}
+                            </div>
+                        </div>
                     </ng-container>
 
                     <!-- Chip -->

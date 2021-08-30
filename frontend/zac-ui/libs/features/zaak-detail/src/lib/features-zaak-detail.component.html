@@ -3,7 +3,7 @@
     <div class="d-flex">
       <h1>{{zaakData.zaaktype.omschrijving}}</h1>
       <button gu-button
-              type="tertiary"
+              buttonStyle="tertiary"
               size="extrasmall"
               class="ml-2 p-0"
               *ngIf="activeActivities"
@@ -17,7 +17,7 @@
         </span>
       </button>
     </div>
-    <button gu-button type="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
+    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
   </div>
 
 <!--  Loading -->

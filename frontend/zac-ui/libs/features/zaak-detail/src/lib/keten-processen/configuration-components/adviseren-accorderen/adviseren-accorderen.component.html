@@ -13,7 +13,7 @@
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Documenten</label>
-      <p>Over welke documenten gaat het?</p>
+      <p>Over welke documenten gaat het? Selecteer minimaal één document.</p>
       <div class="configuration-files">
         <div class="row pl-3">
           <div class="col-12" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
@@ -26,54 +26,61 @@
         </div>
       </div>
     </article>
-    <article class="configuration-details">
+    <article class="configuration-details" *ngFor="let step of [].constructor(steps); let i = index">
       <label class="h4 d-inline-block">{{assignedUsersTitle[reviewType]}}</label>
+      <p *ngIf="reviewType === 'advice'">Van wie wil je advies? Selecteer hier onder één of meerdere collega's. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
+      <p *ngIf="reviewType === 'approval'">Van wie wil je akkoord? Selecteer hier onder één of meerdere collega's. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
       <div class="steps-wrapper">
         <div class="step-container"
              id="kp-adv-acc-user--{{i}}"
-             formArrayName="assignedUsers"
-             *ngFor="let step of [].constructor(steps); let i = index">
-          <div class="d-flex">
-            <span class="step-label" *ngIf="steps > 1">Stap {{i + 1}}</span>
-            <gu-icon *ngIf="steps > 1 && (i+1) === steps" class="d-inline-block" (click)="deleteStep()">delete</gu-icon>
-          </div>
+             formArrayName="assignedUsers">
           <div class="row" [formGroupName]="i">
-            <div class="col-md-6 form-group">
+            <div class="col-md-6">
               <gu-multiselect (search)="onSearch($event)"
                               [items]="items"
                               [multiple]="true"
-                              [control]="assignedUsersUsers(i)"
+                              [control]="assignedUsersControl(i)"
                               bindLabel="fullName"
                               bindValue="username"
                               required
                               placeholder="Selecteer {{assignedUsersTitle[reviewType] | lowercase}}">
               </gu-multiselect>
             </div>
-            <div class="col-md-6 form-group">
-              <gu-datepicker [control]="assignedUsersDeadline(i)"
-                             [minDate]="assignedUsersMinDate(i)"
-                             label="Uiterste datum"
+            <div class="col-md-6">
+              <gu-datepicker [control]="assignedDeadlineControl(i)"
+                             [minDate]="assignedMinDateControl(i)"
+                             label="Einddatum"
                              [required]="true"
                              id="kp-adv-acc-deadline--{{i}}"
               ></gu-datepicker>
             </div>
           </div>
+          <div class="row pl-3">
+            <div class="col-12">
+              <gu-checkbox [control]="extraStepControl(i)"
+                           (change)="addStep(i)"
+                           [disabled]="i+2 < steps ? 'disabled' : null">
+                <p class="mb-0" *ngIf="reviewType === 'advice'">Er volgt hierna nog een adviesronde.</p>
+                <p class="mb-0" *ngIf="reviewType === 'approval'">Er volgt hierna nog een accorderingsronde.</p>
+              </gu-checkbox>
+            </div>
+          </div>
         </div>
         <p class="p--error" *ngIf="assignedUsersErrorMessage">{{assignedUsersErrorMessage}}</p>
       </div>
-      <button gu-button type="secondary" size="small" (click)="addStep()">Stap toevoegen</button>
     </article>
     <article class="configuration-details">
-      <label class="h4 d-inline-block" for="textarea_config">Toelichting</label>
-      <span class="label label--optional">niet verplicht</span>
-      <textarea id="textarea_config" [formControl]="toelichting"></textarea>
+      <label class="h4 d-inline-block">Toelichting</label>
+      <p *ngIf="reviewType === 'advice'">Wat wil je aan je collega's vertellen over deze adviesvraag?</p>
+      <p *ngIf="reviewType === 'approval'">Wat wil je aan je collega's vertellen over deze accorderingsvraag?</p>
+      <gu-textarea [control]="toelichting" class="mb-0" id="textarea_advice"></gu-textarea>
     </article>
     <div class="d-flex justify-content-end">
       <button gu-button size="large"
                  (click)="submitForm()"
                  [disabled]="!assignUsersForm.valid || isSubmitting"
                  [loading]="isSubmitting">
-        Voltooien
+        {{reviewType === 'advice' ? 'Advies vragen' : reviewType === 'approval' ? 'Akkoord vragen' : ''}}
       </button>
     </div>
   </form>

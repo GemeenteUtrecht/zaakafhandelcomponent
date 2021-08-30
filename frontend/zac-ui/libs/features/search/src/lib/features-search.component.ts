@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { TableSort, Zaak } from '@gu/models';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'gu-features-search',
@@ -9,6 +10,8 @@ import { TableSort, Zaak } from '@gu/models';
 export class FeaturesSearchComponent {
 
   resultData: Zaak[];
+  resultLength: number;
   sortData: TableSort;
+  pageData: PageEvent;
 
 }

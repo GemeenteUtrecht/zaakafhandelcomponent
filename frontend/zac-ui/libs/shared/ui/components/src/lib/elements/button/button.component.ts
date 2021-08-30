@@ -7,7 +7,7 @@ import { Component, HostBinding, Input } from '@angular/core';
   styleUrls: ['./button.component.scss']
 })
 export class ButtonComponent {
-  @Input() type: 'primary' | 'secondary' | 'tertiary' | 'action-link' = 'primary';
+  @Input() buttonStyle: 'primary' | 'secondary' | 'tertiary' | 'action-link' = 'primary';
   @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
   @Input() noPadding?: boolean;
   @Input() loading?: boolean;
@@ -28,7 +28,7 @@ export class ButtonComponent {
 
   @HostBinding('attr.class')
   get buttonType() {
-    if (this.type === 'action-link') {
+    if (this.buttonStyle === 'action-link') {
       return [
         'action-link',
         this.class
@@ -36,10 +36,10 @@ export class ButtonComponent {
     } else {
       return [
         'btn',
-        `btn--${this.type}`,
+        `btn--${this.buttonStyle}`,
         `btn--${this.size}`,
         this.loading ? `btn__spinner` : null,
-        this.loading ? `btn__spinner--${this.type}` : null,
+        this.loading ? `btn__spinner--${this.buttonStyle}` : null,
         this.class
       ].filter(Boolean).join(' ')
     }

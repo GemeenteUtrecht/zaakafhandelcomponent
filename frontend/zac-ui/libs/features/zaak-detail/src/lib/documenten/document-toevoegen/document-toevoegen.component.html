@@ -28,7 +28,7 @@
       <button gu-button
         [disabled]="!addDocumentForm.valid || isSubmitting"
         [loading]="isSubmitting"
-        type="primary"
+        buttonStyle="primary"
         [size]="activity ? 'small' : 'large'"
         (click)="submitForm()">
         Document {{ updateDocument ? 'overschrijven' : 'toevoegen'}}

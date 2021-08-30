@@ -3,9 +3,9 @@ import { FormControl } from '@angular/forms';
 import { MatFormField } from '@angular/material/form-field';
 
 /**
- * <gu-input [control]="formControl" label="Input">I'm a input field</gu-checkbox>
+ * <gu-input [control]="formControl" label="Input">I'm a input field</gu-input>
  *
- * Generic datepicker component, based on mat-datepicker.
+ * Generic input component, based on mat-input.
  *
  * Requires control: Reactive Form Control
  * Requires type: Type of the input field.

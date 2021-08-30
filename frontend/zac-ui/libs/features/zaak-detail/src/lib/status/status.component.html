@@ -1,5 +1,6 @@
 <div class="status card">
-  <h2>Doorlooptijd</h2>
+  <h2 class="d-inline-block mr-2">Doorlooptijd</h2>
+  <gu-tooltip type="primary" inline="true">Tijd tot de deadline van de zaak</gu-tooltip>
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
@@ -34,12 +35,14 @@
         </div>
       </div>
     </div>
-    <button gu-button *ngIf="data?.length > 3"
-               type="tertiary"
-               size="extrasmall"
-               [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-               (click)="isExpanded = !isExpanded">
-      {{isExpanded ? 'Toon minder' : 'Toon meer'}}
-    </button>
+    <div class="d-flex justify-content-end">
+      <button gu-button *ngIf="data?.length > 3"
+              buttonStyle="tertiary"
+                 size="extrasmall"
+                 [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+                 (click)="isExpanded = !isExpanded">
+        {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+      </button>
+    </div>
   </ng-container>
 </div>

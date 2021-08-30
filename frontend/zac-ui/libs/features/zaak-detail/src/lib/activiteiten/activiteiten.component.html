@@ -25,7 +25,7 @@
             </gu-input>
             <div class="d-flex justify-content-end">
               <button gu-button
-                      type="tertiary"
+                      buttonStyle="tertiary"
                       (click)="showAddActivityButton = false; hasError = false;">
                 Sluiten
               </button>
@@ -73,7 +73,7 @@
                 <button gu-button *ngIf="!activity.assignee && openAssigneeEditField !== i"
                         (click)="openAssigneeEditField = i; openNoteEditField = null"
                         class="d-block"
-                        type="primary"
+                        buttonStyle="primary"
                         size="extrasmall"
                         icon="person_add">
                   Gebruiker toewijzen
@@ -91,13 +91,13 @@
                   </gu-multiselect>
                   <div class="d-flex justify-content-between">
                     <button gu-button (click)="openAssigneeEditField = null"
-                               type="tertiary"
+                            buttonStyle="tertiary"
                                size="small">
                       Sluiten
                     </button>
                     <button gu-button (click)="submitAssignUser(activity.id, i)"
                             [disabled]="!assignedUser(i).valid"
-                            type="primary"
+                            buttonStyle="primary"
                             size="small">
                       Gebruiker toewijzen
                     </button>
@@ -113,7 +113,7 @@
                     <button gu-button *ngIf="openDocumentUploadForm !== i"
                             (click)="openDocumentUploadForm = i; openAssigneeEditField = null"
                             class="d-block"
-                            type="primary"
+                            buttonStyle="primary"
                             size="extrasmall"
                             icon="upload_file">
                       Document toevoegen
@@ -150,7 +150,7 @@
                   </div>
                 </div>
                 <button gu-button *ngIf="activity.events.length > 3"
-                           type="tertiary"
+                        buttonStyle="tertiary"
                            size="extrasmall"
                            [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
                            (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
@@ -163,7 +163,7 @@
                   <button gu-button *ngIf="openNoteEditField !== i"
                              (click)="openNoteEditField = i; openAssigneeEditField = null"
                              class="d-block"
-                             type="tertiary"
+                             buttonStyle="tertiary"
                              size="extrasmall"
                              icon="note_add">
                     Notitie toevoegen
@@ -176,13 +176,13 @@
                     </label>
                     <div class="d-flex justify-content-between">
                       <button gu-button (click)="openNoteEditField = null"
-                                 type="tertiary"
+                              buttonStyle="tertiary"
                                  size="small">
                         Sluiten
                       </button>
                       <button gu-button (click)="submitNotes(activity.id, i)"
                               [disabled]="!notes(i).valid"
-                              type="primary"
+                              buttonStyle="primary"
                               size="small">
                         Notitie toevoegen
                       </button>
@@ -195,7 +195,7 @@
             <!--  Afsluiten of verwijderen  -->
             <div class="activity__buttons col-lg-2">
               <button gu-button *ngIf="showCloseActivityConfirmation !== i"
-                      type="secondary"
+                      buttonStyle="secondary"
                       size="small"
                       class="mb-2"
                       (click)="showCloseActivityConfirmation = i">Afsluiten</button>
@@ -203,17 +203,17 @@
                 <p>Weet je zeker dat je deze activiteit wilt sluiten?</p>
                 <div class="">
                   <button gu-button
-                          type="primary"
+                          buttonStyle="primary"
                           size="small"
                           class="mb-2"
                           (click)="closeActivity(activity.id)">
                     Bevestigen
                   </button>
-                  <button gu-button type="primary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
+                  <button gu-button buttonStyle="primary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
                 </div>
               </div>
               <button gu-button *ngIf="showDeleteActivityConfirmation !== i"
-                      type="tertiary"
+                      buttonStyle="tertiary"
                       size="small"
                       class="mb-2"
                       (click)="showDeleteActivityConfirmation = i">Verwijderen</button>
@@ -221,13 +221,13 @@
                 <p>Weet je zeker dat je deze activiteit PERMANENT wilt verwijderen?</p>
                 <div class="">
                   <button gu-button
-                          type="primary"
+                          buttonStyle="primary"
                           size="small"
                           class="mb-2"
                           (click)="deleteActivity(activity.id)">
                     Bevestigen
                   </button>
-                  <button gu-button type="primary" size="small" class="mb-2" (click)="showDeleteActivityConfirmation = null">Annuleren</button>
+                  <button gu-button buttonStyle="primary" size="small" class="mb-2" (click)="showDeleteActivityConfirmation = null">Annuleren</button>
                 </div>
               </div>
             </div>
@@ -287,7 +287,7 @@
                   </div>
                 </div>
                 <button gu-button *ngIf="activity.events.length > 3"
-                        type="tertiary"
+                        buttonStyle="tertiary"
                         size="extrasmall"
                         [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
                         (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">

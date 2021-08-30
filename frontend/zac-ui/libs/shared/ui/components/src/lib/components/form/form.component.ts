@@ -30,6 +30,8 @@ export class FormComponent implements OnInit {
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
+  @Input() showLess: boolean;
+  @Input() showEditOnHover: boolean;
 
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
 
@@ -52,6 +54,9 @@ export class FormComponent implements OnInit {
    * @type {string[]} Keys resolved either from keys or form.
    */
   resolvedKeys = [];
+
+  isExpanded = false;
+  isHovered = false;
 
   /**
    * Constructor method.

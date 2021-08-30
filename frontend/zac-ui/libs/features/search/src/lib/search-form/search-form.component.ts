@@ -1,5 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Zaak, TableSort} from '@gu/models';
+import { PageEvent } from '@angular/material/paginator';
 
 
 /**
@@ -17,5 +18,7 @@ import {Zaak, TableSort} from '@gu/models';
 })
 export class SearchFormComponent {
   @Input() sortData: TableSort;
+  @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
+  @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
 }
