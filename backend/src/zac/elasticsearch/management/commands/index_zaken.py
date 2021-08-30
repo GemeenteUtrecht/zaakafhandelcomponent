@@ -137,7 +137,7 @@ class Command(BaseCommand):
         list_of_rollen = [rollen for rollen in results if rollen]
 
         rollen_documenten = {
-            rollen[0].zaak.url: [create_rol_document(rol) for rol in rollen]
+            rollen[0].zaak: [create_rol_document(rol) for rol in rollen]
             for rollen in list_of_rollen
         }
         self.stdout.write(
@@ -153,7 +153,7 @@ class Command(BaseCommand):
             list_of_eigenschappen = list(executor.map(get_zaak_eigenschappen, zaken))
 
         eigenschappen_documenten = {
-            zen[0].zaak.url: create_eigenschappen_document(zen)
+            zen[0].zaak: create_eigenschappen_document(zen)
             for zen in list_of_eigenschappen
             if zen
         }

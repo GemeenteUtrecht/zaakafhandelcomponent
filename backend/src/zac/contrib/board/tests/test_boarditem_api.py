@@ -1,5 +1,4 @@
 import uuid
-from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -66,14 +65,10 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         zaak_model = factory(Zaak, self.zaak)
         zaak_model.zaaktype = zaaktype_model
 
-        patch_get_zaakobjecten = patch(
-            "zac.elasticsearch.api.get_zaakobjecten",
-            return_value=[],
-        )
-        patch_get_zaakobjecten.start()
-        self.addCleanup(patch_get_zaakobjecten.stop)
+        zaak_document = self.create_zaak_document(zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(zaaktype_model)
+        zaak_document.save()
 
-        self.create_zaak_document(zaak_model)
         self.refresh_index()
 
     def _setUpMock(self, m):
@@ -306,14 +301,9 @@ class BoardItemAPITests(ESMixin, APITestCase):
         zaak_model = factory(Zaak, self.zaak)
         zaak_model.zaaktype = zaaktype_model
 
-        patch_get_zaakobjecten = patch(
-            "zac.elasticsearch.api.get_zaakobjecten",
-            return_value=[],
-        )
-        patch_get_zaakobjecten.start()
-        self.addCleanup(patch_get_zaakobjecten.stop)
-
-        self.create_zaak_document(zaak_model)
+        zaak_document = self.create_zaak_document(zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(zaaktype_model)
+        zaak_document.save()
         self.refresh_index()
 
         self.zaak_data = {
