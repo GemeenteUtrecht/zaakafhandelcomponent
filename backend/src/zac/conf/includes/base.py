@@ -245,6 +245,7 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 # LOGGING
 #
 LOG_STDOUT = config("LOG_STDOUT", default=False)
+LOG_LEVEL = config("LOG_LEVEL", default="INFO")
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
@@ -300,7 +301,7 @@ LOGGING = {
     "loggers": {
         "zac": {
             "handlers": ["project"] if not LOG_STDOUT else ["console"],
-            "level": "INFO",
+            "level": LOG_LEVEL,
             "propagate": True,
         },
         "django.request": {
