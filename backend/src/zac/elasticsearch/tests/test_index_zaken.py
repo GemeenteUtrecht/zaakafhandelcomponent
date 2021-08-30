@@ -1,8 +1,10 @@
+from io import StringIO
+
 from django.conf import settings
 from django.core.management import call_command
-from django.test import TestCase
 
 import requests_mock
+from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -19,10 +21,9 @@ ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 
 
 @requests_mock.Mocker()
-class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
+class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    def setUp(self):
+        super().setUp()
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -67,7 +68,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -161,7 +162,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -260,7 +261,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -429,7 +430,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -548,7 +549,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -584,20 +585,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
 
     def test_index_zaken_with_status(self, m):
         # mock API requests
-        status = f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e"
-        statustype = f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74"
-        status_response = generate_oas_component(
-            "zrc",
-            "schemas/Status",
-            url=status,
-            statustype=statustype,
-            statustoelichting="some-statustoelichting",
-        )
-        statustype_response = generate_oas_component(
-            "ztc",
-            "schemas/StatusType",
-            url=statustype,
-        )
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         zaaktype = generate_oas_component(
@@ -614,7 +601,20 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             identificatie="ZAAK1",
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
-            status=status,
+            status=f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
+        )
+        status_response = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
+            statustype=f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
+            statustoelichting="some-statustoelichting",
+            zaak=zaak["url"],
+        )
+        statustype_response = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
         )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
@@ -637,9 +637,15 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, TestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        m.get(status, json=status_response)
-        m.get(statustype, json=statustype_response)
-        call_command("index_zaken")
+        m.get(
+            f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
+            json=status_response,
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
+            json=statustype_response,
+        )
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")

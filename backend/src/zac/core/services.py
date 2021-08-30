@@ -1,7 +1,7 @@
 import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -24,6 +24,7 @@ from zgw_consumers.api_models.catalogi import (
 from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
+from zgw_consumers.client import ZGWClient
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -346,6 +347,29 @@ def get_zaken_es(
         zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
     return zaken
+
+
+def get_zaken_all_paginated(
+    client: ZGWClient,
+    query_params: dict = {},
+) -> Tuple[List[Zaak], dict]:
+    """
+    Fetch all zaken from the ZRCs in batches.
+    Used to index Zaken in ES.
+    Should not be used for searches with user permissions
+    """
+    response = client.list("zaak", query_params=query_params)
+    zaken = factory(Zaak, response["results"])
+
+    if response["next"]:
+        next_url = urlparse(response["next"])
+        query = parse_qs(next_url.query)
+        new_page = int(query["page"][0])
+        query_params["page"] = [new_page]
+    else:
+        query_params["page"] = None
+
+    return zaken, query_params
 
 
 def get_zaken_all(

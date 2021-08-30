@@ -125,7 +125,9 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
-        self.create_zaak_document(self.zaak)
+        zaak_document = self.create_zaak_document(self.zaak)
+        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
+        zaak_document.save()
         self.refresh_index()
 
         response = self.client.get(self.detail_url)

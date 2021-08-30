@@ -13,7 +13,7 @@ from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import create_zaak_document
+from zac.elasticsearch.api import create_zaak_document, create_zaaktype_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
@@ -113,6 +113,10 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
+        zaak_document.save()
+        self.refresh_index()
+
         self.assertEqual(zaak_document.eigenschappen, {})
 
         user = User.objects.create(
@@ -159,7 +163,10 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
         zaak_document.eigenschappen = {"tekst": {"propname": "propvalue"}}
+        zaak_document.save()
+        self.refresh_index()
 
         response = self.client.post(path, NOTIFICATION_DESTROY)
 

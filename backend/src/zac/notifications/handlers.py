@@ -1,5 +1,6 @@
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.zaken import Status
 
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
@@ -15,10 +16,13 @@ from zac.core.cache import (
 from zac.core.services import (
     _client_from_url,
     get_rollen,
+    get_status,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
+    create_status_document,
     create_zaak_document,
+    create_zaaktype_document,
     delete_zaak_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
@@ -61,16 +65,25 @@ class ZakenHandler:
     def _retrieve_zaak(zaak_url) -> Zaak:
         client = _client_from_url(zaak_url)
         zaak = client.retrieve("zaak", url=zaak_url)
+
         if isinstance(zaak["zaaktype"], str):
             zrc_client = _client_from_url(zaak["zaaktype"])
             zaaktype = zrc_client.retrieve("zaaktype", url=zaak["zaaktype"])
             zaak["zaaktype"] = factory(ZaakType, zaaktype)
 
-        return factory(Zaak, zaak)
+        zaak = factory(Zaak, zaak)
+        if zaak.status and isinstance(zaak.status, str):
+            zrc_client = _client_from_url(zaak.status)
+            status = zrc_client.retrieve("status", url=zaak.status)
+            zaak.status = factory(Status, status)
+
+        return zaak
 
     def _handle_zaak_update(self, zaak_url: str):
+        # Invalidate cache
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
+
         # index in ES
         update_zaak_document(zaak)
 
@@ -79,7 +92,12 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
         # index in ES
-        create_zaak_document(zaak)
+        zaak_document = create_zaak_document(zaak)
+        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
+        if zaak.status:
+            zaak_document.status = create_status_document(zaak.status)
+
+        zaak_document.save()
 
     def _handle_zaak_destroy(self, zaak_url: str):
         Activity.objects.filter(zaak=zaak_url).delete()

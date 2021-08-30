@@ -7,11 +7,13 @@ from freezegun import freeze_time
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.zaken import Rol
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory, UserFactory
+from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
 
@@ -212,8 +214,8 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         zaak_model_2 = factory(Zaak, zaak_2)
         zaak_model_2.zaaktype = factory(ZaakType, zaaktype)
 
-        self.create_zaak_document(zaak_model_1)
-        self.create_zaak_document(zaak_model_2)
+        zaak_document_1 = self.create_zaak_document(zaak_model_1)
+        zaak_document_2 = self.create_zaak_document(zaak_model_2)
 
         user = SuperUserFactory.create()
         rol_1 = {
@@ -246,8 +248,10 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
                 "identificatie": user.username,
             },
         }
-        self.add_rol_to_document(rol_1)
-        self.add_rol_to_document(rol_2)
+        zaak_document_1.rollen = [create_rol_document(factory(Rol, rol_1))]
+        zaak_document_2.rollen = [create_rol_document(factory(Rol, rol_2))]
+        zaak_document_1.save()
+        zaak_document_2.save()
         self.refresh_index()
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

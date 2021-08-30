@@ -50,7 +50,7 @@ NOTIFICATION = {
 @requests_mock.Mocker()
 class ZaakUpdateTests(ESMixin, APITestCase):
     """
-    Test that the appropriate actions happen on zaak-creation notifications.
+    Test that the appropriate actions happen on zaak-update notifications.
     """
 
     @classmethod
@@ -69,9 +69,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
-    @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
-    def test_get_zaak_resultaat_created(self, rm, *mocks):
+    def test_get_zaak_zaak_updated(self, rm, *mocks):
         mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
         mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
@@ -117,11 +115,14 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         zaak = factory(Zaak, old_response)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+        self.refresh_index()
 
         self.assertEqual(
             zaak_document.vertrouwelijkheidaanduiding,
             VertrouwelijkheidsAanduidingen.geheim,
         )
+
         self.assertEqual(zaak_document.meta.version, 1)
 
         # set up mock
@@ -171,6 +172,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
             ),
         ]
         zaak_document.save()
+        self.refresh_index()
 
         self.assertEqual(
             zaak_document.vertrouwelijkheidaanduiding,
