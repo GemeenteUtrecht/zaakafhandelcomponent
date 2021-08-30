@@ -1,3 +1,5 @@
+from io import StringIO
+
 from django.conf import settings
 from django.core.management import call_command
 
@@ -66,7 +68,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -160,7 +162,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -259,7 +261,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
@@ -428,7 +430,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -547,7 +549,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
@@ -643,7 +645,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
             json=statustype_response,
         )
-        call_command("index_zaken")
+        call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
         zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
