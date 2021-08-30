@@ -23,7 +23,7 @@
   <!-- Table -->
   <ng-container *ngIf="relatedObjects && !isLoading">
     <div *ngFor="let table of tables">
-      <h3>{{table.title}}</h3>
+      <h3>{{table.title|titlecase}}</h3>
       <gu-table [table]="table.table" (buttonOutput)="tableButtonClick($event)" class="mb-4"></gu-table>
     </div>
     <p *ngIf="(relatedObjects.length === 0)">Er zijn geen gerelateerde objecten.</p>
