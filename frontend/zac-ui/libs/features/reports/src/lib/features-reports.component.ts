@@ -99,7 +99,7 @@ export class FeaturesReportsComponent implements OnInit {
     this.reportsService.getReportCases(reportId, page, sortValue).subscribe((res) => {
       this.reportCases = res;
       this.resultLength = res.count;
-      this.reportCasesTableData.bodyData = this.formatReportTable(res.results)
+      this.reportCasesTableData = new Table(tableHead, this.formatReportTable(res.results));
       this.isLoading = false;
       this.hasError = false;
     }, res => {
