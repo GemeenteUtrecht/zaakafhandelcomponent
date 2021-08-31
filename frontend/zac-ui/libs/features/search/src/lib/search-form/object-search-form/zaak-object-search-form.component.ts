@@ -1,16 +1,15 @@
 import {Component, EventEmitter, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
-import {ZaakObjectService} from './zaak-object.service';
-import {SearchService} from "../../search.service";
+import {SearchService} from '../../search.service';
 import {
   Feature,
   Geometry,
-  Zaak,
   ZaakObject,
   UtrechtNeighbourhoods,
   getProvinceByName,
   getTownshipByName,
 } from '@gu/models';
+import {ZaakObjectService} from '@gu/services';
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -49,12 +48,13 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
   templateUrl: './zaak-object-search-form.component.html',
 })
 export class ZaakObjectSearchFormComponent {
-  @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
+  @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
+  @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
+
+  readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
 
   /** @type {boolean} Whether to show the zaak objecten. */
   showZaakObjecten = false;
-
-  readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
 
   /** @type {FieldConfiguration[] Form configuration. */
   form: FieldConfiguration[] = [
@@ -77,6 +77,12 @@ export class ZaakObjectSearchFormComponent {
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
 
+  /**
+   * Constructor method.
+   * @param {SearchService} searchService
+   * @param {ZaakObjectService} zaakObjectService
+   * @param {SnackbarService} snackbarService
+   */
   constructor(private searchService: SearchService, private zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
   }
 
@@ -100,12 +106,12 @@ export class ZaakObjectSearchFormComponent {
    * Gers called when form is submitted.
    * @param {Object} data
    */
-  submitForm(data) {
+  submitForm(data): void {
+    this.searchObjects.emit();
+
     const geometry: Geometry = JSON.parse(data.geometry);
 
-
     this.zaakObjects = [];
-    this.loadResult.emit([]);
     this.showZaakObjecten = true;
 
     this.zaakObjectService.searchObjects(geometry, data.query).subscribe(
@@ -119,18 +125,9 @@ export class ZaakObjectSearchFormComponent {
    * @param {Event} event
    * @param {ZaakObject} zaakObject
    */
-  selectZaakObject(event: Event, zaakObject: ZaakObject) {
-    const search = {
-      object: zaakObject.url
-    }
-
-    this.loadResult.emit([]);
+  _selectZaakObject(event: Event, zaakObject: ZaakObject): void {
+    this.selectZaakObject.emit(zaakObject);
     this.showZaakObjecten = false;
-
-    this.searchService.searchZaken(search, 1).subscribe(
-      (data) => this.loadResult.emit(data.results as Zaak[]),
-      this.reportError.bind(this)
-    );
   }
 
   //

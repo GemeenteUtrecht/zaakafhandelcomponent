@@ -1,11 +1,12 @@
 <label class="has-float-label">
   <input [attr.type]="type"
          [attr.placeholder]="placeholder ? placeholder : ''"
-         [required]="required"
-         [formControl]="control"
-         [value]="value ? value : null"
          [autocomplete]="autocomplete"
-         class="form-control"
-         [id]="id">
+         [formControl]="control"
+         [id]="id"
+         [pattern]="pattern"
+         [required]="required"
+         [value]="value ? value : null"
+         class="form-control">
   <span>{{label}}</span>
 </label>

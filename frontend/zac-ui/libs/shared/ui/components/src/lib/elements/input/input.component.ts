@@ -28,6 +28,7 @@ export class InputComponent {
   @Input() label: string;
   @Input() required: boolean;
   @Input() disabled: boolean;
+  @Input() pattern: string = null;
   @Input() placeholder: string;
   @Input() value: string | number;
   @Input() autocomplete: any;

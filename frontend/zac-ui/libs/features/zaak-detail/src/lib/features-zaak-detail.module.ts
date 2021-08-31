@@ -1,42 +1,42 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
-
-import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
-
-import { FeaturesZaakDetailComponent } from './features-zaak-detail.component';
-import { InformatieComponent } from './informatie/informatie.component';
-import { BetrokkenenComponent } from './betrokkenen/betrokkenen.component';
-import { StatusComponent } from './status/status.component';
-import { GerelateerdeObjectenComponent } from './gerelateerde-objecten/gerelateerde-objecten.component';
-import { AdviserenAccorderenComponent } from './adviseren-accorderen/adviseren-accorderen.component';
-import { KetenProcessenModule } from './keten-processen/keten-processen.module';
-import { GerelateerdeZakenModule } from './gerelateerde-zaken/gerelateerde-zaken.module';
-import { DocumentenModule } from './documenten/documenten.module';
-import { DetailModalComponent } from './adviseren-accorderen/detail-modal/detail-modal.component';
-import { ToegangVerlenenComponent } from './toegang-verlenen/toegang-verlenen.component';
-import { ActiviteitenComponent } from './activiteiten/activiteiten.component';
-import { TabsModule } from 'ngx-bootstrap/tabs';
-import { UserPermissionsModule } from './user-permissions/user-permissions.module';
+import {CommonModule} from '@angular/common';
+import {HttpClientModule, HttpClientXsrfModule} from '@angular/common/http';
+import {NgModule} from '@angular/core';
+import {FormGroupDirective, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {TabsModule} from 'ngx-bootstrap/tabs';
+import {MultiselectModule, SharedUiComponentsModule} from '@gu/components';
+import {FeaturesSearchModule} from '@gu/search';
+import {ActiviteitenComponent} from './activiteiten/activiteiten.component';
+import {AdviserenAccorderenComponent} from './adviseren-accorderen/adviseren-accorderen.component';
+import {DetailModalComponent} from './adviseren-accorderen/detail-modal/detail-modal.component';
+import {BetrokkenenComponent} from './betrokkenen/betrokkenen.component';
+import {DocumentenModule} from './documenten/documenten.module';
+import {FeaturesZaakDetailComponent} from './features-zaak-detail.component';
+import {GerelateerdeObjectenComponent} from './gerelateerde-objecten/gerelateerde-objecten.component';
+import {GerelateerdeZakenModule} from './gerelateerde-zaken/gerelateerde-zaken.module';
+import {InformatieComponent} from './informatie/informatie.component';
+import {KetenProcessenModule} from './keten-processen/keten-processen.module';
+import {StatusComponent} from './status/status.component';
+import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
+import {UserPermissionsModule} from './user-permissions/user-permissions.module';
 
 @NgModule({
   imports: [
     CommonModule,
+    DocumentenModule,
+    FormsModule,
+    GerelateerdeZakenModule,
     HttpClientModule,
     HttpClientXsrfModule.withOptions({
       cookieName: 'csrftoken',
       headerName: 'X-CSRFToken',
     }),
-    FormsModule,
-    ReactiveFormsModule,
-    SharedUiComponentsModule,
-    UserPermissionsModule,
     KetenProcessenModule,
-    GerelateerdeZakenModule,
-    DocumentenModule,
     MultiselectModule,
-    TabsModule.forRoot()
+    ReactiveFormsModule,
+    FeaturesSearchModule,
+    SharedUiComponentsModule,
+    TabsModule.forRoot(),
+    UserPermissionsModule,
   ],
   declarations: [
     FeaturesZaakDetailComponent,
@@ -52,4 +52,5 @@ import { UserPermissionsModule } from './user-permissions/user-permissions.modul
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]
 })
-export class FeaturesZaakDetailModule {}
+export class FeaturesZaakDetailModule {
+}

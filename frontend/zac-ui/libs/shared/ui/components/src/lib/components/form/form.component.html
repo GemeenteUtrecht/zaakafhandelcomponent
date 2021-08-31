@@ -34,6 +34,7 @@
           *ngIf="field.widgetType == 'input'"
           [control]="field.control"
           [label]="field.label"
+          [pattern]="field.pattern || null"
           [placeholder]="field.placeholder"
           [type]="field.type"
           [required]="field.required"
@@ -41,7 +42,6 @@
           class="mb-4"
         ></gu-input>
         <!-- End regular field. -->
-
 
         <!-- Select field. -->
         <gu-multiselect
