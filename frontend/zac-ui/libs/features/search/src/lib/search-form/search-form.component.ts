@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import { PageEvent } from '@angular/material/paginator';
+import {PageEvent} from '@angular/material/paginator';
 import {SnackbarService} from '@gu/components';
 import {Zaak, TableSort, ZaakObject} from '@gu/models';
 import {SearchService} from '../search.service';
@@ -45,11 +45,12 @@ export class SearchFormComponent {
    * @param {ZaakObject} zaakObject
    */
   selectZaakObject(zaakObject: ZaakObject) {
+    const page = (this.pageData?.pageIndex || 0) + 1
     const search = {
       object: zaakObject.url
     }
 
-    this.searchService.searchZaken(search, this.pageData?.pageIndex + 1).subscribe(
+    this.searchService.searchZaken(search, page).subscribe(
       (data) => this.loadResult.emit(data.results as Zaak[]),
       this.reportError.bind(this)
     );
