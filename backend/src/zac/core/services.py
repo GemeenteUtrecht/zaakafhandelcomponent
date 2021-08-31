@@ -568,6 +568,20 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     return zaak_eigenschappen
 
 
+def update_zaak_eigenschap(zaak_eigenschap_url: str, data: dict) -> ZaakEigenschap:
+    client = _client_from_url(zaak_eigenschap_url)
+    zaak_eigenschap = client.partial_update(
+        "zaakeigenschap", data, url=zaak_eigenschap_url
+    )
+    zaak_eigenschap = factory(ZaakEigenschap, zaak_eigenschap)
+    return zaak_eigenschap
+
+
+def delete_zaak_eigenschap(zaak_eigenschap_url: str):
+    client = _client_from_url(zaak_eigenschap_url)
+    client.delete("zaakeigenschap", url=zaak_eigenschap_url)
+
+
 @cache_result("get_zaak:{zaak_uuid}:{zaak_url}", timeout=AN_HOUR)
 def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
     """

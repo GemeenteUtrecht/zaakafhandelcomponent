@@ -42,6 +42,7 @@ from zac.core.services import (
     relate_object_to_zaak,
     search_objects,
     update_document,
+    update_zaak_eigenschap,
 )
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
@@ -50,6 +51,7 @@ from zgw.models.zrc import Zaak
 from ..cache import invalidate_zaak_cache
 from ..services import (
     create_document,
+    delete_zaak_eigenschap,
     fetch_zaaktype,
     find_zaak,
     get_document,
@@ -280,6 +282,26 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
         eigenschappen = get_zaak_eigenschappen(zaak)
         serializer = self.serializer_class(instance=eigenschappen, many=True)
         return Response(serializer.data)
+
+
+class ZaakEigenschapDetailView(GetZaakMixin, views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
+    serializer_class = ZaakEigenschapSerializer
+
+    @extend_schema(summary=_("Update case property"))
+    def patch(self, request, url, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        updated_zaak_eigenschap = update_zaak_eigenschap(url, serializer.data)
+        serializer = self.get_serializer(instance=updated_zaak_eigenschap)
+        return Response(serializer.data)
+
+    @extend_schema(summary=_("Delete case property"))
+    def delete(self, request, url, *args, **kwargs):
+        delete_zaak_eigenschap(url)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RelatedZakenView(GetZaakMixin, views.APIView):
