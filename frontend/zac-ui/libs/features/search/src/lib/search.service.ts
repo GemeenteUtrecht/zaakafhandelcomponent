@@ -5,6 +5,7 @@ import { ZaaktypeEigenschap } from '../models/zaaktype-eigenschappen';
 import { Zaaktype } from '../models/zaaktype';
 import { Search } from '../models/search';
 import { ReportQuery } from '../models/report';
+import {HttpParams} from "@angular/common/http";
 
 
 @Injectable({
@@ -19,9 +20,10 @@ export class SearchService {
     return this.http.Get<Zaaktype>(endpoint);
   }
 
-  getZaaktypeEigenschappen(catalogus, zaaktype_omschrijving): Observable<ZaaktypeEigenschap[]> {
-    const endpoint = encodeURI(`/api/core/eigenschappen?catalogus=${catalogus}&zaaktype_omschrijving=${zaaktype_omschrijving}`);
-    return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
+  getZaaktypeEigenschappen(catalogs: string[], descriptions: string[]): Observable<ZaaktypeEigenschap[]> {
+    const endpoint = encodeURI('/api/core/eigenschappen');
+    const params = new HttpParams({ fromObject: { 'catalogus': catalogs, 'zaaktype_omschrijving': descriptions } });
+    return this.http.Get<ZaaktypeEigenschap[]>(endpoint, {params});
   }
 
   /**
