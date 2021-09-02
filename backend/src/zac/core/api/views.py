@@ -315,7 +315,18 @@ class ZaakEigenschapDetailView(views.APIView):
 
         return zaak_eigenschap
 
-    @extend_schema(summary=_("Update case property"))
+    @extend_schema(
+        summary=_("Update case property"),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
     def patch(self, request, *args, **kwargs):
         zaak_eigenschap = self.get_object()
 
@@ -329,7 +340,18 @@ class ZaakEigenschapDetailView(views.APIView):
         serializer = self.serializer_class(instance=updated_zaak_eigenschap)
         return Response(serializer.data)
 
-    @extend_schema(summary=_("Delete case property"))
+    @extend_schema(
+        summary=_("Delete case property"),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
     def delete(self, request, *args, **kwargs):
         zaak_eigenschap = self.get_object()
         delete_zaak_eigenschap(zaak_eigenschap.url)
