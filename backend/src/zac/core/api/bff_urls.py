@@ -41,9 +41,9 @@ urlpatterns = [
         name="zaak-properties",
     ),
     path(
-        "cases/<str:bronorganisatie>/<str:identificatie>/properties/<str:url>",
+        "cases/properties",
         ZaakEigenschapDetailView.as_view(),
-        name="zaak-properties-read",
+        name="zaak-properties-detail",
     ),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/documents",

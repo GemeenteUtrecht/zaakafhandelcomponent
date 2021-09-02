@@ -487,7 +487,7 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
             "discriminator."
         ),
     )
-    eigenschap = EigenschapSerializer()
+    eigenschap = EigenschapSerializer(read_only=True)
 
     class Meta:
         model = ZaakEigenschap
@@ -496,6 +496,7 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
             "formaat",
             "eigenschap",
         )
+        extra_kwargs = {"url": {"read_only": True}}
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):

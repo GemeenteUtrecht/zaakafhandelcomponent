@@ -27,3 +27,11 @@ class EigenschappenFilterSet(ApiFilterSet):
         )
     )
     catalogus = fields.URLField(help_text=_("Url reference of related CATALOGUS"))
+
+
+class ZaakEigenschappenFilterSet(ApiFilterSet):
+    # filtering is done in viewset.get_object() method.
+    # This filterset is used just to validate query params
+    url = fields.URLField(
+        required=True, help_text=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API")
+    )
