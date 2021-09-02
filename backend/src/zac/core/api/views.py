@@ -276,17 +276,15 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ZaakEigenschappenView(GetZaakMixin, views.APIView):
+class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
     schema_summary = _("List case properties (eigenschappen)")
 
-    def get(self, request, *args, **kwargs):
+    def get_objects(self):
         zaak = self.get_object()
-        eigenschappen = get_zaak_eigenschappen(zaak)
-        serializer = self.serializer_class(instance=eigenschappen, many=True)
-        return Response(serializer.data)
+        return get_zaak_eigenschappen(zaak)
 
 
 class ZaakEigenschapDetailView(views.APIView):
