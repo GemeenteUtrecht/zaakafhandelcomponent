@@ -1,4 +1,3 @@
-from zac.camunda.data import Task
 from typing import List
 
 from django.utils.translation import gettext as _
@@ -11,6 +10,7 @@ from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_context
+from zac.camunda.data import Task
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.core.api.serializers import ZaakDetailSerializer
 from zac.core.services import get_zaak
@@ -27,8 +27,8 @@ from .serializers import (
 from .utils import (
     get_access_requests_groups,
     get_behandelaar_zaken_unfinished,
-    get_camunda_user_tasks,
     get_camunda_group_tasks,
+    get_camunda_user_tasks,
 )
 
 

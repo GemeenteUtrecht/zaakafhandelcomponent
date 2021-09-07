@@ -4,8 +4,8 @@ from .views import (
     WorkStackAccessRequestsView,
     WorkStackAdhocActivitiesView,
     WorkStackAssigneeCasesView,
-    WorkStackUserTasksView,
     WorkStackGroupsTasksView,
+    WorkStackUserTasksView,
 )
 
 app_name = "werkvoorraad"
