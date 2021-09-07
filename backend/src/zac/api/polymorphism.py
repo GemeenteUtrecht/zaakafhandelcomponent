@@ -134,7 +134,12 @@ class PolymorphicSerializer(serializers.Serializer):
                 return serializers.Serializer()
 
     def _get_serializer_from_data(self, data):
-        discriminator_value = self.fields[self.discriminator_field].get_value(data)
+        field = self.fields[self.discriminator_field]
+        # for PATCH
+        if self.instance:
+            discriminator_value = field.get_attribute(self.instance)
+        else:
+            discriminator_value = field.get_value(data)
         serializer = self._discriminator_serializer(discriminator_value)
         return serializer
 

@@ -42,6 +42,7 @@ from zac.core.services import (
     relate_object_to_zaak,
     search_objects,
     update_document,
+    update_zaak_eigenschap,
 )
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
@@ -50,6 +51,8 @@ from zgw.models.zrc import Zaak
 from ..cache import invalidate_zaak_cache
 from ..services import (
     create_document,
+    delete_zaak_eigenschap,
+    fetch_zaak_eigenschap,
     fetch_zaaktype,
     find_zaak,
     get_document,
@@ -73,7 +76,11 @@ from ..services import (
 from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
-from .filters import EigenschappenFilterSet, ZaaktypenFilterSet
+from .filters import (
+    EigenschappenFilterSet,
+    ZaakEigenschappenFilterSet,
+    ZaaktypenFilterSet,
+)
 from .mixins import ListMixin, RetrieveMixin
 from .pagination import BffPagination
 from .permissions import (
@@ -269,17 +276,84 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ZaakEigenschappenView(GetZaakMixin, views.APIView):
+class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
     schema_summary = _("List case properties (eigenschappen)")
 
-    def get(self, request, *args, **kwargs):
+    def get_objects(self):
         zaak = self.get_object()
-        eigenschappen = get_zaak_eigenschappen(zaak)
-        serializer = self.serializer_class(instance=eigenschappen, many=True)
+        return get_zaak_eigenschappen(zaak)
+
+
+class ZaakEigenschapDetailView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanUpdateZaken,)
+    serializer_class = ZaakEigenschapSerializer
+    filterset_class = ZaakEigenschappenFilterSet
+
+    def get_object(self):
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
+        url = self.request.query_params.get("url")
+
+        try:
+            zaak_eigenschap = fetch_zaak_eigenschap(url)
+        except ClientError as exc:
+            raise Http404("No zaak eigenschap matches the given url.")
+
+        # check permissions
+        zaak = get_zaak(zaak_url=zaak_eigenschap.zaak)
+        self.check_object_permissions(self.request, zaak)
+
+        return zaak_eigenschap
+
+    @extend_schema(
+        summary=_("Update case property"),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
+    def patch(self, request, *args, **kwargs):
+        zaak_eigenschap = self.get_object()
+
+        serializer = self.serializer_class(
+            instance=zaak_eigenschap, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        data = {"waarde": str(serializer.initial_data["value"])}
+
+        updated_zaak_eigenschap = update_zaak_eigenschap(zaak_eigenschap.url, data)
+        serializer = self.serializer_class(instance=updated_zaak_eigenschap)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Delete case property"),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
+    def delete(self, request, *args, **kwargs):
+        zaak_eigenschap = self.get_object()
+        delete_zaak_eigenschap(zaak_eigenschap.url)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RelatedZakenView(GetZaakMixin, views.APIView):

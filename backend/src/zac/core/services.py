@@ -207,6 +207,13 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
     return eigenschappen
 
 
+@cache_result("eigenschap:{url}", timeout=A_DAY)
+def get_eigenschap(url: str) -> Eigenschap:
+    client = _client_from_url(url)
+    result = client.retrieve("eigenschap", url)
+    return factory(Eigenschap, result)
+
+
 @cache_result("roltype:{url}", timeout=A_DAY)
 def get_roltype(url: str) -> RolType:
     client = _client_from_url(url)
@@ -566,6 +573,30 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
         zaak_eigenschap.eigenschap = eigenschappen[zaak_eigenschap.eigenschap]
 
     return zaak_eigenschappen
+
+
+def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
+    client = _client_from_url(zaak_eigenschap_url)
+    zaak_eigenschap = client.retrieve("zaakeigenschap", url=zaak_eigenschap_url)
+    zaak_eigenschap = factory(ZaakEigenschap, zaak_eigenschap)
+    zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
+
+    return zaak_eigenschap
+
+
+def update_zaak_eigenschap(zaak_eigenschap_url: str, data: dict) -> ZaakEigenschap:
+    client = _client_from_url(zaak_eigenschap_url)
+    zaak_eigenschap = client.partial_update(
+        "zaakeigenschap", data=data, url=zaak_eigenschap_url
+    )
+    zaak_eigenschap = factory(ZaakEigenschap, zaak_eigenschap)
+    zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
+    return zaak_eigenschap
+
+
+def delete_zaak_eigenschap(zaak_eigenschap_url: str):
+    client = _client_from_url(zaak_eigenschap_url)
+    client.delete("zaakeigenschap", url=zaak_eigenschap_url)
 
 
 @cache_result("get_zaak:{zaak_uuid}:{zaak_url}", timeout=AN_HOUR)
