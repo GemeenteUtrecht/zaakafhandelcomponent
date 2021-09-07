@@ -5,6 +5,10 @@ import { ModalService, SnackbarService } from '@gu/components';
 import { AuthProfile, MetaConfidentiality, MetaZaaktype, Role } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
+
+/**
+ * Add authorisation profile form
+ */
 @Component({
   selector: 'gu-add-auth-profile',
   templateUrl: './add-auth-profile.component.html',
@@ -91,6 +95,7 @@ export class AddAuthProfileComponent implements OnInit {
       () => {
         this.closeModal('add-auth-profile-modal');
         this.snackbarService.openSnackBar(this.createAuthProfileSuccessMessage, 'Sluiten', 'primary');
+        this.authProfileForm.reset();
         this.reload.emit(true)
         this.isLoading = false;
       },

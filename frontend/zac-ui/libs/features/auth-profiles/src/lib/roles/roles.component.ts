@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { FieldConfiguration, ModalService, SnackbarService } from '@gu/components';
 import { Role } from '@gu/models';
@@ -14,15 +14,15 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrls: ['./roles.component.scss']
 })
 export class RolesComponent implements OnInit {
+  @Input() roles: Role[];
+  @Output() reloadRoles: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  readonly getRolesErrorMessage = "Er is een fout opgetreden bij het ophalen van de rollen.";
-  readonly createRoleErrorMessage = "Er is een fout opgetreden bij het aanmaken van de rol."
-  readonly createRoleSuccessMessage = "De rol is aangemaakt."
-
-  roles: Role[];
   permissions: any;
 
   isLoading: boolean;
+
+  readonly createRoleSuccessMessage = "De rol is aangemaakt."
+  readonly createRoleErrorMessage = "Er is een fout opgetreden bij het aanmaken van de rol."
   errorMessage: string;
 
   constructor(
@@ -32,7 +32,6 @@ export class RolesComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getRoles();
     this.getPermissions();
   }
 
@@ -47,7 +46,6 @@ export class RolesComponent implements OnInit {
         name: 'name',
         required: true,
         autocomplete: 'off',
-        placeholder: 'Zaakbewerker',
         value: '',
       },
       {
@@ -83,21 +81,6 @@ export class RolesComponent implements OnInit {
   }
 
   /**
-   * Retrieve roles.
-   */
-  getRoles() {
-    this.isLoading = true;
-    this.fService.getRoles().subscribe(
-      (data) => this.roles = data,
-      (err) => {
-        this.errorMessage = this.getRolesErrorMessage;
-        this.reportError(err)
-      }
-    );
-    this.isLoading = false;
-  }
-
-  /**
    * Retrieve permissions.
    */
   getPermissions() {
@@ -117,11 +100,11 @@ export class RolesComponent implements OnInit {
       () => {
         this.closeModal('add-role-modal');
         this.snackbarService.openSnackBar(this.createRoleSuccessMessage, 'Sluiten', 'primary');
-        this.getRoles()
+        this.reloadRoles.emit(true);
         this.isLoading = false;
       },
       (err: HttpErrorResponse) => {
-        this.errorMessage = err.error.name[0] || this.createRoleErrorMessage;
+        this.errorMessage = this.createRoleErrorMessage;
         this.reportError(err)
       }
     )

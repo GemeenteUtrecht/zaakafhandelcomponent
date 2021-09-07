@@ -4,12 +4,12 @@
     <gu-tab-group>
       <gu-tab label="Autorisatieprofielen">
         <div class="p-4">
-          <gu-auth-profiles></gu-auth-profiles>
+          <gu-auth-profiles [roles]="roles"></gu-auth-profiles>
         </div>
       </gu-tab>
       <gu-tab label="Rollen">
         <div class="p-4">
-          <gu-roles></gu-roles>
+          <gu-roles *ngIf="roles" (reloadRoles)="getRoles()" [roles]="roles"></gu-roles>
         </div>
       </gu-tab>
     </gu-tab-group>

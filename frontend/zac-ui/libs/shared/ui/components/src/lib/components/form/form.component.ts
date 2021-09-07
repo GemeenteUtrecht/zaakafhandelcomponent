@@ -132,6 +132,7 @@ export class FormComponent implements OnInit {
    */
   _formSubmit(): void {
     this.formSubmit.emit(this.formGroup.getRawValue())
+    this.formGroup.reset();
   }
 
 }

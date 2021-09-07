@@ -12,6 +12,7 @@
       <mat-icon class="mr-2">perm_identity</mat-icon>
       <strong>{{ role.name }}</strong>
     </mat-expansion-panel-header>
+    <p class="mb-2">Rechten</p>
     <ul>
       <li *ngFor="let rolePermission of role.permissions">
         {{rolePermission}}

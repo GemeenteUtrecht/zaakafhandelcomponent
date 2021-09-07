@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
 import { AuthProfile, MetaZaaktype, Result, Role } from '@gu/models';
@@ -13,11 +13,10 @@ import { AuthProfile, MetaZaaktype, Result, Role } from '@gu/models';
   styleUrls: ['./auth-profiles.component.scss']
 })
 export class AuthProfilesComponent implements OnInit {
+  @Input() roles: Role[];
 
   readonly getAuthProfilesErrorMessage = "Er is een fout opgetreden bij het ophalen van de autorisatieprofielen.";
-  readonly getRolesErrorMessage = "Er is een fout opgetreden bij het ophalen van de rollen.";
 
-  roles: Role[];
   authProfiles: AuthProfile[];
   caseTypes: MetaZaaktype;
 
@@ -31,7 +30,6 @@ export class AuthProfilesComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getRoles();
     this.getAuthProfiles();
     this.getCaseTypes();
   }
@@ -79,21 +77,6 @@ export class AuthProfilesComponent implements OnInit {
         this.reportError(err);
       }
     );
-  }
-
-  /**
-   * Retrieve roles.
-   */
-  getRoles() {
-    this.isLoading = true;
-    this.fService.getRoles().subscribe(
-      (data) => this.roles = data,
-      (err) => {
-        this.errorMessage = this.getRolesErrorMessage;
-        this.reportError(err)
-      }
-    );
-    this.isLoading = false;
   }
 
   /**

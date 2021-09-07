@@ -15,7 +15,7 @@
     </mat-expansion-panel-header>
 
     <!-- Inner accordion to show blueprint permissions-->
-    <p class="mb-2" >Rollen</p>
+    <p class="mb-2">Bijbehorende rollen</p>
     <mat-accordion multi>
       <ng-container *ngFor="let blueprintPermission of authProfile.blueprintPermissions">
         <mat-expansion-panel *ngIf="blueprintPermission.objectType === 'search_report'">
