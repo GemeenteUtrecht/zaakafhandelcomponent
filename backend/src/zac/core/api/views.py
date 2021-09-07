@@ -52,7 +52,9 @@ from ..cache import invalidate_zaak_cache
 from ..services import (
     create_document,
     delete_zaak_eigenschap,
+    delete_zaak_object,
     fetch_zaak_eigenschap,
+    fetch_zaak_object,
     fetch_zaaktype,
     find_zaak,
     get_document,
@@ -79,6 +81,7 @@ from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
     EigenschappenFilterSet,
     ZaakEigenschappenFilterSet,
+    ZaakObjectFilterSet,
     ZaaktypenFilterSet,
 )
 from .mixins import ListMixin, RetrieveMixin
@@ -881,17 +884,37 @@ class ObjectSearchView(views.APIView):
         return Response(object_serializer.data)
 
 
-@extend_schema(
-    summary=_("Create zaakobject"),
-    description=_("Relate an object to a zaak"),
-    responses={(201, "application/json"): ZaakObjectProxySerializer},
-    tags=["objects"],
-)
-class ZaakObjectCreateView(views.APIView):
+class ZaakObjectChangeView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, CanUpdateZaken)
     serializer_class = ZaakObjectProxySerializer
+    filterset_class = ZaakObjectFilterSet
 
+    def get_object(self):
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+        url = self.request.query_params.get("url")
+
+        try:
+            zaak_object = fetch_zaak_object(url)
+        except ClientError as exc:
+            raise Http404("No zaak object matches the given url.")
+
+        # check permissions
+        zaak = get_zaak(zaak_url=zaak_object.zaak)
+        self.check_object_permissions(self.request, zaak)
+
+        return zaak_object
+
+    @extend_schema(
+        summary=_("Create zaakobject"),
+        description=_("Relate an object to a zaak"),
+        responses={(201, "application/json"): ZaakObjectProxySerializer},
+        tags=["objects"],
+    )
     def post(self, request):
         try:
             created_zaakobject = relate_object_to_zaak(request.data)
@@ -899,3 +922,21 @@ class ZaakObjectCreateView(views.APIView):
             raise ValidationError(detail=exc.args)
 
         return Response(status=201, data=created_zaakobject)
+
+    @extend_schema(
+        summary=_("Delete zaak object"),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL reference of ZAAK OBJECT in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+        tags=["objects"],
+    )
+    def delete(self, request, *args, **kwargs):
+        zaak_object = self.get_object()
+        delete_zaak_object(zaak_object.url)
+        return Response(status=status.HTTP_204_NO_CONTENT)
