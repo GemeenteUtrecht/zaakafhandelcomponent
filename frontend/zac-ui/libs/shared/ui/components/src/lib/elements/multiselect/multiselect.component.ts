@@ -1,5 +1,6 @@
 import { AfterContentInit, AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
+import { NgSelectConfig } from '@ng-select/ng-select';
 
 @Component({
   selector: 'gu-multiselect',
@@ -17,6 +18,7 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
   @Input() searchable = true;
   @Input() selectedValue: any;
   @Input() label: string;
+  @Input() appendTo: string;
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();

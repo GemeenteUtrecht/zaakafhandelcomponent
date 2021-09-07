@@ -522,6 +522,51 @@
           "style": "scss"
         }
       }
+    },
+    "features-auth-profiles": {
+      "projectType": "library",
+      "root": "libs/features/auth-profiles",
+      "sourceRoot": "libs/features/auth-profiles/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/auth-profiles/tsconfig.lib.json",
+            "project": "libs/features/auth-profiles/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/auth-profiles/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/auth-profiles/tsconfig.lib.json",
+              "libs/features/auth-profiles/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/features/auth-profiles/**/*"
+            ]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/auth-profiles/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
     }
   },
   "cli": {

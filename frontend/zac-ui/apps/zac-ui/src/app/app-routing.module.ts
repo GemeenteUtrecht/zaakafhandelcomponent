@@ -43,6 +43,13 @@ const routes: Routes = [
         (m) => m.ReportsModule
       ),
   },
+  {
+    path: 'autorisatieprofielen',
+    loadChildren: () =>
+      import('./components/auth-profiles/auth-profiles.module').then(
+        (m) => m.AuthProfilesModule
+      ),
+  }
 ];
 
 @NgModule({

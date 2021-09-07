@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {ApplicationHttpClient} from '@gu/services';
 import {Observable} from 'rxjs';
-import {Permission} from "@gu/models";
+import {ZaakPermission} from "@gu/models";
 
 
 @Injectable()
@@ -11,10 +11,10 @@ export class PermissionsService {
 
   /**
    * Delete an atomic permission for a particular user
-   * @param {Permission} permission
+   * @param {ZaakPermission} permission
    * @return {Observable}
    */
-  deletePermission(permission: Permission): Observable<any> {
+  deletePermission(permission: ZaakPermission): Observable<any> {
     const endpoint = encodeURI(`/api/accounts/cases/access/${permission.id}`);
     return this.http.Delete(endpoint);
   }

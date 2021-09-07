@@ -19,6 +19,7 @@ import { KownslModule } from './components/kownsl/kownsl.module';
 import { ZakenModule } from './components/zaken/zaken.module';
 import { WorkstackModule } from './components/workstack/workstack.module';
 import { ZaakSelectModule } from '@gu/search';
+import { AuthProfilesModule } from './components/auth-profiles/auth-profiles.module';
 
 
 registerLocaleData(localeNL);
@@ -26,7 +27,7 @@ registerLocaleData(localeNL);
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -41,7 +42,8 @@ registerLocaleData(localeNL);
     KownslModule,
     ZakenModule,
     WorkstackModule,
-    ZaakSelectModule
+    ZaakSelectModule,
+    AuthProfilesModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

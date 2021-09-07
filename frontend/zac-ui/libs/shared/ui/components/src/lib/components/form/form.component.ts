@@ -122,7 +122,6 @@ export class FormComponent implements OnInit {
    * @param {Field} field
    */
   selectChanged(choice: Choice, field: Field): void {
-    field.control.setValue(choice.value);
     field.control.markAsDirty()
     field.control.markAsTouched()
   }

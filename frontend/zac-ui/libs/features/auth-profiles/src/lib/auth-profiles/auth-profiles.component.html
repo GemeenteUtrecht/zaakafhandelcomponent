@@ -1,0 +1,47 @@
+<div class="d-flex justify-content-between">
+  <h2 class="d-inline-block">Autorisatieprofielen</h2>
+  <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-auth-profile-modal')">
+    Authorisatieprofiel toevoegen
+  </button>
+</div>
+<p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
+<mat-accordion *ngIf="authProfiles && caseTypes" multi>
+  <mat-expansion-panel *ngFor="let authProfile of authProfiles">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon class="mr-2">groups</mat-icon>
+        <strong>{{ authProfile.name }}</strong>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <!-- Inner accordion to show blueprint permissions-->
+    <p class="mb-2" >Rollen</p>
+    <mat-accordion multi>
+      <ng-container *ngFor="let blueprintPermission of authProfile.blueprintPermissions">
+        <mat-expansion-panel *ngIf="blueprintPermission.objectType === 'search_report'">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <strong>{{getRoleName(blueprintPermission.role)}}</strong>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <p class="mb-2">Zaaktypen</p>
+          <ul *ngIf="blueprintPermission.policies[0]">
+            <li *ngFor="let caseTypeId of blueprintPermission.policies[0].zaaktypen">
+              {{ getCaseTypeName(caseTypeId) }}
+            </li>
+          </ul>
+        </mat-expansion-panel>
+      </ng-container>
+    </mat-accordion>
+
+  </mat-expansion-panel>
+</mat-accordion>
+
+<!-- Modal content -->
+<gu-modal id="add-auth-profile-modal"
+          [closeIcon]="true"
+          size="small"
+          title="Autorisatieprofiel toevoegen"
+>
+  <gu-add-auth-profile *ngIf="roles" [roles]="roles" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+</gu-modal>

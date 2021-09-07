@@ -32,7 +32,8 @@
       "@gu/search": ["libs/features/search/src/index.ts"],
       "@gu/workstack": ["libs/features/workstack/src/index.ts"],
       "@gu/reports": ["libs/features/reports/src/index.ts"],
-      "@gu/forms": ["libs/features/forms/src/index.ts"]
+      "@gu/forms": ["libs/features/forms/src/index.ts"],
+      "@gu/auth-profiles": ["libs/features/auth-profiles/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

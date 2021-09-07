@@ -1,0 +1,29 @@
+<div class="d-flex justify-content-between">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <h2 class="d-inline-block">Rollen</h2>
+  <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-role-modal')">
+    Rol toevoegen
+  </button>
+</div>
+<p>Een rol is een set aan rechten.</p>
+<mat-accordion *ngIf="roles" multi>
+  <mat-expansion-panel *ngFor="let role of roles">
+    <mat-expansion-panel-header>
+      <mat-icon class="mr-2">perm_identity</mat-icon>
+      <strong>{{ role.name }}</strong>
+    </mat-expansion-panel-header>
+    <ul>
+      <li *ngFor="let rolePermission of role.permissions">
+        {{rolePermission}}
+      </li>
+    </ul>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<!-- Modal content -->
+<gu-modal id="add-role-modal"
+          [closeIcon]="true"
+          title="Rol toevoegen"
+>
+  <gu-form *ngIf="permissions" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+</gu-modal>
