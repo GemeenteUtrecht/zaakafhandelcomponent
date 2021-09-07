@@ -4,7 +4,7 @@ from django_camunda.api import get_task as _get_task
 from django_camunda.types import CamundaId
 
 from zac.camunda.forms import extract_task_form
-from zac.core.camunda.utils import FORM_KEYS, _resolve_assignee
+from zac.core.camunda.utils import FORM_KEYS, resolve_assignee
 
 from ..data import Task
 
@@ -16,7 +16,7 @@ def get_task(task_id: CamundaId, check_history=False) -> Optional[Task]:
     # add Django integration
     if task is not None:
         if task.assignee:
-            task.assignee = _resolve_assignee(task.assignee)
+            task.assignee = resolve_assignee(task.assignee)
         task.form = extract_task_form(task, FORM_KEYS)
 
     return task

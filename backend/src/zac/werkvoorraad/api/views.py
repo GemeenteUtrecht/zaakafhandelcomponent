@@ -1,3 +1,6 @@
+from zac.camunda.data import Task
+from typing import List
+
 from django.utils.translation import gettext as _
 
 from drf_spectacular.utils import extend_schema
@@ -25,6 +28,7 @@ from .utils import (
     get_access_requests_groups,
     get_behandelaar_zaken_unfinished,
     get_camunda_user_tasks,
+    get_camunda_group_tasks,
 )
 
 
@@ -98,8 +102,11 @@ class WorkStackUserTasksView(ListAPIView):
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()
 
+    def get_camunda_tasks(self) -> List[Task]:
+        return get_camunda_user_tasks(self.request.user)
+
     def get_queryset(self):
-        tasks = get_camunda_user_tasks(self.request.user)
+        tasks = self.get_camunda_tasks()
         with parallel() as executor:
             zaken_context = executor.map(get_zaak_context, tasks)
 
@@ -107,3 +114,9 @@ class WorkStackUserTasksView(ListAPIView):
             TaskAndCase(task=task, zaak=zaak_context.zaak)
             for task, zaak_context in zip(tasks, zaken_context)
         ]
+
+
+@extend_schema(summary=_("List user tasks assigned to groups related to user"))
+class WorkStackGroupsTasksView(WorkStackUserTasksView):
+    def get_camunda_tasks(self) -> List[Task]:
+        return get_camunda_group_tasks(self.request.user)
