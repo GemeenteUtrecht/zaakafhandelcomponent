@@ -73,7 +73,7 @@ from ..services import (
     resolve_documenten_informatieobjecttypen,
     zet_status,
 )
-from ..views.utils import filter_documenten_for_permissions, get_source_doc_versions
+from ..views.utils import filter_documenten_for_permissions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
@@ -507,8 +507,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
             for rr, rr_advices in zip(review_requests, _advices):
                 rr.advices = rr_advices
 
-        doc_versions = get_source_doc_versions(review_requests)
-        documents, gone = get_documenten(zaak, doc_versions)
+        documents, gone = get_documenten(zaak)
         filtered_documenten = filter_documenten_for_permissions(documents, request)
         resolved_documenten = resolve_documenten_informatieobjecttypen(
             filtered_documenten
