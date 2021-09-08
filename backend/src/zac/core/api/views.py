@@ -916,11 +916,8 @@ class ZaakObjectChangeView(views.APIView):
         tags=["objects"],
     )
     def post(self, request):
-        serializer = self.serializer_class(request.data)
-        serializer.is_valid(raise_exception=True)
-
         # check permissions
-        zaak_url = serializer.data["zaak"]
+        zaak_url = request.data["zaak"]
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(self.request, zaak)
 
