@@ -117,6 +117,6 @@ class WorkStackUserTasksView(ListAPIView):
 
 
 @extend_schema(summary=_("List user tasks assigned to groups related to user"))
-class WorkStackGroupsTasksView(WorkStackUserTasksView):
+class WorkStackGroupTasksView(WorkStackUserTasksView):
     def get_camunda_tasks(self) -> List[Task]:
         return get_camunda_group_tasks(self.request.user)
