@@ -35,7 +35,6 @@ from zgw_consumers.models import Service
 from zac.accounts.models import User, UserAtomicPermission
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
-from zac.contrib.kownsl.api import get_review_requests, retrieve_advices
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
@@ -495,18 +494,6 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
-
-        review_requests = get_review_requests(zaak)
-
-        with parallel() as executor:
-            _advices = executor.map(
-                lambda rr: retrieve_advices(rr) if rr else [],
-                [rr if rr.num_advices else None for rr in review_requests],
-            )
-
-            for rr, rr_advices in zip(review_requests, _advices):
-                rr.advices = rr_advices
-
         documents, gone = get_documenten(zaak)
         filtered_documenten = filter_documenten_for_permissions(documents, request)
         resolved_documenten = resolve_documenten_informatieobjecttypen(
