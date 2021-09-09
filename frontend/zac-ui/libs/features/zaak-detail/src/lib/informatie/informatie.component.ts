@@ -1,6 +1,6 @@
 import {Component, Input, OnInit, OnChanges} from '@angular/core';
-import {Zaak} from '@gu/models';
-import {FieldConfiguration} from '@gu/components';
+import {EigenschapWaarde, Zaak} from '@gu/models';
+import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {InformatieService} from './informatie.service';
 import {ZaakService} from "@gu/services";
 
@@ -21,20 +21,32 @@ export class InformatieComponent implements OnInit, OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  /** @type {boolean} Whether this component is loading. */
-  isLoading: boolean;
+  readonly errorMessage = 'Er is een fout opgetreden bij het laden van zaakinformatie.'
+
+  /** @type {boolean} Whether the case API is loading. */
+  isCaseAPILoading: boolean;
+
+  /** @type {number} Whether the property API is loading. */
+  isPropertyAPILoading = 0;
 
   /** @type {Object[]} The confidentiality choices. */
   confidentialityChoices: Array<{ label: string, value: string }>;
 
   /** @type {Object[]} The properties to display as part of the form. */
-  properties: Array<Object>;
+  properties: EigenschapWaarde[];
 
   /** @type {Zaak} The zaak object. */
   zaak: Zaak = null;
 
+  /**
+   * Constructor method.
+   * @param {InformatieService} informatieService
+   * @param {SnackbarService} snackbarService
+   * @param {ZaakService} zaakService
+   */
   constructor(
     private informatieService: InformatieService,
+    private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
   }
@@ -46,14 +58,24 @@ export class InformatieComponent implements OnInit, OnChanges {
   /**
    * Returns the field configurations for the form..
    */
-  get form(): Array<FieldConfiguration> {
-    return [...this.caseDetailsFieldConfigurations, ...this.propertyFieldConfigurations];
+  get form(): FieldConfiguration[] {
+    return [
+      ...this.caseDetailsFieldConfigurations,
+      ...this.propertyFieldConfigurations,
+      {
+        label: 'reden',
+        placeholder: 'Reden',
+        value: '',
+        required: true,
+        writeonly: true,
+      }
+    ];
   }
 
   /**
    * Returns the field configurations for the (editable) case details.
    */
-  get caseDetailsFieldConfigurations(): Array<FieldConfiguration> {
+  get caseDetailsFieldConfigurations(): FieldConfiguration[] {
     return [
       {
         label: 'Identificatie',
@@ -77,26 +99,27 @@ export class InformatieComponent implements OnInit, OnChanges {
         label: 'Toelichting',
         placeholder: ' ',
         name: 'toelichting',
-        required: false,
+        required: true,
         value: this.zaak.toelichting,
-      },
-      {
-        label: 'reden',
-        placeholder: 'Reden',
-        value: '',
-        writeonly: true,
       },
     ];
   }
 
   /**
+   * @type {boolean} Whether this component is loading.
+   * */
+  get isLoading(): boolean {
+    return this.isCaseAPILoading || Boolean(this.isPropertyAPILoading);
+  }
+
+  /**
    * Returns the field configurations for the (readonly) properties.
    */
-  get propertyFieldConfigurations(): Array<FieldConfiguration> {
-    return this.properties.map((property: { eigenschap: { naam: string }, value: string }) => ({
+  get propertyFieldConfigurations(): FieldConfiguration[] {
+    return this.properties.map((property: EigenschapWaarde) => ({
       label: property.eigenschap.naam,
-      readonly: true,
-      value: property.value,
+      readonly: false,
+      value: String(property.value),
     }))
   }
 
@@ -129,15 +152,15 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   getContextData() {
     this.fetchZaak();
-    this.isLoading = true;
+    this.isCaseAPILoading = true;
     this.zaakService.listCaseProperties(this.bronorganisatie, this.identificatie).subscribe(
       (data) => {
         this.properties = data;
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
 
       }, (error) => {
         console.error(error);
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
       })
   }
 
@@ -145,16 +168,16 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Fetches the confidentiality choices
    */
   fetchConfidentialityChoices() {
-    this.isLoading = true;
+    this.isCaseAPILoading = true;
 
     this.informatieService.getConfidentiality().subscribe(
       (data) => {
         this.confidentialityChoices = data;
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
       },
       (error) => {
         console.error(error);
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
       })
   }
 
@@ -162,15 +185,15 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Updates this.zaakData with latest values from API.
    */
   fetchZaak() {
-    this.isLoading = true;
+    this.isCaseAPILoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak: Zaak) => {
         this.zaak = zaak;
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
       },
       (error: any) => {
         console.error(error);
-        this.isLoading = false;
+        this.isCaseAPILoading = false;
       }
     );
   }
@@ -184,17 +207,65 @@ export class InformatieComponent implements OnInit, OnChanges {
    * @param {Object} data
    */
   submitForm(data) {
-    this.isLoading = true
+    const propertyKeys = this.properties.map((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam)
+    const propertyData = Object.entries(data)
+      .filter(([key]) => propertyKeys.indexOf(key) > -1)
+      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
+
+
+    const zaakData = Object.entries(data)
+      .filter(([key]) => propertyKeys.indexOf(key) === -1)
+      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
+
+    this.submitProperties(propertyData);
+    this.submitZaak(zaakData);
+  }
+
+
+  /**
+   * Submits the properties.
+   * @param {Object} data
+   */
+  submitProperties(data: Object): void {
+    this.isPropertyAPILoading = Object.entries(data).reduce((acc, [key, value], index) => {
+      const property = this.properties.find((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam === key)
+      property.value = value;
+
+      this.zaakService.updateCaseProperty(property).subscribe(
+        () => {},
+        this.reportError.bind(this),
+        () => this.isPropertyAPILoading--,
+      );
+
+      return acc + 1;
+    }, 0);
+  }
+
+  /**
+   * Submits the zaak.
+   * @param {Object} data
+   */
+  submitZaak(data: Object): void {
+    this.isCaseAPILoading = true;
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
         this.fetchZaak();
-        this.isLoading = false
+        this.isCaseAPILoading = false
       },
-
-      (error: any) => {
-        console.error(error);
-        this.isLoading = false
-      }
+      this.reportError.bind(this),
     );
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 }
