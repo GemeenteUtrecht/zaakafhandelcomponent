@@ -26,7 +26,7 @@ FORM_KEYS = {
 }
 
 
-def _resolve_assignee(name: str) -> Union[Group, User]:
+def resolve_assignee(name: str) -> Union[Group, User]:
     try:  # Encapsulate in a try-except to not cause breaking changes
         user_or_group, _name = name.split(":", 1)
         if user_or_group == AssigneeTypeChoices.group:
@@ -57,7 +57,7 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
 
     for task in tasks:
         if task.assignee:
-            task.assignee = _resolve_assignee(task.assignee)
+            task.assignee = resolve_assignee(task.assignee)
 
         task.form = extract_task_form(task, FORM_KEYS)
     return tasks

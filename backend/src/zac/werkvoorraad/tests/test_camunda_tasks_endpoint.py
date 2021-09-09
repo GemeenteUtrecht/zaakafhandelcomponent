@@ -9,7 +9,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zgw.models.zrc import Zaak
@@ -47,17 +47,20 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class UserTasksTests(APITestCase):
+class CamundaTasksTests(APITestCase):
     """
-    Test the user tasks workstack API endpoint.
+    Test the camunda tasks workstack API endpoints.
     """
 
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
 
+        cls.groups = GroupFactory.create_batch(2)
+        cls.group_endpoint = reverse("werkvoorraad:group-tasks")
         cls.user = UserFactory.create()
-        cls.endpoint = reverse(
+        cls.user.groups.set(cls.groups)
+        cls.user_endpoint = reverse(
             "werkvoorraad:user-tasks",
         )
 
@@ -83,7 +86,7 @@ class UserTasksTests(APITestCase):
             "zac.werkvoorraad.api.views.get_camunda_user_tasks",
             return_value=[],
         ):
-            response = self.client.get(self.endpoint)
+            response = self.client.get(self.user_endpoint)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
@@ -98,7 +101,7 @@ class UserTasksTests(APITestCase):
                 "zac.werkvoorraad.api.views.get_camunda_user_tasks",
                 return_value=[_get_task(**{"assignee": self.user})],
             ):
-                response = self.client.get(self.endpoint)
+                response = self.client.get(self.user_endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
@@ -115,9 +118,49 @@ class UserTasksTests(APITestCase):
                             "isStaff": self.user.is_staff,
                             "lastName": self.user.last_name,
                             "username": self.user.username,
-                            "groups": [],
+                            "groups": [group.name for group in self.groups],
                         },
                         "assigneeType": "user",
+                        "created": TASK_DATA["created"],
+                        "hasForm": False,
+                        "id": TASK_DATA["id"],
+                    },
+                    "zaak": {
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                        "url": self.zaak.url,
+                    },
+                },
+            ],
+        )
+
+    def test_group_tasks_endpoint(self):
+
+        with patch(
+            "zac.werkvoorraad.api.views.get_zaak_context",
+            return_value=ZaakContext(zaak=self.zaak, zaaktype=None, documents=None),
+        ):
+            with patch(
+                "zac.werkvoorraad.api.views.get_camunda_group_tasks",
+                return_value=[_get_task(**{"assignee": self.groups[0]})],
+            ):
+                response = self.client.get(self.group_endpoint)
+        self.maxDiff = None
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(
+            data,
+            [
+                {
+                    "task": {
+                        "name": TASK_DATA["name"],
+                        "assignee": {
+                            "id": self.groups[0].id,
+                            "fullName": f"Group: {self.groups[0].name}",
+                            "name": self.groups[0].name,
+                        },
+                        "assigneeType": "group",
                         "created": TASK_DATA["created"],
                         "hasForm": False,
                         "id": TASK_DATA["id"],

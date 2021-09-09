@@ -3,9 +3,11 @@ from typing import List
 
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
+from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
 from zac.camunda.data import Task
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_behandelaar_zaken
 from zgw.models.zrc import Zaak
@@ -20,13 +22,32 @@ def get_behandelaar_zaken_unfinished(user: User, ordering: List = []) -> List[Za
     return unfinished_zaken
 
 
-def get_camunda_user_tasks(user: User):
+def get_camunda_user_tasks(user: User) -> List[Task]:
+    tasks = get_camunda_tasks(f"user:{user.username}")
+    if not tasks:  # Try to get tasks the old way to not create breaking changes
+        tasks = get_camunda_tasks(user.username)
+    return tasks
+
+
+def get_camunda_group_tasks(user: User) -> List[Task]:
+    groups = [f"group:{group.name}" for group in user.groups.all()]
+    with parallel(
+        max_workers=10
+    ) as executor:  # 10 parallel requests per user may be too much for camunda if lots of users are making requests - lower this if camunda starts returning 429 errors or similar
+        results = executor.map(get_camunda_tasks, groups)
+
+    # Flatten list of lists
+    tasks = [task for tasks in results for task in tasks]
+    return tasks
+
+
+def get_camunda_tasks(assignee: str) -> List[Task]:
     client = get_client()
-    tasks = client.get("task", {"assignee": user.username})
+    tasks = client.get("task", {"assignee": assignee})
 
     tasks = factory(Task, tasks)
     for task in tasks:
-        task.assignee = user
+        task.assignee = resolve_assignee(assignee)
 
     return tasks
 
