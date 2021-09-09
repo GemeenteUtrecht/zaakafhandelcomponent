@@ -48,10 +48,15 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
     @staticmethod
     def _handle_review_submitted(data: dict):
-        client = Service.get_client(data["hoofd_object"])
+        resource_url = data["hoofd_object"]
+        client = Service.get_client(resource_url)
+        if client is None:
+            raise RuntimeError(
+                f"Could not build an appropriate client for the URL {resource_url}"
+            )
 
-        logger.debug("Retrieving review request %s", data["hoofd_object"])
-        review_request = client.retrieve("reviewrequest", url=data["hoofd_object"])
+        logger.debug("Retrieving review request %s", resource_url)
+        review_request = client.retrieve("reviewrequest", url=resource_url)
 
         # look up and complete the user task in Camunda
         assignee = data["kenmerken"]["author"]
