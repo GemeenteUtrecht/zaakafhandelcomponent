@@ -1,0 +1,126 @@
+{
+  "$id": "app.core",
+  "$name": "app.core",
+  "$version": "1.0.0",
+  "$vendor": "Contezza BV.",
+  "$license": "LGPL-3.0",
+  "$runtime": "1.7.0",
+  "$description": "Core application extensions and features",
+
+  "features": {
+    "toolbar": [
+      {
+        "id": "app.toolbar.download",
+        "order": 100,
+        "title": "APP.ACTIONS.DOWNLOAD",
+        "icon": "get_app",
+        "actions": {
+          "click": "DOWNLOAD_NODES"
+        },
+        "rules": {
+          "visible": "app.selection.canDownload"
+        }
+      },
+      {
+        "id": "app.toolbar.more",
+        "type": "menu",
+        "order": 10000,
+        "icon": "more_vert",
+        "title": "APP.ACTIONS.MORE",
+        "children": [
+          {
+            "id": "app.toolbar.create-eio-intern",
+            "order": 100,
+            "title": "APP.ACTIONS.CREATE_EIO_INTERN",
+            "icon": "edit",
+            "actions": {
+              "click": "EIO_CREATE_INTERN"
+            },
+            "rules": {
+              "visible": "app.selection.canEioCreate"
+            }
+          },
+          {
+            "id": "app.toolbar.create-eio-extern",
+            "order": 200,
+            "title": "APP.ACTIONS.CREATE_EIO_EXTERN",
+            "icon": "add",
+            "actions": {
+              "click": "EIO_CREATE_EXTERN"
+            },
+            "rules": {
+              "visible": "app.selection.canEioCreate"
+            }
+          },
+          {
+            "id": "app.toolbar.delete",
+            "order": 300,
+            "title": "APP.ACTIONS.DELETE",
+            "icon": "delete",
+            "actions": {
+              "click": "DELETE_NODES"
+            },
+            "rules": {
+              "visible": "false"
+            }
+          }
+        ]
+      }
+    ],
+    "contextMenu": [
+      {
+        "id": "app.context.menu.create-eio-intern",
+        "order": 100,
+        "title": "APP.ACTIONS.CREATE_EIO_INTERN",
+        "icon": "edit",
+        "actions": {
+          "click": "EIO_CREATE_INTERN"
+        },
+        "rules": {
+          "visible": "app.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.context.menu.create-eio-extern",
+        "order": 200,
+        "title": "APP.ACTIONS.CREATE_EIO_EXTERN",
+        "icon": "add",
+        "actions": {
+          "click": "EIO_CREATE_EXTERN"
+        },
+        "rules": {
+          "visible": "app.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.create.separator.1",
+        "type": "separator",
+        "order": 300
+      },
+      {
+        "id": "app.context.menu.download",
+        "order": 400,
+        "title": "APP.ACTIONS.DOWNLOAD",
+        "icon": "get_app",
+        "actions": {
+          "click": "DOWNLOAD_NODES"
+        },
+        "rules": {
+          "visible": "app.selection.canDownload"
+        }
+      },
+      {
+        "id": "app.context.menu.delete",
+        "title": "APP.ACTIONS.DELETE",
+        "order": 500,
+        "icon": "delete",
+        "actions": {
+          "click": "DELETE_NODES"
+        },
+        "rules": {
+          "visible": "false"
+        }
+      }
+    ]
+  }
+}

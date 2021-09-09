@@ -20,7 +20,58 @@
             "main": "apps/zac-ui/src/main.ts",
             "polyfills": "apps/zac-ui/src/polyfills.ts",
             "tsConfig": "apps/zac-ui/tsconfig.app.json",
-            "assets": ["apps/zac-ui/src/favicon.ico", "apps/zac-ui/src/assets"],
+            "assets": [
+              "apps/zac-ui/src/favicon.ico",
+              "apps/zac-ui/src/assets",
+              "apps/zac-ui/src/assets/styles",
+              "apps/zac-ui/src/app.config.json",
+
+              {
+                "glob": "app.config.json",
+                "input": "libs/features/contezza-document-search/src",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "libs/features/contezza-document-search/src/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "*",
+                "input": "apps/zac-ui/src/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "*",
+                "input": "node_modules/@alfresco/adf-core/prebuilt-themes",
+                "output": "/assets/prebuilt-themes"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@alfresco/adf-core/bundles/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@alfresco/adf-content-services/bundles/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@contezza/documentlist/bundles/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "pdf.worker.js",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/"
+              },
+              {
+                "glob": "pdf.worker.min.js",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/"
+              }
+            ],
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/@ng-select/ng-select/themes/default.theme.css",
@@ -75,7 +126,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
             "browserTarget": "zac-ui:build",
-            "host": "0.0.0.0"
+            "host": "0.0.0.0",
+            "port": 4200,
+            "open": true,
+            "proxyConfig": "proxy.conf.js"
           },
           "configurations": {
             "production": {
@@ -513,6 +567,51 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/features/forms/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "features-contezza-document-search": {
+      "projectType": "library",
+      "root": "libs/features/contezza-document-search",
+      "sourceRoot": "libs/features/contezza-document-search/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/contezza-document-search/tsconfig.lib.json",
+            "project": "libs/features/contezza-document-search/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/contezza-document-search/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/contezza-document-search/tsconfig.lib.json",
+              "libs/features/contezza-document-search/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/features/contezza-document-search/**/*"
+            ]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/contezza-document-search/jest.config.js",
             "passWithNoTests": true
           }
         }

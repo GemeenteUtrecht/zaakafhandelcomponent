@@ -18,6 +18,7 @@ import {KetenProcessenModule} from './keten-processen/keten-processen.module';
 import {StatusComponent} from './status/status.component';
 import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
 import {UserPermissionsModule} from './user-permissions/user-permissions.module';
+import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search";
 
 @NgModule({
   imports: [
@@ -34,6 +35,7 @@ import {UserPermissionsModule} from './user-permissions/user-permissions.module'
     MultiselectModule,
     ReactiveFormsModule,
     FeaturesSearchModule,
+    FeaturesContezzaDocumentSearchModule,
     SharedUiComponentsModule,
     TabsModule.forRoot(),
     UserPermissionsModule,
