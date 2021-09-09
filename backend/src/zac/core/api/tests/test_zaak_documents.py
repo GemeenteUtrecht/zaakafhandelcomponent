@@ -54,8 +54,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         super().setUp()
         self.user = SuperUserFactory.create()
 
-    @patch("zac.core.api.views.get_review_requests", return_value=[])
-    def test_get_zaak_documents(self, m, *other_mocks):
+    def test_get_zaak_documents(self, m):
         self.client.force_authenticate(user=self.user)
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -170,8 +169,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         ]
         self.assertEqual(response_data, expected)
 
-    @patch("zac.core.api.views.get_review_requests", return_value=[])
-    def test_no_documents(self, m, *other_mocks):
+    def test_no_documents(self, m):
         self.client.force_authenticate(user=self.user)
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -258,10 +256,6 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
 
-        cls.get_review_requests_patcher = patch(
-            "zac.core.api.views.get_review_requests", return_value=[]
-        )
-
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
 
         cls.documenttype = generate_oas_component(
@@ -322,9 +316,6 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
-
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
 
         self.get_open_documenten_patcher.start()
         self.addCleanup(self.get_open_documenten_patcher.stop)
