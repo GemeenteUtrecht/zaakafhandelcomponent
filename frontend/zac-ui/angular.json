@@ -25,22 +25,6 @@
               "apps/zac-ui/src/assets",
               "apps/zac-ui/src/assets/styles",
               "apps/zac-ui/src/app.config.json",
-
-              {
-                "glob": "app.config.json",
-                "input": "libs/features/contezza-document-search/src",
-                "output": "/"
-              },
-              {
-                "glob": "**/*",
-                "input": "libs/features/contezza-document-search/src/assets",
-                "output": "/assets"
-              },
-              {
-                "glob": "*",
-                "input": "apps/zac-ui/src/assets",
-                "output": "/assets"
-              },
               {
                 "glob": "*",
                 "input": "node_modules/@alfresco/adf-core/prebuilt-themes",
@@ -57,11 +41,6 @@
                 "output": "/assets"
               },
               {
-                "glob": "**/*",
-                "input": "node_modules/@contezza/documentlist/bundles/assets",
-                "output": "/assets"
-              },
-              {
                 "glob": "pdf.worker.js",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/"
@@ -70,6 +49,16 @@
                 "glob": "pdf.worker.min.js",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/"
+              },
+              {
+                "glob": "app.config.json",
+                "input": "libs/features/contezza-document-search/src",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "libs/features/contezza-document-search/src/assets",
+                "output": "/assets"
               }
             ],
             "styles": [
