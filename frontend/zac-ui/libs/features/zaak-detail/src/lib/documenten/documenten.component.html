@@ -38,8 +38,9 @@
 <gu-modal id="document-toevoegen-modal"
           [closeIcon]="true"
           title="Document toevoegen"
-          size="small">
+          size="big">
   <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [zaaktypeurl]="zaaktypeurl"
                          [bronorganisatie]="bronorganisatie"
                          [identificatie]="identificatie"
                          (closeModal)="closeModal('document-toevoegen-modal')"
@@ -49,8 +50,9 @@
 <gu-modal id="document-overschrijven-modal"
           [closeIcon]="true"
           title="Document overschrijven"
-          size="small">
+          size="big">
   <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [zaaktypeurl]="zaaktypeurl"
                          [bronorganisatie]="bronorganisatie"
                          [identificatie]="identificatie"
                          [updateDocument]="true"

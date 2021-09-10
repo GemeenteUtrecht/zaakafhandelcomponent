@@ -12,6 +12,7 @@ import { of } from 'rxjs';
  * This section displays the documents for a zaak and allow to add documents.
  *
  * Requires mainZaakUrl: string input to identify the url of the case (zaak).
+ * Requires zaaktypeurl: string input to identify the url of the case (zaak) type.
  * Requires bronorganisatie: string input to identify the organisation.
  * Requires identificatie: string input to identify the case (zaak).
  */
@@ -23,6 +24,7 @@ import { of } from 'rxjs';
 
 export class DocumentenComponent implements OnChanges {
   @Input() mainZaakUrl: string;
+  @Input() zaaktypeurl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 

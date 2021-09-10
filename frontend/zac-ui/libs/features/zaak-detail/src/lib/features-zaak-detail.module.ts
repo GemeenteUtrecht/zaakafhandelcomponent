@@ -35,7 +35,6 @@ import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search
     MultiselectModule,
     ReactiveFormsModule,
     FeaturesSearchModule,
-    FeaturesContezzaDocumentSearchModule,
     SharedUiComponentsModule,
     TabsModule.forRoot(),
     UserPermissionsModule,
