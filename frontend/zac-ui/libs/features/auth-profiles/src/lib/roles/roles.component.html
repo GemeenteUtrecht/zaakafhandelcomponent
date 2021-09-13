@@ -3,7 +3,7 @@
     <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
     <h2 class="d-inline-block">Rollen</h2>
     <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-role-modal')">
-      Rol toevoegen
+      Rol aanmaken
     </button>
   </div>
   <p>Een rol is een set aan rechten.</p>
@@ -28,6 +28,6 @@
             size="small"
             title="Rol toevoegen"
   >
-    <gu-form *ngIf="permissions" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+    <gu-form *ngIf="permissions" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Rol aanmaken"></gu-form>
   </gu-modal>
 </div>
