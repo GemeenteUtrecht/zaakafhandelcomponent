@@ -11,5 +11,6 @@ module.exports = {
     '<rootDir>/libs/features/workstack',
     '<rootDir>/libs/features/reports',
     '<rootDir>/libs/features/forms',
+    '<rootDir>/libs/features/auth-profiles',
   ],
 };

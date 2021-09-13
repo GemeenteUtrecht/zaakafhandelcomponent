@@ -39,6 +39,7 @@
           [type]="field.type"
           [required]="field.required"
           [value]="field.control.value"
+          [autocomplete]="field.autocomplete"
           class="mb-4"
         ></gu-input>
         <!-- End regular field. -->
@@ -46,9 +47,12 @@
         <!-- Select field. -->
         <gu-multiselect
           *ngIf="field.widgetType == 'select' && edit"
+          [control]="field.control"
           [items]="field.choices"
           [selectedValue]="field.control.value"
           [label]="field.label"
+          [multiple]="field.multiple"
+          [required]="field.required"
           bindLabel="label"
           bindValue="value"
           (change)="selectChanged($event, field)"

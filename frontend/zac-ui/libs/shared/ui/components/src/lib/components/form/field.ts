@@ -5,7 +5,7 @@ import {AbstractControl} from '@angular/forms';
  */
 export interface Choice {
   label: string,
-  value: string,
+  value: string | number,
 }
 
 /**
@@ -21,8 +21,10 @@ export interface FieldConfiguration {
   readonly?: boolean;
   required?: boolean
   type?: string;
-  value?: string;
+  value?: string | string[] | number;
   writeonly?: boolean;
+  autocomplete?: 'on' | 'off';
+  multiple?: boolean;
 }
 
 /**
@@ -42,6 +44,8 @@ export class Field {
   value: any;
   widgetType: string;
   writeonly?: boolean;
+  autocomplete?: 'on' | 'off';
+  multiple?: boolean;
 
   /**
    * Construction method.

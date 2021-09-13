@@ -31,7 +31,7 @@ export class InputComponent {
   @Input() pattern: string = null;
   @Input() placeholder: string;
   @Input() value: string | number;
-  @Input() autocomplete: any;
+  @Input() autocomplete?: 'on' | 'off';
 
   /**
    * Creates input label.

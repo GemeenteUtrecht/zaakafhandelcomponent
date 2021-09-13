@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {Permission, UserPermission, Table} from '@gu/models';
+import {ZaakPermission, UserPermission, Table} from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {TableButtonClickEvent} from '../../../../../shared/ui/components/src/lib/components/table/table';
 import {PermissionsService} from './permissions.service';
@@ -81,7 +81,7 @@ export class UserPermissionsComponent implements OnInit {
      */
     userPermissionsAsTable(userPermissions: UserPermission[]): Table {
         const bodyData = userPermissions.reduce((acc, userPermission) => {
-            const userRows = userPermission.permissions.map((permission: Permission) => ({
+            const userRows = userPermission.permissions.map((permission: ZaakPermission) => ({
                 cellData: {
                     user: {
                         type: 'text',

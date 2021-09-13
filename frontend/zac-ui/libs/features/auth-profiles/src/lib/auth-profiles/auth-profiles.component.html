@@ -1,0 +1,58 @@
+<div class="auth-profiles">
+  <div class="d-flex justify-content-between">
+    <h2 class="d-inline-block">Autorisatieprofielen</h2>
+    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-auth-profile-modal')">
+      Authorisatieprofiel toevoegen
+    </button>
+  </div>
+  <p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
+  <mat-accordion *ngIf="authProfiles && caseTypes" multi>
+    <ng-container *ngFor="let authProfile of authProfiles">
+      <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
+      <mat-expansion-panel *ngIf="showAuthProfile(authProfile)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <gu-icon class="group-icon mr-2">groups</gu-icon>
+            <strong>{{ authProfile.name }}</strong>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- Inner accordion to show blueprint permissions-->
+        <ng-container *ngIf="authProfile.blueprintPermissions?.length > 0">
+          <p class="mb-2">Bijbehorende rollen</p>
+          <mat-accordion multi>
+            <ng-container *ngFor="let blueprintPermission of authProfile.blueprintPermissions">
+              <mat-expansion-panel *ngIf="blueprintPermission.objectType === 'zaak'">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <strong>{{getRoleName(blueprintPermission.role)}}</strong>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <p class="mb-2">Zaaktypen</p>
+                <ul>
+                  <li *ngFor="let policy of blueprintPermission.policies">
+                    {{ policy.zaaktypeOmschrijving }} <small>({{policy.maxVa}})</small>
+                  </li>
+                </ul>
+              </mat-expansion-panel>
+            </ng-container>
+          </mat-accordion>
+        </ng-container>
+
+        <ng-container *ngIf="authProfile.blueprintPermissions?.length === 0">
+          <p>Dit profiel heeft geen rollen.</p>
+        </ng-container>
+
+      </mat-expansion-panel>
+    </ng-container>
+  </mat-accordion>
+
+  <!-- Modal content -->
+  <gu-modal id="add-auth-profile-modal"
+            [closeIcon]="true"
+            size="medium"
+            title="Autorisatieprofiel aanmaken"
+  >
+    <gu-add-auth-profile *ngIf="roles" [roles]="roles" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+  </gu-modal>
+</div>

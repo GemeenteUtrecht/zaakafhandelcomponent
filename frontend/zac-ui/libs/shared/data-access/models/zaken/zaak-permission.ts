@@ -1,4 +1,4 @@
-export interface Permission {
+export interface ZaakPermission {
   "id": number,
   "requester": string,
   "permission": string,

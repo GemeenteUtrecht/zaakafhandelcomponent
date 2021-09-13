@@ -1,0 +1,15 @@
+@import './base/colors/colors';
+
+.auth-profiles {
+  .group-icon {
+    ::ng-deep .mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+      display: inline-block;
+      vertical-align: text-bottom;
+      color: $color-blue;
+      margin-top: 1px;
+    }
+  }
+}

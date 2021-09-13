@@ -1,6 +1,6 @@
-import {Permission} from "../zaken/permission";
+import {ZaakPermission} from "../zaken/zaak-permission";
 
 export interface UserPermission {
-  permissions: Permission[],
+  permissions: ZaakPermission[],
   username: string,
 }

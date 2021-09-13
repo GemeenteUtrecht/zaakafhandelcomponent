@@ -39,8 +39,7 @@ const bottomMenuItems: MenuItem[] = [
   {
     icon: 'manage_accounts',
     label: 'Autorisatieprofielen',
-    to: '/accounts/auth-profiles/',
-    external: true,
+    to: '/autorisatieprofielen',
     // roles: [UserRole.Admin],
   },
   {
