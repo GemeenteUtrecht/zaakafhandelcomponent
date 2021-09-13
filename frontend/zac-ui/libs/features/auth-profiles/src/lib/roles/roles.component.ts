@@ -6,7 +6,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 
 /**
- * This component allows the user to create a role.
+ * This component displays all the existing roles
+ * and allows the user to create new roles.
+ *
+ * A role is a set of permissions.
  */
 @Component({
   selector: 'gu-roles',

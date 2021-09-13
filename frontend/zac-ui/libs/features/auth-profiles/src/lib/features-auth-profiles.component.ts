@@ -3,6 +3,16 @@ import { Role } from '@gu/models';
 import { FeaturesAuthProfilesService } from './features-auth-profiles.service';
 import { SnackbarService } from '@gu/components';
 
+
+/**
+ * This component has 2 tabs: Authorisation profiles and Roles.
+ *
+ * Authorisation profiles are profiles that set permissions according to
+ * roles and case types. Roles are a set of permissions.
+ *
+ * The child components display the data and allows the user to create new
+ * authorisation profiles and roles.
+ */
 @Component({
   selector: 'gu-features-auth-profiles',
   templateUrl: './features-auth-profiles.component.html',

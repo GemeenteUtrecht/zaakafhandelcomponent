@@ -5,7 +5,8 @@ import { AuthProfile, MetaZaaktype, Result, Role } from '@gu/models';
 
 
 /**
- * Displays authentication profiles.
+ * Displays the retrieved authorisation profiles with its roles and policies.
+ * Only authorisation profiles with at least one object type "zaak" will be shown.
  */
 @Component({
   selector: 'gu-auth-profiles',
@@ -53,13 +54,12 @@ export class AuthProfilesComponent implements OnInit {
   }
 
   /**
-   * Convert case id to omschrijving.
-   * @param id
-   * @returns {string}
+   * Check if authorisation profile has at least one object type "zaak" in it.
+   * @param {AuthProfile} authProfile
+   * @returns {boolean}
    */
-  getCaseTypeName(id) {
-    const caseTypeObj = this.caseTypes.results.find(caseType => caseType.identificatie === id)
-    return caseTypeObj.omschrijving
+  showAuthProfile(authProfile: AuthProfile) {
+    return authProfile.blueprintPermissions.some(perm => perm.objectType === "zaak")
   }
 
   /**

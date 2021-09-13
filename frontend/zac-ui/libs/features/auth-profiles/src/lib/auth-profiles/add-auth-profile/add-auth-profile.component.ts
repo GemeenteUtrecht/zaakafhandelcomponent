@@ -7,7 +7,12 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 
 
 /**
- * Add authorisation profile form
+ * A form to add authorisation profiles.
+ *
+ * An authorisation profile consists of roles and case types.
+ * The user is allowed to assign multiple roles and case types
+ * to an authorisation profile. The case types will also be given
+ * a confidentiality level.
  */
 @Component({
   selector: 'gu-add-auth-profile',
@@ -41,17 +46,21 @@ export class AddAuthProfileComponent implements OnInit {
     private fb: FormBuilder) {
     this.authProfileForm = this.fb.group({
       name: this.fb.control("", Validators.required),
-      bluePrintPermissions: this.fb.array([
-        this.fb.group({
-          role: ["", Validators.required],
-          policies: [[], Validators.required]
-        })
-      ]),
+      bluePrintPermissions: this.fb.array([this.addBlueprintPermission()]),
     })
   }
 
   ngOnInit(): void {
     this.getCaseTypes();
+    this.getConfidentiality();
+  }
+
+  /**
+   * Opens modal.
+   * @param id
+   */
+  openModal(id) {
+    this.modalService.open(id)
   }
 
   /**
@@ -73,24 +82,50 @@ export class AddAuthProfileComponent implements OnInit {
   }
 
   /**
-   * Submit form
+   * Fetches confidentiality types
+   */
+  getConfidentiality() {
+    this.fService.getConfidentiality().subscribe(
+      (data) => this.confidentiality = data,
+      (error) => console.error(error),
+    );
+  }
+
+  /**
+   * Create form data
    */
   formSubmit() {
     this.isLoading = true;
+    const bluePrintPermissions = this.blueprintPermissionControl.controls
+      .map( (bperm, i) => {
+        const policies = [];
+        this.zaaktypeControl(i).value.forEach(zaaktypeId => {
+          const zaaktype = this.caseTypes.results.find(caseType => caseType.identificatie === zaaktypeId);
+          const policy = {
+            catalogus: zaaktype.catalogus,
+            zaaktypeOmschrijving: zaaktype.omschrijving,
+            maxVa: this.confidentialityControl(i).value
+          }
+          policies.push(policy);
+        })
+        return {
+          role: this.roleControl(i).value,
+          objectType: "zaak",
+          policies: policies
+        }
+      })
     const formData = {
       name: this.authProfileNameControl.value,
-      blueprintPermissions: [
-        {
-          role: this.roleControl(0).value,
-          objectType: "search_report",
-          policies: [
-            {
-              zaaktypen: this.zaaktypeControl(0).value
-            }
-          ]
-        }
-      ]
+      blueprintPermissions: bluePrintPermissions
     };
+    this.createProfile(formData);
+  }
+
+  /**
+   * POST form data to API.
+   * @param formData
+   */
+  createProfile(formData) {
     this.fService.createAuthProfile(formData).subscribe(
       () => {
         this.closeModal('add-auth-profile-modal');
@@ -119,6 +154,15 @@ export class AddAuthProfileComponent implements OnInit {
   /**
    * Form Controls
    */
+
+  addBlueprintPermission() {
+    return this.fb.group({
+      role: ["", Validators.required],
+      policies: [[], Validators.required],
+      confidentiality: ["", Validators.required]
+    })
+  }
+
   get authProfileNameControl() {
     return this.authProfileForm.get('name') as FormControl;
   }
@@ -135,4 +179,20 @@ export class AddAuthProfileComponent implements OnInit {
     return this.blueprintPermissionControl.at(i).get('policies') as FormControl;
   }
 
+  confidentialityControl(i) {
+    return this.blueprintPermissionControl.at(i).get('confidentiality') as FormControl;
+  }
+
+  /**
+   * Steps
+   */
+  addStep() {
+    this.nBlueprintPermissions++
+    this.blueprintPermissionControl.push(this.addBlueprintPermission());
+  }
+
+  deleteStep() {
+    this.nBlueprintPermissions--
+    this.blueprintPermissionControl.removeAt(this.blueprintPermissionControl.length - 1);
+  }
 }

@@ -1,45 +1,79 @@
-<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-<form [formGroup]="authProfileForm" (ngSubmit)="formSubmit()" *ngIf="caseTypes">
-  <!-- Input auth profile name -->
-  <gu-input [control]="authProfileNameControl"
-            type="text"
-            label="Autorisatieprofielnaam"
-            [required]="true"
-            autocomplete="off"
-            class="mb-4">
-  </gu-input>
+<div class="add-auth-profile">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <form [formGroup]="authProfileForm" (ngSubmit)="formSubmit()" *ngIf="caseTypes">
+    <p>Een autorisatieprofiel kan meerdere rollen en zaaktypen bevatten. Alle velden zijn verplicht.</p>
+    <!-- Input auth profile name -->
+    <gu-input [control]="authProfileNameControl"
+              type="text"
+              label="Autorisatieprofielnaam"
+              [required]="true"
+              autocomplete="off"
+              class="mb-4">
+    </gu-input>
 
-  <!-- Select role -->
-  <gu-multiselect
-    [control]="roleControl(0)"
-    [items]="roles"
-    label="Rol"
-    [multiple]="false"
-    [required]="true"
-    bindLabel="name"
-    bindValue="id"
-    class="mb-4"
-    appendTo="body"
-  >
-  </gu-multiselect>
+    <h3>Rol en zaaktypen</h3>
 
-  <!-- Select zaaktypen -->
-  <gu-multiselect
-    [control]="zaaktypeControl(0)"
-    [items]="caseTypes.results"
-    label="Zaaktypen"
-    [multiple]="true"
-    [required]="true"
-    bindLabel="omschrijving"
-    bindValue="identificatie"
-    class="mb-4"
-    appendTo="body"
-  >
-  </gu-multiselect>
+    <div class="mb-2"
+         formArrayName="bluePrintPermissions"
+         *ngFor="let blueprintPermission of [].constructor(nBlueprintPermissions); let i = index; let last = last;">
+      <div *ngIf="nBlueprintPermissions > 1" class="bperm-title mb-2">
+        <b><span>{{i + 1}}.</span></b>
+        <gu-icon *ngIf="nBlueprintPermissions > 1 && (i+1) === nBlueprintPermissions" class="bperm-title__delete d-inline-block" (click)="deleteStep()">delete_outline</gu-icon>
+      </div>
+      <div class="row" [formGroupName]="i">
+        <!-- Select role -->
+        <gu-multiselect
+          [control]="roleControl(i)"
+          [items]="roles"
+          label="Rol"
+          [multiple]="false"
+          [required]="true"
+          bindLabel="name"
+          bindValue="id"
+          class="col-12 col-lg-12 mb-2"
+          appendTo="body"
+        >
+        </gu-multiselect>
 
-  <footer class="d-flex justify-content-end">
-    <button gu-button type="submit" buttonStyle="primary" size="large" class="d-inline-block" [disabled]="!authProfileForm.valid">
-      Toevoegen
+        <!-- Select zaaktypen -->
+        <gu-multiselect
+          [control]="zaaktypeControl(i)"
+          [items]="caseTypes.results"
+          label="Zaaktypen"
+          [multiple]="true"
+          [required]="true"
+          bindLabel="omschrijving"
+          bindValue="identificatie"
+          class="col-12 col-lg-12 mb-2"
+          appendTo="body"
+        >
+        </gu-multiselect>
+
+        <!-- Select confidentiality -->
+        <gu-multiselect
+          [control]="confidentialityControl(i)"
+          [items]="confidentiality"
+          label="Vertrouwelijkheid"
+          [multiple]="false"
+          [required]="true"
+          bindLabel="label"
+          bindValue="value"
+          class="col-12 col-lg-12 mb-2"
+          appendTo="body"
+        >
+        </gu-multiselect>
+      </div>
+      <hr *ngIf="!last" class="mb-4">
+    </div>
+
+    <button gu-button type="button" buttonStyle="tertiary" size="extrasmall" icon="add" (click)="addStep()">
+      Rol toevoegen
     </button>
-  </footer>
-</form>
+
+    <footer class="d-flex justify-content-end">
+      <button gu-button type="submit" buttonStyle="primary" size="large" class="d-inline-block" [disabled]="!authProfileForm.valid">
+        Toevoegen
+      </button>
+    </footer>
+  </form>
+</div>
