@@ -4,10 +4,11 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.fields import _UnvalidatedField
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
-from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
+from zac.api.polymorphism import PolymorphicSerializer
 
 from ..constants import AssigneeTypeChoices
 from ..user_tasks.context import REGISTRY
@@ -67,9 +68,8 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class ChoiceFieldNoValidation(serializers.ChoiceField):
-    def to_internal_value(self, data):
-        return data
+class ChoiceFieldNoValidation(_UnvalidatedField, serializers.ChoiceField):
+    pass
 
 
 class BaseUserTaskSerializer(PolymorphicSerializer):
@@ -84,7 +84,6 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
             "The form key of the form to render. Note that unknown form keys (= not "
             "present in the enum) will be returned as is."
         ),
-        allow_blank=True,
         choices=(),
     )
 
