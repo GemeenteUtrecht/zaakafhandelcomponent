@@ -1176,3 +1176,15 @@ def relate_object_to_zaak(relation_data: dict) -> dict:
         relation_data,
     )
     return response
+
+
+def fetch_zaak_object(zaak_object_url: str):
+    client = _client_from_url(zaak_object_url)
+    zaak_object = client.retrieve("zaakobject", url=zaak_object_url)
+    zaak_object = factory(ZaakObject, zaak_object)
+    return zaak_object
+
+
+def delete_zaak_object(zaak_object_url: str):
+    client = _client_from_url(zaak_object_url)
+    client.delete("zaakobject", url=zaak_object_url)
