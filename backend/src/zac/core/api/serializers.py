@@ -7,6 +7,7 @@ from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
 from furl import furl
+from requests.exceptions import HTTPError
 from rest_framework import serializers
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
@@ -136,7 +137,6 @@ class AddZaakDocumentSerializer(serializers.Serializer):
 
     def validate(self, data):
         zaak = data.get("zaak")
-        informatieobjecttype_url = data.get("informatieobjecttype")
         document_url = data.get("url")
         file = data.get("file")
 
@@ -151,29 +151,29 @@ class AddZaakDocumentSerializer(serializers.Serializer):
             )
 
         if file:
+            informatieobjecttype_url = data.get("informatieobjecttype")
             if not informatieobjecttype_url:
                 raise serializers.ValidationError(
                     "'informatieobjecttype' is required when 'file' is provided"
                 )
 
-            informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
-            present = any(
-                iot
-                for iot in informatieobjecttypen
-                if iot.url == informatieobjecttype_url
-            )
-            if not present:
-                raise serializers.ValidationError(
-                    "Invalid informatieobjecttype URL given."
-                )
+        else:
+            try:
+                document = get_document(document_url)
+            except (ClientError, HTTPError) as exc:
+                raise serializers.ValidationError(detail={"url": exc.args[0]})
+
+            informatieobjecttype_url = document.informatieobjecttype
+
+        # check that zaaktype relates to iotype
+        informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
+        present = any(
+            iot for iot in informatieobjecttypen if iot.url == informatieobjecttype_url
+        )
+        if not present:
+            raise serializers.ValidationError("Invalid informatieobjecttype given.")
 
         return data
-
-    def validate_url(self, value):
-        try:
-            get_document(value)
-        except ClientError as exc:
-            raise serializers.ValidationError(detail=exc.args)
 
 
 class UpdateZaakDocumentSerializer(serializers.Serializer):
