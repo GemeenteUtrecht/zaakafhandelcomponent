@@ -4,7 +4,6 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.fields import _UnvalidatedField
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
@@ -68,8 +67,17 @@ class ProcessInstanceSerializer(serializers.Serializer):
     tasks = TaskSerializer(many=True)
 
 
-class ChoiceFieldNoValidation(_UnvalidatedField, serializers.ChoiceField):
-    pass
+class ChoiceFieldNoValidation(serializers.ChoiceField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allow_blank = True
+        self.allow_null = True
+
+    def to_internal_value(self, data):
+        return data
+
+    def to_representation(self, value):
+        return value
 
 
 class BaseUserTaskSerializer(PolymorphicSerializer):
@@ -85,6 +93,8 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
             "present in the enum) will be returned as is."
         ),
         choices=(),
+        allow_null=True,
+        allow_blank=True,
     )
 
     def __init__(self, *args, **kwargs):
