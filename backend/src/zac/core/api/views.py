@@ -595,8 +595,17 @@ class ZaakDocumentView(views.APIView):
         serializer.is_valid(raise_exception=True)
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
-        document_data = self.get_document_data(serializer.validated_data, zaak)
-        document = create_document(document_data)
+        url = serializer.validated_data.get("url")
+
+        if url:
+            # Document already exists, don't need to create it
+            document = get_document(url)
+
+        else:
+            # create document in Documenten API
+            document_data = self.get_document_data(serializer.validated_data, zaak)
+            document = create_document(document_data)
+
         relate_document_to_zaak(document.url, zaak.url)
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype

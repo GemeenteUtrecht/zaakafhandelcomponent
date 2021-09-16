@@ -28,16 +28,11 @@ from ...permissions import zaken_add_documents, zaken_update_documents, zaken_wi
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 DOCUMENTS_ROOT = "https://open-zaak.nl/documenten/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
+DOCUMENT_URL = f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/148c998d-85ea-4d4f-b06c-a77c791488f6"
 
 
 class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse(
-        "zaak-document",
-        kwargs={
-            "bronorganisatie": "123456782",
-            "identificatie": "ZAAK-2020-0010",
-        },
-    )
+    endpoint = reverse("zaak-document")
 
     def setUp(self):
         super().setUp()
@@ -352,14 +347,9 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+@requests_mock.Mocker()
 class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse(
-        "zaak-document",
-        kwargs={
-            "bronorganisatie": "123456782",
-            "identificatie": "ZAAK-2020-0010",
-        },
-    )
+    endpoint = reverse("zaak-document")
 
     def setUp(self):
         super().setUp()
@@ -450,8 +440,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         patch_get_iot.start()
         self.addCleanup(patch_get_iot.stop)
 
-    @requests_mock.Mocker()
-    def test_add_document(self, m):
+    def test_add_document_with_file(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
         self._setupMocks(m)
@@ -513,7 +502,134 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         }
         self.assertEqual(expected_data, data)
 
-    @requests_mock.Mocker()
+    def test_add_document_with_file_without_iotype(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": BytesIO(b"foobar"),
+        }
+
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["'informatieobjecttype' is required when 'file' is provided"],
+        )
+
+    def test_add_document_with_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=DOCUMENT_URL,
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+            informatieobjecttype=self.informatieobjecttype["url"],
+        )
+
+        m.get(DOCUMENT_URL, json=document)
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
+
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "url": DOCUMENT_URL,
+        }
+
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        # Check that zaakinformatieobjecten url was called
+        called_urls = [req.url for req in m.request_history]
+        self.assertTrue(self.ziot_url.url in called_urls)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        expected_data = {
+            "auteur": document["auteur"],
+            "beschrijving": document["beschrijving"],
+            "bestandsnaam": document["bestandsnaam"],
+            "bestandsomvang": document["bestandsomvang"],
+            "currentUserIsEditing": None,
+            "identificatie": document["identificatie"],
+            "informatieobjecttype": {
+                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+                "omschrijving": self.informatieobjecttype["omschrijving"],
+            },
+            "locked": document["locked"],
+            "readUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/read',
+            "titel": document["titel"],
+            "url": document["url"],
+            "versie": 1,
+            "vertrouwelijkheidaanduiding": "Openbaar",
+            "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+        }
+        self.assertEqual(expected_data, data)
+
+    def test_add_document_with_broken_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        m.get(DOCUMENT_URL, status_code=404)
+
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "url": DOCUMENT_URL,
+        }
+
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("url" in response.json())
+
+    def test_add_document_with_file_and_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        post_data = {
+            "informatieobjecttype": self.informatieobjecttype["url"],
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": BytesIO(b"foobar"),
+            "url": DOCUMENT_URL,
+        }
+
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["'url' and 'file' are mutually exclusive and can't be provided together."],
+        )
+
+    def test_add_document_no_file_no_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        post_data = {
+            "informatieobjecttype": self.informatieobjecttype["url"],
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["Either 'url' or 'file' should be provided."],
+        )
+
     def test_patch_document_no_url_no_reden(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
@@ -531,7 +647,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         }
         self.assertEqual(data, expected_data)
 
-    @requests_mock.Mocker()
     def test_patch_document_wrong_document(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
@@ -559,7 +674,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         expected_data = {"nonFieldErrors": ["The document is unrelated to the case."]}
         self.assertEqual(data, expected_data)
 
-    @requests_mock.Mocker()
     def test_patch_document_already_locked(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
@@ -595,7 +709,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.json(), {"error": "dit is foute boel"})
 
-    @requests_mock.Mocker()
     def test_patch_document(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)

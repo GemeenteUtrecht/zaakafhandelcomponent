@@ -2,13 +2,14 @@ from decimal import ROUND_05UP
 from typing import Optional
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
 from furl import furl
+from requests.exceptions import HTTPError
 from rest_framework import serializers
+from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
     Eigenschap,
@@ -34,7 +35,13 @@ from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
-from zac.core.services import fetch_zaaktype, get_documenten, get_statustypen, get_zaak
+from zac.core.services import (
+    fetch_zaaktype,
+    get_document,
+    get_documenten,
+    get_statustypen,
+    get_zaak,
+)
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -102,30 +109,69 @@ class GetZaakDocumentSerializer(APIModelSerializer):
 
 
 class AddZaakDocumentSerializer(serializers.Serializer):
-    beschrijving = serializers.CharField(required=False)
-    file = serializers.FileField(required=True, use_url=False)
-    informatieobjecttype = serializers.URLField(required=True)
+    beschrijving = serializers.CharField(
+        required=False, help_text=_("Description of the document")
+    )
+    file = serializers.FileField(
+        required=False,
+        use_url=False,
+        help_text=_("Content of the document. Mutually exclusive with `url` attribute"),
+    )
+    informatieobjecttype = serializers.URLField(
+        required=False,
+        help_text=_(
+            "URL of informatiobjecttype in Catalogi API. Required if `file` is provided"
+        ),
+    )
+    url = serializers.URLField(
+        required=False,
+        help_text=_(
+            "URL of document in Documenten API. Mutually exclusive with `file` attribute"
+        ),
+    )
     zaak = serializers.URLField(
         required=True,
-        help_text=_("URL of the case."),
+        help_text=_("URL of the zaak in Zaken API"),
         allow_blank=False,
     )
 
     def validate(self, data):
-        zaak = data["zaak"]
-        informatieobjecttype_url = data.get("informatieobjecttype")
+        zaak = data.get("zaak")
+        document_url = data.get("url")
+        file = data.get("file")
 
-        if zaak and informatieobjecttype_url:
-            informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
-            present = any(
-                iot
-                for iot in informatieobjecttypen
-                if iot.url == informatieobjecttype_url
+        if document_url and file:
+            raise serializers.ValidationError(
+                "'url' and 'file' are mutually exclusive and can't be provided together."
             )
-            if not present:
+
+        if not document_url and not file:
+            raise serializers.ValidationError(
+                "Either 'url' or 'file' should be provided."
+            )
+
+        if file:
+            informatieobjecttype_url = data.get("informatieobjecttype")
+            if not informatieobjecttype_url:
                 raise serializers.ValidationError(
-                    "Invalid informatieobjecttype URL given."
+                    "'informatieobjecttype' is required when 'file' is provided"
                 )
+
+        else:
+            try:
+                document = get_document(document_url)
+            except (ClientError, HTTPError) as exc:
+                raise serializers.ValidationError(detail={"url": exc.args[0]})
+
+            informatieobjecttype_url = document.informatieobjecttype
+
+        # check that zaaktype relates to iotype
+        informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
+        present = any(
+            iot for iot in informatieobjecttypen if iot.url == informatieobjecttype_url
+        )
+        if not present:
+            raise serializers.ValidationError("Invalid informatieobjecttype given.")
 
         return data
 
