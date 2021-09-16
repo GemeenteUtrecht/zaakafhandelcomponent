@@ -464,5 +464,13 @@ class ZaakObjectTests(APITransactionTestCase):
         self.assertTrue(isinstance(object_groups, list))
 
         for group in object_groups:
+            item = group["items"][0]
             # Check that the items (the related objects) are dictionaries and not a string (URLs)
-            self.assertTrue(isinstance(group["items"][0], dict))
+            self.assertTrue(isinstance(item, dict))
+            zaakobject_url_mapping = {
+                zaakobject["object"]: zaakobject["url"]
+                for zaakobject in [zaakobject_1, zaakobject_2]
+            }
+            self.assertEqual(
+                item["zaakobject_url"], zaakobject_url_mapping[item["url"]]
+            )
