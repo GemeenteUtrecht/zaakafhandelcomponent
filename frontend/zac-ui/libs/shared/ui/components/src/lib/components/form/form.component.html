@@ -8,7 +8,7 @@
 
   <fieldset class="form__body">
     <div *ngFor="let field of fields; let i = index">
-      <div [hidden]="!isExpanded && i > 3 && !edit">
+      <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit">
         <!-- Read-only field. -->
         <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
           <div class="col-12">
@@ -65,7 +65,7 @@
 
   <div class="d-flex justify-content-end">
     <button gu-button
-            *ngIf="showLess && fields?.length > 3 && !edit"
+            *ngIf="showLess && visibleFields?.length > 4 && !edit"
             type="button"
             buttonStyle="tertiary"
             size="extrasmall"

@@ -66,6 +66,27 @@ export class FormComponent implements OnInit {
   }
 
   //
+  // Getters / setters.
+  //
+
+  /**
+   * Returns the fields that are initially visible.
+   * @return {Field[]}
+   */
+  get visibleFields(): Field[] {
+    return this.fields.filter((field) => !field.writeonly && field.type !== 'hidden');
+  }
+
+  /**
+   * Returns fields with type hidden.
+   * @return {Field[]}
+   */
+  get hiddenFields(): Field[] {
+    return this.fields.filter((field) => field.type === 'hidden');
+  }
+
+
+  //
   // Angular lifecycle.
   //
 
