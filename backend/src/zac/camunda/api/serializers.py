@@ -93,8 +93,6 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
             "present in the enum) will be returned as is."
         ),
         choices=(),
-        allow_null=True,
-        allow_blank=True,
     )
 
     def __init__(self, *args, **kwargs):
