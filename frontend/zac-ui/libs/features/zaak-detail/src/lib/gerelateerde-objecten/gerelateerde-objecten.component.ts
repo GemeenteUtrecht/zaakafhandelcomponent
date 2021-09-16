@@ -185,8 +185,14 @@ export class GerelateerdeObjectenComponent implements OnInit {
    * Gets called when a delete button in the table is pressed.
    * @param {Object} data
    */
-  tableButtonClick(data: {'acties': ZaakObject}): void {
-    alert('TODO'); // TODO;
+  tableButtonClick(data: { 'acties': ZaakObject }): void {
+    this.isLoading = true;
+
+    this.zaakObjectService.deleteZaakObjectRelation(data.acties.zaakobjectUrl).subscribe(
+      this.getContextData.bind(this),
+      this.reportError.bind(this),
+      () => this.isLoading = false
+    );
   }
 
   //

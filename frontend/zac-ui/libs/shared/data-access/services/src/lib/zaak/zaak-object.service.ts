@@ -1,7 +1,8 @@
+import {HttpParams} from "@angular/common/http";
 import {Injectable} from '@angular/core';
+import {Observable} from 'rxjs';
+import {Geometry, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
 import {ApplicationHttpClient} from '@gu/services';
-import {Observable, Subscriber} from 'rxjs';
-import {Geometry, ObjectType, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,16 @@ export class ZaakObjectService {
       objectType: "overige",
       objectTypeOverige: objectTypeDescription,
     })
+  }
+
+  /**
+   * Removes the relation of an object to a zaak.
+   * @param {string} zaakObjectRelationUrl
+   */
+  deleteZaakObjectRelation(zaakObjectRelationUrl: string): Observable<void> {
+    const endpoint = encodeURI('/api/core/zaakobjects');
+    const params = new HttpParams().set('url', zaakObjectRelationUrl);
+    return this.http.Delete<void>(endpoint, {params: params});
   }
 
   /**

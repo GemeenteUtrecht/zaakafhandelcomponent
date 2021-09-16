@@ -28,23 +28,22 @@ export class ApplicationHttpClient {
   }
 
   public Post<T>(endPoint: string, params?: any, options?: IRequestOptions): Observable<T> {
-    const defaultOptions = { withCredentials: true }
-    const mergedOptions = {...defaultOptions, ...options};
-    return this.http.post<T>(endPoint, params, mergedOptions);
+    options = { withCredentials: true, ...options }
+    return this.http.post<T>(endPoint, params, options);
   }
 
   public Put<T>(endPoint: string, params?: any, options?: IRequestOptions): Observable<T> {
-    options = { withCredentials: true }
+    options = { withCredentials: true, ...options }
     return this.http.put<T>(endPoint, params, options);
   }
 
   public Patch<T>(endPoint: string, params?: any, options?: IRequestOptions): Observable<T> {
-    options = { withCredentials: true }
+    options = { withCredentials: true, ...options }
     return this.http.patch<T>(endPoint, params, options);
   }
 
   public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<T> {
-    options = { withCredentials: true }
+    options = { withCredentials: true, ...options }
     return this.http.delete<T>(endPoint, options);
   }
 }
