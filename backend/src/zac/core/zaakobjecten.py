@@ -26,8 +26,9 @@ class ZaakObjectGroup:
     items: list = None
 
     def retrieve_items(self, items: Iterator[ZaakObject]) -> None:
-        self.items = [
-            self.retriever(item.object) if item.object else item for item in items
+        object_items = [
+            (item.url, self.retriever(item.object)) if item.object else item
+            for item in items
         ]
 
         # Resolve if some of the related objects are in the objects API
@@ -36,17 +37,23 @@ class ZaakObjectGroup:
         if not object_api:
             raise RuntimeError("No objects API has been configured yet.")
 
-        objects_in_object_api = []
-        other_objects = []
+        object_url_in_object_api = {
+            item
+            for zaakobject_url, item in object_items
+            if isinstance(item, str) and item.startswith(object_api.api_root)
+        }
+        objects_in_object_api = fetch_objects(list(object_url_in_object_api))
+        object_url_mapping = {obj["url"]: obj for obj in objects_in_object_api}
 
-        for item in self.items:
-            if isinstance(item, str) and item.startswith(object_api.api_root):
-                objects_in_object_api.append(item)
-            else:
-                other_objects.append(other_objects)
+        self.items = []
+        for zaakobject_url, item in object_items:
+            retrieved_item = object_url_mapping.get(item, item)
 
-        objects_in_object_api = fetch_objects(objects_in_object_api)
-        self.items = objects_in_object_api + other_objects
+            # add zaakobject_url for all dict-like object items
+            if isinstance(retrieved_item, dict):
+                retrieved_item.update({"zaakobject_url": zaakobject_url})
+
+            self.items.append(retrieved_item)
 
 
 GROUPS = {

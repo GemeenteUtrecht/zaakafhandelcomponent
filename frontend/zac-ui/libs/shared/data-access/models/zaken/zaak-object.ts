@@ -58,6 +58,7 @@ export interface ZaakObject {
   type: ObjectType|string,
   url?: string
   uuid?: string,
+  zaakobjectUrl?: string,
 }
 
 export interface ZaakObjectGroup {

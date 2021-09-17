@@ -628,6 +628,8 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
         help_text=_(
             "Collection of object-type specific items. "
             "The schema is determined by the upstream API(s). "
+            "Each item has `zaakobjectUrl` attribute which is the url of case-object "
+            "relations in ZAKEN API and should be used to change/delete the relations. "
             "See `zac.core.zaakobjecten` for the available implementations."
         ),
     )
