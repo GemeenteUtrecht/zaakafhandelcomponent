@@ -2,6 +2,7 @@ from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
+from django.core.management.base import CommandParser
 
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
@@ -42,7 +43,16 @@ from ...documents import (
 class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
 
+    def add_arguments(self, parser: CommandParser) -> None:
+        super().add_arguments(parser)
+        parser.add_argument(
+            "--max_workers",
+            type=int,
+            help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
+        )
+
     def handle(self, **options):
+        self.max_workers = options.get("max_workers", 4)
         self.clear_zaken_index()
         bulk(
             connections.get_connection(),
@@ -104,7 +114,7 @@ class Command(BaseCommand):
         unfetched_zaaktypen = {
             zaak.zaaktype for zaak in zaken if isinstance(zaak.zaaktype, str)
         }
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=self.max_workers) as executor:
             results = executor.map(fetch_zaaktype, unfetched_zaaktypen)
         zaaktypen = {zaaktype.url: zaaktype for zaaktype in list(results)}
 
@@ -118,7 +128,7 @@ class Command(BaseCommand):
         return zaaktype_documenten
 
     def create_status_documenten(self, zaken: List[Zaak]) -> Dict[str, StatusDocument]:
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=self.max_workers) as executor:
             results = executor.map(get_status, zaken)
         status_documenten = {
             status.zaak: create_status_document(status)
@@ -131,7 +141,7 @@ class Command(BaseCommand):
         return status_documenten
 
     def create_rollen_documenten(self, zaken: List[Zaak]) -> Dict[str, RolDocument]:
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=self.max_workers) as executor:
             results = list(executor.map(get_rollen, zaken))
 
         list_of_rollen = [rollen for rollen in results if rollen]
@@ -149,7 +159,7 @@ class Command(BaseCommand):
         self, zaken: List[Zaak]
     ) -> Dict[str, EigenschapDocument]:
         # Prefetch zaakeigenschappen
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=self.max_workers) as executor:
             list_of_eigenschappen = list(executor.map(get_zaak_eigenschappen, zaken))
 
         eigenschappen_documenten = {
@@ -166,7 +176,7 @@ class Command(BaseCommand):
         self, zaken: List[Zaak]
     ) -> Dict[str, ZaakObjectDocument]:
         # Prefetch zaakobjecten
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=self.max_workers) as executor:
             list_of_zon = list(executor.map(get_zaakobjecten, zaken))
 
         zaakobjecten_documenten = {
