@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
-from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
+from zac.api.polymorphism import PolymorphicSerializer
 
 from ..constants import AssigneeTypeChoices
 from ..user_tasks.context import REGISTRY
@@ -68,8 +68,16 @@ class ProcessInstanceSerializer(serializers.Serializer):
 
 
 class ChoiceFieldNoValidation(serializers.ChoiceField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allow_blank = True
+        self.allow_null = True
+
     def to_internal_value(self, data):
         return data
+
+    def to_representation(self, value):
+        return value
 
 
 class BaseUserTaskSerializer(PolymorphicSerializer):
@@ -84,7 +92,6 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
             "The form key of the form to render. Note that unknown form keys (= not "
             "present in the enum) will be returned as is."
         ),
-        allow_blank=True,
         choices=(),
     )
 
