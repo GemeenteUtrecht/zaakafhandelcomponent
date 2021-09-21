@@ -49,10 +49,11 @@ class Command(BaseCommand):
             "--max_workers",
             type=int,
             help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
+            default=4,
         )
 
     def handle(self, **options):
-        self.max_workers = options.get("max_workers", 4)
+        self.max_workers = options["max_workers"]
         self.clear_zaken_index()
         bulk(
             connections.get_connection(),
