@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import GroupAdmin as _GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.utils.translation import gettext_lazy as _
@@ -200,6 +200,5 @@ admin.site.unregister(Group)
 
 # Register new GroupAdmin
 @admin.register(Group)
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(_GroupAdmin):
     form = GroupAdminForm
-    filter_horizontal = ["permissions"]
