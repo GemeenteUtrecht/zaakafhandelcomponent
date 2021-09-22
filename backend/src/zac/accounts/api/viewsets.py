@@ -60,6 +60,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(summary=_("List user groups")),
+    retrieve=extend_schema(summary=_("Retrieve a user group")),
 )
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all().order_by("name")
