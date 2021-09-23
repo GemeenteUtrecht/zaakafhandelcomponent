@@ -202,3 +202,6 @@ admin.site.unregister(Group)
 @admin.register(Group)
 class GroupAdmin(_GroupAdmin):
     form = GroupAdminForm
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("user_set")
