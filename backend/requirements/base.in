@@ -11,6 +11,7 @@ pyyaml
 isodate
 requests_mock
 elasticsearch-dsl
+click
 
 # zgw-integration
 gemma-zds-client>=1.0.1

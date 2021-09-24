@@ -20,6 +20,8 @@ cffi==1.12.3
     # via cryptography
 chardet==3.0.4
     # via requests
+click==8.0.1
+    # via -r requirements/base.in
 cryptography==3.4.4
     # via django-auth-adfs
 defusedxml==0.6.0
@@ -128,6 +130,7 @@ idna==2.8
     # via requests
 importlib-metadata==0.23
     # via
+    #   click
     #   jsonschema
     #   kombu
 inflection==0.3.1
