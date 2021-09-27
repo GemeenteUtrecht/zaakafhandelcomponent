@@ -1,9 +1,11 @@
-from typing import Dict, Iterator, List
+import logging
+from typing import Dict, Iterator, List, Optional
 
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.core.management.base import CommandParser
 
+from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
@@ -51,36 +53,78 @@ class Command(BaseCommand):
             help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
             default=4,
         )
+        parser.add_argument(
+            "--reindex_last",
+            type=int,
+            help="Indicates the number of the most recent zaken to be reindexed.",
+        )
 
     def handle(self, **options):
+        self.reindex_last = options["reindex_last"]
+        if not self.reindex_last:
+            # If we're indexing everything - clear the index.
+            self.clear_zaken_index()
+            ZaakDocument.init()
+        else:
+            # Make sure the index exists...
+            zaken = Index(settings.ES_INDEX_ZAKEN)
+            if not zaken.exists():
+                raise NotFoundError(
+                    404,
+                    "Couldn't find index: %s. Please try to run index_zaken first."
+                    % settings.ES_INDEX_ZAKEN,
+                )
+
+            self.reindexed = (
+                0  # To keep track of how many zaken have already been reindexed.
+            )
+
         self.max_workers = options["max_workers"]
-        self.clear_zaken_index()
         bulk(
             connections.get_connection(),
             self.batch_index_zaken(),
         )
 
-        count = ZaakDocument.search().count()
-        self.stdout.write(f"{count} zaken are received from Zaken API.")
+        if not self.reindex_last:
+            count = ZaakDocument.search().count()
+            self.stdout.write(f"{count} zaken are received from Zaken API.")
+        else:
+            self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
+
+    def check_if_done_batching(self) -> bool:
+        if self.reindex_last and self.reindex_last - self.reindexed == 0:
+            return True
+        return False
 
     def batch_index_zaken(self) -> Iterator[ZaakDocument]:
-        ZaakDocument.init()
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
 
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         clients = [zrc.build_client() for zrc in zrcs]
         for client in clients:
             get_more = True
-            query_params = {}
+
+            # Set ordering explicitely
+            query_params = {"ordering": "-identificatie"}
             while get_more:
                 zaken, query_params = get_zaken_all_paginated(
                     client, query_params=query_params
                 )
+
+                # Make sure we're not retrieving more information than necessary on the zaken
+                if self.reindex_last and self.reindex_last - self.reindexed < len(
+                    zaken
+                ):
+                    zaken = zaken[: self.reindex_last - self.reindexed]
+
                 get_more = query_params.get("page", None)
                 for zaak in zaken:
                     zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
                 yield from self.zaakdocumenten_generator(zaken)
+
+                if self.check_if_done_batching():
+                    return
 
     def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
         zaak_documenten = self.create_zaak_documenten(zaken)
@@ -99,6 +143,10 @@ class Command(BaseCommand):
             zaakdocument.zaakobjecten = zaakobjecten_documenten.get(zaak.url, [])
             zd = zaakdocument.to_dict(True)
             yield zd
+            if self.reindex_last:
+                self.reindexed += 1
+                if self.check_if_done_batching():
+                    return
 
     def clear_zaken_index(self):
         zaken = Index(settings.ES_INDEX_ZAKEN)
