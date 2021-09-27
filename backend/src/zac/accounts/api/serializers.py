@@ -7,11 +7,17 @@ from django.utils.timezone import make_aware
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
-from zac.core.services import find_zaak, get_zaak
+from zac.core.services import (
+    find_zaak,
+    get_informatieobjecttypen_for_zaaktype,
+    get_zaak,
+    get_zaaktypen,
+)
 from zgw.models.zrc import Zaak
 
 from ..constants import (
@@ -435,10 +441,37 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         blueprint_permissions = []
 
         for group in group_permissions:
+            document_policies = []
+
+            # generate related iotype policies
             for policy in group["policies"]:
+                zaaktype_omschrijving = policy.get("zaaktype_omschrijving")
+                catalogus = policy.catalogus("zaaktype_omschrijving")
+
+                if zaaktype_omschrijving and catalogus:
+                    # find zaaktype
+                    zaaktypen = get_zaaktypen(
+                        catalogus=catalogus, omschrijving=zaaktype_omschrijving
+                    )
+
+                    # find related iotypen
+                    for zaaktype in zaaktypen:
+                        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
+                        document_policies += [
+                            {
+                                "catalogus": iotype.catalogus,
+                                "zaaktype_omschrijving": iotype.omschrijving,
+                                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                            }
+                            for iotype in iotypen
+                        ]
+
+            # create permissions
+            for policy in set(document_policies + group["policies"]):
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=group["role"], object_type=group["object_type"], policy=policy
                 )
+
                 blueprint_permissions.append(permission)
 
         return blueprint_permissions
