@@ -697,8 +697,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken")
         zd = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
-        
-
+        self.assertEqual(zd.identificatie, "ZAAK-001")
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -721,4 +720,4 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # check zaak_document exists
         zd2 = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca9")
-        self.assertEqual(ZaakDocument.search().count(), 2)
+        self.assertEqual(zd2.identificatie, "ZAAK-002")

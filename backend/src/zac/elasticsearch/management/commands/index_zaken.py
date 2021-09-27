@@ -68,7 +68,6 @@ class Command(BaseCommand):
         else:
             # Make sure the index exists...
             zaken = Index(settings.ES_INDEX_ZAKEN)
-            print(zaken.search().count())
             if not zaken.exists():
                 raise NotFoundError(
                     404,
@@ -111,7 +110,6 @@ class Command(BaseCommand):
                 zaken, query_params = get_zaken_all_paginated(
                     client, query_params=query_params
                 )
-                print(zaken)
                 # Make sure we're not retrieving more information than necessary on the zaken
                 if self.reindex_last and self.reindex_last - self.reindexed <= len(
                     zaken
