@@ -652,3 +652,73 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(
             zaak_document.status.statustoelichting, "some-statustoelichting"
         )
+
+    def test_index_zaken_reindex_last_argument(self, m):
+        # mock API requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK-001",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[],
+            status=None,
+        )
+
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [zaaktype],
+            },
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen",
+            json={"count": 0, "previous": None, "next": None, "results": []},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+        )
+        m.get(zaaktype["url"], json=zaaktype)
+        call_command("index_zaken")
+        zd = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        
+
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca9",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK-002",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[],
+            status=None,
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken",
+            json={"count": 2, "previous": None, "next": None, "results": [zaak2, zaak]},
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
+        )
+        call_command("index_zaken", reindex_last=1)
+
+        # check zaak_document exists
+        zd2 = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca9")
+        self.assertEqual(ZaakDocument.search().count(), 2)
