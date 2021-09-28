@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import List
 
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.polymorphism import GroupPolymorphicSerializer
@@ -424,6 +426,31 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     )
 
 
+def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
+    zaaktype_omschrijving = zaaktype_policy.get("zaaktype_omschrijving")
+    catalogus = zaaktype_policy.get("catalogus")
+
+    if not zaaktype_omschrijving or not catalogus:
+        return []
+
+    # find zaaktype
+    zaaktypen = get_zaaktypen(catalogus=catalogus, omschrijving=zaaktype_omschrijving)
+
+    # find related iotypen
+    document_policies = []
+    for zaaktype in zaaktypen:
+        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
+        document_policies += [
+            {
+                "catalogus": iotype.catalogus,
+                "zaaktype_omschrijving": iotype.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            }
+            for iotype in iotypen
+        ]
+    return document_policies
+
+
 class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
     blueprint_permissions = GroupBlueprintSerializer(
         many=True,
@@ -441,37 +468,26 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         blueprint_permissions = []
 
         for group in group_permissions:
-            document_policies = []
+            policies = group["policies"]
 
             # generate related iotype policies
-            for policy in group["policies"]:
-                zaaktype_omschrijving = policy.get("zaaktype_omschrijving")
-                catalogus = policy.catalogus("zaaktype_omschrijving")
-
-                if zaaktype_omschrijving and catalogus:
-                    # find zaaktype
-                    zaaktypen = get_zaaktypen(
-                        catalogus=catalogus, omschrijving=zaaktype_omschrijving
-                    )
-
-                    # find related iotypen
-                    for zaaktype in zaaktypen:
-                        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
-                        document_policies += [
-                            {
-                                "catalogus": iotype.catalogus,
-                                "zaaktype_omschrijving": iotype.omschrijving,
-                                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-                            }
-                            for iotype in iotypen
-                        ]
+            with parallel(max_workers=10) as executor:
+                _document_policies = executor.map(generate_document_policies, policies)
+                document_policies = sum(list(_document_policies), [])
 
             # create permissions
-            for policy in set(document_policies + group["policies"]):
+            for policy in policies:
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=group["role"], object_type=group["object_type"], policy=policy
                 )
+                blueprint_permissions.append(permission)
 
+            for policy in document_policies:
+                permission, created = BlueprintPermission.objects.get_or_create(
+                    role=group["role"],
+                    object_type=PermissionObjectTypeChoices.document,
+                    policy=policy,
+                )
                 blueprint_permissions.append(permission)
 
         return blueprint_permissions
