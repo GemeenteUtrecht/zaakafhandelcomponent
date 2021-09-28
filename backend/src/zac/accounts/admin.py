@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import GroupAdmin as _GroupAdmin, UserAdmin
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +9,7 @@ from hijack_admin.admin import HijackUserAdminMixin
 
 from zac.utils.admin import RelatedLinksMixin
 
+from .forms import GroupAdminForm
 from .models import (
     AccessRequest,
     AtomicPermission,
@@ -191,3 +193,15 @@ class RoleAdmin(RelatedLinksMixin, admin.ModelAdmin):
             )
 
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+
+# Unregister old GroupAdmin
+admin.site.unregister(Group)
+
+# Register new GroupAdmin
+@admin.register(Group)
+class GroupAdmin(_GroupAdmin):
+    form = GroupAdminForm
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("user_set")
