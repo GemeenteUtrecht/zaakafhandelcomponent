@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Iterator, List
 
 from django.conf import settings
