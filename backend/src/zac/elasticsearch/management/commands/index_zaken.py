@@ -1,11 +1,10 @@
 import logging
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.core.management.base import CommandParser
 
-from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
@@ -40,6 +39,7 @@ from ...documents import (
     ZaakObjectDocument,
     ZaakTypeDocument,
 )
+from ...utils import check_if_index_exists
 
 
 class Command(BaseCommand):
@@ -67,26 +67,20 @@ class Command(BaseCommand):
             ZaakDocument.init()
         else:
             # Make sure the index exists...
-            zaken = Index(settings.ES_INDEX_ZAKEN)
-            if not zaken.exists():
-                raise NotFoundError(
-                    404,
-                    "Couldn't find index: %s. Please try to run index_zaken first."
-                    % settings.ES_INDEX_ZAKEN,
-                )
-
+            check_if_index_exists()
             self.reindexed = (
                 0  # To keep track of how many zaken have already been reindexed.
             )
 
         self.max_workers = options["max_workers"]
+        es_client = connections.get_connection()
         bulk(
-            connections.get_connection(),
+            es_client,
             self.batch_index_zaken(),
         )
 
         if not self.reindex_last:
-            count = ZaakDocument.search().count()
+            count = es_client.count()
             self.stdout.write(f"{count} zaken are received from Zaken API.")
         else:
             self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
