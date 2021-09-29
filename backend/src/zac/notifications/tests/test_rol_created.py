@@ -189,7 +189,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
-
         rol_new = {
             "url": ROL,
             "zaak": ZAAK,
@@ -209,28 +208,19 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         rm.get(ROL, json=rol_old)
-        rol_1 = factory(Rol, rol_old)
         rol_2 = factory(Rol, rol_new)
 
         self.assertEqual(self.zaak_document.rollen, [])
 
         with patch(
-            "zac.notifications.handlers.get_rollen", return_value=[rol_1]
-        ) as mock_handlers_get_rollen:
+            "zac.core.services.update_rol", return_value=rol_2
+        ) as mock_update_rol:
             with patch(
-                "zac.core.services.get_rollen", return_value=[rol_1]
-            ) as mock_services_get_rollen:
-                with patch(
-                    "zac.core.services.update_rol", return_value=rol_2
-                ) as mock_update_rol:
-                    with patch(
-                        "zac.elasticsearch.api.get_rollen", return_value=[rol_2]
-                    ) as mock_es_get_rollen:
-                        response = self.client.post(self.path, NOTIFICATION)
+                "zac.elasticsearch.api.get_rollen", return_value=[rol_2]
+            ) as mock_es_get_rollen:
+                response = self.client.post(self.path, NOTIFICATION)
 
-        mock_handlers_get_rollen.assert_called_once_with(self.zaak)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        mock_services_get_rollen.assert_called_once_with(self.zaak)
         mock_update_rol.assert_called_once_with(
             ROL,
             {
@@ -262,6 +252,255 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "identificatie": "notifs",
                 "voorletters": "M.Y.",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        )
+
+    def test_rol_created_name_not_empty(self, rm):
+        """check that rol is not updated if it already has name attributes"""
+        # Setup mocks
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+
+        rol = {
+            "url": ROL,
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+                "voorletters": "",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
+            json={"count": 1, "previous": None, "next": None, "results": [rol]},
+        )
+        rm.get(ROL, json=rol)
+
+        with patch("zac.core.services.update_rol", return_value=rol) as mock_update_rol:
+            response = self.client.post(self.path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_update_rol.assert_not_called()
+
+        zaak_document = ZaakDocument.get(id=self.zaak_document.meta.id)
+        self.assertEqual(len(zaak_document.rollen), 1)
+        self.assertEqual(zaak_document.rollen[0]["url"], ROL)
+        self.assertEqual(
+            zaak_document.rollen[0]["betrokkene_identificatie"],
+            {
+                "identificatie": "notifs",
+                "voorletters": "",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        )
+
+    def test_rol_created_username_empty(self, rm):
+        """check that rol is not updated if user doesn't have first and last name"""
+        empty_user = UserFactory.create(username="empty", first_name="", last_name="")
+        # set up mocks
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
+        # Some more mocks
+        rol = {
+            "url": ROL,
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": empty_user.username,
+                "voorletters": "",
+                "achternaam": "",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
+            json={"count": 1, "previous": None, "next": None, "results": [rol]},
+        )
+        rm.get(ROL, json=rol)
+
+        with patch("zac.core.services.update_rol", return_value=rol) as mock_update_rol:
+            response = self.client.post(self.path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_update_rol.assert_not_called()
+
+        zaak_document = ZaakDocument.get(id=self.zaak_document.meta.id)
+        self.assertEqual(len(zaak_document.rollen), 1)
+        self.assertEqual(zaak_document.rollen[0]["url"], ROL)
+        self.assertEqual(
+            zaak_document.rollen[0]["betrokkene_identificatie"],
+            {
+                "identificatie": "empty",
+                "voorletters": "",
+                "achternaam": "",
+                "voorvoegsel_achternaam": "",
+            },
+        )
+
+    def test_rol_created_other_app_updated(self, rm):
+        """check there are no race conditions if several ZAC instances update rollen"""
+        # set up mocks
+        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
+        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+
+        # Some more mocks
+        rol = {
+            "url": ROL,
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+                "voorletters": "",
+                "achternaam": "",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(ROL, json=rol)
+        rol_self_updated = {
+            "url": ROL,
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+                "voorletters": "M.Y.",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rol_self_updated = factory(Rol, rol_self_updated)
+        rol_other_updated = {
+            "url": f"{ZAKEN_ROOT}rollen/f3ff2713-2f53-42ff-a154-16842309ad60",
+            "zaak": ZAAK,
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+                "voorletters": "M.",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(rol_other_updated["url"], json=rol_other_updated)
+        rol_other_updated = factory(Rol, rol_other_updated)
+
+        self.assertEqual(self.zaak_document.rollen, [])
+
+        # 1. receive rol notification with empty name
+        # check that rol is updated
+        with patch(
+            "zac.core.services.update_rol", return_value=rol_self_updated
+        ) as mock_update_rol:
+            with patch(
+                "zac.elasticsearch.api.get_rollen", return_value=[rol_self_updated]
+            ) as mock_es_get_rollen:
+                response = self.client.post(self.path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_update_rol.assert_called_once_with(
+            ROL,
+            {
+                "betrokkene": None,
+                "betrokkene_identificatie": {
+                    "voorletters": "M.Y.",
+                    "achternaam": "Surname",
+                    "identificatie": "notifs",
+                    "voorvoegsel_achternaam": "",
+                },
+                "betrokkene_type": "medewerker",
+                "indicatie_machtiging": "",
+                "omschrijving": "zaak behandelaar",
+                "omschrijving_generiek": "behandelaar",
+                "registratiedatum": "2020-09-01T00:00:00Z",
+                "roltoelichting": "some description",
+                "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+                "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
+                "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+            },
+        )
+        mock_es_get_rollen.assert_called_once_with(self.zaak)
+
+        # 2. receive notification for the same rol with other uuid and name updated by other app
+        # check that rol is not updated
+        with patch(
+            "zac.core.services.update_rol", return_value=rol_self_updated
+        ) as mock_update_rol2:
+            with patch(
+                "zac.elasticsearch.api.get_rollen", return_value=[rol_other_updated]
+            ) as mock_es_get_rollen2:
+                other_notification = {
+                    "kanaal": "zaken",
+                    "hoofdObject": ZAAK,
+                    "resource": "rol",
+                    "resourceUrl": rol_other_updated.url,
+                    "actie": "create",
+                    "aanmaakdatum": timezone.now().isoformat(),
+                    "kenmerken": {
+                        "bronorganisatie": BRONORGANISATIE,
+                        "zaaktype": ZAAKTYPE,
+                        "vertrouwelijkheidaanduiding": "geheim",
+                    },
+                }
+                response = self.client.post(self.path, other_notification)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_update_rol2.assert_not_called()
+        mock_es_get_rollen2.assert_called_once_with(self.zaak)
+
+        # check that we saved the rol updated by other app
+        zaak_document = ZaakDocument.get(id=self.zaak_document.meta.id)
+        self.assertEqual(len(zaak_document.rollen), 1)
+        self.assertEqual(zaak_document.rollen[0]["url"], rol_other_updated.url)
+        self.assertEqual(
+            zaak_document.rollen[0]["betrokkene_identificatie"],
+            {
+                "identificatie": "notifs",
+                "voorletters": "M.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
