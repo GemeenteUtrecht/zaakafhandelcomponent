@@ -79,7 +79,7 @@ class Command(BaseCommand):
         )
 
         if not self.reindex_last:
-            count = es_client.count()
+            count = es_client.count()["count"]
             self.stdout.write(f"{count} zaken are received from Zaken API.")
         else:
             self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
