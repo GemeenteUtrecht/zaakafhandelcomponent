@@ -72,15 +72,15 @@ def invalidate_document_cache(document: Document):
     cache.delete_many(keys)
 
 
-def invalidate_rollen_cache(zaak: Zaak, rollen: Optional[List[Rol]] = None):
+def invalidate_rollen_cache(zaak: Zaak, rol_urls: Optional[List[str]] = None):
     _cache = caches["request"]
     if _cache:
         _cache.delete(f"rollen:{zaak.url}")
 
-    if rollen:
+    if rol_urls:
         cache_keys = []
-        for rol in rollen:
-            cache_keys.append(f"rol:{rol.url}")
+        for rol_url in rol_urls:
+            cache_keys.append(f"rol:{rol_url}")
 
         cache.delete_many(cache_keys)
 

@@ -13,11 +13,7 @@ from zac.core.cache import (
     invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import (
-    _client_from_url,
-    get_rollen,
-    update_medewerker_identificatie_rol,
-)
+from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
 from zac.elasticsearch.api import (
     create_status_document,
     create_zaak_document,
@@ -52,10 +48,12 @@ class ZakenHandler:
             self._handle_related_creation(data["hoofd_object"])
 
         elif data["resource"] == "rol":
-            self._handle_rol_change(data["hoofd_object"])
-            # TODO should we remove permission if the rol is deleted?
             if data["actie"] == "create":
-                add_permission_for_behandelaar(rol=data["resource_url"])
+                self._handle_rol_creation(
+                    data["hoofd_object"], rol_url=data["resource_url"]
+                )
+            elif data["actie"] == "destroy":
+                self._handle_rol_destroy(data["hoofd_object"])
 
         elif data["resource"] == "zaakobject":
             self._handle_zaakobject_change(data["hoofd_object"])
@@ -115,19 +113,19 @@ class ZakenHandler:
         # index in ES
         update_status_in_zaak_document(zaak)
 
-    def _handle_rol_change(self, zaak_url: str):
+    def _handle_rol_creation(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
+        invalidate_rollen_cache(zaak, rol_urls=[rol_url])
 
-        # Invalidate cache for get_rollen in update_medewerker_identificatie_rol
-        rollen = get_rollen(zaak)
-        invalidate_rollen_cache(zaak, rollen=rollen)
+        add_permission_for_behandelaar(rol=rol_url)
+        update_medewerker_identificatie_rol(rol_url)
 
-        # See if medewerker rollen have all the necessary fields
-        updated_rollen = update_medewerker_identificatie_rol(zaak)
-        if (
-            updated_rollen
-        ):  # Invalidate cache for get_rollen in update_rollen_in_zaak_document
-            invalidate_rollen_cache(zaak)
+        # index in ES
+        update_rollen_in_zaak_document(zaak)
+
+    def _handle_rol_destroy(self, zaak_url: str):
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_rollen_cache(zaak)
 
         # index in ES
         update_rollen_in_zaak_document(zaak)
