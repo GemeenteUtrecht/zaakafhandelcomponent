@@ -16,7 +16,6 @@ from zac.core.cache import (
 from zac.core.services import (
     _client_from_url,
     get_rollen,
-    get_status,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
