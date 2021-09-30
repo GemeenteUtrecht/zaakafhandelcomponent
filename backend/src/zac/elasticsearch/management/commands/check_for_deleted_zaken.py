@@ -28,7 +28,7 @@ class Command(BaseCommand):
             _source=False,
         ):
             if zd["_id"] not in self.zaken_uuids:
-                logging.info("Zaak with uuid %s has been deleted." % zd["_id"])
+                logging.info("Zaak with uuid %s has been deleted.", zd["_id"])
                 zd["_op_type"] = "delete"
                 del zd["_type"]  # To shutup ElasticsearchDeprecation warnings
                 yield zd
