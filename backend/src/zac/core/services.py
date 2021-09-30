@@ -741,7 +741,7 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     try:
         user = User.objects.get(username=identificatie)
     except ObjectDoesNotExist:
-        logger.warning("Couldn't find user with identificatie %s" % identificatie)
+        logger.warning("Couldn't find user with identificatie %s", identificatie)
         return
     if not user.get_full_name():
         return
