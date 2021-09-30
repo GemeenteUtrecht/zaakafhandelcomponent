@@ -720,39 +720,41 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
     return factory(Rol, rol)
 
 
-def update_medewerker_identificatie_rol(zaak: Zaak) -> Optional[List[Rol]]:
+def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     # Get latest list of rollen that belong to the zaak
-    rollen = get_rollen(zaak)
+    rol = fetch_rol(rol_url)
 
-    # Determine which rollen could use some extra identification information
+    if rol.betrokkene_type != RolTypes.medewerker or rol.betrokkene:
+        return
+
+    # if there is some name - do nothing.
+    # Can't use rol.get_name() cause it can return betrokkene_identificatie["identificatie"]
+    if (
+        rol.betrokkene_identificatie["voorletters"]
+        or rol.betrokkene_identificatie["voorvoegsel_achternaam"]
+        or rol.betrokkene_identificatie["achternaam"]
+    ):
+        return
+
+    # Try to get user data
+    identificatie = rol.betrokkene_identificatie["identificatie"]
+    try:
+        user = User.objects.get(username=identificatie)
+    except ObjectDoesNotExist:
+        logger.warning("Couldn't find user with identificatie %s", identificatie)
+        return
+    if not user.get_full_name():
+        return
+
     from .api.serializers import UpdateRolSerializer
 
-    new_rollen = []
-    for rol in rollen:
-        if rol.betrokkene_type == RolTypes.medewerker:
-            identificatie = rol.betrokkene_identificatie["identificatie"]
-            try:  # Try to get user data
-                user = User.objects.get(username=identificatie)
-                new_rol = UpdateRolSerializer(instance=rol, context={"user": user}).data
-                if get_naam_medewerker(factory(Rol, new_rol)) != get_naam_medewerker(
-                    rol
-                ):
-                    new_rollen.append((rol.url, new_rol))
+    new_rol_data = UpdateRolSerializer(instance=rol, context={"user": user}).data
+    new_rol = factory(Rol, new_rol_data)
+    # check if the name would be changed
+    if rol.get_name() == new_rol.get_name():
+        return
 
-            except ObjectDoesNotExist:
-                logger.warning(
-                    "Couldn't find user with identificatie %s" % identificatie
-                )
-
-    # If any new rollen can be made - 'update' the rol
-    if new_rollen:
-        with parallel() as executor:
-            results = executor.map(lambda args: update_rol(*args), new_rollen)
-
-        updated_rollen = list(results)
-        return updated_rollen
-
-    return
+    return update_rol(rol_url, new_rol_data)
 
 
 def get_zaak_informatieobjecten(zaak: Zaak) -> list:

@@ -171,7 +171,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
         zaak = factory(Zaak, zaak)
 
         # Invalidate cache
-        invalidate_rollen_cache(zaak, rollen=[factory(Rol, rol)])
+        invalidate_rollen_cache(zaak, rol_urls=[rol["url"]])
 
         # Make sure rol isnt cached anymore
         self.assertFalse(f"rol:{rol['url']}" in cache)
