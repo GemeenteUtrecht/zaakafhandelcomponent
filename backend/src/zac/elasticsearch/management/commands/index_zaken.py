@@ -1,9 +1,11 @@
+from io import StringIO
 from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
-from django.core.management.base import CommandParser
+from django.core.management.base import CommandParser, OutputWrapper
 
+import click
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
@@ -41,24 +43,63 @@ from ...documents import (
 from ...utils import check_if_index_exists
 
 
+class ProgressOutputWrapper(OutputWrapper):
+    """ Class to manage logs with and without progress bar """
+
+    def __init__(self, show_progress, *args, **kwargs):
+        self.show_progress = show_progress
+
+        super().__init__(*args, **kwargs)
+
+    def write_without_progress(self, *args, **kwargs):
+        """ write in the stdout only if there is no progress bar """
+        if not self.show_progress:
+            super().write(*args, **kwargs)
+
+    def progress_file(self):
+        return self if self.show_progress else StringIO()
+
+    def start_progress(self):
+        if self.show_progress:
+            self.ending = ""
+
+    def end_progress(self):
+        if self.show_progress:
+            self.ending = "\n"
+
+
 class Command(BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
 
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
         parser.add_argument(
-            "--max_workers",
+            "--max-workers",
             type=int,
             help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
             default=4,
         )
         parser.add_argument(
-            "--reindex_last",
+            "--reindex-last",
             type=int,
             help="Indicates the number of the most recent zaken to be reindexed.",
         )
+        parser.add_argument(
+            "--progress",
+            "--show-progress",
+            action="store_true",
+            help=(
+                "Show a progress bar. Showing a progress bar disables other "
+                "fine-grained feedback."
+            ),
+        )
 
     def handle(self, **options):
+        # redefine self.stdout as ProgressOutputWrapper cause logging is dependent whether
+        # we have a progress bar
+        show_progress = options["progress"]
+        self.stdout = ProgressOutputWrapper(show_progress, out=self.stdout._out)
+
         self.max_workers = options["max_workers"]
         self.reindex_last = options["reindex_last"]
         self.es_client = connections.get_connection()
@@ -96,33 +137,68 @@ class Command(BaseCommand):
         return False
 
     def batch_index_zaken(self) -> Iterator[ZaakDocument]:
+        self.stdout.write("Preloading all case types...")
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+        self.stdout.write(f"Fetched {len(zaaktypen)} case types")
+
+        self.stdout.write("Starting zaken retrieval from the configured APIs")
 
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         clients = [zrc.build_client() for zrc in zrcs]
+
+        # report back which clients will be iterated over and how many zaken each has
+        total_expected_zaken = 0
         for client in clients:
-            get_more = True
+            # fetch the first page so we get the total count from the backend
+            response = client.list("zaak")
+            client_num_zaken = response["count"]
+            total_expected_zaken += client_num_zaken
+            self.stdout.write(
+                f"Number of cases in {client.base_url}:\n  {client_num_zaken}"
+            )
 
-            # Set ordering explicitely
-            query_params = {"ordering": "-identificatie"}
-            while get_more:
-                zaken, query_params = get_zaken_all_paginated(
-                    client, query_params=query_params
-                )
-                # Make sure we're not retrieving more information than necessary on the zaken
-                if self.reindex_last and self.reindex_last - self.reindexed <= len(
-                    zaken
-                ):
-                    zaken = zaken[: self.reindex_last - self.reindexed]
+        if self.reindex_last:
+            total_expected_zaken = min(total_expected_zaken, self.reindex_last)
 
-                get_more = query_params.get("page", None)
-                for zaak in zaken:
-                    zaak.zaaktype = zaaktypen[zaak.zaaktype]
+        self.stdout.write("Now the real work starts, hold on!")
 
-                yield from self.zaakdocumenten_generator(zaken)
+        self.stdout.start_progress()
+
+        with click.progressbar(
+            length=total_expected_zaken,
+            label="Indexing ",
+            file=self.stdout.progress_file(),
+        ) as bar:
+            for client in clients:
+                get_more = True
+                # Set ordering explicitely
+                # FIXME: this implicitly assumes the generated or created identification
+                # contains some sort of time-stamp and/or increasing number for more recent
+                # cases. This is an assumption that can easily be thwarted, as clients have
+                # the ability to pick a unique identification themselves (such as UUIDs).
+                query_params = {"ordering": "-identificatie"}
+                while get_more:
+                    zaken, query_params = get_zaken_all_paginated(
+                        client, query_params=query_params
+                    )
+                    # Make sure we're not retrieving more information than necessary on the zaken
+                    if self.reindex_last and self.reindex_last - self.reindexed <= len(
+                        zaken
+                    ):
+                        zaken = zaken[: self.reindex_last - self.reindexed]
+
+                    get_more = query_params.get("page", None)
+                    for zaak in zaken:
+                        zaak.zaaktype = zaaktypen[zaak.zaaktype]
+
+                    yield from self.zaakdocumenten_generator(zaken)
+                    bar.update(len(zaken))
 
                 if self.check_if_done_batching():
+                    self.stdout.end_progress()
                     return
+
+        self.stdout.end_progress()
 
     def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
         zaak_documenten = self.create_zaak_documenten(zaken)
@@ -182,7 +258,7 @@ class Command(BaseCommand):
             for status in list(results)
             if status
         }
-        self.stdout.write(
+        self.stdout.write_without_progress(
             f"{len(status_documenten.keys())} statussen are received from Zaken API."
         )
         return status_documenten
@@ -197,8 +273,10 @@ class Command(BaseCommand):
             rollen[0].zaak: [create_rol_document(rol) for rol in rollen]
             for rollen in list_of_rollen
         }
-        self.stdout.write(
-            f"{sum([len(rollen) for rollen in list_of_rollen])} rollen are received for {len(rollen_documenten.keys())} zaken."
+
+        num_roles = sum([len(rollen) for rollen in list_of_rollen])
+        self.stdout.write_without_progress(
+            f"{num_roles} rollen are received for {len(rollen_documenten.keys())} zaken."
         )
         return rollen_documenten
 
@@ -214,8 +292,10 @@ class Command(BaseCommand):
             for zen in list_of_eigenschappen
             if zen
         }
-        self.stdout.write(
-            f"{sum([len(zen) for zen in list_of_eigenschappen])} zaakeigenschappen are found for {len(eigenschappen_documenten.keys())} zaken."
+
+        num_properties = sum([len(zen) for zen in list_of_eigenschappen])
+        self.stdout.write_without_progress(
+            f"{num_properties} zaakeigenschappen are found for {len(eigenschappen_documenten.keys())} zaken."
         )
         return eigenschappen_documenten
 
@@ -231,7 +311,9 @@ class Command(BaseCommand):
             for zon in list_of_zon
             if zon
         }
-        self.stdout.write(
-            f"{sum([len(zon) for zon in list_of_zon])} zaakobjecten are found for {len(zaakobjecten_documenten.keys())} zaken."
+
+        num_case_objects = sum([len(zon) for zon in list_of_zon])
+        self.stdout.write_without_progress(
+            f"{num_case_objects} zaakobjecten are found for {len(zaakobjecten_documenten.keys())} zaken."
         )
         return zaakobjecten_documenten

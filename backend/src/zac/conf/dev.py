@@ -16,6 +16,9 @@ os.environ.setdefault("DB_NAME", "zac")
 os.environ.setdefault("DB_USER", "zac")
 os.environ.setdefault("DB_PASSWORD", "zac")
 
+os.environ.setdefault("LOG_STDOUT", "yes")
+os.environ.setdefault("LOG_LEVEL", "DEBUG")
+
 from .includes.base import *  # noqa isort:skip
 
 #
@@ -25,7 +28,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 LOGGING["loggers"].update(
     {
-        "zac": {"handlers": ["console"], "level": "DEBUG", "propagate": True},
         "django": {"handlers": ["console"], "level": "DEBUG", "propagate": True},
         "django.db.backends": {
             "handlers": ["django"],
