@@ -59,30 +59,36 @@ class Command(BaseCommand):
         )
 
     def handle(self, **options):
-        self.reindex_last = options["reindex_last"]
-        if not self.reindex_last:
-            # If we're indexing everything - clear the index.
-            self.clear_zaken_index()
-            ZaakDocument.init()
-        else:
-            # Make sure the index exists...
-            check_if_index_exists()
-            self.reindexed = (
-                0  # To keep track of how many zaken have already been reindexed.
-            )
-
         self.max_workers = options["max_workers"]
-        es_client = connections.get_connection()
+        self.reindex_last = options["reindex_last"]
+        self.es_client = connections.get_connection()
+        if self.reindex_last:
+            self.handle_reindexing()
+        else:
+            self.handle_indexing()
+
+    def handle_reindexing(self):
+        # Make sure the index exists...
+        check_if_index_exists()
+        self.reindexed = (
+            0  # To keep track of how many zaken have already been reindexed.
+        )
+        self.bulk_upsert()
+        self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
+
+    def handle_indexing(self):
+        # If we're indexing everything - clear the index.
+        self.clear_zaken_index()
+        ZaakDocument.init()
+        self.bulk_upsert()
+        count = self.es_client.count()["count"]
+        self.stdout.write(f"{count} zaken are received from Zaken API.")
+
+    def bulk_upsert(self):
         bulk(
-            es_client,
+            self.es_client,
             self.batch_index_zaken(),
         )
-
-        if not self.reindex_last:
-            count = es_client.count()["count"]
-            self.stdout.write(f"{count} zaken are received from Zaken API.")
-        else:
-            self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
 
     def check_if_done_batching(self) -> bool:
         if self.reindex_last and self.reindex_last - self.reindexed == 0:
