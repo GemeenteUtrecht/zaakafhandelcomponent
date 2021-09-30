@@ -2,7 +2,7 @@
 Zaakafhandelcomponent
 =====================
 
-:Version: 0.38.3
+:Version: 0.39.0
 :Source: https://github.com/GemeenteUtrecht/zaakafhandelcomponent
 :Keywords: zaken, zaakgericht werken, GEMMA, Utrecht
 :PythonVersion: 3.7
