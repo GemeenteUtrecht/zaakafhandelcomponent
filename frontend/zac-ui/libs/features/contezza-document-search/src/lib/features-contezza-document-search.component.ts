@@ -1,7 +1,8 @@
 import {DOCUMENT} from '@angular/common';
-import {AfterViewInit, Component, Inject, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, Inject, Input, OnInit, Renderer2, ViewChild, ViewEncapsulation} from '@angular/core';
 
 @Component({
+    encapsulation: ViewEncapsulation.None,
     selector: 'gu-features-contezza-document-search',
     templateUrl: './features-contezza-document-search.component.html',
     styleUrls: ['./features-contezza-document-search.component.scss'],

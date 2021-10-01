@@ -6,12 +6,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { DocumentVertrouwelijkheidWijzigenComponent } from './document-vertrouwelijkheid-wijzigen/document-vertrouwelijkheid-wijzigen.component';
 import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search";
+import { DocumentToevoegenContezzaComponent } from './document-toevoegen-contezza/document-toevoegen-contezza.component';
 
 @NgModule({
   declarations: [
     DocumentenComponent,
     DocumentToevoegenComponent,
-    DocumentVertrouwelijkheidWijzigenComponent
+    DocumentVertrouwelijkheidWijzigenComponent,
+    DocumentToevoegenContezzaComponent
   ],
   imports: [
     CommonModule,

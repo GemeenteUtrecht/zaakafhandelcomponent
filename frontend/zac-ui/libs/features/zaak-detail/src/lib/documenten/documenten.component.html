@@ -39,13 +39,13 @@
           [closeIcon]="true"
           title="Document toevoegen"
           size="big">
-  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
-                         [zaaktypeurl]="zaaktypeurl"
-                         [bronorganisatie]="bronorganisatie"
-                         [identificatie]="identificatie"
-                         (closeModal)="closeModal('document-toevoegen-modal')"
-                         (reload)="fetchDocuments()">
-  </gu-document-toevoegen>
+  <gu-document-toevoegen-contezza [mainZaakUrl]="mainZaakUrl"
+                                  [zaaktypeurl]="zaaktypeurl"
+                                  [bronorganisatie]="bronorganisatie"
+                                  [identificatie]="identificatie"
+                                  (closeModal)="closeModal('document-toevoegen-modal')"
+                                  (reload)="fetchDocuments()">
+  </gu-document-toevoegen-contezza>
 </gu-modal>
 <gu-modal id="document-overschrijven-modal"
           [closeIcon]="true"
