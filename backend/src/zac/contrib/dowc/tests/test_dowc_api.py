@@ -182,8 +182,16 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             f"{DOWC_API_ROOT}/api/v1/documenten",
             status_code=409,
         )
+        list_url = furl(f"{DOWC_API_ROOT}/api/v1/documenten")
+        list_url.set(
+            {
+                "drc_url": self.dowc_response["drcUrl"],
+                "purpose": DocFileTypes.write,
+                "info_url": "http://www.some-referer-url.com/",
+            }
+        )
         m.get(
-            f"{DOWC_API_ROOT}/api/v1/documenten",
+            list_url.url,
             status_code=200,
             json=[self.dowc_response],
         )
