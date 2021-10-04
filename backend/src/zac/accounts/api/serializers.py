@@ -439,11 +439,14 @@ def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
     # find related iotypen
     document_policies = []
     for zaaktype in zaaktypen:
+        if not zaaktype.informatieobjecttypen:
+            continue
+
         iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
         document_policies += [
             {
                 "catalogus": iotype.catalogus,
-                "zaaktype_omschrijving": iotype.omschrijving,
+                "iotype_omschrijving": iotype.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             }
             for iotype in iotypen
