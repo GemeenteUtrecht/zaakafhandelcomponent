@@ -1,11 +1,19 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { Result, UserSearch } from '../../../models/user-search';
-import { ApplicationHttpClient } from '@gu/services';
+import { Result } from '../../../models/user-search';
+import { UserGroupResult } from '../../../models/user-group-search';
 import { ModalService } from '@gu/components';
 import { Task, User } from '@gu/models';
+import { KetenProcessenService } from '../keten-processen.service';
 
+/**
+ * This component allows tasks to be assigned to a user
+ *
+ * Requires taskData: Task information
+ * Requires currentUser: Logged in user information
+ *
+ * Emits successReload: Event after finishing submit
+ */
 @Component({
   selector: 'gu-assign-task',
   templateUrl: './assign-task.component.html',
@@ -16,9 +24,11 @@ export class AssignTaskComponent implements OnChanges {
   @Input() currentUser: User;
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  assignTaskForm: FormGroup;
+  assignUserForm: FormGroup;
+  assignUserGroupForm: FormGroup;
 
   users: Result[] = [];
+  userGroups: UserGroupResult[] = [];
 
   isSubmitting: boolean;
   submitHasError: boolean;
@@ -26,52 +36,100 @@ export class AssignTaskComponent implements OnChanges {
   submitSuccess: boolean;
 
   constructor(
-    private http: ApplicationHttpClient,
+    private kService: KetenProcessenService,
     private fb: FormBuilder,
     private modalService: ModalService
   ) { }
 
+  //
+  // Getters / setters.
+  //
+
+  get assigneeUserControl(): FormControl {
+    return this.assignUserForm.get('assignee') as FormControl;
+  };
+
+  get assigneeUserGroupControl(): FormControl {
+    return this.assignUserGroupForm.get('assignee') as FormControl;
+  };
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * Respond when Angular sets or resets data-bound input properties.
+   */
   ngOnChanges(): void {
     this.submitSuccess = false;
     this.submitHasError = false;
     this.isSubmitting = false;
 
     if (this.taskData) {
-      this.assignTaskForm = this.fb.group({
-        task: this.taskData.id,
+      this.assignUserForm = this.fb.group({
+        assignee: this.fb.control("", Validators.required)
+      })
+
+      this.assignUserGroupForm = this.fb.group({
         assignee: this.fb.control("", Validators.required)
       })
     }
   }
 
-  get task(): FormControl {
-    return this.assignTaskForm.get('task') as FormControl;
-  };
+  //
+  // Context.
+  //
 
-  get assignee(): FormControl {
-    return this.assignTaskForm.get('assignee') as FormControl;
-  };
-
-  onSearch(searchInput) {
-    this.getAccounts(searchInput).subscribe(res => {
+  /**
+   * Search for user accounts.
+   * @param searchInput
+   */
+  onSearchAccounts(searchInput) {
+    this.kService.getAccounts(searchInput).subscribe(res => {
       this.users = res.results;
     })
   }
 
-  assignSelf() {
-    this.assignee.patchValue(this.currentUser.username);
-    this.submitForm();
+  /**
+   * Search for user groups.
+   * @param searchInput
+   */
+  onSearchUserGroups(searchInput) {
+    this.kService.getUserGroups(searchInput).subscribe(res => {
+      this.userGroups = res.results;
+    })
   }
 
-  submitForm() {
+  /**
+   * Assign a task to the current user.
+   */
+  assignSelf() {
+    this.assigneeUserControl.patchValue(this.currentUser.username);
+    this.submitForm('user');
+  }
+
+  /**
+   * Submits the form. The form data is dependant on "assignType".
+   * @param {"user" | "userGroup"} assignType
+   */
+  submitForm(assignType: 'user' | 'userGroup') {
     this.isSubmitting = true;
+    let assignee;
+    switch (assignType) {
+      case 'user':
+        assignee = this.assigneeUserControl.value;
+        break;
+      case 'userGroup':
+        assignee = this.assigneeUserGroupControl.value;
+        break;
+    }
     const formData = {
-      task: this.task.value,
-      assignee: this.assignee.value,
+      task: this.taskData.id,
+      assignee: assignee,
       delegate: ""
     }
 
-    this.postAssignTask(formData).subscribe( () => {
+    this.kService.postAssignTask(formData).subscribe(() => {
       this.submitSuccess = true;
       this.submitHasError = false;
       this.isSubmitting = false;
@@ -87,15 +145,4 @@ export class AssignTaskComponent implements OnChanges {
       this.isSubmitting = false;
     })
   }
-
-  getAccounts(searchInput: string): Observable<UserSearch>{
-    const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
-    return this.http.Get<UserSearch>(endpoint);
-  }
-
-  postAssignTask(formData) {
-    const endpoint = encodeURI('/api/camunda/claim-task');
-    return this.http.Post<any>(endpoint, formData)
-  }
-
 }

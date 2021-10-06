@@ -25,15 +25,15 @@
             </gu-input>
             <div class="d-flex justify-content-end">
               <button gu-button
-                      buttonStyle="tertiary"
-                      (click)="showAddActivityButton = false; hasError = false;">
-                Sluiten
-              </button>
-              <button gu-button
                       [disabled]="!addActivityForm.valid || isSubmitting"
                       (click)="createNewActivity()"
               >
                 Toevoegen
+              </button>
+              <button gu-button
+                      buttonStyle="tertiary"
+                      (click)="showAddActivityButton = false; hasError = false;">
+                Sluiten
               </button>
             </div>
           </div>
@@ -61,48 +61,79 @@
             </div>
             <div class="activity__details col-lg-6">
               <!--  Gebruiker toewijzen  -->
+              <gu-chip *ngIf="activity.assignee"
+                       (click)="openAssigneeEditField = i; openNoteEditField = null"
+                       [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                       icon="edit"
+                       class="d-inline-block mb-1"
+              >
+                {{activity.assignee}}
+              </gu-chip>
               <div class="activity__detail mb-4">
-                <gu-chip *ngIf="activity.assignee"
-                         (click)="openAssigneeEditField = i; openNoteEditField = null"
-                         [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
-                         icon="edit"
-                         class="d-inline-block mb-1"
-                >
-                  {{activity.assignee}}
-                </gu-chip>
                 <button gu-button *ngIf="!activity.assignee && openAssigneeEditField !== i"
                         (click)="openAssigneeEditField = i; openNoteEditField = null"
                         class="d-block"
                         buttonStyle="primary"
                         size="extrasmall"
                         icon="person_add">
-                  Gebruiker toewijzen
+                  Gebruiker of groep toewijzen
                 </button>
-                <ng-container *ngIf="openAssigneeEditField === i">
-                  <gu-multiselect (search)="onSearch($event)"
-                                  [control]="assignedUser(i)"
-                                  [items]="users"
-                                  [multiple]="false"
-                                  bindLabel="fullName"
-                                  bindValue="username"
-                                  required
-                                  placeholder="Zoek een gebruiker"
-                                  class="mb-2">
-                  </gu-multiselect>
-                  <div class="d-flex justify-content-between">
-                    <button gu-button (click)="openAssigneeEditField = null"
-                            buttonStyle="tertiary"
-                               size="small">
-                      Sluiten
-                    </button>
-                    <button gu-button (click)="submitAssignUser(activity.id, i)"
-                            [disabled]="!assignedUser(i).valid"
-                            buttonStyle="primary"
-                            size="small">
-                      Gebruiker toewijzen
-                    </button>
-                  </div>
-                </ng-container>
+                <gu-tab-group [selectedIndex]="0" *ngIf="openAssigneeEditField === i">
+
+                  <!-- Assign collega -->
+                  <gu-tab label="Collega">
+                    <gu-multiselect (search)="onSearchAccounts($event)"
+                                    [control]="assignedUserControlIndex(i)"
+                                    [items]="users"
+                                    [multiple]="false"
+                                    bindLabel="fullName"
+                                    bindValue="username"
+                                    required
+                                    placeholder="Zoek een gebruiker"
+                                    class="mb-2">
+                    </gu-multiselect>
+                    <div class="d-flex justify-content-between">
+                      <button gu-button (click)="submitAssign(activity.id, i, 'user')"
+                              [disabled]="!assignedUserControlIndex(i).valid"
+                              buttonStyle="primary"
+                              size="small">
+                        Gebruiker toewijzen
+                      </button>
+                      <button gu-button (click)="openAssigneeEditField = null"
+                              buttonStyle="tertiary"
+                              size="small">
+                        Sluiten
+                      </button>
+                    </div>
+                  </gu-tab>
+
+                  <!-- Assign groep -->
+                  <gu-tab label="Groep">
+                    <gu-multiselect (search)="onSearchUserGroups($event)"
+                                    [control]="assignedUserGroupControlIndex(i)"
+                                    [items]="userGroups"
+                                    [multiple]="false"
+                                    bindLabel="name"
+                                    bindValue="name"
+                                    required
+                                    placeholder="Zoek een groep"
+                                    class="mb-2">
+                    </gu-multiselect>
+                    <div class="d-flex justify-content-between">
+                      <button gu-button (click)="submitAssign(activity.id, i, 'userGroup')"
+                              [disabled]="!assignedUserGroupControlIndex(i).valid"
+                              buttonStyle="primary"
+                              size="small">
+                        Groep toewijzen
+                      </button>
+                      <button gu-button (click)="openAssigneeEditField = null"
+                              buttonStyle="tertiary"
+                              size="small">
+                        Sluiten
+                      </button>
+                    </div>
+                  </gu-tab>
+                </gu-tab-group>
               </div>
               <!--  Document uploaden  -->
               <div class="activity__detail mb-4">

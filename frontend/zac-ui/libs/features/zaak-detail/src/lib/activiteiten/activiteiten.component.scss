@@ -28,4 +28,7 @@
     width: 100%;
     margin: 2rem 0;
   }
+  ::ng-deep .mat-tab-body-wrapper {
+    min-height: unset;
+  }
 }

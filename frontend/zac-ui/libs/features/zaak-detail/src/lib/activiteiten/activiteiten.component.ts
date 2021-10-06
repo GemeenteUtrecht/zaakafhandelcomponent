@@ -6,7 +6,17 @@ import {User, ShortDocument, ReadWriteDocument} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Result } from '../../models/user-search';
 import {Document} from '@gu/models';
+import { UserGroupResult } from '../../models/user-group-search';
 
+/**
+ * This component allows the user to set and edit activities.
+ *
+ * Requires mainZaakUrl: string input to identify the url of the case (zaak).
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ * Requires currentUser: User input to identify the current user.
+ * Requires activityData: All activity data.
+ */
 @Component({
   selector: 'gu-activiteiten',
   templateUrl: './activiteiten.component.html',
@@ -16,14 +26,15 @@ export class ActiviteitenComponent implements OnInit {
   @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
-  @Input() activityData: Activity[];
   @Input() currentUser: User;
+  @Input() activityData: Activity[];
 
   activityForm: FormGroup;
   addActivityForm: FormGroup;
   assignUserForm: FormGroup;
 
   users: Result[] = [];
+  userGroups: UserGroupResult[] = [];
 
   ongoingData: Activity[] = [];
   finishedData: Activity[] = [];
@@ -51,37 +62,9 @@ export class ActiviteitenComponent implements OnInit {
   constructor(private actvititeitenService: ActiviteitenService,
               private fb: FormBuilder) { }
 
-  ngOnInit(): void {
-    this.createForm();
-  }
-
-  createForm() {
-    this.activityForm = this.fb.group({
-      notes: this.fb.array(this.addNotesControl(this.activityData))
-    })
-
-    this.assignUserForm = this.fb.group({
-      user: this.fb.array(this.addAssignUserControl(this.activityData))
-    })
-
-    this.addActivityForm = this.fb.group({
-      name: this.fb.control("", Validators.required),
-      remarks: this.fb.control(""),
-    })
-
-    this.isLoading = true;
-    this.formatActivityData(this.activityData);
-    this.fetchDocuments(this.activityData);
-    this.isLoading = false;
-  }
-
-  addNotesControl(data) {
-    return data.map( () => this.fb.control("", Validators.required) )
-  }
-
-  addAssignUserControl(data) {
-    return data.map( () => this.fb.control("", Validators.required) )
-  }
+  //
+  // Getters / setters.
+  //
 
   get addActivityName(): FormControl {
     return this.addActivityForm.get('name') as FormControl;
@@ -99,20 +82,128 @@ export class ActiviteitenComponent implements OnInit {
     return this.assignUserForm.get('user') as FormArray;
   };
 
+  get assignUserGroupControl(): FormArray {
+    return this.assignUserForm.get('group') as FormArray;
+  };
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit(): void {
+    this.createForm();
+  }
+
+  //
+  // Context.
+  //
+
+  /**
+   * Initiate controls for the Reactive form
+   */
+  createForm() {
+    this.activityForm = this.fb.group({
+      notes: this.fb.array(this.addNotesControl(this.activityData))
+    })
+
+    this.assignUserForm = this.fb.group({
+      user: this.fb.array(this.addAssignUserControl(this.activityData)),
+      group: this.fb.array(this.addAssignUserGroupControl(this.activityData))
+    })
+
+    this.addActivityForm = this.fb.group({
+      name: this.fb.control("", Validators.required),
+      remarks: this.fb.control(""),
+    })
+
+    this.isLoading = true;
+    this.formatActivityData(this.activityData);
+    this.fetchDocuments(this.activityData);
+    this.isLoading = false;
+  }
+
+  /**
+   * Add control for each existing activity.
+   * @param data
+   * @returns {any}
+   */
+  addNotesControl(data) {
+    return data.map( () => this.fb.control("", Validators.required) )
+  }
+
+  /**
+   * Add control for each existing activity.
+   * @param data
+   * @returns {any}
+   */
+  addAssignUserControl(data) {
+    return data.map( () => this.fb.control("", Validators.required) )
+  }
+
+  /**
+   * Add control for each existing activity.
+   * @param data
+   * @returns {any}
+   */
+  addAssignUserGroupControl(data) {
+    return data.map( () => this.fb.control("", Validators.required) )
+  }
+
+  /**
+   * Returns control for the given index.
+   * @param {number} index
+   * @returns {FormControl}
+   */
   notes(index: number): FormControl {
     return this.notesControl.at(index) as FormControl;
   }
 
-  assignedUser(index: number): FormControl {
+  /**
+   * Returns control for the given index.
+   * @param {number} index
+   * @returns {FormControl}
+   */
+  assignedUserControlIndex(index: number): FormControl {
     return this.assignUserControl.at(index) as FormControl;
   }
 
-  onSearch(searchInput) {
+  /**
+   * Returns control for the given index.
+   * @param {number} index
+   * @returns {FormControl}
+   */
+  assignedUserGroupControlIndex(index: number): FormControl {
+    return this.assignUserGroupControl.at(index) as FormControl;
+  }
+
+  /**
+   * Find accounts on search input.
+   * @param searchInput
+   */
+  onSearchAccounts(searchInput) {
     this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
       this.users = res.results;
     })
   }
 
+
+  /**
+   * Find user groups on search input.
+   * @param searchInput
+   */
+  onSearchUserGroups(searchInput) {
+    this.actvititeitenService.getUserGroups(searchInput).subscribe(res => {
+      this.userGroups = res.results;
+    })
+  }
+
+  /**
+   * Fetch all activities.
+   */
   fetchActivities() {
     if (this.mainZaakUrl) {
       this.actvititeitenService.getActivities(this.mainZaakUrl)
@@ -124,6 +215,10 @@ export class ActiviteitenComponent implements OnInit {
     }
   }
 
+  /**
+   * Fetch documents for all activities.
+   * @param activities
+   */
   fetchDocuments(activities) {
     this.isFetchingDocuments = true;
     this.actvititeitenService.getDocuments(activities).subscribe( res => {
@@ -136,6 +231,10 @@ export class ActiviteitenComponent implements OnInit {
     });
   }
 
+  /**
+   * Separate ongoing and finished activities.
+   * @param {Activity[]} activities
+   */
   formatActivityData(activities: Activity[]) {
     this.ongoingData = activities.filter(activity => {
       return activity.status === 'on_going'
@@ -145,6 +244,10 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Separate ongoing and finished activity documents.
+   * @param {ShortDocument[]} activityDocs
+   */
   formatDocsData(activityDocs: ShortDocument[]) {
     this.ongoingActivityDocs = activityDocs.filter((activity, i) => {
       return this.activityData[i].status === 'on_going';
@@ -154,6 +257,9 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Create new activity.
+   */
   createNewActivity() {
     this.hasError = false;
     this.isSubmitting = true;
@@ -175,6 +281,11 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Create note for activity.
+   * @param activityId
+   * @param index
+   */
   submitNotes(activityId, index) {
     this.isLoading = true
     const formData = {
@@ -191,12 +302,35 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
-  submitAssignUser(activityId, index) {
+  /**
+   * Assign an activity to a user or user group.
+   * @param activityId
+   * @param index
+   * @param {"user" | "userGroup"} assignType
+   */
+  submitAssign(activityId, index, assignType: 'user' | 'userGroup') {
     this.isLoading = true
-    const formData = {
-      assignee: this.assignedUser(index).value
+    let assignee;
+    switch (assignType) {
+      case 'user':
+        assignee = this.assignedUserControlIndex(index).value;
+        break;
+      case 'userGroup':
+        assignee = this.assignedUserGroupControlIndex(index).value;
+        break;
     }
+    const formData = {
+      assignee: assignee
+    }
+    this.patchActivity(activityId, formData)
+  }
 
+  /**
+   * Updates activity.
+   * @param activityId
+   * @param formData
+   */
+  patchActivity(activityId, formData) {
     this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
       this.assignUserForm.reset();
       this.openAssigneeEditField = null;
@@ -206,6 +340,10 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Sets activity on "finished"
+   * @param activityId
+   */
   closeActivity(activityId) {
     this.isLoading = true
     const formData = {
@@ -221,6 +359,10 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Deletes an activity.
+   * @param activityId
+   */
   deleteActivity(activityId) {
     this.isLoading = true
 
@@ -233,6 +375,11 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Updates the document for an activity.
+   * @param activityId
+   * @param {Document} document
+   */
   patchActivityDocument(activityId, document: Document) {
     const formData = {
       document: document.url
@@ -246,12 +393,24 @@ export class ActiviteitenComponent implements OnInit {
     })
   }
 
+  /**
+   * Retrieve read link for document.
+   * @param readUrl
+   */
   readDocument(readUrl) {
     this.actvititeitenService.readDocument(readUrl).subscribe((res: ReadWriteDocument) => {
       window.open(res.magicUrl, "_blank");
     })
   }
 
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param res
+   */
   setError(res) {
     this.hasError = true;
     this.errorMessage = res.error?.detail ? res.error.detail :
