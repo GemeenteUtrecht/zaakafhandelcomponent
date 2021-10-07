@@ -1,7 +1,7 @@
 import {HttpParams} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Geometry, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
+import {Geometry, ObjectType, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
 import {ApplicationHttpClient} from '@gu/services';
 
 @Injectable({
@@ -41,19 +41,25 @@ export class ZaakObjectService {
   /**
    * Search for objects in the Objects API
    * @param {Geometry} geometry
+   * @param {string} objectTypeUrl
+   * @param {string} [property] Object type property.
    * @param {string} [query]
    * @return {Observable}
    */
-  searchObjects(geometry: Geometry, query: string = ''): Observable<ZaakObject[]> {
+  searchObjects(geometry: Geometry, objectTypeUrl: string, property: string = '', query: string = ''): Observable<ZaakObject[]> {
     const endpoint = encodeURI('/api/core/objects');
     const search = {
-      geometry: {
+      type: objectTypeUrl,
+    }
+
+    if(geometry) {
+      search['geometry'] = {
         within: geometry
-      },
+      }
     }
 
     if (query) {
-      search['data_attrs'] = this._parseQuery(query);
+      search['data_attrs'] = this._parseQuery(property, query);
     }
 
     return this.http.Post<ZaakObject[]>(endpoint, search);
@@ -74,15 +80,16 @@ export class ZaakObjectService {
 
   /**
    * Converts a human-readable query to a valid API data_attrs value.
+   * @param {string} [property] Object type property.
    * @param {string} query e.q.: "Naam van object" or "adres:Utrechtsestraat, type:Laadpaal"
    * @return {string} Value suitable for data_attrs argument.
    * @private
    */
-  _parseQuery(query: string): string {
+  _parseQuery(property: string, query: string): string {
     return query.split(',')
-      .map((part) => part.match(':') ? part : `name:${part}`)
+      .map((part) => part.match(':') ? part : `${property}:${part}`)
       .map((keyValue) => keyValue.replace(/:\s*/g, ':').trim())
-      .map((keyValue) => keyValue.replace(':', '__exact__'))
+      .map((keyValue) => keyValue.replace(':', '__icontains__'))
       .join(',');
   }
 }

@@ -1,15 +1,17 @@
-import {Component, EventEmitter, Output} from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
-import {SearchService} from '../../search.service';
 import {
   Feature,
   Geometry,
-  ZaakObject,
-  UtrechtNeighbourhoods,
   getProvinceByName,
   getTownshipByName,
+  ObjectType,
+  ObjectTypeVersion,
+  UtrechtNeighbourhoods,
+  ZaakObject,
 } from '@gu/models';
-import {ZaakObjectService} from '@gu/services';
+import {ObjectsService, ZaakObjectService} from '@gu/services';
+import {SearchService} from '../../search.service';
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -19,7 +21,12 @@ const PROVINCE_UTRECHT_NAME = 'Utrecht';
 const TOWNSHIP_UTRECHT_NAME = 'Utrecht (Ut)';
 
 
+/** @type {Choice[]} The choices for the geometry <select>. */
 const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
+  {
+    label: '',
+    value: 'null',
+  },
   {
     label: `Gemeente: ${TOWNSHIP_UTRECHT_NAME}`,
     value: JSON.stringify(getTownshipByName(TOWNSHIP_UTRECHT_NAME).geometry),
@@ -36,6 +43,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
   })),
 ];
 
+
 /**
  * <gu-zaak-object-search-form></gu-zaak-object-search-form>
  *
@@ -47,63 +55,185 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
   selector: 'gu-zaak-object-search-form',
   templateUrl: './zaak-object-search-form.component.html',
 })
-export class ZaakObjectSearchFormComponent {
+export class ZaakObjectSearchFormComponent implements OnInit {
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
 
+  /** @type {boolean}} Whether the component is loading. */
+  isLoading = true;
+
   /** @type {boolean} Whether to show the zaak objecten. */
   showZaakObjecten = false;
 
-  /** @type {FieldConfiguration[] Form configuration. */
-  form: FieldConfiguration[] = [
-    {
-      choices: OBJECT_SEARCH_GEOMETRY_CHOICES,
-      label: 'Gebied',
-      name: 'geometry',
-      required: true,
-      value: OBJECT_SEARCH_GEOMETRY_CHOICES[0].value,
-    },
-    {
-      label: 'Zoekopdracht',
-      name: 'query',
-      placeholder: 'adres:Utrechtsestraat 41, type:Laadpaal',
-      required: false,
-      value: '',
-    }
-  ];
+  /** @tupe {ObjectType[]} The object types. */
+  objectTypes: ObjectType[] = [];
+
+  /** @type {ObjectTypeVersion} The latest object type version for every object type in this.objectTypes. */
+  objectTypeVersions: ObjectTypeVersion[] = []
 
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
 
   /**
    * Constructor method.
+   * @param {ObjectsService} objectsService
    * @param {SearchService} searchService
    * @param {ZaakObjectService} zaakObjectService
    * @param {SnackbarService} snackbarService
    */
-  constructor(private searchService: SearchService, private zaakObjectService: ZaakObjectService, private snackbarService: SnackbarService) {
+  constructor(
+    private objectsService: ObjectsService,
+    private searchService: SearchService,
+    private zaakObjectService: ZaakObjectService,
+    private snackbarService: SnackbarService
+  ) {
   }
 
   //
   // Getters / setters.
   //
 
+  /**
+   *  @type {FieldConfiguration[] Form configuration.
+   */
+  get form(): FieldConfiguration[] {
+    return [
+      {
+        choices: OBJECT_SEARCH_GEOMETRY_CHOICES,
+        label: 'Gebied',
+        name: 'geometry',
+        required: false,
+        value: OBJECT_SEARCH_GEOMETRY_CHOICES[0].value,
+      },
+      this.objectTypesAsFieldConfiguration(),
+      ...this.objectTypeVersionsAsFieldConfigurations(),
+      {
+        label: 'Zoekopdracht',
+        name: 'query',
+        placeholder: 'adres:Utrechtsestraat 41, type:Laadpaal',
+        required: false,
+        value: '',
+      },
+    ];
+  }
+
   //
   // Angular lifecycle.
   //
 
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit(): void {
+    this.getContextData();
+  }
+
   //
   // Context.
   //
+
+  getContextData(): void {
+    this.isLoading = true;
+
+    this.objectsService.listObjectTypes().subscribe(
+      this.getObjectTypesContext.bind(this),
+      (error) => {
+        this.reportError(error)
+        this.isLoading = false;
+      }
+    )
+  }
+
+  /**
+   * Sets/fetches this.objectTypes and this.objectTypeVersions.
+   * @param {ObjectType[]} objectTypes.
+   */
+  getObjectTypesContext(objectTypes: ObjectType[]): void {
+    this.isLoading = true;
+    const objectTypeVersions = [];
+    let loadingLength = objectTypes.length;
+
+    objectTypes.forEach((objectType: ObjectType) => this.objectsService
+      .readLatestObjectTypeVersion(objectType)
+      .subscribe(
+        (objectTypeVersion) => {
+          objectTypeVersions.push(objectTypeVersion);
+        },
+        this.reportError.bind(this),
+        () => {
+          loadingLength -= 1;
+
+          if (loadingLength === 0) {
+            this.objectTypes = objectTypes;
+            this.objectTypeVersions = objectTypeVersions;
+            this.isLoading = false;
+          }
+        }
+      )
+    );
+  }
+
+  /**
+   * Returns a select (configuration) for object types.
+   * @return {FieldConfiguration}
+   */
+  objectTypesAsFieldConfiguration(): FieldConfiguration {
+    const choices: Choice[] = [
+      {
+        label: '',
+        value: '',
+      },
+      ...this.objectTypes.map((objectType: ObjectType) => ({
+        label: objectType.name,
+        value: objectType.url
+      }))
+    ];
+
+    return {
+      choices: choices,
+      label: 'Object type',
+      name: 'objectType',
+      required: false,
+      value: choices[0].value,
+    }
+  }
+
+  /**
+   * Returns a FieldConfiguration[] for object type versions.
+   * @return {FieldConfiguration[]}
+   */
+  objectTypeVersionsAsFieldConfigurations(): FieldConfiguration[] {
+    return this.objectTypeVersions.map((objectTypeVersion: ObjectTypeVersion) => {
+      const objectType = this.objectTypes.find((o) => o.url === objectTypeVersion.objectType);
+
+      const choices = Object
+        .keys(objectTypeVersion.jsonSchema.properties)
+        .map((propertyName): Choice => ({
+          label: propertyName,
+          value: propertyName,
+        }));
+
+      return {
+        activeWhen: (formGroup) => formGroup.getRawValue().objectType?.indexOf(objectType.uuid) > -1,  // Only active when the matching object type is selected.
+        choices: choices,
+        label: 'Eigenschap',
+        name: `property`,
+        key: `${objectType.uuid}.property`,
+        required: false,
+        value: choices[0].value,
+      }
+    });
+  }
 
   //
   // Events.
   //
 
   /**
-   * Gers called when form is submitted.
+   * Gets called when form is submitted.
    * @param {Object} data
    */
   submitForm(data): void {
@@ -114,7 +244,7 @@ export class ZaakObjectSearchFormComponent {
     this.zaakObjects = [];
     this.showZaakObjecten = true;
 
-    this.zaakObjectService.searchObjects(geometry, data.query).subscribe(
+    this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
       (zaakObjects: ZaakObject[]) => this.zaakObjects = zaakObjects,
       this.reportError.bind(this),
     );

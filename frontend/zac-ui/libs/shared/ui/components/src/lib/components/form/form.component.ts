@@ -30,9 +30,11 @@ export class FormComponent implements OnInit {
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
+  @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() showEditOnHover: boolean;
 
+  @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
 
   /**
@@ -95,6 +97,14 @@ export class FormComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    this.getContextData();
+  }
+
+  //
+  // Context.
+  //
+
+  getContextData(): void {
     if (this.editable === 'toggle') {
       this.edit = false;
     } else {
@@ -102,20 +112,17 @@ export class FormComponent implements OnInit {
     }
 
     this.resolvedKeys = this.keys || this.formService.keysFromForm(this.form);
-    this.formGroup = this.formService.objectToFormGroup(this.form, this.resolvedKeys);
+    this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
     this.fields = this.getFields();
   }
-
-  //
-  // Context.
-  //
 
   /**
    * Returns the form fields.
    * @return {Field[]}
    */
   getFields(): Field[] {
-    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit);
+    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit)
+      .filter(this.formService.isFieldActive.bind(this, this.formGroup));  // Evalutate activeWhen.
   }
 
   //
@@ -138,22 +145,36 @@ export class FormComponent implements OnInit {
   }
 
   /**
+   * Gets called when input is changed.
+   */
+  inputChanged() {
+    this.fields = this.getFields();
+    this.formChange.emit(this.formGroup.getRawValue())
+  }
+
+  /**
    * Gets called when select is changed.
    * @param {Choice} choice
    * @param {Field} field
    */
   selectChanged(choice: Choice, field: Field): void {
-    field.control.markAsDirty()
-    field.control.markAsTouched()
+    field.control.markAsDirty();
+    field.control.markAsTouched();
+    this.fields = this.getFields();
+    this.formChange.emit(this.formGroup.getRawValue())
   }
 
 
   /**
+   * Serializes data and emits this.formSubmit.
    * Gets called when form is submitted.
    */
   _formSubmit(): void {
-    this.formSubmit.emit(this.formGroup.getRawValue())
-    this.formGroup.reset();
-  }
+    const data = this.formService.serializeForm(this.formGroup, this.form, this.resolvedKeys);
+    this.formSubmit.emit(data)
 
+    if (this.resetAfterSubmit) {
+      this.formGroup.reset();
+    }
+  }
 }
