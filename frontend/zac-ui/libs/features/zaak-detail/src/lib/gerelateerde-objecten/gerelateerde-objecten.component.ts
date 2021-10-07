@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
-import {ObjectType, RowData, Table, ZaakObject, ZaakObjectGroup} from '@gu/models';
+import {ObjectType, ObjectTypeVersion, RowData, Table, ZaakObject, ZaakObjectGroup} from '@gu/models';
 import {ZaakObjectService, ZaakService} from '@gu/services';
 
 /**
@@ -80,8 +80,8 @@ export class GerelateerdeObjectenComponent implements OnInit {
       /* Use the latest version of the ObjectType to make the table headers */
       const latestZaakObjectGroup = group.items[0];
       const latestZaakObjectGroupType = latestZaakObjectGroup.type as ObjectType;
-      const objectProperties: [] = latestZaakObjectGroupType.versions[latestZaakObjectGroupType.versions?.length - 1]
-        .jsonSchema.required;
+      const objectTypeVersion = latestZaakObjectGroupType.versions[latestZaakObjectGroupType.versions?.length - 1] as ObjectTypeVersion
+      const objectProperties = objectTypeVersion.jsonSchema.required;
 
       const tableHead: string[] = [
         ...objectProperties.filter((property): boolean => property !== 'objectid'),
