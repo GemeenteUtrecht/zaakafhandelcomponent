@@ -140,7 +140,10 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
     this.objectsService.listObjectTypes().subscribe(
       this.getObjectTypesContext.bind(this),
-      this.reportError.bind(this),
+      (error) => {
+        this.reportError(error)
+        this.isLoading = false;
+      }
     )
   }
 
