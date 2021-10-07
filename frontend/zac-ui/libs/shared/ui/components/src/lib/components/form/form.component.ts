@@ -30,6 +30,7 @@ export class FormComponent implements OnInit {
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
+  @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() showEditOnHover: boolean;
 
@@ -171,6 +172,9 @@ export class FormComponent implements OnInit {
   _formSubmit(): void {
     const data = this.formService.serializeForm(this.formGroup, this.form, this.resolvedKeys);
     this.formSubmit.emit(data)
-    // this.formGroup.reset();  // TODO: Do we want this?
+
+    if (this.resetAfterSubmit) {
+      this.formGroup.reset();
+    }
   }
 }
