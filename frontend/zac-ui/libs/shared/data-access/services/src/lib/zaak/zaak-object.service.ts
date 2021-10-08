@@ -1,7 +1,7 @@
 import {HttpParams} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Geometry, ObjectType, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
+import {Geometry, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
 import {ApplicationHttpClient} from '@gu/services';
 
 @Injectable({

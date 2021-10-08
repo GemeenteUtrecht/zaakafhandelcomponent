@@ -47,7 +47,18 @@
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold">{{task.name}}</p>
-                <label class="label label--date mb-2">{{task.created | date:'fullDate'}}</label>
+
+                <!-- Double click shows id. -->
+                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                  <ng-container *ngIf="debugTask===task">
+                    Task id: {{task.id}}
+                  </ng-container>
+
+                  <ng-container *ngIf="debugTask!==task">
+                    {{task.created | date:'fullDate'}}
+                  </ng-container>
+                </label>
+
               </div>
 
               <!-- Actions -->
@@ -70,7 +81,18 @@
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
-                <label class="label label--date mb-2">{{task.created | date:'fullDate'}}</label>
+
+                <!-- Double click shows id. -->
+                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                  <ng-container *ngIf="debugTask===task">
+                    Task id: {{task.id}}
+                  </ng-container>
+
+                  <ng-container *ngIf="debugTask!==task">
+                    {{task.created | date:'fullDate'}}
+                  </ng-container>
+                </label>
+
                 <div class="d-flex flex-column justify-content-center" *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                   <button gu-button class="mb-2" buttonStyle="action-link" (click)="executeTask(task.id)">
                     Behandelen

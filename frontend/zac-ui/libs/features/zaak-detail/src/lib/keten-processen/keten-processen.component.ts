@@ -37,6 +37,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   allTaskData: Task[];
   processInstanceId: string;
 
+  debugTask: Task = null;
+
   isExpanded = false;
   isLoading = true;
   hasError: boolean;
@@ -209,5 +211,21 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   closeModal(): void {
     this.modalService.close('ketenprocessenModal');
     this.fetchProcesses()
+  }
+
+  //
+  // Events.
+  //
+
+  /**
+   * Gets called when a task date label is double clicked.
+   * @param task
+   */
+  taskDblClick(task) {
+    if(this.debugTask) {
+      this.debugTask = null;
+      return;
+    }
+    this.debugTask = task;
   }
 }
