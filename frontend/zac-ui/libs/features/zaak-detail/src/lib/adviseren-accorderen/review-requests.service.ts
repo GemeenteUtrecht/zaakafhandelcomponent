@@ -14,7 +14,7 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
   APPROVED: {
     icon: 'done',
     iconColor: 'green',
-    label: 'Akoord',
+    label: 'Akkoord',
     value: 'Akkoord',  // As in API response.
   },
 
