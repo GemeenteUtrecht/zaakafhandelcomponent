@@ -1,8 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {ZaakPermission, UserPermission, Table} from '@gu/models';
 import {ZaakService} from "@gu/services";
-import {TableButtonClickEvent} from '../../../../../shared/ui/components/src/lib/components/table/table';
 import {PermissionsService} from './permissions.service';
+import {TableButtonClickEvent} from '@gu/components';
 
 
 /**
