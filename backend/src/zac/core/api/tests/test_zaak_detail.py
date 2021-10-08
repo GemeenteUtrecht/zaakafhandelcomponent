@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.urls import reverse
 
 import requests_mock
@@ -235,6 +236,40 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
         self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "because")
+
+    def test_update_zaak_invalid_cache(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        # populate cache
+        get_response = self.client.get(self.detail_url)
+
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        cache_find_key = (
+            f"zaak:{self.zaak['bronorganisatie']}:{self.zaak['identificatie']}"
+        )
+        self.assertIsNotNone(cache.get(cache_find_key))
+
+        # patch
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "einddatum": "2021-01-01",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "reden": "because",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        #  cache is cleaned
+        self.assertIsNone(cache.get(cache_find_key))
 
     @freeze_time("2020-12-26T12:00:00Z")
     def test_change_invalid(self, m):

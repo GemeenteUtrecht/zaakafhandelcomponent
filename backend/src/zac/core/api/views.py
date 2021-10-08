@@ -246,6 +246,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
             url=zaak.url,
             request_kwargs={"headers": {"X-Audit-Toelichting": reden}},
         )
+        invalidate_zaak_cache(zaak=zaak)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
