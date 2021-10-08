@@ -2,8 +2,12 @@ from django.forms.utils import ErrorList
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.views import exception_handler as drf_exception_handler
+
+
+class ServiceConfigError(APIException):
+    default_detail = _("A service is not configured")
 
 
 def get_error_list(errors):
