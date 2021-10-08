@@ -81,6 +81,10 @@ export class KetenProcessenService {
    * @returns {Task[]}
    */
   mergeTaskData(ketenProcessenData: KetenProcessen[]): Task[] {
+    if(!ketenProcessenData.length) {
+      return []
+    }
+
     const mainTasksArray = ketenProcessenData[0].tasks;
     const subTasksArray = [];
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
