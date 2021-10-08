@@ -1,4 +1,5 @@
 import {AbstractControl, FormGroup} from '@angular/forms';
+import {FormService} from './form.service';
 
 /**
  * Choices of a select field.
@@ -96,8 +97,9 @@ export class Field {
   constructor(fieldConfiguration: FieldConfiguration) {
     Object.assign(this, fieldConfiguration);
 
-    this.label = fieldConfiguration.label || fieldConfiguration.name;
-    this.label = this.label.charAt(0).toUpperCase() + this.label.slice(1)
+    const label = fieldConfiguration.label || fieldConfiguration.name;
+    this.label = label.charAt(0).toUpperCase() + label.slice(1)
+    this.name = new FormService().nameFromFieldConfiguration(fieldConfiguration);
 
     this.widgetType = this.getWidgetType(fieldConfiguration);
   }
