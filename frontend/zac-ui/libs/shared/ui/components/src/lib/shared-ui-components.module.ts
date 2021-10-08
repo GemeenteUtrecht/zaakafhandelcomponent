@@ -40,6 +40,7 @@ import {SuccessComponent} from './components/success/success.component';
 import {ModalComponent} from './components/modal/modal.component';
 import {DatepickerComponent} from './components/datepicker/datepicker.component';
 import {TableComponent} from './components/table/table.component';
+export {TableButtonClickEvent} from './components/table/table';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
