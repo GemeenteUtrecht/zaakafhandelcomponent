@@ -93,6 +93,7 @@ export class InformatieComponent implements OnInit, OnChanges {
         label: 'Omschrijving',
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
+        required: true,
         value: this.zaak.omschrijving,
       },
       {
