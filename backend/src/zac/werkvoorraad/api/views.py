@@ -1,5 +1,6 @@
 from typing import List
 
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext as _
 
 from drf_spectacular.utils import extend_schema
@@ -44,15 +45,18 @@ class WorkStackAccessRequestsView(ListAPIView):
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
-@extend_schema(summary=_("List adhoc activities"))
+@extend_schema(summary=_("List adhoc activities by user"))
 class WorkStackAdhocActivitiesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackAdhocActivitiesSerializer
     filter_backends = ()
 
+    def get_activity_groups(self):
+        return Activity.objects.as_user_werkvoorraad(user=self.request.user)
+
     def get_queryset(self):
-        activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
+        activity_groups = self.get_activity_groups()
 
         def set_zaak(group):
             try:
@@ -70,6 +74,13 @@ class WorkStackAdhocActivitiesView(ListAPIView):
             ActivityGroup(**group) for group in activity_groups if "zaak" in group
         ]
         return groups
+
+
+@extend_schema(summary=_("List adhoc activities by the groups of a user"))
+class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
+    def get_activity_groups(self):
+        groups = list(Group.objects.filter(user=self.request.user))
+        return Activity.objects.as_group_werkvoorraad(groups=groups)
 
 
 @extend_schema(

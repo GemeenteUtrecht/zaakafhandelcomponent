@@ -41,7 +41,7 @@ class WorkStackAccessRequestsSerializer(APIModelSerializer):
 class ActivityNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("name",)
+        fields = ("name", "group_assignee")
 
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
