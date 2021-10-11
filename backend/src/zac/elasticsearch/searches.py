@@ -20,18 +20,6 @@ from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
 
-SUPPORTED_QUERY_PARAMS = (
-    "identificatie",
-    "bronorganisatie",
-    "omschrijving",
-    "zaaktypen",
-    "behandelaar",
-    "eigenschappen",
-    "object",
-    "ordering",
-    "fields",
-)
-
 
 def query_allowed_for_user(
     user: User,

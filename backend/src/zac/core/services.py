@@ -34,13 +34,13 @@ from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
-from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
+from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zgw.models import Zaak
 
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
-from .rollen import Rol, get_naam_medewerker
+from .rollen import Rol
 
 logger = logging.getLogger(__name__)
 
@@ -307,53 +307,6 @@ def _find_zaken(
         minimum=minimum,
     )
     return _zaken
-
-
-def get_zaken_es(
-    user: Optional[User] = None,
-    size=None,
-    query_params=None,
-    only_allowed=True,
-) -> List[Zaak]:
-    """
-    Fetch all zaken from the ZRCs.
-
-    Only retrieve what the user is allowed to see.
-    """
-    find_kwargs = query_params or {}
-    # validate query params
-    not_supported_params = set(find_kwargs.keys()) - set(SUPPORTED_QUERY_PARAMS)
-    if not_supported_params:
-        raise ValueError(
-            "{} parameters are not supported for ES-based search".format(
-                not_supported_params
-            )
-        )
-
-    if only_allowed and not user:
-        raise ValueError("'user' parameter is required when 'only_allowed=True'")
-
-    # ES search
-    es_results = search(user=user, size=size, only_allowed=only_allowed, **find_kwargs)
-
-    if not es_results:
-        return []
-
-    def _get_zaak(zaak_url):
-        return get_zaak(zaak_url=zaak_url)
-
-    with parallel(max_workers=10) as executor:
-        results = executor.map(_get_zaak, [hit.url for hit in es_results])
-        zaken = list(results)
-
-    # resolve zaaktype reference
-    # todo only fetch zaaktypen from search results
-    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
-
-    for zaak in zaken:
-        zaak.zaaktype = zaaktypen[zaak.zaaktype]
-
-    return zaken
 
 
 def get_zaken_all_paginated(
@@ -786,18 +739,6 @@ def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Sta
 
     invalidate_zaak_cache(zaak)
     return status
-
-
-def get_behandelaar_zaken(user: User, ordering: Optional[List] = None) -> List[Zaak]:
-    """
-    Retrieve zaken where `user` is a medewerker in the role of behandelaar.
-    """
-    ordering = ordering or []
-    medewerker_id = user.username
-    behandelaar_zaken = get_zaken_es(
-        user=user, query_params={"behandelaar": medewerker_id, "ordering": ordering}
-    )
-    return behandelaar_zaken
 
 
 def get_rollen_all(**query_params) -> List[Rol]:

@@ -5,18 +5,16 @@ from django.utils.translation import gettext as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.generics import ListAPIView
-from zds_client import ClientError
 from zgw_consumers.concurrent import parallel
 
-from zac.activities.models import Activity
-from zac.api.context import get_zaak_context
+from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.core.api.permissions import CanHandleAccessRequests
-from zac.core.api.serializers import ZaakDetailSerializer
-from zac.core.services import get_zaak
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
+from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
+from zac.elasticsearch.searches import search
 
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 from .serializers import (
@@ -26,7 +24,7 @@ from .serializers import (
 )
 from .utils import (
     get_access_requests_groups,
-    get_behandelaar_zaken_unfinished,
+    get_activity_groups,
     get_camunda_group_tasks,
     get_camunda_user_tasks,
 )
@@ -52,24 +50,8 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     filter_backends = ()
 
     def get_queryset(self):
-        activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
-
-        def set_zaak(group):
-            try:
-                group["zaak"] = get_zaak(zaak_url=group["zaak_url"])
-            except ClientError as exc:
-                if exc.args[0]["status"] == 404:  # zaak deleted / no longer exists
-                    return
-                raise
-
-        with parallel() as executor:
-            for activity_group in activity_groups:
-                executor.submit(set_zaak, activity_group)
-
-        groups = [
-            ActivityGroup(**group) for group in activity_groups if "zaak" in group
-        ]
-        return groups
+        activity_groups = get_activity_groups(self.request.user)
+        return [ActivityGroup(**group) for group in activity_groups if "zaak" in group]
 
 
 @extend_schema(
@@ -79,25 +61,24 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ZaakDetailSerializer
+    serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
     ordering = ("-deadline",)
 
     def get_queryset(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
-        unfinished_zaken = get_behandelaar_zaken_unfinished(
-            self.request.user,
+        zaken = search(
+            user=self.request.user,
+            behandelaar=self.request.user.username,
             ordering=ordering,
         )
-        # TODO: Add support for resultaat in ES
-        for zaak in unfinished_zaken:
-            zaak.resultaat = None
+        unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
         return unfinished_zaken
 
 
 @extend_schema(summary=_("List user tasks"))
 class WorkStackUserTasksView(ListAPIView):
-    authentication_classes = (authentication.SessionAuthentication,)
+    # authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()
@@ -108,12 +89,20 @@ class WorkStackUserTasksView(ListAPIView):
     def get_queryset(self):
         tasks = self.get_camunda_tasks()
         with parallel() as executor:
-            zaken_context = executor.map(get_zaak_context, tasks)
+            task_ids_and_zaak_urls = list(
+                executor.map(get_zaak_url_from_context, tasks)
+            )
 
-        return [
-            TaskAndCase(task=task, zaak=zaak_context.zaak)
-            for task, zaak_context in zip(tasks, zaken_context)
-        ]
+        zaken = {
+            zaak.url: zaak
+            for zaak in search(
+                user=self.request.user,
+                urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
+            )
+        }
+        task_zaken = {tzu[0]: zaken.get(tzu[1]) for tzu in task_ids_and_zaak_urls}
+
+        return [TaskAndCase(task=task, zaak=task_zaken[task.id]) for task in tasks]
 
 
 @extend_schema(summary=_("List user tasks assigned to groups related to user"))

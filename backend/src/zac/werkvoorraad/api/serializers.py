@@ -6,7 +6,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.camunda.api.serializers import TaskSerializer
-from zac.core.api.serializers import ZaakSerializer
+from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
 
@@ -28,7 +28,7 @@ class AccessRequestSerializer(serializers.ModelSerializer):
 
 class WorkStackAccessRequestsSerializer(APIModelSerializer):
     access_requests = AccessRequestSerializer(many=True)
-    zaak = ZaakSerializer()
+    zaak = ZaakDocumentSerializer()
 
     class Meta:
         model = AccessRequestGroup
@@ -46,7 +46,7 @@ class ActivityNameSerializer(serializers.ModelSerializer):
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
     activities = ActivityNameSerializer(many=True)
-    zaak = ZaakSerializer()
+    zaak = ZaakDocumentSerializer()
 
     class Meta:
         model = ActivityGroup
@@ -58,7 +58,7 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
 
 class WorkStackTaskSerializer(APIModelSerializer):
     task = TaskSerializer()
-    zaak = ZaakSerializer()
+    zaak = ZaakDocumentSerializer()
 
     class Meta:
         model = TaskAndCase

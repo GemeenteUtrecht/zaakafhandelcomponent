@@ -2,22 +2,16 @@ from django.test import TestCase
 
 import requests_mock
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.constants import (
-    RolOmschrijving,
-    RolTypes,
-    VertrouwelijkheidsAanduidingen,
-)
+from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import UserFactory
 from zac.contrib.brp.models import BRPConfig
-from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
-from ..services import get_rollen, get_zaken_es
+from ..services import get_rollen
 from .utils import ClearCachesMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -149,22 +143,3 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
         rol = rollen[0]
         self.assertEqual(rol.get_name(), "Janneke de Vries")
         self.assertEqual(rol.get_identificatie(), BSN2)
-
-
-class GetZakenTests(ESMixin, ClearCachesMixin, TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-
-        cls.user = UserFactory.create()
-
-    def test_get_zaken_with_unsupported_params(self):
-        query_params = {"max_va": VertrouwelijkheidsAanduidingen.openbaar}
-
-        self.assertRaises(
-            ValueError,
-            get_zaken_es,
-            user=self.user,
-            query_params=query_params,
-        )

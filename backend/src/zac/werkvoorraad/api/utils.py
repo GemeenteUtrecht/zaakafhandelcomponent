@@ -6,20 +6,13 @@ from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
+from zac.activities.models import Activity
 from zac.camunda.data import Task
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
-from zac.core.services import get_behandelaar_zaken
-from zgw.models.zrc import Zaak
+from zac.elasticsearch.searches import search
 
-
-def get_behandelaar_zaken_unfinished(user: User, ordering: List = []) -> List[Zaak]:
-    """
-    Retrieve the un-finished zaken where `user` is a medewerker in the role of behandelaar.
-    """
-    zaken = get_behandelaar_zaken(user, ordering=ordering)
-    unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-    return unfinished_zaken
+from .data import ActivityGroup
 
 
 def get_camunda_user_tasks(user: User) -> List[Task]:
@@ -57,7 +50,9 @@ def get_access_requests_groups(user: User):
     if not user.has_perm(zaken_handle_access.name):
         return []
 
-    behandelaar_zaken = {zaak.url: zaak for zaak in get_behandelaar_zaken(user)}
+    behandelaar_zaken = {
+        zaak.url: zaak for zaak in search(user=user, behandelaar=user.username)
+    }
     access_requests = AccessRequest.objects.filter(
         result="", zaak__in=list(behandelaar_zaken.keys())
     ).order_by("zaak", "requester__username")
@@ -72,3 +67,18 @@ def get_access_requests_groups(user: User):
             }
         )
     return requested_zaken
+
+
+def get_activity_groups(user: User) -> List[ActivityGroup]:
+    # if user doesn't have a permission to handle access requests - don't show them
+    if not user.has_perm(zaken_handle_access.name):
+        return []
+
+    activity_groups = Activity.objects.as_werkvoorraad(user=user)
+    zaak_urls = list({activity_group["zaak_url"] for activity_group in activity_groups})
+    es_results = search(user=user, urls=zaak_urls)
+    zaken = {zaak.url: zaak for zaak in es_results}
+    for activity_group in activity_groups:
+        activity_group["zaak"] = zaken.get(activity_group["zaak_url"])
+
+    return activity_groups
