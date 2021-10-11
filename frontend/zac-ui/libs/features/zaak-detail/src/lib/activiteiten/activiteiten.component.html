@@ -32,15 +32,12 @@
               </button>
               <button gu-button
                       buttonStyle="tertiary"
-                      (click)="showAddActivityButton = false; hasError = false;">
+                      (click)="showAddActivityButton = false">
                 Sluiten
               </button>
             </div>
           </div>
         </div>
-      </div>
-      <div *ngIf="hasError" class="d-flex mb-4">
-        <gu-message [message]="errorMessage" type="warn"></gu-message>
       </div>
     </form>
   </div>

@@ -7,6 +7,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { Result } from '../../models/user-search';
 import {Document} from '@gu/models';
 import { UserGroupResult } from '../../models/user-group-search';
+import { SnackbarService } from '@gu/components';
 
 /**
  * This component allows the user to set and edit activities.
@@ -40,7 +41,6 @@ export class ActiviteitenComponent implements OnInit {
   finishedData: Activity[] = [];
 
   isLoading: boolean;
-  hasError: boolean;
   errorMessage: string;
   openNoteEditField: number;
   openAssigneeEditField: number;
@@ -60,6 +60,7 @@ export class ActiviteitenComponent implements OnInit {
   isFetchingDocuments: boolean;
 
   constructor(private actvititeitenService: ActiviteitenService,
+              private snackbarService: SnackbarService,
               private fb: FormBuilder) { }
 
   //
@@ -187,7 +188,10 @@ export class ActiviteitenComponent implements OnInit {
   onSearchAccounts(searchInput) {
     this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
       this.users = res.results;
-    })
+    }, error => {
+      console.error(error);
+      this.reportError(error)
+    });
   }
 
 
@@ -198,7 +202,10 @@ export class ActiviteitenComponent implements OnInit {
   onSearchUserGroups(searchInput) {
     this.actvititeitenService.getUserGroups(searchInput).subscribe(res => {
       this.userGroups = res.results;
-    })
+    }, error => {
+      console.error(error);
+      this.reportError(error)
+    });
   }
 
   /**
@@ -261,7 +268,6 @@ export class ActiviteitenComponent implements OnInit {
    * Create new activity.
    */
   createNewActivity() {
-    this.hasError = false;
     this.isSubmitting = true;
     const formData = {
       zaak: this.mainZaakUrl,
@@ -277,7 +283,7 @@ export class ActiviteitenComponent implements OnInit {
     }, res =>  {
       this.isSubmitting = false;
       this.addActivityForm.reset();
-      this.setError(res)
+      this.reportError(res)
     })
   }
 
@@ -298,7 +304,7 @@ export class ActiviteitenComponent implements OnInit {
       this.openNoteEditField = null;
       this.fetchActivities();
     }, res =>  {
-      this.setError(res)
+      this.reportError(res)
     })
   }
 
@@ -336,7 +342,7 @@ export class ActiviteitenComponent implements OnInit {
       this.openAssigneeEditField = null;
       this.fetchActivities();
     }, res =>  {
-      this.setError(res);
+      this.reportError(res);
     })
   }
 
@@ -355,7 +361,7 @@ export class ActiviteitenComponent implements OnInit {
       this.fetchActivities();
     }, res =>  {
       this.showCloseActivityConfirmation = null;
-      this.setError(res);
+      this.reportError(res);
     })
   }
 
@@ -371,7 +377,7 @@ export class ActiviteitenComponent implements OnInit {
       this.fetchActivities();
     }, res =>  {
       this.showDeleteActivityConfirmation = null;
-      this.setError(res);
+      this.reportError(res);
     })
   }
 
@@ -389,7 +395,7 @@ export class ActiviteitenComponent implements OnInit {
       this.fetchActivities();
     }, res =>  {
       this.openDocumentUploadForm = null;
-      this.setError(res);
+      this.reportError(res);
     })
   }
 
@@ -411,10 +417,11 @@ export class ActiviteitenComponent implements OnInit {
    * Error callback.
    * @param res
    */
-  setError(res) {
-    this.hasError = true;
+  reportError(res) {
     this.errorMessage = res.error?.detail ? res.error.detail :
       res.error?.nonFieldErrors ? res.error.nonFieldErrors[0] : "Er is een fout opgetreden."
     this.isLoading = false;
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(res);
   }
 }
