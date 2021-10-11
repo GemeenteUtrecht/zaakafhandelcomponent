@@ -3,7 +3,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
-import { FileUploadComponent, ModalService } from '@gu/components';
+import {FileUploadComponent, ModalService, SnackbarService} from '@gu/components';
 import { Document } from '@gu/models';
 
 @Component({
@@ -24,6 +24,8 @@ export class DocumentToevoegenComponent implements OnInit {
   @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
   @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 
+  readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van documenten.';
+
   documentTypes: any;
   addDocumentForm: FormGroup;
   isLoading: boolean;
@@ -32,7 +34,8 @@ export class DocumentToevoegenComponent implements OnInit {
   constructor(
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private snackbarService: SnackbarService
   ) { }
 
   ngOnInit() {
@@ -126,15 +129,27 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   postDocument(formData: FormData): Observable<Document> {
-    return this.http.Post<any>(encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/document`), formData);
+    return this.http.Post<any>(encodeURI('/api/core/cases/document'), formData);
   }
 
   patchDocument(formData: FormData): Observable<any> {
-    return this.http.Patch<any>(encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/document`), formData);
+    return this.http.Patch<any>(encodeURI('/api/core/cases/document'), formData);
   }
 
   async handleFileSelect(file: File) {
     this.addDocumentForm.controls['documentFile'].setValue(file);
   }
 
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
+  }
 }
