@@ -1,39 +1,75 @@
 <div class="gu-assign-task" *ngIf="taskData">
-  <h2>Toewijzen {{taskData.name}}</h2>
-  <p>Je kunt de taak op je eigen naam zetten.</p>
-  <button gu-button
-          class="d-block mb-4"
-          [disabled]="isSubmitting"
-          [loading]="isSubmitting"
-          buttonStyle="primary"
-          (click)="assignSelf()">
-    Zelf toewijzen
-  </button>
-  <hr class="mb-4">
-  <h3>Kies een collega voor deze taak</h3>
-  <form [formGroup]="assignTaskForm" *ngIf="!submitSuccess">
-    <div class="form-group">
-      <p class="mb-2">Kies een collega die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De gekozen collega krijgt de taak in zijn of haar werkvoorraad te zien.</p>
-      <gu-multiselect (search)="onSearch($event)"
-                      [items]="users"
-                      [multiple]="false"
-                      [control]="assignee"
-                      bindLabel="fullName"
-                      bindValue="username"
-                      required
-                      placeholder="Zoek een collega">
-      </gu-multiselect>
-    </div>
-    <div class="d-flex justify-content-end">
-      <button gu-button
-              [disabled]="!assignTaskForm.valid || isSubmitting"
-              [loading]="isSubmitting"
-              buttonStyle="primary"
-              size="large"
-              (click)="submitForm()">
-        Collega toewijzen
-      </button>
-    </div>
-    <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
-  </form>
+  <p>Kies een collega of gebruikersgroep voor deze taak. Je kunt ook de taak aan jezelf toewijzen.</p>
+  <gu-tab-group [selectedIndex]="0">
+    <!-- Collega form -->
+    <gu-tab label="Collega">
+      <div class="p-4">
+        <form [formGroup]="assignUserForm" *ngIf="!submitSuccess">
+          <div class="form-group">
+            <p class="mb-2">Kies een collega die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De gekozen collega krijgt de taak in zijn of haar werkvoorraad te zien.</p>
+            <gu-multiselect (search)="onSearchAccounts($event)"
+                            [items]="users"
+                            [multiple]="false"
+                            [control]="assigneeUserControl"
+                            bindLabel="fullName"
+                            bindValue="username"
+                            required
+                            placeholder="Zoek een collega">
+            </gu-multiselect>
+          </div>
+          <button gu-button
+                  [disabled]="!assignUserForm.valid || isSubmitting"
+                  [loading]="isSubmitting"
+                  buttonStyle="primary"
+                  (click)="submitForm('user')">
+            Collega toewijzen
+          </button>
+          <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
+        </form>
+      </div>
+    </gu-tab>
+
+    <!-- Gebruikersgroep form -->
+    <gu-tab label="Groep">
+      <div class="p-4">
+        <form [formGroup]="assignUserGroupForm" *ngIf="!submitSuccess">
+          <div class="form-group">
+            <p class="mb-2">Kies een groep die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De collega's in de gekozen gebruikersgroep krijgen de taak in zijn of haar werkvoorraad te zien.</p>
+            <gu-multiselect (search)="onSearchUserGroups($event)"
+                            [items]="userGroups"
+                            [multiple]="false"
+                            [control]="assigneeUserGroupControl"
+                            bindLabel="name"
+                            bindValue="name"
+                            required
+                            placeholder="Zoek een groep">
+            </gu-multiselect>
+          </div>
+          <button gu-button
+                  [disabled]="!assignUserGroupForm.valid || isSubmitting"
+                  [loading]="isSubmitting"
+                  buttonStyle="primary"
+                  (click)="submitForm('userGroup')">
+            Groep toewijzen
+          </button>
+          <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
+        </form>
+      </div>
+    </gu-tab>
+
+    <!-- Zelf toewijzen form -->
+    <gu-tab label="Zelf">
+      <div class="p-4">
+        <p>De taak op je eigen naam zetten.</p>
+        <button gu-button
+                class="d-block mb-4"
+                [disabled]="isSubmitting"
+                [loading]="isSubmitting"
+                buttonStyle="primary"
+                (click)="assignSelf()">
+          Zelf toewijzen
+        </button>
+      </div>
+    </gu-tab>
+  </gu-tab-group>
 </div>
