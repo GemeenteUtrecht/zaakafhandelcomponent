@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
+from uuid import UUID
 
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.documenten import Document
@@ -19,11 +20,16 @@ class ZaakContext(Context):
     zaaktype: Optional[ZaakType] = None
 
 
+def get_zaak_url_from_context(task: Task) -> Tuple[UUID, str]:
+    process_instance = get_process_instance(task.process_instance_id)
+    zaak_url = get_process_zaak_url(process_instance)
+    return task.id, zaak_url
+
+
 def get_zaak_context(
     task: Task, require_zaaktype: bool = False, require_documents: bool = False
 ) -> ZaakContext:
-    process_instance = get_process_instance(task.process_instance_id)
-    zaak_url = get_process_zaak_url(process_instance)
+    task_pid, zaak_url = get_zaak_url_from_context(task)
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype) if require_zaaktype else None
     docs_context = get_documenten(zaak) if require_documents else (None, None)
