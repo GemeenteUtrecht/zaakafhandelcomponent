@@ -13,13 +13,13 @@ import { AuthInterceptor } from './helpers/auth.interceptor';
 import { SharedUiComponentsModule } from '@gu/components';
 
 import { AppComponent } from './app.component';
-import { HomeComponent } from './components/home/home.component';
 
 import { KownslModule } from './components/kownsl/kownsl.module';
 import { ZakenModule } from './components/zaken/zaken.module';
 import { WorkstackModule } from './components/workstack/workstack.module';
 import { ZaakSelectModule } from '@gu/search';
 import { AuthProfilesModule } from './components/auth-profiles/auth-profiles.module';
+import { DashboardModule } from './components/dashboard/dashboard.module';
 
 
 registerLocaleData(localeNL);
@@ -27,23 +27,23 @@ registerLocaleData(localeNL);
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent
   ],
   imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
     AppRoutingModule,
+    AuthProfilesModule,
+    BrowserAnimationsModule,
+    BrowserModule,
+    DashboardModule,
     HttpClientModule,
     HttpClientXsrfModule.withOptions({
       cookieName: 'csrftoken',
       headerName: 'X-CSRFToken',
     }),
-    SharedUiComponentsModule,
     KownslModule,
-    ZakenModule,
+    SharedUiComponentsModule,
     WorkstackModule,
     ZaakSelectModule,
-    AuthProfilesModule
+    ZakenModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

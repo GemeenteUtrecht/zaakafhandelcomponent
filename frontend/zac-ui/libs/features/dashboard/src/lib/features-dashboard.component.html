@@ -1,0 +1,112 @@
+<div class="dashboard">
+  <form [formGroup]="dashboardForm">
+    <div class="d-flex flex-column flex-lg-row">
+      <h1>Dashboard</h1>
+      <div class="col-xl-4 col-md-6">
+        <div class="form-group">
+
+          <!-- Select dashboard -->
+          <gu-multiselect *ngIf="boards"
+                          [control]="selectedBoardControl"
+                          (change)="onBoardSelect()"
+                          [selectedValue]="selectedBoardControl.value"
+                          [searchable]="true"
+                          [items]="boards"
+                          [multiple]="false"
+                          bindLabel="name"
+                          bindValue="slug"
+                          label="Selecteer een dashboard">
+          </gu-multiselect>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add case to dashboard -->
+    <div class="dashboard__add-case mb-3" *ngIf="columns && boardItems">
+
+      <!-- Add case to dashboard button -->
+      <button *ngIf="!openAddItem" gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openAddItem = true">Zaak toevoegen</button>
+
+      <!-- Add case to dashboard form -->
+      <ng-container *ngIf="openAddItem">
+        <div class="col-xl-4 col-md-6 card">
+          <p class="p--bold">Voeg een zaak toe aan het dashboard</p>
+          <gu-zaak-select
+            class="d-block mb-2"
+            placeholder="Zoek zaaknummer"
+            role="searchbox"
+            (change)="selectCase($event)"
+          ></gu-zaak-select>
+          <div class="d-flex justify-content-between">
+            <button gu-button (click)="openAddItem = null"
+                    buttonStyle="tertiary"
+                    size="small">
+              Sluiten
+            </button>
+            <button gu-button (click)="createBoardItem()"
+                    [disabled]="!selectedCaseControl.valid"
+                    buttonStyle="primary"
+                    size="small">
+              Zaak toevoegen
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </form>
+
+  <!-- Loading bar -->
+  <div class="dashboard-progress-bar">
+    <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+  </div>
+
+  <!-- Dashboard body -->
+  <div class="dashboard-body" *ngIf="columns && boardItems">
+
+    <!-- Dashboard columns -->
+    <div class="dashboard-column" *ngFor="let column of columns; let columnIndex = index">
+      <div class="dashboard-column__title">
+        <h3>{{column.name}}</h3>
+        <div class="dashboard-column__body">
+
+          <!-- Board items -->
+          <ng-container *ngFor="let boardItem of boardItems">
+            <div class="dashboard-item card mb-2" *ngIf="boardItem.column.slug === column.slug">
+              <div class="dashboard-item__delete-button">
+                <button
+                  gu-button
+                  buttonStyle="tertiary"
+                  size="extrasmall"
+                  icon="delete_outline"
+                  (click)="deleteItem(boardItem)"></button>
+              </div>
+              <label class="label label--date mb-1">{{boardItem.zaak.identificatie}}</label>
+              <p class="p--bold mb-1">{{boardItem.zaak.omschrijving}}</p>
+              <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(boardItem.zaak)">
+                Naar zaak
+              </a>
+
+              <!-- Buttons to move items to another column -->
+              <div class="d-flex justify-content-end">
+                <button
+                  *ngIf="columnIndex > 0"
+                  gu-button
+                  buttonStyle="tertiary"
+                  size="extrasmall"
+                  icon="arrow_back"
+                  (click)="moveItemToLeftColumn(boardItem, columnIndex)"></button>
+                <button
+                  *ngIf="columnIndex < columns.length-1"
+                  gu-button
+                  buttonStyle="tertiary"
+                  size="extrasmall"
+                  icon="arrow_forward"
+                  (click)="moveItemToRightColumn(boardItem, columnIndex)"></button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
