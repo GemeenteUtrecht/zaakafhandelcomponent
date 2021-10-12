@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import List
+from typing import List, Optional
 
 from django.contrib.auth.models import Group
 from django.db import models
@@ -20,22 +20,25 @@ class ActivityQuerySet(models.QuerySet):
             zaken.append({"zaak_url": zaak_url, "activities": list(group)})
         return zaken
 
-    def as_user_werkvoorraad(self, user: User) -> List[dict]:
+    def as_werkvoorraad(
+        self, user: Optional[User] = None, group: Optional[Group] = None
+    ) -> List[dict]:
         """
         Retrieve the on-going activities for a given user.
 
         """
-        qs = self.filter(status=ActivityStatuses.on_going, user_assignee=user).order_by(
-            "zaak", "created"
-        )
-        return self.as_grouped_by_zaak(qs)
+        if not user and not group:
+            qs = self.none()
+            return qs
 
-    def as_groups_werkvoorraad(self, groups: List[Group]) -> List[dict]:
-        """
-        Retrieve the on-going activities for a given group.
+        if user:
+            qs = self.filter(
+                status=ActivityStatuses.on_going, user_assignee=user
+            ).order_by("zaak", "created")
+            return self.as_grouped_by_zaak(qs)
 
-        """
-        qs = self.filter(
-            status=ActivityStatuses.on_going, group_assignee__in=groups
-        ).order_by("zaak", "created")
-        return self.as_grouped_by_zaak(qs)
+        if group:
+            qs = self.filter(
+                status=ActivityStatuses.on_going, group_assignee=group
+            ).order_by("zaak", "created")
+            return self.as_grouped_by_zaak(qs)
