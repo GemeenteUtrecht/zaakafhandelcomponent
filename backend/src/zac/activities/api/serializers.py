@@ -38,6 +38,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = (
+            "created",
             "document",
             "events",
             "group_assignee",
@@ -75,7 +76,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         activity = super().create(validated_data)
         # add permissions to assignee
-        self._add_permissions_for_activity_assignee()
+        self._add_permissions_for_activity_assignee(activity)
         return activity
 
     @transaction.atomic

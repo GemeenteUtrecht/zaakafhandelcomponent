@@ -11,7 +11,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
-from zac.activities.tests.factories import ActivityFactory, EventFactory
+from zac.activities.tests.factories import ActivityFactory
 from zgw.models.zrc import Zaak
 
 from ..api.data import ActivityGroup
