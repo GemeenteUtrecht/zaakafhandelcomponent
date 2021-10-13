@@ -18,9 +18,9 @@ export interface ReviewRequest {
   frontendUrl: string;
   numAdvices: number;
   numApprovals: number;
-  numAssignedUsers: number;
+  numAssignees: number;
   toelichting: string;
-  userDeadlines: any;
+  assigneeDeadlines: any;
   requester: string;
   metadata: Metadata;
   zaakDocuments: ZaakDocument[];
@@ -32,7 +32,7 @@ export interface ReviewRequestSummary {
   id: string,
   reviewType: 'advice' | 'approval',
   completed: number,
-  numAssignedUsers: number,
+  numAssignees: number,
 }
 
 export interface ReviewRequestDetails {
