@@ -21,9 +21,9 @@ class ConvertToJsonTests(TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignedUsers": 1,
+            "numAssignees": 1,
             "toelichting": "Like a flash of light in an endless night.",
-            "userDeadlines": {},
+            "assigneeDeadlines": {},
             "requester": "Henkie",
         }
         advice_data = {
@@ -57,7 +57,7 @@ class ConvertToJsonTests(TestCase):
                     "frontend_url": "https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
                     "num_advices": 1,
                     "num_approvals": 0,
-                    "num_assigned_users": 1,
+                    "num_assignees": 1,
                     "toelichting": "Like a flash of light in an endless night.",
                     "advices": [
                         {
@@ -73,7 +73,7 @@ class ConvertToJsonTests(TestCase):
                             "documents": [],
                         }
                     ],
-                    "user_deadlines": {},
+                    "assignee_deadlines": {},
                     "requester": "Henkie",
                 }
             ],
@@ -89,9 +89,9 @@ class ConvertToJsonTests(TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 0,
             "numApprovals": 1,
-            "numAssignedUsers": 1,
+            "numAssignees": 1,
             "toelichting": "I pity the living, envy for the dead",
-            "userDeadlines": {},
+            "assigneeDeadlines": {},
             "requester": "Henkie",
         }
         approval_data = {
@@ -125,7 +125,7 @@ class ConvertToJsonTests(TestCase):
                     "frontend_url": "https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
                     "num_advices": 0,
                     "num_approvals": 1,
-                    "num_assigned_users": 1,
+                    "num_assignees": 1,
                     "toelichting": "I pity the living, envy for the dead",
                     "approvals": [
                         {
@@ -141,7 +141,7 @@ class ConvertToJsonTests(TestCase):
                             "toelichting": "I don't feel anything.",
                         }
                     ],
-                    "user_deadlines": {},
+                    "assignee_deadlines": {},
                     "requester": "Henkie",
                 }
             ],

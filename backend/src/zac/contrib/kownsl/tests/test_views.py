@@ -27,10 +27,10 @@ REVIEW_REQUEST = {
     "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
     "numAdvices": 1,
     "numApprovals": 0,
-    "numAssignedUsers": 1,
+    "numAssignees": 1,
     "toelichting": "Longing for the past but dreading the future",
-    "userDeadlines": {
-        "some-user": "2020-12-20",
+    "assigneeDeadlines": {
+        "user:some-user": "2020-12-20",
     },
     "requester": "other-user",
     "metadata": {},
