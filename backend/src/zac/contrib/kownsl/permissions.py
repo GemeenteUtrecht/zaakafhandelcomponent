@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from backend.src.zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.constants import AssigneeTypeChoices
 
 
 class IsReviewUser(permissions.BasePermission):
