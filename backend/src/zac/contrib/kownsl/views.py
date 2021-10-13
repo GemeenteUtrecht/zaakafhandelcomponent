@@ -91,7 +91,7 @@ class BaseRequestView(APIView):
     This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
     and post their advice/approval to the kownsl component.
 
-    * Requires that the requesting user is authenticated and found in review_request.user_deadlines
+    * Requires that the requesting user is authenticated and found in review_request.assignee_deadlines
     """
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
@@ -127,7 +127,7 @@ class BaseRequestView(APIView):
         return Response(serializer.data, headers=headers)
 
     def post(self, request, request_uuid):
-        # Check if user is allowed to get and post based on source review request user_deadlines value.
+        # Check if user is allowed to get and post based on source review request assignee_deadlines value.
         self.get_object()
         client = get_client(request.user)
         response = client.create(

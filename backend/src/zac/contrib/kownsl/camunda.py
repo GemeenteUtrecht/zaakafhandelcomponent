@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -12,6 +13,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
@@ -73,50 +75,75 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 
 
 @dataclass
-class SelectUsersRevReq:
-    users: List[str]
+class SelectAssigneesRevReq:
+    user_assignees: List[Optional[User]]
+    group_assignees: List[Optional[Group]]
+    email_notification: bool
     deadline: date
 
 
-class SelectUsersRevReqSerializer(APIModelSerializer):
+class SelectAssigneesRevReqSerializer(APIModelSerializer):
     """
-    Select users and assign deadlines to those users in the configuration of
+    Select users or groups and assign deadlines to those users in the configuration of
     review requests such as the advice and approval review requests.
+
     """
 
-    users = serializers.ListField(child=serializers.CharField())
+    user_assignees = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Users assigned to the review request"),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_("Groups assigned to the review request"),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    email_notification = serializers.BooleanField(
+        required=True,
+        help_text=_("Send an email notification about the review request or not."),
+    )
     deadline = serializers.DateField(
         input_formats=["%Y-%m-%d"],
+        help_text=_("On this date the review must be submitted."),
     )
 
     class Meta:
-        model = SelectUsersRevReq
+        model = SelectAssigneesRevReq
         fields = (
-            "users",
+            "user_assignees",
+            "group_assignees",
+            "email_notification",
             "deadline",
         )
 
-    def validate_users(self, users):
-        """
-        Validates that users are unique and exist.
-        """
-        # Check if users are unique.
-        if len(users) > len(set(users)):
-            raise serializers.ValidationError("Users need to be unique.")
+    def validate_user_assignees(self, user_assignees):
+        if len(user_assignees) > len(set(user_assignees)):
+            raise serializers.ValidationError("Assigned users need to be unique.")
+        return user_assignees
 
-        # Check if users exist.
-        usernames = User.objects.all().values_list("username", flat=True)
-        invalid_usernames = [user for user in users if user not in usernames]
-        if invalid_usernames:
+    def validate_group_assignees(self, group_assignees):
+        if len(group_assignees) > len(set(group_assignees)):
+            raise serializers.ValidationError("Assigned groups need to be unique.")
+        return group_assignees
+
+    def validate(self, attrs):
+        if not attrs["group_assignees"] and not attrs["user_assignees"]:
             raise serializers.ValidationError(
-                f"Users {invalid_usernames} do not exist."
+                "You need to select either a user or a group."
             )
-        return users
+        return attrs
 
 
 @dataclass
 class ConfigureReviewRequest:
-    assigned_users: List[SelectUsersRevReq]
+    assignees: List[SelectAssigneesRevReq]
     selected_documents: List[str]
     toelichting: str
 
@@ -129,7 +156,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     Must have a ``task`` and ``request`` in its ``context``.
     """
 
-    assigned_users = SelectUsersRevReqSerializer(many=True)
+    assignees = SelectAssigneesRevReqSerializer(many=True)
     selected_documents = SelectDocumentsField()
     toelichting = serializers.CharField(
         label=_("Toelichting"),
@@ -139,7 +166,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     class Meta:
         model = ConfigureReviewRequest
         fields = (
-            "assigned_users",
+            "assignees",
             "selected_documents",
             "toelichting",
         )
@@ -148,23 +175,23 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         zaak_context = get_zaak_context(self.context["task"])
         return zaak_context.zaak
 
-    def validate_assigned_users(self, assigned_users) -> List:
+    def validate_assignees(self, assignees) -> List:
         """
         Validate that:
-            assigned users are unique,
-            at least 1 user is selected per step, and
+            assigned users and groups are unique,
+            at least 1 user or group is selected per step, and
             deadlines monotonically increase per step.
         """
         users_list = []
-        for data in assigned_users:
-            users = data["users"]
-            if not users:
+        groups_list = []
+        for data in assignees:
+            if not data["user_assignees"] and not data["group_assignees"]:
                 raise serializers.ValidationError(
-                    _("Please select at least 1 user."),
-                    code="empty-users",
+                    _("Please select at least 1 user or group."),
+                    code="empty-assignees",
                 )
 
-            if any([user in users_list for user in users]):
+            if any([user in users_list for user in data["user_assignees"]]):
                 raise serializers.ValidationError(
                     _(
                         "Users in a serial review request process need to be unique. Please select unique users."
@@ -172,10 +199,19 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     code="unique-users",
                 )
 
-            users_list.extend(users)
+            if any([group in groups_list for group in data["group_assignees"]]):
+                raise serializers.ValidationError(
+                    _(
+                        "Groups in a serial review request process need to be unique. Please select unique groups."
+                    ),
+                    code="unique-groups",
+                )
+
+            users_list.extend(data["user_assignees"])
+            groups_list.extend(data["group_assignees"])
 
         deadline_old = date.today() - timedelta(days=1)
-        for data in assigned_users:
+        for data in assignees:
             deadline_new = data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
                 raise serializers.ValidationError(
@@ -188,7 +224,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 )
             deadline_old = deadline_new
 
-        return assigned_users
+        return assignees
 
     def on_task_submission(self) -> None:
         """
@@ -196,18 +232,30 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         """
         assert self.is_valid(), "Serializer must be valid"
 
-        count_users = sum(
+        count_assignees = sum(
             [
-                len(data["users"])
-                for data in self.validated_data["assigned_users"]
-                if data
+                len(data["user_assignees"] or []) + len(data["group_assignees"] or [])
+                for data in self.validated_data["assignees"]
             ]
         )
 
-        user_deadlines = {
-            user: str(data["deadline"])
-            for data in self.validated_data["assigned_users"]
-            for user in data["users"]
+        assignee_deadlines = {
+            assignee: str(data["deadline"])
+            for data in self.validated_data["assignees"]
+            for assignee in (
+                [
+                    f"{AssigneeTypeChoices.user}:{user}"
+                    for user in data["user_assignees"]
+                ]
+                or []
+            )
+            + (
+                [
+                    f"{AssigneeTypeChoices.group}:{group}"
+                    for group in data["group_assignees"]
+                ]
+                or []
+            )
         }
 
         # Derive review_type from task.form_key
@@ -217,9 +265,9 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             zaak_context.zaak.url,
             documents=self.validated_data["selected_documents"],
             review_type=review_type,
-            num_assigned_users=count_users,
+            num_assignees=count_assignees,
             toelichting=self.validated_data["toelichting"],
-            user_deadlines=user_deadlines,
+            assignee_deadlines=assignee_deadlines,
             requester=self.context["request"].user.username,
         )
         # add permission for advisors to see the zaak-detail page
@@ -243,12 +291,26 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             ],
             params={"uuid": self.review_request.id},
         )
-        kownsl_users_list = [
-            data["users"] for data in self.validated_data["assigned_users"]
+        kownsl_assignees_list = [
+            (
+                [
+                    f"{AssigneeTypeChoices.user}:{user}"
+                    for user in data["user_assignees"]
+                ]
+                or []
+            )
+            + (
+                [
+                    f"{AssigneeTypeChoices.group}:{group}"
+                    for group in data["group_assignees"]
+                ]
+                or []
+            )
+            for data in self.validated_data["assignees"]
         ]
         return {
             "kownslDocuments": self.validated_data["selected_documents"],
-            "kownslUsersList": kownsl_users_list,
+            "kownslAssigneesList": kownsl_assignees_list,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": build_absolute_url(kownsl_frontend_url),
         }

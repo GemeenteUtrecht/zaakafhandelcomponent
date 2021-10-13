@@ -35,19 +35,19 @@ def create_review_request(
     zaak_url: str,
     documents: List[str],
     review_type: str = "advice",
-    num_assigned_users: int = 0,
+    num_assignees: int = 0,
     toelichting: str = "",
-    user_deadlines: dict = {},
+    assignee_deadlines: dict = {},
     requester: str = "",
 ) -> ReviewRequest:
     client = get_client()
     data = {
         "for_zaak": zaak_url,
         "review_type": review_type,
-        "num_assigned_users": num_assigned_users,
+        "num_assignees": num_assignees,
         "documents": documents,
         "toelichting": toelichting,
-        "user_deadlines": user_deadlines,
+        "assignee_deadlines": assignee_deadlines,
         "requester": requester,
     }
     resp = client.create("review_requests", data=data)

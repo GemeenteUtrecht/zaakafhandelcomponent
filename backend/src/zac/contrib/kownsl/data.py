@@ -22,14 +22,14 @@ class ReviewRequest(Model):
     review_type: str
     num_advices: int
     num_approvals: int
-    num_assigned_users: int
+    num_assignees: int
     created: datetime = datetime.now()
     documents: List[str] = field(default_factory=list)
     for_zaak: str = ""
     frontend_url: str = ""
     requester: str = ""
     toelichting: str = ""
-    user_deadlines: Dict = field(default_factory=dict)
+    assignee_deadlines: Dict = field(default_factory=dict)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
