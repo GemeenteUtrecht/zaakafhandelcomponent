@@ -28,9 +28,9 @@ REVIEW_REQUEST = {
     "frontendUrl": "string",
     "numAdvices": 1,
     "numApprovals": 0,
-    "numAssignedUsers": 2,
+    "numAssignees": 2,
     "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "userDeadlines": {"bob": "2020-11-05"},
+    "assigneeDeadlines": {"user:bob": "2020-11-05"},
     "requester": "alice",
     "metadata": {
         "processInstanceId": "fa962a23-ff20-4184-ba98-b390f2407353",

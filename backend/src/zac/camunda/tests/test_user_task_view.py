@@ -556,9 +556,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
         payload = {
-            "assignedUsers": [
+            "assignees": [
                 {
-                    "users": [user.username for user in users],
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
                     "deadline": "2020-01-01",
                 },
             ],
@@ -574,9 +576,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "frontendUrl": "http://some.kownsl.com/frontendurl/",
             "numAdvices": 0,
             "numApprovals": 1,
-            "numAssignedUsers": 1,
+            "numAssignees": 1,
             "toelichting": "some-toelichting",
-            "userDeadlines": {},
+            "assigneeDeadlines": {},
             "requester": "some-henkie",
         }
         revreq_data = {
@@ -598,6 +600,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     return_value=review_request,
                 ):
                     response = self.client.put(self.task_endpoint, payload)
+
         self.assertEqual(response.status_code, 204)
 
     @patch(

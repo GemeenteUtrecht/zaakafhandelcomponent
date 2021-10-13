@@ -131,9 +131,12 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignedUsers": 2,
+            "numAssignees": 2,
             "toelichting": "",
-            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "assigneeDeadlines": {
+                "user:some-user": "2021-01-07",
+                "user:some-user-2": "2021-01-08",
+            },
             "requester": "some-other-user",
         }
         review_request = factory(ReviewRequest, review_request)
@@ -225,7 +228,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "id": str(self._uuid),
                     "reviewType": KownslTypes.advice,
                     "completed": 1,
-                    "numAssignedUsers": 2,
+                    "numAssignees": 2,
                 }
             ],
         )
@@ -396,9 +399,12 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignedUsers": 2,
+            "numAssignees": 2,
             "toelichting": "",
-            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "assigneeDeadlines": {
+                "user:some-user": "2021-01-07",
+                "user:some-user-2": "2021-01-08",
+            },
             "requester": "some-other-user",
         }
         cls.review_request = factory(ReviewRequest, cls.review_request_data)
