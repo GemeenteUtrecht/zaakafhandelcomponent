@@ -9,7 +9,7 @@ export interface ZaakObject {
     data?: {
       [key: string]: string,
     }
-    geometry?: Geometry[],
+    geometry?: Geometry | Geometry[],
     index?: number,
     registrationAt?: string,
     startAt: string,
