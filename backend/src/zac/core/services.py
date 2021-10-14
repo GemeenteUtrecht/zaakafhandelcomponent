@@ -52,13 +52,11 @@ A_DAY = AN_HOUR * 24
 
 def _client_from_url(url: str):
     service = Service.get_service(url)
-    try:
-        client = service.build_client()
-    except AttributeError:
+    if not client:
         raise ServiceConfigError(
             _("The service for the url %s is not configured in the admin") % url
         )
-
+    client = service.build_client()
     return client
 
 
