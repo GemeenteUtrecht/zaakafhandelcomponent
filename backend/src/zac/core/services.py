@@ -52,7 +52,7 @@ A_DAY = AN_HOUR * 24
 
 def _client_from_url(url: str):
     service = Service.get_service(url)
-    if not client:
+    if not service:
         raise ServiceConfigError(
             _("The service for the url %s is not configured in the admin") % url
         )
