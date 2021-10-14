@@ -5,9 +5,7 @@ const routes: Routes = [
   {
     path: '',
     loadChildren: () =>
-      import('./components/workstack/workstack.module').then(
-        (m) => m.WorkstackModule
-      ),
+      import('./components/workstack/workstack.module').then((m) => m.WorkstackModule),
   },
   {
     path: 'kownsl',
@@ -17,9 +15,7 @@ const routes: Routes = [
   {
     path: 'werkvoorraad',
     loadChildren: () =>
-      import('./components/workstack/workstack.module').then(
-        (m) => m.WorkstackModule
-      ),
+      import('./components/workstack/workstack.module').then((m) => m.WorkstackModule),
   },
   {
     path: 'zaken',
@@ -39,17 +35,18 @@ const routes: Routes = [
   {
     path: 'rapportages',
     loadChildren: () =>
-      import('./components/reports/reports.module').then(
-        (m) => m.ReportsModule
-      ),
+      import('./components/reports/reports.module').then((m) => m.ReportsModule),
   },
   {
     path: 'autorisatieprofielen',
     loadChildren: () =>
-      import('./components/auth-profiles/auth-profiles.module').then(
-        (m) => m.AuthProfilesModule
-      ),
-  }
+      import('./components/auth-profiles/auth-profiles.module').then((m) => m.AuthProfilesModule),
+  },
+  {
+    path: 'dashboard',
+    loadChildren: () =>
+      import('./components/dashboard/dashboard.module').then((m) => m.DashboardModule),
+  },
 ];
 
 @NgModule({

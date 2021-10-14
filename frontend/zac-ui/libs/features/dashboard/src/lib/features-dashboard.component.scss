@@ -1,0 +1,43 @@
+@import './base/colors/colors';
+
+.dashboard {
+  &-body {
+    width: 100%;
+    display: flex;
+    flex: auto;
+    flex-grow: 1;
+    overflow: auto;
+  }
+  &-column {
+    flex-direction: column;
+    margin: 0 4px;
+    min-width: 280px;
+    max-width: 280px;
+    background-color: $background-lightgrey;
+    padding: 10px;
+    border-radius: 5px;
+    &__body {
+      margin-bottom: 10px;
+    }
+  }
+  &-item {
+    &__delete-button {
+      display: none;
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      ::ng-deep .mat-icon {
+        color: $color-text--gray;
+      }
+    }
+    &:hover .dashboard-item__delete-button {
+      display: block;
+    }
+  }
+  &__add-case {
+    margin-left: 4px;
+  }
+  &-progress-bar {
+    height: 5px;
+  }
+}

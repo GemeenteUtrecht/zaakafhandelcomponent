@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FeaturesReportsComponent } from './features-reports.component';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
-import { TabsModule } from 'ngx-bootstrap/tabs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
@@ -18,7 +17,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     }),
     SharedUiComponentsModule,
     MultiselectModule,
-    TabsModule.forRoot(),
   ],
   declarations: [FeaturesReportsComponent],
   exports: [FeaturesReportsComponent],
