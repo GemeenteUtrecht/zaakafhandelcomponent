@@ -17,7 +17,7 @@ NOTIFICATION = {
     "resourceUrl": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
     "actie": "reviewSubmitted",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
-    "kenmerken": {"author": {"username": "bob"}, "group": ""},
+    "kenmerken": {"author": "bob", "group": ""},
 }
 
 REVIEW_REQUEST = {

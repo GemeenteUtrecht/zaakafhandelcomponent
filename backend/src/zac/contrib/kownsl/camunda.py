@@ -143,7 +143,7 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
 
 @dataclass
 class ConfigureReviewRequest:
-    assignees: List[SelectUsersRevReq]
+    assigned_users: List[SelectUsersRevReq]
     selected_documents: List[str]
     toelichting: str
 
@@ -166,7 +166,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     class Meta:
         model = ConfigureReviewRequest
         fields = (
-            "assignees",
+            "assigned_users",
             "selected_documents",
             "toelichting",
         )
@@ -175,7 +175,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         zaak_context = get_zaak_context(self.context["task"])
         return zaak_context.zaak
 
-    def validate_assigned_users(self, assignees) -> List:
+    def validate_assigned_users(self, assigned_users) -> List:
         """
         Validate that:
             assigned users and groups are unique,
@@ -184,7 +184,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         """
         users_list = []
         groups_list = []
-        for data in assignees:
+        for data in assigned_users:
             if not data["user_assignees"] and not data["group_assignees"]:
                 raise serializers.ValidationError(
                     _("Please select at least 1 user or group."),
@@ -211,7 +211,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             groups_list.extend(data["group_assignees"])
 
         deadline_old = date.today() - timedelta(days=1)
-        for data in assignees:
+        for data in assigned_users:
             deadline_new = data["deadline"]
             if deadline_new and not deadline_new > deadline_old:
                 raise serializers.ValidationError(
@@ -224,7 +224,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 )
             deadline_old = deadline_new
 
-        return assignees
+        return assigned_users
 
     def on_task_submission(self) -> None:
         """
@@ -235,13 +235,13 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         count_users = sum(
             [
                 len(data["user_assignees"] or []) + len(data["group_assignees"] or [])
-                for data in self.validated_data["assignees"]
+                for data in self.validated_data["assigned_users"]
             ]
         )
 
         user_deadlines = {
             assignee: str(data["deadline"])
-            for data in self.validated_data["assignees"]
+            for data in self.validated_data["assigned_users"]
             for assignee in (
                 [
                     f"{AssigneeTypeChoices.user}:{user}"

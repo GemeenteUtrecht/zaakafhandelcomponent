@@ -571,9 +571,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             variables,
             {
                 "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslUsersList": [
-                    [f"user:{user.username}" for user in self.users_1]
-                ],
+                "kownslUsersList": [[f"user:{user.username}" for user in self.users_1]],
                 "kownslReviewRequestId": str(self.review_request.id),
                 "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
             },

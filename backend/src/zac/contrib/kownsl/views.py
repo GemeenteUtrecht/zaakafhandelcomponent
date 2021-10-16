@@ -4,7 +4,6 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
-from backend.src.zac.camunda.constants import AssigneeTypeChoices
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
@@ -16,6 +15,7 @@ from rest_framework.views import APIView
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from backend.src.zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -61,7 +61,11 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = client.retrieve("reviewrequest", url=resource_url)
 
         # look up and complete the user task in Camunda
-        assignee = data["kenmerken"]["author"]
+        assignee = (
+            data["kenmerken"]["group"]
+            if data["kenmerken"].get("group")
+            else data["kenmerken"]["author"]
+        )
         camunda_client = get_camunda_client()
 
         params = {
@@ -113,12 +117,12 @@ class BaseRequestView(APIView):
         # Based on the authors and groups of submitted reviews and
         # the user_deadline field we can derive if the user is allowed to review.
         #
-        # If a user has already reviewed, but is part of a group that still 
+        # If a user has already reviewed, but is part of a group that still
         # is requested to review, the user SHOULD be allowed to submit another review
         # and even though they have already submitted, the header should be flagged as false.
         #
-        # Goal: 
-        # Figure out if a user should be flagged as having submitted a review or not 
+        # Goal:
+        # Figure out if a user should be flagged as having submitted a review or not
         # based on given reviews and user_deadlines field.
         #
         # Given that:
@@ -128,7 +132,7 @@ class BaseRequestView(APIView):
         # etc,
         # }
         # 2) User deadlines correspond with a step uniquely (i.e., one step has 1 unique deadline)
-        # 
+        #
         # Steps:
         # 1) Remove the assignees that have already reviewed from user_deadlines so
         # we can figure out at which step in a serial process we are.
@@ -139,15 +143,17 @@ class BaseRequestView(APIView):
         # don't allow the submission of an(other) review.
 
         # Remove reviewers from assignees
-        user_deadlines = {**review_request['user_deadlines']}
-        for review in review_request['reviews']:
-            if review['group']:
+        user_deadlines = {**review_request["user_deadlines"]}
+        for review in review_request["reviews"]:
+            if review["group"]:
                 assignee = f"{AssigneeTypeChoices.group}:{review['group']}".lower()
             else:
-                assignee = f"{AssigneeTypeChoices.user}:{review['author']['username']}".lower()
-            
+                assignee = (
+                    f"{AssigneeTypeChoices.user}:{review['author']['username']}".lower()
+                )
+
             del user_deadlines[assignee]
-        
+
         # Get assignees with soonest deadline
         deadlines_users = {}
         for user, deadline in user_deadlines.items():
@@ -156,8 +162,11 @@ class BaseRequestView(APIView):
                 deadlines_users[deadline].append(user)
             except KeyError:
                 deadlines_users[deadline] = [user]
-        
-        soonest_deadline = sorted(list(deadlines_users.keys()), key=lambda datestr: datetime.datetime.fromisoformat(datestr))[0]
+
+        soonest_deadline = sorted(
+            list(deadlines_users.keys()),
+            key=lambda datestr: datetime.datetime.fromisoformat(datestr),
+        )[0]
         users = deadlines_users[soonest_deadline]
         if assignee in users:
             return "false"

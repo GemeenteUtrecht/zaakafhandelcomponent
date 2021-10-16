@@ -68,15 +68,15 @@ class AdviceDocument(Model):
 class Advice(Model):
     created: datetime
     author: Author
-    group: str
     advice: str
     documents: List[AdviceDocument]
+    group: str = ""
 
 
 @dataclass
 class Approval(Model):
     created: datetime
     author: Author
-    group: str
     approved: bool
+    group: str = ""
     toelichting: str = ""
