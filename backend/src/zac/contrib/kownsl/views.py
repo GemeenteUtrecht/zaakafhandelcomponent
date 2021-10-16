@@ -1,8 +1,10 @@
+import datetime
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
+from backend.src.zac.camunda.constants import AssigneeTypeChoices
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
@@ -91,7 +93,7 @@ class BaseRequestView(APIView):
     This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
     and post their advice/approval to the kownsl component.
 
-    * Requires that the requesting user is authenticated and found in review_request.assignee_deadlines
+    * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
 
     permission_classes = (IsAuthenticated & IsReviewUser,)
@@ -106,16 +108,64 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
+    def user_has_submitted_review(self, review_request) -> str:
+        # !!! Complicated and fragile logic alert !!!
+        # Based on the authors and groups of submitted reviews and
+        # the user_deadline field we can derive if the user is allowed to review.
+        #
+        # If a user has already reviewed, but is part of a group that still 
+        # is requested to review, the user SHOULD be allowed to submit another review
+        # and even though they have already submitted, the header should be flagged as false.
+        #
+        # Goal: 
+        # Figure out if a user should be flagged as having submitted a review or not 
+        # based on given reviews and user_deadlines field.
+        #
+        # Given that:
+        # 1) User_deadlines field looks like: {
+        # "user:<username>"":"<deadline1_date>",
+        # "group:<groupname":"<deadline2_date>",
+        # etc,
+        # }
+        # 2) User deadlines correspond with a step uniquely (i.e., one step has 1 unique deadline)
+        # 
+        # Steps:
+        # 1) Remove the assignees that have already reviewed from user_deadlines so
+        # we can figure out at which step in a serial process we are.
+        # 2) Group the assignees and take out the intersection of the reviewers and assignees at that step.
+        # This leaves those that still need to review.
+        # If any of these are groups and the user is reviewing on behalf of that group, allow the submission of the review.
+        # If the user is not part of any leftover groups at that step nor is in user_deadlines at that date
+        # don't allow the submission of an(other) review.
+
+        # Remove reviewers from assignees
+        user_deadlines = {**review_request['user_deadlines']}
+        for review in review_request['reviews']:
+            if review['group']:
+                assignee = f"{AssigneeTypeChoices.group}:{review['group']}".lower()
+            else:
+                assignee = f"{AssigneeTypeChoices.user}:{review['author']['username']}".lower()
+            
+            del user_deadlines[assignee]
+        
+        # Get assignees with soonest deadline
+        deadlines_users = {}
+        for user, deadline in user_deadlines.items():
+            user = user.lower()
+            try:
+                deadlines_users[deadline].append(user)
+            except KeyError:
+                deadlines_users[deadline] = [user]
+        
+        soonest_deadline = sorted(list(deadlines_users.keys()), key=lambda datestr: datetime.datetime.fromisoformat(datestr))[0]
+        users = deadlines_users[soonest_deadline]
+        if assignee in users:
+            return "false"
+        return "true"
+
     def get(self, request, request_uuid):
         review_request = self.get_object()
-        review_users = [
-            review["author"]["username"] for review in review_request["reviews"]
-        ]
-        headers = {
-            "X-Kownsl-Submitted": "true"
-            if request.user.username in review_users
-            else "false"
-        }
+        headers = {"X-Kownsl-Submitted": self.user_has_submitted_review(review_request)}
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
@@ -127,7 +177,7 @@ class BaseRequestView(APIView):
         return Response(serializer.data, headers=headers)
 
     def post(self, request, request_uuid):
-        # Check if user is allowed to get and post based on source review request assignee_deadlines value.
+        # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
         client = get_client(request.user)
         response = client.create(
