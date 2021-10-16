@@ -27,7 +27,7 @@ from zgw.models.zrc import Zaak
 from ..camunda import (
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
-    SelectAssigneesRevReqSerializer,
+    SelectUsersRevReqSerializer,
     ZaakInformatieTaskSerializer,
 )
 
@@ -264,9 +264,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "frontendUrl": "http://some.kownsl.com/frontendurl/",
             "numAdvices": 0,
             "numApprovals": 1,
-            "numAssignees": 1,
+            "numAssignedUsers": 1,
             "toelichting": "some-toelichting",
-            "assigneeDeadlines": {},
+            "userDeadlines": {},
             "requester": "some-henkie",
         }
         cls.review_request = factory(ReviewRequest, review_request_data)
@@ -296,7 +296,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         self.addCleanup(self.patch_get_documenten.stop)
 
     @freeze_time("1999-12-31T23:59:59Z")
-    def test_select_assignees_rev_req_serializer(self):
+    def test_select_users_rev_req_serializer(self):
         # Sanity check
         payload = {
             "user_assignees": [user.username for user in self.users_1],
@@ -304,7 +304,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectAssigneesRevReqSerializer(data=payload)
+        serializer = SelectUsersRevReqSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
         self.assertEqual(
             sorted(list(serializer.validated_data.keys())),
@@ -323,28 +323,28 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
 
     @freeze_time("1999-12-31T23:59:59Z")
-    def test_select_assignees_rev_req_serializer_duplicate_users(self):
+    def test_select_users_rev_req_serializer_duplicate_users(self):
         payload = {
             "user_assignees": [user.username for user in self.users_1] * 2,
             "group_assignees": [self.group.name],
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectAssigneesRevReqSerializer(data=payload)
+        serializer = SelectUsersRevReqSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned users need to be unique."
         ):
             serializer.is_valid(raise_exception=True)
 
     @freeze_time("1999-12-31T23:59:59Z")
-    def test_select_assignees_rev_req_serializer_duplicate_groups(self):
+    def test_select_users_rev_req_serializer_date_error(self):
         payload = {
             "user_assignees": [user.username for user in self.users_1],
             "group_assignees": [self.group.name] * 2,
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectAssigneesRevReqSerializer(data=payload)
+        serializer = SelectUsersRevReqSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned groups need to be unique."
         ):
@@ -358,7 +358,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "01-01-2010",
         }
-        serializer = SelectAssigneesRevReqSerializer(data=payload)
+        serializer = SelectUsersRevReqSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError,
             "Date heeft het verkeerde formaat, gebruik 1 van deze formaten: YYYY-MM-DD.",
@@ -367,7 +367,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [self.group.name],
@@ -382,7 +382,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }
@@ -394,7 +394,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         self.assertTrue(serializer.is_valid(raise_exception=True))
         self.assertEqual(
-            serializer.validated_data["assignees"],
+            serializer.validated_data["assigned_users"],
             [
                 {
                     "user_assignees": self.users_1,
@@ -417,7 +417,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_invalid_deadlines(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [self.group.name],
@@ -432,7 +432,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }
@@ -444,11 +444,11 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail["assignees"][0].code, "invalid-date")
+        self.assertEqual(err.exception.detail["assigned_users"][0].code, "invalid-date")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_empty_document(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [],
@@ -457,7 +457,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [""],
         }
@@ -473,7 +473,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_unique_users(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [],
@@ -488,7 +488,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }
@@ -500,11 +500,11 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail["assignees"][0].code, "unique-users")
+        self.assertEqual(err.exception.detail["assigned_users"][0].code, "unique-users")
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_empty_assignees(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [],
                 "group_assignees": [],
@@ -513,7 +513,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }
@@ -530,7 +530,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_get_process_variables(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [],
@@ -539,7 +539,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }
@@ -561,7 +561,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             sorted(
                 [
                     "kownslDocuments",
-                    "kownslAssigneesList",
+                    "kownslUsersList",
                     "kownslReviewRequestId",
                     "kownslFrontendUrl",
                 ]
@@ -571,7 +571,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             variables,
             {
                 "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslAssigneesList": [
+                "kownslUsersList": [
                     [f"user:{user.username}" for user in self.users_1]
                 ],
                 "kownslReviewRequestId": str(self.review_request.id),
@@ -581,7 +581,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_fail_get_process_variables(self):
-        assignees = [
+        assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
                 "group_assignees": [],
@@ -590,7 +590,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             },
         ]
         payload = {
-            "assignees": assignees,
+            "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
         }

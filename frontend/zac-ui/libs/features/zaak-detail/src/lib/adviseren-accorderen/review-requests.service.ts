@@ -55,7 +55,7 @@ export class ReviewRequestsService {
    * @return {boolean}
    */
   isReviewRequestCompleted(reviewRequest: ReviewRequestSummary): boolean {
-    return reviewRequest.completed === reviewRequest.numAssignees;
+    return reviewRequest.completed === reviewRequest.numAssignedUsers;
   }
 
   /**

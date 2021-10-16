@@ -9,5 +9,5 @@ class IsReviewUser(permissions.BasePermission):
             f"{AssigneeTypeChoices.group}:{group}"
             for group in request.user.groups.all()
         ]
-        assignees.append(f"user:{request.user.username}")
-        return any([assignee in obj["assigneeDeadlines"] for assignee in assignees])
+        assignees.append(f"{AssigneeTypeChoices.user}:{request.user.username}")
+        return any([assignee in obj["userDeadlines"] for assignee in assignees])

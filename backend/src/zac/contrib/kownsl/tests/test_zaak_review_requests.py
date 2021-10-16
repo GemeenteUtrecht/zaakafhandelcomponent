@@ -131,9 +131,9 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignees": 2,
+            "numAssignedUsers": 2,
             "toelichting": "",
-            "assigneeDeadlines": {
+            "userDeadlines": {
                 "user:some-user": "2021-01-07",
                 "user:some-user-2": "2021-01-08",
             },
@@ -166,6 +166,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             {
                 "created": "2021-01-07T12:00:00Z",
                 "author": author,
+                "group": "",
                 "advice": "some-advice",
                 "documents": [advice_document],
             },
@@ -228,7 +229,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "id": str(self._uuid),
                     "reviewType": KownslTypes.advice,
                     "completed": 1,
-                    "numAssignees": 2,
+                    "numAssignedUsers": 2,
                 }
             ],
         )
@@ -262,6 +263,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                             "lastName": "some-last-name",
                             "username": self.user.username,
                         },
+                        "group": "",
                         "advice": "some-advice",
                         "documents": [
                             {
@@ -399,9 +401,9 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "frontendUrl": "http://some-kownsl-url.com/frontend-stuff",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignees": 2,
+            "numAssignedUsers": 2,
             "toelichting": "",
-            "assigneeDeadlines": {
+            "userDeadlines": {
                 "user:some-user": "2021-01-07",
                 "user:some-user-2": "2021-01-08",
             },
@@ -425,6 +427,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             {
                 "created": "2021-01-07T12:00:00Z",
                 "author": author,
+                "group": "",
                 "advice": "some-advice",
                 "documents": [advice_document],
             },

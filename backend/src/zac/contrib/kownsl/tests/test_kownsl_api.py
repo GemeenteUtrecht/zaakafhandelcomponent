@@ -82,7 +82,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "frontendUrl": "",
             "numAdvices": 0,
             "numApprovals": 0,
-            "numAssignees": 0,
+            "numAssignedUsers": 0,
             "toelichting": "",
         }
         m.post(
@@ -109,7 +109,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignees": 1,
+            "numAssignedUsers": 1,
             "toelichting": "Longing for the past but dreading the future",
         }
         review_request = factory(ReviewRequest, _review_request)
@@ -121,6 +121,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "firstName": "",
                     "lastName": "",
                 },
+                "group": "",
                 "advice": "dummy",
                 "documents": [],
             }
@@ -157,7 +158,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 0,
             "numApprovals": 1,
-            "numAssignees": 1,
+            "numAssignedUsers": 1,
             "toelichting": "Are a thousand tears worth a single smile?",
         }
         review_request = factory(ReviewRequest, _review_request)
@@ -169,6 +170,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "firstName": "",
                     "lastName": "",
                 },
+                "group": "",
                 "approved": True,
                 "toelichting": "When you give an inch, will they take a mile?",
             }
@@ -216,7 +218,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "frontendUrl": "",
             "numAdvices": 0,
             "numApprovals": 0,
-            "numAssignees": 0,
+            "numAssignedUsers": 0,
             "toelichting": "",
         }
         m.get(

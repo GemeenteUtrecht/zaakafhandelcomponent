@@ -21,9 +21,9 @@ class ConvertToJsonTests(TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 1,
             "numApprovals": 0,
-            "numAssignees": 1,
+            "numAssignedUsers": 1,
             "toelichting": "Like a flash of light in an endless night.",
-            "assigneeDeadlines": {},
+            "userDeadlines": {},
             "requester": "Henkie",
         }
         advice_data = {
@@ -33,6 +33,7 @@ class ConvertToJsonTests(TestCase):
                 "firstName": "",
                 "lastName": "",
             },
+            "group": "",
             "advice": "dummy",
             "documents": [],
         }
@@ -57,7 +58,7 @@ class ConvertToJsonTests(TestCase):
                     "frontend_url": "https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
                     "num_advices": 1,
                     "num_approvals": 0,
-                    "num_assignees": 1,
+                    "num_assigned_users": 1,
                     "toelichting": "Like a flash of light in an endless night.",
                     "advices": [
                         {
@@ -69,11 +70,12 @@ class ConvertToJsonTests(TestCase):
                                 "first_name": "",
                                 "last_name": "",
                             },
+                            "group": "",
                             "advice": "dummy",
                             "documents": [],
                         }
                     ],
-                    "assignee_deadlines": {},
+                    "user_deadlines": {},
                     "requester": "Henkie",
                 }
             ],
@@ -89,9 +91,9 @@ class ConvertToJsonTests(TestCase):
             "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
             "numAdvices": 0,
             "numApprovals": 1,
-            "numAssignees": 1,
+            "numAssignedUsers": 1,
             "toelichting": "I pity the living, envy for the dead",
-            "assigneeDeadlines": {},
+            "userDeadlines": {},
             "requester": "Henkie",
         }
         approval_data = {
@@ -101,6 +103,7 @@ class ConvertToJsonTests(TestCase):
                 "firstName": "",
                 "lastName": "",
             },
+            "group": "",
             "approved": True,
             "toelichting": "I don't feel anything.",
         }
@@ -125,7 +128,7 @@ class ConvertToJsonTests(TestCase):
                     "frontend_url": "https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
                     "num_advices": 0,
                     "num_approvals": 1,
-                    "num_assignees": 1,
+                    "num_assigned_users": 1,
                     "toelichting": "I pity the living, envy for the dead",
                     "approvals": [
                         {
@@ -137,11 +140,12 @@ class ConvertToJsonTests(TestCase):
                                 "first_name": "",
                                 "last_name": "",
                             },
+                            "group": "",
                             "approved": True,
                             "toelichting": "I don't feel anything.",
                         }
                     ],
-                    "assignee_deadlines": {},
+                    "user_deadlines": {},
                     "requester": "Henkie",
                 }
             ],

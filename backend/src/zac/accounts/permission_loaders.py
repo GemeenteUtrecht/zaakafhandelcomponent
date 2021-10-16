@@ -74,11 +74,11 @@ def add_permissions_for_advisors(
     review_request: ReviewRequest,
 ) -> List[UserAtomicPermission]:
 
-    assignee_deadlines = review_request.assignee_deadlines or {}
+    user_deadlines = review_request.user_deadlines or {}
     rr_usernames = []
     rr_groupnames = []
-    for assignee in assignee_deadlines.keys():
-        user_or_group, name = assignee.split(":", 1)
+    for user in user_deadlines.keys():
+        user_or_group, name = user.split(":", 1)
         if user_or_group == AssigneeTypeChoices.group:
             rr_groupnames.append(name)
         else:

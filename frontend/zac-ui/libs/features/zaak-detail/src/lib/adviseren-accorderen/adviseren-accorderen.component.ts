@@ -150,7 +150,7 @@ export class AdviserenAccorderenComponent implements OnInit {
 
           'type': reviewRequestSummary.reviewType === 'approval' ? 'Akkoord aanvraag' : 'Advies aanvraag',
 
-          'opgehaald': `${reviewRequestSummary.completed}/${reviewRequestSummary.numAssignees}`,
+          'opgehaald': `${reviewRequestSummary.completed}/${reviewRequestSummary.numAssignedUsers}`,
 
           'last_update': {
             type: date === null ? 'text' : 'date',

@@ -22,14 +22,14 @@ class ReviewRequest(Model):
     review_type: str
     num_advices: int
     num_approvals: int
-    num_assignees: int
+    num_assigned_users: int
     created: datetime = datetime.now()
     documents: List[str] = field(default_factory=list)
     for_zaak: str = ""
     frontend_url: str = ""
     requester: str = ""
     toelichting: str = ""
-    assignee_deadlines: Dict = field(default_factory=dict)
+    user_deadlines: Dict = field(default_factory=dict)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
@@ -68,6 +68,7 @@ class AdviceDocument(Model):
 class Advice(Model):
     created: datetime
     author: Author
+    group: str
     advice: str
     documents: List[AdviceDocument]
 
@@ -76,5 +77,6 @@ class Advice(Model):
 class Approval(Model):
     created: datetime
     author: Author
+    group: str
     approved: bool
     toelichting: str = ""

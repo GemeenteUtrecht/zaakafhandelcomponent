@@ -75,14 +75,14 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 
 
 @dataclass
-class SelectAssigneesRevReq:
+class SelectUsersRevReq:
     user_assignees: List[Optional[User]]
     group_assignees: List[Optional[Group]]
-    email_notification: bool
     deadline: date
+    email_notification: bool = False
 
 
-class SelectAssigneesRevReqSerializer(APIModelSerializer):
+class SelectUsersRevReqSerializer(APIModelSerializer):
     """
     Select users or groups and assign deadlines to those users in the configuration of
     review requests such as the advice and approval review requests.
@@ -106,7 +106,7 @@ class SelectAssigneesRevReqSerializer(APIModelSerializer):
         required=True,
     )
     email_notification = serializers.BooleanField(
-        required=True,
+        default=False,
         help_text=_("Send an email notification about the review request or not."),
     )
     deadline = serializers.DateField(
@@ -115,7 +115,7 @@ class SelectAssigneesRevReqSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = SelectAssigneesRevReq
+        model = SelectUsersRevReq
         fields = (
             "user_assignees",
             "group_assignees",
@@ -143,7 +143,7 @@ class SelectAssigneesRevReqSerializer(APIModelSerializer):
 
 @dataclass
 class ConfigureReviewRequest:
-    assignees: List[SelectAssigneesRevReq]
+    assignees: List[SelectUsersRevReq]
     selected_documents: List[str]
     toelichting: str
 
@@ -156,7 +156,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     Must have a ``task`` and ``request`` in its ``context``.
     """
 
-    assignees = SelectAssigneesRevReqSerializer(many=True)
+    assigned_users = SelectUsersRevReqSerializer(many=True)
     selected_documents = SelectDocumentsField()
     toelichting = serializers.CharField(
         label=_("Toelichting"),
@@ -175,7 +175,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         zaak_context = get_zaak_context(self.context["task"])
         return zaak_context.zaak
 
-    def validate_assignees(self, assignees) -> List:
+    def validate_assigned_users(self, assignees) -> List:
         """
         Validate that:
             assigned users and groups are unique,
@@ -232,14 +232,14 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         """
         assert self.is_valid(), "Serializer must be valid"
 
-        count_assignees = sum(
+        count_users = sum(
             [
                 len(data["user_assignees"] or []) + len(data["group_assignees"] or [])
                 for data in self.validated_data["assignees"]
             ]
         )
 
-        assignee_deadlines = {
+        user_deadlines = {
             assignee: str(data["deadline"])
             for data in self.validated_data["assignees"]
             for assignee in (
@@ -265,9 +265,9 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             zaak_context.zaak.url,
             documents=self.validated_data["selected_documents"],
             review_type=review_type,
-            num_assignees=count_assignees,
+            num_assigned_users=count_users,
             toelichting=self.validated_data["toelichting"],
-            assignee_deadlines=assignee_deadlines,
+            user_deadlines=user_deadlines,
             requester=self.context["request"].user.username,
         )
         # add permission for advisors to see the zaak-detail page
@@ -291,7 +291,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             ],
             params={"uuid": self.review_request.id},
         )
-        kownsl_assignees_list = [
+        kownsl_users_list = [
             (
                 [
                     f"{AssigneeTypeChoices.user}:{user}"
@@ -310,7 +310,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         ]
         return {
             "kownslDocuments": self.validated_data["selected_documents"],
-            "kownslAssigneesList": kownsl_assignees_list,
+            "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": build_absolute_url(kownsl_frontend_url),
         }

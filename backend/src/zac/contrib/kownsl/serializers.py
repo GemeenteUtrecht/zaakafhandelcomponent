@@ -36,7 +36,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
 
     class Meta:
         model = ReviewRequest
-        fields = ("id", "review_type", "completed", "num_assignees")
+        fields = ("id", "review_type", "completed", "num_assigned_users")
 
     def get_completed(self, obj) -> int:
         return obj.num_advices + obj.num_approvals

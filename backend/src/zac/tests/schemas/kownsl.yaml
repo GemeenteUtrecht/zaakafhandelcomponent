@@ -831,13 +831,13 @@ components:
           readOnly: true
           description: The number of approvals registered for this request. Note that
             does not mean they are all positive approvals - this includes the rejections.
-        numAssignees:
+        numAssignedUsers:
           type: integer
           maximum: 32767
           minimum: 0
         toelichting:
           type: string
-        assigneeDeadlines:
+        userDeadlines:
           type: object
           additionalProperties: {}
         requester:
@@ -898,13 +898,13 @@ components:
           readOnly: true
           description: The number of approvals registered for this request. Note that
             does not mean they are all positive approvals - this includes the rejections.
-        numAssignees:
+        numAssignedUsers:
           type: integer
           maximum: 32767
           minimum: 0
         toelichting:
           type: string
-        assigneeDeadlines:
+        userDeadlines:
           type: object
           additionalProperties: {}
         requester:
