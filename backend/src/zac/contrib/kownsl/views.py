@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from backend.src.zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -61,11 +61,7 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = client.retrieve("reviewrequest", url=resource_url)
 
         # look up and complete the user task in Camunda
-        assignee = (
-            data["kenmerken"]["group"]
-            if data["kenmerken"].get("group")
-            else data["kenmerken"]["author"]
-        )
+        assignee = data["kenmerken"]["group"] or data["kenmerken"]["author"]
         camunda_client = get_camunda_client()
 
         params = {
@@ -154,7 +150,7 @@ class BaseRequestView(APIView):
 
             del user_deadlines[assignee]
 
-        # Get assignees with soonest deadline
+        # Get users with soonest deadline
         deadlines_users = {}
         for user, deadline in user_deadlines.items():
             user = user.lower()
@@ -168,9 +164,9 @@ class BaseRequestView(APIView):
             key=lambda datestr: datetime.datetime.fromisoformat(datestr),
         )[0]
         users = deadlines_users[soonest_deadline]
-        if assignee in users:
-            return "false"
-        return "true"
+        if assignee not in users:
+            return "true"
+        return "false"
 
     def get(self, request, request_uuid):
         review_request = self.get_object()

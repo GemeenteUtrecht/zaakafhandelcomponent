@@ -291,28 +291,33 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             ],
             params={"uuid": self.review_request.id},
         )
-        kownsl_users_list = [
-            (
+
+        kownsl_users_list = []
+        email_notification_list = {}
+        for data in self.validated_data["assigned_users"]:
+            users = (
                 [
                     f"{AssigneeTypeChoices.user}:{user}"
                     for user in data["user_assignees"]
                 ]
                 or []
-            )
-            + (
-                [
+                + [
                     f"{AssigneeTypeChoices.group}:{group}"
                     for group in data["group_assignees"]
                 ]
                 or []
             )
-            for data in self.validated_data["assignees"]
-        ]
+
+            kownsl_users_list.append(users)
+            for user in users:
+                email_notification_list[user] = data["email_notification"]
+
         return {
             "kownslDocuments": self.validated_data["selected_documents"],
             "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": build_absolute_url(kownsl_frontend_url),
+            "emailNotificationList": email_notification_list,
         }
 
 
