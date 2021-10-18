@@ -100,6 +100,11 @@ export class FormComponent implements OnInit, OnChanges {
     this.getContextData();
   }
 
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   * @param {SimpleChanges} changes
+   */
   ngOnChanges(changes: SimpleChanges): void {
     const a = changes.form?.currentValue;
     const b = changes.form?.previousValue;
