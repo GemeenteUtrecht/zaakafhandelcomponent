@@ -45,6 +45,7 @@ from .models import CoreConfig
 from .rollen import Rol
 
 logger = logging.getLogger(__name__)
+perf_logger = logging.getLogger("performance")
 
 AN_HOUR = 60 * 60
 A_DAY = AN_HOUR * 24
@@ -567,12 +568,19 @@ def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     if not zaak.eigenschappen:
         return []
 
+    perf_logger.info("      Fetching eigenschappen for zaak %s", zaak.identificatie)
+
     zrc_client = _client_from_object(zaak)
     eigenschappen = {
         eigenschap.url: eigenschap for eigenschap in get_eigenschappen(zaak.zaaktype)
     }
 
     zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
+
+    perf_logger.info(
+        "      Done fetching eigenschappen for zaak %s", zaak.identificatie
+    )
+
     zaak_eigenschappen = factory(ZaakEigenschap, zaak_eigenschappen)
 
     # resolve relations
@@ -697,9 +705,11 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
 
 @cache_result("rollen:{zaak.url}", alias="request", timeout=10)
 def get_rollen(zaak: Zaak) -> List[Rol]:
+    perf_logger.info("      Fetching rollen for zaak %s", zaak.identificatie)
     # fetch the rollen
     client = _client_from_object(zaak)
     _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
+    perf_logger.info("      Done fetching rollen for zaak %s", zaak.identificatie)
 
     rollen = factory(Rol, _rollen)
 

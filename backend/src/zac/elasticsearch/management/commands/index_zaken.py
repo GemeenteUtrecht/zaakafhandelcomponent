@@ -227,13 +227,27 @@ class Command(BaseCommand):
         self.stdout.end_progress()
 
     def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
+        perf_logger.info("  In ES documents generator")
+        perf_logger.info("    Create zaak documents...")
         zaak_documenten = self.create_zaak_documenten(zaken)
+        perf_logger.info("    Create zaak documents finished")
+        perf_logger.info("    Create zaaktype documents...")
         zaaktype_documenten = self.create_zaaktype_documenten(zaken)
+        perf_logger.info("    Create zaaktype documents finished")
+        perf_logger.info("    Create status documents...")
         status_documenten = self.create_status_documenten(zaken)
+        perf_logger.info("    Create status documents finished")
+        perf_logger.info("    Create rol documents...")
         rollen_documenten = self.create_rollen_documenten(zaken)
+        perf_logger.info("    Create rol documents finished")
+        perf_logger.info("    Create eigenschap documents...")
         eigenschappen_documenten = self.create_eigenschappen_documenten(zaken)
+        perf_logger.info("    Create eigenschap documents finished")
+        perf_logger.info("    Create zaakobject documents...")
         zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
+        perf_logger.info("    Create zaakobject documents finished")
 
+        perf_logger.info("    Relating all results for every zaak...")
         for zaak in zaken:
             zaakdocument = zaak_documenten[zaak.url]
             zaakdocument.zaaktype = zaaktype_documenten[zaak.url]
