@@ -563,7 +563,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
                 "kownslUsersList": [[f"user:{user}" for user in self.users_1]],
                 "kownslReviewRequestId": str(self.review_request.id),
                 "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
-                "emailNotificationList": {f"user:{user}":False for user in self.users_1}
+                "emailNotificationList": {
+                    f"user:{user}": False for user in self.users_1
+                },
             },
         )
 
