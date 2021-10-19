@@ -291,11 +291,8 @@ LOGGING = {
         },
         "performance": {
             "level": "INFO",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(LOGGING_DIR, "performance.log"),
+            "class": "logging.StreamHandler",
             "formatter": "performance",
-            "maxBytes": 1024 * 1024 * 10,  # 10 MB
-            "backupCount": 10,
         },
     },
     "loggers": {
@@ -313,6 +310,11 @@ LOGGING = {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": True,
+        },
+        "performance": {
+            "handlers": ["performance"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }

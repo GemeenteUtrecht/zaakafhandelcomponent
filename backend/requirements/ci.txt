@@ -236,6 +236,8 @@ orderedmultidict==1.0.1
     #   furl
 pathspec==0.8.1
     # via black
+psutil==5.8.0
+    # via -r requirements/base.txt
 psycopg2==2.8.3
     # via -r requirements/base.txt
 pycparser==2.19
