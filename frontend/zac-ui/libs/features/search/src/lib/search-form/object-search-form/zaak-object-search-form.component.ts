@@ -6,7 +6,7 @@ import {
   getProvinceByName,
   getTownshipByName,
   ObjectType,
-  ObjectTypeVersion,
+  ObjectTypeVersion, Position,
   UtrechtNeighbourhoods,
   ZaakObject,
 } from '@gu/models';
@@ -58,8 +58,10 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
 export class ZaakObjectSearchFormComponent implements OnInit {
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
+  @Output() mapGeometry: EventEmitter<any> = new EventEmitter<Geometry>();
+  @Output() mapMarkers: EventEmitter<any> = new EventEmitter<{coordinates: Position[]}>();
 
-  readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.'
+  readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.';
 
   /** @type {boolean}} Whether the component is loading. */
   isLoading = true;
@@ -233,6 +235,15 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   //
 
   /**
+   * Gets called when form is changed.
+   * @param {Object} data
+   */
+  changeForm(data) {
+    const geometry = JSON.parse(data.geometry);
+    this.mapGeometry.emit(geometry)
+  }
+
+  /**
    * Gets called when form is submitted.
    * @param {Object} data
    */
@@ -245,7 +256,23 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.showZaakObjecten = true;
 
     this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
-      (zaakObjects: ZaakObject[]) => this.zaakObjects = zaakObjects,
+      (zaakObjects: ZaakObject[]) => {
+        this.zaakObjects = zaakObjects;
+
+        const activeMapMarkers = this.zaakObjects.map((zaakObject: ZaakObject) => {
+          const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
+          return zaakObjectGeometry?.type === 'Point' ? {
+
+            coordinates: zaakObjectGeometry?.coordinates?.length > 1
+              ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
+              : [],
+            onClick: (event) => this._selectZaakObject(event, zaakObject),
+
+          } : null
+        }).filter((mapMarker) => mapMarker);
+
+        this.mapMarkers.emit(activeMapMarkers);
+      },
       this.reportError.bind(this),
     );
   }

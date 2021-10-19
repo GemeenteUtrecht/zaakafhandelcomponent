@@ -26,7 +26,7 @@ export const excludeProvinceByName = (name: string): Feature[] => {
 /**
  * @see {https://www.webuildinternet.com/2015/07/09/geojson-data-of-the-netherlands/}
  */
-const Provinces: FeatureCollection = {
+export const Provinces: FeatureCollection = {
   "type": "FeatureCollection", "features": [{
     "type": "Feature", "geometry": {
       "type": "Polygon",

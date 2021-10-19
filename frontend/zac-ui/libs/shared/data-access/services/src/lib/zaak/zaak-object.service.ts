@@ -68,14 +68,17 @@ export class ZaakObjectService {
   /**
    * Creates a string representation for a zaak object.
    * @param {ZaakObject} zaakObject
+   * @param {number} [maxEntries] If set, the maximum amount of key/value pairs displayed.
    * @return {string}
    */
-  stringifyZaakObject(zaakObject: ZaakObject): string {
+  stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
     return Object.entries(zaakObject.record.data)
-      .filter(([key, value]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)
-      .sort()
-      .join(', ');
+      .filter(([key,]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)  // Filter unwanted keys.
+      .filter(([,value]) => !value.match(/^http/))  // Filter URLs.
+      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)  // Create key/value string.
+      .sort()  // Sort items alphabetically (key).
+      .filter((value, index) => maxEntries === null || index < maxEntries)  // Limit entries
+      .join(', ');  // Join string.
   }
 
   /**
