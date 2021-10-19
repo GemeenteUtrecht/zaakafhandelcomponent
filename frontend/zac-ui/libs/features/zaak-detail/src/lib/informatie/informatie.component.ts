@@ -62,6 +62,13 @@ export class InformatieComponent implements OnInit, OnChanges {
     return [
       ...this.caseDetailsFieldConfigurations,
       ...this.propertyFieldConfigurations,
+      {
+        label: 'Toelichting',
+        placeholder: ' ',
+        name: 'toelichting',
+        required: false,
+        value: this.zaak.toelichting,
+      },
     ];
   }
 
@@ -96,13 +103,6 @@ export class InformatieComponent implements OnInit, OnChanges {
         placeholder: 'Geen omschrijving',
         required: true,
         value: this.zaak.omschrijving,
-      },
-      {
-        label: 'Toelichting',
-        placeholder: ' ',
-        name: 'toelichting',
-        required: true,
-        value: this.zaak.toelichting,
       },
     ];
   }
