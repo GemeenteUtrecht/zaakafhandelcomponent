@@ -178,6 +178,8 @@ class Command(BaseCommand):
                 # the ability to pick a unique identification themselves (such as UUIDs).
                 query_params = {"ordering": "-identificatie"}
                 while get_more:
+                    # if this is running for 1h+, Open Zaak expires the token
+                    client.refresh_auth()
                     zaken, query_params = get_zaken_all_paginated(
                         client, query_params=query_params
                     )
