@@ -70,6 +70,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
+            zaakgeometrie={"type": "Point", "coordinates": [4.4683077, 51.9236739]},
         )
 
         resultaattype = generate_oas_component(
@@ -152,6 +153,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "einddatumGepland": None,
             "uiterlijkeEinddatumAfdoening": "2021-01-04",
             "vertrouwelijkheidaanduiding": "openbaar",
+            "zaakgeometrie": {"type": "Point", "coordinates": [4.4683077, 51.9236739]},
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
@@ -189,6 +191,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "einddatumGepland": None,
             "uiterlijkeEinddatumAfdoening": "2021-01-04",
             "vertrouwelijkheidaanduiding": "openbaar",
+            "zaakgeometrie": {"type": "Point", "coordinates": [4.4683077, 51.9236739]},
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
@@ -223,6 +226,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "einddatum": "2021-01-01",
                 "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "zaakgeometrie": {
+                    "type": "Point",
+                    "coordinates": [4.4683077, 51.9236739],
+                },
                 "reden": "because",
             },
         )
@@ -233,6 +240,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "einddatum": "2021-01-01",
                 "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "zaakgeometrie": {
+                    "type": "Point",
+                    "coordinates": [4.4683077, 51.9236739],
+                },
             },
         )
         self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "because")
