@@ -557,23 +557,13 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         self.assertTrue(hasattr(serializer, "review_request"))
         variables = serializer.get_process_variables()
         self.assertEqual(
-            sorted(list(variables.keys())),
-            sorted(
-                [
-                    "kownslDocuments",
-                    "kownslUsersList",
-                    "kownslReviewRequestId",
-                    "kownslFrontendUrl",
-                ]
-            ),
-        )
-        self.assertEqual(
             variables,
             {
                 "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslUsersList": [[f"user:{user.username}" for user in self.users_1]],
+                "kownslUsersList": [[f"user:{user}" for user in self.users_1]],
                 "kownslReviewRequestId": str(self.review_request.id),
                 "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
+                "emailNotificationList": {f"user:{user}":False for user in self.users_1}
             },
         )
 
