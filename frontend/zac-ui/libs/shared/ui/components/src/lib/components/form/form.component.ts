@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {FormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration} from './field';
 import {FormService} from './form.service';
@@ -24,7 +24,7 @@ import {FormService} from './form.service';
   styleUrls: ['./form.component.scss'],
   templateUrl: './form.component.html',
 })
-export class FormComponent implements OnInit {
+export class FormComponent implements OnInit, OnChanges {
   @Input() form: FieldConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
   @Input() editable: boolean | string = true;
@@ -98,6 +98,31 @@ export class FormComponent implements OnInit {
    */
   ngOnInit(): void {
     this.getContextData();
+  }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   * @param {SimpleChanges} changes
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    const a = changes.form?.currentValue;
+    const b = changes.form?.previousValue;
+
+    if (!a || !b) {
+      return;
+    }
+
+    // Can we optimize this?
+    try {
+      if (JSON.stringify(a) === JSON.stringify(b)) {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+
+    this.getContextData()
   }
 
   //
