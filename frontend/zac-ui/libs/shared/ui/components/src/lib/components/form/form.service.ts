@@ -62,6 +62,10 @@ export class FormService {
     const key = this.getKeyFromFieldConfiguration(field);
     const _field = formGroup.get(key);
 
+    if(!_field) {
+      return;
+    }
+
     _field.clearValidators();
 
     if (isActive && isRequired) {
