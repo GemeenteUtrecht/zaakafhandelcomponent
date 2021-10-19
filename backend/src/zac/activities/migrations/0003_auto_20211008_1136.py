@@ -14,9 +14,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        migrations.RenameField(
             model_name="activity",
-            name="assignee",
+            old_name="assignee",
+            new_name="user_assignee",
         ),
         migrations.AddField(
             model_name="activity",
@@ -28,18 +29,6 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.SET_NULL,
                 to="auth.Group",
                 verbose_name="group assignee",
-            ),
-        ),
-        migrations.AddField(
-            model_name="activity",
-            name="user_assignee",
-            field=models.ForeignKey(
-                blank=True,
-                help_text="Person responsible for managing this activity.",
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                to=settings.AUTH_USER_MODEL,
-                verbose_name="user assignee",
             ),
         ),
     ]

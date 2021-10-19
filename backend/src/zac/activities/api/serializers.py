@@ -27,11 +27,13 @@ class ActivitySerializer(serializers.ModelSerializer):
         slug_field="name",
         queryset=Group.objects.prefetch_related("user_set").all(),
         required=False,
+        help_text=_("Name of the group."),
     )
     user_assignee = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=False,
+        help_text=_("Username of the user."),
     )
     events = EventSerializer(many=True, read_only=True)
 
