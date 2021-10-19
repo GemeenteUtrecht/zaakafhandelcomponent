@@ -248,8 +248,6 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "purpose": DocFileTypes.read,
             },
         )
-        advice_url = doc_url + "?versie=2"
-        source_url = doc_url + "?versie=1"
         self.assertEqual(
             response_data,
             {
@@ -268,8 +266,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                         "documents": [
                             {
                                 "adviceVersion": 2,
-                                "adviceUrl": advice_url,
-                                "sourceUrl": source_url,
+                                "adviceUrl": doc_url + "?versie=2",
+                                "sourceUrl": doc_url + "?versie=1",
                                 "sourceVersion": 1,
                                 "title": self.document["bestandsnaam"],
                             }
