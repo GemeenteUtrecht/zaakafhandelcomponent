@@ -7,10 +7,10 @@ export class FormService {
   /**
    * Returns whether a Field(Configuration) is active within the context of a form.
    * @param {FormGroup} formGroup
-   * @param {FieldConfiguration} field
+   * @param {Field|FieldConfiguration} field
    * @return {boolean}
    */
-  isFieldActive(formGroup: FormGroup, field: FieldConfiguration) {
+  isFieldActive(formGroup: FormGroup, field: Field | FieldConfiguration): boolean {
     return !field.activeWhen || field.activeWhen(formGroup)
   }
 
@@ -19,28 +19,56 @@ export class FormService {
    * @param {FieldConfiguration[]} form
    * @return {string[]}
    */
-  keysFromForm(form: FieldConfiguration[]): string[] {
-    return form.map((fieldConfiguration: FieldConfiguration) => this.keyFromFieldConfiguration(fieldConfiguration));
+  getKeysFromForm(form: FieldConfiguration[]): string[] {
+    return form.map((fieldConfiguration: FieldConfiguration) => this.getKeyFromFieldConfiguration(fieldConfiguration));
   }
 
   /**
    * Returns the key for a Field(Configuration).
-   * @param {FieldConfiguration} fieldConfiguration
+   * @param {Field|FieldConfiguration} field
    * @return {string}
    */
-  keyFromFieldConfiguration(fieldConfiguration: FieldConfiguration|Field): string {
-    return fieldConfiguration.key || fieldConfiguration.name || fieldConfiguration.label;
+  getKeyFromFieldConfiguration(field: Field | FieldConfiguration): string {
+    return field.key || field.name || field.label;
   }
 
   /**
    * Returns the name for a Field(Configuration).
-   * @param {FieldConfiguration} fieldConfiguration
+   * @param {Field|FieldConfiguration} field
    * @return {string}
    */
-  nameFromFieldConfiguration(fieldConfiguration: FieldConfiguration|Field): string {
-    return fieldConfiguration.name || fieldConfiguration.key || fieldConfiguration.label;
+  getNameFromFieldConfiguration(field: Field | FieldConfiguration): string {
+    return field.name || field.key || field.label;
   }
 
+  /**
+   * Returns field configuration as needle in haystack form.
+   * @param {FieldConfiguration[]} form
+   * @param {string} key
+   * @return {FieldConfiguration}
+   */
+  getFieldConfigurationByKey(form: FieldConfiguration[], key: string): FieldConfiguration {
+    return form.find((fieldConfiguration: FieldConfiguration) => this.getKeyFromFieldConfiguration(fieldConfiguration) === key);
+  }
+
+  /**
+   * Sets validators on field.
+   * @param {FormGroup} formGroup
+   * @param {Field|FieldConfiguration} field
+   */
+  setValidators(formGroup: FormGroup, field: Field | FieldConfiguration): void {
+    const isActive = this.isFieldActive(formGroup, field)
+    const isRequired = typeof field.required === "boolean" ? field.required : true;
+    const key = this.getKeyFromFieldConfiguration(field);
+    const _field = formGroup.get(key);
+
+    _field.clearValidators();
+
+    if (isActive && isRequired) {
+      _field.setValidators([Validators.required])
+    }
+    _field.updateValueAndValidity();
+  }
 
   /**
    * Creates FormGroup for the given form.
@@ -48,27 +76,34 @@ export class FormService {
    * @param {string[]} [keys]
    * @return {FormGroup}
    */
-  formToFormGroup(form: FieldConfiguration[], keys: string[] = this.keysFromForm(form)): FormGroup {
+  formToFormGroup(form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form)): FormGroup {
     const formControls = form
 
       // Filter FieldConfigurations on keys.
-      .filter((fieldConfiguration: FieldConfiguration) => keys.indexOf(this.keyFromFieldConfiguration(fieldConfiguration)) > -1)
+      .filter((fieldConfiguration: FieldConfiguration) => keys.indexOf(this.getKeyFromFieldConfiguration(fieldConfiguration)) > -1)
 
       // Convert FieldConfigurations to FormGroup instance.
       .reduce((acc, fieldConfiguration: FieldConfiguration) => {
-        const key = this.keyFromFieldConfiguration(fieldConfiguration);
+        const key = this.getKeyFromFieldConfiguration(fieldConfiguration);
         const required = typeof fieldConfiguration.required === "boolean" ? fieldConfiguration.required : true;
-
-        if (required) {
-          acc[key] = new FormControl(fieldConfiguration.value, Validators.required);
-        } else {
-          acc[key] = new FormControl(fieldConfiguration.value);
-        }
+        acc[key] = new FormControl(fieldConfiguration.value);
         return acc;
       }, {})
 
     // @ts-ignore
-    return new FormGroup(formControls);
+    const formGroup = new FormGroup(formControls);
+    this.getKeysFromForm(form)
+      .forEach((key) => {
+        const fieldConfiguration = form[key];
+
+        if (!fieldConfiguration) {
+          return;
+        }
+
+        this.setValidators(formGroup, fieldConfiguration);
+      })
+
+    return formGroup;
   }
 
   /**
@@ -79,24 +114,14 @@ export class FormService {
    * @param {boolean} [editable] Whether the form is editable.
    * @return {Field[]}
    */
-  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.keysFromForm(form), editable: boolean = true): Field[] {
+  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), editable: boolean = true): Field[] {
     return keys
       .map(key => {
-        const fieldConfiguration = this.fieldConfigurationByKey(form, key);
+        const fieldConfiguration = this.getFieldConfigurationByKey(form, key);
         fieldConfiguration.control = formGroup.controls[key];
         fieldConfiguration.readonly = editable ? fieldConfiguration.readonly : true;
         return new Field(fieldConfiguration);
       });
-  }
-
-  /**
-   * Returns field configuration as needle in haystack form.
-   * @param {FieldConfiguration[]} form
-   * @param {string} key
-   * @return {FieldConfiguration}
-   */
-  fieldConfigurationByKey(form: FieldConfiguration[], key: string): FieldConfiguration {
-    return form.find((fieldConfiguration: FieldConfiguration) => this.keyFromFieldConfiguration(fieldConfiguration) === key);
   }
 
   /**
@@ -106,7 +131,7 @@ export class FormService {
    * @param {string[]} [resolvedKeys]
    * @return {Object}
    */
-  serializeForm(formGroup, form, resolvedKeys=this.keysFromForm(form)) {
+  serializeForm(formGroup, form, resolvedKeys = this.getKeysFromForm(form)) {
 
     // Initial serialized data.
     const rawData = formGroup.getRawValue();
@@ -117,15 +142,15 @@ export class FormService {
         // Find active field by key.
         const field = this.formGroupToFields(formGroup, form, resolvedKeys)
           .filter(this.isFieldActive.bind(this, formGroup))
-          .find((_field: Field) => this.keyFromFieldConfiguration(_field) === key)
+          .find((_field: Field) => this.getKeyFromFieldConfiguration(_field) === key)
 
         // Field not found (or not active).
-        if(!field) {
+        if (!field) {
           return acc;
         }
 
         // Use name as key in data.
-        const name = this.nameFromFieldConfiguration(field);
+        const name = this.getNameFromFieldConfiguration(field);
 
         // Update data.
         acc[name] = value

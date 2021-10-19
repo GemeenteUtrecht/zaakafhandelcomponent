@@ -99,7 +99,7 @@ export class Field {
 
     const label = fieldConfiguration.label || fieldConfiguration.name;
     this.label = label.charAt(0).toUpperCase() + label.slice(1)
-    this.name = new FormService().nameFromFieldConfiguration(fieldConfiguration);
+    this.name = new FormService().getNameFromFieldConfiguration(fieldConfiguration);
 
     this.widgetType = this.getWidgetType(fieldConfiguration);
   }

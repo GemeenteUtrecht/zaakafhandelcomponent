@@ -62,13 +62,6 @@ export class InformatieComponent implements OnInit, OnChanges {
     return [
       ...this.caseDetailsFieldConfigurations,
       ...this.propertyFieldConfigurations,
-      {
-        label: 'reden',
-        placeholder: 'Reden',
-        value: '',
-        required: true,
-        writeonly: true,
-      }
     ];
   }
 
@@ -88,6 +81,14 @@ export class InformatieComponent implements OnInit, OnChanges {
         name: 'vertrouwelijkheidaanduiding',
         value: this.zaak.vertrouwelijkheidaanduiding,
         choices: this.confidentialityChoices,
+      },
+      {
+        activeWhen: (formGroup) => formGroup.getRawValue().vertrouwelijkheidaanduiding !== this.zaak.vertrouwelijkheidaanduiding,
+        label: 'reden',
+        placeholder: 'Reden',
+        value: '',
+        required: true,
+        writeonly: true,
       },
       {
         label: 'Omschrijving',
