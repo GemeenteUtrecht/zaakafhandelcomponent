@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,7 +14,6 @@ from rest_framework.views import APIView
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -108,69 +106,8 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    def user_has_submitted_review(self, review_request) -> str:
-        # !!! Complicated and fragile logic alert !!!
-        # Based on the authors and groups of submitted reviews and
-        # the user_deadline field we can derive if the user is allowed to review.
-        #
-        # If a user has already reviewed, but is part of a group that still
-        # is requested to review, the user SHOULD be allowed to submit another review
-        # and even though they have already submitted, the header should be flagged as false.
-        #
-        # Goal:
-        # Figure out if a user should be flagged as having submitted a review or not
-        # based on given reviews and user_deadlines field.
-        #
-        # Given that:
-        # 1) User_deadlines field looks like: {
-        # "user:<username>"":"<deadline1_date>",
-        # "group:<groupname":"<deadline2_date>",
-        # etc,
-        # }
-        # 2) User deadlines correspond with a step uniquely (i.e., one step has 1 unique deadline)
-        #
-        # Steps:
-        # 1) Remove the assignees that have already reviewed from user_deadlines so
-        # we can figure out at which step in a serial process we are.
-        # 2) Group the assignees and take out the intersection of the reviewers and assignees at that step.
-        # This leaves those that still need to review.
-        # If any of these are groups and the user is reviewing on behalf of that group, allow the submission of the review.
-        # If the user is not part of any leftover groups at that step nor is in user_deadlines at that date
-        # don't allow the submission of an(other) review.
-
-        # Remove reviewers from assignees
-        user_deadlines = {**review_request["user_deadlines"]}
-        for review in review_request["reviews"]:
-            if review["group"]:
-                assignee = f"{AssigneeTypeChoices.group}:{review['group']}".lower()
-            else:
-                assignee = (
-                    f"{AssigneeTypeChoices.user}:{review['author']['username']}".lower()
-                )
-
-            del user_deadlines[assignee]
-
-        # Get users with soonest deadline
-        deadlines_users = {}
-        for user, deadline in user_deadlines.items():
-            user = user.lower()
-            try:
-                deadlines_users[deadline].append(user)
-            except KeyError:
-                deadlines_users[deadline] = [user]
-
-        soonest_deadline = sorted(
-            list(deadlines_users.keys()),
-            key=lambda datestr: datetime.datetime.fromisoformat(datestr),
-        )[0]
-        users = deadlines_users[soonest_deadline]
-        if assignee not in users:
-            return "true"
-        return "false"
-
     def get(self, request, request_uuid):
         review_request = self.get_object()
-        headers = {"X-Kownsl-Submitted": self.user_has_submitted_review(review_request)}
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
@@ -179,7 +116,7 @@ class BaseRequestView(APIView):
             },
             context={"request": request, "view": self},
         )
-        return Response(serializer.data, headers=headers)
+        return Response(serializer.data)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.
