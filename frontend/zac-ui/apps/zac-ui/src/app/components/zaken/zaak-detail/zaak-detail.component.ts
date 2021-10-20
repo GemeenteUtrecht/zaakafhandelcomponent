@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'gu-zaak-detail',
   templateUrl: './zaak-detail.component.html',
-  styleUrls: ['./zaak-detail.component.scss']
 })
 export class ZaakDetailComponent implements OnInit {
   bronorganisatie: string;
