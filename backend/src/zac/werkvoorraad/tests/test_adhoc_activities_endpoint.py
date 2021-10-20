@@ -1,16 +1,17 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.urls import reverse
 
 from freezegun import freeze_time
+from furl import furl
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
-from zac.accounts.tests.factories import UserFactory
-from zac.activities.tests.factories import ActivityFactory, EventFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.activities.tests.factories import ActivityFactory
 from zgw.models.zrc import Zaak
 
 from ..api.data import ActivityGroup
@@ -42,19 +43,13 @@ class AdhocActivitiesTests(APITestCase):
             uiterlijkeEinddatumAfdoening="2021-02-17",
         )
         cls.zaak = factory(Zaak, zaak)
-
         cls.user = UserFactory.create()
-
-        cls.activity = ActivityFactory.create(zaak=cls.zaak.url, assignee=cls.user)
-        cls.events = [
-            EventFactory.create(
-                activity=cls.activity,
-            ),
-        ]
-        cls.endpoint = reverse(
-            "werkvoorraad:activities",
+        cls.activity = ActivityFactory.create(zaak=cls.zaak.url, user_assignee=cls.user)
+        cls.group = GroupFactory.create()
+        cls.user.groups.add(cls.group)
+        cls.group_activity = ActivityFactory.create(
+            zaak=cls.zaak.url, group_assignee=cls.group
         )
-
         cls.patch_get_zaak = patch(
             "zac.werkvoorraad.api.views.get_zaak", return_value=cls.zaak
         )
@@ -70,8 +65,10 @@ class AdhocActivitiesTests(APITestCase):
         self.client.logout()
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
-
-        response = self.client.get(self.endpoint)
+        endpoint = reverse(
+            "werkvoorraad:activities",
+        )
+        response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
 
@@ -82,18 +79,64 @@ class AdhocActivitiesTests(APITestCase):
             zaak_url=self.zaak.url,
         )
 
-        request = MagicMock()
-        request.user.return_value = self.user
-        serializer = WorkStackAdhocActivitiesSerializer(
-            activity_group, context={"request": request}
-        )
+        serializer = WorkStackAdhocActivitiesSerializer(activity_group)
         self.assertEqual(
             sorted(["activities", "zaak"]),
             sorted(list(serializer.data.keys())),
         )
 
     def test_adhoc_activities_endpoint(self):
-        response = self.client.get(self.endpoint)
+        endpoint = reverse(
+            "werkvoorraad:activities",
+        )
+        response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(sorted(["activities", "zaak"]), sorted(list(data[0].keys())))
+
+    def test_adhoc_group_activities_no_group_specified(self):
+
+        endpoint = reverse(
+            "werkvoorraad:group-activities",
+        )
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data, [])
+
+    def test_adhoc_group_activities_group_specified(self):
+        endpoint = furl(
+            reverse(
+                "werkvoorraad:group-activities",
+            )
+        )
+        endpoint.add({"group_assignee": self.group.name})
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(
+            data,
+            [
+                {
+                    "activities": [{"name": self.group_activity.name}],
+                    "zaak": {
+                        "identificatie": self.zaak.identificatie,
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "url": self.zaak.url,
+                    },
+                }
+            ],
+        )
+
+    def test_adhoc_group_activities_group_specified_user_not_in_group(self):
+        self.user.groups.remove(self.group)
+        endpoint = furl(
+            reverse(
+                "werkvoorraad:group-activities",
+            )
+        )
+        endpoint.add({"group_assignee": self.group.name})
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data, [])
