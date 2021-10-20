@@ -13,7 +13,6 @@ import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-acc
 @Component({
   selector: 'gu-features-zaak-detail',
   templateUrl: './features-zaak-detail.component.html',
-  styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
   @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;

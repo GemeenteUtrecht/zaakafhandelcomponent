@@ -1,138 +1,180 @@
-<div class="zaak-detail">
-  <div class="d-flex flex-column flex-md-row justify-content-md-between" *ngIf="zaakData">
-    <div class="d-flex">
-      <h1>{{zaakData.zaaktype.omschrijving}}</h1>
-      <button gu-button
-              buttonStyle="tertiary"
-              size="extrasmall"
-              class="ml-2 p-0"
-              *ngIf="activeActivities"
-              (click)="openModal('activities-modal')">
-        <span>
-          <gu-chip icon="launch" [color]="'primary'" [ngPlural]="activeActivities?.length">
-              <ng-template ngPluralCase="0">Activiteit toevoegen</ng-template>
-              <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit actief</ng-template>
-              <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten actief</ng-template>
-          </gu-chip>
-        </span>
-      </button>
-    </div>
-    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="person_add" (click)="openModal('add-person-modal')">Toegang verlenen</button>
-  </div>
+<section class="row m-0">
+  <div class="col-12 p-0">
+    <div class="feature-container">
+      <div class="content-background">
+        <article class="content">
 
-<!--  Loading -->
-  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+          <!-- Breadcrumb -->
+          <a class="anchor anchor--back mb-4" routerLink="/zaken">Alle zaken</a>
 
-<!--  Error and 403 access request -->
-  <div class="row" *ngIf="hasError && errorMessage">
-    <div class="col-lg-6">
-      <gu-message
-        *ngIf="!isSubmittingAccessRequest"
-        [type]="!accessRequestSuccess ? 'warn' : 'success'"
-        [message]="!accessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
-        class="d-block mb-4"
-        ></gu-message>
-      <div *ngIf="canRequestAccess && !accessRequestSuccess">
-        <h2>Toegang vragen tot deze zaak</h2>
-        <gu-input [control]="commentControl"
-                  type="text"
-                  label="Opmerking"
-                  class="mb-4">
-        </gu-input>
-        <button gu-button
-                (click)="submitAccessRequest()"
-                [disabled]='isSubmittingAccessRequest'
-                [loading]='isSubmittingAccessRequest'>
-          Aanvraag versturen
-        </button>
-      </div>
-    </div>
-  </div>
 
-  <div class="card-container">
-    <div class="row" *ngIf="zaakData?.resultaat">
-      <div class="col-12 mb-4">
-        <div class="card card--accent">
-          <p class="p--marginsmall">Resultaat: </p>
-          <h4 [ngClass]="{
-            'mb-0': !zaakData.resultaat.toelichting
-          }">
-            {{zaakData.resultaat.resultaattype.omschrijving}}</h4>
-          <p class="p--marginsmall" *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
-        </div>
-      </div>
-    </div>
-    <div class="row" *ngIf="zaakData">
-      <div class="col-xl-4">
-        <gu-informatie
-          *ngIf="zaakData"
-          [bronorganisatie]="bronorganisatie"
-          [identificatie]="identificatie"
-          class="zaak-detail__section">
-          <gu-betrokkenen [bronorganisatie]="bronorganisatie"
-                          [identificatie]="identificatie"
-          >
-          </gu-betrokkenen>
-        </gu-informatie>
-        <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl"
+          <!-- Header -->
+          <section class="row">
+            <header class="col-12 d-flex" *ngIf="zaakData">
+              <h1>{{zaakData.zaaktype.omschrijving}}</h1>
+
+              <button gu-button
+                      buttonStyle="tertiary"
+                      size="extrasmall"
+                      class="ml-2 p-0"
+                      *ngIf="activeActivities"
+                      (click)="openModal('activities-modal')">
+
+                <span>
+                  <gu-chip icon="launch" [color]="'primary'" [ngPlural]="activeActivities?.length">
+                      <ng-template ngPluralCase="0">Activiteit toevoegen</ng-template>
+                      <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit actief</ng-template>
+                      <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten actief</ng-template>
+                  </gu-chip>
+                </span>
+              </button>
+
+              <button gu-button buttonStyle="tertiary" size="extrasmall" icon="person_add"
+                      (click)="openModal('add-person-modal')">Toegang verlenen
+              </button>
+            </header>
+          </section>
+
+
+          <!--  Loading -->
+          <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+
+
+          <!-- Error and 403 access request -->
+          <section *ngIf="hasError && errorMessage" class="row">
+            <div class="col-lg-6">
+              <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!accessRequestSuccess ? 'warn' : 'success'"
+                          [message]="!accessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
+                          class="d-block mb-4"></gu-message>
+
+              <div *ngIf="canRequestAccess && !accessRequestSuccess">
+                <h2>Toegang vragen tot deze zaak</h2>
+
+                <gu-input [control]="commentControl"
+                          type="text"
+                          label="Opmerking"
+                          class="mb-4">
+                </gu-input>
+
+                <button gu-button
+                        (click)="submitAccessRequest()"
+                        [disabled]='isSubmittingAccessRequest'
+                        [loading]='isSubmittingAccessRequest'>
+                  Aanvraag versturen
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="row">
+
+            <!-- Left column -->
+            <div class="col-4">
+
+
+              <!-- I don't know what this does -->
+              <div *ngIf="zaakData?.resultaat" class="card card--accent">
+                <p class="p--marginsmall">Resultaat: </p>
+                <h4 [ngClass]="{
+                  'mb-0': !zaakData.resultaat.toelichting
+                }">
+                  {{zaakData.resultaat.resultaattype.omschrijving}}</h4>
+                <p class="p--marginsmall"
+                   *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
+              </div>
+
+
+              <!-- Details -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-informatie *ngIf="zaakData" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie">
+                  <gu-betrokkenen [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
+                </gu-informatie>
+              </aside>
+
+
+              <!-- Related cases -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie"
+                                       [identificatie]="identificatie"></gu-gerelateerde-zaken>
+              </aside>
+
+
+              <!-- User permissions -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-user-permissions [bronorganisatie]="bronorganisatie"
+                                     [identificatie]="identificatie"></gu-user-permissions>
+              </aside>
+            </div>
+
+
+            <!-- Right column -->
+            <div class="col-8">
+
+              <!-- Status -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-status [bronorganisatie]="bronorganisatie"
+                           [identificatie]="identificatie"
+                           [progress]="zaakData.deadlineProgress"
+                           [deadline]="zaakData.deadline"
+                           [finished]="!!zaakData.resultaat"></gu-status>
+              </aside>
+
+
+              <!-- Processes -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-keten-processen *ngIf="currentUser"
+                                    [mainZaakUrl]="mainZaakUrl"
+                                    [currentUser]="currentUser"
+                                    [bronorganisatie]="bronorganisatie"
+                                    [identificatie]="identificatie"
+                                    (update)="ketenProcessenUpdate($event)"
+                                    class="zaak-detail__section">
+                </gu-keten-processen>
+              </aside>
+
+
+              <!-- Approval -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
+                                         [identificatie]="identificatie"></gu-adviseren-accorderen>
+              </aside>
+
+
+              <!-- Related objects -->
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
+                                          [identificatie]="identificatie"></gu-gerelateerde-objecten>
+              </aside>
+
+
+              <aside *ngIf="zaakData" class="mb-4">
+                <gu-documenten [mainZaakUrl]="mainZaakUrl"
                                [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"
                                class="zaak-detail__section">
-        </gu-gerelateerde-zaken>
+                </gu-documenten>
+              </aside>
+            </div>
+          </section>
 
-        <gu-user-permissions [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-user-permissions>
-      </div>
 
+        </article>
 
-      <div class="col-xl-8">
-        <gu-status
-          [bronorganisatie]="bronorganisatie"
-          [identificatie]="identificatie"
-          [progress]="zaakData.deadlineProgress"
-          [deadline]="zaakData.deadline"
-          [finished]="!!zaakData.resultaat"
-          class="zaak-detail__section">
-        </gu-status>
-        <gu-keten-processen *ngIf="currentUser"
-                            [mainZaakUrl]="mainZaakUrl"
-                            [currentUser]="currentUser"
-                            [bronorganisatie]="bronorganisatie"
-                            [identificatie]="identificatie"
-                            (update)="ketenProcessenUpdate($event)"
-                            class="zaak-detail__section">
-        </gu-keten-processen>
-        <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
-                                 [identificatie]="identificatie"
-                                 class="zaak-detail__section"></gu-adviseren-accorderen>
-        <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
-                                  [identificatie]="identificatie"
-                                  class="zaak-detail__section">
-        </gu-gerelateerde-objecten>
-        <gu-documenten [mainZaakUrl]="mainZaakUrl"
-                       [bronorganisatie]="bronorganisatie"
-                       [identificatie]="identificatie"
-                       class="zaak-detail__section">
-        </gu-documenten>
+        <!-- Modals -->
+        <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
+          <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie"></gu-toegang-verlenen>
+        </gu-modal>
+
+        <gu-modal *ngIf="mainZaakUrl" [closeIcon]="true" id="activities-modal">
+          <gu-activiteiten *ngIf="currentUser && activityData"
+                           [mainZaakUrl]="mainZaakUrl"
+                           [bronorganisatie]="bronorganisatie"
+                           [identificatie]="identificatie"
+                           [currentUser]="currentUser"
+                           [activityData]="activityData">
+          </gu-activiteiten>
+        </gu-modal>
       </div>
     </div>
   </div>
-  <gu-modal id="add-person-modal"
-            [closeIcon]="true"
-            title="Toegang verlenen"
-            size="small">
-    <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie">
-    </gu-toegang-verlenen>
-  </gu-modal>
-  <gu-modal
-    *ngIf="mainZaakUrl"
-    id="activities-modal"
-    [closeIcon]="true">
-    <gu-activiteiten *ngIf="currentUser && activityData"
-                     [mainZaakUrl]="mainZaakUrl"
-                     [bronorganisatie]="bronorganisatie"
-                     [identificatie]="identificatie"
-                     [currentUser]="currentUser"
-                     [activityData]="activityData">
-    </gu-activiteiten>
-  </gu-modal>
-</div>
+</section>
