@@ -348,10 +348,14 @@ class ZaakDetailSerializer(APIModelSerializer):
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
     reden = serializers.CharField(
-        help_text=_("Reason for the edit, used in audit trail."),
+        required=False,
+        help_text=_(
+            "Reason for the edit, used in audit trail. Required when `vertrouwelijkheidaanduiding` is changed"
+        ),
     )
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         VertrouwelijkheidsAanduidingen.choices,
+        required=False,
         help_text=_("The confidentiality level of the case."),
     )
 
@@ -382,10 +386,25 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
             "uiterlijke_einddatum_afdoening": {
                 "required": False,
             },
-            "vertrouwelijkheidaanduiding": {
-                "required": False,
-            },
         }
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        zaak = self.context["zaak"]
+        vertrouwelijkheidaanduiding = validated_data.get("vertrouwelijkheidaanduiding")
+        reden = validated_data.get("reden")
+
+        if (
+            not reden
+            and vertrouwelijkheidaanduiding
+            and vertrouwelijkheidaanduiding != zaak.vertrouwelijkheidaanduiding
+        ):
+            raise serializers.ValidationError(
+                "'reden' is required when 'vertrouwelijkheidaanduiding' is changed"
+            )
+
+        return validated_data
 
 
 class StatusTypeSerializer(APIModelSerializer):
