@@ -365,6 +365,7 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
     )
     zaakgeometrie = serializers.JSONField(
         required=False,
+        allow_null=True,
         help_text=_("GeoJSON which represents the coordinates of the zaak"),
     )
 
