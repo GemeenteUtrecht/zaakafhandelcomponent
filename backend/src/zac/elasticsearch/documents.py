@@ -55,6 +55,7 @@ class ZaakDocument(Document):
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
     zaakobjecten = Nested(ZaakObjectDocument)
+    zaakgeometrie = field.Object()
 
     class Index:
         name = settings.ES_INDEX_ZAKEN

@@ -156,3 +156,4 @@ class ZaakDocumentSerializer(serializers.Serializer):
     status = StatusDocumentSerializer(required=False)
     toelichting = serializers.CharField(required=False)
     zaakobjecten = ZaakObjectDocumentSerializer(many=True, required=False)
+    zaakgeometrie = serializers.JSONField(required=False)
