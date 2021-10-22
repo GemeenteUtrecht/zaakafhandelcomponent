@@ -1,0 +1,11 @@
+
+::ng-deep gu-features-zaak-detail .gu-features-zaak-detail__sidebar {
+  height: 500px;
+
+  @media (min-width: 992px) {
+    background-attachment: fixed;
+    height: 100%;
+    position: fixed;
+    right: 0;
+  }
+}

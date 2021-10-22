@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges} from '@angular/core';
-import {Geometry, TableSort, Zaak} from '@gu/models';
+import {TableSort, Zaak} from '@gu/models';
 import {PageEvent} from '@angular/material/paginator';
-import {MapMarker} from "../../../../shared/ui/components/src/lib/components/map/map";
+import {MapGeometry, MapMarker} from "../../../../shared/ui/components/src/lib/components/map/map";
 
 @Component({
   selector: 'gu-features-search',
@@ -10,7 +10,7 @@ import {MapMarker} from "../../../../shared/ui/components/src/lib/components/map
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FeaturesSearchComponent {
-  mapGeometry: Geometry;
+  mapGeometry: MapGeometry;
   mapMarkers: MapMarker[] = [];
 
   resultData: Zaak[] = [];
@@ -18,10 +18,11 @@ export class FeaturesSearchComponent {
   sortData: TableSort;
   pageData: PageEvent;
 
-  constructor(private changeDetectorRef: ChangeDetectorRef) {}
+  constructor(private changeDetectorRef: ChangeDetectorRef) {
+  }
 
-  onMapGeometry(geometry): void {
-    this.mapGeometry = geometry;
+  onMapGeometry(mapGeometry: MapGeometry): void {
+    this.mapGeometry = mapGeometry;
   }
 
   onMapMarkers(mapMarkers): void {
