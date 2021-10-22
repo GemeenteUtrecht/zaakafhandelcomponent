@@ -22,3 +22,16 @@ class SelectDocumentsField(fields.ListField):
             ),
         )
         super().__init__(*args, **kwargs)
+
+
+class NullableJsonField(fields.JSONField):
+    def get_attribute(self, instance):
+        """
+        Skip field if it's not included in the request.
+        Nested fields are not supported
+        """
+
+        if self.source not in instance:
+            raise fields.SkipField()
+
+        return super().get_attribute(instance)

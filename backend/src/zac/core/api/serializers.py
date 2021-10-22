@@ -46,6 +46,7 @@ from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
 from .data import VertrouwelijkheidsAanduidingData
+from .fields import NullableJsonField
 from .utils import (
     CSMultipleChoiceField,
     TypeChoices,
@@ -363,7 +364,7 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
         required=False,
         help_text=_("The confidentiality level of the case."),
     )
-    zaakgeometrie = serializers.JSONField(
+    zaakgeometrie = NullableJsonField(
         required=False,
         allow_null=True,
         help_text=_("GeoJSON which represents the coordinates of the zaak"),
