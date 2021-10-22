@@ -23,6 +23,6 @@ export class ZaakObjectStringPipe {
    * @return {string}
    */
   transform(zaakObject: ZaakObject): string {
-    return this.zaakObjectService.stringifyZaakObject(zaakObject);
+    return this.zaakObjectService.stringifyZaakObject(zaakObject, 5);
   }
 }

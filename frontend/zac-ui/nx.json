@@ -65,6 +65,9 @@
     },
     "features-contezza-document-search": {
       "tags": []
+    },
+    "features-dashboard": {
+      "tags": []
     }
   }
 }

@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import truncatewords
 from django.utils.translation import gettext_lazy as _
@@ -25,14 +27,23 @@ class Activity(models.Model):
         choices=ActivityStatuses.choices,
         default=ActivityStatuses.on_going,
     )
-    assignee = models.ForeignKey(
+    user_assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        verbose_name=_("assignee"),
+        verbose_name=_("user assignee"),
         help_text=_("Person responsible for managing this activity."),
         on_delete=models.SET_NULL,
     )
+    group_assignee = models.ForeignKey(
+        Group,
+        null=True,
+        blank=True,
+        verbose_name=_("group assignee"),
+        help_text=_("Group responsible for managing this activity."),
+        on_delete=models.SET_NULL,
+    )
+
     document = models.URLField(
         _("document URL"),
         max_length=1000,
@@ -51,6 +62,13 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.user_assignee and self.group_assignee:
+            raise ValidationError(
+                "An activity can not be assigned to both a user and a group."
+            )
+        return super().save(*args, **kwargs)
 
 
 class Event(models.Model):

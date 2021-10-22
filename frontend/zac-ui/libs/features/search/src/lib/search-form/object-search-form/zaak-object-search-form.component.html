@@ -1,5 +1,12 @@
-<gu-form [form]="form" buttonLabel="Zoeken" (formSubmit)="submitForm($event)"></gu-form>
-<mat-action-list *ngIf="showZaakObjecten">
+<ng-container *ngIf="isLoading">
+  <gu-loading-indicator></gu-loading-indicator>
+</ng-container>
+
+
+<gu-form *ngIf="!isLoading" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)"
+         (formSubmit)="submitForm($event)"></gu-form>
+
+<mat-action-list *ngIf="showZaakObjecten" dense>
   <mat-list-item *ngFor="let zaakObject of zaakObjects" (click)="_selectZaakObject($event, zaakObject)">
     <mat-icon mat-list-icon>article</mat-icon>
     {{ zaakObject | zaakObjectString }}

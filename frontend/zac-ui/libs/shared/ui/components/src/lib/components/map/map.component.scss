@@ -1,0 +1,14 @@
+::ng-deep gu-map {
+  display: block;
+  height: 100%;
+  position: relative;
+  width: 100%;
+
+  .leaflet-container {
+    height: 100% !important;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+}

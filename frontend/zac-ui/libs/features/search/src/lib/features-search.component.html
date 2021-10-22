@@ -1,4 +1,23 @@
-<div class="gu-search">
-  <gu-search-form class="d-block mb-4" (loadResult)="resultData = $event" (resultLength)="resultLength = $event" [sortData]="sortData" [pageData]="pageData"></gu-search-form>
-  <gu-search-results [resultData]="resultData" [resultLength]="resultLength" (sortOutput)="sortData = $event" (pageOutput)="pageData = $event"></gu-search-results>
-</div>
+<section class="">
+  <div class="col-sm-12 col-lg-6">
+    <div class="gu-search">
+      <h1>Zaken zoeken</h1>
+
+      <gu-search-form [pageData]="pageData"
+                      [sortData]="sortData"
+                      (mapGeometry)="onMapGeometry($event)"
+                      (mapMarkers)="onMapMarkers($event)"
+                      (loadResult)="onLoadResult($event)"
+                      (resultLength)="onResultLength"
+                      class="d-block mb-4"></gu-search-form>
+      <gu-search-results [resultData]="resultData"
+                         [resultLength]="resultLength"
+                         (pageOutput)="pageData = $event"
+                         (sortOutput)="sortData = $event"></gu-search-results>
+    </div>
+  </div>
+
+  <div class="col-sm-12 col-lg-6">
+    <gu-map [height]="'300px'" [geometries]="[mapGeometry]" [mapMarkers]="mapMarkers"></gu-map>
+  </div>
+</section>

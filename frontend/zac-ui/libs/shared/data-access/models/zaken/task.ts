@@ -13,6 +13,7 @@ export interface Task {
   created: Date;
   hasForm: boolean;
   assignee: Assignee;
+  assigneeType: 'user' | 'group';
 }
 
 export interface UserTask {

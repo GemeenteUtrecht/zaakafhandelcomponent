@@ -194,6 +194,7 @@ class DeleteAccessAPITests(APITransactionTestCase):
 
     @requests_mock.Mocker()
     def test_delete_access_success(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
         user_atomic_permission = UserAtomicPermissionFactory.create(
             user=self.user, atomic_permission__object_url=self.zaak["url"]

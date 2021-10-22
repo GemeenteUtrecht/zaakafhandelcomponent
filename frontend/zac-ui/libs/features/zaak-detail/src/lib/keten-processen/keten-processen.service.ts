@@ -5,6 +5,7 @@ import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
 import { ReadWriteDocument, Task, User } from '@gu/models';
 import { KetenProcessen } from '../../models/keten-processen';
+import { UserGroupSearch } from '../../models/user-group-search';
 
 
 export interface SendMessageForm {
@@ -81,6 +82,10 @@ export class KetenProcessenService {
    * @returns {Task[]}
    */
   mergeTaskData(ketenProcessenData: KetenProcessen[]): Task[] {
+    if(!ketenProcessenData.length) {
+      return []
+    }
+
     const mainTasksArray = ketenProcessenData[0].tasks;
     const subTasksArray = [];
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
@@ -109,9 +114,19 @@ export class KetenProcessenService {
     return this.http.Get<UserSearch>(endpoint);
   }
 
+  getUserGroups(searchInput: string): Observable<UserGroupSearch>{
+    const endpoint = encodeURI(`/api/accounts/groups?search=${searchInput}`);
+    return this.http.Get<UserGroupSearch>(endpoint);
+  }
+
   getCurrentUser(): Observable<User> {
     const endpoint = encodeURI("/api/accounts/users/me");
     return this.http.Get<User>(endpoint);
+  }
+
+  postAssignTask(formData) {
+    const endpoint = encodeURI('/api/camunda/claim-task');
+    return this.http.Post<any>(endpoint, formData)
   }
 
   putTaskData(taskId: string, formData) {

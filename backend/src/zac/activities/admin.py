@@ -8,7 +8,6 @@ class ActivityAdmin(admin.ModelAdmin):
     list_display = ("name", "zaak", "status")
     list_filter = ("status",)
     search_fields = ("zaak", "name")
-    raw_id_fields = ("assignee",)
     date_hierarchy = "created"
 
 

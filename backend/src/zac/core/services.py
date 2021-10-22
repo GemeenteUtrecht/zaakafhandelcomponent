@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urljoin, urlparse
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 import requests
 from furl import furl
@@ -36,11 +37,12 @@ from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import SUPPORTED_QUERY_PARAMS, search
 from zac.utils.decorators import cache as cache_result
+from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
 
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
-from .rollen import Rol, get_naam_medewerker
+from .rollen import Rol
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,12 @@ A_DAY = AN_HOUR * 24
 
 def _client_from_url(url: str):
     service = Service.get_service(url)
-    return service.build_client()
+    if not service:
+        raise ServiceConfigError(
+            _("The service for the url %s is not configured in the admin") % url
+        )
+    client = service.build_client()
+    return client
 
 
 def _client_from_object(obj):

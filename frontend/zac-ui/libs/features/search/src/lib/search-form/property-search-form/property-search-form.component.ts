@@ -71,7 +71,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     const pageHasChanged = changes.pageData?.previousValue !== this.pageData;
     const sortHasChanged = changes.sortData?.previousValue !== this.pageData;
     if (sortHasChanged || pageHasChanged) {
-      this.page = this.pageData.pageIndex + 1;
+      this.page = (this.pageData?.pageIndex || 0) + 1;
       this.postSearchZaken(this.search, this.page, this.sortData);
     }
   }

@@ -1,3 +1,20 @@
 .gu-search {
   padding-top: 6px;
 }
+
+
+::ng-deep gu-features-search gu-map {
+  height: 300px;
+
+  @media (min-width: 992px) {
+    height: 100%;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: calc(50% - 50px);
+  }
+}
+
+::ng-deep gu-features-search .mat-tab-body-content {
+  overflow: hidden;
+}

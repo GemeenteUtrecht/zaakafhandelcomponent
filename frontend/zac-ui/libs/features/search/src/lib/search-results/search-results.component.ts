@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { RowData, Table, Zaak } from '@gu/models';
-import { tableHead } from './constants/table';
-import { PageEvent } from '@angular/material/paginator';
+import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
+import {RowData, Table, Zaak} from '@gu/models';
+import {tableHead} from './constants/table';
+import {PageEvent} from '@angular/material/paginator';
 
 @Component({
   selector: 'gu-search-results',
@@ -16,19 +16,18 @@ export class SearchResultsComponent implements OnChanges {
 
   tableData: Table = new Table([], []);
 
-  constructor() { }
+  constructor() {
+  }
 
-  ngOnChanges(): void {
-    if (this.resultData) {
-      this.tableData = this.createTableData(this.resultData);
-    }
+  ngOnChanges(changes: SimpleChanges): void {
+    this.tableData = this.createTableData(changes.resultData.currentValue);
   }
 
   createTableData(resultData: Zaak[]): Table {
     const tableData: Table = new Table(tableHead, []);
 
     // Add table body data
-    tableData.bodyData = resultData.map( result => {
+    tableData.bodyData = resultData.map(result => {
       const url = `/ui/zaken/${result.bronorganisatie}/${result.identificatie}`;
       const rowData: RowData = {
         cellData: {

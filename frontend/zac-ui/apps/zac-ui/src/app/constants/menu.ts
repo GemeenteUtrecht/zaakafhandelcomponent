@@ -7,12 +7,17 @@ const menuItems: MenuItem[] = [
     to: '/',
   },
   {
+    icon: 'dashboard',
+    label: 'Dashboard',
+    to: '/dashboard',
+  },
+  {
     icon: 'search',
     label: 'Zoeken',
     to: '/zoeken',
   },
   {
-    icon: 'launch',
+    icon: 'feed',
     label: 'Formulieren',
     to: '/formulieren',
   },

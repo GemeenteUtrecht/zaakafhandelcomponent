@@ -62,8 +62,9 @@ def create_doc(
             try:
                 # We can fetch the first from the list because the
                 # client will have raised an exception
-                # if the status isn't as expected.
-                response = client.list("documenten", data=data)[0]
+                # if the status isn't as expected and there SHOULD only
+                # be one documentfile with these attributes.
+                response = client.list("documenten", query_params=data)[0]
                 status_code = status.HTTP_200_OK
             except ClientError as err:  # Relay error
                 raise DOWCCreateError(err.args[0])

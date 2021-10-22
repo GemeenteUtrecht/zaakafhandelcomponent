@@ -14,6 +14,9 @@ const routes: Routes = [
   }
 ];
 
+/**
+ * Module responsible for routing to component.
+ */
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]

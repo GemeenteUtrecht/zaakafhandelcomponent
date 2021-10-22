@@ -35,7 +35,8 @@ from .serializers import ActivitySerializer, EventSerializer
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = (
         Activity.objects.order_by("created")
-        .select_related("assignee")
+        .select_related("user_assignee")
+        .select_related("group_assignee")
         .prefetch_related(
             Prefetch("events", queryset=Event.objects.order_by("created"))
         )

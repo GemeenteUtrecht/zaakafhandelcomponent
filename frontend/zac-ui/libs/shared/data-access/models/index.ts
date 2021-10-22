@@ -9,6 +9,9 @@ export * from './meta/confidentiality';
 export * from './meta/document';
 export * from './meta/zaaktype';
 
+// Objects
+export * from './objects/objecttype'
+
 // UI models
 export * from './ui/table';
 export * from './ui/file-upload';

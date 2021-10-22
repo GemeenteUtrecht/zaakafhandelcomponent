@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
-import {ObjectType, RowData, Table, ZaakObject, ZaakObjectGroup} from '@gu/models';
+import {ObjectType, ObjectTypeVersion, RowData, Table, ZaakObject, ZaakObjectGroup} from '@gu/models';
 import {ZaakObjectService, ZaakService} from '@gu/services';
 
 /**
@@ -80,8 +80,8 @@ export class GerelateerdeObjectenComponent implements OnInit {
       /* Use the latest version of the ObjectType to make the table headers */
       const latestZaakObjectGroup = group.items[0];
       const latestZaakObjectGroupType = latestZaakObjectGroup.type as ObjectType;
-      const objectProperties: [] = latestZaakObjectGroupType.versions[latestZaakObjectGroupType.versions?.length - 1]
-        .jsonSchema.required;
+      const objectTypeVersion = latestZaakObjectGroupType.versions[latestZaakObjectGroupType.versions?.length - 1] as ObjectTypeVersion
+      const objectProperties = objectTypeVersion.jsonSchema.required;
 
       const tableHead: string[] = [
         ...objectProperties.filter((property): boolean => property !== 'objectid'),
@@ -101,8 +101,37 @@ export class GerelateerdeObjectenComponent implements OnInit {
           value: relatedObject,
         }
 
+        const nestedCellData = Object.entries(relatedObject.record)
+          .filter(([, value]) => value !== null)
+          .filter(([, value]) => !Array.isArray(value))
+          .filter(([, value]) => typeof value !== 'object')
+          .reduce((acc: {}, [key, value]) => {
+
+            // typeVersion -> type version.
+            const _key = key[0] + key.slice(1).replace(
+              /[A-Z]/,
+              (str: string) => ` ${str.toLowerCase()}`
+            )
+
+            // Date
+            if (key.match(/at$/i)) {
+              const _value = {
+                type: 'date',
+                date: value
+              }
+              acc[_key] = _value
+              return acc;
+            }
+
+            acc[_key] = value;
+            return acc;
+          }, {})
+
         return {
-          cellData: cellData
+          cellData: cellData,
+          nestedTableData: new Table((Object.keys(nestedCellData)), [{
+            cellData: nestedCellData,
+          }]),
         };
       });
 
@@ -121,6 +150,26 @@ export class GerelateerdeObjectenComponent implements OnInit {
    */
   ngOnInit(): void {
     this.getContextData();
+  }
+
+  /**
+   * A function optionally passed into the NgForOf directive to customize how NgForOf uniquely identifies items in an
+   * iterable.
+   *
+   * In all of these scenarios it is usually desirable to only update the DOM elements associated with the items
+   * affected by the change. This behavior is important to:
+   *
+   *  - preserve any DOM-specific UI state (like cursor position, focus, text selection) when the iterable is modified
+   *  - enable animation of item addition, removal, and iterable reordering
+   *  - preserve the value of the <select> element when nested <option> elements are dynamically populated using NgForOf
+   *    and the bound iterable is updated
+   *
+   * @param {number} index
+   * @param {Table} table
+   * @return {number}
+   */
+  trackRow(index: number, table: Table) {
+    return this.tables?.findIndex((titleAndTable: { title: string, table: Table }) => titleAndTable.table === table);
   }
 
   //

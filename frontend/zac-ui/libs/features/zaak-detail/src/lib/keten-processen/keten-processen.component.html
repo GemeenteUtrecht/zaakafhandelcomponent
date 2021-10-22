@@ -47,7 +47,18 @@
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold">{{task.name}}</p>
-                <label class="label label--date mb-2">{{task.created | date:'fullDate'}}</label>
+
+                <!-- Double click shows id. -->
+                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                  <ng-container *ngIf="debugTask===task">
+                    Task id: {{task.id}}
+                  </ng-container>
+
+                  <ng-container *ngIf="debugTask!==task">
+                    {{task.created | date:'fullDate'}}
+                  </ng-container>
+                </label>
+
               </div>
 
               <!-- Actions -->
@@ -70,7 +81,18 @@
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
-                <label class="label label--date mb-2">{{task.created | date:'fullDate'}}</label>
+
+                <!-- Double click shows id. -->
+                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                  <ng-container *ngIf="debugTask===task">
+                    Task id: {{task.id}}
+                  </ng-container>
+
+                  <ng-container *ngIf="debugTask!==task">
+                    {{task.created | date:'fullDate'}}
+                  </ng-container>
+                </label>
+
                 <div class="d-flex flex-column justify-content-center" *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                   <button gu-button class="mb-2" buttonStyle="action-link" (click)="executeTask(task.id)">
                     Behandelen
@@ -84,17 +106,27 @@
                         *ngIf="ketenProcessenService.isTaskAssigned(task)"
                         buttonStyle="tertiary"
                         size="extrasmall"
-                        icon="person"
+                        [icon]="task.assigneeType === 'user' ? 'person' : 'group'"
                         class="d-inline-block mb-2"
                         (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
                         [disabled]="!ketenProcessenService.isUserAllowedToAssignTask(currentUser, task)"
                 >
-                  <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
-                    {{task.assignee.firstName}} {{task.assignee.lastName}}
+                  <!-- user -->
+                  <ng-container *ngIf="task.assigneeType === 'user'">
+                    <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
+                      {{task.assignee.firstName}} {{task.assignee.lastName}}
+                    </ng-container>
+                    <ng-template #username>
+                      <ng-container *ngIf="task.assignee.username">
+                        {{task.assignee.username}}
+                      </ng-container>
+                    </ng-template>
                   </ng-container>
-                  <ng-template #username>
-                    {{task.assignee.username}}
-                  </ng-template>
+
+                  <!-- group -->
+                  <ng-container *ngIf="task.assigneeType === 'group'">
+                    {{task.assignee.name}}
+                  </ng-container>
                 </button>
               </div>
             </div>

@@ -2,7 +2,7 @@ import {Component, Input, OnInit, OnChanges} from '@angular/core';
 import {EigenschapWaarde, Zaak} from '@gu/models';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {InformatieService} from './informatie.service';
-import {ZaakService} from "@gu/services";
+import {ZaakService} from '@gu/services';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
@@ -93,6 +93,7 @@ export class InformatieComponent implements OnInit, OnChanges {
         label: 'Omschrijving',
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
+        required: true,
         value: this.zaak.omschrijving,
       },
       {

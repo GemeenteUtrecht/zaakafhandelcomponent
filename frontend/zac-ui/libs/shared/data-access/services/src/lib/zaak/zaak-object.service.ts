@@ -41,19 +41,25 @@ export class ZaakObjectService {
   /**
    * Search for objects in the Objects API
    * @param {Geometry} geometry
+   * @param {string} objectTypeUrl
+   * @param {string} [property] Object type property.
    * @param {string} [query]
    * @return {Observable}
    */
-  searchObjects(geometry: Geometry, query: string = ''): Observable<ZaakObject[]> {
+  searchObjects(geometry: Geometry, objectTypeUrl: string, property: string = '', query: string = ''): Observable<ZaakObject[]> {
     const endpoint = encodeURI('/api/core/objects');
     const search = {
-      geometry: {
+      type: objectTypeUrl,
+    }
+
+    if(geometry) {
+      search['geometry'] = {
         within: geometry
-      },
+      }
     }
 
     if (query) {
-      search['data_attrs'] = this._parseQuery(query);
+      search['data_attrs'] = this._parseQuery(property, query);
     }
 
     return this.http.Post<ZaakObject[]>(endpoint, search);
@@ -62,27 +68,31 @@ export class ZaakObjectService {
   /**
    * Creates a string representation for a zaak object.
    * @param {ZaakObject} zaakObject
+   * @param {number} [maxEntries] If set, the maximum amount of key/value pairs displayed.
    * @return {string}
    */
-  stringifyZaakObject(zaakObject: ZaakObject): string {
+  stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
     return Object.entries(zaakObject.record.data)
-      .filter(([key, value]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)
-      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)
-      .sort()
-      .join(', ');
+      .filter(([key,]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)  // Filter unwanted keys.
+      .filter(([,value]) => !value.match(/^http/))  // Filter URLs.
+      .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)  // Create key/value string.
+      .sort()  // Sort items alphabetically (key).
+      .filter((value, index) => maxEntries === null || index < maxEntries)  // Limit entries
+      .join(', ');  // Join string.
   }
 
   /**
    * Converts a human-readable query to a valid API data_attrs value.
+   * @param {string} [property] Object type property.
    * @param {string} query e.q.: "Naam van object" or "adres:Utrechtsestraat, type:Laadpaal"
    * @return {string} Value suitable for data_attrs argument.
    * @private
    */
-  _parseQuery(query: string): string {
+  _parseQuery(property: string, query: string): string {
     return query.split(',')
-      .map((part) => part.match(':') ? part : `name:${part}`)
+      .map((part) => part.match(':') ? part : `${property}:${part}`)
       .map((keyValue) => keyValue.replace(/:\s*/g, ':').trim())
-      .map((keyValue) => keyValue.replace(':', '__exact__'))
+      .map((keyValue) => keyValue.replace(':', '__icontains__'))
       .join(',');
   }
 }

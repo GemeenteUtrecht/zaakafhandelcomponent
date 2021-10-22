@@ -49,6 +49,7 @@
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/@ng-select/ng-select/themes/default.theme.css",
+              "./node_modules/leaflet/dist/leaflet.css",
               "node_modules/ngx-bootstrap/tabs/tabs.css",
               "apps/zac-ui/src/styles.scss",
               "apps/zac-ui/src/theme.scss"
@@ -631,6 +632,48 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/features/auth-profiles/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      }
+    },
+    "features-dashboard": {
+      "projectType": "library",
+      "root": "libs/features/dashboard",
+      "sourceRoot": "libs/features/dashboard/src",
+      "prefix": "gu",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/features/dashboard/tsconfig.lib.json",
+            "project": "libs/features/dashboard/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/features/dashboard/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/features/dashboard/tsconfig.lib.json",
+              "libs/features/dashboard/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/features/dashboard/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/features/dashboard/jest.config.js",
             "passWithNoTests": true
           }
         }

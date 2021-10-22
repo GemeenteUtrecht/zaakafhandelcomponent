@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.urls import reverse
 
 import requests_mock
@@ -236,8 +237,42 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "because")
 
+    def test_update_zaak_invalid_cache(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        # populate cache
+        get_response = self.client.get(self.detail_url)
+
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        cache_find_key = (
+            f"zaak:{self.zaak['bronorganisatie']}:{self.zaak['identificatie']}"
+        )
+        self.assertIsNotNone(cache.get(cache_find_key))
+
+        # patch
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "einddatum": "2021-01-01",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "reden": "because",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        #  cache is cleaned
+        self.assertIsNone(cache.get(cache_find_key))
+
     @freeze_time("2020-12-26T12:00:00Z")
-    def test_change_invalid(self, m):
+    def test_change_va_without_reden_invalid(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -251,16 +286,75 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.patch(
             self.detail_url,
             {
-                "vertrouwelijkheidaanduiding": "zo-geheim-dit",
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-        self.assertEqual(response.status_code, 400)
-        response = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response["vertrouwelijkheidaanduiding"],
-            ['"zo-geheim-dit" is een ongeldige keuze.'],
+            response.json()["nonFieldErrors"],
+            ["'reden' is required when 'vertrouwelijkheidaanduiding' is changed"],
         )
-        self.assertEqual(response["reden"], ["Dit veld is vereist."])
+
+    @freeze_time("2020-12-26T12:00:00Z")
+    def test_change_va_without_reden_valid(self, m):
+        """ Update va without changing va value doesn't require reden"""
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "vertrouwelijkheidaanduiding": self.zaak["vertrouwelijkheidaanduiding"],
+                "omschrijving": "new desc",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(m.last_request.url, self.zaak["url"])
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.openbaar,
+                "omschrijving": "new desc",
+            },
+        )
+        self.assertFalse("X-Audit-Toelichting" in m.last_request.headers)
+
+    def test_change_without_reden_valid(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
+        response = self.client.patch(
+            self.detail_url,
+            {
+                "omschrijving": "new desc",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(m.last_request.url, self.zaak["url"])
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "omschrijving": "new desc",
+            },
+        )
+        self.assertFalse("X-Audit-Toelichting" in m.last_request.headers)
 
 
 class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):

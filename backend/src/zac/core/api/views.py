@@ -233,19 +233,21 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         service = Service.get_service(zaak.url)
         client = service.build_client()
 
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={"zaak": zaak})
         serializer.is_valid(raise_exception=True)
 
         # If no errors are raised - data is valid too.
         data = {**serializer.data}
-        reden = data.pop("reden")
+        reden = data.pop("reden", None)
+        request_kwargs = {"headers": {"X-Audit-Toelichting": reden}} if reden else {}
 
         client.partial_update(
             "zaak",
             data,
             url=zaak.url,
-            request_kwargs={"headers": {"X-Audit-Toelichting": reden}},
+            request_kwargs=request_kwargs,
         )
+        invalidate_zaak_cache(zaak=zaak)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

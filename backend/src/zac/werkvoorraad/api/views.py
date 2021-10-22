@@ -1,8 +1,11 @@
 from typing import List
 
+from django.contrib.auth.models import Group
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions
 from rest_framework.generics import ListAPIView
 from zds_client import ClientError
@@ -44,15 +47,18 @@ class WorkStackAccessRequestsView(ListAPIView):
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
-@extend_schema(summary=_("List adhoc activities"))
+@extend_schema(summary=_("List adhoc activities by user"))
 class WorkStackAdhocActivitiesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackAdhocActivitiesSerializer
     filter_backends = ()
 
-    def get_queryset(self):
-        activity_groups = Activity.objects.as_werkvoorraad(user=self.request.user)
+    def get_activities(self) -> List[dict]:
+        return Activity.objects.as_werkvoorraad(user=self.request.user)
+
+    def get_queryset(self) -> List[ActivityGroup]:
+        activity_groups = self.get_activities()
 
         def set_zaak(group):
             try:
@@ -70,6 +76,31 @@ class WorkStackAdhocActivitiesView(ListAPIView):
             ActivityGroup(**group) for group in activity_groups if "zaak" in group
         ]
         return groups
+
+
+@extend_schema(
+    summary=_("List adhoc activities by the group of a user"),
+    parameters=[
+        OpenApiParameter(
+            name="group_assignee",
+            required=True,
+            type=OpenApiTypes.STR,
+            description=_("The name of the group assigned to the activity."),
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+)
+class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
+    def get_activities(self) -> List[dict]:
+        group_assignee = self.request.query_params.get("group_assignee")
+        if not group_assignee:
+            return []
+
+        group = get_object_or_404(Group, name__iexact=group_assignee)
+        if group in self.request.user.groups.all():
+            return Activity.objects.as_werkvoorraad(group=group)
+
+        return []
 
 
 @extend_schema(

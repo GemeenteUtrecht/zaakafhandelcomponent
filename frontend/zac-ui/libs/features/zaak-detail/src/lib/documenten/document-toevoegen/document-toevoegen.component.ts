@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ApplicationHttpClient } from '@gu/services';
 import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
 import { Document } from '@gu/models';
 import { DocumentenService } from '../documenten.service';
@@ -42,13 +41,14 @@ export class DocumentToevoegenComponent implements OnInit {
 
   @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 
+  readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van documenten.';
+
   documentTypes: any;
   addDocumentForm: FormGroup;
   isLoading: boolean;
   isSubmitting: boolean;
 
   constructor(
-    private http: ApplicationHttpClient,
     private documentService: DocumentenService,
     private fb: FormBuilder,
     private modalService: ModalService,
@@ -98,7 +98,6 @@ export class DocumentToevoegenComponent implements OnInit {
   //
   // Context.
   //
-
   /**
    * Fetch document types.
    */
@@ -110,7 +109,6 @@ export class DocumentToevoegenComponent implements OnInit {
       })
     }
   }
-
   /**
    * Submit form.
    */
@@ -189,8 +187,7 @@ export class DocumentToevoegenComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    const errorMessage = error.error?.name[0] || 'Er is een fout opgetreden';
-    this.snackbarService.openSnackBar(errorMessage, 'Sluiten', 'warn');
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }
 
