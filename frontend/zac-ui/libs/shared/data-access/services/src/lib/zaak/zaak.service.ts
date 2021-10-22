@@ -4,6 +4,8 @@ import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {Document, EigenschapWaarde, UserPermission, Zaak} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
+import {CachedObservableMethod, ClearCacheOnMethodCall} from '@gu/utils';
+
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +21,7 @@ export class ZaakService {
    * Navigate to a case.
    * @param {{bronorganisatie: string, identificatie: string}} zaak
    */
-  navigateToCase(zaak: {bronorganisatie: string, identificatie: string}) {
+  navigateToCase(zaak: { bronorganisatie: string, identificatie: string }) {
     this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie]);
   }
 
@@ -29,6 +31,7 @@ export class ZaakService {
    * @param {string} identificatie
    * @return {Observable}
    */
+  @CachedObservableMethod('ZaakService.retrieveCaseDetails')
   retrieveCaseDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
     return this.http.Get<Zaak>(encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`));
   }
@@ -40,6 +43,7 @@ export class ZaakService {
    * @param {*} formData
    * @return {Observable}
    */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
   updateCaseDetails(bronorganisatie, identificatie, formData): Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}`);
     return this.http.Patch<any>(endpoint, formData);
@@ -52,6 +56,7 @@ export class ZaakService {
    * @param {*} formData
    * @return {Observable}
    */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
   editCaseDocument(bronorganisatie, identificatie, formData: any): Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`);
     return this.http.Patch<any>(endpoint, formData);
@@ -83,6 +88,7 @@ export class ZaakService {
    * Update case property
    * @param {EigenschapWaarde} property
    */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
   updateCaseProperty(property: EigenschapWaarde) {
     const endpoint = encodeURI(`/api/core/cases/properties`);
     const params = new HttpParams().set('url', property.url)
@@ -111,7 +117,7 @@ export class ZaakService {
    * @return {Observable}
    */
   listRelatedObjects(bronorganisatie: string, identificatie: string): Observable<any> {
-      const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/objects`);
-      return this.http.Get<any>(endpoint);
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/objects`);
+    return this.http.Get<any>(endpoint);
   }
 }
