@@ -5,10 +5,10 @@ import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
 import {KetenProcessen} from '../../models/keten-processen';
 import {Task, User} from '@gu/models';
-import { catchError, filter, finalize, switchMap, take } from 'rxjs/operators';
+import { catchError, filter, switchMap } from 'rxjs/operators';
 import { interval, of, Subscription } from 'rxjs';
-
 import { isEqual as _isEqual } from 'lodash';
+import {UserService} from '@gu/services';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -65,10 +65,11 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   doRedirectTarget: '_blank' | '_self';
 
   constructor(
-    private route: ActivatedRoute,
-    private modalService: ModalService,
     private snackbarService: SnackbarService,
     public ketenProcessenService: KetenProcessenService,
+    private modalService: ModalService,
+    private userService: UserService,
+    private route: ActivatedRoute,
   ) {
   }
 
@@ -110,8 +111,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Fetches the current user.
    */
   fetchCurrentUser(): void {
-    this.ketenProcessenService.getCurrentUser().subscribe(res => {
-      this.currentUser = res;
+    this.userService.getCurrentUser().subscribe(([user,]) => {
+      this.currentUser = user;
     })
   }
 

@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
-import { Activity } from '../../models/activity';
 import { UserSearch } from '../../models/user-search';
-import {ReadWriteDocument} from "@gu/models";
+import {Activity, ReadWriteDocument} from "@gu/models";
 import { UserGroupSearch } from '../../models/user-group-search';
 
 @Injectable({

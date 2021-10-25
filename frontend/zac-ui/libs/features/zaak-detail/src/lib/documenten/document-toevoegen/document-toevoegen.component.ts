@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { ApplicationHttpClient } from '@gu/services';
 import {FileUploadComponent, ModalService, SnackbarService} from '@gu/components';
 import { Document } from '@gu/models';
+import {CachedObservableMethod} from '@gu/utils';
 
 @Component({
   selector: 'gu-document-toevoegen',
@@ -73,6 +74,7 @@ export class DocumentToevoegenComponent implements OnInit {
     }
   }
 
+  @CachedObservableMethod('DocumentToevoegenComponent.getDocumentTypes')
   getDocumentTypes(): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/api/core/document-types?zaak=${this.mainZaakUrl}`);
     return this.http.Get<any>(endpoint);

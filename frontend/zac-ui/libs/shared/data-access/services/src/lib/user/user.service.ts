@@ -3,6 +3,7 @@ import {HttpResponse} from '@angular/common/http';
 import {Observable, Subscriber} from 'rxjs';
 import {User} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
+import {CachedObservableMethod, ClearCacheOnMethodCall} from '@gu/utils';
 
 
 @Injectable({
@@ -16,6 +17,7 @@ export class UserService {
    * Retrieves the current user and whether this user is a hijacked user.
    * @return {Observable} Results in array: [User, isHijacked].
    */
+  @CachedObservableMethod('UserService.getCurrentUser')
   getCurrentUser(): Observable<[User, boolean]> {
     return new Observable((subscriber: Subscriber<[User, boolean]>) => {
       const endpoint = encodeURI('/api/accounts/users/me');
@@ -35,6 +37,7 @@ export class UserService {
    * Releases the current user.
    * @return {Observable}
    */
+  @ClearCacheOnMethodCall('UserService.getCurrentUser')
   releaseHijack(): Observable<any> {
     const endpoint = encodeURI(`/admin/hijack/release-hijack/`);
     return this.http.Post<any>(endpoint, {}, {responseType: 'text'});

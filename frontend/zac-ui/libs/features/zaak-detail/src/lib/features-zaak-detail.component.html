@@ -43,11 +43,11 @@
           <!-- Error and 403 access request -->
           <section *ngIf="hasError && errorMessage" class="row">
             <div class="col-lg-6">
-              <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!accessRequestSuccess ? 'warn' : 'success'"
-                          [message]="!accessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
+              <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!isAccessRequestSuccess ? 'warn' : 'success'"
+                          [message]="!isAccessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
                           class="d-block mb-4"></gu-message>
 
-              <div *ngIf="canRequestAccess && !accessRequestSuccess">
+              <div *ngIf="canRequestAccess && !isAccessRequestSuccess">
                 <h2>Toegang vragen tot deze zaak</h2>
 
                 <gu-input [control]="commentControl"
@@ -57,7 +57,7 @@
                 </gu-input>
 
                 <button gu-button
-                        (click)="submitAccessRequest()"
+                        (click)="onSubmitAccessRequest()"
                         [disabled]='isSubmittingAccessRequest'
                         [loading]='isSubmittingAccessRequest'>
                   Aanvraag versturen

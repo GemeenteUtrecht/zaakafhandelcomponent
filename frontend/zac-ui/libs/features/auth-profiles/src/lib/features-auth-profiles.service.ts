@@ -1,7 +1,8 @@
 import {Injectable} from '@angular/core';
-import {ApplicationHttpClient} from '@gu/services';
 import {Observable} from 'rxjs';
 import { AuthProfile, MetaConfidentiality, MetaDocType, MetaZaaktype, Permission, Role } from '@gu/models';
+import {ApplicationHttpClient} from '@gu/services';
+import {CachedObservableMethod} from '@gu/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -62,7 +63,9 @@ export class FeaturesAuthProfilesService {
   /**
    *
    * Request confidentiality types from API
+   * @FIXME
    */
+  @CachedObservableMethod('/api/core/vertrouwelijkheidsaanduidingen')
   getConfidentiality(): Observable<MetaConfidentiality[]> {
     const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
     return this.http.Get<MetaConfidentiality[]>(endpoint);

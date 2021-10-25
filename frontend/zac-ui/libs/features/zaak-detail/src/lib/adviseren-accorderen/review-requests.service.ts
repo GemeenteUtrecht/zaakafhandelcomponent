@@ -1,7 +1,8 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {ApplicationHttpClient} from '@gu/services';
 import {ReviewRequestDetails, ReviewRequestSummary} from '@gu/kownsl';
+import {ApplicationHttpClient} from '@gu/services';
+import {CachedObservableMethod} from '@gu/utils';
 
 export interface ReviewRequestStatus {
   icon: string,
@@ -143,6 +144,7 @@ export class ReviewRequestsService {
     return new Date(mostRecentAdvice.created);
   }
 
+  @CachedObservableMethod('ReviewRequestsService.listReviewRequestSummariesForCase')
   listReviewRequestSummariesForCase(bronorganisatie: string, identificatie: string): Observable<ReviewRequestSummary[]> {
     const endpoint = `/api/kownsl/zaak-review-requests/${bronorganisatie}/${identificatie}/summary`;
     return this.http.Get<ReviewRequestSummary[]>(endpoint);
