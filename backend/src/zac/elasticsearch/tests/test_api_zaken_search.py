@@ -296,8 +296,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
-                    "zaakgeometrie.coordinates",
-                    "zaakgeometrie.type",
+                    "zaakgeometrie",
                     "zaakobjecten.object",
                     "zaakobjecten.url",
                     "zaaktype.catalogus",
@@ -378,7 +377,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Some zaak 1",
             bronorganisatie="123456789",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
-            zaakgeometrie={"type": "Point", "coordinates": [4.4683077, 51.9236739]},
+            zaakgeometrie={
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [5.070877, 52.062216],
+                        [5.063681, 52.027406],
+                        [5.083528, 51.988561],
+                        [5.070877, 52.062216],
+                    ]
+                ],
+            },
         )
         zaak1_eigenschap = generate_oas_component(
             "zrc",
@@ -468,8 +477,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
-                    "zaakgeometrie.coordinates",
-                    "zaakgeometrie.type",
+                    "zaakgeometrie",
                     "zaakobjecten.object",
                     "zaakobjecten.url",
                     "zaaktype.catalogus",
@@ -508,8 +516,15 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "toelichting": zaak1_model.toelichting,
                         "zaakobjecten": [],
                         "zaakgeometrie": {
-                            "type": "Point",
-                            "coordinates": [4.4683077, 51.9236739],
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [5.070877, 52.062216],
+                                    [5.063681, 52.027406],
+                                    [5.083528, 51.988561],
+                                    [5.070877, 52.062216],
+                                ]
+                            ],
                         },
                     }
                 ],
