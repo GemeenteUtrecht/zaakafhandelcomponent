@@ -332,6 +332,7 @@ class BoardItemAPITests(ESMixin, APITestCase):
             },
             "toelichting": zaak_model.toelichting,
             "zaakobjecten": [],
+            "zaakgeometrie": None,
         }
 
     def test_list_items(self):
