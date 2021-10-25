@@ -38,6 +38,11 @@ class ZaakObjectDocument(InnerDoc):
     object = field.Keyword()
 
 
+class ZaakgeometrieDocument(InnerDoc):
+    type = field.Keyword()
+    coordinates = field.Float()
+
+
 class ZaakDocument(Document):
     url = field.Keyword()
     zaaktype = field.Object(ZaakTypeDocument)
@@ -55,7 +60,7 @@ class ZaakDocument(Document):
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
     zaakobjecten = Nested(ZaakObjectDocument)
-    zaakgeometrie = field.Object()
+    zaakgeometrie = field.Object(ZaakgeometrieDocument)
 
     class Index:
         name = settings.ES_INDEX_ZAKEN
