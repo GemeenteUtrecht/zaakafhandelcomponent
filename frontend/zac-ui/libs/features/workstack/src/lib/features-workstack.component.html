@@ -31,7 +31,7 @@
             </ng-template>
           </div>
 
-          <!-- Taken -->
+          <!-- Tasks -->
           <div class="tab-content" *ngSwitchCase="'tasks'">
             <!-- Label -->
             <ng-template mat-tab-label>
@@ -48,12 +48,38 @@
             <ng-container *ngIf="taskData?.length > 0; else noTasks" >
                 <a *ngFor="let userTask of taskData"
                    class="anchor mb-2 task-link"
-                   href="{{createRouteLink(userTask.zaak, userTask.task)}}">
+                   [routerLink]="createZaakLink(userTask.zaak, userTask.task)">
                   {{userTask.zaak.identificatie}}: {{userTask.task.name}}
                 </a>
               </ng-container>
             <ng-template #noTasks>
               <p>Er zijn geen taken gevonden.</p>
+            </ng-template>
+          </div>
+
+          <!-- Group tasks -->
+          <div class="tab-content" *ngSwitchCase="'group-tasks'">
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="groupTaskData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{groupTaskData?.length}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <ng-container *ngIf="groupTaskData?.length > 0; else noGroupTasks" >
+              <a *ngFor="let groupTask of groupTaskData"
+                 class="anchor mb-2 task-link"
+                 [routerLink]="createZaakLink(groupTask.zaak, groupTask.task)">
+                {{groupTask.zaak.identificatie}}: {{groupTask.task.name}}
+              </a>
+            </ng-container>
+            <ng-template #noGroupTasks>
+              <p>Er zijn geen taken voor gebruikersgroepen.</p>
             </ng-template>
           </div>
 
@@ -75,7 +101,7 @@
             <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
               <a *ngFor="let activity of activitiesData"
                  class="anchor mb-2 task-link"
-                 href="{{createActivityLink(activity.zaak)}}">
+                 [routerLink]="createActivityLink(activity.zaak)">
                 {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
               </a>
             </ng-container>

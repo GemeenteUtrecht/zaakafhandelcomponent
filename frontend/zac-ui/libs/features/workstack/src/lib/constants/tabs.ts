@@ -16,6 +16,11 @@ const tabs: Tab[] = [
     endpoint: '/api/workstack/user-tasks'
   },
   {
+    component: 'group-tasks',
+    label: 'Taken gebruikersgroepen',
+    endpoint: '/api/workstack/group-tasks'
+  },
+  {
     component: 'activities',
     label: 'Zaakactiviteiten',
     endpoint: '/api/workstack/activities'

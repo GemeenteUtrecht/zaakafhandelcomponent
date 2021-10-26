@@ -17,6 +17,7 @@ export class FeaturesWorkstackComponent implements OnInit {
   allData: any;
   zakenData: Zaak[];
   taskData: UserTask[];
+  groupTaskData: UserTask[];
   activitiesData: AdHocActivities[];
   accessRequestData: AccessRequests[];
 
@@ -41,8 +42,9 @@ export class FeaturesWorkstackComponent implements OnInit {
         this.allData = res;
         this.zakenData = res[0];
         this.taskData = res[1];
-        this.activitiesData = res[2];
-        this.accessRequestData = res[3];
+        this.groupTaskData = res[2];
+        this.activitiesData = res[3];
+        this.accessRequestData = res[4];
         this.zakenTableData.bodyData = this.formatZakenTableData(
           this.zakenData
         );
@@ -104,11 +106,11 @@ export class FeaturesWorkstackComponent implements OnInit {
     });
   }
 
-  createRouteLink(zaak: UserTaskZaak, task: Task) {
-    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
+  createZaakLink(zaak: UserTaskZaak, task: Task) {
+    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
   }
 
   createActivityLink(zaak) {
-    return `/ui/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`;
+    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`;
   }
 }
