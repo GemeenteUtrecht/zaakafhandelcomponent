@@ -9,6 +9,21 @@
 
   <!-- Form -->
   <ng-container *ngIf="!isLoading">
-    <gu-table [expandable]="true" [table]="table" (buttonOutput)="buttonClick($event)"></gu-table>
+    <gu-table [expandable]="true" [table]="table" (buttonOutput)="buttonClick($event)" class="mb-4"></gu-table>
   </ng-container>
+
+  <div class="d-flex justify-content-end">
+    <button gu-button
+            buttonStyle="tertiary"
+            size="extrasmall"
+            icon="person_add"
+            (click)="openModal('add-person-modal')">
+      Toegang verlenen
+    </button>
+  </div>
+
+  <!-- Modals -->
+  <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
+    <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie"></gu-toegang-verlenen>
+  </gu-modal>
 </div>

@@ -57,7 +57,7 @@
                 <p class="m-0 p--bold">{{task.name}}</p>
 
                 <!-- Double click shows id. -->
-                <label class="label label--date mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
+                <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
                   <ng-container *ngIf="debugTask===task">
                     Task id: {{task.id}}
                   </ng-container>
@@ -91,7 +91,7 @@
                 <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
 
                 <!-- Double click shows id. -->
-                <label class="label label--date mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
+                <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
                   <ng-container *ngIf="debugTask===task">
                     Task id: {{task.id}}
                   </ng-container>

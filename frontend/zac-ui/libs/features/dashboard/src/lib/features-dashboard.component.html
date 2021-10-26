@@ -80,7 +80,7 @@
                   icon="delete_outline"
                   (click)="deleteItem(boardItem)"></button>
               </div>
-              <label class="label label--date mb-1">{{boardItem.zaak.identificatie}}</label>
+              <label class="label label--small mb-1">{{boardItem.zaak.identificatie}}</label>
               <p class="p--bold mb-1">{{boardItem.zaak.omschrijving}}</p>
               <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(boardItem.zaak)">
                 Naar zaak
