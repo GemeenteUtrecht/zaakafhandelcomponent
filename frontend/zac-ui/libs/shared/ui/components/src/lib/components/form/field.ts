@@ -83,7 +83,7 @@ export class Field {
   pattern?: string;
   placeholder: string;
   readonly?: boolean;
-  required: true
+  required: boolean
   type: string;
   value: any;
   widgetType: string;
@@ -99,8 +99,8 @@ export class Field {
 
     const label = fieldConfiguration.label || fieldConfiguration.name;
     this.label = label.charAt(0).toUpperCase() + label.slice(1)
-    this.name = new FormService().nameFromFieldConfiguration(fieldConfiguration);
-
+    this.name = new FormService().getNameFromFieldConfiguration(fieldConfiguration);
+    this.required = (typeof fieldConfiguration.required === 'boolean') ? fieldConfiguration.required : true;
     this.widgetType = this.getWidgetType(fieldConfiguration);
   }
 

@@ -136,7 +136,7 @@ export class FormComponent implements OnInit, OnChanges {
       this.edit = Boolean(this.editable);
     }
 
-    this.resolvedKeys = this.keys || this.formService.keysFromForm(this.form);
+    this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
     this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
     this.fields = this.getFields();
   }
@@ -147,7 +147,11 @@ export class FormComponent implements OnInit, OnChanges {
    */
   getFields(): Field[] {
     return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit)
-      .filter(this.formService.isFieldActive.bind(this, this.formGroup));  // Evalutate activeWhen.
+      .map((field: Field): Field => {
+        this.formService.setValidators(this.formGroup, field);
+        return field
+      })
+      .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evalutate activeWhen.
   }
 
   //
