@@ -148,7 +148,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   * Cancels the polling of tasks
+   * Cancels the polling of tasks.
    */
   cancelPolling() {
     this.isPolling = false;
@@ -156,22 +156,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   *
-   * @param newData
-   * @param currentData
-   * @returns {Task}
-   */
-  findNewTask(newData, currentData) {
-    const currentTaskIds = this.ketenProcessenService.mergeTaskData(newData);
-    return currentTaskIds
-      .find((task: Task) => currentData.indexOf(task.id) === -1);
-  }
-
-  /**
-   * Sets the id of the newest task
+   * Sets the id of the newest task.
    */
   setNewestTask(data, taskIds) {
-    const newestTask = this.findNewTask(data, taskIds);
+    const newestTask = this.ketenProcessenService.findNewTask(data, taskIds);
     if (newestTask) {
       this.newestTaskId = newestTask.id;
     }
@@ -196,7 +184,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       if (openTask && currentTaskIds && data && data.length) {
         // Find first task if with id not in taskIds.
 
-        const newTask = this.findNewTask(data, currentTaskIds);
+        const newTask = this.ketenProcessenService.findNewTask(data, currentTaskIds);
         this.setNewestTask(data, currentTaskIds)
 
         if (newTask) {

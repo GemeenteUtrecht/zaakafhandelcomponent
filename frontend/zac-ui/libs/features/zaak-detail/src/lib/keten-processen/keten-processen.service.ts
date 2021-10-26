@@ -97,6 +97,19 @@ export class KetenProcessenService {
       .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }
 
+  /**
+   * Returns a new task if present.
+   * @param newData
+   * @param currentData
+   * @returns {Task}
+   */
+  findNewTask(newData, currentData) {
+    const currentTaskIds = this.mergeTaskData(newData);
+    return currentTaskIds
+      .find((task: Task) => currentData.indexOf(task.id) === -1);
+  }
+
+
   getProcesses(mainZaakUrl: string): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);
     return this.http.Get(endpoint);
