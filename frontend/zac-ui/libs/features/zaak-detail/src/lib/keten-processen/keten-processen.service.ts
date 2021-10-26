@@ -91,7 +91,10 @@ export class KetenProcessenService {
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
       subProcess.tasks.forEach( task => subTasksArray.push(task))
     })
-    return mainTasksArray.concat(subTasksArray);
+
+    return mainTasksArray
+      .concat(subTasksArray)
+      .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }
 
   getProcesses(mainZaakUrl: string): Observable<any> {

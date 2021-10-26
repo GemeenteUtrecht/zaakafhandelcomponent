@@ -1,10 +1,14 @@
-import {Component, Input, Output, OnChanges, AfterViewInit, EventEmitter} from '@angular/core';
+import { Component, Input, Output, OnChanges, AfterViewInit, EventEmitter, OnDestroy } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {ModalService} from '@gu/components'
+import { ModalService, SnackbarService } from '@gu/components';
 import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
 import {KetenProcessen} from '../../models/keten-processen';
 import {Task, User} from '@gu/models';
+import { catchError, filter, finalize, switchMap, take } from 'rxjs/operators';
+import { interval, of, Subscription } from 'rxjs';
+
+import { isEqual as _isEqual } from 'lodash';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -25,7 +29,7 @@ import {Task, User} from '@gu/models';
   styleUrls: ['./keten-processen.component.scss']
 })
 
-export class KetenProcessenComponent implements OnChanges, AfterViewInit {
+export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewInit {
   @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
@@ -38,15 +42,15 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   processInstanceId: string;
 
   debugTask: Task = null;
+  newestTaskId: string;
+
+  pollingSub$: Subscription;
 
   isExpanded = false;
   isLoading = true;
-  hasError: boolean;
-  errorMessage: string;
+  isPolling = false;
 
-  // Send Message
-  sendMessageErrorMessage: string;
-  sendMessageHasError: boolean;
+  errorMessage: string;
 
   // Task context data
   taskContextData: TaskContextData;
@@ -63,6 +67,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   constructor(
     private route: ActivatedRoute,
     private modalService: ModalService,
+    private snackbarService: SnackbarService,
     public ketenProcessenService: KetenProcessenService,
   ) {
   }
@@ -79,6 +84,13 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       this.fetchCurrentUser();
       this.fetchProcesses();
     });
+  }
+
+  /**
+   * A callback method that performs custom clean-up, invoked immediately before a directive, pipe, or service instance is destroyed.
+   */
+  ngOnDestroy() {
+    this.cancelPolling();
   }
 
   /**
@@ -104,43 +116,101 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
   }
 
   /**
+   * Poll tasks every 30 seconds.
+   */
+  pollProcesses() {
+    const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
+
+    this.isPolling = true;
+    const pollInterval = 30000; // 30 seconds
+    this.pollingSub$ = interval(pollInterval)
+      .pipe(
+        switchMap(x => {
+          // Fetch processes
+          return this.ketenProcessenService.getProcesses(this.mainZaakUrl)
+            .pipe(
+              catchError(errorRes => {
+                this.isLoading = false;
+                this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
+                this.reportError(errorRes);
+                return of(undefined);
+              })
+            );
+        }),
+        filter(data => data !== undefined)
+      )
+      .subscribe(resData => {
+        if (!_isEqual(this.data, resData)) {
+          this.setNewestTask(resData, currentTaskIds);
+        }
+        this.updateProcessData(resData);
+      });
+  }
+
+  /**
+   * Cancels the polling of tasks
+   */
+  cancelPolling() {
+    this.isPolling = false;
+    this.pollingSub$.unsubscribe();
+  }
+
+  /**
+   *
+   * @param newData
+   * @param currentData
+   * @returns {Task}
+   */
+  findNewTask(newData, currentData) {
+    const currentTaskIds = this.ketenProcessenService.mergeTaskData(newData);
+    return currentTaskIds
+      .find((task: Task) => currentData.indexOf(task.id) === -1);
+  }
+
+  /**
+   * Sets the id of the newest task
+   */
+  setNewestTask(data, taskIds) {
+    const newestTask = this.findNewTask(data, taskIds);
+    if (newestTask) {
+      this.newestTaskId = newestTask.id;
+    }
+  }
+
+  /**
    * Fetch all the related processes from the zaak.
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    */
   fetchProcesses(openTask: boolean = false): void {
     // Known tasks after initialization.
-    const taskIds = openTask && this.data && this.data.length ? this.data[0].tasks.map(task => task.id) : null;
+    const currentTaskIds = openTask && this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
 
     this.isLoading = true;
-    this.hasError = false;
-    this.errorMessage = '';
-    this.hasError = true;
 
     // Fetch processes.
     this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
       // Update data.
-      this.data = data;
-      this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
-      this.processInstanceId = data.length > 0 ? data[0].id : null;
-      this.isLoading = false;
+      this.updateProcessData(data);
 
       // Execute newly created task.
-      if (openTask && taskIds && data && data.length) {
+      if (openTask && currentTaskIds && data && data.length) {
         // Find first task if with id not in taskIds.
-        const newTask = data[0].tasks
-          .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime())  // Newest task first.
-          .find((task: Task) => taskIds.indexOf(task.id) === -1);
+
+        const newTask = this.findNewTask(data, currentTaskIds);
+        this.setNewestTask(data, currentTaskIds)
 
         if (newTask) {
           this.executeTask(newTask.id);
         }
       }
 
-      this.update.emit(data);
-    }, errorRes => {
-      this.errorMessage = errorRes.error.detail;
-      this.hasError = true;
       this.isLoading = false;
+
+      this.pollProcesses();
+    }, errorRes => {
+      this.isLoading = false;
+      this.errorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
+      this.reportError(errorRes);
     })
   }
 
@@ -150,6 +220,9 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
    * @param {string} message
    */
   sendMessage(message: string): void {
+    // Cancel data polling
+    this.cancelPolling();
+
     this.isLoading = true
     const formData = {
       processInstanceId: this.processInstanceId,
@@ -158,10 +231,23 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
     this.ketenProcessenService.sendMessage(formData).subscribe((result) => {
       this.fetchProcesses(true);
     }, errorRes => {
-      this.sendMessageErrorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
-      this.sendMessageHasError = true;
       this.isLoading = false;
+      this.errorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
+      this.reportError(errorRes);
     })
+  }
+
+  /**
+   * Updates the context data.
+   * @param data
+   */
+  updateProcessData(data) {
+    // Update data.
+    this.data = data;
+    this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
+    this.processInstanceId = data.length > 0 ? data[0].id : null;
+
+    this.update.emit(data);
   }
 
   /**
@@ -170,6 +256,8 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
    * @param {number} [tabIndex]
    */
   executeTask(taskId: string, tabIndex: number = null): void {
+    this.cancelPolling() // stop polling data;
+
     this.selectedTabIndex = tabIndex;
     this.fetchFormLayout(taskId);
   }
@@ -210,7 +298,7 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
    */
   closeModal(): void {
     this.modalService.close('ketenprocessenModal');
-    this.fetchProcesses()
+    this.fetchProcesses();
   }
 
   //
@@ -227,5 +315,18 @@ export class KetenProcessenComponent implements OnChanges, AfterViewInit {
       return;
     }
     this.debugTask = task;
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 }

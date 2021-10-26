@@ -9,6 +9,7 @@ import { Activity } from '../models/activity';
 import { FeaturesZaakDetailService } from './features-zaak-detail.service';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-accorderen.component";
+import { StatusComponent } from './status/status.component';
 
 @Component({
   selector: 'gu-features-zaak-detail',
@@ -16,6 +17,7 @@ import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-acc
 })
 export class FeaturesZaakDetailComponent implements OnInit {
   @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
+  @ViewChild(StatusComponent) statusComponent: StatusComponent;
 
   bronorganisatie: string;
   identificatie: string;
@@ -166,5 +168,6 @@ export class FeaturesZaakDetailComponent implements OnInit {
 
   ketenProcessenUpdate(event) {
     this.adviserenAccorderenComponent.update();
+    this.statusComponent.update();
   }
 }

@@ -24,10 +24,25 @@ export class StatusComponent implements OnInit {
     private http: ApplicationHttpClient,
   ) { }
 
+  /**
+   * Updates the component using a public interface.
+   */
+  public update() {
+    this.getContextData();
+  }
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
   ngOnInit(): void {
     this.isLoading = true;
 
-    this.getStatuses().subscribe(data => {
+    this.getContextData().subscribe(data => {
       this.data = data;
       this.isLoading = false;
     }, error => {
@@ -36,7 +51,14 @@ export class StatusComponent implements OnInit {
     })
   }
 
-  getStatuses(): Observable<HttpResponse<any>> {
+  //
+  // Context.
+  //
+
+  /**
+   * Fetches the statuses.
+   */
+  getContextData(): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/statuses`);
     return this.http.Get<any>(endpoint);
   }
