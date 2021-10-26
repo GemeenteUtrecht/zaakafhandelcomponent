@@ -88,6 +88,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                     "url": self.zaak["url"],
                     "identificatie": self.zaak["identificatie"],
                     "bronorganisatie": self.zaak["bronorganisatie"],
+                    "status": None,
                 },
             },
         )
@@ -115,6 +116,12 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                         "url": self.zaak["url"],
                         "identificatie": self.zaak["identificatie"],
                         "bronorganisatie": self.zaak["bronorganisatie"],
+                        "status": {
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                            "statustype": None,
+                            "url": None,
+                        },
                     },
                 }
             ],

@@ -139,6 +139,12 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "identificatie": zaak["identificatie"],
                         "bronorganisatie": zaak["bronorganisatie"],
                         "url": zaak["url"],
+                        "status": {
+                            "datumStatusGezet": None,
+                            "statustoelichting": None,
+                            "statustype": None,
+                            "url": None,
+                        },
                     },
                 }
             ],
