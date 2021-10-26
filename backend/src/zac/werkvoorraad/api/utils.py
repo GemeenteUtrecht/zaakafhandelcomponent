@@ -70,10 +70,6 @@ def get_access_requests_groups(user: User):
 
 
 def get_activity_groups(user: User) -> List[ActivityGroup]:
-    # if user doesn't have a permission to handle access requests - don't show them
-    if not user.has_perm(zaken_handle_access.name):
-        return []
-
     activity_groups = Activity.objects.as_werkvoorraad(user=user)
     zaak_urls = list({activity_group["zaak_url"] for activity_group in activity_groups})
     es_results = search(user=user, urls=zaak_urls)
