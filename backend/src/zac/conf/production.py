@@ -62,5 +62,21 @@ if subpath:
 #
 # Custom settings overrides
 #
-ENVIRONMENT = "production"
+ENVIRONMENT = config("ENVIRONMENT", "production")
 ENVIRONMENT_SHOWN_IN_ADMIN = False
+
+# Set up APM
+ELASTIC_APM_SERVER_URL = config("ELASTIC_APM_SERVER_URL", None)
+ELASTIC_APM = {
+    "SERVICE_NAME": f"Zaakafhandelcomponent - {ENVIRONMENT}",
+    "SECRET_TOKEN": config("ELASTIC_APM_SECRET_TOKEN", "default"),
+    "SERVER_URL": ELASTIC_APM_SERVER_URL,
+}
+if not ELASTIC_APM_SERVER_URL:
+    ELASTIC_APM["ENABLED"] = False
+    ELASTIC_APM["SERVER_URL"] = "http://localhost:8200"
+else:
+    MIDDLEWARE = ["elasticapm.contrib.django.middleware.TracingMiddleware"] + MIDDLEWARE
+    INSTALLED_APPS = INSTALLED_APPS + [
+        "elasticapm.contrib.django",
+    ]
