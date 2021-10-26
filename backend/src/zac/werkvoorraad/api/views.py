@@ -106,7 +106,7 @@ class WorkStackAssigneeCasesView(ListAPIView):
 
 @extend_schema(summary=_("List user tasks"))
 class WorkStackUserTasksView(ListAPIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()

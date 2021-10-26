@@ -9,10 +9,9 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component
 
-from zac.accounts.tests.factories import GroupFactory, UserFactory
-from zac.api.context import ZaakContext
+from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.camunda.data import Task
-from zgw.models.zrc import Zaak
+from zac.elasticsearch.tests.utils import ESMixin
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -40,6 +39,7 @@ TASK_DATA = {
 }
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 
 
 def _get_task(**overrides):
@@ -47,7 +47,7 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class CamundaTasksTests(APITestCase):
+class CamundaTasksTests(ESMixin, APITestCase):
     """
     Test the camunda tasks workstack API endpoints.
     """
@@ -58,24 +58,42 @@ class CamundaTasksTests(APITestCase):
 
         cls.groups = GroupFactory.create_batch(2)
         cls.group_endpoint = reverse("werkvoorraad:group-tasks")
-        cls.user = UserFactory.create()
+        cls.user = SuperUserFactory.create()
         cls.user.groups.set(cls.groups)
         cls.user_endpoint = reverse(
             "werkvoorraad:user-tasks",
         )
 
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            omschrijving="ZT1",
+        )
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            startdatum="2021-02-12",
+            einddatum=None,
+            einddatumGepland=None,
+            uiterlijkeEinddatumAfdoening="2021-02-17",
+            zaaktype=cls.zaaktype["url"],
         )
-
-        cls.zaak = factory(Zaak, zaak)
+        cls.task = _get_task(**{"assignee": cls.user})
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
+        zaak_document = self.create_zaak_document(self.zaak)
+        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
+        zaak_document.save()
+        self.refresh_index()
 
     def test_other_user_logging_in(self):
         # Sanity check
@@ -92,14 +110,13 @@ class CamundaTasksTests(APITestCase):
         self.assertEqual(response.json(), [])
 
     def test_user_tasks_endpoint(self):
-
         with patch(
-            "zac.werkvoorraad.api.views.get_zaak_context",
-            return_value=ZaakContext(zaak=self.zaak, zaaktype=None, documents=None),
+            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            return_value=(self.task.id, self.zaak["url"]),
         ):
             with patch(
                 "zac.werkvoorraad.api.views.get_camunda_user_tasks",
-                return_value=[_get_task(**{"assignee": self.user})],
+                return_value=[self.task],
             ):
                 response = self.client.get(self.user_endpoint)
         self.assertEqual(response.status_code, 200)
@@ -126,19 +143,18 @@ class CamundaTasksTests(APITestCase):
                         "id": TASK_DATA["id"],
                     },
                     "zaak": {
-                        "bronorganisatie": self.zaak.bronorganisatie,
-                        "identificatie": self.zaak.identificatie,
-                        "url": self.zaak.url,
+                        "bronorganisatie": self.zaak["bronorganisatie"],
+                        "identificatie": self.zaak["identificatie"],
+                        "url": self.zaak["url"],
                     },
                 },
             ],
         )
 
     def test_group_tasks_endpoint(self):
-
         with patch(
-            "zac.werkvoorraad.api.views.get_zaak_context",
-            return_value=ZaakContext(zaak=self.zaak, zaaktype=None, documents=None),
+            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            return_value=(self.task.id, self.zaak["url"]),
         ):
             with patch(
                 "zac.werkvoorraad.api.views.get_camunda_group_tasks",
@@ -166,9 +182,9 @@ class CamundaTasksTests(APITestCase):
                         "id": TASK_DATA["id"],
                     },
                     "zaak": {
-                        "bronorganisatie": self.zaak.bronorganisatie,
-                        "identificatie": self.zaak.identificatie,
-                        "url": self.zaak.url,
+                        "bronorganisatie": self.zaak["bronorganisatie"],
+                        "identificatie": self.zaak["identificatie"],
+                        "url": self.zaak["url"],
                     },
                 },
             ],
