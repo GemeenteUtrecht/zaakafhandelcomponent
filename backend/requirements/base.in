@@ -40,3 +40,6 @@ django-scim2
 djangorestframework
 djangorestframework-camel-case
 drf-spectacular
+
+# perf monitoring
+elastic-apm
