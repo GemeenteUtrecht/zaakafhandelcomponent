@@ -1,0 +1,65 @@
+{
+    "APP": {
+        "CONSOLE": {
+            "TITLE": "Admin console",
+            "DESCRIPTION": "Admin console"
+        },
+        "PAGINATOR": {
+            "ITEMS_PER_PAGE_LABEL": "Items per page:",
+            "NEXT_PAGE_LABEL": "Next page",
+            "PREVIOUS_PAGE_LABEL": "Previous page",
+            "FIRST_PAGE_LABEL": "First page",
+            "LAST_PAGE_LABEL": "Last page",
+            "RANGE_PAGE_LABEL_1": "0 of {{length}}",
+            "RANGE_PAGE_LABEL_2": "{{startIndex}} - {{endIndex}} of {{length}}"
+        },
+        "LOGIN": {
+            "PASSWORD_RESET": {
+                "TITLE": "Forgot your password?",
+                "INFO": "Enter the email address with which you are registered in Alfresco. You will receive a new password and username at this email address.",
+                "EMAIL_INVALID": "Invalid email address",
+                "SUCCESS_MESSAGE": "The email with the new password has been sent.",
+                "BUTTONS": {
+                    "CANCEL": "Cancel",
+                    "CONFIRM": "Confirm details"
+                }
+            }
+        },
+        "ACTIONS": {
+            "FILTER": "Filter",
+            "REFRESH": "Refresh page"
+        },
+        "FILTER": {
+            "TITLE": "Filter",
+            "SELECT_ALL_OPTION": "All",
+            "OPTIONS": {
+                "CREATED_FROM": "Created from",
+                "ADJUSTED_FROM": "Adjusted from",
+                "REGISTERED_FROM": "Registered from",
+                "PLANNED_FROM": "Planned from",
+                "END_FROM": "End date from",
+                "STARTDATE": "Start date",
+                "TILL": "Till",
+                "NAME": "Name",
+                "DESCRIPTION": "Description",
+                "TITLE": "Title",
+                "OBJECT_CODE": "Object code",
+                "IO_TYPE": "Information-Object type*",
+                "STATUS": "Status",
+                "CASE_TYPE": "Type",
+                "OBJECT_TYPE": "Type",
+                "SITES": "Sites",
+                "HANDLERS": "Assignees",
+                "CLEAR_ALL": "Clear all"
+            }
+        },
+        "PEOPLE_GROUP_PICKER": {
+            "PEOPLE": {
+                "PLACEHOLDER": "Enter username..."
+            },
+            "GROUP": {
+                "PLACEHOLDER": "Enter groupname..."
+            }
+        }
+    }
+}

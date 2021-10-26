@@ -1,6 +1,6 @@
 import { Component, HostListener, Input, OnChanges } from '@angular/core';
 import {Document, ReadWriteDocument, Table } from '@gu/models';
-import {ApplicationHttpClient, ZaakService} from '@gu/services';
+import { ZaakService} from '@gu/services';
 import { DocumentenService } from './documenten.service';
 import { ModalService, SnackbarService } from '@gu/components';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -52,7 +52,6 @@ export class DocumentenComponent implements OnChanges {
   selectedDocumentUrl: string;
 
   constructor(
-    private http: ApplicationHttpClient,
     private documentenService: DocumentenService,
     private modalService: ModalService,
     private zaakService: ZaakService,

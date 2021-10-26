@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Språk",
+    "ROLES": {
+      "ALL": "Alla",
+      "CONTRIBUTOR": "Deltagare",
+      "COLLABORATOR": "Medarbetare",
+      "COORDINATOR": "Samordnare",
+      "EDITOR": "Redaktör",
+      "CONSUMER": "Förbrukare",
+      "SITECOLLABORATOR": "Samarbetsyta medarbetare",
+      "SITECONSUMER": "Samarbetsyta förbrukare",
+      "SITECONTRIBUTOR": "Samarbetsyta deltagare",
+      "SITEMANAGER": "Samarbetsyta hanterare"
+    }
+  },
   "SAVE": "Spara",
   "COMPLETE": "Slutför",
   "CANCEL": "Avbryt",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Avsäga",
   "START PROCESS": "Starta process",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Inga meddelanden",
+    "NO_MESSAGE": "Du har inga aviseringar just nu.",
     "TITLE": "Aviseringar",
     "MARK_AS_READ": "Markera allt som läst",
-    "SYSTEM": "System"
+    "SYSTEM": "System",
+    "LOAD_MORE": "Läs in mer"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Lokal lagring",
       "SOURCE": "Välj källa från ",
-      "SHOW_FILE": "Visa",
+      "VIEW_FILE": "Visa",
       "DOWNLOAD_FILE": "Ladda ner",
       "REMOVE_FILE": "Ta bort",
       "UPLOAD": "Ladda upp",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Ange minst {{ minLength }} tecken",
         "NO_LONGER_THAN": "Ange inte fler än {{ maxLength }} tecken"
       },
-      "FILE_ALREADY_UPLOADED": "En fil med samma namn finns redan uppladdad."
+      "FILE_ALREADY_UPLOADED": "En fil med samma namn finns redan uppladdad.",
+      "ATTACH": "Bifoga"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Namnlös uppgift"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Beskrivning"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Titel"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Skapa"
       },
@@ -175,7 +195,10 @@
       "NONE": "Ingen",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Använd ett nummerformat",
-        "INT_VALIDATION_ERROR": "Använd ett heltalsformat"
+        "INT_VALIDATION_ERROR": "Använd ett heltalsformat",
+        "LENGTH_VALIDATION_ERROR": "Värdet ska vara mellan {{ minLength }} och {{ maxLength }} i längd",
+        "MATCH_VALIDATION_ERROR": "Värdet matchar inte mönstret: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Värdet ska vara mellan {{ minValue }} och {{ maxValue }}"
       },
       "MORE": "Mer"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Skapad av",
         "CREATED_DATE": "Skapad datum",
         "MODIFIER": "Ändrad av",
-        "MODIFIED_DATE": "Ändringsdatum"
+        "MODIFIED_DATE": "Ändringsdatum",
+        "CONTENT_TYPE": "Innehållstyp"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Ändra innehållstyp",
+          "DESCRIPTION": "Genom att göra denna ändring av innehållstypen läggs vissa egenskaper och lagrade metadata permanent till dokumentet.",
+          "CONFIRM": "Är du säker på att du vill ändra innehållstypen?",
+          "CANCEL": "Avbryt",
+          "APPLY": "Spara ändringar",
+          "VIEW_DETAILS": "Visa detaljer",
+          "PROPERTY": {
+            "NAME": "Namn",
+            "DESCRIPTION": "Beskrivning",
+            "DATA_TYPE": "Datatyp"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Redigera",
@@ -199,12 +238,14 @@
         "CANCEL": "Avbryt",
         "CLEAR": "Rensa",
         "TOGGLE": "Växla värde",
-        "COPY_TO_CLIPBOARD": "Dubbelklicka för att kopiera värde"
+        "COPY_TO_CLIPBOARD": "Dubbelklicka för att kopiera värde",
+        "EDIT_ASPECTS": "Redigera aspekt"
       },
       "ACCESSIBILITY": {
         "EDIT": "Redigeringsknapp",
         "DATEPICKER": "Använd piltangenterna för att navigera mellan datumen. Upp och ner flyttar till nästa eller föregående vecka men på samma dag. Vänster och höger flyttar till nästa eller föregående dag. Tryck på Retur för att välja ett datum.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Värde kopierat till urklipp"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Värde kopierat till urklipp",
+        "EDIT_ASPECTS": "Redigera aspekt"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Du har angett ett okänt användarnamn eller lösenord",
       "LOGIN-ERROR-PROVIDERS": "Leverantörer kan inte avdefinieras",
       "LOGIN-ERROR-CORS": "CORS-undantag, kontrollera din serverkonfiguration",
-      "LOGIN-ERROR-CSRF": "CSRF-undantag, ställ in [disableCsrf]=\"true\" i login.component",
+      "LOGIN-ERROR-CSRF": "CSRF undantag, ange \"disableCSRF\": sann i app.config.json",
       "LOGIN-ECM-LICENSE": "Alfresco Content Services-datakatalog är i skrivskyddat läge",
       "SSO-WRONG-CONFIGURATION": "SSO-autentiseringsserver kan inte nås"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Zooma in",
       "ZOOM_OUT": "Zooma ut",
       "FIT_PAGE": "Passa in sida",
-      "ROTATE_LEFT": "Rotera till vänster",
-      "ROTATE_RIGHT": "Rotera till höger",
+      "ROTATE": "Rotera",
+      "CROP": "Beskär",
+      "SAVE": "Spara",
+      "CANCEL": "Avbryt",
       "RESET": "Återställ",
-      "THUMBNAILS": "Dokumentminiatyrbilder"
+      "THUMBNAILS": "Dokumentminiatyrbilder",
+      "THUMBNAILS_PANLEL_CLOSE": "Stäng panel för miniatyrbilder"
     },
     "PAGE_LABEL": {
       "SHOWING": "Visar",
@@ -368,7 +412,8 @@
       "CLOSE": "Stäng",
       "PLACEHOLDER": "Lösenord",
       "ERROR": "Lösenordet är fel"
-    }
+    },
+    "SUBTITLES": "Undertexter"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Ett fel inträffade.",
       "DESCRIPTION": "Felaktig gateway, försök igen eller kontakta IT-support [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Tillbaka hem"
+      }
+    },
+    "503": {
+      "TITLE": "Ett fel inträffade.",
+      "DESCRIPTION": "Service för tillfället ej tillgänglig [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Klicka för att kopiera",
     "SUCCESS_COPY": "Texten har kopierats till urklipp"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Sök",
+      "ARIA_LABEL": "Sökalternativ"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Rensa"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Läser in..."
   }
 }

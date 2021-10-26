@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Sprog",
+    "ROLES": {
+      "ALL": "Alle",
+      "CONTRIBUTOR": "Bidragyder",
+      "COLLABORATOR": "Samarbejdspartner",
+      "COORDINATOR": "Koordinator",
+      "EDITOR": "Redaktør",
+      "CONSUMER": "Forbruger",
+      "SITECOLLABORATOR": "Site samarbejdspartner",
+      "SITECONSUMER": "Site forbruger",
+      "SITECONTRIBUTOR": "Site bidragyder",
+      "SITEMANAGER": "Site chef"
+    }
+  },
   "SAVE": "Gem",
   "COMPLETE": "Fuldført",
   "CANCEL": "Annuller",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Frigiv",
   "START PROCESS": "Start proces",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Ingen meddelelser",
+    "NO_MESSAGE": "Du har ingen meddelelser i øjeblikket.",
     "TITLE": "Meddelelser",
     "MARK_AS_READ": "Markér alle som læst",
-    "SYSTEM": "System"
+    "SYSTEM": "System",
+    "LOAD_MORE": "Indlæs flere"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Lokalt lager",
       "SOURCE": "Vælg kilde fra ",
-      "SHOW_FILE": "Vis",
+      "VIEW_FILE": "Vis",
       "DOWNLOAD_FILE": "Download",
       "REMOVE_FILE": "Fjern",
       "UPLOAD": "Upload",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Skriv mindst {{ minLength }} tegn",
         "NO_LONGER_THAN": "Skriv højst {{ maxLength }} tegn"
       },
-      "FILE_ALREADY_UPLOADED": "En fil med samme navn er allerede uploadet."
+      "FILE_ALREADY_UPLOADED": "En fil med samme navn er allerede uploadet.",
+      "ATTACH": "Vedhæft"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Opgave uden navn"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Beskrivelse"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Titel"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Opret"
       },
@@ -175,7 +195,10 @@
       "NONE": "Ingen",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Brug et talformat",
-        "INT_VALIDATION_ERROR": "Brug et heltalsformat"
+        "INT_VALIDATION_ERROR": "Brug et heltalsformat",
+        "LENGTH_VALIDATION_ERROR": "Værdien skal ligge mellem {{ minLength }} og {{ maxLength }} i længden",
+        "MATCH_VALIDATION_ERROR": "Værdien matcher ikke mønstret: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Værdien skal ligge mellem {{ minValue }} og {{ maxValue }}"
       },
       "MORE": "Mere"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Oprettet af",
         "CREATED_DATE": "Oprettelsesdato",
         "MODIFIER": "Ændret af",
-        "MODIFIED_DATE": "Ændringsdato"
+        "MODIFIED_DATE": "Ændringsdato",
+        "CONTENT_TYPE": "Indholdstype"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Skift indholdstype",
+          "DESCRIPTION": "Udførelse af denne ændring til indholdstypen, vil tilføje visse egenskaber og lagrede metadata permanent til dokumentet.",
+          "CONFIRM": "Er du sikker på at du vil ændre indholdstypen?",
+          "CANCEL": "Annuller",
+          "APPLY": "Gem ændringerne",
+          "VIEW_DETAILS": "Vis detaljer",
+          "PROPERTY": {
+            "NAME": "Navn",
+            "DESCRIPTION": "Beskrivelse",
+            "DATA_TYPE": "Datatype"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Rediger",
@@ -199,12 +238,14 @@
         "CANCEL": "Annuller",
         "CLEAR": "Ryd",
         "TOGGLE": "Slå værdi til/fra",
-        "COPY_TO_CLIPBOARD": "Dobbeltklik for at kopiere værdien"
+        "COPY_TO_CLIPBOARD": "Dobbeltklik for at kopiere værdien",
+        "EDIT_ASPECTS": "Rediger aspekt"
       },
       "ACCESSIBILITY": {
         "EDIT": "Redigér knap",
         "DATEPICKER": "Brug piletasterne til at navigere mellem datoer. Pil op og pil ned bruges til at gå til den næste eller forrige uge, på den samme dag. Brug venstre og højre pil til at gå til næste eller forrige dag. Tryk på Enter eller Return for at vælge en dato.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Værdien er kopieret til udklipsholderen"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Værdien er kopieret til udklipsholderen",
+        "EDIT_ASPECTS": "Rediger aspekt"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Du har skrevet et ukendt brugernavn eller en ukendt adgangskode",
       "LOGIN-ERROR-PROVIDERS": "Der skal angives en definition for udbydere",
       "LOGIN-ERROR-CORS": "CORS-undtagelse. Kontrollér din serverkonfiguration",
-      "LOGIN-ERROR-CSRF": "CSRF-undtagelse. Angiv [disableCsrf]=\"true\" i login.component",
+      "LOGIN-ERROR-CSRF": "Undtagelse i CSRF. Indstil \"disableCSRF\": sand i app.config.json",
       "LOGIN-ECM-LICENSE": "Alfresco Content Services-lageret er i skrivebeskyttet tilstand",
       "SSO-WRONG-CONFIGURATION": "Der kan ikke oprettes forbindelse til SSO-godkendelsesserveren"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Zoom ind",
       "ZOOM_OUT": "Zoom ud",
       "FIT_PAGE": "Tilpas side",
-      "ROTATE_LEFT": "Roter til venstre",
-      "ROTATE_RIGHT": "Roter til højre",
+      "ROTATE": "Roter",
+      "CROP": "Beskær",
+      "SAVE": "Gem",
+      "CANCEL": "Annuller",
       "RESET": "Nulstil",
-      "THUMBNAILS": "Dokumentminiaturer"
+      "THUMBNAILS": "Dokumentminiaturer",
+      "THUMBNAILS_PANLEL_CLOSE": "Luk miniaturepanel"
     },
     "PAGE_LABEL": {
       "SHOWING": "Viser",
@@ -368,7 +412,8 @@
       "CLOSE": "Luk",
       "PLACEHOLDER": "Adgangskode",
       "ERROR": "Adgangskoden er forkert"
-    }
+    },
+    "SUBTITLES": "Undertekster"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Der opstod en fejl.",
       "DESCRIPTION": "Forkert gateway. Prøv igen, eller kontakt it-support [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Tilbage til forsiden"
+      }
+    },
+    "503": {
+      "TITLE": "Der opstod en fejl.",
+      "DESCRIPTION": "Tjenesten er midlertidig utilgængelig [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Klik for at kopiere",
     "SUCCESS_COPY": "Teksten er kopieret til Udklipsholder"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Søg",
+      "ARIA_LABEL": "Søgemuligheder"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Ryd"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Indlæser..."
   }
 }

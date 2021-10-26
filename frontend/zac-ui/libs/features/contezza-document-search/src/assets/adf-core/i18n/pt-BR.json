@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Idioma",
+    "ROLES": {
+      "ALL": "Todos",
+      "CONTRIBUTOR": "Contribuidor",
+      "COLLABORATOR": "Colaborador",
+      "COORDINATOR": "Coordenador",
+      "EDITOR": "Editor",
+      "CONSUMER": "Consumidor",
+      "SITECOLLABORATOR": "Colaborador de site",
+      "SITECONSUMER": "Consumidor de site",
+      "SITECONTRIBUTOR": "Contribuidor de site",
+      "SITEMANAGER": "Gerente de site"
+    }
+  },
   "SAVE": "Salvar",
   "COMPLETE": "Completar",
   "CANCEL": "Cancelar",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Liberar",
   "START PROCESS": "Iniciar processo",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Não há mensagens",
+    "NO_MESSAGE": "No momento, você não tem notificações.",
     "TITLE": "Notificações",
     "MARK_AS_READ": "Marcar todas como lidas",
-    "SYSTEM": "Sistema"
+    "SYSTEM": "Sistema",
+    "LOAD_MORE": "Carregar mais"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Armazenamento local",
       "SOURCE": "Selecionar origem de ",
-      "SHOW_FILE": "Exibir",
+      "VIEW_FILE": "Visualizar",
       "DOWNLOAD_FILE": "Download",
       "REMOVE_FILE": "Remover",
       "UPLOAD": "Carregar",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Insira no mínimo {{ minLength }} caracteres",
         "NO_LONGER_THAN": "Insira no máximo {{ maxLength }} caracteres"
       },
-      "FILE_ALREADY_UPLOADED": "Um arquivo de mesmo nome já foi carregado."
+      "FILE_ALREADY_UPLOADED": "Um arquivo de mesmo nome já foi carregado.",
+      "ATTACH": "Anexar"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Tarefa sem nome"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Descrição"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Título"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Criar"
       },
@@ -175,7 +195,10 @@
       "NONE": "Nenhum",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Use um formato de número",
-        "INT_VALIDATION_ERROR": "Use um formato inteiro"
+        "INT_VALIDATION_ERROR": "Use um formato inteiro",
+        "LENGTH_VALIDATION_ERROR": "O comprimento do valor deve estar entre {{ minLength }} e {{ maxLength }}",
+        "MATCH_VALIDATION_ERROR": "O valor não corresponde ao padrão: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "O valor deve estar entre {{ minValue }} e {{ maxValue }}"
       },
       "MORE": "Mais"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Criador",
         "CREATED_DATE": "Data de criação",
         "MODIFIER": "Modificador",
-        "MODIFIED_DATE": "Data de modificação"
+        "MODIFIED_DATE": "Data de modificação",
+        "CONTENT_TYPE": "Tipo de conteúdo"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Alterar tipo de conteúdo",
+          "DESCRIPTION": "Fazer esta alteração ao tipo de conteúdo irá adicionar permanentemente propriedades e metadados armazenados ao documento.",
+          "CONFIRM": "Tem certeza de que deseja alterar o tipo de conteúdo?",
+          "CANCEL": "Cancelar",
+          "APPLY": "Salvar alterações",
+          "VIEW_DETAILS": "Exibir detalhes",
+          "PROPERTY": {
+            "NAME": "Nome",
+            "DESCRIPTION": "Descrição",
+            "DATA_TYPE": "Tipo de dados"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Editar",
@@ -199,12 +238,14 @@
         "CANCEL": "Cancelar",
         "CLEAR": "Limpar",
         "TOGGLE": "Alternar valor",
-        "COPY_TO_CLIPBOARD": "Clique duas vezes para copiar o valor"
+        "COPY_TO_CLIPBOARD": "Clique duas vezes para copiar o valor",
+        "EDIT_ASPECTS": "Editar aspecto"
       },
       "ACCESSIBILITY": {
         "EDIT": "Botão Editar",
         "DATEPICKER": "Navegue entre as datas usando as teclas de seta. Para mover entre as semanas mantendo o dia, use as setas para cima e para baixo. As setas esquerda e direita alternam entre os dias. Pressione Enter ou Return para selecionar uma data.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Valor copiado para a área de transferência"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Valor copiado para a área de transferência",
+        "EDIT_ASPECTS": "Editar aspecto"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Você inseriu um nome de usuário ou senha desconhecida",
       "LOGIN-ERROR-PROVIDERS": "Provedores não podem ficar indefinidos",
       "LOGIN-ERROR-CORS": "Exceção CORS, verifique a configuração do servidor",
-      "LOGIN-ERROR-CSRF": "Exceção CSRF, set [disableCsrf]=\"true\" in login.component",
+      "LOGIN-ERROR-CSRF": "Exceção CSRF, defina \"disableCSRF\": true no app.config.json",
       "LOGIN-ECM-LICENSE": "O repositório do Alfresco Content Services está em modo somente leitura",
       "SSO-WRONG-CONFIGURATION": "Servidor de autenticação SSO inacessível"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Ampliar",
       "ZOOM_OUT": "Reduzir",
       "FIT_PAGE": "Ajustar página",
-      "ROTATE_LEFT": "Girar para a esquerda",
-      "ROTATE_RIGHT": "Girar para a direita",
+      "ROTATE": "Girar",
+      "CROP": "Recortar",
+      "SAVE": "Salvar",
+      "CANCEL": "Cancelar",
       "RESET": "Redefinir",
-      "THUMBNAILS": "Miniaturas do documento"
+      "THUMBNAILS": "Miniaturas do documento",
+      "THUMBNAILS_PANLEL_CLOSE": "Fechar painel de miniaturas"
     },
     "PAGE_LABEL": {
       "SHOWING": "Mostrando",
@@ -368,7 +412,8 @@
       "CLOSE": "Fechar",
       "PLACEHOLDER": "Senha",
       "ERROR": "A senha está errada"
-    }
+    },
+    "SUBTITLES": "Legendas"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Ocorreu um erro.",
       "DESCRIPTION": "Gateway incorreto, tente novamente ou entre em contato com o suporte de TI [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Voltar para a página inicial"
+      }
+    },
+    "503": {
+      "TITLE": "Ocorreu um erro.",
+      "DESCRIPTION": "Serviço temporariamente indisponível [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Clique para copiar",
     "SUCCESS_COPY": "Texto copiado para a área de transferência"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Pesquisar",
+      "ARIA_LABEL": "Opções de pesquisa"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Limpar"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Carregando..."
   }
 }

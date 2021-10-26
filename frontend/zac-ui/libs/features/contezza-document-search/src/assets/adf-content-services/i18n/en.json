@@ -4,11 +4,12 @@
       "RESTORE": "Restore",
       "DELETE": "Delete",
       "DOWNLOAD": "Download",
+      "VIEW": "View",
       "UPLOAD": {
         "TITLE": "Upload new version",
         "TOOLTIP": "Restriction: you must upload a file with the same name to create a new version of it",
-        "MAJOR": "major changes (2.0)",
-        "MINOR": "minor changes (1.1)",
+        "MAJOR": "major changes ({{version}})",
+        "MINOR": "minor changes ({{version}})",
         "COMMENT": "Leave a comment",
         "ADD": "Add New Version",
         "CANCEL": "Cancel"
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Item type {{ type }}",
       "ARROW_ICON": "Arrow right icon"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Loading..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Confirm",
@@ -79,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Cancel",
     "CHOOSE": "Select",
+    "ATTACH": "Attach",
     "CHOOSE_ITEM": "Select content to attach from '{{ name }}'",
     "COPY": "Copy",
     "COPY_ITEM": "Copy '{{ name }}' to...",
@@ -87,7 +86,11 @@
     "NO_RESULTS": "No results found",
     "SEARCH": "Search",
     "SEARCH_RESULTS": "Search results",
-    "SELECT_LOCATION": "Select Location"
+    "SELECT_LOCATION": "Select Location",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "You can't upload a file whilst a search is still running",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "User doesn't have permission to upload content to the folder",
+    "REPOSITORY": "Repository",
+    "UPLOAD_FROM_DEVICE": "Upload from your device"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -220,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Search",
         "CLEAR": "Clear",
         "APPLY": "Apply",
         "CLEAR-ALL": "Clear all",
         "SHOW-MORE": "Show more",
-        "SHOW-LESS": "Show less",
-        "FILTER-CATEGORY": "Filter category"
+        "SHOW-LESS": "Show less"
       },
       "BUTTONS": {
+        "CLOSE": "Close",
+        "REMOVE": "Remove",
+        "APPLY": "Apply",
         "CLEAR-ALL": {
           "LABEL": "Clear all",
           "TOOLTIP": "This will remove all selections"
@@ -248,7 +254,9 @@
         "NO-DAYS": "No days selected.",
         "INVALID-FORMAT": "Invalid Format",
         "INVALID-DATE": "Invalid date. The date must be in the format '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "The date is beyond the maximum date."
+        "BEYOND-MAX-DATE": "The date is beyond the maximum date.",
+        "INVALID-DATETIME": "Invalid datetime. The datetime must be in the format '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "The datetime is beyond the maximum datetime."
       }
     },
     "ICONS": {
@@ -285,12 +293,34 @@
         }
       }
     },
+    "UNKNOWN_CONFIGURATION": "Unknown Configuration",
     "SEARCH_HEADER" : {
       "TITLE":"Filter",
       "TYPE": "Type",
       "FILTER_BY": "Filter by {{ category }}",
       "CLEAR": "Clear",
-      "APPLY": "Apply"
+      "APPLY": "Apply",
+      "FILTERS" : {
+        "NAME" : {
+          "TITLE": "Name",
+          "PLACEHOLDER": "Enter the name"
+        },
+        "TYPE": {
+          "TITLE": "Check type",
+          "FOLDER": "Folder",
+          "DOCUMENT": "Document"
+        },
+        "SIZE": {
+          "TITLE" : "Content Size (range)",
+          "SMALL": "Small",
+          "MEDIUM": "Medium",
+          "LARGE": "Large",
+          "HUGE": "Huge"
+        },
+        "DATE" :{
+          "TITLE" : "Created Date (range)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -308,7 +338,23 @@
       "CREATOR": "Creator",
       "CREATED_DATE": "Created Date",
       "MODIFIER": "Modifier",
-      "MODIFIED_DATE": "Modified Date"
+      "MODIFIED_DATE": "Modified Date",
+      "CONTENT_TYPE": "Content Type"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG" :{
+        "TITLE" : "Change content type",
+        "DESCRIPTION": "Making this change to the content type will permanently add some properties and stored metadata to the document.",
+        "CONFIRM": "Are you sure you want to change the content type?",
+        "CANCEL": "CANCEL",
+        "APPLY": "SAVE CHANGES",
+        "VIEW_DETAILS": "View details",
+        "PROPERTY" :{
+          "NAME" : "Name",
+          "DESCRIPTION": "Description",
+          "DATA_TYPE": "Data type"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Error updating property",
@@ -343,15 +389,51 @@
       "NO_PERMISSIONS": "No permissions"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Search",
+      "SEARCH": "Search for users or groups to add",
+      "TITLE": "Add permission",
       "TYPE-MESSAGE": "Type something to start searching groups or people",
       "NO-RESULT": "No result found for this search",
+      "SELECT-ACTION": "SELECT",
       "ADD-ACTION": "ADD",
-      "CLOSE-ACTION": "CLOSE",
+      "CLOSE-ACTION": "CANCEL",
       "BASE-DIALOG-TITLE": "Search a group or people to add...",
       "EVERYONE": "EVERYONE"
     },
+    "COLUMN": {
+      "NAME": "Users and Groups ({{ count }})",
+      "LOCATION": "Location",
+      "BULK-ROLE": "Set all role to"
+    },
+    "LABELS": {
+      "ON": "On",
+      "OFF": "Off",
+      "DIRECT-PERMISSIONS": "Directly Applied Permission",
+      "INHERITED-PERMISSIONS": "Inherited Permission",
+      "INHERITED-SUBTITLE": "{{count}} users or groups are inheriting permission from a parent folder",
+      "SELECT-ROLE": "Select role"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "No users/groups",
+      "EMPTY-SUBTITLE": "Add user/group to manage permission.",
+      "NO-MEMBERS": "Add groups or people to manage roles",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Updated {{user}} user(s) {{group}} group(s)",
+      "PERMISSION-UPDATE-SUCCESS": "User/Group updated",
+      "PERMISSION-UPDATE-FAIL": "Failed to update user/group",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Deleted {{user}} user(s) {{group}} group(s)",
+      "PERMISSION-DELETE-SUCCESS": "User/Group deleted",
+      "PERMISSION-DELETE-FAIL": "Failed to delete user/group",
+      "PERMISSION-ADD-SUCCESS": "Added {{user}} user(s) {{group}} group(s)",
+      "PERMISSION-ADD-FAIL": "Failed to add user/group",
+      "INHERIT-ENABLE-SUCCESS": "Enabled inherited permission",
+      "INHERIT-DISABLE-SUCCESS": "Disabled inherited permission",
+      "TOGGLE-PERMISSION-FAILED": "Failed to toggle inherit Permission"
+    },
+    "ACTION": {
+      "DELETE": "Delete",
+      "ADD-PERMISSION": "Add User or Group"
+    },
     "ERROR": {
+      "NOT-FOUND": "This item no longer exists or you don't have permission to view it.",
       "DUPLICATE-PERMISSION": "One or more of the permissions you have set is already present : {{list}}",
       "NOT-ALLOWED": "You are not allowed to change permissions"
     }
@@ -380,7 +462,8 @@
       "MANAGER": "Manager",
       "COLLABORATOR": "Collaborator",
       "CONTRIBUTOR": "Contributor",
-      "CONSUMER": "Consumer"
+      "CONSUMER": "Consumer",
+      "NONE": "Not a member"
     },
     "VISIBILITY": {
       "PRIVATE": "Private",
@@ -416,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Open {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST" : {
+    "PROPERTY_NAME": "Property Name",
+    "DESCRIPTION": "Description",
+    "DATA_TYPE": "Data Type",
+    "DIALOG" : {
+       "TITLE" : "Customize Properties",
+       "DESCRIPTION": "Manage the properties associated with selected file(s). Choose from property aspects listed below, to expose and apply additional metadata and functionality",
+       "RESET": "Reset",
+       "CLEAR": "Clear",
+       "CANCEL": "Cancel",
+       "APPLY": "Apply",
+       "OVER-TABLE-MESSAGE" : "Select property aspects",
+       "SELECTED": "Selected"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} selected"
+  },
+  "swsdp": "Sample: Web Site Design Project"
 }

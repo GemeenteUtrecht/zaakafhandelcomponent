@@ -4,6 +4,7 @@
       "RESTORE": "Ripristina",
       "DELETE": "Elimina",
       "DOWNLOAD": "Scarica",
+      "VIEW": "Visualizza",
       "UPLOAD": {
         "TITLE": "Carica la nuova versione",
         "TOOLTIP": "Limite: è necessario caricare un file con lo stesso nome per crearne una nuova versione.",
@@ -29,9 +30,6 @@
       "ARROW_ICON": "Icona freccia destra"
     }
   },
-  "ADF_DROPDOWN": {
-    "LOADING": "Caricamento..."
-  },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Conferma",
     "ACTION": "Procedere?",
@@ -42,7 +40,7 @@
     "EMPTY": {
       "HEADER": "Questa cartella è vuota"
     },
-    "NO_PERMISSION": "Non si dispone dei permessi per visualizzare questo file o questa cartella.",
+    "NO_PERMISSION": "Non si dispone dell'autorizzazione per visualizzare questo file o questa cartella.",
     "LAYOUT": {
       "CREATED": "Creato",
       "CREATED_BY": "Creato da",
@@ -62,11 +60,6 @@
       "VIEW": "Visualizza",
       "REMOVE": "Rimuovi",
       "DOWNLOAD": "Scarica"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtra per {{ category }}",
-      "CLEAR": "Cancella",
-      "APPLY": "Applica"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Annulla",
     "CHOOSE": "Seleziona",
+    "ATTACH": "Allega",
     "CHOOSE_ITEM": "Selezionare il contenuto da allegare da \"{{ name }}\"",
     "COPY": "Copia",
     "COPY_ITEM": "Copia '{{ name }}' in...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Nessun risultato trovato",
     "SEARCH": "Cerca",
     "SEARCH_RESULTS": "Risultati della ricerca",
-    "SELECT_LOCATION": "Seleziona località"
+    "SELECT_LOCATION": "Seleziona località",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Impossibile caricare un file mentre è ancora in esecuzione una ricerca",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "L'utente non dispone dell'autorizzazione per caricare il contenuto nella cartella",
+    "REPOSITORY": "Repository",
+    "UPLOAD_FROM_DEVICE": "Carica dal dispositivo"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -166,7 +164,7 @@
     "BUTTON": {
       "UPLOAD_FILE": "Carica file",
       "UPLOAD_FOLDER": "Carica cartella",
-      "PERMISSION_CHECK_ERROR": "Errore durante la verifica dei permessi."
+      "PERMISSION_CHECK_ERROR": "Errore durante la verifica delle autorizzazioni."
     },
     "VERSION": {
       "MESSAGES": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Cerca",
         "CLEAR": "Cancella",
         "APPLY": "Applica",
         "CLEAR-ALL": "Cancella tutto",
         "SHOW-MORE": "Altro",
-        "SHOW-LESS": "Nascondi",
-        "FILTER-CATEGORY": "Filtra per categoria"
+        "SHOW-LESS": "Nascondi"
       },
       "BUTTONS": {
+        "CLOSE": "Chiudi",
+        "REMOVE": "Rimuovi",
+        "APPLY": "Applica",
         "CLEAR-ALL": {
           "LABEL": "Cancella tutto",
           "TOOLTIP": "Tutte le selezioni verranno rimosse"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Nessun giorno selezionato.",
         "INVALID-FORMAT": "Formato non valido.",
         "INVALID-DATE": "Data non valida. La data deve essere nel formato '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "La data è successiva alla data massima."
+        "BEYOND-MAX-DATE": "La data è successiva alla data massima.",
+        "INVALID-DATETIME": "Data/ora non valida. La data/ora deve essere specificata nel formato '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "La data/ora supera il valore massimo consentito."
       }
     },
     "ICONS": {
@@ -289,10 +292,39 @@
           "PROCESS_ACTION": "Avvia processo"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Configurazione sconosciuta",
+    "SEARCH_HEADER": {
+      "TITLE": "Filtro",
+      "TYPE": "Tipo",
+      "FILTER_BY": "Filtra per {{ category }}",
+      "CLEAR": "Cancella",
+      "APPLY": "Applica",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Nome",
+          "PLACEHOLDER": "Immettere il nome"
+        },
+        "TYPE": {
+          "TITLE": "Selezionare il tipo",
+          "FOLDER": "Cartella",
+          "DOCUMENT": "Documento"
+        },
+        "SIZE": {
+          "TITLE": "Dimensioni contenuto (intervallo)",
+          "SMALL": "Piccola",
+          "MEDIUM": "Media",
+          "LARGE": "Grande",
+          "HUGE": "Enorme"
+        },
+        "DATE": {
+          "TITLE": "Data di creazione (intervallo)"
+        }
+      }
     }
   },
   "PERMISSION": {
-    "LACKOF": "Non  si dispone dei permessi {{permission}} per {{action}} {{type}}"
+    "LACKOF": "Non si dispone dell'autorizzazione {{permission}} per {{action}} {{type}}"
   },
   "METADATA": {
     "BASIC": {
@@ -306,7 +338,23 @@
       "CREATOR": "Creatore",
       "CREATED_DATE": "Data di creazione",
       "MODIFIER": "Modificatore",
-      "MODIFIED_DATE": "Data di modifica"
+      "MODIFIED_DATE": "Data di modifica",
+      "CONTENT_TYPE": "Tipo di contenuto"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Modifica il tipo di contenuto",
+        "DESCRIPTION": "Se si apporta questa modifica al tipo di contenuto, alcune proprietà e metadati memorizzati verranno aggiunti al documento in modo definitivo.",
+        "CONFIRM": "Modificare il tipo di contenuto?",
+        "CANCEL": "Annulla",
+        "APPLY": "Salva modifiche",
+        "VIEW_DETAILS": "Visualizza dettagli",
+        "PROPERTY": {
+          "NAME": "Nome",
+          "DESCRIPTION": "Descrizione",
+          "DATA_TYPE": "Tipo di dati"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Errore nell’aggiornamento della proprietà",
@@ -330,7 +378,7 @@
       "REMOVE": "Rimuovi"
     },
     "UNSHARE_ERROR": "Errore durante l'annullamento della condivisione di questo file",
-    "UNSHARE_PERMISSION_ERROR": "Non si dispone dei permessi per rimuovere la condivisione di questo file"
+    "UNSHARE_PERMISSION_ERROR": "Non si dispone dell'autorizzazione per rimuovere la condivisione di questo file"
   },
   "PERMISSION_MANAGER": {
     "PERMISSION_DISPLAY": {
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Nessuna autorizzazione"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Cerca",
+      "SEARCH": "Cerca utenti o gruppi da aggiungere",
+      "TITLE": "Aggiungi autorizzazione",
       "TYPE-MESSAGE": "Digita per iniziare a cercare gruppi o persone",
       "NO-RESULT": "Nessun risultato trovato per la ricerca",
+      "SELECT-ACTION": "Seleziona",
       "ADD-ACTION": "Aggiungi",
-      "CLOSE-ACTION": "Chiudi",
+      "CLOSE-ACTION": "Annulla",
       "BASE-DIALOG-TITLE": "Cerca un gruppo o una persona da aggiungere...",
       "EVERYONE": "Tutti"
     },
+    "COLUMN": {
+      "NAME": "Utenti e gruppi ({{ count }})",
+      "LOCATION": "Località",
+      "BULK-ROLE": "Imposta tutti i ruoli su"
+    },
+    "LABELS": {
+      "ON": "Attivata",
+      "OFF": "Disattivata",
+      "DIRECT-PERMISSIONS": "Autorizzazione applicata direttamente",
+      "INHERITED-PERMISSIONS": "Autorizzazione ereditata",
+      "INHERITED-SUBTITLE": "{{count}} utenti o gruppi ereditano l'autorizzazione da una cartella principale",
+      "SELECT-ROLE": "Seleziona ruolo"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Nessun utente/gruppo",
+      "EMPTY-SUBTITLE": "Aggiungere un utente/gruppo per gestire l'autorizzazione.",
+      "NO-MEMBERS": "Aggiungi gruppi o utenti per gestire i ruoli",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "{{user}} utenti {{group}} gruppi aggiornati",
+      "PERMISSION-UPDATE-SUCCESS": "Utente/gruppo aggiornato",
+      "PERMISSION-UPDATE-FAIL": "Impossibile aggiornare utente/gruppo",
+      "PERMISSION-BULK-DELETE-SUCCESS": "{{user}} utenti {{group}} gruppi eliminati",
+      "PERMISSION-DELETE-SUCCESS": "Utente/gruppo eliminato",
+      "PERMISSION-DELETE-FAIL": "Impossibile eliminare utente/gruppo",
+      "PERMISSION-ADD-SUCCESS": "{{user}} utenti {{group}} gruppi aggiunti",
+      "PERMISSION-ADD-FAIL": "Impossibile aggiungere utente/gruppo",
+      "INHERIT-ENABLE-SUCCESS": "Autorizzazione ereditata abilitata",
+      "INHERIT-DISABLE-SUCCESS": "Autorizzazione ereditata disabilitata",
+      "TOGGLE-PERMISSION-FAILED": "Impossibile abilitare/disabilitare autorizzazione ereditata"
+    },
+    "ACTION": {
+      "DELETE": "Elimina",
+      "ADD-PERMISSION": "Aggiungi utente o gruppo"
+    },
     "ERROR": {
+      "NOT-FOUND": "Questo elemento non esiste più o non si dispone delle autorizzazioni per visualizzarlo.",
       "DUPLICATE-PERMISSION": "Uno o più autorizzazioni impostate sono già presenti: {{list}}",
       "NOT-ALLOWED": "Non è consentito modificare le autorizzazioni"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Manager",
       "COLLABORATOR": "Collaboratore",
       "CONTRIBUTOR": "Contributore",
-      "CONSUMER": "Consumatore"
+      "CONSUMER": "Consumatore",
+      "NONE": "Non è un membro"
     },
     "VISIBILITY": {
       "PRIVATE": "Privato",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Apri {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Nome proprietà",
+    "DESCRIPTION": "Descrizione",
+    "DATA_TYPE": "Tipo di dati",
+    "DIALOG": {
+      "TITLE": "Personalizza proprietà",
+      "DESCRIPTION": "Consente di gestire le proprietà associate ai file selezionati. Per visualizzare e applicare altri metadati e funzionalità aggiuntive, è possibile scegliere tra gli aspetti delle proprietà elencati di seguito",
+      "RESET": "Reimposta",
+      "CLEAR": "Cancella",
+      "CANCEL": "Annulla",
+      "APPLY": "Applica",
+      "OVER-TABLE-MESSAGE": "Seleziona aspetti proprietà",
+      "SELECTED": "Selezionato"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} selezionati"
+  },
+  "swsdp": "Esempio: Progetto di sviluppo di sito Web"
 }

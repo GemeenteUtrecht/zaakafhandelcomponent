@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Language",
+    "ROLES": {
+      "ALL": "All",
+      "CONTRIBUTOR": "Contributor",
+      "COLLABORATOR": "Collaborator",
+      "COORDINATOR": "Coordinator",
+      "EDITOR": "Editor",
+      "CONSUMER": "Consumer",
+      "SITECOLLABORATOR": "Site Collaborator",
+      "SITECONSUMER": "Site Consumer",
+      "SITECONTRIBUTOR": "Site Contributor",
+      "SITEMANAGER": "Site Manager"
+    }
+  },
   "SAVE": "SAVE",
   "COMPLETE": "COMPLETE",
   "CANCEL": "CANCEL",
@@ -6,10 +21,11 @@
   "UNCLAIM": "RELEASE",
   "START PROCESS": "START PROCESS",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "No messages",
+    "NO_MESSAGE": "You have no notifications at this time.",
     "TITLE": "Notifications",
     "MARK_AS_READ": "Mark all as read",
-    "SYSTEM": "System"
+    "SYSTEM": "System",
+    "LOAD_MORE": "Load more"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Local storage",
       "SOURCE": "Select source from ",
-      "SHOW_FILE": "Show",
+      "VIEW_FILE": "View",
       "DOWNLOAD_FILE": "Download",
       "REMOVE_FILE": "Remove",
       "UPLOAD": "UPLOAD",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Enter at least {{ minLength }} characters",
         "NO_LONGER_THAN": "Enter no more than {{ maxLength }} characters"
       },
-      "FILE_ALREADY_UPLOADED": "A file with the same name is already uploaded."
+      "FILE_ALREADY_UPLOADED": "A file with the same name is already uploaded.",
+      "ATTACH":"Attach"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Nameless task"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Description"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Title"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Create"
       },
@@ -175,7 +195,10 @@
       "NONE": "None",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Use a number format",
-        "INT_VALIDATION_ERROR": "Use an integer format"
+        "INT_VALIDATION_ERROR": "Use an integer format",
+        "LENGTH_VALIDATION_ERROR": "Value should be between {{ minLength }} and {{ maxLength }} in length",
+        "MATCH_VALIDATION_ERROR": "Value doesn't match pattern: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Value should be between {{ minValue }} and {{ maxValue }}"
       },
       "MORE": "More"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Creator",
         "CREATED_DATE": "Created Date",
         "MODIFIER": "Modifier",
-        "MODIFIED_DATE": "Modified Date"
+        "MODIFIED_DATE": "Modified Date",
+        "CONTENT_TYPE": "Content Type"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG" :{
+          "TITLE" : "Change content type",
+          "DESCRIPTION": "Making this change to the content type will permanently add some properties and stored metadata to the document.",
+          "CONFIRM": "Are you sure you want to change the content type?",
+          "CANCEL": "CANCEL",
+          "APPLY": "Save Changes",
+          "VIEW_DETAILS": "View details",
+          "PROPERTY" :{
+            "NAME" : "Name",
+            "DESCRIPTION": "Description",
+            "DATA_TYPE": "Data type"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Edit",
@@ -199,12 +238,14 @@
         "CANCEL": "Cancel",
         "CLEAR": "Clear",
         "TOGGLE": "Toggle value",
-        "COPY_TO_CLIPBOARD": "Double click to copy value"
+        "COPY_TO_CLIPBOARD": "Double click to copy value",
+        "EDIT_ASPECTS": "Edit Aspect"
       },
       "ACCESSIBILITY": {
         "EDIT": "Edit button",
         "DATEPICKER": "Use the arrow keys to navigate between dates. Up and down move to the next or previous week but on the same day. Left and right move to the next or previous day. Press Enter or Return to select a date.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Value copied to clipboard"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Value copied to clipboard",
+        "EDIT_ASPECTS": "Edit Aspect"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "You've entered an unknown username or password",
       "LOGIN-ERROR-PROVIDERS": "Providers cannot be undefined",
       "LOGIN-ERROR-CORS": "CORS exception, check your server configuration",
-      "LOGIN-ERROR-CSRF": "CSRF exception, set [disableCsrf]=\"true\" in login.component",
+      "LOGIN-ERROR-CSRF": "CSRF exception, set \"disableCSRF\": true in app.config.json",
       "LOGIN-ECM-LICENSE": "Alfresco Content Services repository is in read-only mode",
       "SSO-WRONG-CONFIGURATION": "SSO Authentication server unreachable"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Zoom in",
       "ZOOM_OUT": "Zoom out",
       "FIT_PAGE": "Fit page",
-      "ROTATE_LEFT": "Rotate left",
-      "ROTATE_RIGHT": "Rotate right",
+      "ROTATE": "Rotate",
+      "CROP": "Crop",
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
       "RESET": "Reset",
-      "THUMBNAILS": "Document thumbnails"
+      "THUMBNAILS": "Document thumbnails",
+      "THUMBNAILS_PANLEL_CLOSE": "Close thumbnails panel"
     },
     "PAGE_LABEL": {
       "SHOWING": "Showing",
@@ -368,7 +412,8 @@
       "CLOSE": "Close",
       "PLACEHOLDER": "Password",
       "ERROR": "Password is wrong"
-    }
+    },
+    "SUBTITLES": "Subtitles"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "An error occurred.",
       "DESCRIPTION": "Bad Gateway, try again or contact IT support [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Back to home"
+      }
+    },
+    "503": {
+      "TITLE": "An error occurred.",
+      "DESCRIPTION": "Service Temporarily Unavailable [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Click to copy",
     "SUCCESS_COPY": "Text copied to clipboard"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Search",
+      "ARIA_LABEL": "Search options"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Clear"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Loading..."
   }
 }

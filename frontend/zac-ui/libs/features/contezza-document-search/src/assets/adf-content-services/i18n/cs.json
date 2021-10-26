@@ -4,6 +4,7 @@
       "RESTORE": "Obnovit",
       "DELETE": "Odstranit",
       "DOWNLOAD": "Stáhnout",
+      "VIEW": "Zobrazit",
       "UPLOAD": {
         "TITLE": "Odeslat novou verzi",
         "TOOLTIP": "Omezení: Pokud chcete vytvořit novou verzi souboru, musíte nahrát soubor se stejným názvem",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Typ položky {{ type }}",
       "ARROW_ICON": "Ikona se šipkou doprava"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Načítání..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Potvrdit",
@@ -62,11 +60,6 @@
       "VIEW": "Zobrazit",
       "REMOVE": "Odstranit",
       "DOWNLOAD": "Stáhnout"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtrovat podle {{ category }}",
-      "CLEAR": "Vymazat",
-      "APPLY": "Použít"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Zrušit",
     "CHOOSE": "Vybrat",
+    "ATTACH": "Připojit",
     "CHOOSE_ITEM": "Vybrat obsah pro připojení z '{{ name }}'",
     "COPY": "Kopírovat",
     "COPY_ITEM": "Zkopírovat položku '{{ name }}' do...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Nebyly nalezeny žádné výsledky",
     "SEARCH": "Hledat",
     "SEARCH_RESULTS": "Výsledky hledání",
-    "SELECT_LOCATION": "Vybrat umístění"
+    "SELECT_LOCATION": "Vybrat umístění",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Soubor nelze nahrát, když probíhá hledání.",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Uživatel nemá oprávnění nahrávat obsah do složky.",
+    "REPOSITORY": "Úložiště",
+    "UPLOAD_FROM_DEVICE": "Odeslat z vašeho zařízení"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Hledat",
         "CLEAR": "Vymazat",
         "APPLY": "Použít",
         "CLEAR-ALL": "Vymazat vše",
         "SHOW-MORE": "Zobrazit více",
-        "SHOW-LESS": "Zobrazit méně",
-        "FILTER-CATEGORY": "Filtrovat kategorii"
+        "SHOW-LESS": "Zobrazit méně"
       },
       "BUTTONS": {
+        "CLOSE": "Zavřít",
+        "REMOVE": "Odstranit",
+        "APPLY": "Použít",
         "CLEAR-ALL": {
           "LABEL": "Vymazat vše",
           "TOOLTIP": "Tím se odstraní všechny výběry"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Nejsou určeny žádné dny.",
         "INVALID-FORMAT": "Neplatný formát",
         "INVALID-DATE": "Neplatné datum. Datum musí být ve formátu '{{ requiredFormat }}'.",
-        "BEYOND-MAX-DATE": "Datum nesplňuje limit pro nejvzdálenější datum."
+        "BEYOND-MAX-DATE": "Datum nesplňuje limit pro nejvzdálenější datum.",
+        "INVALID-DATETIME": "Neplatné datum a čas. Datum a čas musí být ve formátu '{{ requiredFormat }}'.",
+        "BEYOND-MAX-DATETIME": "Datum a čas překračuje maximální datum a čas."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Zahájit proces"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Neznámá konfigurace",
+    "SEARCH_HEADER": {
+      "TITLE": "Filtr",
+      "TYPE": "Typ",
+      "FILTER_BY": "Filtrovat podle {{ category }}",
+      "CLEAR": "Vymazat",
+      "APPLY": "Použít",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Název",
+          "PLACEHOLDER": "Zadejte název"
+        },
+        "TYPE": {
+          "TITLE": "Zkontrolujte typ",
+          "FOLDER": "Složka",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Velikost obsahu (rozmezí)",
+          "SMALL": "Malá",
+          "MEDIUM": "Střední",
+          "LARGE": "Velká",
+          "HUGE": "Obrovská"
+        },
+        "DATE": {
+          "TITLE": "Datum vytvoření (rozmezí)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Autor",
       "CREATED_DATE": "Datum vytvoření",
       "MODIFIER": "Upravující",
-      "MODIFIED_DATE": "Datum úpravy"
+      "MODIFIED_DATE": "Datum úpravy",
+      "CONTENT_TYPE": "Typ obsahu"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Změnit typ obsahu",
+        "DESCRIPTION": "Tato změna typu obsahu způsobí, že budou do dokumentu natrvalo přidány vlastnosti a uložená metadata.",
+        "CONFIRM": "Opravdu chcete změnit typ obsahu?",
+        "CANCEL": "Zrušit",
+        "APPLY": "Uložit změny",
+        "VIEW_DETAILS": "Zobrazit podrobnosti",
+        "PROPERTY": {
+          "NAME": "Název",
+          "DESCRIPTION": "Popis",
+          "DATA_TYPE": "Typ dat"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Chyba aktualizace vlastnosti",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Bez oprávnění"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Hledat",
+      "SEARCH": "Hledat uživatele nebo skupiny pro přidání",
+      "TITLE": "Přidat oprávnění",
       "TYPE-MESSAGE": "Začněte hledat skupiny nebo osoby jednoduše zadáním textu",
       "NO-RESULT": "Hledanému výrazu neodpovídají žádné výsledky",
+      "SELECT-ACTION": "Vybrat",
       "ADD-ACTION": "Přidat",
-      "CLOSE-ACTION": "Zavřít",
+      "CLOSE-ACTION": "Zrušit",
       "BASE-DIALOG-TITLE": "Vyhledejte skupinu nebo osoby, které chcete přidat...",
       "EVERYONE": "Každý"
     },
+    "COLUMN": {
+      "NAME": "Uživatelé a skupiny ({{ count }})",
+      "LOCATION": "Umístění",
+      "BULK-ROLE": "Nastavit všechny role na"
+    },
+    "LABELS": {
+      "ON": "Zapnuto",
+      "OFF": "Vypnuto",
+      "DIRECT-PERMISSIONS": "Přímo použité oprávnění",
+      "INHERITED-PERMISSIONS": "Zděděné oprávnění",
+      "INHERITED-SUBTITLE": "Uživatelé nebo skupiny ({{count}}) dědí oprávnění z nadřazené složky",
+      "SELECT-ROLE": "Vybrat roli"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Žádní uživatelé/skupiny",
+      "EMPTY-SUBTITLE": "Pokud chcete spravovat oprávnění, přidejte uživatele/skupinu.",
+      "NO-MEMBERS": "Pokud chcete spravovat role, přidejte skupiny nebo osoby",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Aktualizovaní uživatelé: {{user}}, skupiny: {{group}}",
+      "PERMISSION-UPDATE-SUCCESS": "Uživatel/skupina aktualizován(a)",
+      "PERMISSION-UPDATE-FAIL": "Uživatele/skupinu se nepodařilo aktualizovat",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Odstranění uživatelé: {{user}}, skupiny: {{group}}",
+      "PERMISSION-DELETE-SUCCESS": "Uživatel/skupina odstraněn(a)",
+      "PERMISSION-DELETE-FAIL": "Uživatele/skupinu se nepodařilo odstranit",
+      "PERMISSION-ADD-SUCCESS": "Přidaní uživatelé: {{user}}, skupiny: {{group}}",
+      "PERMISSION-ADD-FAIL": "Uživatele/skupinu se nepodařilo přidat",
+      "INHERIT-ENABLE-SUCCESS": "Povoleno zděděné oprávnění",
+      "INHERIT-DISABLE-SUCCESS": "Zakázáno zděděné oprávnění",
+      "TOGGLE-PERMISSION-FAILED": "Nepodařilo se přepnout zděděné oprávnění"
+    },
+    "ACTION": {
+      "DELETE": "Odstranit",
+      "ADD-PERMISSION": "Přidat uživatele nebo skupinu"
+    },
     "ERROR": {
+      "NOT-FOUND": "Tato položka již neexistuje nebo nemáte dostatečná oprávnění pro její zobrazení.",
       "DUPLICATE-PERMISSION": "Alespoň jedno z vámi nastavených oprávnění již existuje: {{list}}",
       "NOT-ALLOWED": "Nemáte oprávnění měnit oprávnění"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Správce",
       "COLLABORATOR": "Spolupracovník",
       "CONTRIBUTOR": "Přispěvatel",
-      "CONSUMER": "Spotřebitel"
+      "CONSUMER": "Spotřebitel",
+      "NONE": "Není člen"
     },
     "VISIBILITY": {
       "PRIVATE": "Soukromé",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Otevřít {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Název vlastnosti",
+    "DESCRIPTION": "Popis",
+    "DATA_TYPE": "Typ dat",
+    "DIALOG": {
+      "TITLE": "Přizpůsobit vlastnosti",
+      "DESCRIPTION": "Můžete spravovat vlastnosti spojené s vybranými soubory. Pokud chcete zpřístupnit a používat další metadata a funkce, vybírejte z aspektů vlastností uvedených níže.",
+      "RESET": "Reset",
+      "CLEAR": "Vymazat",
+      "CANCEL": "Zrušit",
+      "APPLY": "Použít",
+      "OVER-TABLE-MESSAGE": "Vyberte aspekty vlastností",
+      "SELECTED": "Vybráno"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "Vybráno: {{ count }}"
+  },
+  "swsdp": "Ukázka: Projekt návrhu webové stránky"
 }

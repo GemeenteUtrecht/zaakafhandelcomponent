@@ -4,6 +4,7 @@
       "RESTORE": "Herstellen",
       "DELETE": "Verwijderen",
       "DOWNLOAD": "Downloaden",
+      "VIEW": "Weergeven",
       "UPLOAD": {
         "TITLE": "Nieuwe versie uploaden",
         "TOOLTIP": "Beperking: u moet een bestand met dezelfde naam uploaden om een nieuwe versie van het bestand te maken",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Itemtype {{ type }}",
       "ARROW_ICON": "Pictogram pijl-rechts"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Laden..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Bevestigen",
@@ -62,11 +60,6 @@
       "VIEW": "Weergeven",
       "REMOVE": "Verwijderen",
       "DOWNLOAD": "Downloaden"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filteren op {{ category }}",
-      "CLEAR": "Wissen",
-      "APPLY": "Toepassen"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Annuleren",
     "CHOOSE": "Selecteren",
+    "ATTACH": "Bijvoegen",
     "CHOOSE_ITEM": "Selecteer content om bij te voegen vanuit '{{ name }}'",
     "COPY": "Kopiëren",
     "COPY_ITEM": "'{{ name }}' kopiëren naar...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Geen resultaten gevonden",
     "SEARCH": "Zoeken",
     "SEARCH_RESULTS": "Zoekresultaten",
-    "SELECT_LOCATION": "Locatie selecteren"
+    "SELECT_LOCATION": "Locatie selecteren",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "U kunt geen bestand uploaden terwijl een zoekopdracht wordt uitgevoerd",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Gebruiker heeft geen rechten voor het uploaden van content naar de map",
+    "REPOSITORY": "Repository",
+    "UPLOAD_FROM_DEVICE": "Uploaden vanaf uw apparaat"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Zoeken",
         "CLEAR": "Wissen",
         "APPLY": "Toepassen",
         "CLEAR-ALL": "Alles wissen",
         "SHOW-MORE": "Meer weergeven",
-        "SHOW-LESS": "Minder weergeven",
-        "FILTER-CATEGORY": "Categorie filteren"
+        "SHOW-LESS": "Minder weergeven"
       },
       "BUTTONS": {
+        "CLOSE": "Sluiten",
+        "REMOVE": "Verwijderen",
+        "APPLY": "Toepassen",
         "CLEAR-ALL": {
           "LABEL": "Alles wissen",
           "TOOLTIP": "Hiermee verwijdert u alle selecties"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Geen dagen geselecteerd.",
         "INVALID-FORMAT": "Ongeldige notatie",
         "INVALID-DATE": "Ongeldige datum. De datum moet de volgende notatie hebben: '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "De datum ligt na de laatste datum."
+        "BEYOND-MAX-DATE": "De datum ligt na de laatste datum.",
+        "INVALID-DATETIME": "Ongeldige datum/tijd. De datum/tijd moet de volgende notatie hebben: '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "De datum/tijd ligt na de laatste datum/tijd."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Proces starten"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Onbekende configuratie",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Type",
+      "FILTER_BY": "Filteren op {{ category }}",
+      "CLEAR": "Wissen",
+      "APPLY": "Toepassen",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Naam",
+          "PLACEHOLDER": "Voer de naam in"
+        },
+        "TYPE": {
+          "TITLE": "Bevestig type",
+          "FOLDER": "Map",
+          "DOCUMENT": "Document"
+        },
+        "SIZE": {
+          "TITLE": "Contentgrootte (bereik)",
+          "SMALL": "Klein",
+          "MEDIUM": "Gemiddeld",
+          "LARGE": "Groot",
+          "HUGE": "Zeer groot"
+        },
+        "DATE": {
+          "TITLE": "Datum gemaakt (bereik)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Maker",
       "CREATED_DATE": "Datum gemaakt",
       "MODIFIER": "Gewijzigd door",
-      "MODIFIED_DATE": "Datum gewijzigd"
+      "MODIFIED_DATE": "Datum gewijzigd",
+      "CONTENT_TYPE": "Contenttype"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Contenttype wijzigen",
+        "DESCRIPTION": "Met deze wijziging van het contenttype worden permanent bepaalde eigenschappen en opgeslagen metagegevens aan het document toegevoegd.",
+        "CONFIRM": "Weet u zeker dat u het contenttype wilt wijzigen?",
+        "CANCEL": "Annuleren",
+        "APPLY": "Wijzigingen opslaan",
+        "VIEW_DETAILS": "Details weergeven",
+        "PROPERTY": {
+          "NAME": "Naam",
+          "DESCRIPTION": "Beschrijving",
+          "DATA_TYPE": "Gegevenstype"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Fout bij het bijwerken van de eigenschap",
@@ -338,20 +386,56 @@
       "AUTHORITY_ID": "Autoriteits-id",
       "ROLE": "Rol",
       "LOCALLY_SET": "Lokaal ingesteld",
-      "NO_PERMISSIONS": "Geen machtigingen"
+      "NO_PERMISSIONS": "Geen rechten"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Zoeken",
+      "SEARCH": "Zoeken naar gebruikers of groepen om toe te voegen",
+      "TITLE": "Rechten toevoegen",
       "TYPE-MESSAGE": "Voer iets in om te beginnen met zoeken naar groepen of personen",
       "NO-RESULT": "Geen resultaten gevonden voor deze zoekopdracht",
+      "SELECT-ACTION": "Selecteren",
       "ADD-ACTION": "Toevoegen",
-      "CLOSE-ACTION": "Sluiten",
+      "CLOSE-ACTION": "Annuleren",
       "BASE-DIALOG-TITLE": "Een groep of personen zoeken om toe te voegen...",
       "EVERYONE": "Iedereen"
     },
+    "COLUMN": {
+      "NAME": "Gebruikers en groepen ({{ count }})",
+      "LOCATION": "Locatie",
+      "BULK-ROLE": "Alle rollen instellen op"
+    },
+    "LABELS": {
+      "ON": "Aan",
+      "OFF": "Uit",
+      "DIRECT-PERMISSIONS": "Rechtstreeks toegepaste rechten",
+      "INHERITED-PERMISSIONS": "Overgenomen rechten",
+      "INHERITED-SUBTITLE": "{{count}} gebruikers of groepen nemen rechten over van een bovenliggende map",
+      "SELECT-ROLE": "Rol selecteren"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Geen gebruikers/groepen",
+      "EMPTY-SUBTITLE": "Voeg gebruiker/groep toe om rechten te beheren.",
+      "NO-MEMBERS": "Voeg groepen of personen toe om rollen te beheren",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "{{user}} gebruiker(s) {{group}} groep(en) bijgewerkt",
+      "PERMISSION-UPDATE-SUCCESS": "Gebruiker/groep bijgewerkt",
+      "PERMISSION-UPDATE-FAIL": "Kan gebruiker/groep niet bijwerken",
+      "PERMISSION-BULK-DELETE-SUCCESS": "{{user}} gebruiker(s) {{group}} groep(en) verwijderd",
+      "PERMISSION-DELETE-SUCCESS": "Gebruiker/groep verwijderd",
+      "PERMISSION-DELETE-FAIL": "Kan gebruiker/groep niet verwijderen",
+      "PERMISSION-ADD-SUCCESS": "{{user}} gebruiker(s) {{group}} groep(en) toegevoegd",
+      "PERMISSION-ADD-FAIL": "Kan gebruiker/groep niet toevoegen",
+      "INHERIT-ENABLE-SUCCESS": "Overgenomen rechten ingeschakeld",
+      "INHERIT-DISABLE-SUCCESS": "Overgenomen rechten uitgeschakeld",
+      "TOGGLE-PERMISSION-FAILED": "Kan overgenomen rechten niet in-/uitschakelen"
+    },
+    "ACTION": {
+      "DELETE": "Verwijderen",
+      "ADD-PERMISSION": "Gebruiker of groep toevoegen"
+    },
     "ERROR": {
-      "DUPLICATE-PERMISSION": "Een of meerdere machtigingen die u hebt ingesteld zijn al aanwezig: {{list}}",
-      "NOT-ALLOWED": "Het is u niet toegestaan om machtigingen te wijzigen"
+      "NOT-FOUND": "Dit item bestaat niet meer of u hebt geen rechten om het weer te geven.",
+      "DUPLICATE-PERMISSION": "Een of meerdere rechten die u hebt ingesteld zijn al aanwezig: {{list}}",
+      "NOT-ALLOWED": "Het is u niet toegestaan om rechten te wijzigen"
     }
   },
   "ADF-TREE-VIEW": {
@@ -378,7 +462,8 @@
       "MANAGER": "Beheerder",
       "COLLABORATOR": "Medewerker",
       "CONTRIBUTOR": "Bijdrager",
-      "CONSUMER": "Consument"
+      "CONSUMER": "Consument",
+      "NONE": "Geen lid"
     },
     "VISIBILITY": {
       "PRIVATE": "Privé",
@@ -391,7 +476,7 @@
     "ERRORS": {
       "GENERIC": "Er is een probleem opgetreden",
       "EXISTENT_SITE": "Deze bibliotheek-id is niet beschikbaar. Probeer een andere bibliotheek-id.",
-      "CONFLICT": "Deze bibliotheek wordt al gebruikt. Controleer de prullenbak.",
+      "CONFLICT": "Deze bibliotheek-id wordt al gebruikt. Controleer de prullenbak.",
       "ID_TOO_LONG": "Gebruik 72 tekens of minder voor de URL-naam",
       "DESCRIPTION_TOO_LONG": "Gebruik 512 tekens of minder voor de beschrijving",
       "TITLE_TOO_LONG": "Gebruik 256 tekens of minder voor de titel",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "{{ name }} openen"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Eigenschapsnaam",
+    "DESCRIPTION": "Beschrijving",
+    "DATA_TYPE": "Gegevenstype",
+    "DIALOG": {
+      "TITLE": "Eigenschappen aanpassen",
+      "DESCRIPTION": "Beheer de eigenschappen die zijn gekoppeld aan geselecteerde bestanden. Kies uit de onderstaande eigenschap-aspecten om aanvullende metagegevens en functionaliteit weer te geven en toe te passen",
+      "RESET": "Opnieuw instellen",
+      "CLEAR": "Wissen",
+      "CANCEL": "Annuleren",
+      "APPLY": "Toepassen",
+      "OVER-TABLE-MESSAGE": "Eigenschap-aspecten selecteren",
+      "SELECTED": "Geselecteerd"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} geselecteerd"
+  },
+  "swsdp": "Voorbeeld: Websiteontwerpproject"
 }

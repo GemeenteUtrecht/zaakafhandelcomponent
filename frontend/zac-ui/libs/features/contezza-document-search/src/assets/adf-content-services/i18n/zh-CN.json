@@ -4,6 +4,7 @@
       "RESTORE": "恢复",
       "DELETE": "删除",
       "DOWNLOAD": "下载",
+      "VIEW": "查看",
       "UPLOAD": {
         "TITLE": "上传新版本",
         "TOOLTIP": "限制：您必须上传同名文件才能创建该文件的新版本",
@@ -29,12 +30,9 @@
       "ARROW_ICON": "右箭头图标"
     }
   },
-  "ADF_DROPDOWN": {
-    "LOADING": "正在加载..."
-  },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "确认",
-    "ACTION": "是否继续？",
+    "ACTION": "是否要继续？",
     "YES_LABEL": "是",
     "NO_LABEL": "否"
   },
@@ -62,11 +60,6 @@
       "VIEW": "查看",
       "REMOVE": "删除",
       "DOWNLOAD": "下载"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "根据 {{ category }} 筛选",
-      "CLEAR": "清除",
-      "APPLY": "应用"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "取消",
     "CHOOSE": "选择",
+    "ATTACH": "附加",
     "CHOOSE_ITEM": "从 '{{ name }}'中选择要附加的内容",
     "COPY": "复制",
     "COPY_ITEM": "将 '{{ name }}' 复制到...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "未找到结果",
     "SEARCH": "搜索",
     "SEARCH_RESULTS": "搜索结果",
-    "SELECT_LOCATION": "选择位置"
+    "SELECT_LOCATION": "选择位置",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "当搜索仍在运行时，您不能上传文件",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "用户没有向文件夹上传内容的权限",
+    "REPOSITORY": "存储库",
+    "UPLOAD_FROM_DEVICE": "从设备上载"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "搜索",
         "CLEAR": "清除",
         "APPLY": "应用",
         "CLEAR-ALL": "全部清除",
         "SHOW-MORE": "显示更多",
-        "SHOW-LESS": "显示更少",
-        "FILTER-CATEGORY": "过滤类别"
+        "SHOW-LESS": "显示更少"
       },
       "BUTTONS": {
+        "CLOSE": "关闭",
+        "REMOVE": "删除",
+        "APPLY": "应用",
         "CLEAR-ALL": {
           "LABEL": "全部清除",
           "TOOLTIP": "这将删除所有选择"
@@ -253,7 +254,9 @@
         "NO-DAYS": "未选择天数。",
         "INVALID-FORMAT": "格式无效",
         "INVALID-DATE": "日期无效。日期的格式必须为 '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "日期超过最大日期。"
+        "BEYOND-MAX-DATE": "日期超过最大日期。",
+        "INVALID-DATETIME": "无效的日期时间。日期时间的格式必须为“{{requiredFormat}}”",
+        "BEYOND-MAX-DATETIME": "日期时间超过了最大日期时间。"
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "启动流程"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "未知配置",
+    "SEARCH_HEADER": {
+      "TITLE": "筛选",
+      "TYPE": "类型",
+      "FILTER_BY": "根据 {{ category }} 筛选",
+      "CLEAR": "清除",
+      "APPLY": "应用",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "名称",
+          "PLACEHOLDER": "输入名称"
+        },
+        "TYPE": {
+          "TITLE": "勾选类型",
+          "FOLDER": "文件夹",
+          "DOCUMENT": "文档"
+        },
+        "SIZE": {
+          "TITLE": "内容大小（范围）",
+          "SMALL": "小",
+          "MEDIUM": "中",
+          "LARGE": "大",
+          "HUGE": "特大"
+        },
+        "DATE": {
+          "TITLE": "创建日期（范围）"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "创建者",
       "CREATED_DATE": "创建日期",
       "MODIFIER": "修改者",
-      "MODIFIED_DATE": "修改日期"
+      "MODIFIED_DATE": "修改日期",
+      "CONTENT_TYPE": "内容类型"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "更改内容类型",
+        "DESCRIPTION": "对内容类型进行此更改将永久性地在文档中添加一些属性和存储的元数据.",
+        "CONFIRM": "确定要更改内容类型吗？?",
+        "CANCEL": "取消",
+        "APPLY": "保存更改",
+        "VIEW_DETAILS": "查看详细信息",
+        "PROPERTY": {
+          "NAME": "名称",
+          "DESCRIPTION": "说明",
+          "DATA_TYPE": "数据类型"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "更新属性时出错",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "无权限"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "搜索",
+      "SEARCH": "搜索要添加的用户或组",
+      "TITLE": "添加权限",
       "TYPE-MESSAGE": "输入内容以开始搜索组或人员",
       "NO-RESULT": "找不到此搜索的结果",
+      "SELECT-ACTION": "选择",
       "ADD-ACTION": "添加",
-      "CLOSE-ACTION": "关闭",
+      "CLOSE-ACTION": "取消",
       "BASE-DIALOG-TITLE": "搜索要添加的组或人员...",
       "EVERYONE": "任何人"
     },
+    "COLUMN": {
+      "NAME": "用户和组 ({{ count }})",
+      "LOCATION": "位置",
+      "BULK-ROLE": "将所有角色设置为"
+    },
+    "LABELS": {
+      "ON": "开启",
+      "OFF": "关闭",
+      "DIRECT-PERMISSIONS": "直接应用权限",
+      "INHERITED-PERMISSIONS": "继承的权限",
+      "INHERITED-SUBTITLE": "{{count}} 用户或组正在从父文件夹继承权限",
+      "SELECT-ROLE": "选择角色"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "无用户/组",
+      "EMPTY-SUBTITLE": "添加用户/组以管理权限。",
+      "NO-MEMBERS": "添加组或人员以管理角色",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "已更新 {{user}} 用户 {{group}} 组",
+      "PERMISSION-UPDATE-SUCCESS": "用户/组已更新",
+      "PERMISSION-UPDATE-FAIL": "无法更新用户/组",
+      "PERMISSION-BULK-DELETE-SUCCESS": "已删除 {{user}} 用户 {{group}} 组",
+      "PERMISSION-DELETE-SUCCESS": "用户/组已删除",
+      "PERMISSION-DELETE-FAIL": "无法删除用户/组",
+      "PERMISSION-ADD-SUCCESS": "已添加 {{user}} 用户 {{group}} 组",
+      "PERMISSION-ADD-FAIL": "无法添加用户/组",
+      "INHERIT-ENABLE-SUCCESS": "已启用继承权限",
+      "INHERIT-DISABLE-SUCCESS": "已禁用继承权限",
+      "TOGGLE-PERMISSION-FAILED": "无法切换继承权限"
+    },
+    "ACTION": {
+      "DELETE": "删除",
+      "ADD-PERMISSION": "添加用户或组"
+    },
     "ERROR": {
+      "NOT-FOUND": "此项目不再存在，或者您无权对其进行查看。",
       "DUPLICATE-PERMISSION": "您所设置的一个或多个权限已经存在：{{list}}",
       "NOT-ALLOWED": "不允许更改权限"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "管理员",
       "COLLABORATOR": "合作者",
       "CONTRIBUTOR": "贡献者",
-      "CONSUMER": "使用者"
+      "CONSUMER": "使用者",
+      "NONE": "不是成员"
     },
     "VISIBILITY": {
       "PRIVATE": "私有",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "打开 {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "属性名",
+    "DESCRIPTION": "说明",
+    "DATA_TYPE": "数据类型",
+    "DIALOG": {
+      "TITLE": "自定义属性",
+      "DESCRIPTION": "管理与选定文件关联的属性。从下面列出的属性方面进行选择，以公开和应用其他元数据和功能",
+      "RESET": "重置",
+      "CLEAR": "清除",
+      "CANCEL": "取消",
+      "APPLY": "应用",
+      "OVER-TABLE-MESSAGE": "选择属性方面",
+      "SELECTED": "已选择"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "已选择 {{ count }} 个"
+  },
+  "swsdp": "示例: 网站设计项目"
 }

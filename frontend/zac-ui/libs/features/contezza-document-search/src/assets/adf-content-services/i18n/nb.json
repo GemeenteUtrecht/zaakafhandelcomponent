@@ -4,6 +4,7 @@
       "RESTORE": "Gjenopprett",
       "DELETE": "Slett",
       "DOWNLOAD": "Last ned",
+      "VIEW": "Vis",
       "UPLOAD": {
         "TITLE": "Last opp ny versjon",
         "TOOLTIP": "Begrensning: Du må laste opp en fil med samme navn for å opprette en ny versjon av den",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Elementtype {{ type }}",
       "ARROW_ICON": "Høyrepil-ikon"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Laster inn..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Bekreft",
@@ -62,11 +60,6 @@
       "VIEW": "Vis",
       "REMOVE": "Fjern",
       "DOWNLOAD": "Last ned"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtrer etter {{ category }}",
-      "CLEAR": "Fjern",
-      "APPLY": "Bruk"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Avbryt",
     "CHOOSE": "Velg",
+    "ATTACH": "Legg ved",
     "CHOOSE_ITEM": "Velg innhold du vil legge ved fra '{{ name }}'",
     "COPY": "Kopier",
     "COPY_ITEM": "Kopier {{ name }} til ...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Ingen resultater funnet",
     "SEARCH": "Søk",
     "SEARCH_RESULTS": "Søkeresultater",
-    "SELECT_LOCATION": "Velg plassering"
+    "SELECT_LOCATION": "Velg plassering",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Du kan ikke laste opp en fil mens et søk fremdeles pågår",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Brukeren har ikke tillatelse til å laste opp innhold til mappen",
+    "REPOSITORY": "Datalager",
+    "UPLOAD_FROM_DEVICE": "Last opp fra enheten din"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,16 +223,19 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Søk",
         "CLEAR": "Fjern",
         "APPLY": "Bruk",
-        "CLEAR-ALL": "Slett alle",
+        "CLEAR-ALL": "Fjern alle",
         "SHOW-MORE": "Vis flere",
-        "SHOW-LESS": "Vis mindre",
-        "FILTER-CATEGORY": "Filtrer etter kategori"
+        "SHOW-LESS": "Vis mindre"
       },
       "BUTTONS": {
+        "CLOSE": "Lukk",
+        "REMOVE": "Fjern",
+        "APPLY": "Bruk",
         "CLEAR-ALL": {
-          "LABEL": "Slett alle",
+          "LABEL": "Fjern alle",
           "TOOLTIP": "Dette vil fjerne alle valg"
         },
         "RESET-ALL": {
@@ -253,7 +254,9 @@
         "NO-DAYS": "Ingen dager valgt.",
         "INVALID-FORMAT": "Ugyldig format",
         "INVALID-DATE": "Ugyldig dato. Datoen må være i formatet '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "Datoen er utover maksimumsdato."
+        "BEYOND-MAX-DATE": "Datoen er utover maksimumsdato.",
+        "INVALID-DATETIME": "Ugyldig dato/klokkeslett. Dato/klokkeslett må være i formatet '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "Dato/klokkeslett overgår maksimum dato/klokkeslett."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Start prosess"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Ukjent konfigurasjon",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Type",
+      "FILTER_BY": "Filtrer etter {{ category }}",
+      "CLEAR": "Fjern",
+      "APPLY": "Bruk",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Navn",
+          "PLACEHOLDER": "Skriv inn navnet"
+        },
+        "TYPE": {
+          "TITLE": "Velg type",
+          "FOLDER": "Mappe",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Innholdsstørrelse (område)",
+          "SMALL": "Liten",
+          "MEDIUM": "Middels",
+          "LARGE": "Stor",
+          "HUGE": "Enorm"
+        },
+        "DATE": {
+          "TITLE": "Opprettet dato (område)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Oppretter",
       "CREATED_DATE": "Opprettelsesdato",
       "MODIFIER": "Modifikator",
-      "MODIFIED_DATE": "Endringsdato"
+      "MODIFIED_DATE": "Endringsdato",
+      "CONTENT_TYPE": "Innholdstype"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Endre innholdstype",
+        "DESCRIPTION": "Ved å foreta denne endringen i innholdstypen legges visse egenskaper og lagrede metadata permanent til i dokumentet.",
+        "CONFIRM": "Er du sikker på at du vil endre innholdstypen?",
+        "CANCEL": "Avbryt",
+        "APPLY": "Lagre endringer",
+        "VIEW_DETAILS": "Visningsdetaljer",
+        "PROPERTY": {
+          "NAME": "Navn",
+          "DESCRIPTION": "Beskrivelse",
+          "DATA_TYPE": "Datatype"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Feil ved oppdatering av egenskap",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Ingen tillatelser"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Søk",
+      "SEARCH": "Søk etter brukere eller grupper å legge til",
+      "TITLE": "Legg til tillatelse",
       "TYPE-MESSAGE": "Skriv inn tekst for å starte søk etter grupper eller personer",
       "NO-RESULT": "Ingen resultater funnet for dette søket",
-      "ADD-ACTION": "Legg til",
-      "CLOSE-ACTION": "Lukk",
+      "SELECT-ACTION": "VELG",
+      "ADD-ACTION": "LEGG TIL",
+      "CLOSE-ACTION": "AVBRYT",
       "BASE-DIALOG-TITLE": "Søk etter en gruppe eller personer å legge til...",
       "EVERYONE": "Alle"
     },
+    "COLUMN": {
+      "NAME": "Brukere og grupper ({{ count }})",
+      "LOCATION": "Sted",
+      "BULK-ROLE": "Angi alle roller til"
+    },
+    "LABELS": {
+      "ON": "På",
+      "OFF": "Av",
+      "DIRECT-PERMISSIONS": "Direkte brukt tillatelse",
+      "INHERITED-PERMISSIONS": "Arvet tillatelse",
+      "INHERITED-SUBTITLE": "{{count}} brukere eller grupper arver tillatelse fra en overordnet mappe",
+      "SELECT-ROLE": "Velg rolle"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Ingen brukere/grupper",
+      "EMPTY-SUBTITLE": "Legg til bruker/gruppe for å administrere tillatelser.",
+      "NO-MEMBERS": "Legg til grupper eller personer for å administrere roller",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Oppdaterte {{user}} bruker(e) {{group}} gruppe(r)",
+      "PERMISSION-UPDATE-SUCCESS": "Bruker/gruppe oppdatert",
+      "PERMISSION-UPDATE-FAIL": "Kunne ikke oppdatere bruker/gruppe",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Slettet {{user}} bruker(e) {{group}} gruppe(r)",
+      "PERMISSION-DELETE-SUCCESS": "Bruker/gruppe slettet",
+      "PERMISSION-DELETE-FAIL": "Kunne ikke slette bruker/gruppe",
+      "PERMISSION-ADD-SUCCESS": "La til {{user}} bruker(e) {{group}} gruppe(r)",
+      "PERMISSION-ADD-FAIL": "Kunne ikke legge til bruker/gruppe",
+      "INHERIT-ENABLE-SUCCESS": "Aktiverte arvet tillatelse",
+      "INHERIT-DISABLE-SUCCESS": "Deaktiverte arvet tillatelse",
+      "TOGGLE-PERMISSION-FAILED": "Kunne ikke aktivere/deaktivere arvet tillatelse"
+    },
+    "ACTION": {
+      "DELETE": "Slett",
+      "ADD-PERMISSION": "Legg til bruker eller gruppe"
+    },
     "ERROR": {
+      "NOT-FOUND": "Dette elementet finnes ikke lenger, eller du har ikke tillatelse til å se det.",
       "DUPLICATE-PERMISSION": "Én eller flere av tillatelsene du har angitt, er allerede til stede: {{list}}",
       "NOT-ALLOWED": "Du har ikke lov til å endre tillatelser"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Administrator",
       "COLLABORATOR": "Medarbeider",
       "CONTRIBUTOR": "Bidragsyter",
-      "CONSUMER": "Forbruker"
+      "CONSUMER": "Forbruker",
+      "NONE": "Ikke medlem"
     },
     "VISIBILITY": {
       "PRIVATE": "Privat",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Åpne {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Egenskapsnavn",
+    "DESCRIPTION": "Beskrivelse",
+    "DATA_TYPE": "Datatype",
+    "DIALOG": {
+      "TITLE": "Tilpass egenskaper",
+      "DESCRIPTION": "Administrer egenskapene knyttet til valgte fil(er). Velg fra egenskapsaspektene opplistet nedenfor, for å vise og aktivere ytterligere metadata og funksjonalitet.",
+      "RESET": "Tilbakestill",
+      "CLEAR": "Fjern",
+      "CANCEL": "Avbryt",
+      "APPLY": "Bruk",
+      "OVER-TABLE-MESSAGE": "Velg egenskapsaspekter",
+      "SELECTED": "Valgt"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} valgt"
+  },
+  "swsdp": "Eksempel: Prosjekt for nettsteddesign"
 }

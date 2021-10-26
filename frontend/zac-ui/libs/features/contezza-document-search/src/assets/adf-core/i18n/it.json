@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Lingua",
+    "ROLES": {
+      "ALL": "Tutti",
+      "CONTRIBUTOR": "Contributore",
+      "COLLABORATOR": "Collaboratore",
+      "COORDINATOR": "Coordinatore",
+      "EDITOR": "Redattore",
+      "CONSUMER": "Consumatore",
+      "SITECOLLABORATOR": "Collaboratore sito",
+      "SITECONSUMER": "Consumatore sito",
+      "SITECONTRIBUTOR": "Contributore sito",
+      "SITEMANAGER": "Manager sito"
+    }
+  },
   "SAVE": "Salva",
   "COMPLETE": "Completa",
   "CANCEL": "Annulla",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Restituisci",
   "START PROCESS": "Avvia processo",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Nessun messaggio",
+    "NO_MESSAGE": "Non sono presenti notifiche in questo momento.",
     "TITLE": "Notifiche",
     "MARK_AS_READ": "Seleziona tutti come già letti",
-    "SYSTEM": "Sistema"
+    "SYSTEM": "Sistema",
+    "LOAD_MORE": "Carica altro"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Archivio locale",
       "SOURCE": "Seleziona origine da ",
-      "SHOW_FILE": "Mostra",
+      "VIEW_FILE": "Visualizza",
       "DOWNLOAD_FILE": "Scarica",
       "REMOVE_FILE": "Rimuovi",
       "UPLOAD": "Carica",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Immettere almeno {{ minLength }} caratteri",
         "NO_LONGER_THAN": "Immettere non più di {{ maxLength }} caratteri"
       },
-      "FILE_ALREADY_UPLOADED": "È già stato caricato un file con lo stesso nome."
+      "FILE_ALREADY_UPLOADED": "È già stato caricato un file con lo stesso nome.",
+      "ATTACH": "Allega"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Compito senza nome"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Descrizione"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Titolo"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Crea"
       },
@@ -175,7 +195,10 @@
       "NONE": "Nessuno",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Utilizzare un formato numerico",
-        "INT_VALIDATION_ERROR": "Utilizzare numeri interi"
+        "INT_VALIDATION_ERROR": "Utilizzare numeri interi",
+        "LENGTH_VALIDATION_ERROR": "La lunghezza del valore deve essere compresa tra {{ minLength }} e {{ maxLength }}",
+        "MATCH_VALIDATION_ERROR": "Il valore non corrisponde al modello: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Il valore deve essere compreso tra {{ minValue }} e {{ maxValue }}"
       },
       "MORE": "Altro"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Creatore",
         "CREATED_DATE": "Data di creazione",
         "MODIFIER": "Modificatore",
-        "MODIFIED_DATE": "Data di modifica"
+        "MODIFIED_DATE": "Data di modifica",
+        "CONTENT_TYPE": "Tipo di contenuto"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Modifica il tipo di contenuto",
+          "DESCRIPTION": "Se si apporta questa modifica al tipo di contenuto, alcune proprietà e metadati memorizzati verranno aggiunti al documento in modo definitivo.",
+          "CONFIRM": "Modificare il tipo di contenuto?",
+          "CANCEL": "Annulla",
+          "APPLY": "Salva modifiche",
+          "VIEW_DETAILS": "Visualizza dettagli",
+          "PROPERTY": {
+            "NAME": "Nome",
+            "DESCRIPTION": "Descrizione",
+            "DATA_TYPE": "Tipo di dati"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Modifica",
@@ -199,12 +238,14 @@
         "CANCEL": "Annulla",
         "CLEAR": "Cancella",
         "TOGGLE": "Cambiare valore",
-        "COPY_TO_CLIPBOARD": "Fare doppio clic per copiare il valore"
+        "COPY_TO_CLIPBOARD": "Fare doppio clic per copiare il valore",
+        "EDIT_ASPECTS": "Modifica aspetto"
       },
       "ACCESSIBILITY": {
         "EDIT": "Pulsante Modifica",
         "DATEPICKER": "Usare i tasti freccia per spostarsi fra le date. I tasti Su e Giù passano alla settimana successiva o precedente, ma nello stesso giorno. I tasti Sinistra e Destra passano al giorno successivo o precedente. Premere Invio per selezionare una data.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Valore copiato negli appunti"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Valore copiato negli appunti",
+        "EDIT_ASPECTS": "Modifica aspetto"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Nome utente o password sconosciuti",
       "LOGIN-ERROR-PROVIDERS": "I provider non possono essere non definiti",
       "LOGIN-ERROR-CORS": "Eccezione CORS, controlla la configurazione del server",
-      "LOGIN-ERROR-CSRF": "Eccezione CSRF, imposta [disableCsrf]=\"true\" in login.component",
+      "LOGIN-ERROR-CSRF": "Eccezione CSRF, impostare \"disableCSRF\": true in app.config.json",
       "LOGIN-ECM-LICENSE": "Il repository Alfresco Content Services è in modalità di sola lettura",
       "SSO-WRONG-CONFIGURATION": "Server di autenticazione SSO non raggiungibile"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Zoom avanti",
       "ZOOM_OUT": "Zoom indietro",
       "FIT_PAGE": "Adatta pagina",
-      "ROTATE_LEFT": "Ruota a sinistra",
-      "ROTATE_RIGHT": "Ruota a destra",
+      "ROTATE": "Ruota",
+      "CROP": "Ritaglia",
+      "SAVE": "Salva",
+      "CANCEL": "Annulla",
       "RESET": "Reimposta",
-      "THUMBNAILS": "Miniature documento"
+      "THUMBNAILS": "Miniature documento",
+      "THUMBNAILS_PANLEL_CLOSE": "Chiudi pannello miniature"
     },
     "PAGE_LABEL": {
       "SHOWING": "Visualizzazione di",
@@ -368,7 +412,8 @@
       "CLOSE": "Chiudi",
       "PLACEHOLDER": "Password",
       "ERROR": "Password errata"
-    }
+    },
+    "SUBTITLES": "Sottotitoli"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -382,7 +427,7 @@
       }
     },
     "403": {
-      "TITLE": "Non si dispone dei permessi per accedere al server.",
+      "TITLE": "Non si dispone dell'autorizzazione per accedere al server.",
       "DESCRIPTION": "Accesso alla risorsa sul server non consentito.",
       "SECONDARY_BUTTON": {
         "TEXT": "Segnala errore"
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Si è verificato un errore.",
       "DESCRIPTION": "Gateway non valido. Riprovare o contattare il supporto IT [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Torna alla home"
+      }
+    },
+    "503": {
+      "TITLE": "Si è verificato un errore.",
+      "DESCRIPTION": "Servizio temporaneamente non disponibile [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Fare clic per copiare",
     "SUCCESS_COPY": "Testo copiato negli appunti"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Cerca",
+      "ARIA_LABEL": "Opzioni di ricerca"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Cancella"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Caricamento in corso..."
   }
 }

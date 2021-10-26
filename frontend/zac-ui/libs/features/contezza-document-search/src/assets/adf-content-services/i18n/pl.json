@@ -4,6 +4,7 @@
       "RESTORE": "Przywróć",
       "DELETE": "Usuń",
       "DOWNLOAD": "Pobierz",
+      "VIEW": "Widok",
       "UPLOAD": {
         "TITLE": "Prześlij nową wersję",
         "TOOLTIP": "Ograniczenie: aby utworzyć nową wersję pliku, należy przesłać plik o tej samej nazwie.",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Typ elementu {{ type }}",
       "ARROW_ICON": "Ikona strzałki w prawo"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Wczytywanie..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Potwierdź",
@@ -62,11 +60,6 @@
       "VIEW": "Widok",
       "REMOVE": "Usuń",
       "DOWNLOAD": "Pobierz"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtruj wg {{ category }}",
-      "CLEAR": "Wyczyść",
-      "APPLY": "Zastosuj"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Anuluj",
     "CHOOSE": "Wybierz",
+    "ATTACH": "Załącz",
     "CHOOSE_ITEM": "Wybierz treść do dołączenia z „{{ name }}”",
     "COPY": "Kopiuj",
     "COPY_ITEM": "Kopiuj '{{ name }}' do...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Brak wyników",
     "SEARCH": "Szukaj",
     "SEARCH_RESULTS": "Wyniki wyszukiwania",
-    "SELECT_LOCATION": "Wybierz lokalizację"
+    "SELECT_LOCATION": "Wybierz lokalizację",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Nie można przesłać pliku, ponieważ nadal trwa wyszukiwanie",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Użytkownik nie ma uprawnienia do przesyłania zawartości do tego folderu",
+    "REPOSITORY": "Repozytorium",
+    "UPLOAD_FROM_DEVICE": "Prześlij z urządzenia"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Szukaj",
         "CLEAR": "Wyczyść",
         "APPLY": "Zastosuj",
         "CLEAR-ALL": "Wyczyść wszystko",
         "SHOW-MORE": "Pokaż więcej",
-        "SHOW-LESS": "Pokaż mniej",
-        "FILTER-CATEGORY": "Filtruj kategorie"
+        "SHOW-LESS": "Pokaż mniej"
       },
       "BUTTONS": {
+        "CLOSE": "Zamknij",
+        "REMOVE": "Usuń",
+        "APPLY": "Zastosuj",
         "CLEAR-ALL": {
           "LABEL": "Wyczyść wszystko",
           "TOOLTIP": "Spowoduje to usunięcie wszystkich wyborów"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Nie wybrano dni.",
         "INVALID-FORMAT": "Nieprawidłowy format",
         "INVALID-DATE": "Nieprawidłowa data. Data musi być w formacie '{{ requiredFormat }}'.",
-        "BEYOND-MAX-DATE": "Data jest późniejsza niż maksymalna."
+        "BEYOND-MAX-DATE": "Data jest późniejsza niż maksymalna.",
+        "INVALID-DATETIME": "Nieprawidłowa data i godzina. Data i godzina muszą być w formacie „{{ requiredFormat }}”",
+        "BEYOND-MAX-DATETIME": "Data i godzina wykraczają poza maksymalną datę i godzinę."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Rozpocznij proces"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Nieznana konfiguracja",
+    "SEARCH_HEADER": {
+      "TITLE": "Filtr",
+      "TYPE": "Typ",
+      "FILTER_BY": "Filtruj wg {{ category }}",
+      "CLEAR": "Wyczyść",
+      "APPLY": "Zastosuj",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Nazwa",
+          "PLACEHOLDER": "Wprowadź nazwę"
+        },
+        "TYPE": {
+          "TITLE": "Zaznacz typ",
+          "FOLDER": "Folder",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Rozmiar zawartości (zakres)",
+          "SMALL": "Mały",
+          "MEDIUM": "Średni",
+          "LARGE": "Duży",
+          "HUGE": "Ogromny"
+        },
+        "DATE": {
+          "TITLE": "Data utworzenia (zakres)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Twórca",
       "CREATED_DATE": "Data utworzenia",
       "MODIFIER": "Modyfikator",
-      "MODIFIED_DATE": "Data modyfikacji"
+      "MODIFIED_DATE": "Data modyfikacji",
+      "CONTENT_TYPE": "Typ zawartości"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Zmień typ zawartości",
+        "DESCRIPTION": "Wprowadzenie tej zmiany typu zawartości spowoduje trwałe dodanie pewnych właściwości i zapisanie metadanych w dokumencie.",
+        "CONFIRM": "Czy na pewno zmienić typ zawartości?",
+        "CANCEL": "Anuluj",
+        "APPLY": "Zapisz zmiany",
+        "VIEW_DETAILS": "Wyświetl szczegóły",
+        "PROPERTY": {
+          "NAME": "Nazwa",
+          "DESCRIPTION": "Opis",
+          "DATA_TYPE": "Typ danych"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Błąd podczas aktualizowania właściwości",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Brak uprawnień"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Szukaj",
+      "SEARCH": "Wyszukaj użytkowników lub grupy do dodania",
+      "TITLE": "Dodaj uprawnienie",
       "TYPE-MESSAGE": "Wpisz jakiś tekst, aby rozpocząć wyszukiwanie grup lub osób.",
       "NO-RESULT": "Brak wyników dla tego wyszukiwania.",
+      "SELECT-ACTION": "Wybierz",
       "ADD-ACTION": "Dodaj",
-      "CLOSE-ACTION": "Zamknij",
+      "CLOSE-ACTION": "Anuluj",
       "BASE-DIALOG-TITLE": "Wyszukaj grupę lub osoby do dodania...",
       "EVERYONE": "Wszyscy"
     },
+    "COLUMN": {
+      "NAME": "Użytkownicy i grupy ({{ count }})",
+      "LOCATION": "Lokalizacja",
+      "BULK-ROLE": "Ustaw wszystkie role na"
+    },
+    "LABELS": {
+      "ON": "Wł.",
+      "OFF": "Wył.",
+      "DIRECT-PERMISSIONS": "Uprawnienie stosowane bezpośrednio",
+      "INHERITED-PERMISSIONS": "Uprawnienie dziedziczone",
+      "INHERITED-SUBTITLE": "Użytkownicy lub grupy ({{count}}) dziedziczą uprawnienie z folderu nadrzędnego",
+      "SELECT-ROLE": "Wybierz rolę"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Brak użytkowników/grup",
+      "EMPTY-SUBTITLE": "Dodaj użytkownika/grupę, aby zarządzać ich uprawnieniami.",
+      "NO-MEMBERS": "Dodaj grupę lub osoby, aby zarządzać ich rolami",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Liczba zaktualizowanych użytkowników: {{user}}, grup: {{group}}",
+      "PERMISSION-UPDATE-SUCCESS": "Zaktualizowano użytkownika/grupę",
+      "PERMISSION-UPDATE-FAIL": "Nie udało się zaktualizować użytkownika/grupy",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Liczba usuniętych użytkowników: {{user}}, grup: {{group}}",
+      "PERMISSION-DELETE-SUCCESS": "Usunięto użytkownika/grupę",
+      "PERMISSION-DELETE-FAIL": "Nie udało się usunąć użytkownika/grupy",
+      "PERMISSION-ADD-SUCCESS": "Liczba dodanych użytkowników: {{user}}, grup: {{group}}",
+      "PERMISSION-ADD-FAIL": "Nie udało się dodać użytkownika/grupy",
+      "INHERIT-ENABLE-SUCCESS": "Włączono dziedziczone uprawnienie",
+      "INHERIT-DISABLE-SUCCESS": "Wyłączono dziedziczone uprawnienie",
+      "TOGGLE-PERMISSION-FAILED": "Nie udało się włączyć dziedziczonego uprawnienia"
+    },
+    "ACTION": {
+      "DELETE": "Usuń",
+      "ADD-PERMISSION": "Dodaj użytkownika lub grupę"
+    },
     "ERROR": {
+      "NOT-FOUND": "Ten element już nie istnieje lub nie masz uprawnień, by go wyświetlić.",
       "DUPLICATE-PERMISSION": "Co najmniej jedno ustawione dla Ciebie uprawnienie już występuje: {{list}}",
       "NOT-ALLOWED": "Nie masz zezwolenia na zmianę uprawnień."
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Menedżer",
       "COLLABORATOR": "Współpracownik",
       "CONTRIBUTOR": "Współautor",
-      "CONSUMER": "Konsument"
+      "CONSUMER": "Konsument",
+      "NONE": "Nie jest członkiem"
     },
     "VISIBILITY": {
       "PRIVATE": "Prywatne",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Otwórz {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Nazwa właściwości",
+    "DESCRIPTION": "Opis",
+    "DATA_TYPE": "Typ danych",
+    "DIALOG": {
+      "TITLE": "Dostosuj właściwości",
+      "DESCRIPTION": "Zarządzaj właściwościami powiązanymi z wybranymi plikami. Wybierz aspekty właściwości z poniższej listy, aby ujawnić dodatkowe metadane i funkcje oraz zastosować je",
+      "RESET": "Resetuj",
+      "CLEAR": "Wyczyść",
+      "CANCEL": "Anuluj",
+      "APPLY": "Zastosuj",
+      "OVER-TABLE-MESSAGE": "Wybierz aspekty właściwości",
+      "SELECTED": "Wybrane"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "Liczba zaznaczonych: {{ count }}"
+  },
+  "swsdp": "Przykład: projekt układu witryny internetowej"
 }

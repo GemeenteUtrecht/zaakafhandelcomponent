@@ -4,6 +4,7 @@
       "RESTORE": "Palauta",
       "DELETE": "Poista",
       "DOWNLOAD": "Lataa",
+      "VIEW": "Näytä",
       "UPLOAD": {
         "TITLE": "Lataa uusi versio",
         "TOOLTIP": "Rajoitus: jos haluat luoda tiedostosta uuden version, sinun täytyy ladata tiedosto samalla nimellä",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Kohteen tyyppi {{ type }}",
       "ARROW_ICON": "Oikea nuoli -kuvake"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Ladataan..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Vahvista",
@@ -62,11 +60,6 @@
       "VIEW": "Näytä",
       "REMOVE": "Poista",
       "DOWNLOAD": "Lataa"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Suodata {{ category }}-luokan perusteella",
-      "CLEAR": "Tyhjennä",
-      "APPLY": "Käytä"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Peruuta",
     "CHOOSE": "Valitse",
+    "ATTACH": "Liitä",
     "CHOOSE_ITEM": "Valitse liitettävä sisältö kohteesta '{{ name }}'",
     "COPY": "Kopioi",
     "COPY_ITEM": "Kopioi '{{ name }}' kohteeseen...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Tuloksia ei löydy",
     "SEARCH": "Hae",
     "SEARCH_RESULTS": "Hakutulokset",
-    "SELECT_LOCATION": "Valitse sijainti"
+    "SELECT_LOCATION": "Valitse sijainti",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Et voi ladata tiedostoa haun ollessa kesken",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Käyttäjällä ei ole oikeuksia ladata sisältöä kansioon",
+    "REPOSITORY": "Säilö",
+    "UPLOAD_FROM_DEVICE": "Lataa omalta laitteelta"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Hae",
         "CLEAR": "Tyhjennä",
         "APPLY": "Käytä",
         "CLEAR-ALL": "Tyhjennä kaikki",
         "SHOW-MORE": "Näytä lisää",
-        "SHOW-LESS": "Näytä vähemmän",
-        "FILTER-CATEGORY": "Suodata luokan perusteella"
+        "SHOW-LESS": "Näytä vähemmän"
       },
       "BUTTONS": {
+        "CLOSE": "Sulje",
+        "REMOVE": "Poista",
+        "APPLY": "Käytä",
         "CLEAR-ALL": {
           "LABEL": "Tyhjennä kaikki",
           "TOOLTIP": "Tämä poistaa kaikki valinnat"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Päiviä ei ole valittu",
         "INVALID-FORMAT": "Virheellinen muoto",
         "INVALID-DATE": "Päivämäärä on virheellinen. Päivämäärän täytyy olla muodossa '{{ requiredFormat }}'.",
-        "BEYOND-MAX-DATE": "Päivämäärä ei ole sallitulla alueella."
+        "BEYOND-MAX-DATE": "Päivämäärä ei ole sallitulla alueella.",
+        "INVALID-DATETIME": "Virheellinen päivä ja aika. Päivä ja aika tulee olla muodossa '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "Päivä ja aika eivät ole sallitulla alueella."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Käynnistä prosessi"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Tuntematon määritys",
+    "SEARCH_HEADER": {
+      "TITLE": "Suodatin",
+      "TYPE": "Tyyppi",
+      "FILTER_BY": "Suodata {{ category }}-luokan perusteella",
+      "CLEAR": "Tyhjennä",
+      "APPLY": "Käytä",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Nimi",
+          "PLACEHOLDER": "Kirjoita nimi"
+        },
+        "TYPE": {
+          "TITLE": "Valitse tyyppi",
+          "FOLDER": "Kansio",
+          "DOCUMENT": "Asiakirja"
+        },
+        "SIZE": {
+          "TITLE": "Sisällön koko (vaihteluväli)",
+          "SMALL": "Pieni",
+          "MEDIUM": "Keskikokoinen",
+          "LARGE": "Suuri",
+          "HUGE": "Valtava"
+        },
+        "DATE": {
+          "TITLE": "Luontipäivämäärä (vaihteluväli)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Tekijä",
       "CREATED_DATE": "Luontipäivämäärä",
       "MODIFIER": "Muokkaaja",
-      "MODIFIED_DATE": "Muokkauspäivämäärä"
+      "MODIFIED_DATE": "Muokkauspäivämäärä",
+      "CONTENT_TYPE": "Sisältötyyppi"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Muuta sisältötyyppi",
+        "DESCRIPTION": "Sisältötyypin muuttaminen lisää asiakirjaan pysyvästi joitakin ominaisuuksia ja säilöttyjä metatietoja.",
+        "CONFIRM": "Haluatko varmasti muuttaa sisältötyypin?",
+        "CANCEL": "Peruuta",
+        "APPLY": "Tallenna muutokset",
+        "VIEW_DETAILS": "Näytä tiedot",
+        "PROPERTY": {
+          "NAME": "Nimi",
+          "DESCRIPTION": "Kuvaus",
+          "DATA_TYPE": "Tietotyyppi"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Ominaisuuden päivittämisessä tapahtui virhe",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Ei oikeuksia"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Hae",
+      "SEARCH": "Hae käyttäjiä tai ryhmiä lisättäväksi",
+      "TITLE": "Lisää oikeus",
       "TYPE-MESSAGE": "Aloita ryhmien tai ihmisten hakeminen kirjoittamalla jotain",
       "NO-RESULT": "Tällä haulla ei löydy yhtään tulosta",
+      "SELECT-ACTION": "Valitse",
       "ADD-ACTION": "Lisää",
-      "CLOSE-ACTION": "Sulje",
+      "CLOSE-ACTION": "Peruuta",
       "BASE-DIALOG-TITLE": "Hae lisättävää ryhmää tai ihmistä...",
       "EVERYONE": "Kaikki"
     },
+    "COLUMN": {
+      "NAME": "Käyttäjät ja ryhmät ({{ count }})",
+      "LOCATION": "Sijainti",
+      "BULK-ROLE": "Määritä kaikki roolit seuraavaan:"
+    },
+    "LABELS": {
+      "ON": "Päällä",
+      "OFF": "Pois",
+      "DIRECT-PERMISSIONS": "Suoraan määrätty oikeus",
+      "INHERITED-PERMISSIONS": "Peritty oikeus",
+      "INHERITED-SUBTITLE": "{{count}} käyttäjää tai ryhmää perii oikeuden ylätason kansiolta",
+      "SELECT-ROLE": "Valitse rooli"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Ei käyttäjiä/ryhmiä",
+      "EMPTY-SUBTITLE": "Lisää käyttäjä/ryhmä hallitaksesi oikeuksia",
+      "NO-MEMBERS": "Lisää ryhmiä tai henkilöitä hallitaksesi rooleja",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Päivitettiin {{user}} käyttäjä(t) {{group}} ryhmä(t)",
+      "PERMISSION-UPDATE-SUCCESS": "Käyttäjä/ryhmä päivitettiin",
+      "PERMISSION-UPDATE-FAIL": "Käyttäjän/ryhmän päivittäminen epäonnistui",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Poistettiin {{user}} käyttäjä(t) {{group}} ryhmä(t)",
+      "PERMISSION-DELETE-SUCCESS": "Käyttäjä/ryhmä poistettiin",
+      "PERMISSION-DELETE-FAIL": "Käyttäjän/ryhmän poistaminen epäonnistui",
+      "PERMISSION-ADD-SUCCESS": "Lisättiin {{user}} käyttäjä(t) {{group}} ryhmä(t)",
+      "PERMISSION-ADD-FAIL": "Käyttäjän/ryhmän lisääminen epäonnistui",
+      "INHERIT-ENABLE-SUCCESS": "Peritty oikeus mahdollistettiin",
+      "INHERIT-DISABLE-SUCCESS": "Peritty oikeus estettiin",
+      "TOGGLE-PERMISSION-FAILED": "Perityn oikeuden vaihtaminen epäonnistui"
+    },
+    "ACTION": {
+      "DELETE": "Poista",
+      "ADD-PERMISSION": "Lisää käyttäjä tai ryhmä"
+    },
     "ERROR": {
+      "NOT-FOUND": "Tätä kohdetta ei ole enää olemassa tai sinulla ei ole oikeuksia sen tarkasteluun.",
       "DUPLICATE-PERMISSION": "Ainakin yksi jo määrittämistäsi oikeuksista on jo mukana: {{list}}",
       "NOT-ALLOWED": "Et voi muokata oikeuksia"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Vastaava",
       "COLLABORATOR": "Yhteistyökumppani",
       "CONTRIBUTOR": "Osallistuja",
-      "CONSUMER": "Kuluttaja"
+      "CONSUMER": "Kuluttaja",
+      "NONE": "Ei jäsen"
     },
     "VISIBILITY": {
       "PRIVATE": "Yksityinen",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Avaa {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Ominaisuustyyppi",
+    "DESCRIPTION": "Kuvaus",
+    "DATA_TYPE": "Tietotyyppi",
+    "DIALOG": {
+      "TITLE": "Muokkaa ominaisuuksia",
+      "DESCRIPTION": "Hallitse valittuihin tiedostoihin liittyviä ominaisuuksia.Valitse allaolevista ominaisuusjoukoista paljastaaksesi ja soveltaaksesi ylimääräisiä metatietoja ja toimivuuksia.",
+      "RESET": "Nollaa",
+      "CLEAR": "Tyhjennä",
+      "CANCEL": "Peruuta",
+      "APPLY": "Käytä",
+      "OVER-TABLE-MESSAGE": "Valitse ominaisuusjoukot",
+      "SELECTED": "Valitut"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} valittiin"
+  },
+  "swsdp": "Otos: Verkkosivuston suunnitteluprojekti"
 }

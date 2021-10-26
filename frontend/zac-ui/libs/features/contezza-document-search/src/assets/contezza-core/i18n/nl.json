@@ -1,0 +1,65 @@
+{
+    "APP": {
+        "CONSOLE": {
+            "TITLE": "Beheertools",
+            "DESCRIPTION": "Beheertools weergeven"
+        },
+        "PAGINATOR": {
+            "ITEMS_PER_PAGE_LABEL": "Items per pagina:",
+            "NEXT_PAGE_LABEL": "Volgende pagina",
+            "PREVIOUS_PAGE_LABEL": "Vorige pagina",
+            "FIRST_PAGE_LABEL": "Eerste pagina",
+            "LAST_PAGE_LABEL": "Laatste pagina",
+            "RANGE_PAGE_LABEL_1": "0 van {{length}}",
+            "RANGE_PAGE_LABEL_2": "{{startIndex}} - {{endIndex}} van {{length}}"
+        },
+        "LOGIN": {
+            "PASSWORD_RESET": {
+                "TITLE": "Wachtwoord vergeten?",
+                "INFO": "Geef het emailadres op waarmee je geregistreerd bent in Alfresco. Je ontvangt op dit emailadres een nieuw wachtwoord en gebruikersnaam.",
+                "EMAIL_INVALID": "Ongeldig e-mailadres",
+                "SUCCESS_MESSAGE": "De email met het nieuwe wachtwoord is verzonden.",
+                "BUTTONS": {
+                    "CANCEL": "Annuleren",
+                    "CONFIRM": "Bevestig gevevens"
+                }
+            }
+        },
+        "ACTIONS": {
+            "FILTER": "Filter",
+            "REFRESH": "Ververs pagina"
+        },
+        "FILTER": {
+            "TITLE": "Filter",
+            "SELECT_ALL_OPTION": "Alles",
+            "OPTIONS": {
+                "CREATED_FROM": "Gemaakt vanaf",
+                "ADJUSTED_FROM": "Aangepast vanaf",
+                "REGISTERED_FROM": "Geregistreerd vanaf",
+                "PLANNED_FROM": "Gepland vanaf",
+                "END_FROM": "Einddatum vanaf",
+                "STARTDATE": "Startdatum vanaf",
+                "TILL": "Tot",
+                "NAME": "Naam",
+                "DESCRIPTION": "Omschrijving",
+                "TITLE": "Titel",
+                "OBJECT_CODE": "Objectcode",
+                "IO_TYPE": "Informatieobjecttype*",
+                "STATUS": "Status",
+                "CASE_TYPE": "Type",
+                "OBJECT_TYPE": "Type",
+                "SITES": "Sites",
+                "HANDLERS": "Behandelaars",
+                "CLEAR_ALL": "Alles wissen"
+            }
+        },
+        "PEOPLE_GROUP_PICKER": {
+            "PEOPLE": {
+                "PLACEHOLDER": "Voer de gebruikersnaam in..."
+            },
+            "GROUP": {
+                "PLACEHOLDER": "Voer de groepsnaam in..."
+            }
+        }
+    }
+}

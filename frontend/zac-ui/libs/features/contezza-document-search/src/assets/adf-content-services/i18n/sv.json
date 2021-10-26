@@ -4,6 +4,7 @@
       "RESTORE": "Återställ",
       "DELETE": "Radera",
       "DOWNLOAD": "Ladda ner",
+      "VIEW": "Visa",
       "UPLOAD": {
         "TITLE": "Ladda upp ny version",
         "TOOLTIP": "Begränsning: du måste ladda upp en fil med samma namn för att skapa en ny version av den.",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Artikeltyp {{ type }}",
       "ARROW_ICON": "Ikon för högerpil"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Läser in..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Bekräfta",
@@ -62,11 +60,6 @@
       "VIEW": "Visa",
       "REMOVE": "Ta bort",
       "DOWNLOAD": "Ladda ner"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtrera efter {{ category }}",
-      "CLEAR": "Rensa",
-      "APPLY": "Tillämpa"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Avbryt",
     "CHOOSE": "Välj",
+    "ATTACH": "Bifoga",
     "CHOOSE_ITEM": "Välj innehåll att bifoga från '{{ name }}'",
     "COPY": "Kopiera",
     "COPY_ITEM": "Kopiera '{{ name }}' till...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Inga resultat hittades",
     "SEARCH": "Sök",
     "SEARCH_RESULTS": "Sökresultat",
-    "SELECT_LOCATION": "Välj plats"
+    "SELECT_LOCATION": "Välj plats",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Du kan inte ladda upp en fil medan en sökning pågår",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Användaren har inte tillstånd att ladda upp innehåll till mappen",
+    "REPOSITORY": "Arkiv",
+    "UPLOAD_FROM_DEVICE": "Ladda upp från din enhet"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Sök",
         "CLEAR": "Rensa",
         "APPLY": "Tillämpa",
         "CLEAR-ALL": "Rensa alla",
         "SHOW-MORE": "Visa mer",
-        "SHOW-LESS": "Visa mindre",
-        "FILTER-CATEGORY": "Filtrera på kategori"
+        "SHOW-LESS": "Visa mindre"
       },
       "BUTTONS": {
+        "CLOSE": "Stäng",
+        "REMOVE": "Ta bort",
+        "APPLY": "Tillämpa",
         "CLEAR-ALL": {
           "LABEL": "Rensa alla",
           "TOOLTIP": "Detta kommer att ta bort alla val"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Inga dagar valda",
         "INVALID-FORMAT": "Ogiltigt format",
         "INVALID-DATE": "Ogiltigt datum. Datumet måste vara i formatet '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "Datumet ligger bortom maximidatum"
+        "BEYOND-MAX-DATE": "Datumet ligger bortom maximidatum",
+        "INVALID-DATETIME": "Ogiltig datumtid. Datumtiden måste ha formatet '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "Datumtiden är bortom den maximala datumtiden."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Starta process"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Okänd konfiguration",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Typ",
+      "FILTER_BY": "Filtrera efter {{ category }}",
+      "CLEAR": "Rensa",
+      "APPLY": "Tillämpa",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Namn",
+          "PLACEHOLDER": "Ange namn"
+        },
+        "TYPE": {
+          "TITLE": "Kontrolltyp",
+          "FOLDER": "Mapp",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Innehållsstorlek (område)",
+          "SMALL": "Litet",
+          "MEDIUM": "Medium",
+          "LARGE": "Stort",
+          "HUGE": "Jättestort"
+        },
+        "DATE": {
+          "TITLE": "Skapad datum (område)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Skapad av",
       "CREATED_DATE": "Skapad datum",
       "MODIFIER": "Ändrad av",
-      "MODIFIED_DATE": "Ändringsdatum"
+      "MODIFIED_DATE": "Ändringsdatum",
+      "CONTENT_TYPE": "Innehållstyp"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Ändra innehållstyp",
+        "DESCRIPTION": "Genom att göra denna ändring av innehållstypen läggs vissa egenskaper och lagrade metadata permanent till dokumentet.",
+        "CONFIRM": "Är du säker på att du vill ändra innehållstypen?",
+        "CANCEL": "Avbryt",
+        "APPLY": "Spara ändringar",
+        "VIEW_DETAILS": "Visa detaljer",
+        "PROPERTY": {
+          "NAME": "Namn",
+          "DESCRIPTION": "Beskrivning",
+          "DATA_TYPE": "Datatyp"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Fel vid uppdatering av egenskaper",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Inga behörigheter"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Sök",
+      "SEARCH": "Sök användare eller grupper att lägga till",
+      "TITLE": "Lägg till behörighet",
       "TYPE-MESSAGE": "Skriv något för att börja söka grupper eller personer",
       "NO-RESULT": "Inga resultat hittades för den här sökningen",
+      "SELECT-ACTION": "Välj",
       "ADD-ACTION": "Lägg till",
-      "CLOSE-ACTION": "Stäng",
+      "CLOSE-ACTION": "Avbryt",
       "BASE-DIALOG-TITLE": "Sök en grupp eller personer att lägga till...",
       "EVERYONE": "Alla"
     },
+    "COLUMN": {
+      "NAME": "Användare och grupper ({{ count }})",
+      "LOCATION": "Plats",
+      "BULK-ROLE": "Ställ in alla roller till"
+    },
+    "LABELS": {
+      "ON": "På",
+      "OFF": "Av",
+      "DIRECT-PERMISSIONS": "Direkt tillämpat behörighet",
+      "INHERITED-PERMISSIONS": "Ärvt behörighet",
+      "INHERITED-SUBTITLE": "{{count}} användare eller grupper ärver behörighet från en överordnad mapp",
+      "SELECT-ROLE": "Välj roll"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Inga användare/grupper",
+      "EMPTY-SUBTITLE": "Lägg till användare/grupp för att hantera behörighet.",
+      "NO-MEMBERS": "Lägg till användare eller personer för att hantera roller",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Uppdaterade {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-UPDATE-SUCCESS": "Användare/grupp uppdaterade",
+      "PERMISSION-UPDATE-FAIL": "Misslyckades att uppdatera användare/grupp",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Raderad {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-DELETE-SUCCESS": "Raderad användare/grupp",
+      "PERMISSION-DELETE-FAIL": "Misslyckades att radera användare/grupp",
+      "PERMISSION-ADD-SUCCESS": "Lagt till {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-ADD-FAIL": "Misslyckades att lägga till användare/grupp",
+      "INHERIT-ENABLE-SUCCESS": "Aktiverad ärvt behörighet",
+      "INHERIT-DISABLE-SUCCESS": "Inaktiverad ärvt behörighet",
+      "TOGGLE-PERMISSION-FAILED": "Misslyckades att växla ärvt behörighet"
+    },
+    "ACTION": {
+      "DELETE": "Radera",
+      "ADD-PERMISSION": "Lägg till användare eller grupp"
+    },
     "ERROR": {
+      "NOT-FOUND": "Objektet finns inte längre eller så du har inte behörighet att visa det.",
       "DUPLICATE-PERMISSION": "Ett eller flera av de behörigheter du har ställt in finns redan: {{list}}",
       "NOT-ALLOWED": "Du har inte tillåtelse att ändra behörigheter"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Hanterare",
       "COLLABORATOR": "Medarbetare",
       "CONTRIBUTOR": "Deltagare",
-      "CONSUMER": "Förbrukare"
+      "CONSUMER": "Förbrukare",
+      "NONE": "Inte medlem"
     },
     "VISIBILITY": {
       "PRIVATE": "Privat",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Öppna {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Egenskapnamn",
+    "DESCRIPTION": "Beskrivning",
+    "DATA_TYPE": "Datatyp",
+    "DIALOG": {
+      "TITLE": "Anpassa egenskaper",
+      "DESCRIPTION": "Hantera egenskaperna som är associerade med valda filer. Välj bland egenskapsaspekterna nedan för att exponera och tillämpa ytterligare metadata och funktionalitet.",
+      "RESET": "Återställ",
+      "CLEAR": "Rensa",
+      "CANCEL": "Avbryt",
+      "APPLY": "Tillämpa",
+      "OVER-TABLE-MESSAGE": "Välj egenskapsaspekter",
+      "SELECTED": "Vald"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} vald"
+  },
+  "swsdp": "Sampel: Webbplatsdesignprojekt"
 }

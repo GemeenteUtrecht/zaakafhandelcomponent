@@ -4,6 +4,7 @@
       "RESTORE": "Gendan",
       "DELETE": "Slet",
       "DOWNLOAD": "Download",
+      "VIEW": "Vis",
       "UPLOAD": {
         "TITLE": "Upload ny version",
         "TOOLTIP": "Begrænsning: Du skal uploade en fil med det samme navn for at oprette en ny version af filen",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Elementtype {{ type }}",
       "ARROW_ICON": "Pil højre ikon"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Indlæser ..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Bekræft",
@@ -62,11 +60,6 @@
       "VIEW": "Vis",
       "REMOVE": "Fjern",
       "DOWNLOAD": "Download"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Sorter efter {{ category }}",
-      "CLEAR": "Ryd",
-      "APPLY": "Anvend"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Annuller",
     "CHOOSE": "Vælg",
+    "ATTACH": "Vedhæft",
     "CHOOSE_ITEM": "Vælg indhold der skal  vedhæftes fra '{{ name }}'",
     "COPY": "Kopiér",
     "COPY_ITEM": "Kopiér '{{ name }}' til...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Der blev ikke fundet nogen resultater",
     "SEARCH": "Søg",
     "SEARCH_RESULTS": "Søgeresultater",
-    "SELECT_LOCATION": "Vælg placering"
+    "SELECT_LOCATION": "Vælg placering",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Du kan ikke uploade en fil sideløbende med en søgning",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Bruger har ikke tilladelse til at uploade indhold til mappen",
+    "REPOSITORY": "Opbevaringssted",
+    "UPLOAD_FROM_DEVICE": "Overfør fra din enhed"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Søg",
         "CLEAR": "Ryd",
         "APPLY": "Anvend",
         "CLEAR-ALL": "Ryd alt",
         "SHOW-MORE": "Vis flere",
-        "SHOW-LESS": "Vis færre",
-        "FILTER-CATEGORY": "Filterkategori"
+        "SHOW-LESS": "Vis færre"
       },
       "BUTTONS": {
+        "CLOSE": "Luk",
+        "REMOVE": "Fjern",
+        "APPLY": "Anvend",
         "CLEAR-ALL": {
           "LABEL": "Ryd alt",
           "TOOLTIP": "Denne handling fjerner alle valg"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Der er ikke valgt nogen dage.",
         "INVALID-FORMAT": "Ugyldigt format",
         "INVALID-DATE": "Ugyldig dato. Datoen skal være i formatet '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "Datoen er senere end tilladt."
+        "BEYOND-MAX-DATE": "Datoen er senere end tilladt.",
+        "INVALID-DATETIME": "Ugyldig dato/klokkeslæt. Dato/klokkeslæt skal være i formatet '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "Maks. dato/klokkeslæt er nået."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Start proces"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Ukendt konfiguration",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Type",
+      "FILTER_BY": "Sorter efter {{ category }}",
+      "CLEAR": "Ryd",
+      "APPLY": "Anvend",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Navn",
+          "PLACEHOLDER": "Angiv navnet"
+        },
+        "TYPE": {
+          "TITLE": "Kontrollér type",
+          "FOLDER": "Mappe",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Indholdsstørrelse (interval)",
+          "SMALL": "Lille",
+          "MEDIUM": "Medium",
+          "LARGE": "Stor",
+          "HUGE": "Meget stor"
+        },
+        "DATE": {
+          "TITLE": "Oprettelsesdato (interval)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Oprettet af",
       "CREATED_DATE": "Oprettelsesdato",
       "MODIFIER": "Ændret af",
-      "MODIFIED_DATE": "Ændringsdato"
+      "MODIFIED_DATE": "Ændringsdato",
+      "CONTENT_TYPE": "Indholdstype"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Skift indholdstype",
+        "DESCRIPTION": "Udførelse af denne ændring til indholdstypen, vil tilføje visse egenskaber og lagrede metadata permanent til dokumentet.",
+        "CONFIRM": "Er du sikker på at du vil ændre indholdstypen?",
+        "CANCEL": "Annuller",
+        "APPLY": "Gem ændringerne",
+        "VIEW_DETAILS": "Vis detaljer",
+        "PROPERTY": {
+          "NAME": "Navn",
+          "DESCRIPTION": "Beskrivelse",
+          "DATA_TYPE": "Datatype"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Der opstod fejl under opdatering af egenskaben",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Ingen tilladelser"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Søg",
+      "SEARCH": "Søg efter brugere eller grupper, der skal tilføjes",
+      "TITLE": "Tilføj tilladelse",
       "TYPE-MESSAGE": "Skriv noget for at begynde at søge efter grupper eller personer",
       "NO-RESULT": "Der blev ikke fundet nogen resultater for denne søgning",
+      "SELECT-ACTION": "Vælg",
       "ADD-ACTION": "Tilføj",
-      "CLOSE-ACTION": "Luk",
+      "CLOSE-ACTION": "Annuller",
       "BASE-DIALOG-TITLE": "Søg efter en gruppe eller personer, du vil tilføje...",
       "EVERYONE": "Alle"
     },
+    "COLUMN": {
+      "NAME": "Brugere og grupper ({{ count }})",
+      "LOCATION": "Placering",
+      "BULK-ROLE": "Sæt alle roller til"
+    },
+    "LABELS": {
+      "ON": "On",
+      "OFF": "Off",
+      "DIRECT-PERMISSIONS": "Direkte tilføjet tilladelse",
+      "INHERITED-PERMISSIONS": "Nedarvet tilladelse",
+      "INHERITED-SUBTITLE": "{{count}} brugere eller grupper arver tilladelse fra overordnet mappe",
+      "SELECT-ROLE": "Vælg funktion"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Ingen brugere/grupper",
+      "EMPTY-SUBTITLE": "Tilføj bruger/gruppe til at administrere tilladelse.",
+      "NO-MEMBERS": "Tilføj  grupper eller folkt til at administrere funktioner",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Opdateret {{user}} bruger(e) {{group}} gruppe(r)",
+      "PERMISSION-UPDATE-SUCCESS": "Bruger/gruppe opdateret",
+      "PERMISSION-UPDATE-FAIL": "Opdatering af bruger/gruppe mislykket",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Slettet {{user}} bruger(e) {{group}} gruppe(r)",
+      "PERMISSION-DELETE-SUCCESS": "Bruger/gruppe slettet",
+      "PERMISSION-DELETE-FAIL": "Sletning  af bruger/gruppe mislykket",
+      "PERMISSION-ADD-SUCCESS": "Tilføjet {{user}} bruger(e) {{group}} gruppe(r)",
+      "PERMISSION-ADD-FAIL": "Tilføjelse af bruger/gruppe mislykket",
+      "INHERIT-ENABLE-SUCCESS": "Aktiveret nedarvet tilladelse",
+      "INHERIT-DISABLE-SUCCESS": "Deaktiveret nedarvet tilladelse",
+      "TOGGLE-PERMISSION-FAILED": "Skift af arvetilladelse mislykket"
+    },
+    "ACTION": {
+      "DELETE": "Slet",
+      "ADD-PERMISSION": "Tilføj bruger eller gruppe"
+    },
     "ERROR": {
+      "NOT-FOUND": "Elementet findes ikke længere, eller du har ikke tilladelse til at få det vist.",
       "DUPLICATE-PERMISSION": "En eller flere af de angivne tilladelser findes allerede: {{list}}",
       "NOT-ALLOWED": "Du har ikke tilladelse til at ændre tilladelserne"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Chef",
       "COLLABORATOR": "Samarbejdspartner",
       "CONTRIBUTOR": "Bidragyder",
-      "CONSUMER": "Forbruger"
+      "CONSUMER": "Forbruger",
+      "NONE": "Ikke medlem"
     },
     "VISIBILITY": {
       "PRIVATE": "Privat",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Åbn {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Egenskabsbetegnelse",
+    "DESCRIPTION": "Beskrivelse",
+    "DATA_TYPE": "Datatype",
+    "DIALOG": {
+      "TITLE": "Tilpas egenskaber",
+      "DESCRIPTION": "Administrer egenskaber tilknyttet til den/de valgte fil(er). Vælg mellem egenskaber for udseende angivet nedenfor, for at fremvise og anvende yderligere metadata og funktioner",
+      "RESET": "Nulstil",
+      "CLEAR": "Ryd",
+      "CANCEL": "Annuller",
+      "APPLY": "Anvend",
+      "OVER-TABLE-MESSAGE": "Vælg udseende for egenskab",
+      "SELECTED": "Valgt"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} valgt"
+  },
+  "swsdp": "Prøve: Websted Design Projekt"
 }

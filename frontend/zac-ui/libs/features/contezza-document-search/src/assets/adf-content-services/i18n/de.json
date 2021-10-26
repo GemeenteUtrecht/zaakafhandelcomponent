@@ -4,6 +4,7 @@
       "RESTORE": "Wiederherstellen",
       "DELETE": "Löschen",
       "DOWNLOAD": "Herunterladen",
+      "VIEW": "Anzeigen",
       "UPLOAD": {
         "TITLE": "Neue Version hochladen",
         "TOOLTIP": "Einschränkung: Sie müssen eine Datei mit dem gleichen Namen hochladen, wenn Sie eine neue Version der Datei erstellen möchten.",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Elementtyp {{ type }}",
       "ARROW_ICON": "Pfeil-nach-rechts-Symbol"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Laden..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Bestätigen",
@@ -62,11 +60,6 @@
       "VIEW": "Anzeigen",
       "REMOVE": "Entfernen",
       "DOWNLOAD": "Herunterladen"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtern nach {{ category }}",
-      "CLEAR": "Löschen",
-      "APPLY": "Anwenden"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Abbrechen",
     "CHOOSE": "Auswählen",
+    "ATTACH": "Anhängen",
     "CHOOSE_ITEM": "Wählen Sie aus '{{ name }}' Content zum Anhängen aus",
     "COPY": "Kopieren",
     "COPY_ITEM": "'{{ name }}' kopieren nach...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Keine Ergebnisse gefunden",
     "SEARCH": "Suchen",
     "SEARCH_RESULTS": "Ergebnisse durchsuchen",
-    "SELECT_LOCATION": "Speicherort auswählen"
+    "SELECT_LOCATION": "Speicherort auswählen",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Sie können während einer laufenden Suche keine Datei hochladen.",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Benutzer besitzt keine Berechtigung, um Inhalt in Ordner hochzuladen",
+    "REPOSITORY": "Repository",
+    "UPLOAD_FROM_DEVICE": "Von Ihrem Gerät hochladen"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,16 +223,19 @@
     },
     "FILTER": {
       "ACTIONS": {
-        "CLEAR": "Zurücksetzen",
+        "SEARCH": "Suchen",
+        "CLEAR": "Löschen",
         "APPLY": "Anwenden",
-        "CLEAR-ALL": "Alle zurücksetzen",
+        "CLEAR-ALL": "Alle löschen",
         "SHOW-MORE": "Mehr anzeigen",
-        "SHOW-LESS": "Weniger anzeigen",
-        "FILTER-CATEGORY": "Kategorie filtern"
+        "SHOW-LESS": "Weniger anzeigen"
       },
       "BUTTONS": {
+        "CLOSE": "Schließen",
+        "REMOVE": "Entfernen",
+        "APPLY": "Anwenden",
         "CLEAR-ALL": {
-          "LABEL": "Alle zurücksetzen",
+          "LABEL": "Alle löschen",
           "TOOLTIP": "Dadurch werden alle Auswahlen entfernt"
         },
         "RESET-ALL": {
@@ -253,7 +254,9 @@
         "NO-DAYS": "Keine Tage ausgewählt.",
         "INVALID-FORMAT": "Unzulässiges Format",
         "INVALID-DATE": "Unzulässiges Datum. Das Datum muss das Format '{{ requiredFormat }}' haben.",
-        "BEYOND-MAX-DATE": "Das Datum liegt nach dem maximal zulässigen Datum."
+        "BEYOND-MAX-DATE": "Das Datum liegt nach dem maximal zulässigen Datum.",
+        "INVALID-DATETIME": "Datum/Uhrzeit ungültig. Datum/Uhrzeit muss das Format '{{ requiredFormat }}' haben.",
+        "BEYOND-MAX-DATETIME": "Datum/Uhrzeit liegt über dem Höchstwert für Datum/Uhrzeit."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Prozess starten"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Unbekannte Konfiguration",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Typ",
+      "FILTER_BY": "Filtern nach {{ category }}",
+      "CLEAR": "Löschen",
+      "APPLY": "Anwenden",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Name",
+          "PLACEHOLDER": "Namen eingeben"
+        },
+        "TYPE": {
+          "TITLE": "Typ auswählen",
+          "FOLDER": "Ordner",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Inhaltsgröße (Bereich)",
+          "SMALL": "Klein",
+          "MEDIUM": "Mittel",
+          "LARGE": "Groß",
+          "HUGE": "Riesig"
+        },
+        "DATE": {
+          "TITLE": "Erstellungsdatum (Bereich)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Ersteller",
       "CREATED_DATE": "Datum der Erstellung",
       "MODIFIER": "Bearbeiter",
-      "MODIFIED_DATE": "Datum der Änderung"
+      "MODIFIED_DATE": "Datum der Änderung",
+      "CONTENT_TYPE": "Content-Typ"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Content-Typ ändern",
+        "DESCRIPTION": "Wenn Sie diese Änderung am Content-Typ vornehmen, werden dem Dokument einige Eigenschaften und gespeicherte Metadaten dauerhaft hinzugefügt.",
+        "CONFIRM": "Möchten Sie den Content-Typ wirklich ändern?",
+        "CANCEL": "Abbrechen",
+        "APPLY": "Änderungen speichern",
+        "VIEW_DETAILS": "Details anzeigen",
+        "PROPERTY": {
+          "NAME": "Name",
+          "DESCRIPTION": "Beschreibung",
+          "DATA_TYPE": "Datentyp"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Fehler beim Aktualisieren der Eigenschaft",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Keine Berechtigungen"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Suchen",
+      "SEARCH": "Nach hinzuzufügenden Benutzern oder Gruppen suchen",
+      "TITLE": "Berechtigung hinzufügen",
       "TYPE-MESSAGE": "Geben Sie etwas ein, um nach Gruppen oder Personen zu suchen",
       "NO-RESULT": "Für diese Suchanfrage wurden keine Ergebnisse gefunden",
-      "ADD-ACTION": "Hinzufügen",
-      "CLOSE-ACTION": "Schließen",
+      "SELECT-ACTION": "AUSWÄHLEN",
+      "ADD-ACTION": "HINZUFÜGEN",
+      "CLOSE-ACTION": "ABBRECHEN",
       "BASE-DIALOG-TITLE": "Es wird nach Gruppen oder Personen gesucht, die hinzugefügt werden können...",
       "EVERYONE": "JEDER"
     },
+    "COLUMN": {
+      "NAME": "Benutzer und Gruppen ({{ count }})",
+      "LOCATION": "Speicherort",
+      "BULK-ROLE": "Alle Rollen festlegen auf"
+    },
+    "LABELS": {
+      "ON": "Ein",
+      "OFF": "Aus",
+      "DIRECT-PERMISSIONS": "Direkt angewendete Berechtigung",
+      "INHERITED-PERMISSIONS": "Geerbte Berechtigung",
+      "INHERITED-SUBTITLE": "{{count}} Benutzer oder Gruppen erben Berechtigungen von einem übergeordneten Ordner.",
+      "SELECT-ROLE": "Rolle auswählen"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Keine Benutzer/Gruppen",
+      "EMPTY-SUBTITLE": "Fügen Sie Benutzer/Gruppen hinzu, um Berechtigungen zu verwalten.",
+      "NO-MEMBERS": "Fügen Sie Gruppen oder Personen hinzu, um Rollen zu verwalten.",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "{{user}} Benutzer {{group}} Gruppe(n) aktualisiert",
+      "PERMISSION-UPDATE-SUCCESS": "Benutzer/Gruppe aktualisiert",
+      "PERMISSION-UPDATE-FAIL": "Fehler beim Aktualisieren von Benutzer/Gruppe",
+      "PERMISSION-BULK-DELETE-SUCCESS": "{{user}} Benutzer {{group}} Gruppe(n) gelöscht",
+      "PERMISSION-DELETE-SUCCESS": "Benutzer/Gruppe gelöscht",
+      "PERMISSION-DELETE-FAIL": "Fehler beim Löschen von Benutzer/Gruppe",
+      "PERMISSION-ADD-SUCCESS": "{{user}} Benutzer {{group}} Gruppe(n) hinzugefügt",
+      "PERMISSION-ADD-FAIL": "Fehler beim Hinzufügen von Benutzer/Gruppe",
+      "INHERIT-ENABLE-SUCCESS": "Geerbte Berechtigung aktiviert",
+      "INHERIT-DISABLE-SUCCESS": "Geerbte Berechtigung deaktiviert",
+      "TOGGLE-PERMISSION-FAILED": "Fehler beim Umschalten der geerbten Berechtigung"
+    },
+    "ACTION": {
+      "DELETE": "Löschen",
+      "ADD-PERMISSION": "Benutzer oder Gruppe hinzufügen"
+    },
     "ERROR": {
+      "NOT-FOUND": "Dieses Element gibt es nicht mehr oder Sie verfügen nicht über die für die Anzeige nötigen Benutzerrechte.",
       "DUPLICATE-PERMISSION": "Mindestens eine der von Ihnen bestimmten Berechtigungen ist bereits vorhanden: {{list}}",
       "NOT-ALLOWED": "Sie sind nicht zum Ändern von Berechtigungen berechtigt."
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Manager",
       "COLLABORATOR": "Mitarbeiter",
       "CONTRIBUTOR": "Beitragender",
-      "CONSUMER": "Verbraucher"
+      "CONSUMER": "Verbraucher",
+      "NONE": "Kein Mitglied"
     },
     "VISIBILITY": {
       "PRIVATE": "Privat",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "{{ name }} öffnen"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Eigenschaftenname",
+    "DESCRIPTION": "Beschreibung",
+    "DATA_TYPE": "Datentyp",
+    "DIALOG": {
+      "TITLE": "Eigenschaften anpassen",
+      "DESCRIPTION": "Verwalten Sie die mit den ausgewählten Dateien verbundenen Eigenschaften. Wählen Sie aus den unten aufgeführten Eigenschaftsaspekten aus, um zusätzliche Metadaten und Funktionen anzuzeigen und anzuwenden",
+      "RESET": "Zurücksetzen",
+      "CLEAR": "Löschen",
+      "CANCEL": "Abbrechen",
+      "APPLY": "Anwenden",
+      "OVER-TABLE-MESSAGE": "Eigenschaftsaspekte auswählen",
+      "SELECTED": "Ausgewählt"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} ausgewählt"
+  },
+  "swsdp": "Beispiel: Website-Design-Projekt"
 }

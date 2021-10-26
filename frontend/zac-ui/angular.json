@@ -24,7 +24,6 @@
               "apps/zac-ui/src/favicon.ico",
               "apps/zac-ui/src/assets",
               "apps/zac-ui/src/assets/styles",
-              "apps/zac-ui/src/app.config.json",
               {
                 "glob": "pdf.worker.js",
                 "input": "node_modules/pdfjs-dist/build",

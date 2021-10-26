@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "اللغة",
+    "ROLES": {
+      "ALL": "الكل",
+      "CONTRIBUTOR": "مساهم",
+      "COLLABORATOR": "معاون",
+      "COORDINATOR": "منسق",
+      "EDITOR": "محرر",
+      "CONSUMER": "مستهلك",
+      "SITECOLLABORATOR": "متعاون الموقع",
+      "SITECONSUMER": "مستهلك الموقع",
+      "SITECONTRIBUTOR": "مساهم الموقع",
+      "SITEMANAGER": "مدير الموقع"
+    }
+  },
   "SAVE": "حفظ",
   "COMPLETE": "تم",
   "CANCEL": "إلغاء",
@@ -6,10 +21,11 @@
   "UNCLAIM": "تحرير",
   "START PROCESS": "بدء العملية",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "لا توجد رسائل",
+    "NO_MESSAGE": "ليس لديك إشعارات في هذا الوقت.",
     "TITLE": "إعلامات",
     "MARK_AS_READ": "وضع علامة على الكل كغير مقروءة",
-    "SYSTEM": "النظام"
+    "SYSTEM": "النظام",
+    "LOAD_MORE": "تحميل المزيد"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "التخزين المحلي",
       "SOURCE": "تحديد المصدر من ",
-      "SHOW_FILE": "إظهار",
+      "VIEW_FILE": "عرض",
       "DOWNLOAD_FILE": "تنزيل",
       "REMOVE_FILE": "إزالة",
       "UPLOAD": "تحميل",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "أدخل {{ minLength }} حرف (حرفًا) على الأقل",
         "NO_LONGER_THAN": "أدخل {{ maxLength }} حرف (حرفًا) كحد أقصى"
       },
-      "FILE_ALREADY_UPLOADED": "تم تحميل ملف بالاسم نفسه بالفعل."
+      "FILE_ALREADY_UPLOADED": "تم تحميل ملف بالاسم نفسه بالفعل.",
+      "ATTACH": "إرفاق"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "مهمة بدون اسم"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "الوصف"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "العنوان"
+      },
       "CREATE_BUTTON": {
         "LABEL": "إنشاء"
       },
@@ -175,7 +195,10 @@
       "NONE": "بلا",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "استخدام تنسيق رقم",
-        "INT_VALIDATION_ERROR": "استخدام تنسيق عدد صحيح"
+        "INT_VALIDATION_ERROR": "استخدام تنسيق عدد صحيح",
+        "LENGTH_VALIDATION_ERROR": "ينبغي أن تكون القيمة بطول بين {{ minLength }} كحد أدنى و{{ maxLength }} كحد أقصى",
+        "MATCH_VALIDATION_ERROR": "القيمة لا تطابق النمط: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "ينبغي أن تكون القيمة بين {{ minValue }} و{{ maxValue }}"
       },
       "MORE": "المزيد"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "المنشئ",
         "CREATED_DATE": "تاريخ الإنشاء",
         "MODIFIER": "المعدل",
-        "MODIFIED_DATE": "تاريخ التعديل"
+        "MODIFIED_DATE": "تاريخ التعديل",
+        "CONTENT_TYPE": "نوع المحتوى"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "تغيير نوع المحتوى",
+          "DESCRIPTION": "سيؤدي إجراء هذا التغيير على نوع المحتوى إلى إضافة بعض الخصائص وبيانات التعريف المخزنة إلى المستند.",
+          "CONFIRM": "هل أنت متأكد أنك تريد تغيير نوع المحتوى؟",
+          "CANCEL": "إلغاء",
+          "APPLY": "حفظ التغييرات",
+          "VIEW_DETAILS": "عرض التفاصيل",
+          "PROPERTY": {
+            "NAME": "الاسم",
+            "DESCRIPTION": "الوصف",
+            "DATA_TYPE": "نوع البيانات"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "تحرير",
@@ -199,12 +238,14 @@
         "CANCEL": "إلغاء",
         "CLEAR": "مسح",
         "TOGGLE": "تبديل القيمة",
-        "COPY_TO_CLIPBOARD": "انقر مرتين لنسخ القيمة"
+        "COPY_TO_CLIPBOARD": "انقر مرتين لنسخ القيمة",
+        "EDIT_ASPECTS": "تحرير الجانب"
       },
       "ACCESSIBILITY": {
         "EDIT": "الزر تحرير",
         "DATEPICKER": "استخدم مفاتيح الأسهم للتنقل بين التواريخ. السهمان لأعلى ولأسفل ينتقلان إلى الأسبوع التالي أو السابق لكن في اليوم نفسه. السهمان الأيسر والأيمن ينتقلان إلى اليوم التالي أو السابق. اضغط على مفتاح الإدخال لتحديد تاريخ.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "تم نسخ القيمة إلى الحافظة"
+        "COPY_TO_CLIPBOARD_MESSAGE": "تم نسخ القيمة إلى الحافظة",
+        "EDIT_ASPECTS": "تحرير الجانب"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "لقد أدخلت اسم مستخدم أو كلمة سر غير معروفة",
       "LOGIN-ERROR-PROVIDERS": "لا يمكن أن يكون الموفرون غير محددين",
       "LOGIN-ERROR-CORS": "استثناء CORS، تحقق من تكوين الخادم لديك",
-      "LOGIN-ERROR-CSRF": "استثناء CSRF، قم بتعيين [disableCsrf]=\"true\" في login.component",
+      "LOGIN-ERROR-CSRF": "استثناء CSRF، اضبط \"disableCSRF\": true في app.config.json",
       "LOGIN-ECM-LICENSE": "مستودع Alfresco Content Services في وضع للقراءة فقط",
       "SSO-WRONG-CONFIGURATION": "خادم مصادقة SSO غير قابل للوصول"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "تكبير",
       "ZOOM_OUT": "تصغير",
       "FIT_PAGE": "ملاءمة الصفحة",
-      "ROTATE_LEFT": "تدوير لليسار",
-      "ROTATE_RIGHT": "تدوير لليمين",
+      "ROTATE": "تدوير",
+      "CROP": "قص",
+      "SAVE": "حفظ",
+      "CANCEL": "إلغاء",
       "RESET": "إعادة تعيين",
-      "THUMBNAILS": "الصور المصغرة للمستندات"
+      "THUMBNAILS": "الصور المصغرة للمستندات",
+      "THUMBNAILS_PANLEL_CLOSE": "إغلاق لوحة الصور المصغرة"
     },
     "PAGE_LABEL": {
       "SHOWING": "إظهار",
@@ -368,7 +412,8 @@
       "CLOSE": "إغلاق",
       "PLACEHOLDER": "كلمة سر",
       "ERROR": "كلمة السر خطأ"
-    }
+    },
+    "SUBTITLES": "العناوين الفرعية"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "حدث خطأ.",
       "DESCRIPTION": "بوابة غير صحيحة، حاول مرة أخرى أو اتصل بدعم تكنولوجيا المعلومات [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "عودة إلى الرئيسية"
+      }
+    },
+    "503": {
+      "TITLE": "حدث خطأ.",
+      "DESCRIPTION": "الخدمة غير متاحة  مؤقتًا [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "انقر للنسخ",
     "SUCCESS_COPY": "تم نسخ النص إلى الحافظة"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "بحث",
+      "ARIA_LABEL": "خيارات البحث"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "مسح"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "جار التحميل..."
   }
 }

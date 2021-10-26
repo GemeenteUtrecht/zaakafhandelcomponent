@@ -1,5 +1,24 @@
-<gu-tab-group>
-  <gu-tab label="Document uploaden">
+<!--<gu-tab-group>-->
+<!--  <gu-tab label="Document uploaden">-->
+<!--    <div class="pt-4">-->
+<!--      <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"-->
+<!--                             [zaaktypeurl]="zaaktypeurl"-->
+<!--                             [bronorganisatie]="bronorganisatie"-->
+<!--                             [identificatie]="identificatie"-->
+<!--                             (closeModal)="closeModal.emit(true)"-->
+<!--                             (reload)="reload.emit(true)">-->
+<!--      </gu-document-toevoegen>-->
+<!--    </div>-->
+<!--  </gu-tab>-->
+<!--  <gu-tab label="Alfresco documenten">-->
+<!--      <div class="pt-4">-->
+<!--          <gu-features-contezza-document-search [bronorganisatie]="bronorganisatie" [zaaktypeurl]="zaaktypeurl"></gu-features-contezza-document-search>-->
+<!--      </div>-->
+<!--  </gu-tab>-->
+<!--</gu-tab-group>-->
+
+<mat-tab-group [@.disabled]="true" [selectedIndex]="0" class="gu-document-toevoegen-contezza-mat-tab-group">
+  <mat-tab label="Document uploaden">
     <div class="pt-4">
       <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
                              [zaaktypeurl]="zaaktypeurl"
@@ -9,10 +28,13 @@
                              (reload)="reload.emit(true)">
       </gu-document-toevoegen>
     </div>
-  </gu-tab>
-  <gu-tab label="Alfresco documenten">
-    <div class="pt-4">
-      <gu-features-contezza-document-search [bronorganisatie]="bronorganisatie" [username]="'fb@utrecht.nl'" [password]="'C1iMkt1V'" [zaaktypeurl]="zaaktypeurl"></gu-features-contezza-document-search>
-    </div>
-  </gu-tab>
-</gu-tab-group>
+</mat-tab>
+
+  <mat-tab label="Alfresco documenten">
+    <ng-template matTabContent>
+      <div class="pt-4">
+        <gu-features-contezza-document-search [bronorganisatie]="bronorganisatie" [zaaktypeurl]="zaaktypeurl"></gu-features-contezza-document-search>
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

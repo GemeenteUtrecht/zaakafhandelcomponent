@@ -4,6 +4,7 @@
       "RESTORE": "復元",
       "DELETE": "削除",
       "DOWNLOAD": "ダウンロード",
+      "VIEW": "表示",
       "UPLOAD": {
         "TITLE": "新しいバージョンのアップロード",
         "TOOLTIP": "制限事項: 作成する新しいバージョンのファイルと同じ名前のファイルをアップロードする必要があります",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "アイテムタイプ {{ type }}",
       "ARROW_ICON": "右矢印アイコン"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "読み込んでいます..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "確定",
@@ -62,11 +60,6 @@
       "VIEW": "表示",
       "REMOVE": "削除",
       "DOWNLOAD": "ダウンロード"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "{{ category }} でフィルタ",
-      "CLEAR": "消去",
-      "APPLY": "適用"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "キャンセル",
     "CHOOSE": "選択",
+    "ATTACH": "添付",
     "CHOOSE_ITEM": "'{{ name }}' から添付するコンテンツを選択してください",
     "COPY": "コピー",
     "COPY_ITEM": "'{{ name }}' のコピー先...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "一致するアイテムはありません",
     "SEARCH": "検索",
     "SEARCH_RESULTS": "検索結果",
-    "SELECT_LOCATION": "場所の選択"
+    "SELECT_LOCATION": "場所の選択",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "検索がまだ実行中のため、ファイルをアップロードできません",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "ユーザーに、コンテンツをフォルダにアップロードする権限がありません",
+    "REPOSITORY": "リポジトリ",
+    "UPLOAD_FROM_DEVICE": "使用中のデバイスからアップロード"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "検索",
         "CLEAR": "消去",
         "APPLY": "適用",
         "CLEAR-ALL": "すべて消去",
         "SHOW-MORE": "続きを表示",
-        "SHOW-LESS": "詳細を隠す",
-        "FILTER-CATEGORY": "カテゴリをフィルタする"
+        "SHOW-LESS": "詳細を隠す"
       },
       "BUTTONS": {
+        "CLOSE": "閉じる",
+        "REMOVE": "削除",
+        "APPLY": "適用",
         "CLEAR-ALL": {
           "LABEL": "すべて消去",
           "TOOLTIP": "選択した項目がすべて削除されます"
@@ -253,7 +254,9 @@
         "NO-DAYS": "日付が選択されていません。",
         "INVALID-FORMAT": "無効な形式",
         "INVALID-DATE": "無効な日付です。日付は '{{ requiredFormat }}' 形式で指定する必要があります",
-        "BEYOND-MAX-DATE": "この日付は最長の日付よりも後です。"
+        "BEYOND-MAX-DATE": "この日付は最長の日付よりも後です。",
+        "INVALID-DATETIME": "日時が無効です。日時は '{{ requiredFormat }}' 形式で指定する必要があります",
+        "BEYOND-MAX-DATETIME": "指定した日時は最大日時を超えています"
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "プロセスの開始"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "不明な設定",
+    "SEARCH_HEADER": {
+      "TITLE": "フィルタ",
+      "TYPE": "種類",
+      "FILTER_BY": "{{ category }} でフィルタ",
+      "CLEAR": "消去",
+      "APPLY": "適用",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "名前",
+          "PLACEHOLDER": "名前を入力してください"
+        },
+        "TYPE": {
+          "TITLE": "種類を選択してください",
+          "FOLDER": "フォルダ",
+          "DOCUMENT": "文書"
+        },
+        "SIZE": {
+          "TITLE": "コンテンツのサイズ (範囲)",
+          "SMALL": "小",
+          "MEDIUM": "中",
+          "LARGE": "大",
+          "HUGE": "特大"
+        },
+        "DATE": {
+          "TITLE": "作成日 (範囲)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "作成者",
       "CREATED_DATE": "作成日",
       "MODIFIER": "変更者",
-      "MODIFIED_DATE": "変更日"
+      "MODIFIED_DATE": "変更日",
+      "CONTENT_TYPE": "コンテンツタイプ"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "コンテンツタイプを変更",
+        "DESCRIPTION": "この変更をコンテンツタイプに加えると、いくつかのプロパティと保存されているメタデータがドキュメントに恒久的に追加されます。",
+        "CONFIRM": "コンテンツタイプを変更しますか？?",
+        "CANCEL": "キャンセル",
+        "APPLY": "変更を保存する",
+        "VIEW_DETAILS": "詳細の表示",
+        "PROPERTY": {
+          "NAME": "名前",
+          "DESCRIPTION": "説明",
+          "DATA_TYPE": "データタイプ"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "プロパティの更新中にエラーが発生しました",
@@ -334,22 +382,58 @@
   },
   "PERMISSION_MANAGER": {
     "PERMISSION_DISPLAY": {
-      "INHERITED": "継承された権限",
+      "INHERITED": "継承済み",
       "AUTHORITY_ID": "権限 ID",
       "ROLE": "役割",
       "LOCALLY_SET": "ローカルで設定された権限",
       "NO_PERMISSIONS": "権限がありません"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "検索",
+      "SEARCH": "追加するユーザー / グループを検索",
+      "TITLE": "権限を追加",
       "TYPE-MESSAGE": "グループまたはメンバーの検索条件を入力してください",
       "NO-RESULT": "この条件に一致する結果はありません",
+      "SELECT-ACTION": "選択",
       "ADD-ACTION": "追加",
-      "CLOSE-ACTION": "閉じる",
+      "CLOSE-ACTION": "キャンセル",
       "BASE-DIALOG-TITLE": "追加するグループまたはメンバーの検索...",
       "EVERYONE": "全員"
     },
+    "COLUMN": {
+      "NAME": "ユーザーとグループ({{ count }})",
+      "LOCATION": "場所",
+      "BULK-ROLE": "すべての役割を設定"
+    },
+    "LABELS": {
+      "ON": "オン",
+      "OFF": "オフ",
+      "DIRECT-PERMISSIONS": "直接適用される権限",
+      "INHERITED-PERMISSIONS": "継承権限",
+      "INHERITED-SUBTITLE": "{{count}}ユーザーやグループが親フォルダから権限を継承しています",
+      "SELECT-ROLE": "役割の選択"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "ユーザー/グループなし",
+      "EMPTY-SUBTITLE": "ユーザー/グループを追加して権限を管理します。",
+      "NO-MEMBERS": "グループや人を追加して役割を管理します",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "更新した{{user}}ユーザー{{group}}グループ",
+      "PERMISSION-UPDATE-SUCCESS": "ユーザー/グループの更新",
+      "PERMISSION-UPDATE-FAIL": "ユーザー/グループの更新に失敗しました",
+      "PERMISSION-BULK-DELETE-SUCCESS": "削除した{{user}}ユーザー{{group}}グループ",
+      "PERMISSION-DELETE-SUCCESS": "ユーザー/グループの削除",
+      "PERMISSION-DELETE-FAIL": "ユーザー/グループの削除に失敗しました",
+      "PERMISSION-ADD-SUCCESS": "追加した{{user}}ユーザー{{group}}グループ",
+      "PERMISSION-ADD-FAIL": "ユーザー/グループの追加に失敗しました",
+      "INHERIT-ENABLE-SUCCESS": "継承権限を有効化",
+      "INHERIT-DISABLE-SUCCESS": "継承権限を無効化",
+      "TOGGLE-PERMISSION-FAILED": "継承権限の切り替えに失敗しました"
+    },
+    "ACTION": {
+      "DELETE": "削除",
+      "ADD-PERMISSION": "ユーザー/グループの追加"
+    },
     "ERROR": {
+      "NOT-FOUND": "このアイテムは削除されたか、このアイテムを表示する権限がありません。",
       "DUPLICATE-PERMISSION": "設定済みの権限が既にあります: {{list}}",
       "NOT-ALLOWED": "権限を変更することはできません"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "マネージャ",
       "COLLABORATOR": "共同作業者",
       "CONTRIBUTOR": "投稿者",
-      "CONSUMER": "利用者"
+      "CONSUMER": "利用者",
+      "NONE": "非メンバー"
     },
     "VISIBILITY": {
       "PRIVATE": "非公開",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "{{ name }} を開く"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "プロパティ名",
+    "DESCRIPTION": "説明",
+    "DATA_TYPE": "データタイプ",
+    "DIALOG": {
+      "TITLE": "プロパティをカスタマイズ",
+      "DESCRIPTION": "選択したファイルに関連付けられたプロパティを管理します。追加のメタデータと機能性を公開したり適用したりするには、以下にリストされたプロパティアスペクトから選択します",
+      "RESET": "リセット",
+      "CLEAR": "消去",
+      "CANCEL": "キャンセル",
+      "APPLY": "適用",
+      "OVER-TABLE-MESSAGE": "プロパティアスペクトを選択します",
+      "SELECTED": "選択済み"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }}を選択"
+  },
+  "swsdp": "サンプル：Webサイトデザインプロジェクト"
 }

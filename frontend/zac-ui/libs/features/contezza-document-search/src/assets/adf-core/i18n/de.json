@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Sprache",
+    "ROLES": {
+      "ALL": "Alle",
+      "CONTRIBUTOR": "Beitragender",
+      "COLLABORATOR": "Mitarbeiter",
+      "COORDINATOR": "Koordinator",
+      "EDITOR": "Editor",
+      "CONSUMER": "Verbraucher",
+      "SITECOLLABORATOR": "Site-Mitarbeiter",
+      "SITECONSUMER": "Site-Verbraucher",
+      "SITECONTRIBUTOR": "Site-Beitragender",
+      "SITEMANAGER": "Site-Manager"
+    }
+  },
   "SAVE": "Speichern",
   "COMPLETE": "Abschließen",
   "CANCEL": "Abbrechen",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Anspruch aufheben",
   "START PROCESS": "Prozess starten",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Keine Nachrichten",
+    "NO_MESSAGE": "Sie haben momentan keine Benachrichtigungen.",
     "TITLE": "Benachrichtigungen",
     "MARK_AS_READ": "Alles als gelesen markieren",
-    "SYSTEM": "System"
+    "SYSTEM": "System",
+    "LOAD_MORE": "Mehr laden"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Lokaler Speicherort",
       "SOURCE": "Quelle auswählen aus ",
-      "SHOW_FILE": "Anzeigen",
+      "VIEW_FILE": "Anzeigen",
       "DOWNLOAD_FILE": "Herunterladen",
       "REMOVE_FILE": "Entfernen",
       "UPLOAD": "Hochladen",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Geben Sie mindestens {{ minLength }} Zeichen ein",
         "NO_LONGER_THAN": "Geben Sie höchstens {{ maxLength }} Zeichen ein"
       },
-      "FILE_ALREADY_UPLOADED": "Eine Datei mit diesem Namen wurde bereits hochgeladen."
+      "FILE_ALREADY_UPLOADED": "Eine Datei mit diesem Namen wurde bereits hochgeladen.",
+      "ATTACH": "Anhängen"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Namenlose Aufgabe"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Beschreibung"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Titel"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Erstellen"
       },
@@ -175,7 +195,10 @@
       "NONE": "Keine",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Verwenden Sie ein Zahlenformat",
-        "INT_VALIDATION_ERROR": "Verwenden Sie ein Ganzzahlenformat"
+        "INT_VALIDATION_ERROR": "Verwenden Sie ein Ganzzahlenformat",
+        "LENGTH_VALIDATION_ERROR": "Wert muss zwischen {{ minLength }} und {{ maxLength }} lang sein",
+        "MATCH_VALIDATION_ERROR": "Wert muss dem folgenden Muster entsprechen: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Wert muss zwischen {{ minValue }} und {{ maxValue }} liegen"
       },
       "MORE": "Mehr"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Ersteller",
         "CREATED_DATE": "Datum der Erstellung",
         "MODIFIER": "Bearbeiter",
-        "MODIFIED_DATE": "Datum der Änderung"
+        "MODIFIED_DATE": "Datum der Änderung",
+        "CONTENT_TYPE": "Content-Typ"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Content-Typ ändern",
+          "DESCRIPTION": "Wenn Sie diese Änderung am Content-Typ vornehmen, werden dem Dokument einige Eigenschaften und gespeicherte Metadaten dauerhaft hinzugefügt.",
+          "CONFIRM": "Möchten Sie den Content-Typ wirklich ändern?",
+          "CANCEL": "Abbrechen",
+          "APPLY": "Änderungen speichern",
+          "VIEW_DETAILS": "Details anzeigen",
+          "PROPERTY": {
+            "NAME": "Name",
+            "DESCRIPTION": "Beschreibung",
+            "DATA_TYPE": "Datentyp"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Bearbeiten",
@@ -199,12 +238,14 @@
         "CANCEL": "Abbrechen",
         "CLEAR": "Löschen",
         "TOGGLE": "Umschaltwert",
-        "COPY_TO_CLIPBOARD": "Doppelklicken, um den Wert zu kopieren"
+        "COPY_TO_CLIPBOARD": "Doppelklicken, um den Wert zu kopieren",
+        "EDIT_ASPECTS": "Aspekt bearbeiten"
       },
       "ACCESSIBILITY": {
-        "EDIT": "Schaltfläche 'Hinzufügen'",
+        "EDIT": "Schaltfläche 'Bearbeiten'",
         "DATEPICKER": "Mit den Pfeiltasten können Sie zwischen den Daten wechseln. Mit den Aufwärts- und Abwärtspfeilen gelangen Sie zum selben Tag der vorherigen bzw. nächsten Woche, mit den Links- und Rechtspfeilen gelangen Sie zum vorherigen bzw. zum nächsten Tag. Drücken Sie die Eingabetaste, um ein Datum auszuwählen.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Wert in Zwischenablage kopiert"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Wert in Zwischenablage kopiert",
+        "EDIT_ASPECTS": "Aspekt bearbeiten"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Sie haben einen unbekannten Benutzernamen oder ein falsches Passwort eingegeben",
       "LOGIN-ERROR-PROVIDERS": "Provider müssen definiert werden",
       "LOGIN-ERROR-CORS": "CORS-Ausnahme; überprüfen Sie Ihre Serverkonfiguration",
-      "LOGIN-ERROR-CSRF": "CSRF exception, set [disableCsrf]=\"true\" in login.component",
+      "LOGIN-ERROR-CSRF": "CSRF-Aufnahme; \"disableCSRF\": true in app.config.json festlegen",
       "LOGIN-ECM-LICENSE": "Alfresco Content Services-Repository ist schreibgeschützt",
       "SSO-WRONG-CONFIGURATION": "Server für SSO-Authentifizierung nicht erreichbar"
     },
@@ -340,13 +381,16 @@
     "ARIA": {
       "PREVIOUS_PAGE": "Vorherige Seite",
       "NEXT_PAGE": "Nächste Seite",
-      "ZOOM_IN": "Vergrößern",
-      "ZOOM_OUT": "Verkleinern",
+      "ZOOM_IN": "Hineinzoomen",
+      "ZOOM_OUT": "Herauszoomen",
       "FIT_PAGE": "Seite anpassen",
-      "ROTATE_LEFT": "Nach links drehen",
-      "ROTATE_RIGHT": "Nach rechts drehen",
+      "ROTATE": "Drehen",
+      "CROP": "Zuschneiden",
+      "SAVE": "Speichern",
+      "CANCEL": "Abbrechen",
       "RESET": "Zurücksetzen",
-      "THUMBNAILS": "Dokumenten-Miniaturansichten"
+      "THUMBNAILS": "Dokumenten-Miniaturansichten",
+      "THUMBNAILS_PANLEL_CLOSE": "Miniaturansichten-Fenster schließen"
     },
     "PAGE_LABEL": {
       "SHOWING": "Angezeigt",
@@ -368,7 +412,8 @@
       "CLOSE": "Schließen",
       "PLACEHOLDER": "Passwort",
       "ERROR": "Passwort ist falsch"
-    }
+    },
+    "SUBTITLES": "Untertitel"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Es ist ein Fehler aufgetreten.",
       "DESCRIPTION": "Ungültiges Gateway. Versuchen Sie es noch einmal oder wenden Sie sich an den IT-Support. [502]",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Zurück zur Startseite"
+      }
+    },
+    "503": {
+      "TITLE": "Es ist ein Fehler aufgetreten.",
+      "DESCRIPTION": "Service vorübergehend nicht verfügbar [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Zum Kopieren klicken",
     "SUCCESS_COPY": "Text in Zwischenablage kopiert"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Suche",
+      "ARIA_LABEL": "Suchoptionen"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Löschen"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Es wird geladen..."
   }
 }

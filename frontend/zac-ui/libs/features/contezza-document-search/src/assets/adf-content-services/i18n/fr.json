@@ -4,6 +4,7 @@
       "RESTORE": "Restaurer",
       "DELETE": "Supprimer",
       "DOWNLOAD": "Télécharger",
+      "VIEW": "Afficher",
       "UPLOAD": {
         "TITLE": "Importer une nouvelle version",
         "TOOLTIP": "Restriction : pour créer une nouvelle version d'un fichier vous devez importer un fichier du même nom",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Type d'élément {{ type }}",
       "ARROW_ICON": "Icône flèche vers la droite"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Chargement..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Confirmer",
@@ -62,11 +60,6 @@
       "VIEW": "Afficher",
       "REMOVE": "Supprimer",
       "DOWNLOAD": "Télécharger"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtrer par {{ category }}",
-      "CLEAR": "Supprimer",
-      "APPLY": "Appliquer"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Annuler",
     "CHOOSE": "Sélectionner",
+    "ATTACH": "Joindre",
     "CHOOSE_ITEM": "Sélectionner le contenu à joindre à partir de '{{ name }}'",
     "COPY": "Copier",
     "COPY_ITEM": "Copier '{{ name }}' dans...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Aucun résultat trouvé",
     "SEARCH": "Rechercher",
     "SEARCH_RESULTS": "Résultats de la recherche",
-    "SELECT_LOCATION": "Sélectionner l'emplacement"
+    "SELECT_LOCATION": "Sélectionner l'emplacement",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Impossible d'importer un fichier pendant une recherche",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "L'utilisateur n'est pas autorisé à importer du contenu dans le dossier",
+    "REPOSITORY": "Entrepôt",
+    "UPLOAD_FROM_DEVICE": "Importer depuis votre appareil"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -113,13 +111,13 @@
   },
   "TAG": {
     "LABEL": {
-      "NEWTAG": "Nouveau Tag"
+      "NEWTAG": "Nouvelle balise"
     },
     "MESSAGES": {
-      "EXIST": "Le tag existe déjà"
+      "EXIST": "La balise existe déjà"
     },
     "BUTTON": {
-      "ADD": "Ajouter un Tag"
+      "ADD": "Ajouter une balise"
     }
   },
   "ADF_FILE_UPLOAD": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Rechercher",
         "CLEAR": "Supprimer",
         "APPLY": "Appliquer",
         "CLEAR-ALL": "Supprimer tout",
         "SHOW-MORE": "Afficher plus",
-        "SHOW-LESS": "Montrer moins",
-        "FILTER-CATEGORY": "Filtrer par catégorie"
+        "SHOW-LESS": "Montrer moins"
       },
       "BUTTONS": {
+        "CLOSE": "Fermer",
+        "REMOVE": "Supprimer",
+        "APPLY": "Appliquer",
         "CLEAR-ALL": {
           "LABEL": "Supprimer tout",
           "TOOLTIP": "Toutes les sélections seront supprimées"
@@ -253,7 +254,9 @@
         "NO-DAYS": "Aucun jour sélectionné.",
         "INVALID-FORMAT": "Format non valide",
         "INVALID-DATE": "Date non valide. La date doit être au format '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "La date est postérieure à la date maximum."
+        "BEYOND-MAX-DATE": "La date est postérieure à la date maximum.",
+        "INVALID-DATETIME": "Date et heure incorrectes. La date et l'heure doivent être au format '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "La date et l'heure sont postérieures à la limite autorisée."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Démarrer le processus"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Configuration inconnue",
+    "SEARCH_HEADER": {
+      "TITLE": "Filtre",
+      "TYPE": "Type",
+      "FILTER_BY": "Filtrer par {{ category }}",
+      "CLEAR": "Supprimer",
+      "APPLY": "Appliquer",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Nom",
+          "PLACEHOLDER": "Saisir le nom"
+        },
+        "TYPE": {
+          "TITLE": "Cocher le type",
+          "FOLDER": "Dossier",
+          "DOCUMENT": "Document"
+        },
+        "SIZE": {
+          "TITLE": "Taille du contenu (plage)",
+          "SMALL": "Petite",
+          "MEDIUM": "Moyenne",
+          "LARGE": "Grande",
+          "HUGE": "Énorme"
+        },
+        "DATE": {
+          "TITLE": "Date de création (plage)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Créateur",
       "CREATED_DATE": "Date de création",
       "MODIFIER": "Modificateur",
-      "MODIFIED_DATE": "Date de Modification"
+      "MODIFIED_DATE": "Date de Modification",
+      "CONTENT_TYPE": "Type de contenu"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Modifier le type de contenu",
+        "DESCRIPTION": "Si vous modifiez le type de contenu, certaines propriétés et métadonnées stockées seront ajoutées de manière permanente au document.",
+        "CONFIRM": "Voulez-vous vraiment modifier le type de contenu ?",
+        "CANCEL": "Annuler",
+        "APPLY": "Enregistrer les modif.",
+        "VIEW_DETAILS": "Afficher les détails",
+        "PROPERTY": {
+          "NAME": "Nom",
+          "DESCRIPTION": "Description",
+          "DATA_TYPE": "Type de données"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Erreur lors de la mise à jour de la propriété",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Pas de droit d'accès"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Rechercher",
+      "SEARCH": "Rechercher des utilisateurs ou des groupes à ajouter",
+      "TITLE": "Ajouter des droits d'accès",
       "TYPE-MESSAGE": "Entrez du texte pour rechercher des groupes ou des personnes",
       "NO-RESULT": "La recherche n'a donné aucun résultat",
+      "SELECT-ACTION": "Sélectionner",
       "ADD-ACTION": "Ajouter",
-      "CLOSE-ACTION": "Fermer",
+      "CLOSE-ACTION": "Annuler",
       "BASE-DIALOG-TITLE": "Rechercher un groupe ou une personne à ajouter...",
       "EVERYONE": "Tout le monde"
     },
+    "COLUMN": {
+      "NAME": "Utilisateurs et groupes ({{ count }})",
+      "LOCATION": "Emplacement",
+      "BULK-ROLE": "Définir tous les rôles sur"
+    },
+    "LABELS": {
+      "ON": "Activé",
+      "OFF": "Désactivé",
+      "DIRECT-PERMISSIONS": "Droits d'accès directement appliqués",
+      "INHERITED-PERMISSIONS": "Droits d'accès hérités",
+      "INHERITED-SUBTITLE": "{{count}} utilisateurs ou groupes héritent des droits d'accès d'un dossier parent",
+      "SELECT-ROLE": "Sélectionner un rôle"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Aucun utilisateur/groupe",
+      "EMPTY-SUBTITLE": "Ajouter un utilisateur/groupe pour gérer les droits d'accès.",
+      "NO-MEMBERS": "Ajouter des groupes ou des personnes pour gérer les rôles",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "{{user}} utilisateur(s) {{group}} groupe(s) mis à jour",
+      "PERMISSION-UPDATE-SUCCESS": "Utilisateur/groupe mis à jour",
+      "PERMISSION-UPDATE-FAIL": "Impossible de mettre à jour l'utilisateur/le groupe",
+      "PERMISSION-BULK-DELETE-SUCCESS": "{{user}} utilisateur(s) {{group}} groupe(s) supprimé(s)",
+      "PERMISSION-DELETE-SUCCESS": "Utilisateur/groupe supprimé",
+      "PERMISSION-DELETE-FAIL": "Impossible de supprimer l'utilisateur/le groupe",
+      "PERMISSION-ADD-SUCCESS": "{{user}} utilisateur(s) {{group}} groupe(s) ajouté(s)",
+      "PERMISSION-ADD-FAIL": "Impossible d'ajouter l'utilisateur/le groupe",
+      "INHERIT-ENABLE-SUCCESS": "Droits d'accès hérités activés",
+      "INHERIT-DISABLE-SUCCESS": "Droits d'accès hérités désactivés",
+      "TOGGLE-PERMISSION-FAILED": "Impossible d'activer/désactiver Hériter des droits d'accès"
+    },
+    "ACTION": {
+      "DELETE": "Supprimer",
+      "ADD-PERMISSION": "Ajouter un utilisateur ou un groupe"
+    },
     "ERROR": {
+      "NOT-FOUND": "Cet élément n'existe plus ou vous n'avez pas les droits pour le consulter.",
       "DUPLICATE-PERMISSION": "Un ou plusieurs droits d'accès définis existent déjà : {{list}}",
       "NOT-ALLOWED": "Vous n'avez pas le droit de modifier les droits d'accès"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Gestionnaire",
       "COLLABORATOR": "Collaborateur",
       "CONTRIBUTOR": "Contributeur",
-      "CONSUMER": "Lecteur"
+      "CONSUMER": "Lecteur",
+      "NONE": "N'est pas un membre"
     },
     "VISIBILITY": {
       "PRIVATE": "Liste privée",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Ouvrir {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Nom de la propriété",
+    "DESCRIPTION": "Description",
+    "DATA_TYPE": "Type de données",
+    "DIALOG": {
+      "TITLE": "Personnaliser les propriétés",
+      "DESCRIPTION": "Gérer les propriétés associées au(x) fichier(s) sélectionné(s). Choisir parmi les aspects de propriétés répertoriés ci-dessous pour afficher et appliquer des métadonnées et fonctionnalités supplémentaires",
+      "RESET": "Réinitialiser",
+      "CLEAR": "Supprimer",
+      "CANCEL": "Annuler",
+      "APPLY": "Appliquer",
+      "OVER-TABLE-MESSAGE": "Sélectionner les aspects des propriétés",
+      "SELECTED": "Sélectionné"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} sélectionné(s)"
+  },
+  "swsdp": "Exemple : projet de conception de site Web"
 }

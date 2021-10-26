@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewEncapsulation} from '@angular/core';
 
 /**
  * Wrapper component that contains the document upload of this application
@@ -15,7 +15,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 @Component({
   selector: 'gu-document-toevoegen-contezza',
   templateUrl: './document-toevoegen-contezza.component.html',
-  styleUrls: ['./document-toevoegen-contezza.component.scss']
+  styleUrls: ['./document-toevoegen-contezza.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class DocumentToevoegenContezzaComponent {
   @Input() mainZaakUrl: string;

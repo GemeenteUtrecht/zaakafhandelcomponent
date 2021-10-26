@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Язык",
+    "ROLES": {
+      "ALL": "Все",
+      "CONTRIBUTOR": "Писатель",
+      "COLLABORATOR": "Редактор",
+      "COORDINATOR": "Координатор",
+      "EDITOR": "Корректор",
+      "CONSUMER": "Читатель",
+      "SITECOLLABORATOR": "Редактор сайта",
+      "SITECONSUMER": "Читатель сайта",
+      "SITECONTRIBUTOR": "Писатель сайта",
+      "SITEMANAGER": "Менеджер сайта"
+    }
+  },
   "SAVE": "Сохранить",
   "COMPLETE": "Завершить",
   "CANCEL": "Отмена",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Освободить",
   "START PROCESS": "Начать процесс",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Нет сообщений",
+    "NO_MESSAGE": "В настоящее время у вас нет уведомлений.",
     "TITLE": "Оповещения",
     "MARK_AS_READ": "Отметить все как прочитанное",
-    "SYSTEM": "Система"
+    "SYSTEM": "Система",
+    "LOAD_MORE": "Загрузить еще"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Локальное хранение",
       "SOURCE": "Выберите источник из ",
-      "SHOW_FILE": "Показать",
+      "VIEW_FILE": "Посмотреть",
       "DOWNLOAD_FILE": "Скачать",
       "REMOVE_FILE": "Удалить",
       "UPLOAD": "Загрузить",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Введите не менее {{ minLength }} символов",
         "NO_LONGER_THAN": "Введите не более {{ maxLength }} символов"
       },
-      "FILE_ALREADY_UPLOADED": "Файл с таким названием уже загружен."
+      "FILE_ALREADY_UPLOADED": "Файл с таким названием уже загружен.",
+      "ATTACH": "Прикрепить"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Задача без имени"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Описание"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Заголовок"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Создать"
       },
@@ -175,7 +195,10 @@
       "NONE": "Нет",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Использовать формат числа",
-        "INT_VALIDATION_ERROR": "Использовать формат целого числа"
+        "INT_VALIDATION_ERROR": "Использовать формат целого числа",
+        "LENGTH_VALIDATION_ERROR": "Значение должно находиться в пределах от {{ minLength }} до {{ maxLength }} по длине",
+        "MATCH_VALIDATION_ERROR": "Значение не совпадает с шаблоном: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Значение должно находиться в пределах от {{ minValue }} до {{ maxValue }}"
       },
       "MORE": "Больше"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Создатель",
         "CREATED_DATE": "Дата создания",
         "MODIFIER": "Редактор",
-        "MODIFIED_DATE": "Дата изменения"
+        "MODIFIED_DATE": "Дата изменения",
+        "CONTENT_TYPE": "Тип содержимого"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Изменить тип содержимого",
+          "DESCRIPTION": "Внесение этого изменения в тип содержимого навсегда добавит в документ некоторые свойства и сохраненные метаданные.",
+          "CONFIRM": "Вы уверены, что хотите изменить тип содержимого?",
+          "CANCEL": "Отмена",
+          "APPLY": "Сохранить изменения",
+          "VIEW_DETAILS": "Посмотреть детали",
+          "PROPERTY": {
+            "NAME": "Имя",
+            "DESCRIPTION": "Описание",
+            "DATA_TYPE": "Тип данных"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Редактировать",
@@ -199,12 +238,14 @@
         "CANCEL": "Отмена",
         "CLEAR": "Очистить",
         "TOGGLE": "Переключить значение",
-        "COPY_TO_CLIPBOARD": "Нажмите дважды, чтобы скопировать значение"
+        "COPY_TO_CLIPBOARD": "Нажмите дважды, чтобы скопировать значение",
+        "EDIT_ASPECTS": "Изменить аспект"
       },
       "ACCESSIBILITY": {
         "EDIT": "Редактировать кнопку",
         "DATEPICKER": "Используйте клавиши со стрелками для перехода между датами. Стрелки вверх и вниз перемещают к следующей или предыдущей неделе, без изменения дня. Стрелки влево и вправо перемещают к следующему или предыдущему дню. Нажмите кнопку выхода или возврата для выбора даты.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Значение скопировано в буфер обмена"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Значение скопировано в буфер обмена",
+        "EDIT_ASPECTS": "Изменить аспект"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Вы ввели неверное имя пользователя или пароль",
       "LOGIN-ERROR-PROVIDERS": "Поставщики не могут оставаться неопределенными",
       "LOGIN-ERROR-CORS": "Исключение CORS, проверьте конфигурацию сервера",
-      "LOGIN-ERROR-CSRF": "Исключение CSRF, установите [disableCsrf]=\"true\" в login.component",
+      "LOGIN-ERROR-CSRF": "Исключение CSRF, задайте \"disableCSRF\": true в app.config.json",
       "LOGIN-ECM-LICENSE": "Репозиторий Alfresco Content Services находится в режиме только для чтения",
       "SSO-WRONG-CONFIGURATION": "Сервер авторизации SSO недоступен"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Увеличить",
       "ZOOM_OUT": "Уменьшить",
       "FIT_PAGE": "По размеру страницы",
-      "ROTATE_LEFT": "Повернуть влево",
-      "ROTATE_RIGHT": "Повернуть вправо",
+      "ROTATE": "Повернуть",
+      "CROP": "Обрезать",
+      "SAVE": "Сохранить",
+      "CANCEL": "Отмена",
       "RESET": "Сброс",
-      "THUMBNAILS": "Миниатюры документов"
+      "THUMBNAILS": "Миниатюры документов",
+      "THUMBNAILS_PANLEL_CLOSE": "Закрыть панель эскизов"
     },
     "PAGE_LABEL": {
       "SHOWING": "Отображается",
@@ -368,7 +412,8 @@
       "CLOSE": "Закрыть",
       "PLACEHOLDER": "Пароль",
       "ERROR": "Неверный пароль"
-    }
+    },
+    "SUBTITLES": "Субтитры"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Произошла ошибка.",
       "DESCRIPTION": "Ошибка шлюза. Повторите попытку или обратитесь в службу ИТ-поддержки [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Назад на главную"
+      }
+    },
+    "503": {
+      "TITLE": "Произошла ошибка.",
+      "DESCRIPTION": "Сервис временно недоступен [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Нажмите, чтобы скопировать",
     "SUCCESS_COPY": "Текст скопирован в буфер обмена"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Поиск",
+      "ARIA_LABEL": "Параметры поиска"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Очистить"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Загрузка..."
   }
 }

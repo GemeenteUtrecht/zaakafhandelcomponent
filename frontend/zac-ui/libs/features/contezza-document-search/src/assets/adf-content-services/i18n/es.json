@@ -4,6 +4,7 @@
       "RESTORE": "Restaurar",
       "DELETE": "Eliminar",
       "DOWNLOAD": "Descargar",
+      "VIEW": "Ver",
       "UPLOAD": {
         "TITLE": "Cargar nueva versión",
         "TOOLTIP": "Restricción: debe cargar un fichero con el mismo nombre para crear una nueva versión del mismo",
@@ -28,9 +29,6 @@
       "ICON_TEXT": "Tipo de elemento {{ type }}",
       "ARROW_ICON": "Icono de dirección a la derecha"
     }
-  },
-  "ADF_DROPDOWN": {
-    "LOADING": "Cargando..."
   },
   "ADF_CONFIRM_DIALOG": {
     "TITLE": "Confirmar",
@@ -62,11 +60,6 @@
       "VIEW": "Ver",
       "REMOVE": "Eliminar",
       "DOWNLOAD": "Descargar"
-    },
-    "FILTER_MENU": {
-      "FILTER_BY": "Filtrar por {{ category }}",
-      "CLEAR": "Borrar",
-      "APPLY": "Aplicar"
     }
   },
   "ALFRESCO_DOCUMENT_LIST": {
@@ -84,6 +77,7 @@
   "NODE_SELECTOR": {
     "CANCEL": "Cancelar",
     "CHOOSE": "Seleccionar",
+    "ATTACH": "Adjuntar",
     "CHOOSE_ITEM": "Seleccione el contenido que adjuntar de '{{ name }}'",
     "COPY": "Copiar",
     "COPY_ITEM": "Copiar '{{ name }}' a...",
@@ -92,7 +86,11 @@
     "NO_RESULTS": "Ningún resultado encontrado",
     "SEARCH": "Buscar",
     "SEARCH_RESULTS": "Resultados de la búsqueda",
-    "SELECT_LOCATION": "Seleccionar ubicación"
+    "SELECT_LOCATION": "Seleccionar ubicación",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "No puede cargar un fichero mientras se está realizando una búsqueda",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "El usuario no tiene permiso para cargar contenido en la carpeta",
+    "REPOSITORY": "Repositorio",
+    "UPLOAD_FROM_DEVICE": "Cargar desde su dispositivo"
   },
   "OPERATION": {
     "SUCCESS": {
@@ -225,14 +223,17 @@
     },
     "FILTER": {
       "ACTIONS": {
+        "SEARCH": "Buscar",
         "CLEAR": "Borrar",
         "APPLY": "Aplicar",
         "CLEAR-ALL": "Borrar todo",
         "SHOW-MORE": "Mostrar más",
-        "SHOW-LESS": "Mostrar menos",
-        "FILTER-CATEGORY": "Filtrar por categoría"
+        "SHOW-LESS": "Mostrar menos"
       },
       "BUTTONS": {
+        "CLOSE": "Cerrar",
+        "REMOVE": "Eliminar",
+        "APPLY": "Aplicar",
         "CLEAR-ALL": {
           "LABEL": "Borrar todo",
           "TOOLTIP": "Esto eliminará todo lo seleccionado"
@@ -253,7 +254,9 @@
         "NO-DAYS": "No se han seleccionado días.",
         "INVALID-FORMAT": "Formato no válido",
         "INVALID-DATE": "Fecha no válida. La fecha debe tener el formato '{{ requiredFormat }}'",
-        "BEYOND-MAX-DATE": "La fecha es posterior a la fecha máxima."
+        "BEYOND-MAX-DATE": "La fecha es posterior a la fecha máxima.",
+        "INVALID-DATETIME": "Fecha y hora no válidas. La fecha y hora deben tener el formato '{{requiredFormat}}'",
+        "BEYOND-MAX-DATETIME": "La fecha y hora son posteriores a la fecha y hora máximas."
       }
     },
     "ICONS": {
@@ -289,6 +292,35 @@
           "PROCESS_ACTION": "Iniciar proceso"
         }
       }
+    },
+    "UNKNOWN_CONFIGURATION": "Configuración desconocida",
+    "SEARCH_HEADER": {
+      "TITLE": "Filtrar",
+      "TYPE": "Tipo",
+      "FILTER_BY": "Filtrar por {{ category }}",
+      "CLEAR": "Borrar",
+      "APPLY": "Aplicar",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Nombre",
+          "PLACEHOLDER": "Introduzca el nombre"
+        },
+        "TYPE": {
+          "TITLE": "Marque el tipo",
+          "FOLDER": "Carpeta",
+          "DOCUMENT": "Documento"
+        },
+        "SIZE": {
+          "TITLE": "Tamaño de contenido (rango)",
+          "SMALL": "Pequeño",
+          "MEDIUM": "Mediano",
+          "LARGE": "Grande",
+          "HUGE": "Enorme"
+        },
+        "DATE": {
+          "TITLE": "Fecha de creación (rango)"
+        }
+      }
     }
   },
   "PERMISSION": {
@@ -306,7 +338,23 @@
       "CREATOR": "Creador",
       "CREATED_DATE": "Fecha de creación",
       "MODIFIER": "Modificador",
-      "MODIFIED_DATE": "Fecha de modificación"
+      "MODIFIED_DATE": "Fecha de modificación",
+      "CONTENT_TYPE": "Tipo de contenido"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Cambiar tipo de contenido",
+        "DESCRIPTION": "Al realizar este cambio de tipo de contenido, se añadirán propiedades y se guardarán metadatos en el documento de forma permanente.",
+        "CONFIRM": "¿Está seguro de que desea cambiar el tipo de contenido?",
+        "CANCEL": "Cancelar",
+        "APPLY": "Guardar cambios",
+        "VIEW_DETAILS": "Ver los detalles",
+        "PROPERTY": {
+          "NAME": "Nombre",
+          "DESCRIPTION": "Descripción",
+          "DATA_TYPE": "Tipo de datos"
+        }
+      }
     },
     "ERRORS": {
       "GENERIC": "Error al actualizar la propiedad",
@@ -341,15 +389,51 @@
       "NO_PERMISSIONS": "Sin permisos"
     },
     "ADD-PERMISSION": {
-      "SEARCH": "Buscar",
+      "SEARCH": "Buscar usuarios o grupos que añadir",
+      "TITLE": "Añadir permiso",
       "TYPE-MESSAGE": "Escriba algo para comenzar a buscar grupos o personas",
       "NO-RESULT": "No se han encontrado resultados para esta búsqueda",
+      "SELECT-ACTION": "Seleccionar",
       "ADD-ACTION": "Añadir",
-      "CLOSE-ACTION": "Cerrar",
+      "CLOSE-ACTION": "Cancelar",
       "BASE-DIALOG-TITLE": "Buscar un grupo o personas para añadir...",
       "EVERYONE": "Todos"
     },
+    "COLUMN": {
+      "NAME": "Usuarios y grupos ({{ count }})",
+      "LOCATION": "Ubicación",
+      "BULK-ROLE": "Definir todas las funciones a"
+    },
+    "LABELS": {
+      "ON": "Activado",
+      "OFF": "Desactivado",
+      "DIRECT-PERMISSIONS": "Permiso aplicado directamente",
+      "INHERITED-PERMISSIONS": "Permiso heredado",
+      "INHERITED-SUBTITLE": "{{count}} usuarios o grupos están heredando el permiso de una carpeta principal",
+      "SELECT-ROLE": "Seleccionar función"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Sin usuarios/grupos",
+      "EMPTY-SUBTITLE": "Añadir un usuario/grupo para administrar el permiso.",
+      "NO-MEMBERS": "Añadir grupos o personas para administrar funciones",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Usuario(s) {{user}} grupo(s) {{group}} actualizados",
+      "PERMISSION-UPDATE-SUCCESS": "Usuario/Grupo actualizado",
+      "PERMISSION-UPDATE-FAIL": "Error al actualizar usuario/grupo",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Usuario(s) {{user}} grupo(s) {{group}} eliminados",
+      "PERMISSION-DELETE-SUCCESS": "Usuario/Grupo eliminado",
+      "PERMISSION-DELETE-FAIL": "Error al eliminar usuario/grupo",
+      "PERMISSION-ADD-SUCCESS": "Usuario(s) {{user}} grupo(s) {{group}} añadidos",
+      "PERMISSION-ADD-FAIL": "Error al añadir usuario/grupo",
+      "INHERIT-ENABLE-SUCCESS": "Permiso heredado habilitado",
+      "INHERIT-DISABLE-SUCCESS": "Permiso heredado inhabilitado",
+      "TOGGLE-PERMISSION-FAILED": "Error al alternar permiso heredado"
+    },
+    "ACTION": {
+      "DELETE": "Eliminar",
+      "ADD-PERMISSION": "Añadir usuario o grupo"
+    },
     "ERROR": {
+      "NOT-FOUND": "Este elemento ya no existe o no tiene permiso para verlo.",
       "DUPLICATE-PERMISSION": "Uno o más de los permisos que ha establecido ya existe: {{list}}",
       "NOT-ALLOWED": "No puede cambiar los permisos"
     }
@@ -378,7 +462,8 @@
       "MANAGER": "Administrador",
       "COLLABORATOR": "Colaborador",
       "CONTRIBUTOR": "Contribuidor",
-      "CONSUMER": "Consumidor"
+      "CONSUMER": "Consumidor",
+      "NONE": "No es miembro"
     },
     "VISIBILITY": {
       "PRIVATE": "Lista privada",
@@ -414,5 +499,24 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Abrir {{ name }}"
     }
-  }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Nombre de la propiedad",
+    "DESCRIPTION": "Descripción",
+    "DATA_TYPE": "Tipo de datos",
+    "DIALOG": {
+      "TITLE": "Personalizar propiedades",
+      "DESCRIPTION": "Gestione las propiedades asociadas con los ficheros seleccionados. Elija entre los aspectos de las propiedad que se enumeran a continuación, para mostrar y aplicar los metadatos y funcionalidades adicionales",
+      "RESET": "Reiniciar",
+      "CLEAR": "Borrar",
+      "CANCEL": "Cancelar",
+      "APPLY": "Aplicar",
+      "OVER-TABLE-MESSAGE": "Seleccionar aspectos de propiedades",
+      "SELECTED": "Seleccionado"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} seleccionado(s)"
+  },
+  "swsdp": "Ejemplo: Proyecto de diseño de sitio web"
 }

@@ -1,4 +1,19 @@
 {
+  "ADF": {
+    "LANGUAGE": "Kieli",
+    "ROLES": {
+      "ALL": "Kaikki",
+      "CONTRIBUTOR": "Osallistuja",
+      "COLLABORATOR": "Yhteistyökumppani",
+      "COORDINATOR": "Koordinaattori",
+      "EDITOR": "Muokkaaja",
+      "CONSUMER": "Kuluttaja",
+      "SITECOLLABORATOR": "Sivuston yhteistyökumppani",
+      "SITECONSUMER": "Sivuston kuluttaja",
+      "SITECONTRIBUTOR": "Sivuston osallistuja",
+      "SITEMANAGER": "Sivuston vastaava"
+    }
+  },
   "SAVE": "Tallenna",
   "COMPLETE": "Merkitse valmiiksi",
   "CANCEL": "Peruuta",
@@ -6,10 +21,11 @@
   "UNCLAIM": "Vapauta",
   "START PROCESS": "Käynnistä prosessi",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "Ei viestejä",
+    "NO_MESSAGE": "Sinulla ei ole ilmoituksia.",
     "TITLE": "Ilmoitukset",
     "MARK_AS_READ": "Merkitse kaikki luetuiksi",
-    "SYSTEM": "Järjestelmä"
+    "SYSTEM": "Järjestelmä",
+    "LOAD_MORE": "Lataa lisää"
   },
   "FORM": {
     "START_FORM": {
@@ -21,7 +37,7 @@
     "FIELD": {
       "LOCALSTORAGE": "Paikallinen tallennustila",
       "SOURCE": "Valitse lähde kohteesta: ",
-      "SHOW_FILE": "Näytä",
+      "VIEW_FILE": "Näytä",
       "DOWNLOAD_FILE": "Lataa",
       "REMOVE_FILE": "Poista",
       "UPLOAD": "Lataa",
@@ -36,7 +52,8 @@
         "AT_LEAST_LONG": "Anna vähintään {{ minLength }} merkkiä",
         "NO_LONGER_THAN": "Anna enintään {{ maxLength }} merkkiä"
       },
-      "FILE_ALREADY_UPLOADED": "Samanniminen tiedosto on jo ladattu."
+      "FILE_ALREADY_UPLOADED": "Samanniminen tiedosto on jo ladattu.",
+      "ATTACH": "Liitä"
     },
     "FORM_RENDERER": {
       "NAMELESS_TASK": "Nimetön tehtävä"
@@ -111,6 +128,9 @@
       "FOLDER_DESCRIPTION": {
         "LABEL": "Kuvaus"
       },
+      "FOLDER_TITLE": {
+        "LABEL": "Otsikko"
+      },
       "CREATE_BUTTON": {
         "LABEL": "Luo"
       },
@@ -175,7 +195,10 @@
       "NONE": "Ei mitään",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Käytä numeromuotoa",
-        "INT_VALIDATION_ERROR": "Käytä kokonaislukumuotoa"
+        "INT_VALIDATION_ERROR": "Käytä kokonaislukumuotoa",
+        "LENGTH_VALIDATION_ERROR": "Arvon tulee olla pituudeltaan {{ minLength }} ja {{ maxLength }} välillä",
+        "MATCH_VALIDATION_ERROR": "Arvo ei vastaa kaavaa: {{ expression }}",
+        "MINMAX_VALIDATION_ERROR": "Arvon tulee olla {{ minValue }} ja {{ maxValue }} välillä"
       },
       "MORE": "Lisää"
     },
@@ -191,7 +214,23 @@
         "CREATOR": "Tekijä",
         "CREATED_DATE": "Luontipäivämäärä",
         "MODIFIER": "Muokkaaja",
-        "MODIFIED_DATE": "Muokkauspäivämäärä"
+        "MODIFIED_DATE": "Muokkauspäivämäärä",
+        "CONTENT_TYPE": "Sisältötyyppi"
+      },
+      "CONTENT_TYPE": {
+        "DIALOG": {
+          "TITLE": "Muuta sisältötyyppi",
+          "DESCRIPTION": "Sisältötyypin muuttaminen lisää asiakirjaan pysyvästi joitakin ominaisuuksia ja säilöttyjä metatietoja.",
+          "CONFIRM": "Haluatko varmasti muuttaa sisältötyypin?",
+          "CANCEL": "Peruuta",
+          "APPLY": "Tallenna muutokset",
+          "VIEW_DETAILS": "Näytä tiedot",
+          "PROPERTY": {
+            "NAME": "Nimi",
+            "DESCRIPTION": "Kuvaus",
+            "DATA_TYPE": "Tietotyyppi"
+          }
+        }
       },
       "ACTIONS": {
         "EDIT": "Muokkaa",
@@ -199,12 +238,14 @@
         "CANCEL": "Peruuta",
         "CLEAR": "Tyhjennä",
         "TOGGLE": "Vaihda arvoa",
-        "COPY_TO_CLIPBOARD": "Kopioi arvo kaksoisnapsauttamalla"
+        "COPY_TO_CLIPBOARD": "Kopioi arvo kaksoisnapsauttamalla",
+        "EDIT_ASPECTS": "Muokkaa ominaisuusjoukkoja"
       },
       "ACCESSIBILITY": {
         "EDIT": "Muokkaa-painike",
         "DATEPICKER": "Navigoi päivämäärien välillä nuolinäppäinten avulla. Nuolet ylös ja alas siirtävät seuraavaan tai edelliseen viikkoon, mutta samaan viikonpäivään. Nuolet vasemmalle ja oikealle siirtävät seuraavan tai edelliseen päivään. Valitse päivämäärä Enter-näppäimellä.",
-        "COPY_TO_CLIPBOARD_MESSAGE": "Arvo kopioitu leikepöydälle"
+        "COPY_TO_CLIPBOARD_MESSAGE": "Arvo kopioitu leikepöydälle",
+        "EDIT_ASPECTS": "Muokkaa ominaisuusjoukkoja"
       }
     },
     "SEARCH": {
@@ -248,7 +289,7 @@
       "LOGIN-ERROR-CREDENTIALS": "Annoit tuntemattoman käyttäjänimen tai salasanan",
       "LOGIN-ERROR-PROVIDERS": "Palveluiden määritystä ei voi poistaa",
       "LOGIN-ERROR-CORS": "Ilmeni CORS-poikkeus, tarkista palvelinmääritykset",
-      "LOGIN-ERROR-CSRF": "Ilmeni CSRF-poikkeus, määritä asetuksen [disableCsrf] arvoksi \"true\" kohteessa login.component",
+      "LOGIN-ERROR-CSRF": "Ilmeni CSRF-poikkeus, määritä asetuken \"disableCSRF\": arvoksi true kohteessa app.config.json",
       "LOGIN-ECM-LICENSE": "Alfresco Content Services -säilö on Vain luku -tilassa",
       "SSO-WRONG-CONFIGURATION": "Kertakirjautumisen todennuspalvelimeen ei saada yhteyttä"
     },
@@ -343,10 +384,13 @@
       "ZOOM_IN": "Lähennä",
       "ZOOM_OUT": "Loitonna",
       "FIT_PAGE": "Sovita sivu",
-      "ROTATE_LEFT": "Käännä vasemmalle",
-      "ROTATE_RIGHT": "Käännä oikealle",
+      "ROTATE": "Kierrä",
+      "CROP": "Rajaa",
+      "SAVE": "Tallenna",
+      "CANCEL": "Peruuta",
       "RESET": "Nollaa",
-      "THUMBNAILS": "Asiakirjojen esikatselukuvakkeet"
+      "THUMBNAILS": "Asiakirjojen esikatselukuvakkeet",
+      "THUMBNAILS_PANLEL_CLOSE": "Sulje pikkukuvapaneeli"
     },
     "PAGE_LABEL": {
       "SHOWING": "Näytetään",
@@ -368,7 +412,8 @@
       "CLOSE": "Sulje",
       "PLACEHOLDER": "Salasana",
       "ERROR": "Salasana on väärä"
-    }
+    },
+    "SUBTITLES": "Tekstitykset"
   },
   "ERROR_CONTENT": {
     "UNKNOWN": {
@@ -414,6 +459,16 @@
     "502": {
       "TITLE": "Tapahtui virhe.",
       "DESCRIPTION": "Virheellinen yhdyskäytävä, yritä uudelleen tai ota yhteyttä IT-tukeen [502].",
+      "SECONDARY_BUTTON": {
+        "TEXT": ""
+      },
+      "RETURN_BUTTON": {
+        "TEXT": "Takaisin aloitussivulle"
+      }
+    },
+    "503": {
+      "TITLE": "Tapahtui virhe.",
+      "DESCRIPTION": "Palvelu ei ole tilapäisesti saatavilla [503].",
       "SECONDARY_BUTTON": {
         "TEXT": ""
       },
@@ -502,5 +557,17 @@
   "CLIPBOARD": {
     "CLICK_TO_COPY": "Kopioi napsauttamalla",
     "SUCCESS_COPY": "Teksti kopioitiin leikepöydälle"
+  },
+  "SELECT_FILTER": {
+    "INPUT": {
+      "PLACEHOLDER": "Hae",
+      "ARIA_LABEL": "Haun valikko"
+    },
+    "BUTTON": {
+      "ARIA_LABEL": "Tyhjennä"
+    }
+  },
+  "ADF_DROPDOWN": {
+    "LOADING": "Ladataan..."
   }
 }

@@ -1,60 +1,15 @@
 {
-    "ecmHost": "http://{hostname}{:port}",
-    "providers" : "ECM",
-    "pagination": {
-      "size": 25,
-      "supportedPageSizes": [5, 10, 25, 50, 100, 150]
-    },
-    "application": {
-      "name": "Contezza Elements"
-    },
-    "SEARCH_QUERY": "TYPE:'cm:content' AND -ASPECT:'rgbz:enkelvoudigInformatieobject' AND -ASPECT:'tza:eio'",
-    "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
-    "ALFRESCO_PREVIEW_URL": "https://alfresco-oz.utrechtproeftuin.nl",
-    "documentList": {
-      "columns": [
-        {
-          "id": "app.files.thumbnail",
-          "key": "$thumbnail",
-          "type": "image",
-          "sortable": false,
-          "desktopOnly": false
-        },
-        {
-          "id": "app.files.name",
-          "key": "name",
-          "title": "APP.DOCUMENT_LIST.COLUMNS.NAME",
-          "type": "text",
-          "class": "full-width ellipsis-cell",
-          "sortable": true,
-          "template": "app.columns.name",
-          "desktopOnly": false
-        },
-        {
-          "id": "app.files.size",
-          "key": "content.sizeInBytes",
-          "title": "APP.DOCUMENT_LIST.COLUMNS.SIZE",
-          "type": "fileSize",
-          "sortable": true,
-          "desktopOnly": true
-        },
-        {
-          "id": "app.files.modifiedOn",
-          "key": "modifiedAt",
-          "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_ON",
-          "type": "date",
-          "format": "timeAgo",
-          "sortable": true,
-          "desktopOnly": true
-        },
-        {
-          "id": "app.files.modifiedBy",
-          "key": "modifiedByUser.displayName",
-          "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_BY",
-          "type": "text",
-          "sortable": true,
-          "desktopOnly": true
-        }
-      ]
-    }
-  }
+  "ecmHost": "{protocol}//{hostname}{:port}",
+  "providers": "ECM",
+  "locale": "nl",
+  "pagination": {
+    "size": 25,
+    "supportedPageSizes": [5, 10, 25, 50, 100, 150]
+  },
+  "application": {
+    "name": "Contezza ZAC Documentlist"
+  },
+  "SEARCH_QUERY": "TYPE:'cm:content'",
+  "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
+  "ALFRESCO_PREVIEW_URL": "https://alfresco-tezza.aks.utrechtproeftuin.nl"
+}
