@@ -23,6 +23,9 @@
     margin: 0;
     padding: 0;
   }
+  &--accent {
+    color: $color-orange;
+  }
   &--hint {
     color: $color-dimgray;
     display: block;

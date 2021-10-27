@@ -1,15 +1,7 @@
 <div class="keten-processen card">
   <h2 class="d-inline-block mr-2">Acties</h2>
-  <button gu-button
-          *ngIf="!!data && data?.length > 0"
-          buttonStyle="tertiary"
-          size="extrasmall"
-          class="d-inline-block"
-          [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-          (click)="isExpanded = !isExpanded">
-    {{isExpanded ? 'Minder acties' : 'Meer acties'}}
-  </button>
-  <!-- Loading -->
+
+  <!-- First time loading  -->
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
@@ -18,7 +10,7 @@
   <ng-container *ngIf="!!data && data?.length > 0">
 
     <!-- Action buttons -->
-    <div class="keten-processen__actie-buttons-container">
+    <div class="keten-processen__msg-btns-container">
       <ng-container *ngFor="let message of data[0].messages; let i = index">
         <button gu-button
                 [hidden]="!isExpanded && i >= 3"
@@ -30,16 +22,32 @@
       </ng-container>
     </div>
 
-    <!-- Feedback/error messages -->
-    <div *ngIf="sendMessageHasError" class="mb-4">
-      <gu-message type="warn" message="{{sendMessageErrorMessage}}"></gu-message>
+    <!-- Show more buttons -->
+    <button gu-button
+            *ngIf="!!data && data?.length > 0"
+            buttonStyle="tertiary"
+            size="extrasmall"
+            class="d-block mb-4"
+            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+            (click)="isExpanded = !isExpanded">
+      {{isExpanded ? 'Minder acties' : 'Meer acties'}}
+    </button>
+
+    <!-- Polling  -->
+    <div class="d-flex flex-column mb-4" *ngIf="isPolling">
+      <mat-progress-bar class="mb-2" mode="buffer"></mat-progress-bar>
+      <gu-message
+        message="Er wordt gezocht naar nieuwe taken. Zodra een nieuwe taak gereed is om uitgevoerd te worden, zal deze hieronder verschijnen. Dit kan een even duren."
+        type="primary"
+        class="mb-2"
+      ></gu-message>
     </div>
 
     <!-- Task lists -->
     <div class="keten-processen__taken">
       <div class="row">
 
-        <!-- Tasks -->
+        <!-- Tasks for current user -->
         <div class="col-md-6 mb-4 mb-md-0">
           <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Zelf doen</h3>
           <ng-container *ngFor="let task of allTaskData">
@@ -49,13 +57,13 @@
                 <p class="m-0 p--bold">{{task.name}}</p>
 
                 <!-- Double click shows id. -->
-                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                <label class="label label--date mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
                   <ng-container *ngIf="debugTask===task">
                     Task id: {{task.id}}
                   </ng-container>
 
                   <ng-container *ngIf="debugTask!==task">
-                    {{task.created | date:'fullDate'}}
+                    {{task.created | niceDateFormatPipe}}
                   </ng-container>
                 </label>
 
@@ -73,7 +81,7 @@
           </ng-container>
         </div>
 
-        <!-- Sub processes -->
+        <!-- Task for others -->
         <div class="col-md-6">
           <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h3>
           <ng-container *ngFor="let task of allTaskData">
@@ -83,13 +91,13 @@
                 <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
 
                 <!-- Double click shows id. -->
-                <label class="label label--date mb-2" (dblclick)="taskDblClick(task)">
+                <label class="label label--date mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
                   <ng-container *ngIf="debugTask===task">
                     Task id: {{task.id}}
                   </ng-container>
 
                   <ng-container *ngIf="debugTask!==task">
-                    {{task.created | date:'fullDate'}}
+                    {{task.created | niceDateFormatPipe}}
                   </ng-container>
                 </label>
 
