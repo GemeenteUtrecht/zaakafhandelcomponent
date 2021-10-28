@@ -22,10 +22,9 @@
       }
     },
     "ACTIONS": {
+      "ADD": "Add",
       "VIEW": "View",
       "MORE": "More Actions",
-      "CREATE_EIO_INTERN": "Create EIO Intern",
-      "CREATE_EIO_EXTERN": "Create EIO Extern",
       "DOWNLOAD": "Download",
       "FILTER": "Filter",
       "REFRESH": "Refresh page"
@@ -39,6 +38,9 @@
       }
     },
     "DIALOGS": {
+      "ADD_TO_CASE": {
+        "TITLE": "Add to case"
+      },
       "EDIT_IOT": {
         "TITLE": "Change type",
         "INFO": "To change the type of the information object, select a new type from the dropdown list. Next, give the information object a new title and select a language.",

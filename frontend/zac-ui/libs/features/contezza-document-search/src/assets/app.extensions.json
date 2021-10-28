@@ -10,6 +10,18 @@
   "features": {
     "toolbar": [
       {
+        "id": "app.toolbar.add_to_case",
+        "order": 100,
+        "title": "APP.ACTIONS.ADD",
+        "icon": "add",
+        "actions": {
+          "click": "ADD_TO_CASE"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
+      {
         "id": "app.toolbar.edit.iot",
         "order": 200,
         "title": "APP.DIALOGS.EIO_CREATE.TITLE",
@@ -62,6 +74,18 @@
       }
     ],
     "contextMenu": [
+      {
+        "id": "app.context.menu.add_to_case",
+        "order": 100,
+        "title": "APP.ACTIONS.ADD",
+        "icon": "add",
+        "actions": {
+          "click": "ADD_TO_CASE"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
       {
         "id": "app.context.menu.edit.iot",
         "order": 200,
@@ -118,13 +142,6 @@
           "order": 200,
           "title": "APP.INFO_DRAWER.TABS.COMMENTS",
           "component": "app.components.tabs.comments"
-        },
-        {
-          "id": "app.sidebar.versions",
-          "order": 300,
-          "disabled": true,
-          "title": "APP.INFO_DRAWER.TABS.VERSIONS",
-          "component": "app.components.tabs.versions"
         }
       ]
     },

@@ -1,5 +1,5 @@
 import {DOCUMENT} from '@angular/common';
-import {AfterViewInit, Component, ElementRef, Inject, Input, OnInit, Renderer2, ViewChild, ViewEncapsulation} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Inject, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
 
 @Component({
     selector: 'gu-features-contezza-document-search',
@@ -38,12 +38,6 @@ export class FeaturesContezzaDocumentSearchComponent implements OnInit, AfterVie
      * ngOnInit() method to handle any additional initialization tasks.
      */
     ngOnInit() {
-        if (this.zaaktypeurl && this.zaaktypeurl.includes('utrechtproeftuin')) {
-          const urlParts = this.zaaktypeurl.split('://');
-          const typeParts = urlParts[1].split('/').slice(1);
-          this.zaaktypeurl = `${urlParts[0]}://openzaak.cg-intern.ont.utrecht.nl/${typeParts.join('/')}`;
-        }
-
         const script = this.renderer2.createElement('script');
         script.src = '/ui/assets/contezza-zac-doclib.js';
         this.renderer2.appendChild(this.document.body, script);

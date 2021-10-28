@@ -11,5 +11,5 @@
   },
   "SEARCH_QUERY": "TYPE:'cm:content'",
   "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
-  "ALFRESCO_PREVIEW_URL": "https://alfresco-tezza.aks.utrechtproeftuin.nl"
+  "ALFRESCO_PREVIEW_URL": "https://alfresco.cg-intern.ont.utrecht.nl"
 }

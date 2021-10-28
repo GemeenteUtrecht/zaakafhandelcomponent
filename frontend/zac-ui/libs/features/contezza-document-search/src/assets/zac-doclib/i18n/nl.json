@@ -22,10 +22,9 @@
       }
     },
     "ACTIONS": {
+      "ADD": "Toevoegen",
       "VIEW": "Weergeven",
       "MORE": "Meer acties",
-      "CREATE_EIO_INTERN": "Maak EIO Intern",
-      "CREATE_EIO_EXTERN": "Maak EIO Extern",
       "DOWNLOAD": "Downloaden",
       "FILTER": "Filter",
       "REFRESH": "Ververs pagina"
@@ -39,6 +38,9 @@
       }
     },
     "DIALOGS": {
+      "ADD_TO_CASE": {
+        "TITLE": "Toevoegen aan het zaak"
+      },
       "EDIT_IOT": {
         "TITLE": "Wijzig type",
         "INFO": "Om het type van het informatieobject te wijzigen selecteer uw een nieuw type uit de dropdownlijst. Vervolgens geeft u het informatieobject een nieuwe titel en selecteert u een taal.",
