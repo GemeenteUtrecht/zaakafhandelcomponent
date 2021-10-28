@@ -247,14 +247,12 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     f"{AssigneeTypeChoices.user}:{user}"
                     for user in data["user_assignees"]
                 ]
-                or []
             )
             + (
                 [
                     f"{AssigneeTypeChoices.group}:{group}"
                     for group in data["group_assignees"]
                 ]
-                or []
             )
         }
 
@@ -295,16 +293,12 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         kownsl_users_list = []
         email_notification_list = {}
         for data in self.validated_data["assigned_users"]:
-            users = (
-                [
-                    f"{AssigneeTypeChoices.user}:{user}"
-                    for user in data["user_assignees"]
-                ]
-                + [
-                    f"{AssigneeTypeChoices.group}:{group}"
-                    for group in data["group_assignees"]
-                ]
-            )
+            users = [
+                f"{AssigneeTypeChoices.user}:{user}" for user in data["user_assignees"]
+            ] + [
+                f"{AssigneeTypeChoices.group}:{group}"
+                for group in data["group_assignees"]
+            ]
 
             kownsl_users_list.append(users)
             for user in users:

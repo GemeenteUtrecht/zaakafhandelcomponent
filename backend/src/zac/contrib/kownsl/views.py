@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -59,7 +60,11 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = client.retrieve("reviewrequest", url=resource_url)
 
         # look up and complete the user task in Camunda
-        assignee = data["kenmerken"]["group"] or data["kenmerken"]["author"]
+        if data["kenmerken"]["group"]:
+            assignee = f'{AssigneeTypeChoices.group}:{data["kenmerken"]["group"]}'
+        else:
+            assignee = f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
+
         camunda_client = get_camunda_client()
 
         params = {
@@ -72,7 +77,7 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
         if not tasks:
             logger.info(
-                "No user tasks found - possibly they were already marked completed."
+                "No user tasks found - possibly they were already marked completed. "
             )
             return
 

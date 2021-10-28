@@ -533,7 +533,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1],
-                "group_assignees": [],
+                "group_assignees": [self.group.name],
                 "email_notification": False,
                 "deadline": "2020-01-01",
             },
@@ -555,17 +555,21 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         serializer.is_valid(raise_exception=True)
         serializer.on_task_submission()
         self.assertTrue(hasattr(serializer, "review_request"))
+        
+        email_notification_list = {f"user:{user}": False for user in self.users_1}
+        email_notification_list[f"group:{self.group}"] = False
+
         variables = serializer.get_process_variables()
         self.assertEqual(
             variables,
             {
                 "kownslDocuments": serializer.validated_data["selected_documents"],
-                "kownslUsersList": [[f"user:{user}" for user in self.users_1]],
+                "kownslUsersList": [
+                    [f"user:{user}" for user in self.users_1] + [f"group:{self.group}"]
+                ],
                 "kownslReviewRequestId": str(self.review_request.id),
                 "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
-                "emailNotificationList": {
-                    f"user:{user}": False for user in self.users_1
-                },
+                "emailNotificationList": email_notification_list,
             },
         )
 
