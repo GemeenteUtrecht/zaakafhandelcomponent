@@ -63,12 +63,12 @@ export class InformatieComponent implements OnInit, OnChanges {
       ...this.caseDetailsFieldConfigurations,
       ...this.propertyFieldConfigurations,
       {
-        label: 'reden',
-        placeholder: 'Reden',
-        value: '',
-        required: true,
-        writeonly: true,
-      }
+        label: 'Toelichting',
+        placeholder: ' ',
+        name: 'toelichting',
+        required: false,
+        value: this.zaak.toelichting,
+      },
     ];
   }
 
@@ -90,18 +90,19 @@ export class InformatieComponent implements OnInit, OnChanges {
         choices: this.confidentialityChoices,
       },
       {
+        activeWhen: (formGroup) => formGroup.getRawValue().vertrouwelijkheidaanduiding !== this.zaak.vertrouwelijkheidaanduiding,
+        label: 'reden',
+        placeholder: 'Reden',
+        value: '',
+        required: true,
+        writeonly: true,
+      },
+      {
         label: 'Omschrijving',
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
         required: true,
         value: this.zaak.omschrijving,
-      },
-      {
-        label: 'Toelichting',
-        placeholder: ' ',
-        name: 'toelichting',
-        required: true,
-        value: this.zaak.toelichting,
       },
     ];
   }

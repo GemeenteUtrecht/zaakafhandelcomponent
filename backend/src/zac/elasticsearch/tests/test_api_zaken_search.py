@@ -216,6 +216,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
             bronorganisatie="123456789",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
+            zaakgeometrie={"type": "Point", "coordinates": [4.4683077, 51.9236739]},
         )
         zaak2 = generate_oas_component(
             "zrc",
@@ -226,6 +227,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Other zaak 2",
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
+            zaakgeometrie={"type": "Point", "coordinates": [4, 51]},
         )
 
         # mock requests
@@ -294,6 +296,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
+                    "zaakgeometrie",
                     "zaakobjecten.object",
                     "zaakobjecten.url",
                     "zaaktype.catalogus",
@@ -331,6 +334,10 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         },
                         "toelichting": zaak1_model.toelichting,
                         "zaakobjecten": [],
+                        "zaakgeometrie": {
+                            "type": "Point",
+                            "coordinates": [4.4683077, 51.9236739],
+                        },
                     }
                 ],
             },
@@ -370,6 +377,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="Some zaak 1",
             bronorganisatie="123456789",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
+            zaakgeometrie={
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [5.070877, 52.062216],
+                        [5.063681, 52.027406],
+                        [5.083528, 51.988561],
+                        [5.070877, 52.062216],
+                    ]
+                ],
+            },
         )
         zaak1_eigenschap = generate_oas_component(
             "zrc",
@@ -388,6 +406,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             zaaktype=zaaktype["url"],
             identificatie="zaak2",
             omschrijving="Other zaak 2",
+            zaakgeometrie={"type": "Point", "coordinates": [4, 51]},
         )
         zaak2_eigenschap = generate_oas_component(
             "zrc",
@@ -458,6 +477,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "va_order",
                     "vertrouwelijkheidaanduiding",
+                    "zaakgeometrie",
                     "zaakobjecten.object",
                     "zaakobjecten.url",
                     "zaaktype.catalogus",
@@ -495,6 +515,17 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         },
                         "toelichting": zaak1_model.toelichting,
                         "zaakobjecten": [],
+                        "zaakgeometrie": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [5.070877, 52.062216],
+                                    [5.063681, 52.027406],
+                                    [5.083528, 51.988561],
+                                    [5.070877, 52.062216],
+                                ]
+                            ],
+                        },
                     }
                 ],
             },

@@ -194,6 +194,7 @@ class RelatedCasesResponseTests(APITestCase):
                     "einddatumGepland": None,
                     "uiterlijkeEinddatumAfdoening": "2021-01-21",
                     "vertrouwelijkheidaanduiding": "beperkt_openbaar",
+                    "zaakgeometrie": {},
                     "deadline": "2021-01-21",
                     "deadlineProgress": 50.00,
                     "status": {

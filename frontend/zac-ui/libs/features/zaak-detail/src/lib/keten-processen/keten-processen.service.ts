@@ -91,8 +91,24 @@ export class KetenProcessenService {
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
       subProcess.tasks.forEach( task => subTasksArray.push(task))
     })
-    return mainTasksArray.concat(subTasksArray);
+
+    return mainTasksArray
+      .concat(subTasksArray)
+      .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }
+
+  /**
+   * Returns a new task if present.
+   * @param newData
+   * @param currentData
+   * @returns {Task}
+   */
+  findNewTask(newData, currentData) {
+    const currentTaskIds = this.mergeTaskData(newData);
+    return currentTaskIds
+      .find((task: Task) => currentData.indexOf(task.id) === -1);
+  }
+
 
   getProcesses(mainZaakUrl: string): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);

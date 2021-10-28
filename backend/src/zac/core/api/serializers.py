@@ -46,6 +46,7 @@ from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
 from .data import VertrouwelijkheidsAanduidingData
+from .fields import NullableJsonField
 from .utils import (
     CSMultipleChoiceField,
     TypeChoices,
@@ -324,6 +325,10 @@ class ZaakDetailSerializer(APIModelSerializer):
         ),
     )
     resultaat = ResultaatSerializer()
+    zaakgeometrie = serializers.JSONField(
+        required=False,
+        help_text=_("GeoJSON which represents the coordinates of the zaak"),
+    )
 
     class Meta:
         model = Zaak
@@ -340,6 +345,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "einddatum_gepland",
             "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
+            "zaakgeometrie",
             "deadline",
             "deadline_progress",
             "resultaat",
@@ -358,6 +364,11 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
         required=False,
         help_text=_("The confidentiality level of the case."),
     )
+    zaakgeometrie = NullableJsonField(
+        required=False,
+        allow_null=True,
+        help_text=_("GeoJSON which represents the coordinates of the zaak"),
+    )
 
     class Meta:
         model = Zaak
@@ -369,6 +380,7 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
             "toelichting",
             "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
+            "zaakgeometrie",
         )
         extra_kwargs = {
             "einddatum": {

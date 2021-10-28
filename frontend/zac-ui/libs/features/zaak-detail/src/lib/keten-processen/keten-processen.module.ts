@@ -11,6 +11,8 @@ import { DynamicFormComponent } from './configuration-components/dynamic-form/dy
 import { AssignTaskComponent } from './assign-task/assign-task.component';
 import { RedirectComponent } from './configuration-components/redirect/redirect.component';
 import {MatTabsModule} from "@angular/material/tabs";
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { SharedUtilsModule } from '@gu/utils';
 
 @NgModule({
   declarations: [
@@ -29,6 +31,8 @@ import {MatTabsModule} from "@angular/material/tabs";
     MultiselectModule,
     ReactiveFormsModule,
     SharedUiComponentsModule,
+    MatProgressBarModule,
+    SharedUtilsModule
   ],
   exports: [
     KetenProcessenComponent

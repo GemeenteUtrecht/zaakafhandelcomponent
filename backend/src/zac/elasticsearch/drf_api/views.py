@@ -74,7 +74,6 @@ class PerformSearchMixin:
 class SearchView(PerformSearchMixin, views.APIView):
     authentication_classes = (SessionAuthentication,)
     ordering = ("-identificatie",)
-    pagination_class = ESPagination
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (IsAuthenticated,)
     search_document = ZaakDocument

@@ -160,6 +160,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
                     zaak_model_1.uiterlijke_einddatum_afdoening
                 ),
                 "vertrouwelijkheidaanduiding": zaak_model_1.vertrouwelijkheidaanduiding,
+                "zaakgeometrie": {},
                 "deadline": str(zaak_model_1.deadline),
                 "deadlineProgress": zaak_model_1.deadline_progress(),
                 "resultaat": None,

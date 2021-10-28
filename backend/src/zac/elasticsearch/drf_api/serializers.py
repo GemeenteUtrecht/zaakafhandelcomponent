@@ -139,6 +139,16 @@ class ZaakObjectDocumentSerializer(serializers.Serializer):
     object = serializers.URLField(required=False)
 
 
+class ZaakgeometrieSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    coordinates = serializers.ListField()
+
+    def to_representation(self, instance):
+        if not instance:
+            return None
+        return super().to_representation(instance)
+
+
 class ZaakDocumentSerializer(serializers.Serializer):
     url = serializers.URLField(required=False)
     zaaktype = ZaakTypeDocumentSerializer(required=False)
@@ -156,3 +166,4 @@ class ZaakDocumentSerializer(serializers.Serializer):
     status = StatusDocumentSerializer(required=False)
     toelichting = serializers.CharField(required=False)
     zaakobjecten = ZaakObjectDocumentSerializer(many=True, required=False)
+    zaakgeometrie = ZaakgeometrieSerializer(required=False)

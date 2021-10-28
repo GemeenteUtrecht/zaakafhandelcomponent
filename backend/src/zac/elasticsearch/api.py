@@ -48,6 +48,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         registratiedatum=zaak.registratiedatum,
         deadline=zaak.deadline,
         toelichting=zaak.toelichting,
+        zaakgeometrie=zaak.zaakgeometrie,
     )
 
     return zaak_document
@@ -92,6 +93,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         registratiedatum=zaak.registratiedatum,
         deadline=zaak.deadline,
         toelichting=zaak.toelichting,
+        zaakgeometrie=zaak.zaakgeometrie,
     )
     return zaak_document
 
