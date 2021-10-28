@@ -300,12 +300,10 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     f"{AssigneeTypeChoices.user}:{user}"
                     for user in data["user_assignees"]
                 ]
-                or []
                 + [
                     f"{AssigneeTypeChoices.group}:{group}"
                     for group in data["group_assignees"]
                 ]
-                or []
             )
 
             kownsl_users_list.append(users)
