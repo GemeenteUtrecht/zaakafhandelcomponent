@@ -1,7 +1,7 @@
 <section class="row m-0">
-  <div class="col-12 p-0">
-    <div class="feature-container">
-      <div class="content-background">
+  <div class="col-xl-10 p-0">
+    <div class="feature-container pb-0">
+      <div class="content-background mb-0">
         <article class="content">
 
           <!-- Breadcrumb -->
@@ -147,7 +147,7 @@
               </aside>
 
 
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside *ngIf="zaakData" class="">
                 <gu-documenten [mainZaakUrl]="mainZaakUrl"
                                [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"
@@ -177,4 +177,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Map -->
+  <aside class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
+    <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
+  </aside>
 </section>

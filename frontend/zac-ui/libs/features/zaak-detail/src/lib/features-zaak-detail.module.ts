@@ -18,6 +18,7 @@ import {KetenProcessenModule} from './keten-processen/keten-processen.module';
 import {StatusComponent} from './status/status.component';
 import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
 import {UserPermissionsModule} from './user-permissions/user-permissions.module';
+import {ZaakMapComponent} from './zaak-map/zaak-map.component';
 
 @NgModule({
   imports: [
@@ -48,6 +49,7 @@ import {UserPermissionsModule} from './user-permissions/user-permissions.module'
     DetailModalComponent,
     ToegangVerlenenComponent,
     ActiviteitenComponent,
+    ZaakMapComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

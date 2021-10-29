@@ -1,9 +1,9 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {PageEvent} from '@angular/material/paginator';
 import {SnackbarService} from '@gu/components';
-import {Zaak, TableSort, ZaakObject, Geometry} from '@gu/models';
+import {Zaak, TableSort, ZaakObject} from '@gu/models';
 import {SearchService} from '../search.service';
-import {MapMarker} from "../../../../../shared/ui/components/src/lib/components/map/map";
+import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/lib/components/map/map";
 
 
 /**
@@ -28,7 +28,7 @@ export class SearchFormComponent {
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
 
-  @Output() mapGeometry: EventEmitter<Geometry> = new EventEmitter<Geometry>();
+  @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
   @Output() mapMarkers: EventEmitter<MapMarker[]> = new EventEmitter<MapMarker[]>();
 
   constructor(private searchService: SearchService, private snackbarService: SnackbarService) {

@@ -2,7 +2,6 @@ import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {RouterModule} from '@angular/router';
-import {LeafletModule} from '@asymmetrik/ngx-leaflet';
 
 // Material Components
 import {MatCheckboxModule} from "@angular/material/checkbox";
@@ -58,7 +57,6 @@ patchMatFormField();
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    LeafletModule,
     MatFormFieldModule,
     MatInputModule,
     MatNativeDateModule,

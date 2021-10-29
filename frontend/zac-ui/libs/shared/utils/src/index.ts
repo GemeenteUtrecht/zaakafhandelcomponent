@@ -1,3 +1,5 @@
+export * from './lib/cache';
+
 export * from './lib/shared-utils.module';
 
 export * from './lib/helpers/blob-to-string';
