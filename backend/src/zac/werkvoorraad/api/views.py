@@ -10,6 +10,7 @@ from rest_framework import authentication, permissions
 from rest_framework.generics import ListAPIView
 from zgw_consumers.concurrent import parallel
 
+from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.core.api.permissions import CanHandleAccessRequests
@@ -52,8 +53,12 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     serializer_class = WorkStackAdhocActivitiesSerializer
     filter_backends = ()
 
+    def get_activities(self) -> List[dict]:
+        return Activity.objects.as_werkvoorraad(user=self.request.user)
+
     def get_queryset(self):
-        activity_groups = get_activity_groups(self.request.user)
+        grouped_activities = self.get_activities()
+        activity_groups = get_activity_groups(self.request.user, grouped_activities)
         return [ActivityGroup(**group) for group in activity_groups if "zaak" in group]
 
 

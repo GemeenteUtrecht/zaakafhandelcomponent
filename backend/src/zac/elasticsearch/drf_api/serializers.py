@@ -233,3 +233,7 @@ class ZaakDocumentSerializer(serializers.Serializer):
     zaakobjecten = ZaakObjectDocumentSerializer(
         many=True, required=False, help_text=_("ZAAKOBJECTen belonging to the ZAAK.")
     )
+    zaakgeometrie = ZaakgeometrieSerializer(
+        required=False,
+        help_text=_("A GeoJSON containing geometric information related to the ZAAK."),
+    )

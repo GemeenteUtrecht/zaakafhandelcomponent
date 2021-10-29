@@ -19,7 +19,6 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
-from zgw.models.zrc import Zaak
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"

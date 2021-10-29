@@ -6,7 +6,6 @@ from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
-from zac.activities.models import Activity
 from zac.camunda.data import Task
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
@@ -69,12 +68,13 @@ def get_access_requests_groups(user: User):
     return requested_zaken
 
 
-def get_activity_groups(user: User) -> List[ActivityGroup]:
-    activity_groups = Activity.objects.as_werkvoorraad(user=user)
-    zaak_urls = list({activity_group["zaak_url"] for activity_group in activity_groups})
+def get_activity_groups(user: User, grouped_activities: dict) -> List[ActivityGroup]:
+    zaak_urls = list(
+        {activity_group["zaak_url"] for activity_group in grouped_activities}
+    )
     es_results = search(user=user, urls=zaak_urls)
     zaken = {zaak.url: zaak for zaak in es_results}
-    for activity_group in activity_groups:
+    for activity_group in grouped_activities:
         activity_group["zaak"] = zaken.get(activity_group["zaak_url"])
 
-    return activity_groups
+    return grouped_activities
