@@ -68,7 +68,7 @@ class ReviewSubmittedTests(APITestCase):
         )
         m.get(
             "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=bob",
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
             json=[{"id": "some-task-id"}],
         )
         m.post(
@@ -100,7 +100,7 @@ class ReviewSubmittedTests(APITestCase):
         )
         m.get(
             "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=bob",
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
             json=[],
         )
 

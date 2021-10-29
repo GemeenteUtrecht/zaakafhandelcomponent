@@ -555,7 +555,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         serializer.is_valid(raise_exception=True)
         serializer.on_task_submission()
         self.assertTrue(hasattr(serializer, "review_request"))
-        
+
         email_notification_list = {f"user:{user}": False for user in self.users_1}
         email_notification_list[f"group:{self.group}"] = False
 
