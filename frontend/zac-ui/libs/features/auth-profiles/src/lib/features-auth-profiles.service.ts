@@ -62,17 +62,6 @@ export class FeaturesAuthProfilesService {
 
   /**
    *
-   * Request confidentiality types from API
-   * @FIXME
-   */
-  @CachedObservableMethod('/api/core/vertrouwelijkheidsaanduidingen')
-  getConfidentiality(): Observable<MetaConfidentiality[]> {
-    const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
-    return this.http.Get<MetaConfidentiality[]>(endpoint);
-  }
-
-  /**
-   *
    */
   getDocTypes(): Observable<MetaDocType> {
     const endpoint = encodeURI("/api/core/document-types");
