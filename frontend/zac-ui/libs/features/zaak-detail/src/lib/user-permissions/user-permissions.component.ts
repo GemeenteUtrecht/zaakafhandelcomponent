@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from '@angular/core';
 import {ZaakPermission, UserPermission, Table} from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {PermissionsService} from './permissions.service';
-import {TableButtonClickEvent} from '@gu/components';
+import { ModalService, TableButtonClickEvent } from '@gu/components';
 
 
 /**
@@ -22,6 +22,7 @@ import {TableButtonClickEvent} from '@gu/components';
 export class UserPermissionsComponent implements OnInit {
     @Input() bronorganisatie: string;
     @Input() identificatie: string;
+    @Input() mainZaakUrl: string;
 
     /** @type {boolean} Whether this component is loading. */
     isLoading = false;
@@ -34,6 +35,7 @@ export class UserPermissionsComponent implements OnInit {
 
     constructor(
       private permissionsService: PermissionsService,
+      private modalService: ModalService,
       private zaakService: ZaakService,
     ) {
     }
@@ -120,6 +122,14 @@ export class UserPermissionsComponent implements OnInit {
     //
     // Events.
     //
+
+  /**
+   * Opens modal.
+   * @param {string} id
+   */
+  openModal(id: string) {
+      this.modalService.open(id);
+    }
 
     /**
      * Gets called when delete button is clicked, remover user permission.

@@ -31,7 +31,7 @@
             </ng-template>
           </div>
 
-          <!-- Taken -->
+          <!-- Tasks -->
           <div class="tab-content" *ngSwitchCase="'tasks'">
             <!-- Label -->
             <ng-template mat-tab-label>
@@ -46,14 +46,43 @@
 
             <!-- Content -->
             <ng-container *ngIf="taskData?.length > 0; else noTasks" >
-                <a *ngFor="let userTask of taskData"
-                   class="anchor mb-2 task-link"
-                   href="{{createRouteLink(userTask.zaak, userTask.task)}}">
+              <div class="task-link" *ngFor="let userTask of taskData">
+                <a class="anchor mb-2"
+                   [routerLink]="createZaakLink(userTask.zaak, userTask.task)">
                   {{userTask.zaak.identificatie}}: {{userTask.task.name}}
                 </a>
-              </ng-container>
+              </div>
+            </ng-container>
             <ng-template #noTasks>
               <p>Er zijn geen taken gevonden.</p>
+            </ng-template>
+          </div>
+
+          <!-- Group tasks -->
+          <div class="tab-content" *ngSwitchCase="'group-tasks'">
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="groupTaskData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{groupTaskData?.length}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <ng-container *ngIf="groupTaskData?.length > 0; else noGroupTasks" >
+              <div class="task-link" *ngFor="let groupTask of groupTaskData">
+                <a class="anchor mb-2"
+                   [routerLink]="createZaakLink(groupTask.zaak, groupTask.task)">
+                  {{groupTask.zaak.identificatie}}: {{groupTask.task.name}}
+                </a>
+                <label class="label label--small d-block">{{groupTask.task.assignee.name}}</label>
+              </div>
+            </ng-container>
+            <ng-template #noGroupTasks>
+              <p>Er zijn geen taken voor gebruikersgroepen.</p>
             </ng-template>
           </div>
 
@@ -73,11 +102,12 @@
 
             <!-- Content -->
             <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
-              <a *ngFor="let activity of activitiesData"
-                 class="anchor mb-2 task-link"
-                 href="{{createActivityLink(activity.zaak)}}">
-                {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
-              </a>
+              <div class="task-link" *ngFor="let activity of activitiesData">
+                <a class="anchor mb-2"
+                   [routerLink]="createActivityLink(activity.zaak)">
+                  {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
+                </a>
+              </div>
             </ng-container>
             <ng-template #noActivity>
               <p>Er zijn geen ad-hoc activiteiten gevonden.</p>
