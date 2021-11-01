@@ -1,5 +1,5 @@
 import {Observable} from "rxjs";
-import {getCache, setCache, clearCache, getIsCached, setIsCached} from './cache';
+import {getCache, setCache, getIsCached, setIsCached, getCacheFailed, setCacheFailed, clearCache} from './cache';
 
 /**
  * Method decorator which caches a method returning an observable.
@@ -33,7 +33,10 @@ export function CachedObservableMethod(identifierKey = '', maxCacheAgeInSeconds 
       if (!getIsCached(cacheKey, args, maxCacheAgeInSeconds)) {
         originalFn.call(this, ...args).subscribe(
           (data) => setCache(cacheKey, args, data),
-          () => setIsCached(cacheKey, args, false),
+          (error) => {
+            setCache(cacheKey, args, error),
+            setCacheFailed(cacheKey, args, true);
+          },
         );
 
         // Mark as cached (even through cache is not YET ready).
@@ -47,7 +50,11 @@ export function CachedObservableMethod(identifierKey = '', maxCacheAgeInSeconds 
           const cache = getCache(cacheKey, args);
 
           if (cache) {
-            subscriber.next(cache);
+            if (getCacheFailed(cacheKey, args)) {
+              subscriber.error(cache);
+            } else {
+              subscriber.next(cache);
+            }
             subscriber.complete();
             return;
           }

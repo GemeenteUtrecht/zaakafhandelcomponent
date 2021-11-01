@@ -61,7 +61,8 @@
             </div>
           </section>
 
-          <section class="row">
+          <!-- Components -->
+          <section *ngIf="!isLoading && !hasError" class="row" >
 
             <!-- Left column -->
             <div class="col-4">
@@ -174,7 +175,7 @@
   </div>
 
   <!-- Map -->
-  <aside class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
+  <aside *ngIf="!isLoading && !hasError" class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
     <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
   </aside>
 </section>

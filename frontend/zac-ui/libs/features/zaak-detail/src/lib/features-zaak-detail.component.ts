@@ -159,7 +159,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
             return activity.status === 'on_going'
           })
         },
-        error: this.reportError.bind(this),
+        error: (error) => this.reportError(error.error),
         complete: () => this.isLoading = false
       })
   }
@@ -247,8 +247,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
           "Je hebt geen toegang tot deze zaak" :
           "Er is een fout opgetreden";
 
-    this.hasError = true;
     console.error(error);
+    this.hasError = true;
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
   }
 }

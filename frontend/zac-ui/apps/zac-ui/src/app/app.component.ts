@@ -87,7 +87,11 @@ export class AppComponent implements OnInit {
         if (isHijacked) {
           this.snackbarService.openSnackBar(`Je werkt nu namens ${this.currentUser}`, 'Stoppen', 'accent', 0)
             .afterDismissed()
-            .subscribe(this.hijackSnackBarDismissed.bind(this));
+            .subscribe((matSnackBarDismiss) => {
+              if(matSnackBarDismiss.dismissedByAction) {
+                this.hijackSnackBarDismissed()
+              }
+            });
         }
       });
   }
