@@ -50,7 +50,7 @@ COPY --from=frontend-build /app/src/zac/static/fonts /app/src/zac/static/fonts
 COPY --from=frontend-build /app/src/zac/static/css /app/src/zac/static/css
 COPY --from=frontend-build /app/src/zac/static/js /app/src/zac/static/js
 
-ENV DJANGO_SETTINGS_MODULE=zac.conf.docker
+ENV PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=zac.conf.docker
 
 ARG SECRET_KEY=dummy
 
