@@ -1,3 +1,5 @@
+import logging
+import os
 from io import StringIO
 from typing import Dict, Iterator, List
 
@@ -6,6 +8,7 @@ from django.core.management import BaseCommand
 from django.core.management.base import CommandParser, OutputWrapper
 
 import click
+import psutil
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
@@ -41,6 +44,15 @@ from ...documents import (
     ZaakTypeDocument,
 )
 from ...utils import check_if_index_exists
+
+perf_logger = logging.getLogger("performance")
+
+
+def get_memory_usage():
+    process = psutil.Process(os.getpid())
+    mem_bytes = process.memory_info().rss  # in bytes
+    mem_mbytes = mem_bytes / 1024 ** 2
+    return f"{mem_mbytes} MB"
 
 
 class ProgressOutputWrapper(OutputWrapper):
@@ -170,6 +182,8 @@ class Command(BaseCommand):
             file=self.stdout.progress_file(),
         ) as bar:
             for client in clients:
+                perf_logger.info("Starting indexing for client %s", client)
+                perf_logger.info("Memory usage: %s", get_memory_usage())
                 get_more = True
                 # Set ordering explicitely
                 # FIXME: this implicitly assumes the generated or created identification
@@ -178,9 +192,17 @@ class Command(BaseCommand):
                 # the ability to pick a unique identification themselves (such as UUIDs).
                 query_params = {"ordering": "-identificatie"}
                 while get_more:
+                    # if this is running for 1h+, Open Zaak expires the token
+                    client.refresh_auth()
+                    perf_logger.info(
+                        "Fetching cases for client, query params: %r", query_params
+                    )
+                    perf_logger.info("Memory usage: %s", get_memory_usage())
                     zaken, query_params = get_zaken_all_paginated(
                         client, query_params=query_params
                     )
+                    perf_logger.info("Fetched %d cases", len(zaken))
+                    perf_logger.info("Memory usage: %s", get_memory_usage())
                     # Make sure we're not retrieving more information than necessary on the zaken
                     if self.reindex_last and self.reindex_last - self.reindexed <= len(
                         zaken
@@ -191,7 +213,11 @@ class Command(BaseCommand):
                     for zaak in zaken:
                         zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
+                    perf_logger.info("Entering ES documents generator")
+                    perf_logger.info("Memory usage: %s", get_memory_usage())
                     yield from self.zaakdocumenten_generator(zaken)
+                    perf_logger.info("Exited ES documents generator")
+                    perf_logger.info("Memory usage: %s", get_memory_usage())
                     bar.update(len(zaken))
 
                 if self.check_if_done_batching():
@@ -201,13 +227,27 @@ class Command(BaseCommand):
         self.stdout.end_progress()
 
     def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
+        perf_logger.info("  In ES documents generator")
+        perf_logger.info("    Create zaak documents...")
         zaak_documenten = self.create_zaak_documenten(zaken)
+        perf_logger.info("    Create zaak documents finished")
+        perf_logger.info("    Create zaaktype documents...")
         zaaktype_documenten = self.create_zaaktype_documenten(zaken)
+        perf_logger.info("    Create zaaktype documents finished")
+        perf_logger.info("    Create status documents...")
         status_documenten = self.create_status_documenten(zaken)
+        perf_logger.info("    Create status documents finished")
+        perf_logger.info("    Create rol documents...")
         rollen_documenten = self.create_rollen_documenten(zaken)
+        perf_logger.info("    Create rol documents finished")
+        perf_logger.info("    Create eigenschap documents...")
         eigenschappen_documenten = self.create_eigenschappen_documenten(zaken)
+        perf_logger.info("    Create eigenschap documents finished")
+        perf_logger.info("    Create zaakobject documents...")
         zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
+        perf_logger.info("    Create zaakobject documents finished")
 
+        perf_logger.info("    Relating all results for every zaak...")
         for zaak in zaken:
             zaakdocument = zaak_documenten[zaak.url]
             zaakdocument.zaaktype = zaaktype_documenten[zaak.url]
