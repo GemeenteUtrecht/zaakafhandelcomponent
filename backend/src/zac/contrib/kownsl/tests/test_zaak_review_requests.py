@@ -133,7 +133,10 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             "numApprovals": 0,
             "numAssignedUsers": 2,
             "toelichting": "",
-            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "userDeadlines": {
+                "user:some-user": "2021-01-07",
+                "user:some-user-2": "2021-01-08",
+            },
             "requester": "some-other-user",
         }
         review_request = factory(ReviewRequest, review_request)
@@ -163,6 +166,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             {
                 "created": "2021-01-07T12:00:00Z",
                 "author": author,
+                "group": "",
                 "advice": "some-advice",
                 "documents": [advice_document],
             },
@@ -244,8 +248,6 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "purpose": DocFileTypes.read,
             },
         )
-        advice_url = doc_url + "?versie=2"
-        source_url = doc_url + "?versie=1"
         self.assertEqual(
             response_data,
             {
@@ -259,12 +261,13 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                             "lastName": "some-last-name",
                             "username": self.user.username,
                         },
+                        "group": "",
                         "advice": "some-advice",
                         "documents": [
                             {
                                 "adviceVersion": 2,
-                                "adviceUrl": advice_url,
-                                "sourceUrl": source_url,
+                                "adviceUrl": doc_url + "?versie=2",
+                                "sourceUrl": doc_url + "?versie=1",
                                 "sourceVersion": 1,
                                 "title": self.document["bestandsnaam"],
                             }
@@ -398,7 +401,10 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "numApprovals": 0,
             "numAssignedUsers": 2,
             "toelichting": "",
-            "userDeadlines": {"some-user": "2021-01-07", "some-user-2": "2021-01-08"},
+            "userDeadlines": {
+                "user:some-user": "2021-01-07",
+                "user:some-user-2": "2021-01-08",
+            },
             "requester": "some-other-user",
         }
         cls.review_request = factory(ReviewRequest, cls.review_request_data)
@@ -419,6 +425,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             {
                 "created": "2021-01-07T12:00:00Z",
                 "author": author,
+                "group": "",
                 "advice": "some-advice",
                 "documents": [advice_document],
             },

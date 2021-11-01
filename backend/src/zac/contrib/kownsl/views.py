@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -59,7 +60,11 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = client.retrieve("reviewrequest", url=resource_url)
 
         # look up and complete the user task in Camunda
-        assignee = data["kenmerken"]["author"]
+        if data["kenmerken"]["group"]:
+            assignee = f'{AssigneeTypeChoices.group}:{data["kenmerken"]["group"]}'
+        else:
+            assignee = f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
+
         camunda_client = get_camunda_client()
 
         params = {
@@ -72,7 +77,7 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
 
         if not tasks:
             logger.info(
-                "No user tasks found - possibly they were already marked completed."
+                "No user tasks found - possibly they were already marked completed. "
             )
             return
 
@@ -108,14 +113,6 @@ class BaseRequestView(APIView):
 
     def get(self, request, request_uuid):
         review_request = self.get_object()
-        review_users = [
-            review["author"]["username"] for review in review_request["reviews"]
-        ]
-        headers = {
-            "X-Kownsl-Submitted": "true"
-            if request.user.username in review_users
-            else "false"
-        }
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
@@ -124,7 +121,7 @@ class BaseRequestView(APIView):
             },
             context={"request": request, "view": self},
         )
-        return Response(serializer.data, headers=headers)
+        return Response(serializer.data)
 
     def post(self, request, request_uuid):
         # Check if user is allowed to get and post based on source review request user_deadlines value.

@@ -17,7 +17,7 @@ NOTIFICATION = {
     "resourceUrl": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
     "actie": "reviewSubmitted",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
-    "kenmerken": {"author": "bob"},
+    "kenmerken": {"author": "bob", "group": ""},
 }
 
 REVIEW_REQUEST = {
@@ -30,7 +30,7 @@ REVIEW_REQUEST = {
     "numApprovals": 0,
     "numAssignedUsers": 2,
     "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "userDeadlines": {"bob": "2020-11-05"},
+    "userDeadlines": {"user:bob": "2020-11-05"},
     "requester": "alice",
     "metadata": {
         "processInstanceId": "fa962a23-ff20-4184-ba98-b390f2407353",
@@ -68,7 +68,7 @@ class ReviewSubmittedTests(APITestCase):
         )
         m.get(
             "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=bob",
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
             json=[{"id": "some-task-id"}],
         )
         m.post(
@@ -100,7 +100,7 @@ class ReviewSubmittedTests(APITestCase):
         )
         m.get(
             "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=bob",
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
             json=[],
         )
 

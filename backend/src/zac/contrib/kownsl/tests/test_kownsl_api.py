@@ -121,6 +121,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "firstName": "",
                     "lastName": "",
                 },
+                "group": "",
                 "advice": "dummy",
                 "documents": [],
             }
@@ -169,6 +170,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "firstName": "",
                     "lastName": "",
                 },
+                "group": "",
                 "approved": True,
                 "toelichting": "When you give an inch, will they take a mile?",
             }

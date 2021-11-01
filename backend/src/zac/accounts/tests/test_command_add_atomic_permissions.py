@@ -116,7 +116,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
             "schemas/ReviewRequest",
             id="1b864f55-0880-4207-9246-9b454cb69cca",
             forZaak=zaak["url"],
-            userDeadlines={self.user.username: "2099-01-01"},
+            userDeadlines={f"user:{self.user.username}": "2099-01-01"},
             metadata={},
             zaakDocuments={},
             reviews={},
