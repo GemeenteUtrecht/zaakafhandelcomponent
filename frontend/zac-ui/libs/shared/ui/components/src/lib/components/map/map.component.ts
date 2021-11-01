@@ -14,6 +14,9 @@ import {RD_CRS} from './rd';
 import * as L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 
+/** @type {string} path to leaflet assets. */
+const LEAFLET_ASSETS = 'assets/vendor/leaflet/'
+
 /**
  * <gu-map></gu-map>
  *
@@ -46,6 +49,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
   @Input() editable: boolean | L.PM.ToolbarOptions = false;
 
   @Output() shapeChange: EventEmitter<any> = new EventEmitter<any>();
+  @Output() shapeChangeComplete: EventEmitter<any> = new EventEmitter<any>();
 
   /** @type {MapOptions} */
   mapOptions: L.MapOptions;
@@ -55,6 +59,9 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
   /** @type {boolean} Whether the map is in edit mode. */
   editMode = false;
+
+  /** @type {L.Layer} Temporary maker layer (used when creating a marker). */
+  temporaryMarkerLayer: L.Layer;
 
   //
   // Angular lifecycle.
@@ -94,17 +101,19 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    * Sets the map context.
    */
   getContextData(): void {
-    // Map.
-    this.mapOptions = {
-      center: (this.center?.length > 1) ? L.latLng(this.center[1], this.center[0]) : L.latLng([52.0907, 5.1214]),
-      zoom: this.zoom,
-      crs: RD_CRS,
-    };
+    L.Icon.Default.imagePath = LEAFLET_ASSETS,
+
+      // Map.
+      this.mapOptions = {
+        center: (this.center?.length > 1) ? L.latLng(this.center[1], this.center[0]) : L.latLng([52.0907, 5.1214]),
+        zoom: this.zoom,
+        crs: RD_CRS,
+      };
     this.map = L.map('mapid', this.mapOptions)
 
     // Tiles.
     const tileConfig = {
-      url: `https://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart/EPSG:28992/{z}/{x}/{y}.png`,
+      url: `https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:28992/{z}/{x}/{y}.png`,
       options: {
         minZoom: 1,
         maxZoom: 13,
@@ -120,16 +129,63 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
     // Leaflet-geoman.
     if (this.editable) {
-      this.map.on('pm:create', (e) => this.shapeChange.emit(e))
-      this.map.on('pm:drawstart', (e) => {
+
+      const onDrawEnd = (e) => {
         this.shapeChange.emit(e);
-      })
-      this.map.on('pm:drawend', (e) => this.shapeChange.emit(e))
-      this.map.on('pm:remove', (e) => this.shapeChange.emit(e))
+
+        if (e.shape.toUpperCase() === 'MARKER') {
+          this.removeTemporaryMarkerLayer();
+          this.shapeChangeComplete.emit(e);
+        }
+      };
+
+      this.map.on('pm:create', (e) => {
+        this.shapeChange.emit(e);
+
+        if (e.shape.toUpperCase() === 'MARKER') {
+          this.removeTemporaryMarkerLayer();
+          this.temporaryMarkerLayer = e.layer;
+        }
+
+        if (e.shape.toUpperCase() === 'POLYGON') {
+          this.shapeChangeComplete.emit(e);
+        }
+      });
+
+      this.map.on('pm:drawstart', (e) => this.shapeChange.emit(e));
+      this.map.on('pm:drawend', onDrawEnd);
+
+      this.map.on('pm:remove', (e) => {
+        this.shapeChange.emit(e);
+        this.shapeChangeComplete.emit(e);
+      });
+
+      this.map.on('pm:actionclick', (e) => {
+        if (e.action.text.toUpperCase() === 'CANCEL') {
+          this.removeTemporaryMarkerLayer();
+          this.map.off('pm:drawend');
+          setTimeout(() => this.map.on('pm:drawend', onDrawEnd));
+          return;
+        }
+
+        if (e.action.text.toUpperCase() === 'FINISH') {
+          this.shapeChangeComplete.emit(e);
+        }
+      });
     }
 
     // Update.
     this.update();
+  }
+
+  /**
+   * Removes this.temporaryMarkerLayer (if set) from this.map.
+   */
+  removeTemporaryMarkerLayer(): void {
+    if (!this.temporaryMarkerLayer) {
+      return;
+    }
+    this.map.removeLayer(this.temporaryMarkerLayer);
   }
 
   //
@@ -182,7 +238,13 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
     // Add geometries
     this.mapGeometries.filter(v => v).forEach((mapGeometry) => {
       // @ts-ignore
-      const layer = L.geoJSON(mapGeometry.geometry);
+      const layer = L.geoJSON(mapGeometry.geometry, )
+
+      if(mapGeometry.title) {
+        layer.bindTooltip(mapGeometry.title);
+      }
+
+      layer.addEventListener('click', () => mapGeometry.onClick ? mapGeometry.onClick() : null);
       this.map.addLayer(layer);
 
       if (mapGeometry.editable) {
@@ -203,7 +265,26 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
     // Add markers
     this.mapMarkers.filter(v => v).map((mapMarker: MapMarker) => {
-      const marker = L.marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as L.LatLngExpression);
+      const iconSize = (mapMarker.iconSize || [25, 41]) as L.PointExpression;
+      const icon = new L.Icon({
+        iconAnchor: (mapMarker.iconAnchor || [iconSize[0]/2, iconSize[1]]) as L.PointExpression,
+        iconUrl: mapMarker.iconUrl,
+        iconSize: iconSize,
+        shadowAnchor: (mapMarker.shadowAnchor || [14, 62]) as L.PointExpression,
+        shadowSize: (mapMarker.shadowSize || [50,64]) as L.PointExpression,
+        shadowUrl: mapMarker.shadowUrl || `${LEAFLET_ASSETS}marker-shadow.png`,
+      })
+
+      const markerOptions = {
+        icon: mapMarker.iconUrl ? icon : undefined,
+      }
+
+      const marker = L.marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as L.LatLngExpression, markerOptions);
+
+      if(mapMarker.title) {
+        marker.bindTooltip(mapMarker.title);
+      }
+
       marker.addEventListener('click', () => mapMarker.onClick ? mapMarker.onClick() : null);
       this.map.addLayer(marker);
 

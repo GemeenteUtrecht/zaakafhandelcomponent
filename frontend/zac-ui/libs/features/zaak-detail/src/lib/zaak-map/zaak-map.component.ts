@@ -1,9 +1,9 @@
 import {Component, Input, OnInit} from '@angular/core';
 import * as L from 'leaflet';
-import {ZaakService} from '@gu/services';
 import {SnackbarService} from '@gu/components';
-import {Zaak} from "@gu/models";
-import {MapGeometry} from "../../../../../shared/ui/components/src/lib/components/map/map";
+import {ZaakObjectService, ZaakService} from '@gu/services';
+import {RelatedCase, Zaak, ZaakObject, ZaakObjectGroup} from '@gu/models';
+import {MapGeometry, MapMarker} from '../../../../../shared/ui/components/src/lib/components/map/map';
 
 @Component({
   selector: 'gu-zaak-map',
@@ -13,14 +13,25 @@ export class ZaakMapComponent implements OnInit {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
+  /** @type {Zaak} The case (zaak) to show geographical information for. */
   zaak: Zaak = null;
-  mapGeometries: MapGeometry[] = []
+
+  /** @type {MapGeometry[]} The map geometries to draw on the map. */
+  mapGeometries: MapGeometry[] = [];
+
+  /** @type {MapGeometry[]} The map geometry that is being changed. */
+  updatedMapGeometry: MapGeometry;
+
+  /** @type {mapMarkers[]} The map markers to draw on the map. */
+  mapMarkers: MapMarker[] = [];
+
+  /** @type {number[]} The map's center coordinates. */
   center = null;
 
   /** @type {string} Possible error message. */
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van zaakinformatie.'
 
-  constructor(private snackbarService: SnackbarService, private zaakService: ZaakService) {
+  constructor(private snackbarService: SnackbarService, private zaakService: ZaakService, private zaakObjectService: ZaakObjectService) {
   }
 
   /**
@@ -36,23 +47,63 @@ export class ZaakMapComponent implements OnInit {
   //
 
   /**
-   * Fetches the zaak (case) and sets geometrical data.
+   * Fetches the case (zaak) and sets geometrical data.
    */
   getContextData(): void {
+    this.mapGeometries = [];
+    this.getZaakMapGeometries();
+    this.getRelatedZaakMapGeometries();
+    this.getRelatedObjectGeometries();
+  }
+
+  /**
+   * Fetches case (zaak) geometries.
+   */
+  getZaakMapGeometries(): void {
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak) => {
         if (zaak.zaakgeometrie?.coordinates) {
           const latLng = L.polygon([zaak.zaakgeometrie.coordinates] as L.LatLngExpression[]).getBounds().getCenter()
           this.center = [latLng.lat, latLng.lng];
-          this.mapGeometries = [{
-            geometry: zaak.zaakgeometrie,
+          this.mapGeometries = [...this.mapGeometries, this.zaakService.zaakToMapGeometry(zaak, {
             onChange: this.onMapShapeChange.bind(this),
-          }]
-
+          })];
         }
         this.zaak = zaak;
       },
       this.reportError.bind(this)
+    );
+  }
+  /**
+   * Fetches related case (zaak) geometries.
+   */
+  getRelatedZaakMapGeometries() {
+    this.zaakService.listRelatedCases(this.bronorganisatie, this.identificatie).subscribe(
+      (relatedCases: RelatedCase[]) => {
+        const cases = relatedCases.map((relatedCase: RelatedCase) => relatedCase.zaak);
+
+        cases.forEach((zaak: Zaak) => {
+          this.mapGeometries = [...this.mapGeometries, this.zaakService.zaakToMapGeometry(zaak, {
+            onChange: this.onMapShapeChange.bind(this),
+          })];
+        });
+      }
+    );
+  }
+
+  /**
+   * Fetches related object geometries.
+   */
+  getRelatedObjectGeometries(): void {
+    this.zaakService.listRelatedObjects(this.bronorganisatie, this.identificatie).subscribe(
+      (zaakObjectGroups: ZaakObjectGroup[]) => {
+        this.mapMarkers = zaakObjectGroups
+          .reduce((acc: ZaakObject[], zaakObjectGroup: ZaakObjectGroup) => {
+            return [...acc, ...zaakObjectGroup.items]
+          }, [])
+          .map(this.zaakObjectService.zaakObjectToMapMarker)
+      },
+      this.reportError.bind(this),
     );
   }
 
@@ -65,10 +116,6 @@ export class ZaakMapComponent implements OnInit {
    * @param event
    */
   onMapShapeChange(event): void {
-    if (['pm:dragstart', 'pm:drag', 'pm:edit'].indexOf(event.type) > -1) {
-      return;
-    }
-
     const layer = event.layer;
     const geoJSON = layer?.toGeoJSON();
 
@@ -78,12 +125,32 @@ export class ZaakMapComponent implements OnInit {
 
     const geometry = (event.type) === 'pm:remove' ? null : geoJSON?.geometry;
 
+    this.updatedMapGeometry = {
+      geometry: geometry,
+      onChange: this.onMapShapeChange.bind(this),
+    };
+  }
+
+  /**
+   * Gets called when the shape is done editing.
+   * Submits new shape to the API.
+   * @param {Event} event
+   */
+  onMapShapeComplete(event): void {
+    const layer = event.layer;
+    const geoJSON = layer?.toGeoJSON();
+    let geometry = geoJSON?.geometry;
+
+    if (!geometry && this.updatedMapGeometry) {
+      geometry = this.updatedMapGeometry.geometry;
+      this.updatedMapGeometry = null;
+    }
+
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, {
       reden: 'SYSTEM: geolocation change.',
       vertrouwelijkheidaanduiding: this.zaak.vertrouwelijkheidaanduiding,
       zaakgeometrie: geometry
     }).subscribe(this.getContextData.bind(this), this.reportError.bind(this));
-
   }
 
   //

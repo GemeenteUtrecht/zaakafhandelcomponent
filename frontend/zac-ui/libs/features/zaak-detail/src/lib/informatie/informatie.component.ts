@@ -1,8 +1,7 @@
 import {Component, Input, OnInit, OnChanges} from '@angular/core';
 import {EigenschapWaarde, Zaak} from '@gu/models';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
-import {InformatieService} from './informatie.service';
-import {ZaakService} from '@gu/services';
+import {MetaService, ZaakService} from '@gu/services';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
@@ -40,12 +39,12 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   /**
    * Constructor method.
-   * @param {InformatieService} informatieService
+   * @param metaService
    * @param {SnackbarService} snackbarService
    * @param {ZaakService} zaakService
    */
   constructor(
-    private informatieService: InformatieService,
+    private metaService: MetaService,
     private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
@@ -172,15 +171,11 @@ export class InformatieComponent implements OnInit, OnChanges {
   fetchConfidentialityChoices() {
     this.isCaseAPILoading = true;
 
-    this.informatieService.getConfidentiality().subscribe(
+    this.metaService.listConfidentialityClassifications().subscribe(
       (data) => {
         this.confidentialityChoices = data;
         this.isCaseAPILoading = false;
-      },
-      (error) => {
-        console.error(error);
-        this.isCaseAPILoading = false;
-      })
+      }, this.reportError.bind(this))
   }
 
   /**
@@ -268,6 +263,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   reportError(error: any): void {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    this.isCaseAPILoading = false;
     console.error(error);
   }
 }

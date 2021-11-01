@@ -1,10 +1,8 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { Table } from '@gu/models';
-import { ApplicationHttpClient } from '@gu/services';
-import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
-import { ModalService } from '@gu/components';
-import { RelatedCase } from '../../models/related-case';
+import {Component, Input, OnChanges} from '@angular/core';
+import {ActivatedRoute} from '@angular/router';
+import {ModalService, SnackbarService} from '@gu/components';
+import {RelatedCase, Table} from '@gu/models';
+import {ZaakService} from '@gu/services';
 
 @Component({
   selector: 'gu-gerelateerde-zaken',
@@ -16,16 +14,20 @@ export class GerelateerdeZakenComponent implements OnChanges {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
+  readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
+
   tableData: Table = new Table(['Zaaknummer', 'Zaaktype'], []);
 
   data: any;
   isLoading = true;
 
   constructor(
-    private http: ApplicationHttpClient,
     private route: ActivatedRoute,
-    private modalService: ModalService
-  ) { }
+    private snackbarService: SnackbarService,
+    private modalService: ModalService,
+    private zaakService: ZaakService,
+  ) {
+  }
 
   ngOnChanges(): void {
     this.fetchRelatedCases();
@@ -33,23 +35,15 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   fetchRelatedCases() {
     this.isLoading = true;
-    this.getRelatedCases().subscribe( data => {
+    this.zaakService.listRelatedCases(this.bronorganisatie, this.identificatie).subscribe(data => {
       this.tableData.bodyData = this.formatTableData(data);
       this.data = data;
       this.isLoading = false;
-    }, error => {
-      console.log(error);
-      this.isLoading = false;
-    })
+    }, this.reportError.bind(this))
   }
 
-  getRelatedCases(): Observable<RelatedCase[]> {
-    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/related-cases`);
-    return this.http.Get<RelatedCase[]>(endpoint);
-  }
-
-  formatTableData(data){
-    return data.map( (element: RelatedCase) => {
+  formatTableData(data) {
+    return data.map((element: RelatedCase) => {
       const eigenschappenArray = [
         `Resultaat: ${element.zaak.resultaat ? element.zaak.resultaat : '-'}`,
         `Status: ${element.zaak.status ? element.zaak.status.statustype.omschrijving : '-'}`,
@@ -72,5 +66,18 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   openModal(id: string) {
     this.modalService.open(id);
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 }

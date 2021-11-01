@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component} from '@angular/core';
 import {TableSort, Zaak} from '@gu/models';
 import {PageEvent} from '@angular/material/paginator';
 import {MapGeometry, MapMarker} from "../../../../shared/ui/components/src/lib/components/map/map";
+import {ZaakService} from "@gu/services";
 
 @Component({
   selector: 'gu-features-search',
@@ -10,7 +11,7 @@ import {MapGeometry, MapMarker} from "../../../../shared/ui/components/src/lib/c
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FeaturesSearchComponent {
-  mapGeometry: MapGeometry;
+  mapGeometries: MapGeometry[] = [];
   mapMarkers: MapMarker[] = [];
 
   resultData: Zaak[] = [];
@@ -18,22 +19,59 @@ export class FeaturesSearchComponent {
   sortData: TableSort;
   pageData: PageEvent;
 
-  constructor(private changeDetectorRef: ChangeDetectorRef) {
+  constructor(private changeDetectorRef: ChangeDetectorRef, private zaakService: ZaakService) {
   }
 
+  //
+  // Context.
+  //
+
+  /**
+   * Gets the map geometreis to show on the map.
+   * @return {MapGeometry[]}
+   */
+  getZaakMapGeometries(): MapGeometry[] {
+    return this.resultData.map((zaak) => this.zaakService.zaakToMapGeometry(zaak, {
+      onClick: () => {
+        this.zaakService.navigateToCase(zaak);
+      },
+    }));
+  }
+
+  //
+  // Events.
+  //
+
+  /**
+   * Gets called when a map geometry callback is triggered.
+   * @param {MapGeometry} mapGeometry
+   */
   onMapGeometry(mapGeometry: MapGeometry): void {
-    this.mapGeometry = mapGeometry;
+    this.mapGeometries = [...this.getZaakMapGeometries(), mapGeometry];
   }
 
-  onMapMarkers(mapMarkers): void {
+  /**
+   * Gets called when a map marker callback is triggered.
+   * @param {MapMarker[]} mapMarkers
+   */
+  onMapMarkers(mapMarkers: MapMarker[]): void {
     this.mapMarkers = mapMarkers;
   }
 
-  onLoadResult(data): void {
-    this.resultData = data
+  /**
+   * Gets called when te rersult is loaded.
+   * @param {Zaak[]} cases
+   */
+  onLoadResult(cases: Zaak[]): void {
+    this.resultData = cases
+    this.mapGeometries = [...this.getZaakMapGeometries()];
     this.changeDetectorRef.detectChanges()
   }
 
+  /**
+   * Gets called on result length.
+   * @param data
+   */
   onResultLength(data): void {
     this.resultLength = data;
   }

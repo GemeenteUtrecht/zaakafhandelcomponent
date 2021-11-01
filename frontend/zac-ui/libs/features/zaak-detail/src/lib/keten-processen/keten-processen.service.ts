@@ -135,11 +135,6 @@ export class KetenProcessenService {
     return this.http.Get<UserGroupSearch>(endpoint);
   }
 
-  getCurrentUser(): Observable<User> {
-    const endpoint = encodeURI("/api/accounts/users/me");
-    return this.http.Get<User>(endpoint);
-  }
-
   postAssignTask(formData) {
     const endpoint = encodeURI('/api/camunda/claim-task');
     return this.http.Post<any>(endpoint, formData)

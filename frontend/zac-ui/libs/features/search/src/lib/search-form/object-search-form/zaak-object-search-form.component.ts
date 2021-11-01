@@ -12,7 +12,7 @@ import {
 } from '@gu/models';
 import {ObjectsService, ZaakObjectService} from '@gu/services';
 import {SearchService} from '../../search.service';
-import {MapGeometry} from "../../../../../../shared/ui/components/src/lib/components/map/map";
+import {MapGeometry, MapMarker} from "../../../../../../shared/ui/components/src/lib/components/map/map";
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -60,7 +60,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
-  @Output() mapMarkers: EventEmitter<any> = new EventEmitter<{coordinates: Position[]}>();
+  @Output() mapMarkers: EventEmitter<any> = new EventEmitter<{ coordinates: Position[] }>();
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.';
 
@@ -260,17 +260,10 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       (zaakObjects: ZaakObject[]) => {
         this.zaakObjects = zaakObjects;
 
-        const activeMapMarkers = this.zaakObjects.map((zaakObject: ZaakObject) => {
-          const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
-          return zaakObjectGeometry?.type === 'Point' ? {
-
-            coordinates: zaakObjectGeometry?.coordinates?.length > 1
-              ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
-              : [],
+        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
             onClick: (event) => this._selectZaakObject(event, zaakObject),
-
-          } : null
-        }).filter((mapMarker) => mapMarker);
+          })
+        ).filter((mapMarker) => mapMarker);
 
         this.mapMarkers.emit(activeMapMarkers);
       },
