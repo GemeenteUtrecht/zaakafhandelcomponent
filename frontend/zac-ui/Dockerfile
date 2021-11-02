@@ -9,7 +9,7 @@ ARG ui_prefix=/ui/
 RUN ./node_modules/.bin/ng build --prod --base-href="$ui_prefix"
 
 # Stage 2 -- serve static build with nginx
-FROM nginx:1.19
+FROM nginxinc/nginx-unprivileged:1.20
 
 WORKDIR /apps
 
