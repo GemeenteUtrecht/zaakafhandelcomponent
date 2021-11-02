@@ -280,8 +280,6 @@ pyyaml==5.4.1
     #   drf-spectacular
     #   gemma-zds-client
     #   tablib
-raven==6.10.0
-    # via -r requirements/base.txt
 redis==3.3.8
     # via
     #   -r requirements/base.txt

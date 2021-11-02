@@ -190,8 +190,6 @@ pyyaml==5.4.1
     #   drf-spectacular
     #   gemma-zds-client
     #   tablib
-raven==6.10.0
-    # via -r requirements/base.in
 redis==3.3.8
     # via django-redis
 requests-mock==1.7.0
