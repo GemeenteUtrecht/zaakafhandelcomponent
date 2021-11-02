@@ -42,3 +42,4 @@ drf-spectacular
 
 # monitoring
 elastic-apm
+sentry-sdk
