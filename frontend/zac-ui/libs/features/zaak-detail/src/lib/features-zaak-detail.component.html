@@ -1,4 +1,7 @@
-<section class="row m-0">
+<!--  Loading -->
+<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+
+<section *ngIf="!isLoading" class="row m-0">
   <div class="col-xl-10 p-0">
     <div class="feature-container pb-0">
       <div class="content-background mb-0">
@@ -32,10 +35,6 @@
           </section>
 
 
-          <!--  Loading -->
-          <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-
-
           <!-- Error and 403 access request -->
           <section *ngIf="hasError && errorMessage" class="row">
             <div class="col-lg-6">
@@ -62,7 +61,8 @@
             </div>
           </section>
 
-          <section class="row">
+          <!-- Components -->
+          <section *ngIf="!isLoading && !hasError" class="row" >
 
             <!-- Left column -->
             <div class="col-4">
@@ -175,7 +175,7 @@
   </div>
 
   <!-- Map -->
-  <aside class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
+  <aside *ngIf="!isLoading && !hasError" class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
     <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
   </aside>
 </section>

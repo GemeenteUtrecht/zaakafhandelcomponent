@@ -65,6 +65,26 @@ export const setIsCached = (baseKey: string, args: any[], isCached: Boolean): vo
   _getCacheBackend().setTimestamp(_getCacheKey(baseKey, args), null);
 }
 
+/**
+ * Returns whether tthe attempt of caching resulted in a failure.
+ * @param baseKey {string} The base key for the cached target, used together with args to create a unique identifier.
+ * @param args {*[]} Arguments passed to the cached method.
+ * @return {boolean}
+ */
+export const getCacheFailed = (baseKey: string, args: any[]): boolean => {
+  return _getCacheBackend().getFailed(_getCacheKey(baseKey, args));
+}
+
+/**
+ * Sets whether the attempt of caching resulted in a failure.
+ * @param baseKey {string} The base key for the cached target, used together with args to create a unique identifier.
+ * @param args {*[]} Arguments passed to the cached method.
+ * @param {boolean} cacheFailed
+ */
+export const setCacheFailed = (baseKey: string, args: any[], cacheFailed: boolean): void => {
+  _getCacheBackend().setFailed(_getCacheKey(baseKey, args), cacheFailed)
+}
+
 
 //
 // Private (cache) API.
@@ -83,6 +103,8 @@ const _getCacheKey = (baseKey: string, args: any[]): string => {
 interface CacheBackend {
   getValue: (key: string) => any;
   setValue: (key: string, value: any) => void;
+  getFailed: (key: string) => boolean;
+  setFailed: (key: string, value: boolean) => void;
   clearValues: (key: string) => void;
 
   getTimestamp: (key: string) => number;
@@ -103,6 +125,10 @@ const _getCacheBackend = (): CacheBackend => {
 
     getValue: (key: string): any => window['__cache__'].entries[`${key}value`],
     setValue: (key: string, value: any): void => window['__cache__'].entries[`${key}value`] = value,
+
+    getFailed: (key: string): any => window['__cache__'].entries[`${key}failed`],
+    setFailed: (key: string, failed: boolean): boolean => window['__cache__'].entries[`${key}failed`] = failed,
+
     clearValues: (key: string) => Object.keys(window['__cache__'].entries)
       .filter((cachedKey) => cachedKey.startsWith(key))
       .forEach((cachedKey) => delete window['__cache__'].entries[cachedKey]),
