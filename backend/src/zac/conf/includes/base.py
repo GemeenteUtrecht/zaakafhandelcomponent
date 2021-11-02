@@ -2,9 +2,9 @@ import os
 
 from django.urls import reverse_lazy
 
-import raven
+import sentry_sdk
 
-from .environ import config
+from .utils import config, get_current_version, get_sentry_integrations
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 DJANGO_PROJECT_DIR = os.path.abspath(
@@ -366,16 +366,8 @@ X_FRAME_OPTIONS = "DENY"
 PROJECT_NAME = "zac"
 SITE_TITLE = "Zaakafhandeling"
 
-ENVIRONMENT = None
+ENVIRONMENT = config("ENVIRONMENT", "")
 SHOW_ALERT = True
-
-if "GIT_SHA" in os.environ:
-    GIT_SHA = config("GIT_SHA", "")
-# in docker (build) context, there is no .git directory
-elif os.path.exists(os.path.join(BASE_DIR, ".git")):
-    GIT_SHA = raven.fetch_git_sha(BASE_DIR)
-else:
-    GIT_SHA = None
 
 ##############################
 #                            #
@@ -482,22 +474,20 @@ ZRC_API_SCHEMA = config(
 )
 
 #
-# RAVEN/SENTRY - error monitoring
+# SENTRY - error monitoring
 #
 SENTRY_DSN = config("SENTRY_DSN", None)
+RELEASE = get_current_version()
 
 if SENTRY_DSN:
-    INSTALLED_APPS = INSTALLED_APPS + ["raven.contrib.django.raven_compat"]
+    SENTRY_CONFIG = {
+        "dsn": SENTRY_DSN,
+        "environment": ENVIRONMENT,
+        "release": RELEASE,
+    }
 
-    RAVEN_CONFIG = {"dsn": SENTRY_DSN, "release": GIT_SHA}
-    LOGGING["handlers"].update(
-        {
-            "sentry": {
-                "level": "WARNING",
-                "class": "raven.handlers.logging.SentryHandler",
-                "dsn": RAVEN_CONFIG["dsn"],
-            }
-        }
+    sentry_sdk.init(
+        **SENTRY_CONFIG, integrations=get_sentry_integrations(), send_default_pii=True
     )
 
 #
