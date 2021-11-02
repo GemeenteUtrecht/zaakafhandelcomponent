@@ -1,5 +1,5 @@
 # Stage 1 - Compile needed python dependencies
-FROM python:3.7-slim-buster AS build
+FROM python:3.9-slim-buster AS build
 
 WORKDIR /app
 
@@ -27,14 +27,14 @@ COPY src/zac/js/ /app/src/zac/js/
 RUN npm run build --production
 
 # Stage 3 - Build docker image suitable for execution and deployment
-FROM python:3.7-slim-buster AS production
+FROM python:3.9-slim-buster AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
         mime-support \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Stage 3.1 - Set up dependencies
-COPY --from=build /usr/local/lib/python3.7 /usr/local/lib/python3.7
+COPY --from=build /usr/local/lib/python3.9 /usr/local/lib/python3.9
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
 # required for fonts,styles etc.
