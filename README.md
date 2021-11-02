@@ -26,7 +26,7 @@ You need the following dependencies on your development machine:
 
 * PostgreSQL 10+
 * Redis 5+ if you're using the real cache backend, which is recommended
-* Python 3.7, with virtualenv recommended or similar tools
+* Python 3.9, with virtualenv recommended or similar tools
 
 You also need Elastic Search, but that one can easily be run using Docker:
 
