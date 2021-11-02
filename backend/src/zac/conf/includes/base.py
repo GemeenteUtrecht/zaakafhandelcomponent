@@ -246,6 +246,7 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 #
 LOG_STDOUT = config("LOG_STDOUT", default=False)
 LOG_LEVEL = config("LOG_LEVEL", default="INFO")
+LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=False)
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
@@ -312,7 +313,7 @@ LOGGING = {
             "propagate": True,
         },
         "performance": {
-            "handlers": ["performance"],
+            "handlers": ["performance"] if LOG_PERFORMANCE else [],
             "level": "INFO",
             "propagate": False,
         },
