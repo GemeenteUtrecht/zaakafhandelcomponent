@@ -18,9 +18,9 @@ Prerequisites
 
 You need the following libraries and/or programs:
 
-* `Python`_ 3.7 or above
+* `Python`_ 3.9 or above
 * Python `Virtualenv`_ and `Pip`_
-* `PostgreSQL`_ 9.6 or above
+* `PostgreSQL`_ 10 or above
 * `Node.js`_
 * `npm`_
 * `Elasticsearch`_
