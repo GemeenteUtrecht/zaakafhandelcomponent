@@ -1,5 +1,5 @@
 # Stage 1 - Compile needed python dependencies
-FROM python:3.9-slim-buster AS build
+FROM python:3.9-slim-bullseye AS build
 
 WORKDIR /app
 
@@ -27,14 +27,22 @@ COPY src/zac/sass/ /app/src/zac/sass/
 COPY src/zac/js/ /app/src/zac/js/
 RUN npm run build --production
 
-# Stage 3 - Build docker image suitable for execution and deployment
-FROM python:3.9-slim-buster AS production
+# Stage 3 - Build docker image suitable for production
+FROM python:3.9-slim-bullseye AS production
+
+# Stage 3.1 - Set up the needed production dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        procps \
+        vim \
         mime-support \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Stage 3.1 - Set up dependencies
+WORKDIR /app
+COPY ./bin/docker_start.sh /start.sh
+RUN mkdir /app/log /app/media
+
+# copy backend build deps
 COPY --from=build /usr/local/lib/python3.9 /usr/local/lib/python3.9
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
@@ -42,14 +50,16 @@ COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 COPY --from=frontend-build /app/node_modules/font-awesome /app/node_modules/font-awesome
 
 # Stage 3.2 - Copy source code
-WORKDIR /app
-COPY ./bin/docker_start.sh /start.sh
-RUN mkdir /app/log
-
 COPY ./src /app/src
 COPY --from=frontend-build /app/src/zac/static/fonts /app/src/zac/static/fonts
 COPY --from=frontend-build /app/src/zac/static/css /app/src/zac/static/css
 COPY --from=frontend-build /app/src/zac/static/js /app/src/zac/static/js
+
+RUN useradd -M -u 1000 appuser
+RUN chown -R appuser:appuser /app
+
+# drop privileges
+USER appuser
 
 ENV PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=zac.conf.docker
 

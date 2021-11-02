@@ -1,9 +1,9 @@
-FROM nginx:1.19
+FROM nginxinc/nginx-unprivileged:1.20
 
 ENV BACKEND_HOST=backend \
     BACKEND_PORT=8000  \
     FRONTEND_HOST=frontend  \
-    FRONTEND_PORT=80 \
+    FRONTEND_PORT=8080 \
     FRONTEND_PATH=/
 
 COPY wait-for-it.sh /wait-for-it.sh
