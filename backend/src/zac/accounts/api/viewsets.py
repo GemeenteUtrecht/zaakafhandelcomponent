@@ -22,15 +22,15 @@ from ..models import (
     UserAtomicPermission,
 )
 from .filters import UserFilter
-from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess
+from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess, ManageGroup
 from .serializers import (
     AccessRequestDetailSerializer,
     AtomicPermissionSerializer,
     AuthProfileSerializer,
     CreateAccessRequestSerializer,
     GrantPermissionSerializer,
-    GroupSerializer,
     HandleAccessRequestSerializer,
+    ManageGroupSerializer,
     RoleSerializer,
     UserSerializer,
 )
@@ -61,13 +61,19 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 @extend_schema_view(
     list=extend_schema(summary=_("List user groups")),
     retrieve=extend_schema(summary=_("Retrieve a user group")),
+    create=extend_schema(summary=_("Create a user group")),
+    update=extend_schema(summary=_("Update a user group")),
+    destroy=extend_schema(summary=_("Delete a user group")),
+    partial_update=extend_schema(exclude=True),
 )
-class GroupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Group.objects.all().order_by("name")
-    serializer_class = GroupSerializer
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.prefetch_related("user_set").all().order_by("name")
     pagination_class = BffPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ["name"]
+    permission_classes = [IsAuthenticated, ManageGroup]
+    allowed_methods = ["get", "put", "post", "delete"]
+    serializer_class = ManageGroupSerializer
 
 
 @extend_schema_view(

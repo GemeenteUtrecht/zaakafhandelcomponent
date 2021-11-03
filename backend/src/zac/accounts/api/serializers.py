@@ -75,6 +75,37 @@ class GroupSerializer(serializers.ModelSerializer):
         return _("Group") + ": " + obj.name
 
 
+class ManageGroupSerializer(GroupSerializer):
+    users = serializers.SlugRelatedField(
+        source="user_set",
+        many=True,
+        read_only=False,
+        slug_field="username",
+        queryset=User.objects.all(),
+        required=False,
+    )
+
+    class Meta(GroupSerializer.Meta):
+        model = GroupSerializer.Meta.model
+        fields = GroupSerializer.Meta.fields
+
+    @transaction.atomic()
+    def save(self, **kwargs):
+        users = self.validated_data.pop("user_set")
+        group = self.instance
+        if group is not None:
+            old_users = group.user_set.all()
+            remove_users = [old_user for old_user in old_users if old_user not in users]
+            add_users = [new_user for new_user in users if new_user not in old_users]
+            group.user_set.add(*add_users)
+            group.user_set.remove(*remove_users)
+            return super().save(**kwargs)
+
+        group = super().save(**kwargs)
+        group.user_set.add(*users)
+        return group
+
+
 class CatalogusURLSerializer(serializers.Serializer):
     url = serializers.URLField(max_length=1000, required=True)
 
