@@ -1,4 +1,7 @@
-::ng-deep gu-map {
+@import '~leaflet/dist/leaflet.css';
+@import '~@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
+
+gu-map {
   display: block;
   height: 100%;
   position: relative;

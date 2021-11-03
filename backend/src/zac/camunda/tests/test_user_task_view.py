@@ -558,7 +558,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         payload = {
             "assignedUsers": [
                 {
-                    "users": [user.username for user in users],
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
                     "deadline": "2020-01-01",
                 },
             ],

@@ -1,6 +1,9 @@
 from typing import List, Optional, Union
 
+from django.contrib.auth.models import Group
+
 from zac.camunda.api.permissions import zaakproces_usertasks
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
@@ -72,8 +75,20 @@ def add_permissions_for_advisors(
 ) -> List[UserAtomicPermission]:
 
     user_deadlines = review_request.user_deadlines or {}
-    rr_usernames = list(user_deadlines.keys())
+    rr_usernames = []
+    rr_groupnames = []
+    for user in user_deadlines.keys():
+        user_or_group, name = user.split(":", 1)
+        if user_or_group == AssigneeTypeChoices.group:
+            rr_groupnames.append(name)
+        else:
+            rr_usernames.append(name)
+
     rr_users = User.objects.filter(username__in=rr_usernames)
+    groups = Group.objects.prefetch_related("user_set").filter(name__in=rr_groupnames)
+    for group in groups:
+        rr_users |= group.user_set.all()
+
     zaak_url = (
         review_request.for_zaak.url
         if isinstance(review_request.for_zaak, Zaak)

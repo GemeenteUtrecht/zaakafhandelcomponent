@@ -1,0 +1,9 @@
+<gu-map *ngIf="zaak"
+        [center]="center"
+        [editable]="true"
+        [mapGeometries]="mapGeometries"
+        [mapMarkers]="mapMarkers"
+        (shapeChange)="onMapShapeChange($event)"
+        (shapeChangeComplete)="onMapShapeComplete($event)"
+        [zoom]="7"
+></gu-map>

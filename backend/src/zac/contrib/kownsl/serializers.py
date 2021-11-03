@@ -57,7 +57,7 @@ class ApprovalSerializer(APIModelSerializer):
 
     class Meta:
         model = Approval
-        fields = ("created", "author", "status", "toelichting")
+        fields = ("created", "author", "status", "toelichting", "group")
 
     def get_status(self, obj) -> str:
         if obj.approved:
@@ -124,7 +124,7 @@ class AdviceSerializer(APIModelSerializer):
 
     class Meta:
         model = Advice
-        fields = ("created", "author", "advice", "documents")
+        fields = ("created", "author", "advice", "documents", "group")
 
 
 class AdviceReviewsSerializer(serializers.Serializer):

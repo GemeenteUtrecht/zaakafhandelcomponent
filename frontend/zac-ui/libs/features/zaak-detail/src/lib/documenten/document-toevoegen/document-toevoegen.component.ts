@@ -4,6 +4,7 @@ import { FileUploadComponent, ModalService, SnackbarService } from '@gu/componen
 import { Document } from '@gu/models';
 import { DocumentenService } from '../documenten.service';
 
+import {CachedObservableMethod} from '@gu/utils';
 
 /**
  * This component allows users to add or override documents.
@@ -26,7 +27,6 @@ import { DocumentenService } from '../documenten.service';
   styleUrls: ['./document-toevoegen.component.scss']
 })
 export class DocumentToevoegenComponent implements OnInit {
-
   @Input() mainZaakUrl: string;
   @Input() zaaktypeurl: string;
   @Input() bronorganisatie: string;
@@ -55,28 +55,6 @@ export class DocumentToevoegenComponent implements OnInit {
     private snackbarService: SnackbarService,
   ) { }
 
-
-  //
-  // Getters / setters.
-  //
-
-  get documentTypeControl(): FormControl {
-    return this.addDocumentForm.controls['documentType'] as FormControl;
-  }
-
-  get reasonControl(): FormControl {
-    return this.addDocumentForm.controls['reason'] as FormControl;
-  }
-
-  //
-  // Angular lifecycle.
-  //
-
-  /**
-   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
-   * ngOnInit() method to handle any additional initialization tasks.
-   */
-
   ngOnInit() {
     this.addDocumentForm = this.fb.group({
       documentFile: this.fb.control("", Validators.required)
@@ -95,12 +73,14 @@ export class DocumentToevoegenComponent implements OnInit {
     this.fetchDocumentTypes()
   }
 
-  //
-  // Context.
-  //
-  /**
-   * Fetch document types.
-   */
+  get documentTypeControl(): FormControl {
+    return this.addDocumentForm.controls['documentType'] as FormControl;
+  }
+
+  get reasonControl(): FormControl {
+    return this.addDocumentForm.controls['reason'] as FormControl;
+  }
+
   fetchDocumentTypes() {
     this.isLoading = true;
     if (this.mainZaakUrl) {
@@ -109,9 +89,13 @@ export class DocumentToevoegenComponent implements OnInit {
       })
     }
   }
-  /**
-   * Submit form.
-   */
+
+  @CachedObservableMethod('DocumentToevoegenComponent.getDocumentTypes')
+  getDocumentTypes(): Observable<HttpResponse<any>> {
+    const endpoint = encodeURI(`/api/core/document-types?zaak=${this.mainZaakUrl}`);
+    return this.http.Get<any>(endpoint);
+  }
+
   submitForm(): void {
     const formData = new FormData();
 
@@ -165,22 +149,17 @@ export class DocumentToevoegenComponent implements OnInit {
     this.addDocumentForm.reset();
   }
 
-  //
-  // Events.
-  //
+  postDocument(formData: FormData): Observable<Document> {
+    return this.http.Post<any>(encodeURI('/api/core/cases/document'), formData);
+  }
 
-  /**
-   * Add selected file to the form.
-   * @param {File} file
-   * @returns {Promise<void>}
-   */
+  patchDocument(formData: FormData): Observable<any> {
+    return this.http.Patch<any>(encodeURI('/api/core/cases/document'), formData);
+  }
+
   async handleFileSelect(file: File) {
     this.addDocumentForm.controls['documentFile'].setValue(file);
   }
-
-  //
-  // Error handling.
-  //
 
   /**
    * Error callback.
@@ -190,5 +169,4 @@ export class DocumentToevoegenComponent implements OnInit {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }
-
 }

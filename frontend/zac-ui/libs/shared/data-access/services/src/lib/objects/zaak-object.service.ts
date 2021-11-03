@@ -3,6 +3,8 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {Geometry, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
 import {ApplicationHttpClient} from '@gu/services';
+import {MapMarker} from "../../../../../ui/components/src/lib/components/map/map";
+import {ClearCacheOnMethodCall} from "@gu/utils";
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +20,7 @@ export class ZaakObjectService {
    * @param {string} objectTypeDescription
    * @return {Observable}
    */
+  @ClearCacheOnMethodCall('ZaakService.listRelatedObjects')
   createZaakObjectRelation(zaak: Zaak, zaakObject: ZaakObject, objectTypeDescription: string): Observable<ZaakObjectRelation> {
     const endpoint = encodeURI('/api/core/zaakobjects');
     return this.http.Post<ZaakObjectRelation>(endpoint, {
@@ -32,6 +35,7 @@ export class ZaakObjectService {
    * Removes the relation of an object to a zaak.
    * @param {string} zaakObjectRelationUrl
    */
+  @ClearCacheOnMethodCall('ZaakService.listRelatedObjects')
   deleteZaakObjectRelation(zaakObjectRelationUrl: string): Observable<void> {
     const endpoint = encodeURI('/api/core/zaakobjects');
     const params = new HttpParams().set('url', zaakObjectRelationUrl);
@@ -52,7 +56,7 @@ export class ZaakObjectService {
       type: objectTypeUrl,
     }
 
-    if(geometry) {
+    if (geometry) {
       search['geometry'] = {
         within: geometry
       }
@@ -72,13 +76,46 @@ export class ZaakObjectService {
    * @return {string}
    */
   stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
+    return ZaakObjectService._stringifyZaakObject(zaakObject, maxEntries);
+  }
+
+  /**
+   * Creates a string representation for a zaak object.
+   * @param {ZaakObject} zaakObject
+   * @param {number} [maxEntries] If set, the maximum amount of key/value pairs displayed.
+   * @return {string}
+   */
+  static _stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
     return Object.entries(zaakObject.record.data)
       .filter(([key,]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)  // Filter unwanted keys.
-      .filter(([,value]) => !value.match(/^http/))  // Filter URLs.
+      .filter(([, value]) => !value.match(/^http/))  // Filter URLs.
       .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)  // Create key/value string.
       .sort()  // Sort items alphabetically (key).
       .filter((value, index) => maxEntries === null || index < maxEntries)  // Limit entries
       .join(', ');  // Join string.
+  }
+
+  /**
+   * Converts a ZaakObject to a MapMarker, ready to draw on the map.
+   * @param zaakObject
+   * @param options
+   */
+  zaakObjectToMapMarker(zaakObject: ZaakObject, options: Object = {}): MapMarker {
+    const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
+    const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
+
+      title: ZaakObjectService._stringifyZaakObject(zaakObject),
+      coordinates: zaakObjectGeometry?.coordinates?.length > 1
+        ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
+        : [],
+      iconUrl: 'assets/map/marker-icon-red.png',
+
+    } as MapMarker : null;
+
+    if (mapMarker) {
+      Object.assign(mapMarker, options);
+    }
+    return mapMarker;
   }
 
   /**
@@ -88,11 +125,13 @@ export class ZaakObjectService {
    * @return {string} Value suitable for data_attrs argument.
    * @private
    */
-  _parseQuery(property: string, query: string): string {
+  private _parseQuery(property: string, query: string): string {
     return query.split(',')
       .map((part) => part.match(':') ? part : `${property}:${part}`)
       .map((keyValue) => keyValue.replace(/:\s*/g, ':').trim())
       .map((keyValue) => keyValue.replace(':', '__icontains__'))
       .join(',');
   }
+
+
 }

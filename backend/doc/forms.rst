@@ -26,6 +26,7 @@ implemented by the ZAC:
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
     - ``kownslFrontendUrl``: the URL for end users to submit their advice.
     - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+    - ``emailNotificationList``: a JSON of usernames or groupnames with an email notification flag (boolean).
 
 - ``zac:configureApprovalRequest``: presents a form to the end user to select documents
   from the case to create an approval request, and allows selection of assignees.
@@ -36,6 +37,7 @@ implemented by the ZAC:
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
     - ``kownslFrontendUrl``: the URL for end users to submit their approval.
     - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+    - ``emailNotificationList``: a JSON of usernames or groupnames with an email notification flag (boolean).
 
 - ``zac:doRedirect``: grabs the ``redirectTo`` process variable, and redirects the user
   to this location. A ``?state`` parameter is added for the receiving application, which

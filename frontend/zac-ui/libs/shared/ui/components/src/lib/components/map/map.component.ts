@@ -1,9 +1,21 @@
-import {ChangeDetectionStrategy, Component, Input, OnChanges, OnInit} from '@angular/core';
-import {geoJSON, latLng, LatLngExpression, MapOptions, marker, tileLayer} from 'leaflet';
-import {Geometry, Position} from '@gu/models';
-import {MapMarker} from './map';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output, ViewEncapsulation
+} from '@angular/core';
+import {Position} from '@gu/models';
+import {MapGeometry, MapMarker} from './map';
 import {RD_CRS} from './rd';
+import * as L from 'leaflet';
+import '@geoman-io/leaflet-geoman-free';
 
+/** @type {string} path to leaflet assets. */
+const LEAFLET_ASSETS = 'assets/vendor/leaflet/'
 
 /**
  * <gu-map></gu-map>
@@ -14,28 +26,42 @@ import {RD_CRS} from './rd';
  * Takes height: string as CSS value for the map's height.
  * Takes zoom: number as zoom value.
 
- * Takes geometries: Geometry[] as geometry layers.
- * Takes MapMarker: MapMarker[] as marker layers.
+ * Takes mapGeometries: MapGeometry[] as geometry layers.
+ * Takes mapMarkers: MapMarker[] as marker layers.
+
+ * Takes editable: boolean|L.PM.ToolbarOptions whether to allow creating/editing shapes.
  */
 @Component({
   selector: 'gu-map',
   templateUrl: 'map.component.html',
-  styleUrls: ['map.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./map.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class MapComponent implements OnInit, OnChanges {
-  @Input() center: Position = [5.1214, 52.0907] as Position;
+export class MapComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() center: Position;
   @Input() height: string;
-  @Input() zoom = 10;
+  @Input() zoom = 9;
 
-  @Input() geometries: Geometry[] = []
+  @Input() mapGeometries: MapGeometry[] = []
   @Input() mapMarkers: MapMarker[] = []
 
+  @Input() editable: boolean | L.PM.ToolbarOptions = false;
+
+  @Output() shapeChange: EventEmitter<any> = new EventEmitter<any>();
+  @Output() shapeChangeComplete: EventEmitter<any> = new EventEmitter<any>();
+
   /** @type {MapOptions} */
-  mapOptions: MapOptions;
+  mapOptions: L.MapOptions;
 
   /** @type {Object} The leaflet instance. */
   map = null;
+
+  /** @type {boolean} Whether the map is in edit mode. */
+  editMode = false;
+
+  /** @type {L.Layer} Temporary maker layer (used when creating a marker). */
+  temporaryMarkerLayer: L.Layer;
 
   //
   // Angular lifecycle.
@@ -46,7 +72,9 @@ export class MapComponent implements OnInit, OnChanges {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
-    this.getContextData();
+    requestAnimationFrame(() => {
+      this.getContextData();
+    });
   }
 
   /**
@@ -54,7 +82,15 @@ export class MapComponent implements OnInit, OnChanges {
    * method to handle any additional initialization tasks.
    */
   ngOnChanges(): void {
-    this.getContextData()
+    this.update()
+  }
+
+  /**
+   * A lifecycle hook that is called when a directive, pipe, or service is destroyed. Use for any custom cleanup that
+   * needs to occur when the instance is destroyed.
+   */
+  ngOnDestroy() {
+    this.map.remove();
   }
 
   //
@@ -65,39 +101,91 @@ export class MapComponent implements OnInit, OnChanges {
    * Sets the map context.
    */
   getContextData(): void {
-    const MAP_DEFAULTS = {
-      crs: RD_CRS,
-    };
+    L.Icon.Default.imagePath = LEAFLET_ASSETS,
 
-    const tilesService = 'https://geodata.nationaalgeoregister.nl/tiles/service';
-    const attribution = `
-      Kaartgegevens &copy;
-      <a href="https://www.kadaster.nl">Kadaster</a> |
-      <a href="https://www.verbeterdekaart.nl">Verbeter de kaart</a>
-    `;
+      // Map.
+      this.mapOptions = {
+        center: (this.center?.length > 1) ? L.latLng(this.center[1], this.center[0]) : L.latLng([52.0907, 5.1214]),
+        zoom: this.zoom,
+        crs: RD_CRS,
+      };
+    this.map = L.map('mapid', this.mapOptions)
 
-    const tileLayers = {
-      brt: {
-        url: `${tilesService}/wmts/brtachtergrondkaart/EPSG:28992/{z}/{x}/{y}.png`,
-        options: {
-          minZoom: 1,
-          maxZoom: 13,
-          attribution: attribution,
-        },
+    // Tiles.
+    const tileConfig = {
+      url: `https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:28992/{z}/{x}/{y}.png`,
+      options: {
+        minZoom: 1,
+        maxZoom: 13,
+        attribution: `
+          Kaartgegevens &copy;
+            <a href="https://www.kadaster.nl">Kadaster</a> |
+            <a href="https://www.verbeterdekaart.nl">Verbeter de kaart</a>
+            `,
       },
     };
+    const tileLayer = L.tileLayer(tileConfig.url, tileConfig.options);
+    tileLayer.addTo(this.map)
 
-    const layers = [
-      tileLayer(tileLayers.brt.url, tileLayers.brt.options),
-    ]
+    // Leaflet-geoman.
+    if (this.editable) {
 
-    this.mapOptions = Object.assign({}, MAP_DEFAULTS, {
-      center: latLng(this.center[1], this.center[0]),
-      zoom: this.zoom,
-      layers: layers,
-    });
+      const onDrawEnd = (e) => {
+        this.shapeChange.emit(e);
 
+        if (e.shape.toUpperCase() === 'MARKER') {
+          this.removeTemporaryMarkerLayer();
+          this.shapeChangeComplete.emit(e);
+        }
+      };
+
+      this.map.on('pm:create', (e) => {
+        this.shapeChange.emit(e);
+
+        if (e.shape.toUpperCase() === 'MARKER') {
+          this.removeTemporaryMarkerLayer();
+          this.temporaryMarkerLayer = e.layer;
+        }
+
+        if (e.shape.toUpperCase() === 'POLYGON') {
+          this.shapeChangeComplete.emit(e);
+        }
+      });
+
+      this.map.on('pm:drawstart', (e) => this.shapeChange.emit(e));
+      this.map.on('pm:drawend', onDrawEnd);
+
+      this.map.on('pm:remove', (e) => {
+        this.shapeChange.emit(e);
+        this.shapeChangeComplete.emit(e);
+      });
+
+      this.map.on('pm:actionclick', (e) => {
+        if (e.action.text.toUpperCase() === 'CANCEL') {
+          this.removeTemporaryMarkerLayer();
+          this.map.off('pm:drawend');
+          setTimeout(() => this.map.on('pm:drawend', onDrawEnd));
+          return;
+        }
+
+        if (e.action.text.toUpperCase() === 'FINISH') {
+          this.shapeChangeComplete.emit(e);
+        }
+      });
+    }
+
+    // Update.
     this.update();
+  }
+
+  /**
+   * Removes this.temporaryMarkerLayer (if set) from this.map.
+   */
+  removeTemporaryMarkerLayer(): void {
+    if (!this.temporaryMarkerLayer) {
+      return;
+    }
+    this.map.removeLayer(this.temporaryMarkerLayer);
   }
 
   //
@@ -134,25 +222,126 @@ export class MapComponent implements OnInit, OnChanges {
       return
     }
 
+    // Invalidate size.
     requestAnimationFrame(() => {
       this.map.invalidateSize();
     });
 
+    // Remove all layers.
     this.map.eachLayer((layer) => {
       if (!!layer.toGeoJSON) {
         this.map.removeLayer(layer);
       }
     });
 
-    // @ts-expect-error
-    this.geometries.map((geometry) => geoJSON(geometry))
-      .forEach((layer) => this.map.addLayer(layer));
+    // @ts-ignore
+    // Add geometries
+    this.mapGeometries.filter(v => v).forEach((mapGeometry) => {
+      // @ts-ignore
+      const layer = L.geoJSON(mapGeometry.geometry, )
 
-    this.mapMarkers.map((mapMarker: MapMarker) => {
-      const _marker = marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as LatLngExpression);
-      _marker.addEventListener('click', () => mapMarker.onClick ? mapMarker.onClick() : null);
-      return _marker;
+      if(mapGeometry.title) {
+        layer.bindTooltip(mapGeometry.title);
+      }
+
+      layer.addEventListener('click', () => mapGeometry.onClick ? mapGeometry.onClick() : null);
+      this.map.addLayer(layer);
+
+      if (mapGeometry.editable) {
+        // @ts-ignore
+        layer.pm.enable({draggable: true});
+      }
+
+      if (mapGeometry.onChange) {
+        layer.on('pm:edit', (e) => mapGeometry.onChange(e));
+        layer.on('pm:update', (e) => mapGeometry.onChange(e));
+        layer.on('pm:drag', (e) => mapGeometry.onChange(e));
+        layer.on('pm:dragstart', (e) => mapGeometry.onChange(e));
+        layer.on('pm:dragend', (e) => mapGeometry.onChange(e));
+        layer.on('pm:rotate', (e) => mapGeometry.onChange(e));
+      }
     })
-      .forEach((layer) => this.map.addLayer(layer));
+
+
+    // Add markers
+    this.mapMarkers.filter(v => v).map((mapMarker: MapMarker) => {
+      const iconSize = (mapMarker.iconSize || [25, 41]) as L.PointExpression;
+      const icon = new L.Icon({
+        iconAnchor: (mapMarker.iconAnchor || [iconSize[0]/2, iconSize[1]]) as L.PointExpression,
+        iconUrl: mapMarker.iconUrl,
+        iconSize: iconSize,
+        shadowAnchor: (mapMarker.shadowAnchor || [14, 62]) as L.PointExpression,
+        shadowSize: (mapMarker.shadowSize || [50,64]) as L.PointExpression,
+        shadowUrl: mapMarker.shadowUrl || `${LEAFLET_ASSETS}marker-shadow.png`,
+      })
+
+      const markerOptions = {
+        icon: mapMarker.iconUrl ? icon : undefined,
+      }
+
+      const marker = L.marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as L.LatLngExpression, markerOptions);
+
+      if(mapMarker.title) {
+        marker.bindTooltip(mapMarker.title);
+      }
+
+      marker.addEventListener('click', () => mapMarker.onClick ? mapMarker.onClick() : null);
+      this.map.addLayer(marker);
+
+      if (mapMarker.editable) {
+        // @ts-ignore
+        marker.pm.enable({draggable: true});
+      }
+
+      if (mapMarker.onChange) {
+        marker.on('pm:edit', (e) => mapMarker.onChange(e));
+        marker.on('pm:update', (e) => mapMarker.onChange(e));
+        marker.on('pm:drag', (e) => mapMarker.onChange(e));
+        marker.on('pm:dragstart', (e) => mapMarker.onChange(e));
+        marker.on('pm:dragend', (e) => mapMarker.onChange(e));
+        marker.on('pm:rotate', (e) => mapMarker.onChange(e));
+      }
+    });
+
+    if (this.editable) {
+      this.map.pm.removeControls();
+      this.map.pm.addControls((typeof this.editable === 'boolean')
+        ? {
+          drawControls: this.editMode,
+          editControls: this.editMode,
+
+          position: 'topleft',
+
+          drawRectangle: false,
+          drawCircle: false,
+          drawCircleMarker: false,
+          drawPolyline: false,
+
+          cutPolygon: false,
+          rotateMode: false,
+
+          positions: {
+            draw: 'topright',
+            edit: 'topright',
+          }
+        }
+        : this.editable
+      );
+
+      if (typeof this.editable === 'boolean' && this.map.pm.Toolbar.getControlOrder().indexOf('Edit') === -1) {
+        this.map.pm.Toolbar.createCustomControl({
+          block: 'custom',
+          className: 'leaflet-pm-icon-edit',
+          name: 'Edit',
+          title: 'Edit',
+          toggle: false,
+          onClick: () => {
+            this.editMode = !this.editMode;
+            this.update();
+          },
+        });
+        this.map.pm.Toolbar.changeControlOrder(['Edit'])
+      }
+    }
   }
 }

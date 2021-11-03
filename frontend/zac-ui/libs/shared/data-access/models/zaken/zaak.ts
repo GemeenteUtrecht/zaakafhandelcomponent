@@ -1,3 +1,5 @@
+import {Geometry} from "../geojson/geojson";
+
 export interface Zaaktype {
   url: string;
   catalogus: string;
@@ -16,6 +18,22 @@ export interface Resultaat {
   toelichting: string;
 }
 
+export interface Statustype {
+  url: string;
+  omschrijving: string;
+  omschrijvingGeneriek: string;
+  statustekst: string;
+  volgnummer: number;
+  isEindstatus: boolean;
+}
+
+export interface Status {
+  url: string;
+  datumStatusGezet: Date;
+  statustoelichting: string;
+  statustype: Statustype;
+}
+
 export interface Zaak {
   url: string;
   identificatie: string;
@@ -32,4 +50,7 @@ export interface Zaak {
   deadline: string;
   deadlineProgress: number;
   resultaat: Resultaat;
+  status: Status;
+  zaakgeometrie: Geometry;
+
 }

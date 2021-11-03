@@ -4,4 +4,5 @@ export interface Assignee {
   lastName?: string;
   id: number;
   name?: string;
+  groups: string[];
 }

@@ -1,91 +1,147 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
-import {ApplicationHttpClient, ZaakService} from '@gu/services';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { User, Zaak } from '@gu/models';
-import { ModalService } from '@gu/components';
-import { catchError, switchMap, tap } from 'rxjs/operators';
-import { Activity } from '../models/activity';
-import { FeaturesZaakDetailService } from './features-zaak-detail.service';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {ActivitiesService, UserService, ZaakService} from '@gu/services';
+import {Observable, of} from 'rxjs';
+import {Activity, User, Zaak} from '@gu/models';
+import {ModalService, SnackbarService} from '@gu/components';
+import {catchError, switchMap, tap} from 'rxjs/operators';
+import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-accorderen.component";
 import { StatusComponent } from './status/status.component';
 
+
+/**
+ * <gu-features-zaak-detail [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-features-zaak-detail>
+ *
+ * Case (zaak) detail view component.
+ *
+ * Requires bronorganisatie: string input to identify the organisation.
+ * Requires identificatie: string input to identify the case (zaak).
+ */
 @Component({
   selector: 'gu-features-zaak-detail',
   templateUrl: './features-zaak-detail.component.html',
+  styleUrls: ['./features-zaak-detail.component.scss']
 })
 export class FeaturesZaakDetailComponent implements OnInit {
+  /** @type {string} To identify the organisation. */
+  @Input() bronorganisatie: string;
+
+  /** @type {string} To identify the case (zaak). */
+  @Input() identificatie: string;
+
+  /** @type {string} To identify the activity). */
+  @Input() activity: string;
+
   @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
   @ViewChild(StatusComponent) statusComponent: StatusComponent;
 
-  bronorganisatie: string;
-  identificatie: string;
-  mainZaakUrl: string;
-  currentUser: User;
+  /** @type {string} Message to show when access request is successfully submitted. */
+  readonly accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
 
-  zaakData: Zaak;
-  zaakAccessRequestForm: FormGroup;
 
+  /** @type {boolean} Whether this component is loading. */
   isLoading: boolean;
+
+  /** @type {boolean} Whether an error occured. */
   hasError: boolean;
+
+  /** @type {string} The error message. */
   errorMessage: string;
 
-  canRequestAccess: boolean;
-  isSubmittingAccessRequest: boolean;
-  accessRequestSuccess: boolean;
-  accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
-  accessRequestFinished: boolean;
-
-  loginUrl: string;
-
+  /** @type {Activity[]} The activities for this case (zaak). */
   activityData: Activity[];
+
+  /** @type {Activity[]} The active activities for this case (zaak). */
   activeActivities: Activity[];
 
+  /** @type {boolean} Whether the user is allowed to request access to this case (zaak). */
+  canRequestAccess: boolean;
+
+  /** @type {boolean} Whether an access request is being submitted. */
+  isSubmittingAccessRequest: boolean;
+
+  /** @type {boolean} Whether an access request is successfully submitted. */
+  isAccessRequestSuccess: boolean;
+
+  /** @type {FormGroup} Form use to request acces to this case (zaak). */
+  zaakAccessRequestForm: FormGroup;
+
+  /** @type {User} The current logged in/hijacked user. */
+  currentUser: User;
+
+  /** @type {string} The case (zaak) url. */
+  mainZaakUrl: string;
+
+  /** @type {Zaak} The case (zaak). */
+  zaakData: Zaak;
+
+
+  /**
+   *
+   * @param activitiesService
+   * @param {FormBuilder} formBuilder
+   * @param {ModalService} modalService
+   * @param {SnackbarService} snackbarService
+   * @param {UserService} userService
+   * @param {ZaakService} zaakService
+   */
   constructor(
-    private fb: FormBuilder,
-    private http: ApplicationHttpClient,
-    private route: ActivatedRoute,
-    private router: Router,
+    private activitiesService: ActivitiesService,
+    private formBuilder: FormBuilder,
     private modalService: ModalService,
-    private zaakDetailService: FeaturesZaakDetailService,
+    private snackbarService: SnackbarService,
+    private userService: UserService,
     private zaakService: ZaakService,
   ) {
-    this.zaakAccessRequestForm = this.fb.group({
-      comment: this.fb.control(""),
+    this.zaakAccessRequestForm = this.formBuilder.group({
+      comment: this.formBuilder.control(""),
     })
   }
 
-  ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
+  //
+  // Getters / setters.
+  //
 
-      this.fetchCurrentUser();
-      this.fetchInformation();
-    });
+  /**
+   * Returns the comment FormControl.
+   * @return {FormControl}
+   */
+  get commentControl(): FormControl {
+    return this.zaakAccessRequestForm.get('comment') as FormControl;
+  };
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit(): void {
+    this.fetchCurrentUser();
+    this.getContextData();
   }
 
-  fetchInformation() {
+  //
+  // Context.
+  //
+
+  /**
+   * Fetches the details of the case (zaak).
+   */
+  getContextData(): void {
     this.canRequestAccess = false
     this.isLoading = true;
+
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
       .pipe(
-        tap( res => {
+        tap(res => {
           this.zaakData = res;
           this.mainZaakUrl = res.url ? res.url : null;
         }),
-        catchError(res => {
-          this.canRequestAccess = res.error.canRequestAccess;
-          this.errorMessage = res.error.detail ?
-            res.error.detail :
-            res.error.reason ?
-              res.error.reason :
-                res.error.canRequestAccess ?
-                  "Je hebt geen toegang tot deze zaak" :
-                  "Er is een fout opgetreden";
-          this.hasError = true;
-          this.isLoading = false;
+        catchError((res) => {
+          this.reportError(res.error)
           return of(null)
         }),
         switchMap(res => {
@@ -93,59 +149,66 @@ export class FeaturesZaakDetailComponent implements OnInit {
           return url ? this.fetchActivities(url) : of(null);
         })
       )
-      .subscribe( activities => {
-        if (activities) {
+      .subscribe({
+        next: (activities) => {
+          if (!activities) {
+            return;
+          }
           this.activityData = activities;
           this.activeActivities = activities.filter(activity => {
             return activity.status === 'on_going'
           })
-        }
-        this.isLoading = false;
-      }, error => {
-        this.isLoading = false;
+        },
+        error: (error) => this.reportError(error.error),
+        complete: () => this.isLoading = false
       })
   }
 
+  /**
+   * Fetches the activities for this case (zaak).
+   * @param {string} zaakUrl
+   * @return {Observable}
+   */
   fetchActivities(zaakUrl): Observable<Activity[]> {
-    return this.zaakDetailService.getActivities(zaakUrl)
+    return this.activitiesService.getActivities(zaakUrl)
       .pipe(
         switchMap(res => {
-          this.openActivitiesModal();
+          if (this.activity) {
+            this.openModal('activities-modal')
+          }
           return of(res);
         }),
-        catchError(() => {
-          this.hasError = true;
-          this.isLoading = false;
-          return of(null);
-        })
+        catchError(this.reportError.bind(this))
       )
   }
 
-  openActivitiesModal() {
-    this.route.queryParams.subscribe(params => {
-      const activityParam = params['activities'];
-      if (activityParam) {
-        this.openModal('activities-modal')
-      }
-    });
-  }
-
+  /**
+   * Fetches the current user.
+   */
   fetchCurrentUser(): void {
-    this.zaakDetailService.getCurrentUser().subscribe( res => {
-      this.currentUser = res;
+    this.userService.getCurrentUser().subscribe(([user,]) => {
+      this.currentUser = user;
     })
   }
 
-  openModal(id: string) {
+  /**
+   * Opens a modal.
+   * @param {string} id The id of the modal to open.
+   */
+  openModal(id: string): void {
     this.modalService.open(id);
   }
 
-  get commentControl(): FormControl {
-    return this.zaakAccessRequestForm.get('comment') as FormControl;
-  };
+  //
+  // Events.
+  //
 
-  submitAccessRequest() {
+  /**
+   * Gets called when the access request is submitted.
+   */
+  onSubmitAccessRequest(): void {
     this.isSubmittingAccessRequest = true;
+
     const comment = this.commentControl.value ? this.commentControl.value : undefined;
     const formData = {
       zaak: {
@@ -154,20 +217,38 @@ export class FeaturesZaakDetailComponent implements OnInit {
       },
       comment: comment
     }
-    this.zaakDetailService.postAccessRequest(formData).subscribe(() => {
+
+    this.zaakService.createAccessRequest(formData).subscribe(() => {
       this.isSubmittingAccessRequest = false;
-      this.accessRequestFinished = true;
-      this.accessRequestSuccess = true;
-    }, error => {
-      this.isSubmittingAccessRequest = false;
-      this.accessRequestFinished = true;
-      this.accessRequestSuccess = false;
-      this.errorMessage = error.detail ? error.detail : "De aanvraag is niet gelukt"
-    })
+      this.isAccessRequestSuccess = true;
+    }, this.reportError.bind(this))
   }
 
   ketenProcessenUpdate(event) {
     this.adviserenAccorderenComponent.update();
     this.statusComponent.update();
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.canRequestAccess = error.canRequestAccess;
+    this.errorMessage = error.detail ?
+      error.detail :
+      error.reason ?
+        error.reason :
+        error.canRequestAccess ?
+          "Je hebt geen toegang tot deze zaak" :
+          "Er is een fout opgetreden";
+
+    console.error(error);
+    this.hasError = true;
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
   }
 }

@@ -70,6 +70,7 @@ class Advice(Model):
     author: Author
     advice: str
     documents: List[AdviceDocument]
+    group: str = ""
 
 
 @dataclass
@@ -77,4 +78,5 @@ class Approval(Model):
     created: datetime
     author: Author
     approved: bool
+    group: str = ""
     toelichting: str = ""

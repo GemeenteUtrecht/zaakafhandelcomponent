@@ -33,6 +33,7 @@ class ConvertToJsonTests(TestCase):
                 "firstName": "",
                 "lastName": "",
             },
+            "group": "",
             "advice": "dummy",
             "documents": [],
         }
@@ -69,6 +70,7 @@ class ConvertToJsonTests(TestCase):
                                 "first_name": "",
                                 "last_name": "",
                             },
+                            "group": "",
                             "advice": "dummy",
                             "documents": [],
                         }
@@ -101,6 +103,7 @@ class ConvertToJsonTests(TestCase):
                 "firstName": "",
                 "lastName": "",
             },
+            "group": "",
             "approved": True,
             "toelichting": "I don't feel anything.",
         }
@@ -137,6 +140,7 @@ class ConvertToJsonTests(TestCase):
                                 "first_name": "",
                                 "last_name": "",
                             },
+                            "group": "",
                             "approved": True,
                             "toelichting": "I don't feel anything.",
                         }

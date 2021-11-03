@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ModalService, SnackbarService } from '@gu/components';
 import { AuthProfile, MetaConfidentiality, MetaZaaktype, Role } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import {MetaService} from "@gu/services";
 
 
 /**
@@ -23,7 +24,6 @@ export class AddAuthProfileComponent implements OnInit {
   @Input() roles: Role[];
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  readonly createAuthProfileErrorMessage = "Er is een fout opgetreden bij het aanmaken van het profiel."
   readonly createAuthProfileSuccessMessage = "Het profiel is aangemaakt."
 
   authProfileForm: FormGroup;
@@ -41,6 +41,7 @@ export class AddAuthProfileComponent implements OnInit {
 
   constructor(
     private fService: FeaturesAuthProfilesService,
+    private metaService: MetaService,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private fb: FormBuilder) {
@@ -77,7 +78,7 @@ export class AddAuthProfileComponent implements OnInit {
   getCaseTypes() {
     this.fService.getCaseTypes().subscribe(
       (data) => this.caseTypes = data,
-      (error) => console.error(error),
+      this.reportError.bind(this)
     );
   }
 
@@ -85,9 +86,9 @@ export class AddAuthProfileComponent implements OnInit {
    * Fetches confidentiality types
    */
   getConfidentiality() {
-    this.fService.getConfidentiality().subscribe(
+    this.metaService.listConfidentialityClassifications().subscribe(
       (data) => this.confidentiality = data,
-      (error) => console.error(error),
+      (error) => this.reportError.bind(this)
     );
   }
 
@@ -133,22 +134,8 @@ export class AddAuthProfileComponent implements OnInit {
         this.authProfileForm.reset();
         this.reload.emit(true)
         this.isLoading = false;
-      },
-      (err: HttpErrorResponse) => {
-        this.errorMessage = err.error?.name[0] || this.createAuthProfileErrorMessage;
-        this.reportError(err)
-      }
+      }, this.reportError.bind(this)
     )
-  }
-
-  /**
-   * Error callback.
-   * @param {*} error
-   */
-  reportError(error: any): void {
-    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
-    console.error(error);
-    this.isLoading = false;
   }
 
   /**
@@ -194,5 +181,20 @@ export class AddAuthProfileComponent implements OnInit {
   deleteStep() {
     this.nBlueprintPermissions--
     this.blueprintPermissionControl.removeAt(this.blueprintPermissionControl.length - 1);
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.errorMessage = error.error?.name[0] || 'Er is een fout opgetreden';
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    this.isLoading = false;
+    console.error(error);
   }
 }

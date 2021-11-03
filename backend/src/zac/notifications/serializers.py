@@ -47,6 +47,7 @@ class NotificatieSerializer(serializers.Serializer):
             label=_("kenmerk"),
             max_length=1000,
             help_text=_("Een waarde behorende bij de sleutel."),
+            allow_blank=True,
         ),
         help_text=_(
             "Mapping van kenmerken (sleutel/waarde) van de notificatie. De "

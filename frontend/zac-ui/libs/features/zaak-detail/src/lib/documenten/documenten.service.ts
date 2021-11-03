@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Document, ExtensiveCell, ReadWriteDocument, RowData, Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
+import {CachedObservableMethod} from '@gu/utils';
 import { HttpResponse } from '@angular/common/http';
 
 @Injectable({

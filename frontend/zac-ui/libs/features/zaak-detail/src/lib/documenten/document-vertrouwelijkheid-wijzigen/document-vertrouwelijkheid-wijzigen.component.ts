@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { DocumentenService } from '../documenten.service';
-import { Document } from '@gu/models';
-import {ZaakService} from "@gu/services";
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {DocumentenService} from '../documenten.service';
+import {Document} from '@gu/models';
+import {MetaService, ZaakService} from '@gu/services';
+import {SnackbarService} from "@gu/components";
 
 @Component({
   selector: 'gu-document-vertrouwelijkheid-wijzigen',
@@ -17,9 +18,10 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
 
+  readonly errorMessage = 'Er is een fout opgetreden.';
+
   isLoading: boolean;
   hasError: boolean;
-  errorMessage: string;
 
   currentConfidentialityType: any;
   confidentialityData: any;
@@ -32,6 +34,8 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   constructor(
     private documentenService: DocumentenService,
     private fb: FormBuilder,
+    private metaService: MetaService,
+    private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
     this.confidentialityForm = this.fb.group({
@@ -55,25 +59,23 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   }
 
   setConfidentialityType(value): void {
-    this.currentConfidentialityType = this.confidentialityData.find( item =>
+    this.currentConfidentialityType = this.confidentialityData.find(item =>
       item.label === value
     )
   }
 
   fetchConfidentiality() {
     this.hasError = false;
-    this.documentenService.getConfidentiality().subscribe(data => {
-      this.confidentialityData = data;
-      if (this.selectedDocument) {
-        this.setConfidentialityType(this.selectedDocument.vertrouwelijkheidaanduiding);
-      }
-      this.isLoading = false;
-    }, error => {
-      console.log(error);
-      this.hasError = true;
-      this.errorMessage = error?.error?.detail ? error.error.detail : 'Vertrouwelijkheidaanduidingen konden niet worden opgehaald.';
-      this.isLoading = false;
-    })
+    this.metaService.listConfidentialityClassifications().subscribe(
+      (data) => {
+        this.confidentialityData = data;
+        if (this.selectedDocument) {
+          this.setConfidentialityType(this.selectedDocument.vertrouwelijkheidaanduiding);
+        }
+        this.isLoading = false;
+      },
+      this.reportError.bind(this)
+    )
   }
 
   get confidentialityTypeControl(): FormControl {
@@ -87,21 +89,36 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   submitConfidentiality() {
     this.isSubmitting = true;
     const formData = new FormData();
-    formData.append('vertrouwelijkheidaanduiding',  this.confidentialityTypeControl.value);
-    formData.append('reden',  this.reasonControl.value);
+    formData.append('vertrouwelijkheidaanduiding', this.confidentialityTypeControl.value);
+    formData.append('reden', this.reasonControl.value);
     formData.append('url', this.selectedDocument.url);
-    formData.append('zaak',  this.mainZaakUrl);
+    formData.append('zaak', this.mainZaakUrl);
 
-    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, formData).subscribe( () => {
+    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, formData).subscribe(() => {
       this.setConfidentialityType(this.confidentialityTypeControl.value);
       this.confidentialityForm.reset();
       this.reload.emit(true);
       this.closeModal.emit(true);
       this.isSubmitting = false;
-    }, error => {
-      this.submitHasError = true;
-      this.submitErrorMessage = error?.error?.detail ? error.error.detail : 'Er is een fout opgetreden';
-      this.isSubmitting = false;
-    })
+    }, this.reportError.bind(this))
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    const submitErrorMessage = error?.error?.detail ? error.error.detail : this.errorMessage;
+    this.snackbarService.openSnackBar(submitErrorMessage, 'Sluiten', 'warn');
+    console.error(error);
+
+    this.isLoading = false
+    this.isSubmitting = false;
+    this.submitHasError = true;
+    this.submitErrorMessage = submitErrorMessage
   }
 }

@@ -26,3 +26,4 @@ class UserFilter(filters.FilterSet):
     exclude_email = StringInFilter(
         field_name="email", widget=QueryArrayWidget, exclude=True
     )
+    include_groups = StringInFilter(field_name="groups__name", widget=QueryArrayWidget)

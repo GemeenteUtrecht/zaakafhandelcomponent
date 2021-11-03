@@ -1,7 +1,13 @@
 from rest_framework import permissions
 
+from zac.camunda.constants import AssigneeTypeChoices
+
 
 class IsReviewUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        username = request.user.username
-        return username in obj["userDeadlines"]
+        assignees = [
+            f"{AssigneeTypeChoices.group}:{group}"
+            for group in request.user.groups.all()
+        ]
+        assignees.append(f"{AssigneeTypeChoices.user}:{request.user.username}")
+        return any([assignee in obj["userDeadlines"] for assignee in assignees])

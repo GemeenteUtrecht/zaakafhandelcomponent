@@ -17,8 +17,8 @@ import {InformatieComponent} from './informatie/informatie.component';
 import {KetenProcessenModule} from './keten-processen/keten-processen.module';
 import {StatusComponent} from './status/status.component';
 import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
-import {UserPermissionsModule} from './user-permissions/user-permissions.module';
-import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search";
+import {ZaakMapComponent} from './zaak-map/zaak-map.component';
+import {UserPermissionsComponent} from './user-permissions/user-permissions.component';
 
 @NgModule({
   imports: [
@@ -37,7 +37,6 @@ import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search
     FeaturesSearchModule,
     SharedUiComponentsModule,
     TabsModule.forRoot(),
-    UserPermissionsModule,
   ],
   declarations: [
     FeaturesZaakDetailComponent,
@@ -49,6 +48,8 @@ import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search
     DetailModalComponent,
     ToegangVerlenenComponent,
     ActiviteitenComponent,
+    UserPermissionsComponent,
+    ZaakMapComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

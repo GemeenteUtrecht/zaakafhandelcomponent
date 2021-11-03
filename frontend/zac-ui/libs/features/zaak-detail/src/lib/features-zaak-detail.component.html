@@ -1,7 +1,10 @@
-<section class="row m-0">
-  <div class="col-12 p-0">
-    <div class="feature-container">
-      <div class="content-background">
+<!--  Loading -->
+<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+
+<section *ngIf="!isLoading" class="row m-0">
+  <div class="col-xl-10 p-0">
+    <div class="feature-container pb-0">
+      <div class="content-background mb-0">
         <article class="content">
 
           <!-- Breadcrumb -->
@@ -28,26 +31,18 @@
                   </gu-chip>
                 </span>
               </button>
-
-              <button gu-button buttonStyle="tertiary" size="extrasmall" icon="person_add"
-                      (click)="openModal('add-person-modal')">Toegang verlenen
-              </button>
             </header>
           </section>
-
-
-          <!--  Loading -->
-          <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 
 
           <!-- Error and 403 access request -->
           <section *ngIf="hasError && errorMessage" class="row">
             <div class="col-lg-6">
-              <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!accessRequestSuccess ? 'warn' : 'success'"
-                          [message]="!accessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
+              <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!isAccessRequestSuccess ? 'warn' : 'success'"
+                          [message]="!isAccessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
                           class="d-block mb-4"></gu-message>
 
-              <div *ngIf="canRequestAccess && !accessRequestSuccess">
+              <div *ngIf="canRequestAccess && !isAccessRequestSuccess">
                 <h2>Toegang vragen tot deze zaak</h2>
 
                 <gu-input [control]="commentControl"
@@ -57,7 +52,7 @@
                 </gu-input>
 
                 <button gu-button
-                        (click)="submitAccessRequest()"
+                        (click)="onSubmitAccessRequest()"
                         [disabled]='isSubmittingAccessRequest'
                         [loading]='isSubmittingAccessRequest'>
                   Aanvraag versturen
@@ -66,7 +61,8 @@
             </div>
           </section>
 
-          <section class="row">
+          <!-- Components -->
+          <section *ngIf="!isLoading && !hasError" class="row" >
 
             <!-- Left column -->
             <div class="col-4">
@@ -147,7 +143,7 @@
               </aside>
 
 
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside *ngIf="zaakData" class="">
                 <gu-documenten [mainZaakUrl]="mainZaakUrl"
                                [zaaktypeurl]="zaakData.zaaktype.url"
                                [bronorganisatie]="bronorganisatie"
@@ -178,4 +174,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Map -->
+  <aside *ngIf="!isLoading && !hasError" class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
+    <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
+  </aside>
 </section>

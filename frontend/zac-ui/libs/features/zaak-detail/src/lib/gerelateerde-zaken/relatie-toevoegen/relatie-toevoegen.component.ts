@@ -1,9 +1,9 @@
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ApplicationHttpClient } from '@gu/services';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ModalService } from '@gu/components';
+import {Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
+import {Observable} from 'rxjs';
+import {HttpResponse} from '@angular/common/http';
+import {ApplicationHttpClient, ZaakService} from '@gu/services';
+import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {ModalService, SnackbarService} from '@gu/components';
 
 @Component({
   selector: 'gu-relatie-toevoegen',
@@ -14,6 +14,8 @@ export class RelatieToevoegenComponent implements OnInit {
 
   @Input() mainZaakUrl: string;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
   readonly AARD_RELATIES = [
     {
@@ -38,8 +40,11 @@ export class RelatieToevoegenComponent implements OnInit {
   constructor(
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
-    private modalService: ModalService
-  ) { }
+    private modalService: ModalService,
+    private snackbarService: SnackbarService,
+    private zaakService: ZaakService,
+  ) {
+  }
 
   ngOnInit(): void {
     this.addRelationForm = this.fb.group({
@@ -58,9 +63,10 @@ export class RelatieToevoegenComponent implements OnInit {
 
   handleSearch(searchValue) {
     if (searchValue) {
-      this.getSearchZaken(searchValue.toUpperCase()).subscribe( res => {
-        this.zaken = res;
-      })
+      this.getSearchZaken(searchValue.toUpperCase()).subscribe(
+        (res) => this.zaken = res,
+        this.reportError.bind(this)
+      );
     }
   }
 
@@ -79,18 +85,24 @@ export class RelatieToevoegenComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.postRelation(formData).subscribe(() => {
+    this.zaakService.addRelatedCase(formData).subscribe(() => {
       this.reload.emit(true);
       this.modalService.close("gerelateerde-zaken-modal");
       this.addRelationForm.reset();
       this.isSubmitting = false;
-    }, errorRes => {
-      console.log(errorRes);
-    })
+    }, this.reportError.bind(this))
   }
 
-  postRelation(formData: any): Observable<any> {
-    return this.http.Post<any>(encodeURI("/api/core/cases/related-case"), formData);
-  }
+  //
+  // Error handling.
+  //
 
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
+  }
 }

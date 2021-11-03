@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework.test import APITestCase
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
 
 from ...models import User
 
@@ -18,10 +18,16 @@ class UserViewsetTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.users = UserFactory.create_batch(3)
-
+        cls.group_0 = GroupFactory.create()
+        cls.users[0].groups.add(cls.group_0)
+        cls.users[1].groups.add(cls.group_0)
         cls.superuser = User.objects.create_superuser(
-            username="john", email="john.doe@johndoe.nl", password="secret"
+            username="john",
+            email="john.doe@johndoe.nl",
+            password="secret",
         )
+        cls.group_1 = GroupFactory.create()
+        cls.superuser.groups.add(cls.group_1)
 
     def setUp(self):
         self.client.force_authenticate(user=self.superuser)
@@ -81,3 +87,13 @@ class UserViewsetTests(APITestCase):
         params = {"include_username": ",".join(usernames)}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 2)
+
+    def test_filter_users_on_groups(self):
+        params = {"include_groups": self.group_0.name}
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_filter_users_on_multiple_groups(self):
+        params = {"include_groups": [self.group_0.name, self.group_1.name]}
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.data["count"], 3)
