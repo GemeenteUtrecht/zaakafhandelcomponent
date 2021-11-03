@@ -24,7 +24,7 @@ export class DocumentToevoegenContezzaComponent {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
-  @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() reload = new EventEmitter<boolean>();
+  @Output() closeModal = new EventEmitter<boolean>();
 
 }

@@ -31,8 +31,8 @@ export class DocumentenService {
     return this.http.Get<any>(endpoint);
   }
 
-  postDocument(formData: FormData, bronorganisatie: string, identificatie: string): Observable<Document> {
-    return this.http.Post<any>(encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`), formData);
+  postDocument(formData: FormData): Observable<Document> {
+    return this.http.Post<any>(encodeURI(`/api/core/cases/document`), formData);
   }
 
   patchDocument(formData: FormData, bronorganisatie: string, identificatie: string): Observable<any> {

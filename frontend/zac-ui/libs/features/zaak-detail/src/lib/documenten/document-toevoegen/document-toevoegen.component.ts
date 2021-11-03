@@ -134,7 +134,7 @@ export class DocumentToevoegenComponent implements OnInit {
     this.isSubmitting = true;
 
     if (!this.updateDocument) {
-      this.documentService.postDocument(formData, this.bronorganisatie, this.identificatie).subscribe(res => {
+      this.documentService.postDocument(formData).subscribe(res => {
         this.closeAndResetForm();
         this.uploadedDocument.emit(res)
         this.isSubmitting = false;
