@@ -5,6 +5,9 @@ import { Document } from '@gu/models';
 import { DocumentenService } from '../documenten.service';
 
 import {CachedObservableMethod} from '@gu/utils';
+import { Observable } from 'rxjs';
+import {HttpResponse} from "@angular/common/http";
+import {ApplicationHttpClient} from "@gu/services";
 
 /**
  * This component allows users to add or override documents.
@@ -51,6 +54,7 @@ export class DocumentToevoegenComponent implements OnInit {
   constructor(
     private documentService: DocumentenService,
     private fb: FormBuilder,
+    private http: ApplicationHttpClient,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
   ) { }
