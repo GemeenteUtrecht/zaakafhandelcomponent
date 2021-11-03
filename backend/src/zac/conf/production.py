@@ -4,8 +4,11 @@ Production environment settings module.
 Tweaks the base settings so that caching mechanisms are used where possible,
 and HTTPS is leveraged where possible to further secure things.
 """
-from .includes.base import *  # noqa
-from .includes.environ import config
+import os
+
+os.environ.setdefault("ENVIRONMENT", "production")
+
+from .includes.base import *  # noqa isort:skip
 
 conn_max_age = config("DB_CONN_MAX_AGE", cast=float, default=None)
 for db_config in DATABASES.values():
@@ -25,24 +28,14 @@ TEMPLATES[0]["OPTIONS"]["loaders"] = [
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 # Production logging facility.
-root_handlers, django_handlers = [], []
-
-if "sentry" in LOGGING["handlers"]:
-    root_handlers.append("sentry")
-
-if LOG_STDOUT:
-    root_handlers.append("console")
-    django_handlers.append("console")
-else:
-    root_handlers.append("project")
-    django_handlers.append("django")
+handlers = ["console"] if LOG_STDOUT else ["django"]
 
 LOGGING["loggers"].update(
     {
-        "": {"handlers": root_handlers, "level": "ERROR", "propagate": False},
-        "django": {"handlers": django_handlers, "level": "INFO", "propagate": True},
+        "": {"handlers": handlers, "level": "ERROR", "propagate": False},
+        "django": {"handlers": handlers, "level": "INFO", "propagate": True},
         "django.security.DisallowedHost": {
-            "handlers": django_handlers,
+            "handlers": handlers,
             "level": "CRITICAL",
             "propagate": False,
         },
@@ -67,8 +60,7 @@ if subpath:
 #
 # Custom settings overrides
 #
-ENVIRONMENT = config("ENVIRONMENT", "production")
-ENVIRONMENT_SHOWN_IN_ADMIN = False
+SHOW_ALERT = False
 
 # Set up APM
 ELASTIC_APM_SERVER_URL = config("ELASTIC_APM_SERVER_URL", None)

@@ -4,7 +4,6 @@ psycopg2
 python-dotenv
 python-decouple  # processing of envvar configs
 pytz
-raven
 uwsgi
 python-dateutil
 pyyaml
@@ -41,5 +40,6 @@ djangorestframework
 djangorestframework-camel-case
 drf-spectacular
 
-# perf monitoring
+# monitoring
 elastic-apm
+sentry-sdk
