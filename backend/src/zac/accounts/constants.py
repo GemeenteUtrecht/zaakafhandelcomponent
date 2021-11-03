@@ -12,6 +12,7 @@ class PermissionObjectTypeChoices(DjangoChoices):
     zaak = ChoiceItem("zaak", _("zaak"))
     document = ChoiceItem("document", _("document"))
     search_report = ChoiceItem("search_report", _("search report"))
+    group = ChoiceItem("group", _("group"))
 
 
 class PermissionReason(DjangoChoices):
