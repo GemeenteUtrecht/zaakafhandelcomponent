@@ -65,11 +65,11 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = (
+        fields = [
             "id",
             "name",
             "full_name",
-        )
+        ]
 
     def get_full_name(self, obj) -> str:
         return _("Group") + ": " + obj.name
@@ -87,7 +87,7 @@ class ManageGroupSerializer(GroupSerializer):
 
     class Meta(GroupSerializer.Meta):
         model = GroupSerializer.Meta.model
-        fields = GroupSerializer.Meta.fields
+        fields = GroupSerializer.Meta.fields + ["users"]
 
     @transaction.atomic()
     def save(self, **kwargs):
