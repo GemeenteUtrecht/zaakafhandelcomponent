@@ -90,20 +90,21 @@ class ManageGroupSerializer(GroupSerializer):
         fields = GroupSerializer.Meta.fields + ["users"]
 
     @transaction.atomic()
-    def save(self, **kwargs):
-        users = self.validated_data.pop("user_set")
-        group = self.instance
-        if group is not None:
-            old_users = group.user_set.all()
-            remove_users = [old_user for old_user in old_users if old_user not in users]
-            add_users = [new_user for new_user in users if new_user not in old_users]
-            group.user_set.add(*add_users)
-            group.user_set.remove(*remove_users)
-            return super().save(**kwargs)
-
-        group = super().save(**kwargs)
+    def create(self, validated_data):
+        users = validated_data.pop("user_set")
+        group = super().create(validated_data)
         group.user_set.add(*users)
         return group
+
+    @transaction.atomic()
+    def update(self, instance, validated_data):
+        users = validated_data.pop("user_set")
+        old_users = instance.user_set.all()
+        remove_users = [old_user for old_user in old_users if old_user not in users]
+        add_users = [new_user for new_user in users if new_user not in old_users]
+        instance.user_set.add(*add_users)
+        instance.user_set.remove(*remove_users)
+        return super().update(instance, validated_data)
 
 
 class CatalogusURLSerializer(serializers.Serializer):

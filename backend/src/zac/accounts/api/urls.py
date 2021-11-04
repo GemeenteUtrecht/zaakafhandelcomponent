@@ -13,7 +13,7 @@ from .viewsets import (
 )
 
 router = DefaultRouter(trailing_slash=False)
-router.register("groups", GroupViewSet, basename="groups")
+router.register("groups", GroupViewSet, basename="usergroups")
 router.register("users", UserViewSet, basename="users")
 router.register("access-requests", AccessRequestViewSet)
 router.register("cases/access", AtomicPermissionViewSet, basename="accesses")

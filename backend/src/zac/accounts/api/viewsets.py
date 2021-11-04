@@ -29,6 +29,7 @@ from .serializers import (
     AuthProfileSerializer,
     CreateAccessRequestSerializer,
     GrantPermissionSerializer,
+    GroupSerializer,
     HandleAccessRequestSerializer,
     ManageGroupSerializer,
     RoleSerializer,
@@ -74,6 +75,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ManageGroup]
     allowed_methods = ["get", "put", "post", "delete"]
     serializer_class = ManageGroupSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list" and self.request.method == "GET":
+            return GroupSerializer
+        return ManageGroupSerializer
+
+    def perform_create(self, serializer):
+        group = serializer.save()
+        self.request.user.manages_groups.add(group)
 
 
 @extend_schema_view(
