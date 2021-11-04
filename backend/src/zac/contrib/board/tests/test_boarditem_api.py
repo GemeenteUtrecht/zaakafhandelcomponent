@@ -309,7 +309,7 @@ class BoardItemAPITests(ESMixin, APITestCase):
             "bronorganisatie": cls.zaak_model.bronorganisatie,
             "omschrijving": cls.zaak_model.omschrijving,
             "vertrouwelijkheidaanduiding": "openbaar",
-            "vaOrder": 28,
+            "vaOrder": 27,
             "rollen": [],
             "startdatum": cls.zaak_model.startdatum.isoformat() + "T00:00:00Z",
             "einddatum": None,
@@ -421,7 +421,6 @@ class BoardItemAPITests(ESMixin, APITestCase):
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json(),
