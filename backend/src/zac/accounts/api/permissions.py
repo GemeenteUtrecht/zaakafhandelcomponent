@@ -1,19 +1,15 @@
 import logging
-from dataclasses import dataclass
+
+from django.contrib.auth.models import Group
 
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from zds_client import ClientError
 
-from zac.api.permissions import (
-    DefinitionBasePermission,
-    Permission,
-    ZaakDefinitionPermission,
-)
+from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
 from zac.core.permissions import zaken_handle_access, zaken_request_access
 from zac.core.services import get_zaak
 
-from ..constants import PermissionObjectTypeChoices
 from ..models import AccessRequest, UserAtomicPermission
 
 logger = logging.getLogger(__name__)
@@ -79,32 +75,13 @@ class CanCreateOrHandleAccessRequest:
         return permission.has_object_permission(request, view, obj)
 
 
-@dataclass(frozen=True)
-class GroupPermission(Permission):
-    object_type: str = PermissionObjectTypeChoices.group
-
-
-groep_beheren = GroupPermission(
-    name="accounts:groep-beheren",
-    description="Laat toe om groepen te beheren.",
-)
-
-groep_inzien = GroupPermission(
-    name="accounts:groep-inzien",
-    description="Laat toe om groepen in te zien.",
-)
-
-
-class GroupPermissionMixin:
-    object_type: str = PermissionObjectTypeChoices.group
-
+class GroupBasePermission:
     def get_object(self, view):
         # Mostly taken from get_object_or_404 but without obj permission checks.
         queryset = view.filter_queryset(view.get_queryset())
 
         # Perform the lookup filtering.
         lookup_url_kwarg = view.lookup_url_kwarg or view.lookup_field
-
         assert lookup_url_kwarg in view.kwargs, (
             "Expected view %s to be called with a URL keyword argument "
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
@@ -118,20 +95,32 @@ class GroupPermissionMixin:
             ]
         except IndexError:
             logger.info(
-                "%s with %s %s does not exist"
+                "Group with %s %s does not exist"
                 % (self.object_type, view.lookup_field, view.kwargs[lookup_url_kwarg]),
                 exc_info=True,
             )
             return None
         return qs
 
+    def has_permission(self, request: Request, view: APIView):
+        if request.user.is_superuser:
+            return True
 
-class CanChangeGroup(GroupPermissionMixin, DefinitionBasePermission):
-    permission = groep_beheren
+        if view.action == "create":
+            return True
+
+        obj = self.get_object(view)
+        return self.has_object_permission(request, view, obj)
 
 
-class CanViewGroup(GroupPermissionMixin, DefinitionBasePermission):
-    permission = groep_inzien
+class CanChangeGroup(GroupBasePermission):
+    def has_object_permission(self, request: Request, view: APIView, obj: Group):
+        return obj in request.user.manages_groups.all()
+
+
+class CanViewGroup(GroupBasePermission):
+    def has_object_permission(self, request: Request, view: APIView, obj: Group):
+        return request.user in obj.user_set.all()
 
 
 class ManageGroup:
@@ -142,6 +131,9 @@ class ManageGroup:
             return CanChangeGroup()
 
     def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.method == "GET":
+            if view.action == "list":
+                return True
         return self.get_permission(request).has_permission(request, view)
 
     def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
