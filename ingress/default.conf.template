@@ -29,7 +29,7 @@ server {
     }
 
     location /alfresco/ {
-        proxy_pass https://alfresco.cg-intern.ont.utrecht.nl;
+        proxy_pass ${ACS_PROXY_URL};
         proxy_hide_header   www-authenticate;
     }
 }
