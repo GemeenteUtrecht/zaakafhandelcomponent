@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from itertools import groupby
 
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -73,6 +73,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name=_("atomic permissions"),
         related_name="users",
         through="UserAtomicPermission",
+    )
+
+    # Group management
+    manages_groups = models.ManyToManyField(
+        Group,
+        blank=True,
+        verbose_name=_("manages groups"),
+        related_name="manager",
     )
 
     objects = UserManager()
