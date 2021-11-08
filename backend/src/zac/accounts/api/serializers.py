@@ -99,11 +99,7 @@ class ManageGroupSerializer(GroupSerializer):
     @transaction.atomic()
     def update(self, instance, validated_data):
         users = validated_data.pop("user_set")
-        old_users = instance.user_set.all()
-        remove_users = [old_user for old_user in old_users if old_user not in users]
-        add_users = [new_user for new_user in users if new_user not in old_users]
-        instance.user_set.add(*add_users)
-        instance.user_set.remove(*remove_users)
+        instance.user_set.set(users)
         return super().update(instance, validated_data)
 
 
