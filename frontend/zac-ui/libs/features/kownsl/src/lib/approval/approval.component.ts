@@ -82,14 +82,8 @@ export class ApprovalComponent implements OnInit {
 
   setLayout(res) {
     this.setZaakUrl(res.body.zaak);
-    const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
-    if (isSubmittedBefore === "false") {
-      this.approvalData = res.body;
-      this.tableData = this.createTableData(res.body);
-    } else {
-      this.hasError = true;
-      this.errorMessage = "U heeft deze aanvraag al beantwoord.";
-    }
+    this.approvalData = res.body;
+    this.tableData = this.createTableData(res.body);
     this.isLoading = false;
   }
 
