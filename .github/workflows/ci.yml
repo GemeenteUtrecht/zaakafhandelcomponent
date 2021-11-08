@@ -116,11 +116,17 @@ jobs:
           [ "$VERSION" == "main" ] && VERSION=latest
 
           echo ::set-output name=tag::${VERSION}
+          echo ::set-output name=git_hash::${GITHUB_SHA}
 
       - name: Build the Docker image
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-        run: docker build . --tag $BACKEND_IMAGE_NAME:$RELEASE_VERSION
+        run: |
+          docker build \
+            --tag $BACKEND_IMAGE_NAME:$RELEASE_VERSION \
+            --build-arg COMMIT_HASH=${{ steps.vars.outputs.git_hash }} \
+            --build-arg RELEASE=${{ steps.vars.outputs.tag }} \
+            .
 
       - name: Log into registry
         if: github.event_name == 'push'  # exclude PRs
