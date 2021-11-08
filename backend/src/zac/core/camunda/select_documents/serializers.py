@@ -1,7 +1,7 @@
 import base64
 from dataclasses import dataclass
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from django.utils.translation import gettext_lazy as _
 
@@ -12,20 +12,15 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
-from zac.camunda.data import ProcessInstance
-from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
-from zac.core.services import (
-    create_document,
-    download_document,
-    fetch_zaaktype,
-    get_document,
-)
+from zac.core.services import create_document, download_document, get_document
 from zgw.models import Zaak
+
+from .utils import get_zaaktype_from_identificatie
 
 
 class DocumentSerializer(APIModelSerializer):
@@ -100,9 +95,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         validate_zaak_documents(doc_urls, hoofd_zaak)
 
         # Validated selected document types according to case type
-        process_instance = self._get_process_instance()
-        related_zaaktype_url = process_instance.get_variable("zaaktype")
-        related_zaaktype = fetch_zaaktype(related_zaaktype_url)
+        related_zaaktype = get_zaaktype_from_identificatie(self.context["task"])
 
         selected_doc_types = [doc["document_type"] for doc in selected_docs]
         invalid_doc_types = [
@@ -120,24 +113,6 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
                 code="invalid-choice",
             )
         return selected_docs
-
-    def _get_process_instance(self) -> Optional[ProcessInstance]:
-        try:
-            return self._process_instance
-        except AttributeError:
-            self._process_instance = get_process_instance(
-                self.context["task"].process_instance_id
-            )
-            if not self._process_instance:
-                raise serializers.ValidationError(
-                    _(
-                        "No process instance with id: {pid} was found.".format(
-                            pid=self.context["task"].process_instance_id
-                        )
-                    )
-                )
-
-        return self._process_instance
 
     def get_zaak_from_context(self) -> Zaak:
         try:
