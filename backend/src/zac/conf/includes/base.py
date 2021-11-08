@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 
 import sentry_sdk
 
-from .utils import config, get_current_version, get_sentry_integrations
+from .utils import config, get_current_version, get_git_sha, get_sentry_integrations
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 DJANGO_PROJECT_DIR = os.path.abspath(
@@ -166,6 +166,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.accounts.middleware.HijackMiddleware",
+    "zac.utils.middleware.ReleaseHeaderMiddleware",
 ]
 
 ROOT_URLCONF = "zac.urls"
@@ -477,6 +478,10 @@ ZRC_API_SCHEMA = config(
 # SENTRY - error monitoring
 #
 SENTRY_DSN = config("SENTRY_DSN", None)
+
+GIT_SHA: str = (
+    get_git_sha()
+)  # either pulled from the env (image build arg) or git filesystem
 RELEASE = get_current_version()
 
 if SENTRY_DSN:
