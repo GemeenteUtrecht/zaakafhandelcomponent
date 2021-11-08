@@ -46,7 +46,7 @@ export class ZaakDetailComponent implements OnInit {
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.bronorganisatie = params['bronorganisatie'];
-      this.identificatie = params['identificatie'];
+      this.identificatie = params['identificatie'].split('?')[0];
     });
 
     this.route.queryParams.subscribe(params => {

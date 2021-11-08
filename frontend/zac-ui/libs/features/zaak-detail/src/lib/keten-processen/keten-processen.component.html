@@ -51,7 +51,9 @@
         <div class="col-md-6 mb-4 mb-md-0">
           <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Zelf doen</h3>
           <ng-container *ngFor="let task of allTaskData">
-            <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username === currentUser.username">
+            <div class="taak d-flex justify-content-between"
+                 *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
+            >
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold">{{task.name}}</p>
@@ -75,6 +77,17 @@
                   <button gu-button class="mb-2" buttonStyle="primary" size="small" (click)="executeTask(task.id)">
                     Behandelen
                   </button>
+                  <button gu-button
+                          *ngIf="ketenProcessenService.isTaskAssigned(task) && task.assigneeType === 'group'"
+                          buttonStyle="tertiary"
+                          size="extrasmall"
+                          [icon]="task.assigneeType === 'user' ? 'person' : 'group'"
+                          class="d-inline-block mb-2"
+                          (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
+                          [disabled]="true"
+                  >
+                    {{task.assignee.name}}
+                  </button>
                 </ng-container>
               </div>
             </div>
@@ -85,7 +98,7 @@
         <div class="col-md-6">
           <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h3>
           <ng-container *ngFor="let task of allTaskData">
-            <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username">
+            <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
               <!-- Description -->
               <div class="taak__detail mr-md-2">
                 <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>

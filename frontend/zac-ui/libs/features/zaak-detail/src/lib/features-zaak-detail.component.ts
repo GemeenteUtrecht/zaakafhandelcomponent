@@ -174,7 +174,9 @@ export class FeaturesZaakDetailComponent implements OnInit {
       .pipe(
         switchMap(res => {
           if (this.activity) {
-            this.openModal('activities-modal')
+            setTimeout( () => {
+              this.openModal('activities-modal')
+            }, 1000)
           }
           return of(res);
         }),
