@@ -138,7 +138,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         cls.zaaktype = factory(ZaakType, zaaktype)
 
         cls.patch_get_zaaktype = patch(
-            "zac.core.camunda.select_documents.context.fetch_zaaktype",
+            "zac.core.camunda.select_documents.context.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype,
         )
 
@@ -247,16 +247,6 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             InformatieObjectType, cls.documenttype
         )
 
-        process_instance = {
-            "id": "c6a5e447-c58e-4986-a30d-54fce7503bbf",
-            "definition_id": f"BBV_vragen:3:c6a5e447-ce95-4986-a36f-54fce7503bbf",
-        }
-        cls.process_instance = factory(ProcessInstance, process_instance)
-        cls.patch_get_process_instance = patch(
-            "zac.core.camunda.select_documents.serializers.get_process_instance",
-            return_value=cls.process_instance,
-        )
-
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
@@ -284,22 +274,19 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             ],
         )
         cls.zaaktype = factory(ZaakType, zaaktype)
-        cls.patch_fetch_zaaktype = patch(
-            "zac.core.camunda.select_documents.serializers.fetch_zaaktype",
+        cls.patch_get_zaaktype = patch(
+            "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype,
         )
 
     def setUp(self):
         super().setUp()
 
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
-
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
 
-        self.patch_fetch_zaaktype.start()
-        self.addCleanup(self.patch_fetch_zaaktype.stop)
+        self.patch_get_zaaktype.start()
+        self.addCleanup(self.patch_get_zaaktype.stop)
 
     def test_document_select_task_serializer_no_catalogi(self, m):
         payload = {
