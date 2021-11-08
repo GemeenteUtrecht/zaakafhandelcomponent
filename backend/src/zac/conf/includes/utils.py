@@ -68,7 +68,7 @@ def _get_version_from_git():
         logger.warning("Unable to list current commit hash")
         commit = None
 
-    return commit or ""
+    return (commit or "").strip()
 
 
 def get_current_version():
@@ -79,3 +79,10 @@ def get_current_version():
     elif which("git"):
         return _get_version_from_git()
     return ""
+
+
+def get_git_sha() -> str:
+    git_sha = config("GIT_SHA", default=None)
+    if git_sha is not None:
+        return git_sha
+    return _get_version_from_git()

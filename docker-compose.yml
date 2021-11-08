@@ -28,7 +28,11 @@ services:
 
   backend: &backend-default
     image: scrumteamzgw/zaakafhandelcomponent:${TAG:-latest}
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        - RELEASE=${TAG:-compose-latest}
+        - COMMIT_HASH=${COMMIT_HASH:-HEAD}
     environment:
       - DJANGO_SETTINGS_MODULE=zac.conf.docker
       - SECRET_KEY=${SECRET_KEY:-changeme}
