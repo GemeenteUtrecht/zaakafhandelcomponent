@@ -166,6 +166,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.accounts.middleware.HijackMiddleware",
+    "zac.utils.middleware.ReleaseHeaderMiddleware",
 ]
 
 ROOT_URLCONF = "zac.urls"
