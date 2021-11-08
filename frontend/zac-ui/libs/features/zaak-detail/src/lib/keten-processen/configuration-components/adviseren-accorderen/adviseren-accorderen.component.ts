@@ -215,6 +215,9 @@ export class AdviserenAccorderenComponent implements OnChanges {
   handleDocumentClick(url) {
     this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
       window.open(res.magicUrl, "_blank");
+    }, error => {
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
     });
   }
 
@@ -226,6 +229,9 @@ export class AdviserenAccorderenComponent implements OnChanges {
     if (searchInput) {
       this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
         this.searchResultUsers = res.results;
+      }, error => {
+        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+        this.reportError(error);
       })
     } else {
       this.searchResultUsers = [];
@@ -240,6 +246,9 @@ export class AdviserenAccorderenComponent implements OnChanges {
     if (searchInput) {
       this.ketenProcessenService.getUserGroups(searchInput).subscribe(res => {
         this.searchResultUserGroups = res.results;
+      }, error => {
+        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+        this.reportError(error);
       })
     } else {
       this.searchResultUserGroups = [];
