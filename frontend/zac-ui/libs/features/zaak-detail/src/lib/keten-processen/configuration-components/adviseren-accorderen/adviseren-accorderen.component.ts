@@ -3,12 +3,22 @@ import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
 import { Result } from '../../../../models/user-search';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UserGroupResult } from '../../../../models/user-group-search';
+import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument} from "@gu/models";
-import {ModalService} from "@gu/components";
+import { ModalService, SnackbarService } from '@gu/components';
 
+/**
+ * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
+ *
+ * This is a configuration componenten for adviseren/accorderen tasks.
+ *
+ * Requires taskContextData: TaskContextData input for the form layout.
+ *
+ * Emits successReload: boolean after succesfully submitting the form.
+ */
 @Component({
   selector: 'gu-config-adviseren-accorderen',
   templateUrl: './adviseren-accorderen.component.html',
@@ -27,15 +37,14 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   steps = 1;
   minDate = new Date();
-  items: Result[] = [];
+  searchResultUsers: Result[] = [];
+  searchResultUserGroups: UserGroupResult[] = [];
 
   assignUsersForm: FormGroup;
 
   isSubmitting: boolean;
   submitSuccess: boolean;
-  submitHasError: boolean;
-  submitErrorMessage: string;
-  assignedUsersErrorMessage: string;
+  errorMessage: string;
 
   constructor(
     private datePipe: DatePipe,
@@ -43,99 +52,12 @@ export class AdviserenAccorderenComponent implements OnChanges {
     private http: ApplicationHttpClient,
     private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
+    private snackbarService: SnackbarService,
   ) {}
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes.taskContextData.previousValue !== this.taskContextData ) {
-      this.reviewType = this.taskContextData.context.reviewType;
-      this.assignUsersForm = this.fb.group({
-        documents: this.addDocumentCheckboxes(),
-        assignedUsers: this.fb.array([this.addAssignUsersStep()]),
-        toelichting: this.fb.control("", Validators.maxLength(4000))
-      })
-    }
-  }
-
-  addStep(i) {
-    if (this.extraStepControl(i).value) {
-      this.steps++
-      this.assignedUsers.push(this.addAssignUsersStep());
-    } else {
-      this.deleteStep();
-    }
-  }
-
-  deleteStep() {
-    this.steps--
-    this.assignedUsers.removeAt(this.assignedUsers.length - 1);
-  }
-
-  handleDocumentClick(url) {
-    this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
-      window.open(res.magicUrl, "_blank");
-    });
-  }
-
-  onSearch(searchInput) {
-    this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-      this.items = res.results;
-    })
-  }
-
-  submitForm() {
-    this.isSubmitting = true;
-
-    const selectedDocuments = this.documents.value
-      .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
-      .filter(v => v !== null);
-    const assignedUsers = this.assignedUsers.controls
-      .map( (step, i) => {
-        const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
-        const users = this.assignedUsersControl(i).value;
-        return {
-          deadline: deadline,
-          users: users
-        }
-      })
-    const toelichting = this.toelichting.value;
-    const formData = {
-      form: this.taskContextData.form,
-      assignedUsers: assignedUsers,
-      selectedDocuments: selectedDocuments,
-      toelichting: toelichting
-    };
-    this.putForm(formData);
-  }
-
-  putForm(formData) {
-    this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
-      this.isSubmitting = false;
-      this.submitSuccess = true;
-      this.successReload.emit(true);
-
-      this.modalService.close('ketenprocessenModal');
-    }, error => {
-      this.isSubmitting = false;
-      this.assignedUsersErrorMessage = error.assignedUsers[0];
-      this.submitErrorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
-      this.submitHasError = true;
-    })
-  }
-
-  addDocumentCheckboxes() {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control(false);
-    });
-    return this.fb.array(arr, atleastOneValidator());
-  }
-
-  addAssignUsersStep() {
-    return this.fb.group({
-      deadline: [undefined, Validators.required],
-      users: [[], Validators.minLength(1)],
-      extraStep: ['']
-    })
-  }
+  //
+  // Getters / setters.
+  //
 
   get documents(): FormArray {
     return this.assignUsersForm.get('documents') as FormArray;
@@ -150,7 +72,11 @@ export class AdviserenAccorderenComponent implements OnChanges {
   };
 
   assignedUsersControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('users') as FormControl;
+    return this.assignedUsers.at(index).get('assignees').get('users') as FormControl;
+  }
+
+  assignedUserGroupControl(index: number): FormControl {
+    return this.assignedUsers.at(index).get('assignees').get('userGroups') as FormControl;
   }
 
   assignedDeadlineControl(index: number): FormControl {
@@ -161,6 +87,90 @@ export class AdviserenAccorderenComponent implements OnChanges {
     return this.assignedUsers.at(index).get('extraStep') as FormControl;
   }
 
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.taskContextData.previousValue !== this.taskContextData ) {
+      this.reviewType = this.taskContextData.context.reviewType;
+      this.assignUsersForm = this.fb.group({
+        documents: this.addDocumentCheckboxes(),
+        assignedUsers: this.fb.array([this.addAssignUsersStep()]),
+        toelichting: this.fb.control("", Validators.maxLength(4000))
+      })
+    }
+  }
+
+  //
+  // Context.
+  //
+
+  /**
+   * Send configuration data to API.
+   * @param formData
+   */
+  putForm(formData) {
+    this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
+      this.isSubmitting = false;
+      this.submitSuccess = true;
+      this.successReload.emit(true);
+
+      this.modalService.close('ketenprocessenModal');
+    }, error => {
+      this.isSubmitting = false;
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
+    })
+  }
+
+  /**
+   * Creates form controls for checkboxes.
+   * @returns {FormArray}
+   */
+  addDocumentCheckboxes() {
+    const arr = this.taskContextData.context.documents.map(() => {
+      return this.fb.control(false);
+    });
+    return this.fb.array(arr, atleastOneValidator());
+  }
+
+  /**
+   * Creates form group for steps.
+   * @returns {FormGroup}
+   */
+  addAssignUsersStep() {
+    return this.fb.group({
+      deadline: [undefined, Validators.required],
+      assignees: this.fb.group({
+        users: [[]],
+        userGroups: [[]],
+      }, { validators: [this.atLeastOneAssignee]}),
+      extraStep: ['']
+    })
+  }
+
+  /**
+   * Validator for assignees.
+   * @param {FormGroup} form
+   * @returns {ValidationErrors}
+   */
+  atLeastOneAssignee(form: FormGroup): ValidationErrors {
+    if (form.value["users"]?.length > 0 || form.value["userGroups"]?.length > 0) {
+      return null
+    }
+    return { "error": "Minimaal één selectie benodigd." }
+  }
+
+  /**
+   * Sets minimum deadline date for form group.
+   * @param {number} index
+   * @returns {Date}
+   */
   assignedMinDateControl(index: number): Date {
     const today = new Date();
     if (this.assignedUsers.at(index - 1)) {
@@ -172,4 +182,110 @@ export class AdviserenAccorderenComponent implements OnChanges {
       return today
     }
   }
+
+  //
+  // Events.
+  //
+
+  /**
+   * Adds a step to the form.
+   * @param i
+   */
+  addStep(i) {
+    if (this.extraStepControl(i).value) {
+      this.steps++
+      this.assignedUsers.push(this.addAssignUsersStep());
+    } else {
+      this.deleteStep();
+    }
+  }
+
+  /**
+   * Deletes last step in the form.
+   */
+  deleteStep() {
+    this.steps--
+    this.assignedUsers.removeAt(this.assignedUsers.length - 1);
+  }
+
+  /**
+   * Redirects to url on click.
+   * @param url
+   */
+  handleDocumentClick(url) {
+    this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_blank");
+    });
+  }
+
+  /**
+   * Searches for users.
+    * @param searchInput
+   */
+  onSearchUsers(searchInput) {
+    if (searchInput) {
+      this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
+        this.searchResultUsers = res.results;
+      })
+    } else {
+      this.searchResultUsers = [];
+    }
+  }
+
+  /**
+   * Searches for user groups.
+   * @param searchInput
+   */
+  onSearchUserGroups(searchInput) {
+    if (searchInput) {
+      this.ketenProcessenService.getUserGroups(searchInput).subscribe(res => {
+        this.searchResultUserGroups = res.results;
+      })
+    } else {
+      this.searchResultUserGroups = [];
+    }
+  }
+
+  /**
+   * Prepare form data to fit API.
+   */
+  submitForm() {
+    this.isSubmitting = true;
+    const selectedDocuments = this.documents.value
+      .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
+      .filter(v => v !== null);
+    const assignedUsers = this.assignedUsers.controls
+      .map( (step, i) => {
+        const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
+        const users = this.assignedUsersControl(i).value;
+        const userGroups = this.assignedUserGroupControl(i).value;
+        return {
+          deadline: deadline,
+          userAssignees: users,
+          groupAssignees: userGroups
+        }
+      })
+    const toelichting = this.toelichting.value;
+    const formData = {
+      form: this.taskContextData.form,
+      assignedUsers: assignedUsers,
+      selectedDocuments: selectedDocuments,
+      toelichting: toelichting
+    };
+    this.putForm(formData);
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
+  }
+
 }
