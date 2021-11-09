@@ -1,6 +1,9 @@
 from django.http import HttpResponse
 
 import requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 HEADERS_TO_KEEP = (
     "api-version",
@@ -20,3 +23,9 @@ def remote_schema_view(request):
             continue
         django_response[header] = value
     return django_response
+
+
+@api_view()
+@permission_classes(())
+def health_check(request: Request):
+    return Response({"healty": True})
