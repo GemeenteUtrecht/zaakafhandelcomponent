@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any
+from uuid import UUID
 
 from django.contrib.auth.models import Group
 
@@ -58,3 +59,9 @@ class Task(_Task):
             elif isinstance(self.assignee, Group):
                 return AssigneeTypeChoices.group
         return ""
+
+
+@dataclass
+class BPMN:
+    id: str
+    bpmn20_xml: str

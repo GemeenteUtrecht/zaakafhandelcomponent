@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    GetBPMNView,
     ProcessInstanceFetchView,
     SendMessageView,
     SetTaskAssigneeView,
@@ -20,4 +21,5 @@ urlpatterns = [
     ),
     path("send-message", SendMessageView.as_view(), name="send-message"),
     path("claim-task", SetTaskAssigneeView.as_view(), name="claim-task"),
+    path("bpmn/<str:process_definition_id>", GetBPMNView.as_view(), name="bpmn"),
 ]

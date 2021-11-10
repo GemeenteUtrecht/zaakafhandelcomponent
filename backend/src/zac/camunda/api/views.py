@@ -1,6 +1,5 @@
 import uuid
 
-from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, send_message
@@ -25,6 +24,7 @@ from ..processes import get_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
+    BPMNSerializer,
     ErrorSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
@@ -337,3 +337,26 @@ class SetTaskAssigneeView(APIView):
             self._create_rol(zaak, delegate)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GetBPMNView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = BPMNSerializer
+
+    @extend_schema(
+        summary=_("Retrieve the XML of the BPMN"),
+        responses={
+            200: BPMNSerializer,
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        client = get_client()
+        process_definition_id = kwargs["process_definition_id"]
+        response = client.get(f"process-definition/{process_definition_id}/xml")
+        serializer = self.serializer_class(data=response)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except exceptions.ValidationError:
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
