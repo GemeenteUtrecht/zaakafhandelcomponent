@@ -4,6 +4,7 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.api.permissions import (
     DefinitionBasePermission,
     DocumentDefinitionPermission,
@@ -13,6 +14,7 @@ from zac.api.permissions import (
 from ..permissions import (
     zaken_add_documents,
     zaken_add_relations,
+    zaken_download_documents,
     zaken_handle_access,
     zaken_inzien,
     zaken_update_documents,
@@ -20,6 +22,11 @@ from ..permissions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class CanOpenDocuments(DefinitionBasePermission):
+    permission = zaken_download_documents
+    object_type = PermissionObjectTypeChoices.document
 
 
 class CanAddDocuments(ZaakDefinitionPermission):

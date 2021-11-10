@@ -16,6 +16,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -24,7 +25,7 @@ from zac.accounts.tests.factories import (
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.data import DowcResponse
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_download_documents, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -115,21 +116,20 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             drc_url=doc_versioned_url.url, magic_url="", purpose="write", uuid=uuid4()
         )
 
-        with patch(
-            "zac.core.api.views.filter_documenten_for_permissions",
-            return_value=[doc_obj],
-        ):
-            with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch("zac.core.api.views.get_documenten", return_value=([], [])):
+        with patch("zac.core.api.views.find_zaak", return_value=zaak):
+            with patch(
+                "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
+            ):
+                with patch(
+                    "zac.core.api.views.resolve_documenten_informatieobjecttypen",
+                    return_value=([doc_obj]),
+                ):
                     with patch(
-                        "zac.core.api.views.resolve_documenten_informatieobjecttypen",
-                        return_value=([doc_obj]),
+                        "zac.core.api.views.get_open_documenten",
+                        return_value=[dowc],
                     ):
-                        with patch(
-                            "zac.core.api.views.get_open_documenten",
-                            return_value=[dowc],
-                        ):
-                            response = self.client.get(self.endpoint)
+                        response = self.client.get(self.endpoint)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
@@ -198,14 +198,8 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
 
         with patch("zac.core.api.views.find_zaak", return_value=zaak):
             with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
-                with patch(
-                    "zac.core.api.views.filter_documenten_for_permissions",
-                    return_value=[],
-                ):
-                    with patch(
-                        "zac.core.api.views.get_open_documenten", return_value=[]
-                    ):
-                        response = self.client.get(self.endpoint)
+                with patch("zac.core.api.views.get_open_documenten", return_value=[]):
+                    response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
@@ -274,9 +268,6 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         cls.doc_obj = factory(Document, cls.document)
-        cls.doc_obj.informatieobjecttype = factory(
-            InformatieObjectType, cls.documenttype
-        )
 
         cls.dowc = DowcResponse(
             drc_url=cls.doc_obj.url, magic_url="", purpose="write", uuid=uuid4()
@@ -309,6 +300,10 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}informatieobjecttypen",
+            json=paginated_response([self.documenttype]),
         )
 
     def setUp(self):
@@ -376,6 +371,30 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
+    def test_has_perm_to_see_zaak_but_not_documents(self, m):
+        self._setupMocks(m)
+
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        with patch(
+            "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
+        ):
+            response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), [])
+
+    @requests_mock.Mocker()
     def test_has_perm(self, m):
         self._setupMocks(m)
 
@@ -389,6 +408,11 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_download_documents.name],
+            object_type=PermissionObjectTypeChoices.document,
+            for_user=user,
         )
         self.client.force_authenticate(user=user)
 

@@ -74,7 +74,6 @@ from ..services import (
     resolve_documenten_informatieobjecttypen,
     zet_status,
 )
-from ..views.utils import filter_documenten_for_permissions
 from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
@@ -89,6 +88,7 @@ from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
     CanHandleAccessRequests,
+    CanOpenDocuments,
     CanReadOrUpdateZaken,
     CanReadZaken,
     CanUpdateZaken,
@@ -497,12 +497,21 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = GetZaakDocumentSerializer
 
+    def _filter_for_permissions(self, obj):
+        return CanOpenDocuments().has_permission(
+            self.request, self
+        ) or CanOpenDocuments().has_object_permission(self.request, self, obj)
+
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         documents, gone = get_documenten(zaak)
-        filtered_documenten = filter_documenten_for_permissions(documents, request)
+        filtered_documents = []
+        for document in documents:
+            if self._filter_for_permissions(document):
+                filtered_documents.append(document)
+
         resolved_documenten = resolve_documenten_informatieobjecttypen(
-            filtered_documenten
+            filtered_documents
         )
         referer = request.headers.get("referer", "")
         open_documenten = get_open_documenten(request.user, referer)
