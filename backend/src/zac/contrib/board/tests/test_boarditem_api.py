@@ -34,16 +34,14 @@ ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
 
 @requests_mock.Mocker()
 class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
-    def setUp(self):
-        super().setUp()
-
-        self.user = UserFactory.create()
-        self.client.force_authenticate(user=self.user)
-
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory.create()
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         # data for ES documents
-        self.zaaktype = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
@@ -52,23 +50,25 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
-        self.zaak = generate_oas_component(
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=ZAAK_URL,
-            zaaktype=self.zaaktype["url"],
+            zaaktype=cls.zaaktype["url"],
             identificatie="zaak1",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             eigenschappen=[],
         )
-        zaaktype_model = factory(ZaakType, self.zaaktype)
-        zaak_model = factory(Zaak, self.zaak)
-        zaak_model.zaaktype = zaaktype_model
+        cls.zaaktype_model = factory(ZaakType, cls.zaaktype)
+        cls.zaak_model = factory(Zaak, cls.zaak)
+        cls.zaak_model.zaaktype = cls.zaaktype_model
 
-        zaak_document = self.create_zaak_document(zaak_model)
-        zaak_document.zaaktype = self.create_zaaktype_document(zaaktype_model)
+    def setUp(self):
+        super().setUp()
+        self.client.force_authenticate(user=self.user)
+        zaak_document = self.create_zaak_document(self.zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype_model)
         zaak_document.save()
-
         self.refresh_index()
 
     def _setUpMock(self, m):
@@ -272,14 +272,12 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
 
 class BoardItemAPITests(ESMixin, APITestCase):
-    def setUp(self):
-        super().setUp()
-
-        self.user = SuperUserFactory.create()
-        self.client.force_authenticate(user=self.user)
-
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = SuperUserFactory.create()
         # data for ES documents
-        self.zaaktype = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
@@ -288,41 +286,36 @@ class BoardItemAPITests(ESMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
-        self.zaak = generate_oas_component(
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=ZAAK_URL,
-            zaaktype=self.zaaktype["url"],
+            zaaktype=cls.zaaktype["url"],
             identificatie="zaak1",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             eigenschappen=[],
         )
-        zaaktype_model = factory(ZaakType, self.zaaktype)
-        zaak_model = factory(Zaak, self.zaak)
-        zaak_model.zaaktype = zaaktype_model
-
-        zaak_document = self.create_zaak_document(zaak_model)
-        zaak_document.zaaktype = self.create_zaaktype_document(zaaktype_model)
-        zaak_document.save()
-        self.refresh_index()
-
-        self.zaak_data = {
+        cls.zaaktype_model = factory(ZaakType, cls.zaaktype)
+        cls.zaak_model = factory(Zaak, cls.zaak)
+        cls.zaak_model.zaaktype = cls.zaaktype_model
+        cls.zaak_data = {
             "url": ZAAK_URL,
             "zaaktype": {
-                "url": zaaktype_model.url,
+                "url": cls.zaaktype_model.url,
                 "catalogus": CATALOGUS_URL,
                 "omschrijving": "ZT1",
             },
             "identificatie": "zaak1",
-            "bronorganisatie": zaak_model.bronorganisatie,
-            "omschrijving": zaak_model.omschrijving,
+            "bronorganisatie": cls.zaak_model.bronorganisatie,
+            "omschrijving": cls.zaak_model.omschrijving,
             "vertrouwelijkheidaanduiding": "openbaar",
             "vaOrder": 27,
             "rollen": [],
-            "startdatum": zaak_model.startdatum.isoformat() + "T00:00:00Z",
+            "startdatum": cls.zaak_model.startdatum.isoformat() + "T00:00:00Z",
             "einddatum": None,
-            "registratiedatum": zaak_model.registratiedatum.isoformat() + "T00:00:00Z",
-            "deadline": zaak_model.deadline.isoformat() + "T00:00:00Z",
+            "registratiedatum": cls.zaak_model.registratiedatum.isoformat()
+            + "T00:00:00Z",
+            "deadline": cls.zaak_model.deadline.isoformat() + "T00:00:00Z",
             "eigenschappen": [],
             "status": {
                 "url": None,
@@ -330,10 +323,18 @@ class BoardItemAPITests(ESMixin, APITestCase):
                 "datumStatusGezet": None,
                 "statustoelichting": None,
             },
-            "toelichting": zaak_model.toelichting,
+            "toelichting": cls.zaak_model.toelichting,
             "zaakobjecten": [],
             "zaakgeometrie": None,
         }
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_authenticate(user=self.user)
+        zaak_document = self.create_zaak_document(self.zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype_model)
+        zaak_document.save()
+        self.refresh_index()
 
     def test_list_items(self):
         item1 = BoardItemFactory.create(column__name="wip", object=ZAAK_URL)
@@ -420,7 +421,6 @@ class BoardItemAPITests(ESMixin, APITestCase):
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json(),

@@ -28,22 +28,35 @@
     </article>
     <article class="configuration-details" *ngFor="let step of [].constructor(steps); let i = index">
       <label class="h4 d-inline-block">{{assignedUsersTitle[reviewType]}}</label>
-      <p *ngIf="reviewType === 'advice'">Van wie wil je advies? Selecteer hier onder één of meerdere collega's. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
-      <p *ngIf="reviewType === 'approval'">Van wie wil je akkoord? Selecteer hier onder één of meerdere collega's. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
+      <p *ngIf="reviewType === 'advice'">Van wie wil je advies? Selecteer hier onder één of meerdere collega's. Je kunt ook gebruikersgroepen selecteren. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
+      <p *ngIf="reviewType === 'approval'">Van wie wil je akkoord? Selecteer hier onder één of meerdere collega's. Je kunt ook gebruikersgroepen selecteren. Geef daarbij ook aan wat de einddatum is van de vraag.</p>
       <div class="steps-wrapper">
         <div class="step-container"
              id="kp-adv-acc-user--{{i}}"
              formArrayName="assignedUsers">
           <div class="row" [formGroupName]="i">
-            <div class="col-md-6">
-              <gu-multiselect (search)="onSearch($event)"
-                              [items]="items"
+            <div class="col-md-6 mb-2">
+              <gu-multiselect (search)="onSearchUsers($event)"
+                              (change)="searchResultUsers = []"
+                              [items]="searchResultUsers"
                               [multiple]="true"
                               [control]="assignedUsersControl(i)"
+                              label="Personen"
                               bindLabel="fullName"
                               bindValue="username"
-                              required
-                              placeholder="Selecteer {{assignedUsersTitle[reviewType] | lowercase}}">
+                              placeholder="Zoek collega's">
+              </gu-multiselect>
+            </div>
+            <div class="col-md-6">
+              <gu-multiselect (search)="onSearchUserGroups($event)"
+                              (change)="searchResultUserGroups = []"
+                              [items]="searchResultUserGroups"
+                              [multiple]="true"
+                              [control]="assignedUserGroupControl(i)"
+                              label="Gebruikersgroepen"
+                              bindLabel="name"
+                              bindValue="name"
+                              placeholder="Zoek gebruikersgroepen...">
               </gu-multiselect>
             </div>
             <div class="col-md-6">
@@ -66,7 +79,6 @@
             </div>
           </div>
         </div>
-        <p class="p--error" *ngIf="assignedUsersErrorMessage">{{assignedUsersErrorMessage}}</p>
       </div>
     </article>
     <article class="configuration-details">
@@ -84,6 +96,4 @@
       </button>
     </div>
   </form>
-  <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
-  </gu-message>
 </div>

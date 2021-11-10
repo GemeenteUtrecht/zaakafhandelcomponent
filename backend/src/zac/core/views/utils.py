@@ -3,14 +3,9 @@ from typing import Dict, List, Optional
 
 from django.http import HttpRequest
 
-from rest_framework.permissions import SAFE_METHODS
-from rest_framework.request import Request
-from zgw_consumers.api_models.documenten import Document
-
 from zac.contrib.kownsl.data import ReviewRequest
 from zgw.models.zrc import Zaak
 
-from ..permissions import zaken_download_documents, zaken_update_documents
 from ..services import get_zaak
 
 
@@ -21,24 +16,6 @@ def get_zaak_from_query(request: HttpRequest, param: str = "zaak") -> Zaak:
 
     zaak = get_zaak(zaak_url=zaak_url)
     return zaak
-
-
-def filter_documenten_for_permissions(
-    documenten: List[Document],
-    request: Request,
-) -> List[Document]:
-    """Filter documents on the user permissions."""
-
-    if request.method in SAFE_METHODS:
-        permission = zaken_download_documents
-    else:
-        permission = zaken_update_documents
-
-    filtered_documents = []
-    for document in documenten:
-        if request.user.has_perm(permission.name, document):
-            filtered_documents.append(document)
-    return filtered_documents
 
 
 def get_source_doc_versions(

@@ -97,15 +97,9 @@ export class AdviceComponent implements OnInit {
   setLayout(res) {
     this.setZaakUrl(res.body.zaak);
     this.bronorganisatie = res.body.zaak.bronorganisatie;
-    const isSubmittedBefore = res.headers.get('X-Kownsl-Submitted');
-    if (isSubmittedBefore === "false") {
-      this.adviceData = res.body;
-      this.tableData.bodyData = this.createTableData(res.body.reviews);
-      this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
-    } else {
-      this.hasError = true;
-      this.errorMessage = "U heeft deze aanvraag al beantwoord.";
-    }
+    this.adviceData = res.body;
+    this.tableData.bodyData = this.createTableData(res.body.reviews);
+    this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
   }
 
   getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
