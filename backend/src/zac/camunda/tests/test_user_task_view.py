@@ -144,7 +144,7 @@ class GetUserTaskContextViewTests(APITestCase):
         )
 
         cls.patch_get_zaaktype = patch(
-            "zac.core.camunda.select_documents.context.fetch_zaaktype",
+            "zac.core.camunda.select_documents.context.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype_obj,
         )
 
@@ -437,20 +437,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         cls.patch_fetch_zaaktype = patch(
-            "zac.core.camunda.select_documents.serializers.fetch_zaaktype",
+            "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype_obj,
         )
-
-        process_instance = {
-            "id": "c6a5e447-c58e-4986-a30d-54fce7503bbf",
-            "definition_id": f"BBV_vragen:3:c6a5e447-ce95-4986-a36f-54fce7503bbf",
-        }
-        cls.process_instance = factory(ProcessInstance, process_instance)
-        cls.patch_get_process_instance = patch(
-            "zac.core.camunda.select_documents.serializers.get_process_instance",
-            return_value=cls.process_instance,
-        )
-
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -538,11 +527,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                         "zac.core.camunda.select_documents.serializers.get_zaak_context",
                         return_value=self.zaak_context,
                     ):
-                        with patch(
-                            "zac.core.camunda.select_documents.serializers.get_process_instance",
-                            return_value=self.process_instance,
-                        ):
-                            response = self.client.put(self.task_endpoint, payload)
+
+                        response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
 
