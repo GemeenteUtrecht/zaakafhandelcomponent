@@ -6,9 +6,22 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.camunda.api.serializers import TaskSerializer
-from zac.core.api.serializers import ZaakSerializer
+from zac.elasticsearch.drf_api.serializers import StatusDocumentSerializer
 
 from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
+
+
+class SummaryZaakDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(
+        help_text=_("URL reference of the ZAAK in Zaken API."),
+    )
+    identificatie = serializers.CharField(
+        help_text=_("Unique identification of the ZAAK.")
+    )
+    bronorganisatie = serializers.CharField(
+        help_text=_("The RSIN of the organisation that created the the ZAAK.")
+    )
+    status = StatusDocumentSerializer(help_text=_("STATUS of the ZAAK."))
 
 
 class AccessRequestSerializer(serializers.ModelSerializer):
@@ -27,8 +40,12 @@ class AccessRequestSerializer(serializers.ModelSerializer):
 
 
 class WorkStackAccessRequestsSerializer(APIModelSerializer):
-    access_requests = AccessRequestSerializer(many=True)
-    zaak = ZaakSerializer()
+    access_requests = AccessRequestSerializer(
+        many=True, help_text=_("Access requests for requester to ZAAKen.")
+    )
+    zaak = SummaryZaakDocumentSerializer(
+        help_text=_("ZAAK that access requests belong to.")
+    )
 
     class Meta:
         model = AccessRequestGroup
@@ -45,8 +62,10 @@ class ActivityNameSerializer(serializers.ModelSerializer):
 
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
-    activities = ActivityNameSerializer(many=True)
-    zaak = ZaakSerializer()
+    activities = ActivityNameSerializer(
+        many=True, help_text=_("Names of the activities.")
+    )
+    zaak = SummaryZaakDocumentSerializer(help_text=_("ZAAK that activity belongs to."))
 
     class Meta:
         model = ActivityGroup
@@ -57,8 +76,10 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
 
 
 class WorkStackTaskSerializer(APIModelSerializer):
-    task = TaskSerializer()
-    zaak = ZaakSerializer()
+    task = TaskSerializer(help_text=_("Camunda task for the user."))
+    zaak = SummaryZaakDocumentSerializer(
+        help_text=_("ZAAK that camunda task belongs to.")
+    )
 
     class Meta:
         model = TaskAndCase

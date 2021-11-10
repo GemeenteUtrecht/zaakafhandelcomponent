@@ -111,32 +111,60 @@ class EigenschapDocumentSerializer(serializers.Serializer):
 
 
 class BetrokkeneIdentificatieSerializer(serializers.Serializer):
-    identificatie = serializers.CharField(required=False)
+    identificatie = serializers.CharField(
+        required=False, help_text=_("Identification of the betrokkene.")
+    )
 
 
 class RolDocumentSerializer(serializers.Serializer):
-    url = serializers.URLField(required=False)
-    betrokkene_type = serializers.CharField()
-    omschrijving_generiek = serializers.CharField()
-    betrokkene_identificatie = BetrokkeneIdentificatieSerializer(required=False)
+    url = serializers.URLField(
+        required=False, help_text=_("URL reference of the ROL in Zaken API.")
+    )
+    betrokkene_type = serializers.CharField(help_text=_("Betrokkene type of the ROL."))
+    omschrijving_generiek = serializers.CharField(
+        help_text=_("Generic, brief description of the ROL.")
+    )
+    betrokkene_identificatie = BetrokkeneIdentificatieSerializer(
+        required=False, help_text=_("A short unique identification of the betrokkene.")
+    )
 
 
 class ZaakTypeDocumentSerializer(serializers.Serializer):
-    url = serializers.URLField(required=False)
-    catalogus = serializers.CharField(required=False)
-    omschrijving = serializers.CharField(required=False)
+    url = serializers.URLField(
+        required=False,
+        help_text=_("URL reference of the ZAAKTYPE in the Catalogi API."),
+    )
+    catalogus = serializers.CharField(
+        required=False,
+        help_text=_("URL reference of the CATALOGUS that belongs to the ZAAKTYPE."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Description of the ZAAKTYPE.")
+    )
 
 
 class StatusDocumentSerializer(serializers.Serializer):
-    url = serializers.URLField(required=False)
-    statustype = serializers.CharField(required=False)
-    datum_status_gezet = serializers.DateTimeField(required=False)
-    statustoelichting = serializers.CharField(required=False)
+    url = serializers.URLField(
+        required=False, help_text=_("URL reference of the STATUS in Zaken API.")
+    )
+    statustype = serializers.CharField(
+        required=False, help_text=_("STATUSTYPE description of the STATUS.")
+    )
+    datum_status_gezet = serializers.DateTimeField(
+        required=False, help_text=_("Date at which the STATUS was given to the ZAAK.")
+    )
+    statustoelichting = serializers.CharField(
+        required=False, help_text=_("Comment on the STATUS.")
+    )
 
 
 class ZaakObjectDocumentSerializer(serializers.Serializer):
-    url = serializers.URLField(required=False)
-    object = serializers.URLField(required=False)
+    url = serializers.URLField(
+        required=False, help_text=_("URL reference of the ZAAKOBJECT in Zaken API.")
+    )
+    object = serializers.URLField(
+        required=False, help_text=_("URL reference of the OBJECT in Objects API.")
+    )
 
 
 class ZaakgeometrieSerializer(serializers.Serializer):
@@ -150,20 +178,62 @@ class ZaakgeometrieSerializer(serializers.Serializer):
 
 
 class ZaakDocumentSerializer(serializers.Serializer):
-    url = serializers.URLField(required=False)
-    zaaktype = ZaakTypeDocumentSerializer(required=False)
-    identificatie = serializers.CharField(required=False)
-    bronorganisatie = serializers.CharField(required=True)
-    omschrijving = serializers.CharField(required=False)
-    vertrouwelijkheidaanduiding = serializers.CharField(required=False)
-    va_order = serializers.IntegerField(required=False)
-    rollen = RolDocumentSerializer(required=False, many=True)
-    startdatum = serializers.DateTimeField(required=False)
-    einddatum = serializers.DateTimeField(required=False)
-    registratiedatum = serializers.DateTimeField(required=False)
-    deadline = serializers.DateTimeField(required=False)
-    eigenschappen = EigenschapDocumentSerializer(many=True, required=False)
-    status = StatusDocumentSerializer(required=False)
-    toelichting = serializers.CharField(required=False)
-    zaakobjecten = ZaakObjectDocumentSerializer(many=True, required=False)
-    zaakgeometrie = ZaakgeometrieSerializer(required=False)
+    url = serializers.URLField(
+        required=False,
+        help_text=_("URL reference of the ZAAK in Zaken API."),
+    )
+    zaaktype = ZaakTypeDocumentSerializer(
+        required=False, help_text=_("ZAAKTYPE of the ZAAK.")
+    )
+    identificatie = serializers.CharField(
+        required=False, help_text=_("Unique identification of the ZAAK.")
+    )
+    bronorganisatie = serializers.CharField(
+        required=True,
+        help_text=_("The RSIN of the organisation that created the the ZAAK."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of the ZAAK.")
+    )
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        required=False, help_text=_("Confidentiality classification of the ZAAK.")
+    )
+    va_order = serializers.IntegerField(
+        required=False,
+    )
+    rollen = RolDocumentSerializer(
+        required=False,
+        many=True,
+        help_text=_("ROLlen of the ZAAK that were involved at some point."),
+    )
+    startdatum = serializers.DateTimeField(
+        required=False, help_text=_("Date at which the ZAAK processing starts.")
+    )
+    einddatum = serializers.DateTimeField(
+        required=False, help_text=_("Date at which the ZAAK processing ends.")
+    )
+    registratiedatum = serializers.DateTimeField(
+        required=False, help_text=_("Date at which the ZAAK was registered.")
+    )
+    deadline = serializers.DateTimeField(
+        required=False,
+        help_text=_(
+            "Deadline of the ZAAK: returns 'uiterlijke_einddatum_afdoening' if it known. Otherwise it is calculated from 'startdatum' and 'doorlooptijd'."
+        ),
+    )
+    eigenschappen = EigenschapDocumentSerializer(
+        many=True, required=False, help_text=_("EIGENSCHAPpen of the ZAAK.")
+    )
+    status = StatusDocumentSerializer(
+        required=False, help_text=_("STATUS of the ZAAK.")
+    )
+    toelichting = serializers.CharField(
+        required=False, help_text=_("Comment on the ZAAK.")
+    )
+    zaakobjecten = ZaakObjectDocumentSerializer(
+        many=True, required=False, help_text=_("ZAAKOBJECTen belonging to the ZAAK.")
+    )
+    zaakgeometrie = ZaakgeometrieSerializer(
+        required=False,
+        help_text=_("A GeoJSON containing geometric information related to the ZAAK."),
+    )
