@@ -1,15 +1,28 @@
 {
   "ecmHost": "{protocol}//{hostname}{:port}",
+  "aosHost": "{protocol}//{hostname}{:port}/alfresco/aos",
+  "baseShareUrl": "{protocol}//{hostname}{:port}/#/preview/s",
+  "identityHost": "{protocol}//{hostname}{:port}/auth/realms/alfresco",
   "providers": "ECM",
+  "authType": "OAUTH",
+  "oauth2": {
+    "host": "https://alfresco-auth.cg-intern.ont.utrecht.nl/auth/realms/alfresco",
+    "clientId": "alfresco",
+    "scope": "openid",
+    "secret": "",
+    "implicitFlow": true,
+    "silentLogin": true,
+    "publicUrls": ["**/preview/s/*", "**/settings"],
+    "redirectSilentIframeUri": "{protocol}//{hostname}{:port}/ui/assets/silent-refresh.html",
+    "redirectUri": "/ui/zoeken",
+    "redirectUriLogout": "/logout"
+  },
   "locale": "nl",
   "pagination": {
     "size": 25,
     "supportedPageSizes": [5, 10, 25, 50, 100, 150]
   },
-  "application": {
-    "name": "Contezza ZAC Documentlist"
-  },
   "SEARCH_QUERY": "TYPE:'cm:content'",
   "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
-  "ALFRESCO_PREVIEW_URL": "https://alfresco.cg-intern.ont.utrecht.nl"
+  "ALFRESCO_PREVIEW_URL": "https://alfresco-tezza.cg-intern.ont.utrecht.nl/"
 }

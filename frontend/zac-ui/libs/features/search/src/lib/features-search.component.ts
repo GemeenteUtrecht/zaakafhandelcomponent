@@ -1,8 +1,10 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnInit, Renderer2} from '@angular/core';
 import {TableSort, Zaak} from '@gu/models';
 import {PageEvent} from '@angular/material/paginator';
 import {MapGeometry, MapMarker} from "../../../../shared/ui/components/src/lib/components/map/map";
 import {ZaakService} from "@gu/services";
+import {DOCUMENT} from "@angular/common";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'gu-features-search',
@@ -10,7 +12,7 @@ import {ZaakService} from "@gu/services";
   styleUrls: ['./features-search.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FeaturesSearchComponent {
+export class FeaturesSearchComponent implements OnInit{
   mapGeometries: MapGeometry[] = [];
   mapMarkers: MapMarker[] = [];
 
@@ -19,7 +21,25 @@ export class FeaturesSearchComponent {
   sortData: TableSort;
   pageData: PageEvent;
 
-  constructor(private changeDetectorRef: ChangeDetectorRef, private zaakService: ZaakService) {
+  constructor(
+    private changeDetectorRef: ChangeDetectorRef,
+    private zaakService: ZaakService,
+    private router: Router,
+    private renderer2: Renderer2,
+    @Inject(DOCUMENT) private document: Document) {
+  }
+
+  ngOnInit(): void {
+
+    /*
+     * /ui/zoeken route is now used for Oauth authorisation en can by configured via app.config.json: "redirectUri": "your_redirect_uri",
+     * 'contezza-zac-doclib' script must by appended to complete Oauth login
+     */
+    if (this.router.url.includes('session_state')) {
+      const script = this.renderer2.createElement('script');
+      script.src = '/ui/assets/contezza-zac-doclib.js';
+      this.renderer2.appendChild(this.document.body, script);
+    }
   }
 
   //
