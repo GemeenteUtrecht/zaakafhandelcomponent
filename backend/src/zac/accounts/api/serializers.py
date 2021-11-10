@@ -65,14 +65,42 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = (
+        fields = [
             "id",
             "name",
             "full_name",
-        )
+        ]
 
     def get_full_name(self, obj) -> str:
         return _("Group") + ": " + obj.name
+
+
+class ManageGroupSerializer(GroupSerializer):
+    users = serializers.SlugRelatedField(
+        source="user_set",
+        many=True,
+        read_only=False,
+        slug_field="username",
+        queryset=User.objects.all(),
+        required=False,
+    )
+
+    class Meta(GroupSerializer.Meta):
+        model = GroupSerializer.Meta.model
+        fields = GroupSerializer.Meta.fields + ["users"]
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        users = validated_data.pop("user_set")
+        group = super().create(validated_data)
+        group.user_set.add(*users)
+        return group
+
+    @transaction.atomic()
+    def update(self, instance, validated_data):
+        users = validated_data.pop("user_set")
+        instance.user_set.set(users)
+        return super().update(instance, validated_data)
 
 
 class CatalogusURLSerializer(serializers.Serializer):
