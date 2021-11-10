@@ -1,5 +1,5 @@
 # Stage 1 - Compile needed python dependencies
-FROM python:3.9-slim-bullseye AS build
+FROM python:3.9.7-slim-bullseye AS build
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ COPY src/zac/js/ /app/src/zac/js/
 RUN npm run build --production
 
 # Stage 3 - Build docker image suitable for production
-FROM python:3.9-slim-bullseye AS production
+FROM python:3.9.7-slim-bullseye AS production
 
 # Stage 3.1 - Set up the needed production dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
