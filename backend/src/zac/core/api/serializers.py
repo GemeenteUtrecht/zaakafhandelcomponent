@@ -391,9 +391,11 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
             },
             "omschrijving": {
                 "required": False,
+                "allow_blank": True,
             },
             "toelichting": {
                 "required": False,
+                "allow_blank": True,
             },
             "uiterlijke_einddatum_afdoening": {
                 "required": False,
