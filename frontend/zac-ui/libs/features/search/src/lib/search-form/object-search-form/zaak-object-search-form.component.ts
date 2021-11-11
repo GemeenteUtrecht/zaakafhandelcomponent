@@ -103,15 +103,23 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   get form(): FieldConfiguration[] {
     return [
+      this.objectTypesAsFieldConfiguration(),
+      ...this.objectTypeVersionsAsFieldConfigurations(),
       {
         choices: OBJECT_SEARCH_GEOMETRY_CHOICES,
         label: 'Gebied',
         name: 'geometry',
         required: false,
         value: OBJECT_SEARCH_GEOMETRY_CHOICES[0].value,
+        activeWhen: (formGroup) => {
+          const geometryIndicators = ['adres'];
+          const objectTypeUrl = formGroup.getRawValue().objectType;
+          const objectType = this.objectTypes.find((objectType: ObjectType) => objectType.url === objectTypeUrl);
+          const objectTypeVersionUrl = objectType?.versions[objectType.versions.length - 1];
+          const objectTypeVersion = this.objectTypeVersions.find((objectTypeVersion: ObjectTypeVersion) => objectTypeVersion.url === objectTypeVersionUrl)
+          return geometryIndicators.find((indicator: string) => objectTypeVersion?.jsonSchema.properties[indicator]);
+        }
       },
-      this.objectTypesAsFieldConfiguration(),
-      ...this.objectTypeVersionsAsFieldConfigurations(),
       {
         label: 'Zoekopdracht',
         name: 'query',
