@@ -49,7 +49,7 @@ def get_zaaktype_from_identificatie(task: Task) -> ZaakType:
         request_kwargs = {"domein": catalogus_domein, "rsin": catalogus_rsin}
         catalogus = _get_from_catalogus("catalogus", **request_kwargs)
         try:
-            catalogus_url = catalogus["results"][0]["url"]
+            catalogus_url = catalogus[0]["url"]
         except (KeyError, IndexError):
             raise ValueError(
                 "No catalogus found with domein %s and RSIN %s."
@@ -60,8 +60,8 @@ def get_zaaktype_from_identificatie(task: Task) -> ZaakType:
             "catalogus": catalogus_url,
             "identificatie": zaaktype_identificatie,
         }
-        zaaktypen = _get_from_catalogus("zaaktype", request_kwargs=request_kwargs)
-        if zaaktypen["count"] == 0:
+        zaaktypen = _get_from_catalogus("zaaktype", **request_kwargs)
+        if len(zaaktypen) == 0:
             raise ValueError(
                 "No zaaktype was found with catalogus %s and identificatie %s."
                 % (
@@ -70,7 +70,7 @@ def get_zaaktype_from_identificatie(task: Task) -> ZaakType:
                 )
             )
 
-        zaaktypen = [factory(ZaakType, zaaktype) for zaaktype in zaaktypen["results"]]
+        zaaktypen = [factory(ZaakType, zaaktype) for zaaktype in zaaktypen]
 
         def _filter_on_geldigheid(zaaktype: ZaakType) -> bool:
             if zaaktype.einde_geldigheid:
