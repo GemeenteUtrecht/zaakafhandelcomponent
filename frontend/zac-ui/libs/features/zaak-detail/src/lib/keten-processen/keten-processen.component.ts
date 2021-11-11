@@ -152,8 +152,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Cancels the polling of tasks.
    */
   cancelPolling() {
-    this.isPolling = false;
-    this.pollingSub$.unsubscribe();
+    if (this.pollingSub$) {
+      this.isPolling = false;
+      this.pollingSub$.unsubscribe();
+    }
   }
 
   /**
@@ -245,6 +247,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {number} [tabIndex]
    */
   executeTask(taskId: string, tabIndex: number = null): void {
+
     this.cancelPolling() // stop polling data;
 
     this.selectedTabIndex = tabIndex;

@@ -48,7 +48,9 @@
             <ng-container *ngIf="taskData?.length > 0; else noTasks" >
               <div class="task-link" *ngFor="let userTask of taskData">
                 <a class="anchor mb-2"
-                   [routerLink]="createZaakLink(userTask.zaak, userTask.task)">
+                   [routerLink]="createZaakLink(userTask.zaak)"
+                   [queryParams]="{'user-task': userTask.task.id}"
+                >
                   {{userTask.zaak.identificatie}}: {{userTask.task.name}}
                 </a>
               </div>
@@ -75,7 +77,9 @@
             <ng-container *ngIf="groupTaskData?.length > 0; else noGroupTasks" >
               <div class="task-link" *ngFor="let groupTask of groupTaskData">
                 <a class="anchor mb-2"
-                   [routerLink]="createZaakLink(groupTask.zaak, groupTask.task)">
+                   [routerLink]="createZaakLink(groupTask.zaak)"
+                   [queryParams]="{'user-task': groupTask.task.id}"
+                >
                   {{groupTask.zaak.identificatie}}: {{groupTask.task.name}}
                 </a>
                 <label class="label label--small d-block">{{groupTask.task.assignee.name}}</label>
@@ -104,7 +108,9 @@
             <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
               <div class="task-link" *ngFor="let activity of activitiesData">
                 <a class="anchor mb-2"
-                   [routerLink]="createActivityLink(activity.zaak)">
+                   [routerLink]="createZaakLink(activity.zaak)"
+                   [queryParams]="{'activities': true}"
+                >
                   {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
                 </a>
               </div>

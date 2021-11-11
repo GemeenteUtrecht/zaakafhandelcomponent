@@ -5,4 +5,5 @@ export interface User {
   lastName: string;
   isStaff: boolean;
   email: string;
+  groups: string[];
 }

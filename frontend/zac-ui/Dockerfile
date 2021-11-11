@@ -1,12 +1,12 @@
 # Stage 1 -- install dev tools and build bundle
-FROM node:15-buster-slim AS build
+FROM node:16-buster-slim AS build
 
 WORKDIR /app
 
 COPY . ./
 RUN npm ci
 ARG ui_prefix=/ui/
-RUN ./node_modules/.bin/ng build --prod --base-href="$ui_prefix"
+RUN ./node_modules/.bin/ng build --configuration production --base-href="$ui_prefix"
 
 # Stage 2 -- serve static build with nginx
 FROM nginxinc/nginx-unprivileged:1.20
