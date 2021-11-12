@@ -326,7 +326,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @freeze_time("2020-12-26T12:00:00Z")
     def test_change_va_without_reden_valid(self, m):
-        """ Update va without changing va value doesn't require reden"""
+        """Update va without changing va value doesn't require reden"""
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
