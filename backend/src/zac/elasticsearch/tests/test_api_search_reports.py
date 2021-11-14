@@ -8,6 +8,7 @@ from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -18,10 +19,11 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import paginated_response
 
 from ..documents import ZaakDocument, ZaakTypeDocument
-from ..drf_api.permissions import zoek_rapport_inzien
 from ..drf_api.serializers import DEFAULT_ES_FIELDS
 from ..models import SearchReport
 from .factories import SearchReportFactory
@@ -679,18 +681,30 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+        self.assertEqual(response["count"], 0)
 
-    def test_get_report_logged_in_with_permission(self):
-        self.zaaktype_document1 = ZaakTypeDocument(
+    @requests_mock.Mocker()
+    def test_get_report_logged_in_with_permission(self, m):
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        zaaktype_1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
         )
-        self.zaak_document1 = ZaakDocument(
+        zaaktype_document1 = ZaakTypeDocument(
+            url=zaaktype_1["url"],
+            catalogus=zaaktype_1["catalogus"],
+            omschrijving=zaaktype_1["omschrijving"],
+        )
+        zaak_document1 = ZaakDocument(
             meta={"id": "a522d30c-6c10-47fe-82e3-e9f524c14ca8"},
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=self.zaaktype_document1,
+            zaaktype=zaaktype_document1,
             identificatie="ZAAK1",
             bronorganisatie="123456",
             omschrijving="Some zaak description",
@@ -721,16 +735,23 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
             deadline="2021-12-31",
         )
-        self.zaak_document1.save()
-        self.zaaktype_document2 = ZaakTypeDocument(
+        zaak_document1.save()
+        zaaktype_2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
         )
-        self.zaak_document2 = ZaakDocument(
+        zaaktype_document2 = ZaakTypeDocument(
+            url=zaaktype_2["url"],
+            catalogus=zaaktype_2["catalogus"],
+            omschrijving=zaaktype_2["omschrijving"],
+        )
+        zaak_document2 = ZaakDocument(
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013aa"},
             url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
-            zaaktype=self.zaaktype_document2,
+            zaaktype=zaaktype_document2,
             identificatie="ZAAK2",
             bronorganisatie="7890",
             omschrijving="Other description",
@@ -740,28 +761,49 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",
         )
-        self.zaak_document2.save()
+        zaak_document2.save()
 
         zaken = Index(settings.ES_INDEX_ZAKEN)
         zaken.refresh()
 
         search_report = SearchReportFactory.create()
-        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
+        endpoint = reverse("searchreport-results", kwargs={"pk": search_report.pk})
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+        self.assertEqual(response["count"], 0)
 
         # Create permission
         BlueprintPermissionFactory.create(
-            role__permissions=[zoek_rapport_inzien.name],
+            role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "zaaktypen": [
-                    f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                    f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-                ],
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "zaaktype_omschrijving": "zaaktype1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
-            object_type=PermissionObjectTypeChoices.search_report,
+            object_type=PermissionObjectTypeChoices.zaak,
+        )
+        response = self.client.get(endpoint)
+        self.assertEqual(response.status_code, 200)
+        response = response.json()
+        self.assertEqual(response["count"], 1)
+
+        # Create permission
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "zaaktype_omschrijving": "zaaktype2",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+            object_type=PermissionObjectTypeChoices.zaak,
         )
 
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
+        response = response.json()
+        self.assertEqual(response["count"], 2)
