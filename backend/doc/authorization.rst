@@ -15,7 +15,6 @@ Each permission has the object type the permission relates to. For now three obj
 
 * zaak (case)
 * document
-* report
 
 Each object type has its required shape for a blueprint permission.
 It is explained in the details in :ref:`authorization_blueprints`.
@@ -37,10 +36,6 @@ Each permission provides the right to perform one of the following types of oper
 * document permissions:
     * ``zaken:download-documents`` - to see the metadata and content of the document
     * ``zaken:update-documents`` - to update the content of the document
-
-* report permissions:
-    * ``rapport:inzien`` - to see the report
-
 
 The permissions used only in the old version of the ZAC:
 
@@ -79,9 +74,6 @@ For now, three blueprints are supported:
 * for document:
     * informatieobjecttype (``catalogus`` and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
-
-* for report:
-   * list of zaaktype identifications (``identificatie``)
 
 The new blueprints can be easily defined for all kinds of objects and their properties.
 
