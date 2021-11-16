@@ -56,7 +56,7 @@ def get_memory_usage():
 
 
 class ProgressOutputWrapper(OutputWrapper):
-    """ Class to manage logs with and without progress bar """
+    """Class to manage logs with and without progress bar"""
 
     def __init__(self, show_progress, *args, **kwargs):
         self.show_progress = show_progress
@@ -64,7 +64,7 @@ class ProgressOutputWrapper(OutputWrapper):
         super().__init__(*args, **kwargs)
 
     def write_without_progress(self, *args, **kwargs):
-        """ write in the stdout only if there is no progress bar """
+        """write in the stdout only if there is no progress bar"""
         if not self.show_progress:
             super().write(*args, **kwargs)
 

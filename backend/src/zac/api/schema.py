@@ -41,7 +41,7 @@ class AutoSchema(_AutoSchema):
         return action_or_method_summary or cls_summary
 
     def get_override_parameters(self):
-        """ Add hijack header"""
+        """Add hijack header"""
         hijack_response_header = OpenApiParameter(
             name=settings.HIJACK_HEADER,
             type=str,
