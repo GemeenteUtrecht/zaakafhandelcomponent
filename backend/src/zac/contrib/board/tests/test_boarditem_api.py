@@ -12,6 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -309,7 +310,7 @@ class BoardItemAPITests(ESMixin, APITestCase):
             "bronorganisatie": cls.zaak_model.bronorganisatie,
             "omschrijving": cls.zaak_model.omschrijving,
             "vertrouwelijkheidaanduiding": "openbaar",
-            "vaOrder": 27,
+            "vaOrder": VA_ORDER["openbaar"],
             "rollen": [],
             "startdatum": cls.zaak_model.startdatum.isoformat() + "T00:00:00Z",
             "einddatum": None,
