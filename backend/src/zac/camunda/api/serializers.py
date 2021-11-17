@@ -4,12 +4,14 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 
 from ..constants import AssigneeTypeChoices
+from ..data import BPMN
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
 from .validators import GroupValidator, OrValidator, UserValidator
@@ -199,3 +201,22 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
 
     def validate_delegate(self, delegate: str) -> str:
         return self._resolve_name(delegate)
+
+
+class BPMNSerializer(APIModelSerializer):
+    class Meta:
+        model = BPMN
+        fields = (
+            "id",
+            "bpmn20_xml",
+        )
+        extra_kwargs = {
+            "id": {
+                "help_text": _("The process definition id."),
+            },
+            "bpmn20_xml": {
+                "help_text": _(
+                    "The XML of the process definition. To be used for visualization of the BPMN."
+                )
+            },
+        }
