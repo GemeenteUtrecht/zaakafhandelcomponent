@@ -40,6 +40,7 @@ class GetBPMNViewTests(APITestCase):
                 "type": "InvalidRequestException",
                 "message": "No matching definition with id Adhoc_vergaderen:1:2ee97bc4-a370-11eb-970c-6a0042b17f4b",
             },
+            status_code=400,
         )
         self.client.force_authenticate(user=user)
         endpoint = reverse(

@@ -6,6 +6,7 @@ from django_camunda.api import complete_task, send_message
 from django_camunda.client import get_client
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from requests.exceptions import HTTPError
 from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -352,11 +353,12 @@ class GetBPMNView(APIView):
     def get(self, request, *args, **kwargs):
         client = get_client()
         process_definition_id = kwargs["process_definition_id"]
-        response = client.get(f"process-definition/{process_definition_id}/xml")
-        serializer = self.serializer_class(data=response)
         try:
+            response = client.get(f"process-definition/{process_definition_id}/xml")
+            serializer = self.serializer_class(data=response)
             serializer.is_valid(raise_exception=True)
-        except exceptions.ValidationError:
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except HTTPError as exc:
+            if exc.response.status_code == 400:
+                raise exceptions.ValidationError(exc.response.json())
+            raise
