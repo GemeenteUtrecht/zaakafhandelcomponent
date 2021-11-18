@@ -7,7 +7,7 @@ from ..constants import BoardObjectTypes
 
 
 class BoardFactory(factory.django.DjangoModelFactory):
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: factory.Faker("word").generate() + f"-{n}")
     slug = factory.LazyAttribute(lambda a: slugify(a.name))
 
     class Meta:
@@ -16,7 +16,7 @@ class BoardFactory(factory.django.DjangoModelFactory):
 
 class BoardColumnFactory(factory.django.DjangoModelFactory):
     board = factory.SubFactory(BoardFactory)
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: factory.Faker("word").generate() + f"-{n}")
     slug = factory.LazyAttribute(lambda a: slugify(a.name))
     order = factory.Sequence(lambda n: n)
 

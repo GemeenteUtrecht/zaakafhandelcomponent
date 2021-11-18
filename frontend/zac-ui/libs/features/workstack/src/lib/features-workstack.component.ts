@@ -106,11 +106,7 @@ export class FeaturesWorkstackComponent implements OnInit {
     });
   }
 
-  createZaakLink(zaak: UserTaskZaak, task: Task) {
-    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?user-task=${task.id}`
-  }
-
-  createActivityLink(zaak) {
-    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}?activities=true`;
+  createZaakLink(zaak: UserTaskZaak) {
+    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}`;
   }
 }

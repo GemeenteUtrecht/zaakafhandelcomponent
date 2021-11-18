@@ -10,6 +10,4 @@ class EsConfig(AppConfig):
     verbose_name = _("Elasticsearch configuration")
 
     def ready(self):
-        from . import blueprints  # noqa
-
         connections.configure(**settings.ELASTICSEARCH_DSL)

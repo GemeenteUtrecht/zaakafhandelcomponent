@@ -47,6 +47,12 @@ implemented by the ZAC:
   then the page will be opened in a new tab or window, and the end-user can mark the
   task as completed.
 
+- ``zac:documentSelectie``: presents a form to the end user to select documents for the camunda process.
+
+  Upon succesful submission, the following process variables are set:
+    
+    - ``documenten``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+
 Form definition
 ---------------
 

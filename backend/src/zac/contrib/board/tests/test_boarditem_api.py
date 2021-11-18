@@ -4,7 +4,7 @@ from django.urls import reverse
 
 import requests_mock
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -12,6 +12,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -309,7 +310,7 @@ class BoardItemAPITests(ESMixin, APITestCase):
             "bronorganisatie": cls.zaak_model.bronorganisatie,
             "omschrijving": cls.zaak_model.omschrijving,
             "vertrouwelijkheidaanduiding": "openbaar",
-            "vaOrder": 27,
+            "vaOrder": VA_ORDER["openbaar"],
             "rollen": [],
             "startdatum": cls.zaak_model.startdatum.isoformat() + "T00:00:00Z",
             "einddatum": None,
@@ -384,7 +385,6 @@ class BoardItemAPITests(ESMixin, APITestCase):
 
     def test_list_items_filter_on_board_uuid(self):
         item = BoardItemFactory.create(object=ZAAK_URL)
-        BoardItemFactory.create()
         url = reverse("boarditem-list")
 
         response = self.client.get(url, {"board_uuid": str(item.column.board.uuid)})
@@ -401,7 +401,6 @@ class BoardItemAPITests(ESMixin, APITestCase):
 
     def test_list_items_filter_on_board_slug(self):
         item = BoardItemFactory.create(column__board__slug="scrum", object=ZAAK_URL)
-        BoardItemFactory.create()
         url = reverse("boarditem-list")
 
         response = self.client.get(url, {"board_slug": "scrum"})

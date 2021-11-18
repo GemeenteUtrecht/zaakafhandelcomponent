@@ -326,7 +326,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @freeze_time("2020-12-26T12:00:00Z")
     def test_change_va_without_reden_valid(self, m):
-        """ Update va without changing va value doesn't require reden"""
+        """Update va without changing va value doesn't require reden"""
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -383,6 +383,37 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
         self.assertFalse("X-Audit-Toelichting" in m.last_request.headers)
+
+    def test_update_with_blank_toelichting(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+
+        m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+        data = {
+            "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.openbaar,
+            "reden": "some",
+            "omschrijving": "new desc",
+            "toelichting": "",
+        }
+
+        response = self.client.patch(self.detail_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(m.last_request.url, self.zaak["url"])
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "omschrijving": "new desc",
+                "toelichting": "",
+                "vertrouwelijkheidaanduiding": "openbaar",
+            },
+        )
+        self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "some")
 
 
 class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):

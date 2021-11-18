@@ -36,7 +36,7 @@ export class KetenProcessenService {
    * @return {boolean}
    */
   isTaskAssignedToUser(user: User, task: Task): boolean {
-    return this.isTaskAssigned(task) && user.username === task.assignee.username;
+    return this.isTaskAssigned(task) && (user.username === task.assignee.username || user.groups.includes(task.assignee.name));
   }
 
   /**

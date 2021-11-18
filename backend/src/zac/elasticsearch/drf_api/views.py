@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
-from zac.core.api.permissions import CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.services import get_zaaktypen
 
@@ -22,7 +21,6 @@ from ..searches import autocomplete_zaak_search, search
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
-from .permissions import CanDownloadSearchReports
 from .serializers import (
     SearchReportSerializer,
     SearchSerializer,
@@ -66,7 +64,6 @@ class PerformSearchMixin:
                 omschrijving=zaaktype_data["omschrijving"],
             )
             search_query["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
-
         results = search(user=self.request.user, **search_query)
         return results
 
@@ -177,27 +174,8 @@ class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
         assert isinstance(self.paginator, ESPagination)
         return self.paginator.get_paginated_response(*args)
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-
-        # filter on allowed zaaktypen
-        allowed_zts = get_zaaktypen(user=self.request.user)
-        allowed_zt_urls = {zt.url for zt in allowed_zts}
-
-        # only allow reports where the zaaktypen are a sub-set of the accessible zaaktypen
-        # for this particular user
-        allowed_report_ids = []
-        for report in qs:
-            search_results = self.perform_search(report.query)
-            zaaktypen = {result.zaaktype.url for result in search_results}
-            if zaaktypen.issubset(allowed_zt_urls):
-                allowed_report_ids.append(report.id)
-
-        return qs.filter(id__in=allowed_report_ids)
-
     @action(
         detail=True,
-        permission_classes=(IsAuthenticated & CanDownloadSearchReports,),
         pagination_class=ESPagination,
     )
     def results(self, request, *args, **kwargs):

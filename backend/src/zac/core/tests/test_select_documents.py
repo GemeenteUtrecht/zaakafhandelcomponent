@@ -19,12 +19,17 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
 from zac.core.models import CoreConfig
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ..camunda.select_documents.serializers import (
     DocumentSelectContextSerializer,
     DocumentSelectTaskSerializer,
     DocumentSerializer,
+)
+from ..camunda.select_documents.utils import (
+    MissingVariable,
+    get_zaaktype_from_identificatie,
 )
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -401,3 +406,173 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
 
         variables = serializer.get_process_variables()
         self.assertEqual(variables, {"documenten": [self.document["url"]]})
+
+
+@requests_mock.Mocker()
+class GetZaaktypeFromIdentificatieTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=catalogus_url,
+        )
+
+    def test_get_zaaktype_from_identificatie(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+                "catalogusRSIN": serialize_variable("002240022"),
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen?domein=UTRE&rsin=002240022",
+            json=paginated_response([self.catalogus]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}&identificatie=53",
+            json=paginated_response([self.zaaktype]),
+        )
+        zaaktype = get_zaaktype_from_identificatie(_get_task())
+        self.assertEqual(zaaktype.url, self.zaaktype["url"])
+
+    def test_get_zaaktype_from_identificatie_missing_catalogus_domein(self, m):
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+                "catalogusRSIN": serialize_variable("002240022"),
+            },
+        )
+        with self.assertRaises(MissingVariable) as exc:
+            get_zaaktype_from_identificatie(_get_task())
+
+        self.assertEqual(
+            exc.exception.__str__(), "The variable catalogusDomein is missing or empty."
+        )
+
+    def test_get_zaaktype_from_identificatie_missing_zaaktype_identificatie(self, m):
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "catalogusRSIN": serialize_variable("002240022"),
+            },
+        )
+        with self.assertRaises(MissingVariable) as exc:
+            get_zaaktype_from_identificatie(_get_task())
+
+        self.assertEqual(
+            exc.exception.__str__(),
+            "The variable zaaktypeIdentificatie is missing or empty.",
+        )
+
+    def test_get_zaaktype_from_identificatie_missing_catalogusRSIN(self, m):
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+            },
+        )
+        with self.assertRaises(MissingVariable) as exc:
+            get_zaaktype_from_identificatie(_get_task())
+
+        self.assertEqual(
+            exc.exception.__str__(), "The variable organisatieRSIN is missing or empty."
+        )
+
+    def test_get_zaaktype_from_identificatie_use_organisatieRSIN_instead_of_catalogusRSIN(
+        self, m
+    ):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+                "organisatieRSIN": serialize_variable("002240022"),
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen?domein=UTRE&rsin=002240022",
+            json=paginated_response([self.catalogus]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}&identificatie=53",
+            json=paginated_response([self.zaaktype]),
+        )
+        zaaktype = get_zaaktype_from_identificatie(_get_task())
+        self.assertEqual(zaaktype.url, self.zaaktype["url"])
+
+    def test_get_zaaktype_from_identificatie_no_catalogus_found(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+                "organisatieRSIN": serialize_variable("002240022"),
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen?domein=UTRE&rsin=002240022",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}&identificatie=53",
+            json=paginated_response([self.zaaktype]),
+        )
+        with self.assertRaises(ValueError) as exc:
+            get_zaaktype_from_identificatie(_get_task())
+
+        self.assertEqual(
+            exc.exception.__str__(),
+            "No catalogus found with domein UTRE and RSIN 002240022.",
+        )
+
+    def test_get_zaaktype_from_identificatie_no_zaaktype_found(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables?deserializeValues=false",
+            json={
+                "zaaktype": serialize_variable(""),
+                "catalogusDomein": serialize_variable("UTRE"),
+                "zaaktypeIdentificatie": serialize_variable("53"),
+                "organisatieRSIN": serialize_variable("002240022"),
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen?domein=UTRE&rsin=002240022",
+            json=paginated_response([self.catalogus]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}&identificatie=53",
+            json=paginated_response([]),
+        )
+        with self.assertRaises(ValueError) as exc:
+            get_zaaktype_from_identificatie(_get_task())
+
+        self.assertEqual(
+            exc.exception.__str__(),
+            f"No zaaktype was found with catalogus {self.catalogus['url']} and identificatie 53.",
+        )
