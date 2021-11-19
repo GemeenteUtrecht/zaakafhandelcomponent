@@ -113,8 +113,8 @@ def search(
             s = s.query(
                 QueryString(
                     fields=[f"eigenschappen.*.{eigenschap_name.replace('.', ' ')}"],
-                    query=eigenschap_value,
-                )
+                    query=f"*{eigenschap_value}*",
+                ),
             )
     if object:
         s = s.filter(
