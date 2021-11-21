@@ -160,8 +160,14 @@ class SearchZakenTests(ESMixin, TestCase):
 
     def test_search_eigenschappen(self):
         result = search(
-            eigenschappen={"Beleidsveld": "Asiel\ en\ Integrati"}, only_allowed=False
+            eigenschappen={"Beleidsveld": "Asiel\ en\ Integratie"}, only_allowed=False
         )
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].url, self.zaak_document1.url)
+
+    def test_search_partial_eigenschappen(self):
+        result = search(eigenschappen={"Beleidsveld": "en"}, only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
