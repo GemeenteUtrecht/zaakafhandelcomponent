@@ -70,8 +70,8 @@ class SearchZakenTests(ESMixin, TestCase):
             omschrijving="zaaktype2",
         )
         self.zaak_document2 = ZaakDocument(
-            meta={"id": "a8c8bc90-defa-4548-bacd-793874c013aa"},
-            url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
+            meta={"id": "a8c8bc90-defa-4548-bacd-793874c013ab"},
+            url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013ab",
             zaaktype=self.zaaktype_document2,
             identificatie="ZAAK2",
             bronorganisatie="7890",
@@ -160,7 +160,7 @@ class SearchZakenTests(ESMixin, TestCase):
 
     def test_search_eigenschappen(self):
         result = search(
-            eigenschappen={"Beleidsveld": "Asiel en Integratie"}, only_allowed=False
+            eigenschappen={"Beleidsveld": "Asiel\ en\ Integrati"}, only_allowed=False
         )
 
         self.assertEqual(len(result), 1)
@@ -191,7 +191,7 @@ class SearchZakenTests(ESMixin, TestCase):
             bronorganisatie="123456",
             identificatie="ZAAK1",
             omschrijving="some",
-            eigenschappen={"Beleidsveld": "Asiel en Integratie"},
+            eigenschappen={"Beleidsveld": "Asiel"},
         )
 
         self.assertEqual(len(result), 1)
