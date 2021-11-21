@@ -531,6 +531,93 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
+    def test_search_on_partial_value_of_eigenschappen(self, m):
+        # set up catalogi api data
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "10",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+        # set up zaken API data
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            identificatie="zaak1",
+            omschrijving="Some zaak 1",
+            bronorganisatie="123456789",
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.confidentieel,
+            zaakgeometrie={
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [5.070877, 52.062216],
+                        [5.063681, 52.027406],
+                        [5.083528, 51.988561],
+                        [5.070877, 52.062216],
+                    ]
+                ],
+            },
+        )
+        zaak1_eigenschap = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{zaak1['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
+            zaak=zaak1["url"],
+            eigenschap=eigenschap["url"],
+            naam="Buurt",
+            waarde="Leidsche Rijn",
+        )
+        zaak1["eigenschappen"] = [zaak1_eigenschap["url"]]
+
+        # mock requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}",
+            json=paginated_response([]),
+        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
+        m.get(zaak1["url"], json=zaak1)
+        m.get(f"{zaak1['url']}/zaakeigenschappen", json=[zaak1_eigenschap])
+
+        # index documents in es
+        zaak1_model = factory(Zaak, zaak1)
+        zaak1_model.zaaktype = factory(ZaakType, zaaktype)
+        update_eigenschappen_in_zaak_document(zaak1_model)
+        self.refresh_index()
+        input = {"eigenschappen": {"Buurt": {"value": "Leid"}}}
+        response = self.client.post(self.endpoint, data=input)
+        results = response.json()
+        self.assertEqual(results["results"][0]["identificatie"], "zaak1")
+
+        input = {"eigenschappen": {"Buurt": {"value": "Led"}}}
+        response = self.client.post(self.endpoint, data=input)
+        result = response.json()["results"]
+        self.assertEqual(result, [])
+
     def test_search_without_input(self, m):
         # set up catalogi api data
         zaaktype = generate_oas_component(
