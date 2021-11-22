@@ -39,6 +39,7 @@ from zac.core.services import (
     fetch_zaaktype,
     get_document,
     get_documenten,
+    get_informatieobjecttypen_for_zaaktype,
     get_statustypen,
     get_zaak,
 )
@@ -196,6 +197,14 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         help_text=_("URL of the case."),
         allow_blank=False,
     )
+    bestandsnaam = serializers.CharField(
+        help_text=_("Filename with extension."),
+        required=False,
+    )
+    informatieobjecttype = serializers.URLField(
+        required=False,
+        help_text=_("URL-reference of INFORMATIEOBJECTTYPE in Catalogi API."),
+    )
 
     def validate(self, data):
         document_url = data.get("url")
@@ -203,12 +212,29 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         documenten, gone = get_documenten(zaak)
         documenten = {document.url: document for document in documenten}
         try:
-            documenten[document_url]
+            document = documenten[document_url]
+            if new_fn := data.get("bestandsnaam"):
+                if new_fn.split(".")[-1] != document.bestandsnaam.split(".")[-1]:
+                    raise serializers.ValidationError(
+                        _("You are not allowed to change the file extension.")
+                    )
+                data["titel"] = new_fn
+
         except KeyError:
             raise serializers.ValidationError(
-                _("The document is unrelated to the case.")
+                _("The document is unrelated to ZAAK %s." % zaak.url)
             )
 
+        if doctype := data.get("informatieobjecttype"):
+            zaaktype = fetch_zaaktype(zaak.zaaktype)
+            iots = get_informatieobjecttypen_for_zaaktype(zaaktype)
+            if doctype not in [iot.url for iot in iots]:
+                raise serializers.ValidationError(
+                    _(
+                        "Document type (INFORMATIEOBJECTTYPE) is not related to ZAAKTYPE of ZAAK %s."
+                        % zaak.url
+                    )
+                )
         return data
 
 
