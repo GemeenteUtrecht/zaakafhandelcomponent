@@ -722,6 +722,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             versie=1,
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             locked=False,
+            bestandsnaam="some-bestandsnaam.extension",
         )
         m.get(document["url"], json=document)
 
@@ -737,25 +738,47 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         m.patch(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            json=document,
+            json={
+                **document,
+                **{
+                    "bestandsnaam": "some-other-bestandsnaam.extension",
+                    "titel": "some-other-bestandsnaam.extension",
+                },
+            },
         )
         post_data = {
             "reden": "daarom",
             "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "bestandsnaam": "some-other-bestandsnaam.extension",
         }
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.services.get_document",
+            return_value=factory(
+                Document,
+                {
+                    **document,
+                    **{
+                        "bestandsnaam": "some-other-bestandsnaam.extension",
+                        "titel": "some-other-bestandsnaam.extension",
+                    },
+                },
+            ),
         ):
-            response = self.client.patch(self.endpoint, post_data, format="multipart")
+            with patch(
+                "zac.core.api.serializers.get_documenten",
+                return_value=[[factory(Document, document)], []],
+            ):
+                response = self.client.patch(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         expected_data = {
             "auteur": document["auteur"],
             "beschrijving": document["beschrijving"],
-            "bestandsnaam": document["bestandsnaam"],
+            "bestandsnaam": "some-other-bestandsnaam.extension",
             "bestandsomvang": None,
             "currentUserIsEditing": None,
             "identificatie": document["identificatie"],
@@ -765,10 +788,91 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             },
             "locked": False,
             "readUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/read",
-            "titel": document["titel"],
+            "titel": "some-other-bestandsnaam.extension",
             "url": "https://open-zaak.nl/documenten/api/v1/enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Zaakvertrouwelijk",
             "writeUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/write",
         }
+        self.maxDiff = None
         self.assertEqual(data, expected_data)
+
+    def test_fail_patch_extension_of_filename_of_document(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+            bestandsnaam="some-file.extension",
+        )
+        m.get(document["url"], json=document)
+
+        post_data = {
+            "reden": "daarom",
+            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "bestandsnaam": "some-file.someotherextension",
+        }
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = response.json()
+        self.assertEqual(
+            response,
+            {"nonFieldErrors": ["You are not allowed to change the file extension."]},
+        )
+
+    def test_fail_patch_document_type_of_document(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+            bestandsnaam="some-file.extension",
+        )
+        m.get(document["url"], json=document)
+
+        other_informatieobjecttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1c",
+        )
+
+        post_data = {
+            "reden": "daarom",
+            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "informatieobjecttype": other_informatieobjecttype["url"],
+        }
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = response.json()
+        self.assertEqual(
+            {
+                "nonFieldErrors": [
+                    "Document type (INFORMATIEOBJECTTYPE) is not related to ZAAKTYPE of ZAAK https://open-zaak.nl/zaken/api/v1/zaken/456."
+                ]
+            },
+            response,
+        )
