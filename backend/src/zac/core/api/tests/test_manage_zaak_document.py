@@ -671,7 +671,11 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
-        expected_data = {"nonFieldErrors": ["The document is unrelated to the case."]}
+        expected_data = {
+            "nonFieldErrors": [
+                f"The document is unrelated to ZAAK {ZAKEN_ROOT}zaken/456."
+            ]
+        }
         self.assertEqual(data, expected_data)
 
     def test_patch_document_already_locked(self, m):
