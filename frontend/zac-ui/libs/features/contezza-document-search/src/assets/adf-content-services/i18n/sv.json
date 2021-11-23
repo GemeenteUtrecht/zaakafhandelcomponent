@@ -1,0 +1,522 @@
+{
+  "ADF_VERSION_LIST": {
+    "ACTIONS": {
+      "RESTORE": "Återställ",
+      "DELETE": "Radera",
+      "DOWNLOAD": "Ladda ner",
+      "VIEW": "Visa",
+      "UPLOAD": {
+        "TITLE": "Ladda upp ny version",
+        "TOOLTIP": "Begränsning: du måste ladda upp en fil med samma namn för att skapa en ny version av den.",
+        "MAJOR": "större förändringar (2.0)",
+        "MINOR": "mindre förändringar (1.1)",
+        "COMMENT": "Lämna en kommentar",
+        "ADD": "Lägg till ny version",
+        "CANCEL": "Avbryt"
+      }
+    },
+    "CONFIRM_DELETE": {
+      "TITLE": "Radera version",
+      "MESSAGE": "Raderade filversioner kan inte återställas. Fortsätt?",
+      "YES_LABEL": "Ja",
+      "NO_LABEL": "Nej"
+    }
+  },
+  "ADF_VERSION_COMPARISON": {
+    "CURRENT_VERSION": "Aktuell",
+    "NEW_VERSION": "Ny",
+    "ACCESSIBILITY": {
+      "ICON_TEXT": "Artikeltyp {{ type }}",
+      "ARROW_ICON": "Ikon för högerpil"
+    }
+  },
+  "ADF_CONFIRM_DIALOG": {
+    "TITLE": "Bekräfta",
+    "ACTION": "Vill du fortsätta?",
+    "YES_LABEL": "Ja",
+    "NO_LABEL": "Nej"
+  },
+  "ADF-DOCUMENT-LIST": {
+    "EMPTY": {
+      "HEADER": "Den här mappen är tom"
+    },
+    "NO_PERMISSION": "Du har inte behörighet att visa den här filen eller mappen.",
+    "LAYOUT": {
+      "CREATED": "Skapad",
+      "CREATED_BY": "Skapad av",
+      "THUMBNAIL": "Miniatyrbild",
+      "NAME": "Namn",
+      "LOCATION": "Plats",
+      "SIZE": "Storlek",
+      "DELETED_ON": "Raderad",
+      "DELETED_BY": "Raderad av",
+      "STATUS": "Status",
+      "MODIFIED_ON": "Ändrad",
+      "MODIFIED_BY": "Ändrad av",
+      "SHARED_BY": "Delad av",
+      "LOAD_MORE": "Läs in mer"
+    },
+    "MENU_ACTIONS": {
+      "VIEW": "Visa",
+      "REMOVE": "Ta bort",
+      "DOWNLOAD": "Ladda ner"
+    }
+  },
+  "ALFRESCO_DOCUMENT_LIST": {
+    "BUTTON": {
+      "ACTION_CREATE": "Skapa...",
+      "ACTION_NEW_FOLDER": "Ny mapp",
+      "CREATE": "Skapa",
+      "CANCEL": "Avbryt"
+    }
+  },
+  "DROPDOWN": {
+    "PLACEHOLDER_LABEL": "Lista med samarbetsytor",
+    "MY_FILES_OPTION": "Mina filer"
+  },
+  "NODE_SELECTOR": {
+    "CANCEL": "Avbryt",
+    "CHOOSE": "Välj",
+    "ATTACH": "Bifoga",
+    "CHOOSE_ITEM": "Välj innehåll att bifoga från '{{ name }}'",
+    "COPY": "Kopiera",
+    "COPY_ITEM": "Kopiera '{{ name }}' till...",
+    "MOVE": "Flytta",
+    "MOVE_ITEM": "Flytta '{{ name }}' till...",
+    "NO_RESULTS": "Inga resultat hittades",
+    "SEARCH": "Sök",
+    "SEARCH_RESULTS": "Sökresultat",
+    "SELECT_LOCATION": "Välj plats",
+    "UPLOAD_BUTTON_SEARCH_WARNING_MESSAGE": "Du kan inte ladda upp en fil medan en sökning pågår",
+    "UPLOAD_BUTTON_PERMISSION_WARNING_MESSAGE": "Användaren har inte tillstånd att ladda upp innehåll till mappen",
+    "REPOSITORY": "Arkiv",
+    "UPLOAD_FROM_DEVICE": "Ladda upp från din enhet"
+  },
+  "OPERATION": {
+    "SUCCESS": {
+      "CONTENT": {
+        "COPY": "Kopiering lyckades",
+        "MOVE": "Flytt lyckades"
+      },
+      "FOLDER": {
+        "COPY": "Kopiering lyckades",
+        "MOVE": "Flytt lyckades"
+      }
+    },
+    "ERROR": {
+      "CONFLICT": "Det här namnet används redan, testa ett annat namn.",
+      "UNKNOWN": "Åtgärden lyckades inte. Försök igen eller kontakta din IT-avdelning.",
+      "PERMISSION": "Du har inte åtkomst att göra detta."
+    }
+  },
+  "TAG": {
+    "LABEL": {
+      "NEWTAG": "Ny tagg"
+    },
+    "MESSAGES": {
+      "EXIST": "Tagg finns redan"
+    },
+    "BUTTON": {
+      "ADD": "Lägg till tagg"
+    }
+  },
+  "ADF_FILE_UPLOAD": {
+    "BUTTON": {
+      "MINIMIZE": "Minimera",
+      "MAXIMIZE": "Maximera",
+      "CLOSE": "Stäng",
+      "CANCEL_ALL": "Avbryt uppladdningar",
+      "CANCEL_FILE": "Avbryt uppladdning",
+      "REMOVE_FILE": "Ta bort uppladdad fil"
+    },
+    "STATUS": {
+      "FILE_CANCELED_STATUS": "Avbruten",
+      "FILE_DONE_STATUS": "Uppladdad"
+    },
+    "CONFIRMATION": {
+      "BUTTON": {
+        "CANCEL": "Ja",
+        "CONTINUE": "Nej"
+      },
+      "MESSAGE": {
+        "TITLE": "Avbryt uppladdning",
+        "TEXT": "Stoppa uppladdning och ta bort filer som redan laddats upp"
+      }
+    },
+    "ARIA-LABEL": {
+      "VERSION": "Filversion {{ version }}",
+      "DIALOG": "Ladda upp lista",
+      "DIALOG_MAXIMIZE": "Förstora dialogruta för uppladdning",
+      "DIALOG_MINIMIZE": "Förminska dialogruta för uppladdning",
+      "DIALOG_CLOSE": "Stäng dialogruta för uppladdning",
+      "CANCEL_ALL": "Avbryt alla filer som laddas upp",
+      "REMOVE_FILE": "Ta bort uppladdad fil {{ file }}",
+      "CANCEL_FILE": "Avbryt planerad fil {{ file }}",
+      "CANCEL_FILE_UPLOAD": "Avbryt uppladdning av fil {{ file }}",
+      "UPLOAD_FILE_ERROR": "Uppladdningsfel {{ error }}",
+      "CONFIRMATION": {
+        "CANCEL": "Bekräfta avbrott",
+        "CONTINUE": "Fortsätt uppladdning"
+      }
+    }
+  },
+  "FILE_UPLOAD": {
+    "BUTTON": {
+      "UPLOAD_FILE": "Ladda upp fil",
+      "UPLOAD_FOLDER": "Ladda upp mapp",
+      "PERMISSION_CHECK_ERROR": "Fel vid kontroll av behörighet."
+    },
+    "VERSION": {
+      "MESSAGES": {
+        "NO_ACCEPTED_FILE_TYPES": "Notera att inställningen av \"acceptedFilesType\" inte har någon effekt på de nya versionsuppladdningarna. Filtypen kommer att vara samma som den ursprungliga filens.",
+        "INCOMPATIBLE_VERSION": "Bara ett filter av samma typ får laddas upp som ny version."
+      }
+    },
+    "MESSAGES": {
+      "UPLOAD_CANCELED": "Uppladdning avbruten",
+      "UPLOAD_PROGRESS": "Uppladdad {{ completed }} / {{ total }}",
+      "UPLOAD_ERROR": "{{ total }} uppladdning lyckades inte",
+      "UPLOAD_ERRORS": "{{ total }} uppladdningar lyckades inte",
+      "PROGRESS": "Uppladdning pågår...",
+      "FOLDER_ALREADY_EXIST": "Mappen {0} finns redan",
+      "FOLDER_NOT_SUPPORTED": "Mappuppladdning stöds inte av din webbläsare, testa en annan webbläsare",
+      "REMOVE_FILE_ERROR": "{{ fileName }} kunde inte flyttas, försök igen eller kolla med IT-avdelningen.",
+      "REMOVE_FILES_ERROR": "{{ total }} kunde inte flyttas, försök igen eller kolla med IT-avdelningen.",
+      "EXCEED_MAX_FILE_SIZE": "Fil {{ fileName }} är större än den tillåtna filstorleken"
+    },
+    "ACTION": {
+      "UNDO": "Ångra"
+    },
+    "ERRORS": {
+      "GENERIC": "Uppladdningen misslyckades. Kontakta IT-avdelningen om det här problemet kvarstår",
+      "500": "Internt serverfel, försök igen eller kontakta IT-supporten [500]",
+      "504": "Tidsgränsen för servern överskreds, försök igen eller kontakta IT-supporten [504]",
+      "403": "Otillräckliga behörigheter för att ladda upp på den här platsen [403]",
+      "404": "Uppladdningsplats finns inte längre [404]",
+      "409": "Det finns redan en fil med samma namn [409]"
+    },
+    "ARIA-LABEL": {
+      "ERROR": "Uppladdningsfel"
+    }
+  },
+  "WEBSCRIPT": {
+    "ERROR": "Kunde inte slutföra åtgärden. Dela det här meddelandet med din IT-avdelning: Fel under deserialisering av {{data}} som {{contentType}}"
+  },
+  "SEARCH": {
+    "CONTROL": {},
+    "BUTTON": {
+      "TOOLTIP": "Sök",
+      "ARIA-LABEL": "Sökknapp"
+    },
+    "INPUT": {
+      "ARIA-LABEL": "Sökindata"
+    },
+    "RESULTS": {
+      "SUMMARY": "{{numResults}} resultat hittades för {{searchTerm}}",
+      "NONE": "Inga resultat hittades för {{searchTerm}}",
+      "ERROR": "Vi stötte på ett problem under sökningen - försök igen.",
+      "COLUMNS": {
+        "NAME": "Visa namn",
+        "MODIFIED_BY": "Ändrad av",
+        "MODIFIED_AT": "Ändrad den"
+      }
+    },
+    "FILTER": {
+      "ACTIONS": {
+        "SEARCH": "Sök",
+        "CLEAR": "Rensa",
+        "APPLY": "Tillämpa",
+        "CLEAR-ALL": "Rensa alla",
+        "SHOW-MORE": "Visa mer",
+        "SHOW-LESS": "Visa mindre"
+      },
+      "BUTTONS": {
+        "CLOSE": "Stäng",
+        "REMOVE": "Ta bort",
+        "APPLY": "Tillämpa",
+        "CLEAR-ALL": {
+          "LABEL": "Rensa alla",
+          "TOOLTIP": "Detta kommer att ta bort alla val"
+        },
+        "RESET-ALL": {
+          "LABEL": "Återställ alla",
+          "TOOLTIP": "Detta kommer att återställa alla val och alla filter"
+        }
+      },
+      "RANGE": {
+        "FROM": "Från",
+        "TO": "Till",
+        "FROM-DATE": "Från",
+        "TO-DATE": "Till"
+      },
+      "VALIDATION": {
+        "REQUIRED-VALUE": "Obligatoriskt värde",
+        "NO-DAYS": "Inga dagar valda",
+        "INVALID-FORMAT": "Ogiltigt format",
+        "INVALID-DATE": "Ogiltigt datum. Datumet måste vara i formatet '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATE": "Datumet ligger bortom maximidatum",
+        "INVALID-DATETIME": "Ogiltig datumtid. Datumtiden måste ha formatet '{{ requiredFormat }}'",
+        "BEYOND-MAX-DATETIME": "Datumtiden är bortom den maximala datumtiden."
+      }
+    },
+    "ICONS": {
+      "ft_ic_raster_image": "Bild-fil",
+      "ft_ic_pdf": "PDF-dokument",
+      "ft_ic_ms_excel": "Microsoft Excel-fil",
+      "ft_ic_ms_word": "Microsoft Word-dokument",
+      "ft_ic_ms_powerpoint": "Microsoft PowerPoint fil",
+      "ft_ic_video": "Videofil",
+      "ft_ic_document": "Dokumentfil",
+      "ft_ic_website": "Webbresurs",
+      "ft_ic_archive": "Arkivfil",
+      "ft_ic_presentation": "Presentationsfil",
+      "ft_ic_spreadsheet": "Kalkylbladsfil"
+    },
+    "DOCUMENT_LIST": {
+      "COLUMNS": {
+        "DISPLAY_NAME": "Visa namn",
+        "CREATED_BY": "Skapad av",
+        "CREATED_ON": "Skapad"
+      },
+      "ACTIONS": {
+        "FOLDER": {
+          "DELETE": "Radera",
+          "MOVE": "Flytta",
+          "COPY": "Kopiera"
+        },
+        "DOCUMENT": {
+          "DOWNLOAD": "Ladda ner",
+          "DELETE": "Radera",
+          "MOVE": "Flytta",
+          "COPY": "Kopiera",
+          "PROCESS_ACTION": "Starta process"
+        }
+      }
+    },
+    "UNKNOWN_CONFIGURATION": "Okänd konfiguration",
+    "SEARCH_HEADER": {
+      "TITLE": "Filter",
+      "TYPE": "Typ",
+      "FILTER_BY": "Filtrera efter {{ category }}",
+      "CLEAR": "Rensa",
+      "APPLY": "Tillämpa",
+      "FILTERS": {
+        "NAME": {
+          "TITLE": "Namn",
+          "PLACEHOLDER": "Ange namn"
+        },
+        "TYPE": {
+          "TITLE": "Kontrolltyp",
+          "FOLDER": "Mapp",
+          "DOCUMENT": "Dokument"
+        },
+        "SIZE": {
+          "TITLE": "Innehållsstorlek (område)",
+          "SMALL": "Litet",
+          "MEDIUM": "Medium",
+          "LARGE": "Stort",
+          "HUGE": "Jättestort"
+        },
+        "DATE": {
+          "TITLE": "Skapad datum (område)"
+        }
+      }
+    }
+  },
+  "PERMISSION": {
+    "LACKOF": "Du har inte {{permission}} behörighet att {{action}} {{type}}"
+  },
+  "METADATA": {
+    "BASIC": {
+      "HEADER": "Egenskaper",
+      "NAME": "Namn",
+      "TITLE": "Titel",
+      "DESCRIPTION": "Beskrivning",
+      "AUTHOR": "Författare",
+      "MIMETYPE": "Mime-typ",
+      "SIZE": "Storlek",
+      "CREATOR": "Skapad av",
+      "CREATED_DATE": "Skapad datum",
+      "MODIFIER": "Ändrad av",
+      "MODIFIED_DATE": "Ändringsdatum",
+      "CONTENT_TYPE": "Innehållstyp"
+    },
+    "CONTENT_TYPE": {
+      "DIALOG": {
+        "TITLE": "Ändra innehållstyp",
+        "DESCRIPTION": "Genom att göra denna ändring av innehållstypen läggs vissa egenskaper och lagrade metadata permanent till dokumentet.",
+        "CONFIRM": "Är du säker på att du vill ändra innehållstypen?",
+        "CANCEL": "Avbryt",
+        "APPLY": "Spara ändringar",
+        "VIEW_DETAILS": "Visa detaljer",
+        "PROPERTY": {
+          "NAME": "Namn",
+          "DESCRIPTION": "Beskrivning",
+          "DATA_TYPE": "Datatyp"
+        }
+      }
+    },
+    "ERRORS": {
+      "GENERIC": "Fel vid uppdatering av egenskaper",
+      "409": "Duplicerat namn på underordnad är inte tillåtet [409]",
+      "422": "Ogiltigt egenskapsvärde"
+    }
+  },
+  "SHARE": {
+    "PUBLIC-LINK": "Offentlig länk",
+    "DIALOG-TITLE": "Dela",
+    "DESCRIPTION": "Klicka på länken nedan för att kopiera den till urklipp",
+    "TITLE": "Länk att dela",
+    "EXPIRES": "Löper ut den",
+    "EXPIRATION-LABEL": "Sista giltighetsdatum",
+    "CLIPBOARD-MESSAGE": "Länk kopierad till urklipp",
+    "CLOSE": "Stäng",
+    "CONFIRMATION": {
+      "DIALOG-TITLE": "Ta bort den här delade länken",
+      "MESSAGE": "Den här länken kommer att raderas och en ny länk kommer att skapas nästa gång den här filen delas",
+      "CANCEL": "Avbryt",
+      "REMOVE": "Ta bort"
+    },
+    "UNSHARE_ERROR": "Fel uppstod vid försök att sluta dela denna fil",
+    "UNSHARE_PERMISSION_ERROR": "Du har inte behörighet att sluta dela den här filen"
+  },
+  "PERMISSION_MANAGER": {
+    "PERMISSION_DISPLAY": {
+      "INHERITED": "Ärvd",
+      "AUTHORITY_ID": "Befogenhets-ID",
+      "ROLE": "Roll",
+      "LOCALLY_SET": "Lokalt inställd",
+      "NO_PERMISSIONS": "Inga behörigheter"
+    },
+    "ADD-PERMISSION": {
+      "SEARCH": "Sök användare eller grupper att lägga till",
+      "TITLE": "Lägg till behörighet",
+      "TYPE-MESSAGE": "Skriv något för att börja söka grupper eller personer",
+      "NO-RESULT": "Inga resultat hittades för den här sökningen",
+      "SELECT-ACTION": "Välj",
+      "ADD-ACTION": "Lägg till",
+      "CLOSE-ACTION": "Avbryt",
+      "BASE-DIALOG-TITLE": "Sök en grupp eller personer att lägga till...",
+      "EVERYONE": "Alla"
+    },
+    "COLUMN": {
+      "NAME": "Användare och grupper ({{ count }})",
+      "LOCATION": "Plats",
+      "BULK-ROLE": "Ställ in alla roller till"
+    },
+    "LABELS": {
+      "ON": "På",
+      "OFF": "Av",
+      "DIRECT-PERMISSIONS": "Direkt tillämpat behörighet",
+      "INHERITED-PERMISSIONS": "Ärvt behörighet",
+      "INHERITED-SUBTITLE": "{{count}} användare eller grupper ärver behörighet från en överordnad mapp",
+      "SELECT-ROLE": "Välj roll"
+    },
+    "MESSAGE": {
+      "EMPTY-PERMISSION": "Inga användare/grupper",
+      "EMPTY-SUBTITLE": "Lägg till användare/grupp för att hantera behörighet.",
+      "NO-MEMBERS": "Lägg till användare eller personer för att hantera roller",
+      "PERMISSION-BULK-UPDATE-SUCCESS": "Uppdaterade {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-UPDATE-SUCCESS": "Användare/grupp uppdaterade",
+      "PERMISSION-UPDATE-FAIL": "Misslyckades att uppdatera användare/grupp",
+      "PERMISSION-BULK-DELETE-SUCCESS": "Raderad {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-DELETE-SUCCESS": "Raderad användare/grupp",
+      "PERMISSION-DELETE-FAIL": "Misslyckades att radera användare/grupp",
+      "PERMISSION-ADD-SUCCESS": "Lagt till {{user}} användare {{group}} grupp(er)",
+      "PERMISSION-ADD-FAIL": "Misslyckades att lägga till användare/grupp",
+      "INHERIT-ENABLE-SUCCESS": "Aktiverad ärvt behörighet",
+      "INHERIT-DISABLE-SUCCESS": "Inaktiverad ärvt behörighet",
+      "TOGGLE-PERMISSION-FAILED": "Misslyckades att växla ärvt behörighet"
+    },
+    "ACTION": {
+      "DELETE": "Radera",
+      "ADD-PERMISSION": "Lägg till användare eller grupp"
+    },
+    "ERROR": {
+      "NOT-FOUND": "Objektet finns inte längre eller så du har inte behörighet att visa det.",
+      "DUPLICATE-PERMISSION": "Ett eller flera av de behörigheter du har ställt in finns redan: {{list}}",
+      "NOT-ALLOWED": "Du har inte tillåtelse att ändra behörigheter"
+    }
+  },
+  "ADF-TREE-VIEW": {
+    "MISSING-ID": "Ingen nod-ID tillhandahållen!",
+    "ACCESSIBILITY": {
+      "ARIA_LABEL": "Växla {{ name }}"
+    }
+  },
+  "LIBRARY": {
+    "DIALOG": {
+      "CREATE_TITLE": "Skapa bibliotek",
+      "CREATE": "Skapa",
+      "UPDATE": "Uppdatera",
+      "EDIT": "Redigera",
+      "CANCEL": "Avbryt",
+      "FORM": {
+        "DESCRIPTION": "Beskrivning",
+        "SITE_ID": "Biblioteks-ID",
+        "NAME": "Namn",
+        "VISIBILITY": "Synlighet"
+      }
+    },
+    "ROLE": {
+      "MANAGER": "Hanterare",
+      "COLLABORATOR": "Medarbetare",
+      "CONTRIBUTOR": "Deltagare",
+      "CONSUMER": "Förbrukare",
+      "NONE": "Inte medlem"
+    },
+    "VISIBILITY": {
+      "PRIVATE": "Privat",
+      "PUBLIC": "Offentlig",
+      "MODERATED": "Modererad"
+    },
+    "HINTS": {
+      "SITE_TITLE_EXISTS": "Biblioteksnamn används redan"
+    },
+    "ERRORS": {
+      "GENERIC": "Vi har stött på ett problem",
+      "EXISTENT_SITE": "Detta biblioteks-ID är inte tillgängligt. Testa ett annat Biblioteks-ID.",
+      "CONFLICT": "Detta Biblioteks-ID används redan. Kontrollera papperskorgen",
+      "ID_TOO_LONG": "Använd 72 tecken eller färre för URL-namnet",
+      "DESCRIPTION_TOO_LONG": "Använd 512 tecken eller färre till beskrivningen",
+      "TITLE_TOO_LONG": "Använd 256 tecken eller färre till titeln",
+      "TITLE_TOO_SHORT": "Titeln måste vara minst 2 tecken lång",
+      "ILLEGAL_CHARACTERS": "Använd bara siffror och bokstäver",
+      "ONLY_SPACES": "Biblioteksnamnet kan inte innehålla enbart mellanrum",
+      "LIBRARY_UPDATE_ERROR": "Det uppstod ett fel när biblioteksegenskaperna uppdaterades"
+    },
+    "SUCCESS": {
+      "LIBRARY_UPDATED": "Biblioteksegenskaper uppdaterade"
+    }
+  },
+  "BREADCRUMB": {
+    "ARIA-LABEL": {
+      "BREADCRUMB": "Synlig sökväg",
+      "DROPDOWN": "Rullgardinsmeny"
+    }
+  },
+  "NAME_COLUMN_LINK": {
+    "ACCESSIBILITY": {
+      "ARIA_LABEL": "Öppna {{ name }}"
+    }
+  },
+  "ADF-ASPECT-LIST": {
+    "PROPERTY_NAME": "Egenskapnamn",
+    "DESCRIPTION": "Beskrivning",
+    "DATA_TYPE": "Datatyp",
+    "DIALOG": {
+      "TITLE": "Anpassa egenskaper",
+      "DESCRIPTION": "Hantera egenskaperna som är associerade med valda filer. Välj bland egenskapsaspekterna nedan för att exponera och tillämpa ytterligare metadata och funktionalitet.",
+      "RESET": "Återställ",
+      "CLEAR": "Rensa",
+      "CANCEL": "Avbryt",
+      "APPLY": "Tillämpa",
+      "OVER-TABLE-MESSAGE": "Välj egenskapsaspekter",
+      "SELECTED": "Vald"
+    }
+  },
+  "NODE_COUNTER": {
+    "SELECTED_COUNT": "{{ count }} vald"
+  },
+  "swsdp": "Sampel: Webbplatsdesignprojekt"
+}

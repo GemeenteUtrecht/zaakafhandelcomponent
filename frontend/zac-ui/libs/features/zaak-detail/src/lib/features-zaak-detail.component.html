@@ -145,6 +145,7 @@
 
               <aside *ngIf="zaakData" class="">
                 <gu-documenten [mainZaakUrl]="mainZaakUrl"
+                               [zaaktypeurl]="zaakData.zaaktype.url"
                                [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"
                                class="zaak-detail__section">

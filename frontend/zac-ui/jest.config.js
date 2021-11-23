@@ -12,6 +12,7 @@ module.exports = {
     '<rootDir>/libs/features/reports',
     '<rootDir>/libs/features/forms',
     '<rootDir>/libs/features/auth-profiles',
+    '<rootDir>/libs/features/contezza-document-search',
     '<rootDir>/libs/features/dashboard',
   ],
 };

@@ -1,0 +1,27 @@
+<mat-tab-group [@.disabled]="true" [selectedIndex]="0" class="gu-document-toevoegen-contezza-mat-tab-group">
+  <mat-tab label="Document uploaden">
+    <div class="pt-4">
+      <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                             [zaaktypeurl]="zaaktypeurl"
+                             [bronorganisatie]="bronorganisatie"
+                             [identificatie]="identificatie"
+                             (closeModal)="closeModal.emit(true)"
+                             (reload)="reload.emit(true)">
+      </gu-document-toevoegen>
+    </div>
+</mat-tab>
+
+  <mat-tab label="Alfresco documenten">
+    <ng-template matTabContent>
+      <div class="pt-4">
+        <gu-features-contezza-document-search [mainZaakUrl]="mainZaakUrl"
+                                              [bronorganisatie]="bronorganisatie"
+                                              [identificatie]="identificatie"
+                                              [zaaktypeurl]="zaaktypeurl"
+                                              (closeModal)="closeModal.emit(true)"
+                                              (reload)="reload.emit(true)">
+        </gu-features-contezza-document-search>
+      </div>
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

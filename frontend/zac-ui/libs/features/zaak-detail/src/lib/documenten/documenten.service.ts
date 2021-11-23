@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { Document, ExtensiveCell, ReadWriteDocument, RowData, Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 import {CachedObservableMethod} from '@gu/utils';
+import { HttpResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,24 @@ export class DocumentenService {
   closeDocumentEdit(deleteUrl: string): Observable<any> {
     const endpoint = encodeURI(deleteUrl);
     return this.http.Delete<any>(endpoint);
+  }
+
+  getConfidentiality(): Observable<any> {
+    const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
+    return this.http.Get<any>(endpoint);
+  }
+
+  postDocument(formData: FormData): Observable<Document> {
+    return this.http.Post<any>(encodeURI(`/api/core/cases/document`), formData);
+  }
+
+  patchDocument(formData: FormData, bronorganisatie: string, identificatie: string): Observable<any> {
+    return this.http.Patch<any>(encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`), formData);
+  }
+
+  getDocumentTypes(mainZaakUrl): Observable<HttpResponse<any>> {
+    const endpoint = encodeURI(`/api/core/document-types?zaak=${mainZaakUrl}`);
+    return this.http.Get<any>(endpoint);
   }
 
   /**
