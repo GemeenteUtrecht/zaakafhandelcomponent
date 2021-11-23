@@ -1,0 +1,242 @@
+{
+  "$id": "lib.zac-doclib.columns",
+  "$version": "@@project.version@@",
+  "$name": "Contezza ZAC Doclib Extension",
+  "$vendor": "Contezza BV",
+  "$description": "Contezza ZAC Doclib Extension",
+  "$license": "LGPL-3.0",
+  "$runtime": "2.6.0",
+
+  "features": {
+    "toolbar": [
+      {
+        "id": "app.toolbar.add_to_case",
+        "order": 100,
+        "title": "APP.ACTIONS.ADD",
+        "icon": "add",
+        "actions": {
+          "click": "ADD_TO_CASE"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.toolbar.edit.iot",
+        "order": 200,
+        "title": "APP.DIALOGS.EIO_CREATE.TITLE",
+        "icon": "edit",
+        "actions": {
+          "click": "EDIT_IOT"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.toolbar.preview",
+        "type": "custom",
+        "order": 300,
+        "data": {
+          "title": "APP.ACTIONS.VIEW",
+          "iconButton": true
+        },
+        "component": "zac.toolbar.viewNode",
+        "rules": {
+          "visible": "canViewFile"
+        }
+      },
+      {
+        "id": "app.toolbar.download",
+        "order": 400,
+        "title": "APP.ACTIONS.DOWNLOAD",
+        "icon": "get_app",
+        "actions": {
+          "click": "DOWNLOAD_NODES"
+        },
+        "rules": {
+          "visible": "zac.selection.canDownload"
+        }
+      },
+      {
+        "id": "app.create.separator.2",
+        "type": "separator",
+        "order": 680
+      },
+      {
+        "id": "app.toolbar.info.infoDrawer",
+        "type": "custom",
+        "order": 700,
+        "component": "app.toolbar.toggleInfoDrawer",
+        "rules": {
+          "visible": "canShowInfoDrawer"
+        }
+      }
+    ],
+    "contextMenu": [
+      {
+        "id": "app.context.menu.add_to_case",
+        "order": 100,
+        "title": "APP.ACTIONS.ADD",
+        "icon": "add",
+        "actions": {
+          "click": "ADD_TO_CASE"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.context.menu.edit.iot",
+        "order": 200,
+        "title": "APP.DIALOGS.EIO_CREATE.TITLE",
+        "icon": "edit",
+        "actions": {
+          "click": "EDIT_IOT"
+        },
+        "rules": {
+          "visible": "zac.selection.canEioCreate"
+        }
+      },
+      {
+        "id": "app.create.separator.1",
+        "type": "separator",
+        "order": 300
+      },
+      {
+        "id": "app.context.menu.preview",
+        "type": "custom",
+        "order": 350,
+        "data": {
+          "title": "APP.ACTIONS.VIEW",
+          "menuButton": true
+        },
+        "component": "zac.toolbar.viewNode",
+        "rules": {
+          "visible": "canViewFile"
+        }
+      },
+      {
+        "id": "app.context.menu.download",
+        "order": 400,
+        "title": "APP.ACTIONS.DOWNLOAD",
+        "icon": "get_app",
+        "actions": {
+          "click": "DOWNLOAD_NODES"
+        },
+        "rules": {
+          "visible": "zac.selection.canDownload"
+        }
+      }
+    ],
+    "sidebar": {
+      "tabs": [
+        {
+          "id": "app.sidebar.properties",
+          "order": 100,
+          "title": "APP.INFO_DRAWER.TABS.PROPERTIES",
+          "component": "app.components.tabs.metadata"
+        },
+        {
+          "id": "app.sidebar.comments",
+          "order": 200,
+          "title": "APP.INFO_DRAWER.TABS.COMMENTS",
+          "component": "app.components.tabs.comments"
+        }
+      ]
+    },
+    "sidebarFilters": [
+      {
+        "name": "created",
+        "type": "dateRange",
+        "queryParam": "@cm\\:created",
+        "save": false,
+        "controls": {
+          "from": {
+            "name": "createdFrom",
+            "value": "*",
+            "label": "APP.FILTER.OPTIONS.CREATED_FROM"
+          },
+          "till": {
+            "name": "createdTill",
+            "value": "*",
+            "label": "APP.FILTER.OPTIONS.TILL"
+          }
+        }
+      },
+      {
+        "name": "infoType",
+        "label": "APP.FILTER.OPTIONS.IO_TYPE",
+        "type": "autocomplete",
+        "optionKey": "text",
+        "searchKey": "uuid",
+        "value": "*",
+        "save": false,
+        "queryParam": "rgbz\\:informatieobjecttype",
+        "dataUrl": "api/ztc/informatieobjecttypen"
+      }
+    ],
+    "columns": [
+      {
+        "id": "app.files.thumbnail",
+        "key": "$thumbnail",
+        "type": "image",
+        "sortable": false,
+        "desktopOnly": false,
+        "order": 10
+      },
+      {
+        "id": "app.files.name",
+        "key": "name",
+        "title": "APP.DOCUMENT_LIST.COLUMNS.NAME",
+        "type": "text",
+        "class": "adf-ellipsis-cell adf-expand-cell-5",
+        "sortable": true,
+        "template": "app.columns.name",
+        "desktopOnly": false,
+        "order": 20
+      },
+      {
+        "id": "app.files.size",
+        "key": "content.sizeInBytes",
+        "sortingKey": "sizeInBytes",
+        "title": "APP.DOCUMENT_LIST.COLUMNS.SIZE",
+        "type": "fileSize",
+        "class": "adf-no-grow-cell adf-ellipsis-cell",
+        "sortable": true,
+        "desktopOnly": true,
+        "order": 30
+      },
+      {
+        "id": "app.files.modifiedOn",
+        "key": "modifiedAt",
+        "sortingKey": "cm:modified",
+        "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_ON",
+        "type": "date",
+        "format": "timeAgo",
+        "class": "adf-ellipsis-cell",
+        "sortable": true,
+        "desktopOnly": true,
+        "order": 40
+      },
+      {
+        "id": "app.files.modifiedBy",
+        "key": "modifiedByUser.displayName",
+        "sortingKey": "cm:modifier",
+        "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_BY",
+        "type": "text",
+        "class": "adf-ellipsis-cell adf-no-grow-cell",
+        "sortable": true,
+        "desktopOnly": true,
+        "order": 50
+      }
+    ],
+    "icons" : [
+      {
+        "id": "svg:filter-variant-plus",
+        "value": "./assets/zac-doclib/images/filter-variant-plus.svg"
+      }
+    ]
+  },
+  "extraSearchFields": ["TEXT"]
+}

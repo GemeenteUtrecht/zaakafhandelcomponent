@@ -27,4 +27,9 @@ server {
     location = /50x.html {
         root   /usr/share/nginx/html;
     }
+
+    location /alfresco/ {
+        proxy_pass ${ACS_PROXY_URL};
+        proxy_hide_header   www-authenticate;
+    }
 }

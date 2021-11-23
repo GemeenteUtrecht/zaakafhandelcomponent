@@ -34,6 +34,7 @@
       "@gu/reports": ["libs/features/reports/src/index.ts"],
       "@gu/forms": ["libs/features/forms/src/index.ts"],
       "@gu/auth-profiles": ["libs/features/auth-profiles/src/index.ts"],
+      "@gu/contezza-document-search": ["libs/features/contezza-document-search/src/index.ts"],
       "@gu/dashboard": ["libs/features/dashboard/src/index.ts"]
     }
   },

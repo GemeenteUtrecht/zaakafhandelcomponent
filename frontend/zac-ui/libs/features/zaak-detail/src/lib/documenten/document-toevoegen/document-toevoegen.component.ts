@@ -1,12 +1,29 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApplicationHttpClient } from '@gu/services';
-import {FileUploadComponent, ModalService, SnackbarService} from '@gu/components';
+import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
 import { Document } from '@gu/models';
-import {CachedObservableMethod} from '@gu/utils';
+import { DocumentenService } from '../documenten.service';
 
+import {CachedObservableMethod} from '@gu/utils';
+import { Observable } from 'rxjs';
+import {HttpResponse} from "@angular/common/http";
+import {ApplicationHttpClient} from "@gu/services";
+
+/**
+ * This component allows users to add or override documents.
+ *
+ * Requires mainZaakUrl: case url
+ * Requires zaaktypeurl: case type url
+ * Requires bronorganisatie: organisation
+ * Requires identificatie: identification
+
+ * Takes activity: Specifies if the documents are for the activity widget (needs extra field "Beschrijving").
+ * Takes documentUrl: When updating a document, the url of the document is needed to know which document needs to be updated.
+ *
+ * Emits reload: event to notify that the parent component can reload.
+ * Emits closeModal: event to notify that the parent component can close the modal.
+ * Emits uploadedDocument: emits the url of the uploaded document
+ */
 @Component({
   selector: 'gu-document-toevoegen',
   templateUrl: './document-toevoegen.component.html',
@@ -14,15 +31,17 @@ import {CachedObservableMethod} from '@gu/utils';
 })
 export class DocumentToevoegenComponent implements OnInit {
   @Input() mainZaakUrl: string;
+  @Input() zaaktypeurl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
   @Input() activity: string;
   @Input() documentUrl?: string;
   @Input() updateDocument: boolean;
-  @Input() closeButton: boolean;
+
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
+
   @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van documenten.';
@@ -33,10 +52,11 @@ export class DocumentToevoegenComponent implements OnInit {
   isSubmitting: boolean;
 
   constructor(
-    private http: ApplicationHttpClient,
+    private documentService: DocumentenService,
     private fb: FormBuilder,
+    private http: ApplicationHttpClient,
     private modalService: ModalService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
   ) { }
 
   ngOnInit() {
@@ -68,7 +88,7 @@ export class DocumentToevoegenComponent implements OnInit {
   fetchDocumentTypes() {
     this.isLoading = true;
     if (this.mainZaakUrl) {
-      this.getDocumentTypes().subscribe( res => {
+      this.documentService.getDocumentTypes(this.mainZaakUrl).subscribe( res => {
         this.documentTypes = res;
       })
     }
@@ -102,23 +122,26 @@ export class DocumentToevoegenComponent implements OnInit {
     this.isSubmitting = true;
 
     if (!this.updateDocument) {
-      this.postDocument(formData).subscribe(res => {
+      this.documentService.postDocument(formData).subscribe(res => {
         this.closeAndResetForm();
         this.uploadedDocument.emit(res)
         this.isSubmitting = false;
       }, errorRes => {
-        console.log(errorRes);
+        this.reportError(errorRes);
       })
     } else if (this.updateDocument) {
-      this.patchDocument(formData).subscribe(() => {
+      this.documentService.patchDocument(formData, this.bronorganisatie, this.identificatie).subscribe(() => {
         this.closeAndResetForm()
         this.isSubmitting = false;
       }, errorRes => {
-        console.log(errorRes);
+        this.reportError(errorRes);
       })
     }
   }
 
+  /**
+   * Closes modals and resets the forms
+   */
   closeAndResetForm() {
     this.fileUploadComponent.resetFileInput();
     this.reload.emit(true);
@@ -141,10 +164,6 @@ export class DocumentToevoegenComponent implements OnInit {
   async handleFileSelect(file: File) {
     this.addDocumentForm.controls['documentFile'].setValue(file);
   }
-
-  //
-  // Error handling.
-  //
 
   /**
    * Error callback.

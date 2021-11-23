@@ -1,0 +1,103 @@
+{
+  "APP": {
+    "FILTER": {
+      "TITLE": "Filter",
+      "SELECT_ALL_OPTION": "All",
+      "OPTIONS": {
+        "CREATED_FROM": "Created from",
+        "TILL": "Till",
+        "NAME": "Name",
+        "DESCRIPTION": "Description",
+        "TITLE": "Title",
+        "IO_TYPE": "Information-Object type",
+        "CLEAR_ALL": "Clear all"
+      }
+    },
+    "DOCUMENT_LIST": {
+      "COLUMNS": {
+        "NAME": "Name",
+        "SIZE": "Size",
+        "MODIFIED_ON": "Modified on",
+        "MODIFIED_BY": "Modified by"
+      }
+    },
+    "ACTIONS": {
+      "ADD": "Add",
+      "VIEW": "View",
+      "MORE": "More Actions",
+      "DOWNLOAD": "Download",
+      "FILTER": "Filter",
+      "REFRESH": "Refresh page"
+    },
+    "MESSAGES": {
+      "EDIT_IOT_SUCCESS": "Selected Information-Object type(s) successfully created or changed.",
+      "ERRORS": {
+        "MISSING_CONTENT": "This item no longer exists or you don't have permission to view it.",
+        "GENERIC": "The action was unsuccessful. Try again or contact your IT Team.",
+        "CONFLICT": "This name is already in use, try a different name."
+      }
+    },
+    "DIALOGS": {
+      "ADD_TO_CASE": {
+        "TITLE": "Add to case"
+      },
+      "EDIT_IOT": {
+        "TITLE": "Change type",
+        "INFO": "To change the type of the information object, select a new type from the dropdown list. Next, give the information object a new title and select a language.",
+        "LABELS": {
+          "CURRENT_VALUE": "Current value",
+          "IO_TYPE": "Information object type",
+          "TITLE": "Title",
+          "LANGUAGE": "Language"
+        }
+      },
+      "EIO_CREATE": {
+        "TITLE": "Change type",
+        "INTERN_TITLE": "Maak EIO Intern",
+        "EXTERN_TITLE": "Maak EIO Extern",
+        "INFO": "To change the type of the information object, select a new type from the dropdown list. Next, give the information object a new title and select a language.",
+        "LABELS": {
+          "CURRENT_VALUE": "Current value",
+          "IO_TYPE": "Information object type",
+          "TITLE": "Title",
+          "LANGUAGE": "language"
+        }
+      },
+      "BUTTONS": {
+        "OK": "Ok",
+        "CLOSE": "Close"
+      }
+    },
+    "INFO_DRAWER": {
+      "TITLE": "Details",
+      "TABS": {
+        "PROPERTIES": "Properties",
+        "LIBRARY_PROPERTIES": "About",
+        "VERSIONS": "Versions",
+        "COMMENTS": "Comments",
+        "PERMISSIONS": "Permissions",
+        "EXPAND": "Expand"
+      }
+    },
+    "AUTOCOMPLETE": {
+      "NO_SUGGESTIONS": "No suggestions found",
+      "TOTAL_ITEMS": "Number of options",
+      "LOADING": "Loading...",
+      "TOOLTIP": {
+        "MIN_CHARS": "Search requires at least {{minChars}} characters"
+      }
+    },
+    "VALIDATIONS": {
+      "REQUIRED": "* This is required field",
+      "INVALID": "* Input is invalid"
+    }
+  },
+  "LOGIN": {
+    "DIALOG": {
+      "TITLE": "Alfresco login",
+      "BUTTONS": {
+        "LOGIN": "Login"
+      }
+    }
+  }
+}

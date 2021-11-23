@@ -63,6 +63,9 @@
     "features-auth-profiles": {
       "tags": []
     },
+    "features-contezza-document-search": {
+      "tags": []
+    },
     "features-dashboard": {
       "tags": []
     }

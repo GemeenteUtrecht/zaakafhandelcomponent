@@ -38,19 +38,21 @@
 <gu-modal id="document-toevoegen-modal"
           [closeIcon]="true"
           title="Document toevoegen"
-          size="small">
-  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
-                         [bronorganisatie]="bronorganisatie"
-                         [identificatie]="identificatie"
-                         (closeModal)="closeModal('document-toevoegen-modal')"
-                         (reload)="fetchDocuments()">
-  </gu-document-toevoegen>
+          size="big">
+  <gu-document-toevoegen-contezza [mainZaakUrl]="mainZaakUrl"
+                                  [zaaktypeurl]="zaaktypeurl"
+                                  [bronorganisatie]="bronorganisatie"
+                                  [identificatie]="identificatie"
+                                  (closeModal)="closeModal('document-toevoegen-modal')"
+                                  (reload)="fetchDocuments()">
+  </gu-document-toevoegen-contezza>
 </gu-modal>
 <gu-modal id="document-overschrijven-modal"
           [closeIcon]="true"
           title="Document overschrijven"
-          size="small">
+          size="big">
   <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
+                         [zaaktypeurl]="zaaktypeurl"
                          [bronorganisatie]="bronorganisatie"
                          [identificatie]="identificatie"
                          [updateDocument]="true"
