@@ -123,7 +123,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
 
     this.isPolling = true;
-    const pollInterval = 30000; // 30 seconds
+    const pollInterval = 3000; // 3 seconds
     this.pollingSub$ = interval(pollInterval)
       .pipe(
         switchMap(x => {
