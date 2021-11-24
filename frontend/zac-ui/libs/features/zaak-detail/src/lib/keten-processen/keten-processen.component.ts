@@ -5,7 +5,7 @@ import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
 import {KetenProcessen} from '../../models/keten-processen';
 import {Task, User} from '@gu/models';
-import { catchError, filter, switchMap } from 'rxjs/operators';
+import { catchError, concatMap, filter, switchMap } from 'rxjs/operators';
 import { interval, of, Subscription } from 'rxjs';
 import { isEqual as _isEqual } from 'lodash';
 import {UserService} from '@gu/services';
@@ -126,7 +126,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     const pollInterval = 3000; // 3 seconds
     this.pollingSub$ = interval(pollInterval)
       .pipe(
-        switchMap(x => {
+        concatMap(x => {
           // Fetch processes
           return this.ketenProcessenService.getProcesses(this.mainZaakUrl)
             .pipe(
