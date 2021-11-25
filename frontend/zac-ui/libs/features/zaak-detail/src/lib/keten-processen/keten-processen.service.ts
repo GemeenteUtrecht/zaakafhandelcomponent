@@ -4,8 +4,9 @@ import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
 import { ReadWriteDocument, Task, User } from '@gu/models';
-import { KetenProcessen } from '../../models/keten-processen';
+import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
 import { UserGroupSearch } from '../../models/user-group-search';
+import {HttpParams} from '@angular/common/http';
 
 
 export interface SendMessageForm {
@@ -113,6 +114,16 @@ export class KetenProcessenService {
   getProcesses(mainZaakUrl: string): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);
     return this.http.Get(endpoint);
+  }
+
+  /**
+   * Retrieve the XML of the BPMN.
+   * @param {string} processDefinitionId
+   * @return {Observable}
+   */
+  getBpmnXml(processDefinitionId: string): Observable<BpmnXml> {
+    const endpoint = encodeURI(`/api/camunda/bpmn/${processDefinitionId}`);
+    return this.http.Get<BpmnXml>(endpoint, )
   }
 
   getFormLayout(taskId: string): Observable<TaskContextData> {

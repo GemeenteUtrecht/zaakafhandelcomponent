@@ -21,7 +21,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   @Input() id: string;
   @Input() closeIcon: boolean;
   @Input() title: string;
-  @Input() size: 'small' | 'medium' = 'medium';
+  @Input() size: 'small' | 'medium' | 'huge' = 'medium';
   @Input() type: 'center' | 'right' = 'center';
 
   @Output() onClose: EventEmitter<boolean> = new EventEmitter<boolean>();

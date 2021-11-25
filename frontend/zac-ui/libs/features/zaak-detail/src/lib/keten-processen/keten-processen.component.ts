@@ -1,14 +1,25 @@
-import { Component, Input, Output, OnChanges, AfterViewInit, EventEmitter, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  OnChanges,
+  AfterViewInit,
+  EventEmitter,
+  OnDestroy,
+  ViewEncapsulation
+} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import { ModalService, SnackbarService } from '@gu/components';
+import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
-import {KetenProcessen} from '../../models/keten-processen';
+import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
 import {Task, User} from '@gu/models';
-import { catchError, concatMap, filter, switchMap } from 'rxjs/operators';
-import { interval, of, Subscription } from 'rxjs';
-import { isEqual as _isEqual } from 'lodash';
+import {catchError, concatMap, filter} from 'rxjs/operators';
+import {interval, of, Subscription} from 'rxjs';
+import {isEqual as _isEqual} from 'lodash';
 import {UserService} from '@gu/services';
+import BpmnJS from 'bpmn-js';
+
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -26,7 +37,11 @@ import {UserService} from '@gu/services';
 @Component({
   selector: 'gu-keten-processen',
   templateUrl: './keten-processen.component.html',
-  styleUrls: ['./keten-processen.component.scss']
+  styleUrls: [
+    './keten-processen.component.scss',
+  ],
+  encapsulation: ViewEncapsulation.None,
+
 })
 
 export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewInit {
@@ -302,11 +317,40 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param task
    */
   taskDblClick(task) {
-    if(this.debugTask) {
+    if (this.debugTask) {
       this.debugTask = null;
       return;
     }
     this.debugTask = task;
+  }
+
+  /**
+   * Gets called when the tooltip is clicked.
+   */
+  openBpmnVisualisation() {
+    if (!this.data?.length) {
+      return;
+    }
+
+    // Clear previous instances.
+    const container = document.querySelector('.bpmn');
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Get/render visualisation.
+    const definitionId = this.data[0].definitionId;
+    this.ketenProcessenService.getBpmnXml(definitionId).subscribe(async (bpmnXml: BpmnXml) => {
+      const bpmnXML = bpmnXml.bpmn20Xml;
+
+      const viewer = new BpmnJS({container: container});
+      await viewer.importXML(bpmnXML);
+
+      this.modalService.open('bpmnModal');
+      setTimeout(() => {
+        viewer.get('canvas').zoom('fit-viewport');
+      })
+    }, this.reportError.bind(this))
   }
 
   //
