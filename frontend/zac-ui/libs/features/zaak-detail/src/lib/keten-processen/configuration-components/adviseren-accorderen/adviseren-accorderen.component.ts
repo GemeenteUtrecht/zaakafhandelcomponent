@@ -266,8 +266,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
         const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
-        const users = this.assignedUsersControl(i).value;
-        const userGroups = this.assignedUserGroupControl(i).value;
+        const users = this.assignedUsersControl(i).value ? this.assignedUsersControl(i).value : [];
+        const userGroups = this.assignedUserGroupControl(i).value ? this.assignedUserGroupControl(i).value : [];
         return {
           deadline: deadline,
           userAssignees: users,
