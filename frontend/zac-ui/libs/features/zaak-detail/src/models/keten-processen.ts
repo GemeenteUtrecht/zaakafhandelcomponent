@@ -7,6 +7,11 @@ export interface Assignee {
   id: number;
 }
 
+export interface BpmnXml {
+  id: string
+  bpmn20Xml: string,
+}
+
 export interface SubProcess {
   id: string;
   definitionId: string;

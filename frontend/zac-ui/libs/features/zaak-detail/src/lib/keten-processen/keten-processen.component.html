@@ -1,5 +1,6 @@
 <div class="keten-processen card">
   <h2 class="d-inline-block mr-2">Acties</h2>
+  <gu-tooltip type="primary" inline="true" (click)="openBpmnVisualisation()">Bekijk BPMN model.</gu-tooltip>
 
   <!-- First time loading  -->
   <ng-container *ngIf="isLoading">
@@ -165,7 +166,12 @@
 </div>
 
 
-<!-- Modal -->
+<!-- BPMN modal -->
+<gu-modal id="bpmnModal" [closeIcon]="true" [size]="'huge'">
+  <div class="bpmn"></div>
+</gu-modal>
+
+<!-- Keten processen modal -->
 <gu-modal id="ketenprocessenModal" [closeIcon]="true">
 
   <!-- Loading -->
@@ -208,4 +214,5 @@
       </gu-tab>
     </gu-tab-group>
   </ng-container>
+
 </gu-modal>
