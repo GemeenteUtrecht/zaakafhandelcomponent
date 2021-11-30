@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.test import TestCase
+from django.test.testcases import TransactionTestCase
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -22,20 +23,16 @@ CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
     return_value=["Annuleer behandeling", "Advies vragen"],
 )
 @requests_mock.Mocker()
-class ProcessInstanceTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
+class ProcessInstanceTests(TransactionTestCase):
+    def setUp(self) -> None:
+        super().setUp()
         config = CamundaConfig.get_solo()
         config.root_url = CAMUNDA_ROOT
         config.rest_api_path = CAMUNDA_API_PATH
         config.save()
 
-        cls.user = UserFactory.create()
-        cls.group = GroupFactory.create()
-
-    def setUp(self) -> None:
-        super().setUp()
+        self.user = UserFactory.create()
+        self.group = GroupFactory.create()
         self.client.force_login(self.user)
 
     def _setUpMock(self, m):
