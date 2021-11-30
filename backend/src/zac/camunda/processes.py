@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Dict, List
 
 from django_camunda.camunda_models import ProcessDefinition
@@ -65,25 +66,43 @@ def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
     with parallel() as executor:
         list(executor.map(_add_subprocesses, pids))
 
+    def _set_process_definitions(definition_ids: List[str]):
+        nonlocal process_instances
+        definitions = {
+            definition.id: definition
+            for definition in get_process_definitions(definition_ids)
+        }
+
+        for id, process_instance in process_instances.items():
+            process_instance.definition = definitions[process_instance.definition_id]
+
+    def _set_process_tasks(pids: List[ProcessInstance]):
+        nonlocal process_instances
+        with parallel() as executor:
+            results = executor.map(get_process_tasks, pids)
+
+        tasks = {
+            str(_tasks[0].process_instance_id): _tasks for _tasks in results if _tasks
+        }
+        for id, process_instance in process_instances.items():
+            if not process_instance.tasks:
+                process_instance.tasks = tasks.get(str(process_instance.id), [])
+
     # add definitions add user tasks
     definition_ids = [p.definition_id for p in process_instances.values()]
-    definitions = {
-        definition.id: definition
-        for definition in get_process_definitions(definition_ids)
-    }
     process_instances_without_task = []
     for id, process_instance in process_instances.items():
-        process_instance.definition = definitions[process_instance.definition_id]
         if not process_instance.tasks:
             process_instances_without_task.append(process_instance)
 
+    concurrent_functions = [
+        partial(_set_process_definitions, definition_ids),
+        partial(_set_process_tasks, process_instances_without_task),
+    ]
+    concurrent_results = []
     with parallel() as executor:
-        results = executor.map(get_process_tasks, process_instances_without_task)
-
-    tasks = {str(_tasks[0].process_instance_id): _tasks for _tasks in results if _tasks}
-    for id, process_instance in process_instances.items():
-        if not process_instance.tasks:
-            process_instance.tasks = tasks.get(str(process_instance.id), [])
+        for result in executor.map(lambda fn: fn(), concurrent_functions):
+            concurrent_results.append(result)
 
     # get messages only for top level processes
     top_level_processes = [
