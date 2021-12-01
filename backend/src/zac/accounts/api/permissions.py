@@ -115,12 +115,19 @@ class GroupBasePermission:
 
 class CanChangeGroup(GroupBasePermission):
     def has_object_permission(self, request: Request, view: APIView, obj: Group):
+        if request.user.is_superuser:
+            return True
         return obj in request.user.manages_groups.all()
 
 
 class CanViewGroup(GroupBasePermission):
     def has_object_permission(self, request: Request, view: APIView, obj: Group):
-        return request.user in obj.user_set.all()
+        if request.user.is_superuser:
+            return True
+        return (
+            request.user in obj.user_set.all()
+            or obj in request.user.manages_groups.all()
+        )
 
 
 class ManageGroup:
