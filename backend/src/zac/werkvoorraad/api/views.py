@@ -135,7 +135,11 @@ class WorkStackUserTasksView(ListAPIView):
         }
         task_zaken = {tzu[0]: zaken.get(tzu[1]) for tzu in task_ids_and_zaak_urls}
 
-        return [TaskAndCase(task=task, zaak=task_zaken[task.id]) for task in tasks]
+        return [
+            TaskAndCase(task=task, zaak=task_zaken[task.id])
+            for task in tasks
+            if task_zaken[task.id]
+        ]
 
 
 @extend_schema(summary=_("List user tasks assigned to groups related to user"))
