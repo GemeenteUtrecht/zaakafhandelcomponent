@@ -202,7 +202,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
             ],
         )
 
-    def test_user_tasks_endpoint_zaak_is_deleted(self):
+    def test_user_tasks_endpoint_zaak_cant_be_found(self):
         with patch(
             "zac.werkvoorraad.api.views.get_zaak_url_from_context",
             return_value=(self.task.id, self.zaak["url"]),
