@@ -1,8 +1,11 @@
+from typing import Optional
+
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as _GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
+from django.http.request import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
@@ -30,6 +33,25 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 @admin.register(User)
 class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                    "manages_groups",
+                ),
+            },
+        ),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+
     list_display = UserAdmin.list_display + (
         "is_superuser",
         "get_auth_profiles_display",
@@ -38,11 +60,13 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
     )
     inlines = [UserAuthorizationProfileInline]
 
+    filter_horizontal = UserAdmin.filter_horizontal + ("manages_groups",)
+
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
-            .prefetch_related("atomic_permissions", "auth_profiles")
+            .prefetch_related("atomic_permissions", "auth_profiles", "manages_groups")
         )
 
     def get_auth_profiles_display(self, obj):
