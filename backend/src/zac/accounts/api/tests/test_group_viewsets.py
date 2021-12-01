@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from rest_framework.test import APITestCase
 
-from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 
 
 class GroupViewsetTests(APITestCase):
@@ -88,3 +88,20 @@ class GroupViewsetTests(APITestCase):
         )
         self.user.manages_groups.remove(self.groups[0])
         self.user.groups.remove(self.groups[0])
+
+    def test_group_with_superuser(self):
+        superuser = SuperUserFactory.create()
+        self.client.force_authenticate(user=superuser)
+        detail_endpoint = reverse("usergroups-detail", args=[self.groups[0].id])
+        data = {"name": self.groups[0].name, "users": [self.user.username]}
+        response = self.client.put(detail_endpoint, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "id": self.groups[0].id,
+                "name": self.groups[0].name,
+                "fullName": "Group: " + self.groups[0].name,
+                "users": [self.user.username],
+            },
+        )
