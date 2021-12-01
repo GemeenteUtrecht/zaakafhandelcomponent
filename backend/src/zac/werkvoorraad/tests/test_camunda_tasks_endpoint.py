@@ -201,3 +201,21 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 },
             ],
         )
+
+    def test_user_tasks_endpoint_zaak_is_deleted(self):
+        with patch(
+            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            return_value=(self.task.id, self.zaak["url"]),
+        ):
+            with patch(
+                "zac.werkvoorraad.api.views.get_camunda_user_tasks",
+                return_value=[self.task],
+            ):
+                with patch(
+                    "zac.werkvoorraad.api.views.search",
+                    return_value=[],
+                ):
+                    response = self.client.get(self.user_endpoint)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data, [])
