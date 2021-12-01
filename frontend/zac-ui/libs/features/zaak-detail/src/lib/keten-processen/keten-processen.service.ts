@@ -5,8 +5,7 @@ import { TaskContextData } from '../../models/task-context';
 import { UserSearch } from '../../models/user-search';
 import { ReadWriteDocument, Task, User } from '@gu/models';
 import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
-import { UserGroupSearch } from '../../models/user-group-search';
-import {HttpParams} from '@angular/common/http';
+import { UserGroupList } from '../../models/user-group-search';
 
 
 export interface SendMessageForm {
@@ -141,9 +140,9 @@ export class KetenProcessenService {
     return this.http.Get<UserSearch>(endpoint);
   }
 
-  getUserGroups(searchInput: string): Observable<UserGroupSearch>{
+  getUserGroups(searchInput: string): Observable<UserGroupList>{
     const endpoint = encodeURI(`/api/accounts/groups?search=${searchInput}`);
-    return this.http.Get<UserGroupSearch>(endpoint);
+    return this.http.Get<UserGroupList>(endpoint);
   }
 
   postAssignTask(formData) {

@@ -1,0 +1,39 @@
+<gu-loading-indicator *ngIf="isSubmitting"></gu-loading-indicator>
+<gu-input [control]="userGroupNameControl"
+          [required]="true"
+          type="text"
+          label="Naam gebruikersgroep"
+          class="mb-4">
+</gu-input>
+<p class="mb-2">Selecteer gebruikers die je wilt toevoegen aan de groep.</p>
+<gu-input [control]="searchValueControl"
+          (input)="searchUsers()"
+          [hideNotRequiredLabel]="true"
+          autocomplete="off"
+          type="text"
+          placeholder="Typ om gebruikers te zoeken..."
+          class="mb-4">
+</gu-input>
+<div class="d-flex justify-content-end mb-4">
+  <button *ngIf="type === 'create'" gu-button buttonStyle="primary" size="small" [disabled]="!newUserGroupForm.valid" (click)="submitUserGroup('create')">
+    Aanmaken
+  </button>
+  <button *ngIf="type === 'edit'" gu-button buttonStyle="primary" size="small" [disabled]="!newUserGroupForm.valid" (click)="submitUserGroup('edit')">
+    Opslaan
+  </button>
+</div>
+<ng-container *ngIf="selectedUsers.length > 0">
+  <p class="mb-2"><strong>Geselecteerde gebruikers:</strong></p>
+  <p>{{showSelectedUsers()}}</p>
+</ng-container>
+<ul>
+  <li class="user-group-user" *ngFor="let user of searchResultUsers">
+    <gu-checkbox (change)="updateSelectedUsers($event)"
+                 [value]="user"
+                 [checked]="isInSelectedUser(user)"
+                 class="d-inline-block mr-1"
+    >
+      {{user.fullName}}
+    </gu-checkbox>
+  </li>
+</ul>

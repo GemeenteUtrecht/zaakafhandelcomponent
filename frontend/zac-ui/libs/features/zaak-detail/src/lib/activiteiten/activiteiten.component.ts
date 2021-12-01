@@ -3,7 +3,7 @@ import { ActiviteitenService } from './activiteiten.service';
 import { first } from 'rxjs/operators';
 import {Activity, User, ShortDocument, ReadWriteDocument} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Result } from '../../models/user-search';
+import { UserSearchResult } from '../../models/user-search';
 import {Document} from '@gu/models';
 import { UserGroupResult } from '../../models/user-group-search';
 import { SnackbarService } from '@gu/components';
@@ -33,7 +33,7 @@ export class ActiviteitenComponent implements OnInit {
   addActivityForm: FormGroup;
   assignUserForm: FormGroup;
 
-  users: Result[] = [];
+  users: UserSearchResult[] = [];
   userGroups: UserGroupResult[] = [];
 
   ongoingData: Activity[] = [];

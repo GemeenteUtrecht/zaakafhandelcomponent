@@ -3,7 +3,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
 import { UserSearch } from '../../models/user-search';
 import {Activity, ReadWriteDocument} from "@gu/models";
-import { UserGroupSearch } from '../../models/user-group-search';
+import { UserGroupList } from '../../models/user-group-search';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +17,9 @@ export class ActiviteitenService {
     return this.http.Get<UserSearch>(endpoint);
   }
 
-  getUserGroups(searchInput: string): Observable<UserGroupSearch>{
+  getUserGroups(searchInput: string): Observable<UserGroupList>{
     const endpoint = encodeURI(`/api/accounts/groups?search=${searchInput}`);
-    return this.http.Get<UserGroupSearch>(endpoint);
+    return this.http.Get<UserGroupList>(endpoint);
   }
 
   getDocuments(activities: Activity[]): Observable<any> {

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatFormField } from '@angular/material/form-field';
 
@@ -32,13 +32,20 @@ export class InputComponent {
   @Input() placeholder: string;
   @Input() value: string | number;
   @Input() autocomplete?: 'on' | 'off';
+  @Input() hideNotRequiredLabel: boolean;
+
+  @Output() input: EventEmitter<any> = new EventEmitter<any>();
 
   /**
    * Creates input label.
    * @returns {string}
    */
   getLabel() {
-    return this.required ? this.label : (this.label + ' (niet verplicht)')
+    if (!this.hideNotRequiredLabel) {
+      return this.required ? this.label : (this.label + ' (niet verplicht)')
+    } else {
+      return this.label;
+    }
   }
 }
 

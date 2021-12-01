@@ -1,4 +1,4 @@
-export interface Result {
+export interface UserSearchResult {
   id: number;
   username: string;
   fullName: string;
@@ -12,5 +12,5 @@ export interface UserSearch {
   count: number;
   next?: any;
   previous?: any;
-  results: Result[];
+  results: UserSearchResult[];
 }

@@ -38,7 +38,7 @@ const routes: Routes = [
       import('./components/reports/reports.module').then((m) => m.ReportsModule),
   },
   {
-    path: 'autorisatieprofielen',
+    path: 'autorisaties',
     loadChildren: () =>
       import('./components/auth-profiles/auth-profiles.module').then((m) => m.AuthProfilesModule),
   },

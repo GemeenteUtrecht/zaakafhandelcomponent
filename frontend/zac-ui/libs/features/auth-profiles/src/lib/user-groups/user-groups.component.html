@@ -1,0 +1,73 @@
+<div class="user-groups">
+  <div class="d-flex justify-content-between">
+    <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+    <h2 class="d-inline-block">Gebruikersgroepen</h2>
+    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-usergroup-modal')">
+      Gebruikersgroep aanmaken
+    </button>
+  </div>
+  <mat-accordion *ngIf="userGroupsDetails.length > 0 && !isDetailsLoading" multi>
+    <ng-container *ngFor="let group of userGroupsDetails">
+      <mat-expansion-panel *ngIf="group">
+        <mat-expansion-panel-header>
+          <gu-icon class="group-icon mr-2">groups</gu-icon>
+          <strong>{{ group.name }}</strong>
+        </mat-expansion-panel-header>
+        <p class="mb-2">Gebruikers</p>
+        <ul>
+          <li *ngFor="let user of group.users">
+            {{user}}
+          </li>
+        </ul>
+        <div class="d-flex justify-content-between align-items-center">
+          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editUserGroup(group)">
+            Wijzigen
+          </button>
+          <button gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteUserGroup(group)">
+            Verwijderen
+          </button>
+        </div>
+      </mat-expansion-panel>
+    </ng-container>
+  </mat-accordion>
+
+  <!-- Create user group-->
+  <gu-modal id="add-usergroup-modal"
+            [closeIcon]="true"
+            size="medium"
+            title="Gebruikersgroep aanmaken"
+  >
+    <gu-create-group
+      type="create"
+      (reloadGroups)="listUserGroups(); closeModal('add-usergroup-modal');"
+    >
+    </gu-create-group>
+  </gu-modal>
+
+  <!-- Edit user group-->
+  <gu-modal id="edit-usergroup-modal"
+            [closeIcon]="true"
+            size="medium"
+            title="Gebruikersgroep wijzigen"
+  >
+    <gu-create-group
+      *ngIf="selectedEditModeGroup"
+      type="edit"
+      [selectedUserGroup]="selectedEditModeGroup"
+      (reloadGroups)="listUserGroups(); closeModal('edit-usergroup-modal');">
+    </gu-create-group>
+  </gu-modal>
+
+  <!-- Delete user group-->
+  <gu-modal id="delete-usergroup-modal"
+            [closeIcon]="true"
+            size="small"
+            title="Gebruikersgroep verwijderen"
+  >
+    <gu-delete-group
+      *ngIf="selectedDeleteModeGroup"
+      [selectedUserGroup]="selectedDeleteModeGroup"
+      (reloadGroups)="listUserGroups(); closeModal('delete-usergroup-modal');">
+    </gu-delete-group>
+  </gu-modal>
+</div>

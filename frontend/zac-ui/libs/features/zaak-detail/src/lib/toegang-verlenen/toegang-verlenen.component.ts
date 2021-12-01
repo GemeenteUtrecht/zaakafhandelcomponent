@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { Result, UserSearch } from '../../models/user-search';
+import { UserSearchResult, UserSearch } from '../../models/user-search';
 import { ApplicationHttpClient } from '@gu/services';
 import { switchMap } from 'rxjs/operators';
 
@@ -14,8 +14,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   @Input() mainZaakUrl: string;
   @Input() identificatie: string;
 
-  users: Result[] = [];
-  requesterUser: Result;
+  users: UserSearchResult[] = [];
+  requesterUser: UserSearchResult;
 
   grantAccessForm: FormGroup;
   isLoading: boolean;

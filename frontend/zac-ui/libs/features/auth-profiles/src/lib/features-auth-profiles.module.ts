@@ -9,6 +9,9 @@ import { AuthProfilesComponent } from './auth-profiles/auth-profiles.component';
 import { AddAuthProfileComponent } from './auth-profiles/add-auth-profile/add-auth-profile.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AuthProfilesPipe } from './auth-profiles/auth-profiles.pipe';
+import { UserGroupsComponent } from './user-groups/user-groups.component';
+import { CreateGroupComponent } from './user-groups/create-group/create-group.component';
+import { DeleteGroupComponent } from './user-groups/delete-group/delete-group.component';
 
 @NgModule({
   imports: [
@@ -28,7 +31,10 @@ import { AuthProfilesPipe } from './auth-profiles/auth-profiles.pipe';
     RolesComponent,
     AuthProfilesComponent,
     AddAuthProfileComponent,
-    AuthProfilesPipe
+    AuthProfilesPipe,
+    UserGroupsComponent,
+    CreateGroupComponent,
+    DeleteGroupComponent
   ],
 })
 export class FeaturesAuthProfilesModule {}
