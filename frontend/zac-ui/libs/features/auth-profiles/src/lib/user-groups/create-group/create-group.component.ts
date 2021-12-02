@@ -190,7 +190,7 @@ export class CreateGroupComponent implements OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
     this.isSubmitting = false;
   }
