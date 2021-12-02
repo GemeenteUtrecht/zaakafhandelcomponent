@@ -6,6 +6,9 @@ import { FeaturesAuthProfilesService } from '../../features-auth-profiles.servic
 import { ModalService, SnackbarService } from '@gu/components';
 import { UserGroupDetail } from '@gu/models';
 
+/**
+ * Allows user to create or edit a user group.
+ */
 @Component({
   selector: 'gu-create-group',
   templateUrl: './create-group.component.html',
@@ -143,7 +146,9 @@ export class CreateGroupComponent implements OnChanges {
    */
   resetForm() {
     this.isSubmitting = false;
-    this.newUserGroupForm.reset();
+    if (this.type === 'create') {
+      this.newUserGroupForm.reset();
+    }
     this.selectedUsers = [];
     this.reloadGroups.emit(true);
     this.modalService.close('add-usergroup-modal')

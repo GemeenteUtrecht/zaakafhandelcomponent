@@ -6,7 +6,7 @@
       Gebruikersgroep aanmaken
     </button>
   </div>
-  <mat-accordion *ngIf="userGroupsDetails.length > 0 && !isDetailsLoading" multi>
+  <mat-accordion *ngIf="userGroupsDetails.length > 0 && !isDetailsLoading && allUsers" multi>
     <ng-container *ngFor="let group of userGroupsDetails">
       <mat-expansion-panel *ngIf="group">
         <mat-expansion-panel-header>
@@ -15,7 +15,7 @@
         </mat-expansion-panel-header>
         <p class="mb-2">Gebruikers</p>
         <ul>
-          <li *ngFor="let user of group.users">
+          <li *ngFor="let user of prettifyUsers(group.users)">
             {{user}}
           </li>
         </ul>

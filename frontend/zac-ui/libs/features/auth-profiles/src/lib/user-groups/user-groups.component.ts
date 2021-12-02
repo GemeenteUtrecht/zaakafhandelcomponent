@@ -3,7 +3,11 @@ import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { UserGroupResult } from '../../../../zaak-detail/src/models/user-group-search';
 import { ModalService, SnackbarService } from '@gu/components';
 import { UserGroupDetail } from '@gu/models';
+import { UserSearchResult } from '../../../../zaak-detail/src/models/user-search';
 
+/**
+ * Managing component for user groups.
+ */
 @Component({
   selector: 'gu-user-groups',
   templateUrl: './user-groups.component.html',
@@ -21,6 +25,8 @@ export class UserGroupsComponent implements OnInit {
   selectedEditModeGroup: UserGroupDetail;
   selectedDeleteModeGroup: UserGroupDetail;
 
+  allUsers: UserSearchResult[];
+
   constructor(
     private fService: FeaturesAuthProfilesService,
     private modalService: ModalService,
@@ -37,6 +43,7 @@ export class UserGroupsComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    this.getAllUsers();
     this.listUserGroups();
   }
 
@@ -58,6 +65,36 @@ export class UserGroupsComponent implements OnInit {
    */
   closeModal(id) {
     this.modalService.close(id);
+  }
+
+  /**
+   * Returns full name if present.
+   * @param {string} username
+   * @returns {string}
+   */
+  getFullName(username: string) {
+    const user = this.allUsers.find(userDetail => userDetail.username === username);
+    return user.fullName ? user.fullName : user.username;
+  }
+
+  /**
+   * Show array of pretty names instead of usernames
+   * @param {string[]} users
+   * @returns {string[]}
+   */
+  prettifyUsers(users: string[]) {
+    return users.map(user => this.getFullName(user)).sort();
+  }
+
+  /**
+   * Get all user accounts.
+   */
+  getAllUsers() {
+    this.fService.getAccounts('').subscribe(res => {
+      this.allUsers = res.results;
+    }, error => {
+      this.reportError(error)
+    })
   }
 
   /**
@@ -97,6 +134,10 @@ export class UserGroupsComponent implements OnInit {
     );
   }
 
+  /**
+   * Retrieve details per user group.
+   * @param {UserGroupResult[]} groupList
+   */
   fetchUserGroupDetails(groupList: UserGroupResult[]) {
     this.userGroupsDetails = [];
     this.isDetailsLoading = true;

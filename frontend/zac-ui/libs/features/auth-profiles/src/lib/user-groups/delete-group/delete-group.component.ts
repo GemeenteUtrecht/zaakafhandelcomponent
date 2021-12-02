@@ -3,6 +3,9 @@ import { UserGroupDetail } from '@gu/models';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
 
+/**
+ * Delete a user group.
+ */
 @Component({
   selector: 'gu-delete-group',
   templateUrl: './delete-group.component.html',
