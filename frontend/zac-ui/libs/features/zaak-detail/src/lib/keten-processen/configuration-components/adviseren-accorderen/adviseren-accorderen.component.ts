@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
-import { Result } from '../../../../models/user-search';
+import { UserSearchResult } from '../../../../models/user-search';
 import { UserGroupResult } from '../../../../models/user-group-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
@@ -37,7 +37,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   steps = 1;
   minDate = new Date();
-  searchResultUsers: Result[] = [];
+  searchResultUsers: UserSearchResult[] = [];
   searchResultUserGroups: UserGroupResult[] = [];
 
   assignUsersForm: FormGroup;

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaZaaktype, Result, Role } from '@gu/models';
+import { AuthProfile, MetaZaaktype, Role } from '@gu/models';
 
 
 /**

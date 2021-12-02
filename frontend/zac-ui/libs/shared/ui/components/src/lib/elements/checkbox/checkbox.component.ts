@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl } from '@angular/forms';
 
 /**
  * <gu-checkbox [control]="formControl">I'm a checkbox</gu-checkbox>
@@ -21,10 +21,11 @@ import { AbstractControl } from '@angular/forms';
 export class CheckboxComponent {
   @Input() control: AbstractControl;
   @Input() color: 'primary' | 'accent' | 'warn' = 'primary'
-  @Input() value: string;
+  @Input() value: any;
   @Input() disabled: 'disabled';
+  @Input() checked: boolean;
 
-  @Output() change: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() {}
+  constructor() { }
 }

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Result } from '../../../models/user-search';
+import { UserSearchResult } from '../../../models/user-search';
 import { UserGroupResult } from '../../../models/user-group-search';
 import { ModalService } from '@gu/components';
 import { Task, User } from '@gu/models';
@@ -27,7 +27,7 @@ export class AssignTaskComponent implements OnChanges {
   assignUserForm: FormGroup;
   assignUserGroupForm: FormGroup;
 
-  users: Result[] = [];
+  users: UserSearchResult[] = [];
   userGroups: UserGroupResult[] = [];
 
   isSubmitting: boolean;

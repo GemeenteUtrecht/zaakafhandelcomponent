@@ -4,7 +4,7 @@ export interface UserGroupResult {
   name: string;
 }
 
-export interface UserGroupSearch {
+export interface UserGroupList {
   count: number;
   next?: any;
   previous?: any;

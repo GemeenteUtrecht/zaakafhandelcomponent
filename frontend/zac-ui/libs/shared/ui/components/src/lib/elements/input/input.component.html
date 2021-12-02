@@ -5,6 +5,7 @@
 >
   <mat-label *ngIf="label">{{getLabel()}}</mat-label>
   <input matInput
+         (input)="input.emit($event)"
          [type]="type"
          [placeholder]="placeholder"
          [value]="value"

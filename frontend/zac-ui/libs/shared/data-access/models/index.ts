@@ -27,6 +27,7 @@ export * from './accounts/auth-profile';
 export * from './accounts/permission';
 export * from './accounts/role';
 export * from './accounts/user';
+export * from './accounts/user-group';
 export * from './accounts/user-permissions';
 
 // Zaken

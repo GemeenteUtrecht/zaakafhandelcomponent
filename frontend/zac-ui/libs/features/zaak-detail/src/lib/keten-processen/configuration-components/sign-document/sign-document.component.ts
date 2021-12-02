@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import { Result } from '../../../../models/user-search';
+import { UserSearchResult } from '../../../../models/user-search';
 import { ModalService } from '@gu/components';
 
 @Component({
@@ -18,7 +18,7 @@ export class SignDocumentComponent implements OnChanges {
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   steps = 1;
-  items: Result[] = [];
+  items: UserSearchResult[] = [];
 
   signDocumentForm: FormGroup;
 
