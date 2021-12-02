@@ -137,14 +137,14 @@ class WorkStackUserTasksView(ListAPIView):
             )
         }
         task_zaken = {}
-        for tzu in task_ids_and_zaak_urls:
-            if not (zaak := zaken.get(tzu[1])):
+        for task_id, zaak_url in task_ids_and_zaak_urls:
+            if not (zaak := zaken.get(zaak_url)):
                 logger.warning(
                     "Couldn't find a ZAAK in Elasticsearch for task with id %s."
-                    % tzu[0]
+                    % task_id
                 )
 
-            task_zaken[tzu[0]] = zaak
+            task_zaken[task_id] = zaak
 
         return [
             TaskAndCase(task=task, zaak=task_zaken[task.id])
