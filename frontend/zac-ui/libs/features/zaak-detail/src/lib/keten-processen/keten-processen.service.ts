@@ -109,7 +109,11 @@ export class KetenProcessenService {
       .find((task: Task) => currentData.indexOf(task.id) === -1);
   }
 
-
+  /**
+   * Retrieve processes.
+   * @param {string} mainZaakUrl
+   * @returns {Observable<any>}
+   */
   getProcesses(mainZaakUrl: string): Observable<any> {
     const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);
     return this.http.Get(endpoint);
@@ -125,36 +129,72 @@ export class KetenProcessenService {
     return this.http.Get<BpmnXml>(endpoint, )
   }
 
+  /**
+   * Retrieve layout of the task.
+   * @param {string} taskId
+   * @returns {Observable<TaskContextData>}
+   */
   getFormLayout(taskId: string): Observable<TaskContextData> {
     const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
     return this.http.Get<TaskContextData>(endpoint);
   }
 
+  /**
+   * Sends message to create a new task.
+   * @param {SendMessageForm} formData
+   * @returns {Observable<SendMessageForm>}
+   */
   sendMessage(formData: SendMessageForm): Observable<SendMessageForm> {
     const endpoint = encodeURI("/api/camunda/send-message");
     return this.http.Post<SendMessageForm>(endpoint, formData);
   }
 
+  /**
+   * Retrieve all accounts.
+   * @param {string} searchInput
+   * @returns {Observable<UserSearch>}
+   */
   getAccounts(searchInput: string): Observable<UserSearch>{
     const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
     return this.http.Get<UserSearch>(endpoint);
   }
 
+  /**
+   * Retrieve all user groups.
+   * @param {string} searchInput
+   * @returns {Observable<UserGroupList>}
+   */
   getUserGroups(searchInput: string): Observable<UserGroupList>{
     const endpoint = encodeURI(`/api/accounts/groups?search=${searchInput}`);
     return this.http.Get<UserGroupList>(endpoint);
   }
 
+  /**
+   * Assign task to user or group.
+   * @param formData
+   * @returns {Observable<any>}
+   */
   postAssignTask(formData) {
     const endpoint = encodeURI('/api/camunda/claim-task');
     return this.http.Post<any>(endpoint, formData)
   }
 
+  /**
+   * Update task data.
+   * @param {string} taskId
+   * @param formData
+   * @returns {Observable<unknown>}
+   */
   putTaskData(taskId: string, formData) {
     const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
     return this.http.Put(endpoint, formData);
   }
 
+  /**
+   * Open document.
+   * @param endpoint
+   * @returns {Observable<ReadWriteDocument>}
+   */
   readDocument(endpoint) {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }
