@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from django.contrib.auth.models import Group
@@ -32,6 +33,8 @@ from .utils import (
     get_camunda_group_tasks,
     get_camunda_user_tasks,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema(summary=_("List access requests"))
@@ -133,9 +136,21 @@ class WorkStackUserTasksView(ListAPIView):
                 urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
             )
         }
-        task_zaken = {tzu[0]: zaken.get(tzu[1]) for tzu in task_ids_and_zaak_urls}
+        task_zaken = {}
+        for task_id, zaak_url in task_ids_and_zaak_urls:
+            if not (zaak := zaken.get(zaak_url)):
+                logger.warning(
+                    "Couldn't find a ZAAK in Elasticsearch for task with id %s."
+                    % task_id
+                )
 
-        return [TaskAndCase(task=task, zaak=task_zaken[task.id]) for task in tasks]
+            task_zaken[task_id] = zaak
+
+        return [
+            TaskAndCase(task=task, zaak=task_zaken[task.id])
+            for task in tasks
+            if task_zaken[task.id]
+        ]
 
 
 @extend_schema(summary=_("List user tasks assigned to groups related to user"))
