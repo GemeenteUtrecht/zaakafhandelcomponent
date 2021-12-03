@@ -7,9 +7,11 @@ def delete_search_report_blueprint_permissions(apps, _):
     BlueprintPermission = apps.get_model("accounts", "BlueprintPermission")
     BlueprintPermission.objects.filter(object_type="search_report").delete()
 
+
 def delete_search_report_atomic_permissions(apps, _):
     AtomicPermission = apps.get_model("accounts", "AtomicPermission")
     AtomicPermission.objects.filter(object_type="search_report").delete()
+
 
 class Migration(migrations.Migration):
 
@@ -23,5 +25,5 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             delete_search_report_atomic_permissions, migrations.RunPython.noop
-        )
+        ),
     ]
