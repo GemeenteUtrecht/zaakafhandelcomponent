@@ -11,7 +11,8 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.models import AccessRequest
+from zac.accounts.tests.factories import AccessRequestFactory, UserFactory
 from zac.activities.models import Activity, Event
 from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.contrib.board.models import BoardItem
@@ -121,3 +122,14 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BoardItem.objects.exists())
+
+    def test_access_request_deleted(self):
+        path = reverse("notifications:callback")
+        AccessRequestFactory(
+            zaak="https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
+        )
+
+        response = self.client.post(path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(AccessRequest.objects.exists())
