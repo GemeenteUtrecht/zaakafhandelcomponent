@@ -103,14 +103,19 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   get form(): FieldConfiguration[] {
     return [
+      this.objectTypesAsFieldConfiguration(),
       {
+        activeWhen: (formGroup) => {
+          const objectTypeURL = formGroup.getRawValue().objectType;
+          const objectType = this.objectTypes.find((o: ObjectType) => o.url === objectTypeURL);
+          return objectType?.allowGeometry
+        },
         choices: OBJECT_SEARCH_GEOMETRY_CHOICES,
         label: 'Gebied',
         name: 'geometry',
         required: false,
         value: OBJECT_SEARCH_GEOMETRY_CHOICES[0].value,
       },
-      this.objectTypesAsFieldConfiguration(),
       ...this.objectTypeVersionsAsFieldConfigurations(),
       {
         label: 'Zoekopdracht',
