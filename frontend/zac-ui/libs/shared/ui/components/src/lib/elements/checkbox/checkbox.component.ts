@@ -19,7 +19,7 @@ import { AbstractControl, FormBuilder, FormControl } from '@angular/forms';
   styleUrls: ['./checkbox.component.scss']
 })
 export class CheckboxComponent {
-  @Input() control: AbstractControl;
+  @Input() control: AbstractControl = new FormControl('');
   @Input() color: 'primary' | 'accent' | 'warn' = 'primary'
   @Input() value: any;
   @Input() disabled: 'disabled';
