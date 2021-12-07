@@ -81,7 +81,7 @@ django-solo==1.1.3
     #   django-auth-adfs-db
     #   django-camunda
     #   zgw-consumers
-django==2.2.24
+django==2.2.25
     # via
     #   -r requirements/base.in
     #   django-appconf
@@ -245,7 +245,7 @@ xlrd==1.2.0
     # via tablib
 xlwt==1.3.0
     # via tablib
-zgw-consumers[drf]==0.15.0
+zgw-consumers[drf]==0.16.1
     # via -r requirements/base.in
 zipp==0.6.0
     # via importlib-metadata
