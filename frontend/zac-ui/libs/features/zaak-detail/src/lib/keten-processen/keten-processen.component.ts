@@ -59,11 +59,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   debugTask: Task = null;
   newestTaskId: string;
 
-  pollingSub$: Subscription;
-
   isExpanded = false;
   isLoading = true;
   isPolling = false;
+  nPollingFails = 0;
 
   errorMessage: string;
 
@@ -135,41 +134,52 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Poll tasks every 30 seconds.
    */
   pollProcesses() {
-    const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
-
     this.isPolling = true;
-    const pollInterval = 3000; // 3 seconds
-    this.pollingSub$ = interval(pollInterval)
-      .pipe(
-        concatMap(x => {
-          // Fetch processes
-          return this.ketenProcessenService.getProcesses(this.mainZaakUrl)
-            .pipe(
-              catchError(errorRes => {
-                this.isLoading = false;
-                this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
-                this.reportError(errorRes);
-                return of(undefined);
-              })
-            );
-        }),
-        filter(data => data !== undefined)
-      )
-      .subscribe(resData => {
+    this.fetchPollProcesses();
+  }
+
+  fetchPollProcesses() {
+    if (this.isPolling) {
+      const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
+      this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(resData => {
         if (!_isEqual(this.data, resData)) {
           this.setNewestTask(resData, currentTaskIds);
         }
         this.updateProcessData(resData);
+
+        // Poll every 3s
+        setTimeout(() => {
+          this.fetchPollProcesses();
+        }, 3000)
+
+        // Reset fail counter
+        this.nPollingFails = 0;
+      }, () => {
+        // Add to fail counter
+        this.nPollingFails += 1;
+
+        // Poll again after 3s if it fails
+        setTimeout(errorRes => {
+          this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
+          this.reportError(errorRes);
+
+          if (this.nPollingFails < 5) {
+            this.fetchPollProcesses();
+          } else {
+            this.isPolling = false;
+            this.nPollingFails = 0;
+          }
+        }, 3000)
       });
+    }
   }
 
   /**
    * Cancels the polling of tasks.
    */
   cancelPolling() {
-    if (this.pollingSub$) {
+    if (this.isPolling) {
       this.isPolling = false;
-      this.pollingSub$.unsubscribe();
     }
   }
 
@@ -201,7 +211,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       // Execute newly created task.
       if (openTask && currentTaskIds && data && data.length) {
         // Find first task if with id not in taskIds.
-
         const newTask = this.ketenProcessenService.findNewTask(data, currentTaskIds);
         this.setNewestTask(data, currentTaskIds)
 

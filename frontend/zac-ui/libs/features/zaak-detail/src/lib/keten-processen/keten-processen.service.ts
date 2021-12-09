@@ -105,8 +105,11 @@ export class KetenProcessenService {
    */
   findNewTask(newData, currentData) {
     const currentTaskIds = this.mergeTaskData(newData);
-    return currentTaskIds
-      .find((task: Task) => currentData.indexOf(task.id) === -1);
+
+    if (JSON.stringify(currentData) !== JSON.stringify(currentTaskIds)) {
+      return currentTaskIds.find((task: Task) => currentData.indexOf(task.id) === -1);
+    }
+    return;
   }
 
   /**
