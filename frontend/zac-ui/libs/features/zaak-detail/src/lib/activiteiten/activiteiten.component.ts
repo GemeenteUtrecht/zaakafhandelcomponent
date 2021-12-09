@@ -315,17 +315,18 @@ export class ActiviteitenComponent implements OnInit {
    */
   submitAssign(activityId, index, assignType: 'user' | 'userGroup') {
     this.isLoading = true
-    let assignee;
+    let formData = {};
     switch (assignType) {
       case 'user':
-        assignee = this.assignedUserControlIndex(index).value;
+        formData = {
+          userAssignee: this.assignedUserControlIndex(index).value,
+        };
         break;
       case 'userGroup':
-        assignee = this.assignedUserGroupControlIndex(index).value;
+        formData = {
+          groupAssignee: this.assignedUserGroupControlIndex(index).value,
+        };
         break;
-    }
-    const formData = {
-      assignee: assignee
     }
     this.patchActivity(activityId, formData)
   }
