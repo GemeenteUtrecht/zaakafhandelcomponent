@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesWorkstackService } from './features-workstack.service';
 import { tabs, Tab } from './constants/tabs';
-import { tableHead, tableHeadMapping } from './constants/zaken-tablehead';
+import { tableHead } from './constants/zaken-tablehead';
 import { RowData, Zaak, Table, UserTask, UserTaskZaak, Task } from '@gu/models';
 import { AccessRequests } from './models/access-request';
 import { AdHocActivities } from './models/activities';
@@ -58,8 +58,10 @@ export class FeaturesWorkstackComponent implements OnInit {
   }
 
   fetchZaken(sortValue) {
+    const sortBy = sortValue.order ? sortValue.value : undefined  // Yes.
+    const sortOrder= sortValue.order ? sortValue.order : undefined  // Yes.
     this.workstackService
-      .getWorkstackZaken(tableHeadMapping[sortValue.value], sortValue.order)
+      .getWorkstackZaken(sortBy, sortOrder)
       .subscribe(
         (res) => {
           this.zakenData = res;
@@ -84,18 +86,18 @@ export class FeaturesWorkstackComponent implements OnInit {
 
       const cellData: RowData = {
         cellData: {
-          link: {
+          identificatie: {
             type: 'link',
             label: element.identificatie,
             url: zaakUrl,
           },
           omschrijving: element.omschrijving,
           zaaktype: element.zaaktype.omschrijving,
-          startdate: {
+          startdatum: {
             type: element.startdatum ? 'date' : 'text',
             date: element.startdatum
           },
-          deadline: {
+          einddatum: {
             type: element.deadline ? 'date' : 'text',
             date: element.deadline
           },
