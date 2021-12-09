@@ -38,7 +38,7 @@
     <div class="d-flex flex-column mb-4" *ngIf="isPolling">
       <mat-progress-bar class="mb-2" mode="buffer"></mat-progress-bar>
       <gu-message
-        message="Er wordt gezocht naar nieuwe taken. Zodra een nieuwe taak gereed is om uitgevoerd te worden, zal deze hieronder verschijnen. Dit kan een even duren."
+        message="Er wordt gezocht naar nieuwe taken. Zodra een nieuwe taak gereed is om uitgevoerd te worden, zal deze hieronder verschijnen. Dit kan even duren."
         type="primary"
         class="mb-2"
       ></gu-message>
@@ -73,7 +73,7 @@
               </div>
 
               <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center">
+              <div class="d-flex flex-column justify-content-center align-items-end">
                 <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                   <button gu-button class="mb-2" buttonStyle="primary" size="small" (click)="executeTask(task.id)">
                     Behandelen
@@ -123,7 +123,7 @@
               </div>
 
               <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center">
+              <div class="d-flex flex-column justify-content-center align-items-end">
                 <button gu-button
                         *ngIf="ketenProcessenService.isTaskAssigned(task)"
                         buttonStyle="tertiary"
