@@ -62,6 +62,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isExpanded = false;
   isLoading = true;
   isPolling = false;
+  nPollingFails = 0;
 
   errorMessage: string;
 
@@ -150,13 +151,24 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         setTimeout(() => {
           this.fetchPollProcesses();
         }, 3000)
+
+        // Reset fail counter
+        this.nPollingFails = 0;
       }, () => {
+        // Add to fail counter
+        this.nPollingFails += 1;
 
         // Poll again after 3s if it fails
         setTimeout(errorRes => {
           this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
           this.reportError(errorRes);
-          this.fetchPollProcesses();
+
+          if (this.nPollingFails < 5) {
+            this.fetchPollProcesses();
+          } else {
+            this.isPolling = false;
+            this.nPollingFails = 0;
+          }
         }, 3000)
       });
     }
