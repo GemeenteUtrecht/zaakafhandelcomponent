@@ -22,7 +22,7 @@
 
             <!-- Content -->
             <gu-table *ngIf="zakenTableData.bodyData.length > 0; else noZaken"
-                      (sortOutput)="fetchZaken($event)"
+                      (sortOutput)="sortZaken($event)"
                       [sortable]="true"
                       [table]="zakenTableData"
             ></gu-table>
@@ -48,7 +48,7 @@
             <ng-container *ngIf="taskData?.length > 0; else noTasks" >
               <div class="task-link" *ngFor="let userTask of taskData">
                 <a class="anchor mb-2"
-                   [routerLink]="createZaakLink(userTask.zaak)"
+                   [routerLink]="getZaakPath(userTask.zaak)"
                    [queryParams]="{'user-task': userTask.task.id}"
                 >
                   {{userTask.zaak.identificatie}}: {{userTask.task.name}}
@@ -77,7 +77,7 @@
             <ng-container *ngIf="groupTaskData?.length > 0; else noGroupTasks" >
               <div class="task-link" *ngFor="let groupTask of groupTaskData">
                 <a class="anchor mb-2"
-                   [routerLink]="createZaakLink(groupTask.zaak)"
+                   [routerLink]="getZaakPath(groupTask.zaak)"
                    [queryParams]="{'user-task': groupTask.task.id}"
                 >
                   {{groupTask.zaak.identificatie}}: {{groupTask.task.name}}
@@ -108,7 +108,7 @@
             <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
               <div class="task-link" *ngFor="let activity of activitiesData">
                 <a class="anchor mb-2"
-                   [routerLink]="createZaakLink(activity.zaak)"
+                   [routerLink]="getZaakPath(activity.zaak)"
                    [queryParams]="{'activities': true}"
                 >
                   {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
@@ -135,7 +135,7 @@
             </ng-template>
 
             <!-- Content -->
-            <gu-access-request [data]='accessRequestData' (reload)="reloadWorkstack(3)"></gu-access-request>
+            <gu-access-request [data]='accessRequestData' (reload)="updateContextData(3)"></gu-access-request>
           </div>
         </ng-container>
       </gu-tab>

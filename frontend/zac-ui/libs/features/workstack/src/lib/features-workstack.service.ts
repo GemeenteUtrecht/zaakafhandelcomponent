@@ -21,9 +21,13 @@ export class FeaturesWorkstackService {
 
   getWorkstackZaken(sortValue, sortOrder): Observable<any> {
     const order = sortOrder === 'desc' ? '-' : '';
-    const endpoint = encodeURI(
-      `/api/workstack/cases?ordering=${order}${sortValue}`
-    );
+    let endpoint = '/api/workstack/cases';
+
+    if(sortValue) {
+      endpoint += encodeURI(
+        `?ordering=${order}${sortValue}`
+      );
+    }
     return this.http.Get<any>(endpoint);
   }
 
