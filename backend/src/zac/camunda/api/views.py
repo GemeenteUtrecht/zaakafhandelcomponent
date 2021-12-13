@@ -65,7 +65,7 @@ class ProcessInstanceFetchView(APIView):
         """
         zaak_url = request.GET.get("zaak_url")
         if not zaak_url:
-            err_serializer = ErrorSerializer(data={"detail": "missing zaak_url"})
+            err_serializer = ErrorSerializer({"detail": "missing zaak_url"})
             return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         process_instances = get_process_instances(zaak_url)
