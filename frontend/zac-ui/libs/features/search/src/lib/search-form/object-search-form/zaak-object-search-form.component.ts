@@ -216,9 +216,14 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   objectTypeVersionsAsFieldConfigurations(): FieldConfiguration[] {
     return this.objectTypeVersions.map((objectTypeVersion: ObjectTypeVersion) => {
       const objectType = this.objectTypes.find((o) => o.url === objectTypeVersion.objectType);
+      const properties = objectTypeVersion.jsonSchema.properties;
+
+      if(!properties) {
+        return;
+      }
 
       const choices = Object
-        .keys(objectTypeVersion.jsonSchema.properties)
+        .keys(properties)
         .map((propertyName): Choice => ({
           label: propertyName,
           value: propertyName,
@@ -233,7 +238,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         required: false,
         value: choices[0].value,
       }
-    });
+    }).filter(f=>f);
   }
 
   //
