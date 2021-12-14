@@ -31,7 +31,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
     auth controlled read is performed.
     """
 
-    endpoint = reverse_lazy("activities:activity-list")
+    endpoint = reverse_lazy("activity-list")
 
     @classmethod
     def setUpTestData(cls):
@@ -234,9 +234,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.user = UserFactory.create()
 
     def test_read_not_logged_in(self):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         response = self.client.get(endpoint)
 
@@ -244,9 +242,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_read_logged_in_no_permissions(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -258,9 +254,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_read_logged_in_with_permissions_for_another_zaak(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -283,9 +277,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_read_logged_in_with_permissions(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -308,9 +300,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_read_logged_in_with_atomic_permissions(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(self.user)
         # set up user permissions
         AtomicPermissionFactory.create(
@@ -327,7 +317,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
 
 
 class CreatePermissionTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("activities:activity-list")
+    endpoint = reverse_lazy("activity-list")
 
     @classmethod
     def setUpTestData(cls):
@@ -461,7 +451,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_event_not_logged_in(self):
-        endpoint = reverse_lazy("activities:event-list")
+        endpoint = reverse_lazy("event-list")
 
         response = self.client.post(endpoint)
 
@@ -469,7 +459,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_create_event_logged_in_no_permissions(self, m):
-        endpoint = reverse_lazy("activities:event-list")
+        endpoint = reverse_lazy("event-list")
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -486,7 +476,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_create_event_logged_in_with_permissions_for_other_zaak(self, m):
-        endpoint = reverse_lazy("activities:event-list")
+        endpoint = reverse_lazy("event-list")
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         # set up user permissions
@@ -515,7 +505,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_create_event_logged_in_with_permissions(self, m):
-        endpoint = reverse_lazy("activities:event-list")
+        endpoint = reverse_lazy("event-list")
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         # set up user permissions
@@ -544,7 +534,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_create_event_logged_in_with_atomic_permissions(self, m):
-        endpoint = reverse_lazy("activities:event-list")
+        endpoint = reverse_lazy("event-list")
         activity = ActivityFactory.create(zaak=self.zaak["url"])
         self.client.force_authenticate(user=self.user)
         # set up user permissions
@@ -605,9 +595,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.user = UserFactory.create()
 
     def test_update_activity_not_logged_in(self):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         response = self.client.patch(endpoint, {})
 
@@ -615,9 +603,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_update_activity_logged_in_no_permission(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -630,9 +616,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_update_activity_logged_in_with_permissions_for_other_zaak(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -656,9 +640,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_update_activity_logged_in_with_permissions(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -682,9 +664,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_update_activity_logged_in_with_atomic_permissions(self, m):
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(user=self.user)
         # set up user permissions
         AtomicPermissionFactory.create(

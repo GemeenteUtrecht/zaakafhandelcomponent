@@ -44,7 +44,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_login(self.user)
 
     def test_create_activity_without_assignee(self):
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -58,7 +58,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_with_assignee(self):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -85,7 +85,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_with_group_assignement(self):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -117,7 +117,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         activity = ActivityFactory.create(zaak=ZAAK_URL)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-detail", args=[activity.id])
+        endpoint = reverse("activity-detail", args=[activity.id])
         data = {"user_assignee": self.assignee.username}
 
         response = self.client.patch(endpoint, data)

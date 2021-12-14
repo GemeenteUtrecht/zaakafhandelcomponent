@@ -21,6 +21,7 @@ urlpatterns = [
     ),
     # actual API endpoints
     path("accounts/", include("zac.accounts.api.urls")),
+    path("activities/", include("zac.activities.api.urls")),
     path("forms/", include("zac.forms.api.urls")),
     path("kownsl/", include("zac.contrib.kownsl.urls")),
     path("dowc/", include("zac.contrib.dowc.urls")),

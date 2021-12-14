@@ -54,7 +54,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "url": {
-                "view_name": "activities:activity-detail",
+                "view_name": "activity-detail",
             },
             "zaak": {"validators": (ImmutableFieldValidator(),)},
         }

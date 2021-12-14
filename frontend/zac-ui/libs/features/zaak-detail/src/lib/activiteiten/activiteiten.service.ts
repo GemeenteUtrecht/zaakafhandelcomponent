@@ -56,7 +56,7 @@ export class ActiviteitenService {
    * @returns {Observable<Activity[]>}
    */
   getActivities(mainZaakUrl): Observable<Activity[]> {
-    const endpoint = `/activities/api/activities?zaak=${mainZaakUrl}`;
+    const endpoint = `/api/activities/activities?zaak=${mainZaakUrl}`;
     return this.http.Get<Activity[]>(endpoint);
   }
 
@@ -67,7 +67,7 @@ export class ActiviteitenService {
    * @returns {Observable<any>}
    */
   patchActivity(id, formData): Observable<any> {
-    return this.http.Patch<any>(encodeURI(`/activities/api/activities/${id}`), formData);
+    return this.http.Patch<any>(encodeURI(`/api/activities/activities/${id}`), formData);
   }
 
   /**
@@ -76,7 +76,7 @@ export class ActiviteitenService {
    * @returns {Observable<any>}
    */
   deleteActivity(id): Observable<any> {
-    return this.http.Delete<any>(encodeURI(`/activities/api/activities/${id}`));
+    return this.http.Delete<any>(encodeURI(`/api/activities/activities/${id}`));
   }
 
   /**
@@ -85,7 +85,7 @@ export class ActiviteitenService {
    * @returns {Observable<any>}
    */
   postNewActivity(formData): Observable<any> {
-    return this.http.Post<any>(encodeURI('/activities/api/activities'), formData);
+    return this.http.Post<any>(encodeURI('/api/activities/activities'), formData);
   }
 
   /**
@@ -94,7 +94,7 @@ export class ActiviteitenService {
    * @returns {Observable<any>}
    */
   postNotes(formData): Observable<any> {
-    return this.http.Post<any>(encodeURI('/activities/api/events'), formData);
+    return this.http.Post<any>(encodeURI('/api/activities/events'), formData);
   }
 
   /**
