@@ -130,7 +130,7 @@ export class DocumentToevoegenComponent implements OnInit {
         this.reportError(errorRes);
       })
     } else if (this.updateDocument) {
-      this.documentService.patchDocument(formData, this.bronorganisatie, this.identificatie).subscribe(() => {
+      this.documentService.patchDocument(formData).subscribe(() => {
         this.closeAndResetForm()
         this.isSubmitting = false;
       }, errorRes => {
