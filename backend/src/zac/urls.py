@@ -15,7 +15,6 @@ urlpatterns = [
     path("api/", include("zac.api.urls")),
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),
-    path("contrib/", include("zac.contrib.kadaster.urls")),
     path("scim/v2/", include("zac.accounts.scim.urls")),
     path("", RedirectView.as_view(url=settings.UI_ROOT_URL)),
 ]
