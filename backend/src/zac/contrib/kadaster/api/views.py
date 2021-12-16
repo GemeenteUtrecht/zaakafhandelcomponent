@@ -2,22 +2,24 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
 
 from ..bag import Bag, LocationServer
+from .data import BagResponse, Pand, Verblijfsobject
 from .serializers import (
-    BagLocationSerializer,
+    BagResponseSerializer,
     PandSerializer,
     VerblijfsobjectSerializer,
 )
 
 
 class AdresSearchView(APIView):
-    serializer_class = BagLocationSerializer
+    serializer_class = BagResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
@@ -38,15 +40,8 @@ class AdresSearchView(APIView):
         query = request.GET.get("q")
         if not query:
             return Response(
-                {
-                    "response": {
-                        "numFound": 0,
-                        "maxScore": 0,
-                        "docs": [],
-                    },
-                    "highlighting": {},
-                    "spellcheck": {},
-                }
+                {"detail": "missing query parameter `q`"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         location_server = LocationServer()
@@ -60,7 +55,18 @@ class AdresSearchView(APIView):
             )
             return Response({"error": exc.args[0]}, status=status_code)
 
-        return Response(self.serializer_class(results).data)
+        # Fix ugly spellcheck results wtf
+        if "spellcheck" in results:
+            search_terms = results["spellcheck"]["suggestions"][::2]
+            suggestions = results["spellcheck"]["suggestions"][1::2]
+            results["spellcheck"]["suggestions"] = [
+                {"search_term": search_term, **suggestion}
+                for search_term, suggestion in zip(search_terms, suggestions)
+            ]
+
+        instance = factory(BagResponse, results)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
 
 
 class BagObjectFetchView(APIView):
@@ -75,6 +81,11 @@ class BagObjectFetchView(APIView):
     def get_bag_object(self, address: dict):
         return NotImplementedError(
             "Subclasses of BagObjectFetchView must provide a get_bag_object() method."
+        )
+
+    def get_serializer(self, data: dict):
+        return NotImplementedError(
+            "Subclasses of BagObjectFetchView must provide a get_serializer() method."
         )
 
     def get_bag_data(self, bag_object: dict) -> dict:
@@ -108,7 +119,7 @@ class BagObjectFetchView(APIView):
             },
             "bagObject": bag_data,
         }
-        return Response(self.serializer_class(data).data)
+        return Response(self.get_serializer(data).data)
 
 
 class PandFetchView(BagObjectFetchView):
@@ -133,6 +144,11 @@ class PandFetchView(BagObjectFetchView):
         data = super().get_bag_data(bag_object)
         data["oorspronkelijkBouwjaar"] = bag_object["oorspronkelijkBouwjaar"]
         return data
+
+    def get_serializer(self, data):
+        instance = factory(Pand, data)
+        serializer = self.serializer_class(instance=instance)
+        return serializer
 
     @extend_schema(
         summary=_("Retrieve pand from BAG API."),
@@ -167,6 +183,11 @@ class VerblijfsobjectFetchView(BagObjectFetchView):
         data = super().get_bag_data(bag_object)
         data["oppervlakte"] = bag_object["oppervlakte"]
         return data
+
+    def get_serializer(self, data):
+        instance = factory(Verblijfsobject, data)
+        serializer = self.serializer_class(instance=instance)
+        return serializer
 
     @extend_schema(
         summary=_("Retrieve verblijfsobject from BAG API."),
