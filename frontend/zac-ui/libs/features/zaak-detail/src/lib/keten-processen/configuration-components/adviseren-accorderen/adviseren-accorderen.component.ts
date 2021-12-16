@@ -79,6 +79,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
     return this.assignedUsers.at(index).get('assignees').get('userGroups') as FormControl;
   }
 
+  assignedEmailNotificationControl(index: number): FormControl {
+    return this.assignedUsers.at(index).get('emailNotification') as FormControl;
+  }
+
   assignedDeadlineControl(index: number): FormControl {
     return this.assignedUsers.at(index).get('deadline') as FormControl;
   }
@@ -150,6 +154,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
         users: [[]],
         userGroups: [[]],
       }, { validators: [this.atLeastOneAssignee]}),
+      emailNotification: [false],
       extraStep: ['']
     })
   }
@@ -268,10 +273,12 @@ export class AdviserenAccorderenComponent implements OnChanges {
         const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
         const users = this.assignedUsersControl(i).value ? this.assignedUsersControl(i).value : [];
         const userGroups = this.assignedUserGroupControl(i).value ? this.assignedUserGroupControl(i).value : [];
+        const emailNotification = this.assignedEmailNotificationControl(i).value ? this.assignedEmailNotificationControl(i).value : false;
         return {
           deadline: deadline,
           userAssignees: users,
-          groupAssignees: userGroups
+          groupAssignees: userGroups.groupAssignees,
+          emailNotification: emailNotification
         }
       })
     const toelichting = this.toelichting.value;
