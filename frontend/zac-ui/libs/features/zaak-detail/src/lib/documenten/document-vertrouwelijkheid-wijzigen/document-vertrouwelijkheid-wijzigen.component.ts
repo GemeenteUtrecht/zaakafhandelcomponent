@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {DocumentenService} from '../documenten.service';
 import {Document} from '@gu/models';
@@ -49,10 +49,10 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
     }
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
     if (!this.confidentialityData) {
       this.fetchConfidentiality();
-    } else if (this.confidentialityData && this.selectedDocument) {
+    } else if (this.confidentialityData && (changes.selectedDocument.previousValue !== this.selectedDocument)) {
       this.setConfidentialityType(this.selectedDocument.vertrouwelijkheidaanduiding);
     }
   }
@@ -60,7 +60,8 @@ export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnCha
   setConfidentialityType(value): void {
     this.currentConfidentialityType = this.confidentialityData.find(item =>
       item.label === value
-    )
+    );
+    this.confidentialityTypeControl.patchValue(value);
   }
 
   fetchConfidentiality() {
