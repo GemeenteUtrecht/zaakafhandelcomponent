@@ -83,9 +83,9 @@ class BagObjectFetchView(APIView):
             "Subclasses of BagObjectFetchView must provide a get_bag_object() method."
         )
 
-    def get_serializer(self, data: dict):
+    def get_instance(self, data: dict):
         return NotImplementedError(
-            "Subclasses of BagObjectFetchView must provide a get_serializer() method."
+            "Subclasses of BagObjectFetchView must provide a get_instance() method."
         )
 
     def get_bag_data(self, bag_object: dict) -> dict:
@@ -119,7 +119,9 @@ class BagObjectFetchView(APIView):
             },
             "bagObject": bag_data,
         }
-        return Response(self.get_serializer(data).data)
+        instance = self.get_instance(data)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
 
 
 class PandFetchView(BagObjectFetchView):
@@ -145,10 +147,8 @@ class PandFetchView(BagObjectFetchView):
         data["oorspronkelijkBouwjaar"] = bag_object["oorspronkelijkBouwjaar"]
         return data
 
-    def get_serializer(self, data):
-        instance = factory(Pand, data)
-        serializer = self.serializer_class(instance=instance)
-        return serializer
+    def get_instance(self, data: dict) -> Pand:
+        return factory(Pand, data)
 
     @extend_schema(
         summary=_("Retrieve pand from BAG API."),
@@ -184,10 +184,8 @@ class VerblijfsobjectFetchView(BagObjectFetchView):
         data["oppervlakte"] = bag_object["oppervlakte"]
         return data
 
-    def get_serializer(self, data):
-        instance = factory(Verblijfsobject, data)
-        serializer = self.serializer_class(instance=instance)
-        return serializer
+    def get_instance(self, data: dict) -> Verblijfsobject:
+        return factory(Verblijfsobject, data)
 
     @extend_schema(
         summary=_("Retrieve verblijfsobject from BAG API."),
