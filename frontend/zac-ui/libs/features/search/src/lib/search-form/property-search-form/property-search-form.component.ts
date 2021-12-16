@@ -28,6 +28,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
+  @Output() isLoadingResult: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   searchForm: FormGroup
   search: Search;
@@ -197,6 +198,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
    */
   postSearchZaken(formData: Search, page, sortData?: TableSort) {
     this.isSubmitting = true;
+    this.isLoadingResult.emit(true);
 
     const orderingDirection = sortData?.order === 'desc' ? '-' : '';
     const orderingParam = sortData ? tableHeadMapping[sortData.value] : '';
@@ -206,10 +208,12 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.loadResult.emit(res.results);
       this.resultLength.emit(res.count);
       this.isSubmitting = false;
+      this.isLoadingResult.emit(false);
     }, error => {
       this.hasError = true;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het zoeken."
       this.isSubmitting = false;
+      this.isLoadingResult.emit(false);
     })
   }
 

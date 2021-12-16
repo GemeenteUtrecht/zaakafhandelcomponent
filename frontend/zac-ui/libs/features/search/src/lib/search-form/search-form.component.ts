@@ -22,6 +22,8 @@ import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/li
 export class SearchFormComponent {
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar zaken.'
 
+  isLoading: boolean;
+
   @Input() sortData: TableSort;
   @Input() pageData: PageEvent;
 
@@ -43,6 +45,7 @@ export class SearchFormComponent {
    */
   searchObjects() {
     this.loadResult.emit([]);
+    this.resultLength.emit(0);
   }
 
   /**
@@ -55,8 +58,13 @@ export class SearchFormComponent {
       object: zaakObject.url
     }
 
+    this.isLoading = true;
     this.searchService.searchZaken(search, page).subscribe(
-      (data) => this.loadResult.emit(data.results as Zaak[]),
+      (data) => {
+        this.isLoading = false;
+        this.loadResult.emit(data.results as Zaak[]);
+        this.resultLength.emit(data.count);
+      },
       this.reportError.bind(this)
     );
   }

@@ -1,5 +1,10 @@
+@import './base/colors/colors';
+
 .gu-search {
   padding-top: 6px;
+  .search-form-container {
+    border-bottom: 1px solid $border-grey;
+  }
 }
 
 

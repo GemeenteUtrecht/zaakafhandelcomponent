@@ -16,7 +16,7 @@ export class FeaturesSearchComponent implements OnInit{
   mapGeometries: MapGeometry[] = [];
   mapMarkers: MapMarker[] = [];
 
-  resultData: Zaak[] = [];
+  resultData: Zaak[];
   resultLength: number;
   sortData: TableSort;
   pageData: PageEvent;

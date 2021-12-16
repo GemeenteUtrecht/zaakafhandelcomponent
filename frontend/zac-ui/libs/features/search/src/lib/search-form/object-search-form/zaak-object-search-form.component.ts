@@ -260,25 +260,28 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   submitForm(data): void {
     this.searchObjects.emit();
+    if (data.geometry) {
+      this.isLoading = true;
+      const geometry: Geometry = JSON.parse(data.geometry);
 
-    const geometry: Geometry = JSON.parse(data.geometry);
+      this.zaakObjects = [];
+      this.showZaakObjecten = true;
 
-    this.zaakObjects = [];
-    this.showZaakObjecten = true;
+      this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
+        (zaakObjects: ZaakObject[]) => {
+          this.isLoading = false;
+          this.zaakObjects = zaakObjects;
 
-    this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
-      (zaakObjects: ZaakObject[]) => {
-        this.zaakObjects = zaakObjects;
+          const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
+              onClick: (event) => this._selectZaakObject(event, zaakObject),
+            })
+          ).filter((mapMarker) => mapMarker);
 
-        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
-            onClick: (event) => this._selectZaakObject(event, zaakObject),
-          })
-        ).filter((mapMarker) => mapMarker);
-
-        this.mapMarkers.emit(activeMapMarkers);
-      },
-      this.reportError.bind(this),
-    );
+          this.mapMarkers.emit(activeMapMarkers);
+        },
+        this.reportError.bind(this),
+      );
+    }
   }
 
   /**
@@ -300,6 +303,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
+    this.isLoading = false;
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }

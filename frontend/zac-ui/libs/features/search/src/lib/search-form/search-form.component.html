@@ -1,3 +1,4 @@
+<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 <div class="row">
   <div class="col-xl-12">
     <gu-tab-group>
@@ -6,6 +7,7 @@
         <div class="mt-4">
           <gu-property-search-form [pageData]="pageData"
                                    [sortData]="sortData"
+                                   (isLoadingResult)="isLoading = $event"
                                    (loadResult)="loadResult.emit($event)"
                                    (resultLength)="resultLength.emit($event)"></gu-property-search-form>
         </div>
