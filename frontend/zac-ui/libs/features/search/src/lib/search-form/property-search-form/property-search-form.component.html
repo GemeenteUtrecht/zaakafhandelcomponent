@@ -1,3 +1,4 @@
+<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 <form [formGroup]="searchForm">
   <div class="row">
     <div class="col-12">
@@ -69,7 +70,7 @@
   </div>
 
   <div class="row pl-3">
-    <div class="col-lg-6 mt-2">
+    <div class="col-12 mt-2">
       <gu-checkbox class="d-inline-block mr-1"
                    [control]="saveReportControl"
                    (change)="onCheckboxChange()">
@@ -85,7 +86,7 @@
       </gu-tooltip>
     </div>
 
-    <div *ngIf="showReportNameField" class="col-lg-6 mt-2">
+    <div *ngIf="showReportNameField" class="col-12 col-md-8 mt-2">
       <gu-input type="text"
                 [control]="queryNameControl"
                 label="Rapportagenaam"
