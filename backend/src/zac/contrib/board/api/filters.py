@@ -13,6 +13,7 @@ class BoardItemFilter(filters.FilterSet):
         field_name="column__board__slug", help_text=_("Slug of the board")
     )
     zaak_url = filters.CharFilter(field_name="object", help_text=_("Url of the zaak"))
+    object = filters.CharFilter(field_name="object", help_text=_("Url of the object"))
 
     class Meta:
         model = BoardItem

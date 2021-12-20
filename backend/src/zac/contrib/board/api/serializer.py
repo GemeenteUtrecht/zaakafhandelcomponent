@@ -26,7 +26,9 @@ class BoardSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
-    board = BoardSerializer(read_only=True, help_text=_("Board of the item"))
+    board = BoardSerializer(
+        source="column.board", read_only=True, help_text=_("Board of the item")
+    )
     column_uuid = serializers.SlugRelatedField(
         queryset=BoardColumn.objects.all(),
         source="column",
