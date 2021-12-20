@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -124,6 +124,22 @@ class BagObjectFetchView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema_view(
+    get=extend_schema(
+        summary=_("Retrieve pand from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "id",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description=_(
+                    "The ID of the BAG object. Can be found using the BAG address suggestions."
+                ),
+                required=True,
+            )
+        ],
+    )
+)
 class PandFetchView(BagObjectFetchView):
     serializer_class = PandSerializer
 
@@ -150,8 +166,10 @@ class PandFetchView(BagObjectFetchView):
     def get_instance(self, data: dict) -> Pand:
         return factory(Pand, data)
 
-    @extend_schema(
-        summary=_("Retrieve pand from BAG API."),
+
+@extend_schema_view(
+    get=extend_schema(
+        summary=_("Retrieve verblijfsobject from BAG API."),
         parameters=[
             OpenApiParameter(
                 "id",
@@ -164,10 +182,7 @@ class PandFetchView(BagObjectFetchView):
             )
         ],
     )
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
-
-
+)
 class VerblijfsobjectFetchView(BagObjectFetchView):
     serializer_class = VerblijfsobjectSerializer
 
@@ -186,20 +201,3 @@ class VerblijfsobjectFetchView(BagObjectFetchView):
 
     def get_instance(self, data: dict) -> Verblijfsobject:
         return factory(Verblijfsobject, data)
-
-    @extend_schema(
-        summary=_("Retrieve verblijfsobject from BAG API."),
-        parameters=[
-            OpenApiParameter(
-                "id",
-                OpenApiTypes.STR,
-                OpenApiParameter.QUERY,
-                description=_(
-                    "The ID of the BAG object. Can be found using the BAG address suggestions."
-                ),
-                required=True,
-            )
-        ],
-    )
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
