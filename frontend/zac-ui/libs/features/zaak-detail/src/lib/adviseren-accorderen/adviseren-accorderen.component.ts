@@ -92,7 +92,7 @@ export class AdviserenAccorderenComponent implements OnInit {
         this.reviewRequestSummaries = reviewRequestSummaries;
         this.fetchReviewRequestDetails(reviewRequestSummaries);
       },
-      this.reportError,
+      this.reportError.bind(this),
       () => this.isSummariesLoading = false,
     );
   }
@@ -110,7 +110,7 @@ export class AdviserenAccorderenComponent implements OnInit {
 
     this.reviewRequestsService.retrieveReviewRequestDetailsBatch(relevantUuids).subscribe(
       (reviewRequesetDetails) => this.reviewRequestDetails[reviewRequesetDetails.id] = reviewRequesetDetails,
-      this.reportError,
+      this.reportError.bind(this),
       () => this.isDetailsLoading = false,
     );
   }
