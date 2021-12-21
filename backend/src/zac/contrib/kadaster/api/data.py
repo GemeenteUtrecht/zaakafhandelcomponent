@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, List, Union
+from typing import List
 
 from zgw_consumers.api_models.base import Model
 
@@ -35,7 +35,7 @@ class BagLocation(Model):
 
 
 @dataclass
-class BagResponse(Model):
+class AddressSearchResponse(Model):
     response: BagLocation
     spellcheck: SpellCheck
 

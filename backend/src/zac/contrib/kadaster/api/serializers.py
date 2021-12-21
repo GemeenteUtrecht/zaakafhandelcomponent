@@ -1,13 +1,12 @@
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from .data import (
     Address,
+    AddressSearchResponse,
     BagLocation,
-    BagResponse,
     BaseBagData,
     Pand,
     PandBagData,
@@ -103,7 +102,7 @@ class BagLocationSerializer(APIModelSerializer):
         }
 
 
-class BagResponseSerializer(APIModelSerializer):
+class AddressSearchResponseSerializer(APIModelSerializer):
     response = BagLocationSerializer(
         required=False,
     )
@@ -113,7 +112,7 @@ class BagResponseSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = BagResponse
+        model = AddressSearchResponse
         fields = (
             "response",
             "spellcheck",
