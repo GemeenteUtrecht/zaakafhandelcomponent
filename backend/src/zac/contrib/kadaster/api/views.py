@@ -3,23 +3,23 @@ from django.utils.translation import gettext_lazy as _
 import requests
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import permissions, status
+from rest_framework import permissions, status, serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zgw_consumers.api_models.base import factory
 
 from ..bag import Bag, LocationServer
-from .data import BagResponse, Pand, Verblijfsobject
+from .data import AddressSearchResponse, Pand, Verblijfsobject
 from .serializers import (
-    BagResponseSerializer,
+    AddressSearchResponseSerializer,
     PandSerializer,
     VerblijfsobjectSerializer,
 )
 
 
 class AdresSearchView(APIView):
-    serializer_class = BagResponseSerializer
+    serializer_class = AddressSearchResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
@@ -39,10 +39,7 @@ class AdresSearchView(APIView):
     def get(self, request: Request, *args, **kwargs):
         query = request.GET.get("q")
         if not query:
-            return Response(
-                {"detail": "missing query parameter `q`"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise serializers.ValidationError(_("Missing query parameter 'q'"))
 
         location_server = LocationServer()
         try:
@@ -64,7 +61,7 @@ class AdresSearchView(APIView):
                 for search_term, suggestion in zip(search_terms, suggestions)
             ]
 
-        instance = factory(BagResponse, results)
+        instance = factory(AddressSearchResponse, results)
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data)
 
