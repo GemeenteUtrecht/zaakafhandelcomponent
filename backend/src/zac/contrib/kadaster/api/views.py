@@ -1,31 +1,45 @@
+from django.utils.translation import gettext_lazy as _
+
 import requests
-from rest_framework import permissions, status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import permissions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
 
 from ..bag import Bag, LocationServer
+from .data import AddressSearchResponse, Pand, Verblijfsobject
+from .serializers import (
+    AddressSearchResponseSerializer,
+    PandSerializer,
+    VerblijfsobjectSerializer,
+)
 
 
 class AdresSearchView(APIView):
+    serializer_class = AddressSearchResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    schema = None
 
+    @extend_schema(
+        summary=_("List BAG address suggestions"),
+        parameters=[
+            OpenApiParameter(
+                "q",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description=_(
+                    "The search query. The Solr-syntax can be used, for example: combining searches with `and` or using double quotes for sequenced searches. Searches are allowed to be incomplete and you can use synonyms."
+                ),
+                required=True,
+            )
+        ],
+    )
     def get(self, request: Request, *args, **kwargs):
         query = request.GET.get("q")
         if not query:
-            return Response(
-                {
-                    "response": {
-                        "numFound": 0,
-                        "start": 0,
-                        "maxScore": 0,
-                        "docs": [],
-                    },
-                    "highlighting": {},
-                    "spellcheck": {},
-                }
-            )
+            raise serializers.ValidationError(_("Missing query parameter 'q'"))
 
         location_server = LocationServer()
         try:
@@ -38,12 +52,22 @@ class AdresSearchView(APIView):
             )
             return Response({"error": exc.args[0]}, status=status_code)
 
-        return Response(results)
+        # Fix ugly spellcheck results wtf
+        if "spellcheck" in results:
+            search_terms = results["spellcheck"]["suggestions"][::2]
+            suggestions = results["spellcheck"]["suggestions"][1::2]
+            results["spellcheck"]["suggestions"] = [
+                {"search_term": search_term, **suggestion}
+                for search_term, suggestion in zip(search_terms, suggestions)
+            ]
+
+        instance = factory(AddressSearchResponse, results)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
 
 
 class BagObjectFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
-    schema = None
 
     def get_address(self, address_id: str) -> dict:
         location_server = LocationServer()
@@ -54,6 +78,11 @@ class BagObjectFetchView(APIView):
     def get_bag_object(self, address: dict):
         return NotImplementedError(
             "Subclasses of BagObjectFetchView must provide a get_bag_object() method."
+        )
+
+    def get_instance(self, data: dict):
+        return NotImplementedError(
+            "Subclasses of BagObjectFetchView must provide a get_instance() method."
         )
 
     def get_bag_data(self, bag_object: dict) -> dict:
@@ -87,12 +116,29 @@ class BagObjectFetchView(APIView):
             },
             "bagObject": bag_data,
         }
+        instance = self.get_instance(data)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
 
-        return Response(data)
 
-
+@extend_schema_view(
+    get=extend_schema(
+        summary=_("Retrieve pand from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "id",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description=_(
+                    "The ID of the BAG object. Can be found using the BAG address suggestions."
+                ),
+                required=True,
+            )
+        ],
+    )
+)
 class PandFetchView(BagObjectFetchView):
-    schema = None
+    serializer_class = PandSerializer
 
     def get_bag_object(self, address):
         vo_id = address["adresseerbaarobject_id"]
@@ -114,9 +160,28 @@ class PandFetchView(BagObjectFetchView):
         data["oorspronkelijkBouwjaar"] = bag_object["oorspronkelijkBouwjaar"]
         return data
 
+    def get_instance(self, data: dict) -> Pand:
+        return factory(Pand, data)
 
+
+@extend_schema_view(
+    get=extend_schema(
+        summary=_("Retrieve verblijfsobject from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "id",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description=_(
+                    "The ID of the BAG object. Can be found using the BAG address suggestions."
+                ),
+                required=True,
+            )
+        ],
+    )
+)
 class VerblijfsobjectFetchView(BagObjectFetchView):
-    schema = None
+    serializer_class = VerblijfsobjectSerializer
 
     def get_bag_object(self, address):
         vo_id = address["adresseerbaarobject_id"]
@@ -130,3 +195,6 @@ class VerblijfsobjectFetchView(BagObjectFetchView):
         data = super().get_bag_data(bag_object)
         data["oppervlakte"] = bag_object["oppervlakte"]
         return data
+
+    def get_instance(self, data: dict) -> Verblijfsobject:
+        return factory(Verblijfsobject, data)
