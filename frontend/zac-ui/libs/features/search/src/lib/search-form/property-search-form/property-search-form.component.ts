@@ -2,10 +2,9 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Zaak, TableSort } from '@gu/models';
+import {Zaak, TableSort, ZaaktypeEigenschap} from '@gu/models';
 import { Search } from '../../../models/search';
 import { Result } from '../../../models/zaaktype';
-import { ZaaktypeEigenschap } from '../../../models/zaaktype-eigenschappen';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
