@@ -1,7 +1,8 @@
-import {Component, Input, OnInit, OnChanges} from '@angular/core';
-import {EigenschapWaarde, Zaak} from '@gu/models';
+import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
+import {EigenschapWaarde, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
+import {SearchService} from '../../../../search/src/lib/search.service';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
@@ -37,14 +38,19 @@ export class InformatieComponent implements OnInit, OnChanges {
   /** @type {Zaak} The zaak object. */
   zaak: Zaak = null;
 
+  /** @type {ZaaktypeEigenschap[]} The zaaktype eigenschappen for the zaak. */
+  zaaktypeEigenschappen: ZaaktypeEigenschap[] = []
+
   /**
    * Constructor method.
    * @param metaService
+   * @param {SearchService} searchService
    * @param {SnackbarService} snackbarService
    * @param {ZaakService} zaakService
    */
   constructor(
     private metaService: MetaService,
+    private searchService: SearchService,
     private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
@@ -58,7 +64,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Returns the field configurations for the form..
    */
   get form(): FieldConfiguration[] {
-    return [
+     return [
       ...this.caseDetailsFieldConfigurations,
       ...this.propertyFieldConfigurations,
       {
@@ -107,21 +113,28 @@ export class InformatieComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Returns the field configurations for the (readonly) properties.
+   */
+  get propertyFieldConfigurations(): FieldConfiguration[] {
+    return this.zaaktypeEigenschappen.map((zaaktypeEigenschap: ZaaktypeEigenschap): FieldConfiguration => {
+      const property = this.properties.find((p: EigenschapWaarde) => p.eigenschap.naam === zaaktypeEigenschap.name)
+      const value = (property?.value) ? String(property.value) : null;
+
+      return {
+        label: zaaktypeEigenschap.name,
+        placeholder: '-',
+        readonly: false,
+        required: false,
+        value: value,
+      };
+    })
+  }
+
+  /**
    * @type {boolean} Whether this component is loading.
    * */
   get isLoading(): boolean {
     return this.isCaseAPILoading || Boolean(this.isPropertyAPILoading);
-  }
-
-  /**
-   * Returns the field configurations for the (readonly) properties.
-   */
-  get propertyFieldConfigurations(): FieldConfiguration[] {
-    return this.properties.map((property: EigenschapWaarde) => ({
-      label: property.eigenschap.naam,
-      readonly: false,
-      value: String(property.value),
-    }))
   }
 
   //
@@ -159,10 +172,7 @@ export class InformatieComponent implements OnInit, OnChanges {
         this.properties = data;
         this.isCaseAPILoading = false;
 
-      }, (error) => {
-        console.error(error);
-        this.isCaseAPILoading = false;
-      })
+      }, this.reportError.bind(this))
   }
 
   /**
@@ -187,12 +197,23 @@ export class InformatieComponent implements OnInit, OnChanges {
       (zaak: Zaak) => {
         this.zaak = zaak;
         this.isCaseAPILoading = false;
-      },
-      (error: any) => {
-        console.error(error);
-        this.isCaseAPILoading = false;
-      }
+
+        this.fetchZaakTypeEigenschappen(zaak);
+      }, this.reportError.bind(this)
     );
+  }
+
+  /**
+   * Updates this.zaakData with latest values from API.
+   */
+  fetchZaakTypeEigenschappen(zaak: Zaak) {
+    this.isCaseAPILoading = true;
+    this.searchService.getZaaktypeEigenschappen(zaak.zaaktype.catalogus, zaak.zaaktype.omschrijving).subscribe(
+      (zaaktypeEigenschappen: ZaaktypeEigenschap[]) => {
+        this.zaaktypeEigenschappen = zaaktypeEigenschappen;
+        this.isCaseAPILoading = false;
+      }, this.reportError.bind(this)
+    )
   }
 
   //

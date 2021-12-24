@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ZaaktypeEigenschap } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { ZaaktypeEigenschap } from '../models/zaaktype-eigenschappen';
 import { Zaaktype } from '../models/zaaktype';
 import { Search } from '../models/search';
 import { ReportQuery } from '../models/report';
