@@ -268,11 +268,23 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
 
 
 class AddZaakRelationSerializer(serializers.Serializer):
-    relation_zaak = serializers.URLField(required=True)
-    aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
-    main_zaak = serializers.URLField(required=True)
+    relation_zaak = serializers.URLField(
+        required=True,
+        help_text=_("The ZAAK that is to be related to the main ZAAK.")
+    )
+    aard_relatie = serializers.ChoiceField(
+        required=True,
+        choices=AardRelatieChoices,
+        help_text=_("The nature of the relationship between the main ZAAK and the related ZAAK.")
+    )
+    main_zaak = serializers.URLField(
+        required=True,
+        help_text=_("The URL-reference to the main ZAAK.")
+    )
     aard_relatie_omgekeerde_richting = serializers.ChoiceField(
-        required=True, choices=AardRelatieChoices
+        required=True,
+        choices=AardRelatieChoices,
+        help_text=_("The nature of the reverse relationship.")
     )
 
     def validate(self, data):
