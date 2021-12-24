@@ -304,7 +304,7 @@ class CreateZakenRelationTests(ClearCachesMixin, APITestCase):
                 "relation_zaak": f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",  # Relate the zaak to itself
                 "main_zaak": f"{zaak_root}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
                 "aard_relatie": "vervolg",
-                "aard_relatie_omgekeerde_richting": "onderwerp"
+                "aard_relatie_omgekeerde_richting": "onderwerp",
             },
         )
 
