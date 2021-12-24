@@ -271,14 +271,21 @@ class AddZaakRelationSerializer(serializers.Serializer):
     relation_zaak = serializers.URLField(required=True)
     aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
     main_zaak = serializers.URLField(required=True)
+    aard_relatie_omgekeerde_richting = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
 
     def validate(self, data):
-        """Check that the main zaak and the relation are not the same"""
+        """Check that the main zaak and the relation are not the same nor have the same relationship."""
 
         if data["relation_zaak"] == data["main_zaak"]:
             raise serializers.ValidationError(
                 _("Zaken kunnen niet met zichzelf gerelateerd worden.")
             )
+        
+        if data["aard_relatie"] == data["aard_relatie_omgekeerde_richting"]:
+            raise serializers.ValidationError(
+                _("De aard van de zaak relaties kunnen niet hetzelfde zijn.")
+            )
+
         return data
 
 
