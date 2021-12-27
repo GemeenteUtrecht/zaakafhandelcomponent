@@ -265,22 +265,26 @@ export class AdviserenAccorderenComponent implements OnChanges {
    */
   submitForm() {
     this.isSubmitting = true;
+
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
       .filter(v => v !== null);
+
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
         const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
         const users = this.assignedUsersControl(i).value ? this.assignedUsersControl(i).value : [];
         const userGroups = this.assignedUserGroupControl(i).value ? this.assignedUserGroupControl(i).value : [];
         const emailNotification = this.assignedEmailNotificationControl(i).value ? this.assignedEmailNotificationControl(i).value : false;
+
         return {
           deadline: deadline,
           userAssignees: users,
-          groupAssignees: userGroups.groupAssignees,
+          groupAssignees: userGroups,
           emailNotification: emailNotification
         }
       })
+
     const toelichting = this.toelichting.value;
     const formData = {
       form: this.taskContextData.form,
@@ -288,6 +292,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
       selectedDocuments: selectedDocuments,
       toelichting: toelichting
     };
+
     this.putForm(formData);
   }
 
