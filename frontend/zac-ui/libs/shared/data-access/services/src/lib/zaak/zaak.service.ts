@@ -1,4 +1,4 @@
-import {HttpParams} from "@angular/common/http";
+import {HttpParams, HttpResponse} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
@@ -147,6 +147,16 @@ export class ZaakService {
   createAccessRequest(formData): Observable<any> {
     const endpoint = encodeURI("/api/accounts/access-requests");
     return this.http.Post<any>(endpoint, formData);
+  }
+
+  /**
+   * Searches zaken (cases) based on identificatie.
+   * @param {string} identificatie (Partial) identificatie of zaak (case).
+   * @return {Observable}
+   */
+  searchZaken(identificatie: string): Observable<Zaak[]> {
+    const endpoint = encodeURI(`/api/search/zaken/autocomplete?identificatie=${identificatie}`);
+    return this.http.Get<Zaak[]>(endpoint);
   }
 
   /**

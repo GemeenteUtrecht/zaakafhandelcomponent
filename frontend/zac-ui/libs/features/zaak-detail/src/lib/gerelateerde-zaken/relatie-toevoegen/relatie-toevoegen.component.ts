@@ -1,9 +1,7 @@
 import {Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
-import {Observable} from 'rxjs';
-import {HttpResponse} from '@angular/common/http';
-import {ApplicationHttpClient, ZaakService} from '@gu/services';
-import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
-import {ModalService, SnackbarService} from '@gu/components';
+import {Choice, Field, FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
+import {Zaak} from '@gu/models';
+import {ZaakService} from '@gu/services';
 
 @Component({
   selector: 'gu-relatie-toevoegen',
@@ -11,13 +9,15 @@ import {ModalService, SnackbarService} from '@gu/components';
   styleUrls: ['./relatie-toevoegen.component.scss']
 })
 export class RelatieToevoegenComponent implements OnInit {
-
   @Input() mainZaakUrl: string;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
+  form: FieldConfiguration[];
+  isLoading: boolean;
+
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
-  readonly AARD_RELATIES = [
+  readonly AARD_RELATIES: Choice[] = [
     {
       value: 'vervolg',
       label: 'Vervolg'
@@ -32,64 +32,93 @@ export class RelatieToevoegenComponent implements OnInit {
     }
   ];
 
-  zaken: any = []
-  addRelationForm: FormGroup;
-
-  isSubmitting: boolean;
-
+  /**
+   * Constructor method.
+   * @param {ModalService} modalService
+   * @param {SnackbarService} snackbarService
+   * @param {ZaakService} zaakService
+   */
   constructor(
-    private http: ApplicationHttpClient,
-    private fb: FormBuilder,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
   }
 
+  //
+  // Angular lifecycle.
+  //
+
   ngOnInit(): void {
-    this.addRelationForm = this.fb.group({
-      identificatie: this.fb.control("", Validators.required),
-      aard_relaties: this.fb.control("", Validators.required),
-    })
+    this.form = this.getForm();
   }
 
-  get identificatieControl(): FormControl {
-    return this.addRelationForm.controls['identificatie'] as FormControl;
+  //
+  // Context.
+  //
+
+  /**
+   * Returns the field configurations for the form..
+   */
+  getForm(): FieldConfiguration[] {
+    return [
+      {
+        label: 'Identificatie',
+        name: 'relation_zaak',
+        required: true,
+        choices: [],
+        onSearch: this.updateZaakChoices.bind(this)
+      },
+      {
+        label: 'Aard relatie',
+        name: 'aard_relatie',
+        required: true,
+        choices: this.AARD_RELATIES
+      },
+      {
+        label: 'Aard relatie (omgekeerd)',
+        name: 'aard_relatie_omgekeerde_richting',
+        required: true,
+        choices: this.AARD_RELATIES,
+        value: 'onderwerp',
+      },
+      {
+        name: 'main_zaak',
+        type: 'hidden',
+        value: this.mainZaakUrl,
+      },
+    ]
   }
 
-  get aardRelatiesControl(): FormControl {
-    return this.addRelationForm.controls['aard_relaties'] as FormControl;
-  }
-
-  handleSearch(searchValue) {
-    if (searchValue) {
-      this.getSearchZaken(searchValue.toUpperCase()).subscribe(
-        (res) => this.zaken = res,
-        this.reportError.bind(this)
-      );
+  /**
+   * Updates the zaak (case) selector field (field) with choices based on input.
+   * @param {string} identificatie (Partial) identificatie of zaak (case).
+   * @param {Field} field
+   */
+  updateZaakChoices(identificatie: string, field: Field): void {
+    if(!identificatie) {
+      return
     }
+
+    this.zaakService.searchZaken(identificatie).subscribe(
+      (zaken: Zaak[]) => {
+        const choices = zaken.map((zaak: Zaak) => ({value: zaak.url, label: zaak.identificatie}));
+        return field.choices = choices;
+      },
+      this.reportError.bind(this)
+    )
   }
 
-  getSearchZaken(searchValue): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/search/zaken/autocomplete?identificatie=${searchValue}`);
-    return this.http.Get<any>(endpoint);
-  }
+  //
+  // Events.
+  //
 
-  submitForm(): void {
-    let formData;
-
-    formData = {
-      main_zaak: this.mainZaakUrl,
-      relation_zaak: this.addRelationForm.controls['identificatie'].value,
-      aard_relatie: this.addRelationForm.controls['aard_relaties'].value
-    }
-
-    this.isSubmitting = true;
+  submitForm(formData): void {
+    this.isLoading = true;
     this.zaakService.addRelatedCase(formData).subscribe(() => {
       this.reload.emit(true);
       this.modalService.close("gerelateerde-zaken-modal");
-      this.addRelationForm.reset();
-      this.isSubmitting = false;
+      this.isLoading = false;
     }, this.reportError.bind(this))
   }
 
@@ -104,5 +133,6 @@ export class RelatieToevoegenComponent implements OnInit {
   reportError(error: any): void {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
+    this.isLoading = false;
   }
 }

@@ -138,7 +138,7 @@ export class FormComponent implements OnInit, OnChanges {
 
     this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
     this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
-    this.fields = this.getFields();
+    this.updateFields();
   }
 
   /**
@@ -152,6 +152,25 @@ export class FormComponent implements OnInit, OnChanges {
         return field
       })
       .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evalutate activeWhen.
+  }
+
+  updateFields() {
+    const fields = this.getFields();
+
+    if(!this.fields) {
+      this.fields = fields;
+      return
+    }
+
+    fields.forEach((field) => {
+      const otherField = this.fields.find((f) => f.name === field.name)
+
+      if(!otherField) {
+        this.fields.push(field)
+      }
+
+      Object.assign(otherField, field);
+    });
   }
 
   //
@@ -169,16 +188,19 @@ export class FormComponent implements OnInit, OnChanges {
 
     if (this.editable === 'toggle') {
       this.edit = !this.edit;
-      this.fields = this.getFields();
+      this.updateFields();
     }
   }
 
   /**
    * Gets called when input is changed.
    */
-  inputChanged() {
-    this.fields = this.getFields();
+  inputChanged(event, field: Field) {
+    this.updateFields();
     this.formChange.emit(this.formGroup.getRawValue())
+    if (field.onChange) {
+      field.onChange(event, field);
+    }
   }
 
   /**
@@ -189,8 +211,17 @@ export class FormComponent implements OnInit, OnChanges {
   selectChanged(choice: Choice, field: Field): void {
     field.control.markAsDirty();
     field.control.markAsTouched();
-    this.fields = this.getFields();
+    this.updateFields();
     this.formChange.emit(this.formGroup.getRawValue())
+    if(field.onChange) {
+      field.onChange(choice, field)
+    }
+  }
+
+  selectSearch(term: string, field: Field): void {
+    if(field.onSearch) {
+      field.onSearch(term, field);
+    }
   }
 
 
