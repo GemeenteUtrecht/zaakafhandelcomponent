@@ -35,13 +35,12 @@ def catch_bag_zdserror(func: callable):
         try:
             return func(*args, **kwargs)
         except ClientError as exc:
-            detail = exc.args[0].get("title", "Something went wrong.")
             status_code = exc.args[0].get(
                 "status", status.HTTP_500_INTERNAL_SERVER_ERROR
             )
             code = exc.args[0].get("code", "error")
             raise KadasterAPIException(
-                detail=detail, code=code, status_code=status_code
+                detail=exc.args[0], code=code, status_code=status_code
             )
 
     return wrapped

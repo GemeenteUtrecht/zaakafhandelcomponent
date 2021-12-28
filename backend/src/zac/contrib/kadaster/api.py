@@ -31,7 +31,6 @@ def get_bag_client() -> ZGWClient:
 
 
 @optional_service
-@cache("address_suggestions:{query}", timeout=A_DAY)
 def get_address_suggestions(query: str) -> List[AddressSearchResponse]:
     client = get_location_server_client()
     results = client.suggest({"q": query, "fq": "bron:bag AND type:adres"})

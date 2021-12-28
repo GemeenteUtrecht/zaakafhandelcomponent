@@ -385,7 +385,14 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 404)
         results = response.json()
-        self.assertEqual(results, {"detail": "Opgevraagde resource bestaat niet."})
+        self.assertEqual(
+            results,
+            {
+                "status": "404",
+                "title": "Opgevraagde resource bestaat niet.",
+                "code": "notFound",
+            },
+        )
 
     def test_fail_get_verblijfsobject(self, m):
         # Mock locatie server lookup response
