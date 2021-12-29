@@ -272,7 +272,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
         iconSize: iconSize,
         shadowAnchor: (mapMarker.shadowAnchor || [14, 62]) as L.PointExpression,
         shadowSize: (mapMarker.shadowSize || [50,64]) as L.PointExpression,
-        shadowUrl: mapMarker.shadowUrl || `${LEAFLET_ASSETS}marker-shadow.png`,
+        shadowUrl: mapMarker.shadowUrl || `assets/images/map/marker-shadow.png`,
       })
 
       const markerOptions = {

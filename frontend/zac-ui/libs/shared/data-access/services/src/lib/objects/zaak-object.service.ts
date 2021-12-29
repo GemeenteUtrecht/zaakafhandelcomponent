@@ -108,7 +108,7 @@ export class ZaakObjectService {
       coordinates: zaakObjectGeometry?.coordinates?.length > 1
         ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
         : [],
-      iconUrl: 'assets/map/marker-icon-red.png',
+      iconUrl: 'assets/images/map/marker-icon-red.png',
 
     } as MapMarker : null;
 
