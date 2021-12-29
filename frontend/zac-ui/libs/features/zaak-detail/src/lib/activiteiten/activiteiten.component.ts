@@ -213,10 +213,12 @@ export class ActiviteitenComponent implements OnInit {
   fetchActivities() {
     if (this.mainZaakUrl) {
       this.actvititeitenService.getActivities(this.mainZaakUrl)
-        .pipe(first())
         .subscribe(res => {
           this.activityData = res;
           this.createForm();
+        }, error => {
+          console.error(error);
+          this.reportError(error)
         });
     }
   }

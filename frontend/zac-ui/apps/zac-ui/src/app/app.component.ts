@@ -21,10 +21,10 @@ export class AppComponent implements OnInit {
   readonly errorMessage: 'Er is een fout opgetreden bij het laden van de applicatie.'
 
   /** @type {string} The (relative) url to the logo. */
-  logoUrl = 'assets/gemeente-utrecht-logo.svg';
+  logoUrl = 'assets/images/gemeente-utrecht-logo.svg';
 
   /** @type {string} The (relative) url to the mobile logo. */
-  mobileLogoUrl = 'assets/schild.png';
+  mobileLogoUrl = 'assets/images/schild.png';
 
   /** @type {string} The string representation of the current user. */
   currentUser: string;
