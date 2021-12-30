@@ -40,7 +40,7 @@
           [required]="field.required"
           [value]="field.control.value"
           [autocomplete]="field.autocomplete"
-          (change)="inputChanged()"
+          (change)="inputChanged($event, field)"
           class="mb-4"
         ></gu-input>
         <!-- End regular field. -->
@@ -57,6 +57,7 @@
           bindLabel="label"
           bindValue="value"
           (change)="selectChanged($event, field)"
+          (search)="selectSearch($event, field)"
           class="mb-4"
         ></gu-multiselect>
         <!-- End select field. -->

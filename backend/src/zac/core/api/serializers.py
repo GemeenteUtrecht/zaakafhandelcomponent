@@ -268,17 +268,38 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
 
 
 class AddZaakRelationSerializer(serializers.Serializer):
-    relation_zaak = serializers.URLField(required=True)
-    aard_relatie = serializers.ChoiceField(required=True, choices=AardRelatieChoices)
-    main_zaak = serializers.URLField(required=True)
+    relation_zaak = serializers.URLField(
+        required=True, help_text=_("The ZAAK that is to be related to the main ZAAK.")
+    )
+    aard_relatie = serializers.ChoiceField(
+        required=True,
+        choices=AardRelatieChoices,
+        help_text=_(
+            "The nature of the relationship between the main ZAAK and the related ZAAK."
+        ),
+    )
+    main_zaak = serializers.URLField(
+        required=True, help_text=_("The URL-reference to the main ZAAK.")
+    )
+    aard_relatie_omgekeerde_richting = serializers.ChoiceField(
+        required=True,
+        choices=AardRelatieChoices,
+        help_text=_("The nature of the reverse relationship."),
+    )
 
     def validate(self, data):
-        """Check that the main zaak and the relation are not the same"""
+        """Check that the main zaak and the relation are not the same nor have the same relationship."""
 
         if data["relation_zaak"] == data["main_zaak"]:
             raise serializers.ValidationError(
                 _("Zaken kunnen niet met zichzelf gerelateerd worden.")
             )
+
+        if data["aard_relatie"] == data["aard_relatie_omgekeerde_richting"]:
+            raise serializers.ValidationError(
+                _("De aard van de zaak relaties kunnen niet hetzelfde zijn.")
+            )
+
         return data
 
 

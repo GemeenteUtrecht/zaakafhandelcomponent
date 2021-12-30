@@ -380,37 +380,59 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
-@extend_schema(summary=_("Add related zaak"))
 class CreateZaakRelationView(views.APIView):
     permission_classes = (permissions.IsAuthenticated, CanAddRelations)
 
     def get_serializer(self, *args, **kwargs):
         return AddZaakRelationSerializer(data=self.request.data)
 
+    @extend_schema(
+        summary=_("Add related zaak"),
+        description=_("Relate a zaak to another zaak and create the reverse relation."),
+    )
     def post(self, request: Request) -> Response:
         serializer = self.get_serializer()
         serializer.is_valid(raise_exception=True)
 
         # Retrieving the main zaak
-        zaak_url = serializer.validated_data["main_zaak"]
-        client = Service.get_client(zaak_url)
-        main_zaak = client.retrieve("zaak", url=zaak_url)
+        main_zaak_url = serializer.validated_data["main_zaak"]
+        bijdrage_zaak_url = serializer.validated_data["relation_zaak"]
+        client = Service.get_client(main_zaak_url)
+        main_zaak = client.retrieve("zaak", url=main_zaak_url)
 
+        # Create the relation (from to main to related)
         main_zaak["relevanteAndereZaken"].append(
             {
-                "url": serializer.validated_data["relation_zaak"],
+                "url": bijdrage_zaak_url,
                 "aardRelatie": serializer.validated_data["aard_relatie"],
             }
         )
-
-        # Create the relation
         client.partial_update(
             "zaak",
             {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
-            url=zaak_url,
+            url=main_zaak_url,
+        )
+
+        # Retrieving the related zaak
+        bijdrage_zaak = client.retrieve("zaak", url=bijdrage_zaak_url)
+
+        # Create the reverse relation
+        bijdrage_zaak["relevanteAndereZaken"].append(
+            {
+                "url": main_zaak_url,
+                "aardRelatie": serializer.validated_data[
+                    "aard_relatie_omgekeerde_richting"
+                ],
+            }
+        )
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": bijdrage_zaak["relevanteAndereZaken"]},
+            url=bijdrage_zaak_url,
         )
 
         invalidate_zaak_cache(factory(Zaak, main_zaak))
+        invalidate_zaak_cache(factory(Zaak, bijdrage_zaak))
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
