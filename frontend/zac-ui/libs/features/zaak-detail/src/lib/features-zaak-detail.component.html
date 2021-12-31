@@ -108,7 +108,8 @@
 
               <!-- Status -->
               <aside *ngIf="zaakData" class="mb-4">
-                <gu-status [bronorganisatie]="bronorganisatie"
+                <gu-status [mainZaakUrl]="mainZaakUrl"
+                           [bronorganisatie]="bronorganisatie"
                            [identificatie]="identificatie"
                            [progress]="zaakData.deadlineProgress"
                            [deadline]="zaakData.deadline"

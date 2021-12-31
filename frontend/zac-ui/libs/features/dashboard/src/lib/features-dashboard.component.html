@@ -6,12 +6,12 @@
         <div class="form-group">
 
           <!-- Select dashboard -->
-          <gu-multiselect *ngIf="boards"
+          <gu-multiselect *ngIf="dashboards"
                           [control]="selectedBoardControl"
                           (change)="onBoardSelect()"
                           [selectedValue]="selectedBoardControl.value"
                           [searchable]="true"
-                          [items]="boards"
+                          [items]="dashboards"
                           [multiple]="false"
                           bindLabel="name"
                           bindValue="slug"

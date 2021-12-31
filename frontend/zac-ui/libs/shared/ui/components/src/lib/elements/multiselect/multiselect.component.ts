@@ -41,6 +41,7 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
   @Input() selectedValue: any;
   @Input() label: string;
   @Input() appendTo: string;
+  @Input() clearable = true;
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();

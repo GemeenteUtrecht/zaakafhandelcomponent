@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FeaturesDashboardService } from './features-dashboard.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
-import { Board, Column } from './models/dashboard';
-import { BoardItem } from './models/board-item';
-import { Zaak } from '@gu/models';
+import { BoardItem, Dashboard, DashboardColumn, Zaak } from '@gu/models';
 import { ActivatedRoute, Router } from '@angular/router';
 
 
@@ -20,12 +18,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class FeaturesDashboardComponent implements OnInit {
 
   isLoading: boolean;
+  isPolling: boolean;
+  nPollingFails: number;
   errorMessage: string;
 
   dashboardForm: FormGroup
 
-  boards: Board[];
-  columns: Column[];
+  dashboards: Dashboard[];
+  columns: DashboardColumn[];
   boardItems: BoardItem[];
 
   openAddItem: boolean;
@@ -72,12 +72,12 @@ export class FeaturesDashboardComponent implements OnInit {
   //
 
   /**
-   * Retrieve all available boards.
+   * Retrieve all available dashboards.
    */
   getContextData(): void {
     this.isLoading = true;
     this.dashboardService.listBoards().subscribe(res => {
-      this.boards = res;
+      this.dashboards = res;
       this.openQueryParamBoard()
       this.isLoading = false;
     }, (error) => {
@@ -92,7 +92,7 @@ export class FeaturesDashboardComponent implements OnInit {
   openQueryParamBoard(): void {
     this.activatedRoute.queryParams.subscribe(queryParams => {
       const paramBoardSlug = queryParams['board']
-      if (paramBoardSlug && this.boards.some(b => b.slug === paramBoardSlug)) {
+      if (paramBoardSlug && this.dashboards.some(b => b.slug === paramBoardSlug)) {
         this.selectedBoardControl.patchValue(paramBoardSlug);
         this.onBoardSelect();
       }
@@ -106,8 +106,11 @@ export class FeaturesDashboardComponent implements OnInit {
     this.columns = null;
     const selectedBoard = this.selectedBoardControl.value;
     if (selectedBoard) {
+      this.isLoading = true;
+      this.isPolling = true;
+      this.pollBoardItems();
       this.getBoardItems(selectedBoard);
-      this.columns = this.boards.find(board => board.slug === selectedBoard).columns
+      this.columns = this.dashboards.find(board => board.slug === selectedBoard).columns
     }
     this.activatedRoute.queryParams.subscribe(() => {
       this.router.navigate([], {
@@ -121,11 +124,50 @@ export class FeaturesDashboardComponent implements OnInit {
   }
 
   /**
+   * Retrieves dashboard items every 5s
+   */
+  pollBoardItems(): void {
+    const selectedBoardSlug = this.selectedBoardControl.value;
+    if (selectedBoardSlug && this.isPolling) {
+      this.dashboardService.getBoardItems(selectedBoardSlug).subscribe( res => {
+        this.boardItems = res;
+        this.isLoading = false;
+
+        // Poll every 5s
+        setTimeout(() => {
+          this.pollBoardItems();
+        }, 5000)
+
+        // Reset fail counter
+        this.nPollingFails = 0;
+      }, (error) => {
+        this.reportError(error);
+        this.isLoading = false;
+
+        // Add to fail counter
+        this.nPollingFails += 1;
+
+        // Poll again after 5s if it fails
+        setTimeout(errorRes => {
+          this.errorMessage = errorRes.error.detail || 'Dashboards ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
+          this.reportError(errorRes);
+
+          if (this.nPollingFails < 5) {
+            this.pollBoardItems();
+          } else {
+            this.isPolling = false;
+            this.nPollingFails = 0;
+          }
+        }, 5000)
+      })
+    }
+  }
+
+  /**
    * Retrieves all board items.
    * @param {string} slug
    */
   getBoardItems(slug: string): void {
-    this.isLoading = true;
     this.dashboardService.getBoardItems(slug).subscribe( res => {
       this.boardItems = res;
       this.isLoading = false;

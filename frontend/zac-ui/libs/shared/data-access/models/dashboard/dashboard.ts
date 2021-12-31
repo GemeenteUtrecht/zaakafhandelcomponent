@@ -1,4 +1,4 @@
-export interface Column {
+export interface DashboardColumn {
   uuid: string;
   name: string;
   slug: string;
@@ -7,12 +7,12 @@ export interface Column {
   modified: Date;
 }
 
-export interface Board {
+export interface Dashboard {
   url: string;
   uuid: string;
   name: string;
   slug: string;
   created: Date;
   modified: Date;
-  columns: Column[];
+  columns: DashboardColumn[];
 }
