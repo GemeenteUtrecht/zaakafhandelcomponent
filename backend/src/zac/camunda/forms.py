@@ -123,5 +123,22 @@ def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
     return formfields
 
 
+def extract_task_form_key(task: Task) -> str:
+    """
+    Get the Camunda form key of a user task from the BPMN definition.
+
+    Camunda embeds the form key as an attribute into the BPMN definition.
+    """
+
+    tree = get_bpmn(task.process_definition_id)
+
+    task_id = task.task_definition_key
+    task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
+    form_key = task_definition.attrib.get(
+        "{" + CAMUNDA_NS["camunda"] + "}formKey", None
+    )
+    return form_key
+
+
 def extract_task_form(task: Task, form_key_mapping: dict) -> bool:
     return form_key_mapping.get(task.form_key)

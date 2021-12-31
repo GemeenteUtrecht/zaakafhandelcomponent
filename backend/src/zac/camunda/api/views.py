@@ -21,7 +21,7 @@ from zgw.models import Zaak
 from ..data import Task
 from ..messages import get_messages
 from ..process_instances import get_process_instance
-from ..processes import get_process_instances
+from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
@@ -68,7 +68,7 @@ class ProcessInstanceFetchView(APIView):
             err_serializer = ErrorSerializer({"detail": "missing zaak_url"})
             return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
-        process_instances = get_process_instances(zaak_url)
+        process_instances = get_top_level_process_instances(zaak_url)
         serializer = self.serializer_class(process_instances, many=True)
 
         return Response(serializer.data)
@@ -160,7 +160,8 @@ class UserTaskView(APIView):
 
         The exact shape of the data depends on the Camunda task type. On succesful,
         valid submission, the user task in Camunda is completed and the resulting
-        process variables are set.
+        process variables are set. The final assignee of the user task is also set
+        for history trail purposes.
 
         The ZAC always injects its own ``bptlAppId`` process variable so that BPTL
         executes tasks from the right context.
@@ -181,6 +182,19 @@ class UserTaskView(APIView):
             **get_bptl_app_id_variable(),
             **serializer.get_process_variables(),
         }
+
+        # For case history purposes set assignee if no assignee is set yet, has changed or the assignee is a group.
+        if (
+            not task.assignee
+            or task.assignee != f"{AssigneeTypeChoices.user}:{request.user}"
+            or task.assignee_type == AssigneeTypeChoices.group
+        ):
+            camunda_client = get_client()
+            assignee = f"{AssigneeTypeChoices.user}:{request.user}"
+            camunda_client.post(
+                f"task/{task.id}/assignee",
+                json={"userId": assignee},
+            )
 
         complete_task(task.id, variables)
         return Response(status=status.HTTP_204_NO_CONTENT)

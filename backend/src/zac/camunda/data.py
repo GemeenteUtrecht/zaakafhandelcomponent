@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Optional
-from uuid import UUID
 
 from django.contrib.auth.models import Group
 
@@ -17,7 +17,7 @@ from .history import get_historical_variable
 @dataclass
 class ProcessInstance(Model):
     id: CamundaId
-    definition_id: str
+    definition_id: str = ""
     business_key: str = ""
     case_instance_id: str = ""
     suspended: bool = False
@@ -43,7 +43,8 @@ class ProcessInstance(Model):
 @dataclass
 class Task(_Task):
     historical: bool = False
-
+    end_time: Optional[datetime] = None
+    activity_instance_id: Optional[CamundaId] = None
     form = None
 
     def has_form(self) -> bool:
