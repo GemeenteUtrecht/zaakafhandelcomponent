@@ -1,6 +1,10 @@
 // Activities
 export * from './activities/activity';
 
+// Dashboard
+export * from './dashboard/dashboard';
+export * from './dashboard/board-item';
+
 // Geojson
 export * from './geojson/geojson';
 export * from './geojson/provinces';

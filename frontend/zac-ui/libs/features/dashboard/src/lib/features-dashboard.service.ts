@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
-import { Board } from './models/dashboard';
-import { BoardItem } from './models/board-item';
+import { BoardItem, Dashboard } from '@gu/models';
 
 @Injectable({
   providedIn: 'root',
@@ -10,9 +9,9 @@ import { BoardItem } from './models/board-item';
 export class FeaturesDashboardService {
   constructor(private http: ApplicationHttpClient) {}
 
-  listBoards(): Observable<Board[]> {
+  listBoards(): Observable<Dashboard[]> {
     const endpoint = '/api/dashboard/boards';
-    return this.http.Get<Board[]>(endpoint);
+    return this.http.Get<Dashboard[]>(endpoint);
   }
 
   getBoardItems(slug): Observable<BoardItem[]> {

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
-import { ApplicationHttpClient } from '@gu/services';
+import { StatusService } from './status.service';
+import { SnackbarService } from '@gu/components';
+import { BoardItem, DashboardColumn } from '@gu/models';
 
 @Component({
   selector: 'gu-status',
@@ -9,6 +9,7 @@ import { ApplicationHttpClient } from '@gu/services';
   styleUrls: ['./status.component.scss']
 })
 export class StatusComponent implements OnInit {
+  @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
   @Input() progress: number;
@@ -16,12 +17,16 @@ export class StatusComponent implements OnInit {
   @Input() finished: boolean;
 
   data: any;
+  dashboardColumns: DashboardColumn[];
+  currentDashboardItem: BoardItem;
   isLoading: boolean;
+  errorMessage: string;
 
   isExpanded = false;
 
   constructor(
-    private http: ApplicationHttpClient,
+    private statusService: StatusService,
+    private snackbarService: SnackbarService,
   ) { }
 
   /**
@@ -41,8 +46,27 @@ export class StatusComponent implements OnInit {
    */
   ngOnInit(): void {
     this.isLoading = true;
+    this.getZaakStatus();
+    this.getDashboardStatus()
+  }
 
-    this.getContextData().subscribe(data => {
+  //
+  // Context.
+  //
+
+  /**
+   * Get context.
+   */
+  getContextData(): void {
+    this.getZaakStatus();
+    this.getDashboardStatus()
+  }
+
+  /**
+   * Fetches the case statuses.
+   */
+  getZaakStatus() {
+    this.statusService.getZaakStatuses(this.bronorganisatie, this.identificatie).subscribe(data => {
       this.data = data;
       this.isLoading = false;
     }, error => {
@@ -51,15 +75,58 @@ export class StatusComponent implements OnInit {
     })
   }
 
+  /**
+   * Fetches the dashboard statuses.
+   */
+  getDashboardStatus() {
+    this.statusService.getDashboardStatus(this.mainZaakUrl).subscribe(data => {
+      if (data[0]) {
+        this.dashboardColumns = data[0].board.columns;
+        this.findCurrentDashboardItem(data);
+      }
+    }, error => {
+      console.log(error);
+    })
+  }
+
+  /**
+   * Find current dashboard item.
+   * @param data
+   */
+  findCurrentDashboardItem(data) {
+    this.currentDashboardItem = data.find(item => item.zaak.url === this.mainZaakUrl);
+  }
+
+  /**
+   * Triggers when user selects new dashboard status.
+   * @param {DashboardColumn} column
+   */
+  onDashboardStatusSelect(column: DashboardColumn): void {
+    const formData = {
+      object: this.mainZaakUrl,
+      columnUuid: column.uuid
+    }
+    this.statusService.updateBoardItem(this.currentDashboardItem.uuid, formData)
+      .subscribe( () => {
+        this.snackbarService.openSnackBar("Dashboard bijgewerkt", "Sluiten", "primary");
+      }, error => {
+        this.reportError(error);
+        this.isLoading = false;
+      })
+  }
+
   //
-  // Context.
+  // Error handling.
   //
 
   /**
-   * Fetches the statuses.
+   * Error callback.
+   * @param res
    */
-  getContextData(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/statuses`);
-    return this.http.Get<any>(endpoint);
+  reportError(res: any): void {
+    this.errorMessage = res.error?.detail ? res.error.detail :
+      res.error?.nonFieldErrors ? res.error.nonFieldErrors[0] : "Er is een fout opgetreden."
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(res);
   }
 }

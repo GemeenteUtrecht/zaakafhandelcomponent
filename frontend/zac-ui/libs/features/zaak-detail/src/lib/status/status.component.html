@@ -1,5 +1,18 @@
 <div class="status card">
-  <h2 class="d-inline-block mr-2">Doorlooptijd</h2>
+  <h2>Status</h2>
+  <gu-multiselect *ngIf="dashboardColumns"
+                  (change)="onDashboardStatusSelect($event)"
+                  [searchable]="false"
+                  [items]="dashboardColumns"
+                  [multiple]="false"
+                  [selectedValue]="currentDashboardItem.column.slug"
+                  [clearable]="false"
+                  bindLabel="name"
+                  bindValue="slug"
+                  label="Dashboard status"
+                  class="mb-2">
+  </gu-multiselect>
+  <h4 class="d-inline-block mr-2">Doorlooptijd</h4>
   <gu-tooltip type="primary" inline="true">Tijd tot de deadline van de zaak</gu-tooltip>
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>

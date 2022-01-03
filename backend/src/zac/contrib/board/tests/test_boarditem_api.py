@@ -25,7 +25,7 @@ from zgw.models.zrc import Zaak
 
 from ..constants import BoardObjectTypes
 from ..models import BoardItem
-from .factories import BoardColumnFactory, BoardItemFactory
+from .factories import BoardColumnFactory, BoardFactory, BoardItemFactory
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -353,7 +353,25 @@ class BoardItemAPITests(ESMixin, APITestCase):
                     "uuid": str(item2.uuid),
                     "objectType": "zaak",
                     "object": item2.object,
-                    "board": f"http://testserver{reverse('board-detail', args=[item2.column.board.uuid])}",
+                    "board": {
+                        "url": f"http://testserver{reverse('board-detail', args=[item2.column.board.uuid])}",
+                        "uuid": str(item2.column.board.uuid),
+                        "name": item2.column.board.name,
+                        "slug": item2.column.board.slug,
+                        "created": item2.column.board.created.isoformat()[:-6] + "Z",
+                        "modified": item2.column.board.modified.isoformat()[:-6] + "Z",
+                        "columns": [
+                            {
+                                "uuid": str(item2.column.uuid),
+                                "name": "done",
+                                "slug": "done",
+                                "order": item2.column.order,
+                                "created": item2.column.created.isoformat()[:-6] + "Z",
+                                "modified": item2.column.modified.isoformat()[:-6]
+                                + "Z",
+                            },
+                        ],
+                    },
                     "column": {
                         "uuid": str(item2.column.uuid),
                         "name": "done",
@@ -369,7 +387,25 @@ class BoardItemAPITests(ESMixin, APITestCase):
                     "uuid": str(item1.uuid),
                     "objectType": "zaak",
                     "object": item1.object,
-                    "board": f"http://testserver{reverse('board-detail', args=[item1.column.board.uuid])}",
+                    "board": {
+                        "url": f"http://testserver{reverse('board-detail', args=[item1.column.board.uuid])}",
+                        "uuid": str(item1.column.board.uuid),
+                        "name": item1.column.board.name,
+                        "slug": item1.column.board.slug,
+                        "created": item1.column.board.created.isoformat()[:-6] + "Z",
+                        "modified": item1.column.board.modified.isoformat()[:-6] + "Z",
+                        "columns": [
+                            {
+                                "uuid": str(item1.column.uuid),
+                                "name": "wip",
+                                "slug": "wip",
+                                "order": item1.column.order,
+                                "created": item1.column.created.isoformat()[:-6] + "Z",
+                                "modified": item1.column.modified.isoformat()[:-6]
+                                + "Z",
+                            },
+                        ],
+                    },
                     "column": {
                         "uuid": str(item1.column.uuid),
                         "name": "wip",
@@ -415,8 +451,26 @@ class BoardItemAPITests(ESMixin, APITestCase):
             f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
         )
 
-    def test_retrieve_item(self):
+    def test_list_items_filter_on_zaak_url(self):
         item = BoardItemFactory.create(object=ZAAK_URL)
+        url = reverse("boarditem-list")
+
+        response = self.client.get(url, {"zaakUrl": ZAAK_URL})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(
+            data[0]["url"],
+            f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
+        )
+
+    def test_retrieve_item(self):
+        board = BoardFactory.create()
+        col1, col2 = BoardColumnFactory.create_batch(2, board=board)
+        item = BoardItemFactory.create(object=ZAAK_URL, column=col1)
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.get(url)
@@ -428,14 +482,39 @@ class BoardItemAPITests(ESMixin, APITestCase):
                 "uuid": str(item.uuid),
                 "objectType": "zaak",
                 "object": item.object,
-                "board": f"http://testserver{reverse('board-detail', args=[item.column.board.uuid])}",
+                "board": {
+                    "url": f"http://testserver{reverse('board-detail', args=[board.uuid])}",
+                    "uuid": str(board.uuid),
+                    "name": board.name,
+                    "slug": board.slug,
+                    "created": board.created.isoformat()[:-6] + "Z",
+                    "modified": board.modified.isoformat()[:-6] + "Z",
+                    "columns": [
+                        {
+                            "uuid": str(col1.uuid),
+                            "name": col1.name,
+                            "slug": col1.slug,
+                            "order": col1.order,
+                            "created": col1.created.isoformat()[:-6] + "Z",
+                            "modified": col1.modified.isoformat()[:-6] + "Z",
+                        },
+                        {
+                            "uuid": str(col2.uuid),
+                            "name": col2.name,
+                            "slug": col2.slug,
+                            "order": col2.order,
+                            "created": col2.created.isoformat()[:-6] + "Z",
+                            "modified": col2.modified.isoformat()[:-6] + "Z",
+                        },
+                    ],
+                },
                 "column": {
-                    "uuid": str(item.column.uuid),
-                    "name": item.column.name,
-                    "slug": item.column.slug,
-                    "order": item.column.order,
-                    "created": item.column.created.isoformat()[:-6] + "Z",
-                    "modified": item.column.modified.isoformat()[:-6] + "Z",
+                    "uuid": str(col1.uuid),
+                    "name": col1.name,
+                    "slug": col1.slug,
+                    "order": col1.order,
+                    "created": col1.created.isoformat()[:-6] + "Z",
+                    "modified": col1.modified.isoformat()[:-6] + "Z",
                 },
                 "zaak": self.zaak_data,
             },
