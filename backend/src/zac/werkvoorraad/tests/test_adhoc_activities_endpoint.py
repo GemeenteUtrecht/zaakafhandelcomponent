@@ -157,6 +157,26 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         )
 
+    def test_workstack_adhoc_activities_endpoint_no_zaak(self):
+        self.refresh_index()
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(data, [])
+
     def test_other_user_logging_in(self):
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
