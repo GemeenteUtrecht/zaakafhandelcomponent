@@ -10,6 +10,7 @@ from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 
+from ..api.data import HistoricActivityInstanceDetail, HistoricUserTask
 from ..constants import AssigneeTypeChoices
 from ..data import BPMN
 from ..user_tasks.context import REGISTRY
@@ -220,3 +221,36 @@ class BPMNSerializer(APIModelSerializer):
                 )
             },
         }
+
+
+class HistoricActivityInstanceDetailSerializer(APIModelSerializer):
+    value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HistoricActivityInstanceDetail
+        fields = (
+            "variable_name",
+            "value",
+            "label",
+        )
+
+    def get_value(self, value: Any) -> Any:
+        return value
+
+
+class HistoricUserTaskSerializer(APIModelSerializer):
+    assignee = UserSerializer()
+    completed = serializers.DateTimeField(source="task.end_time")
+    created = serializers.DateTimeField(source="task.created")
+    name = serializers.CharField(source="task.name")
+    history = HistoricActivityInstanceDetailSerializer(many=True)
+
+    class Meta:
+        model = HistoricUserTask
+        fields = (
+            "assignee",
+            "completed",
+            "created",
+            "name",
+            "history",
+        )

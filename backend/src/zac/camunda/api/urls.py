@@ -5,6 +5,7 @@ from .views import (
     ProcessInstanceFetchView,
     SendMessageView,
     SetTaskAssigneeView,
+    UserTaskHistory,
     UserTaskView,
 )
 
@@ -22,4 +23,5 @@ urlpatterns = [
     path("send-message", SendMessageView.as_view(), name="send-message"),
     path("claim-task", SetTaskAssigneeView.as_view(), name="claim-task"),
     path("bpmn/<str:process_definition_id>", GetBPMNView.as_view(), name="bpmn"),
+    path("task-data/historical", UserTaskHistory.as_view(), name="user-task-history"),
 ]

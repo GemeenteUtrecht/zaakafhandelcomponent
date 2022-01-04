@@ -12,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..user_tasks.history import get_camunda_history_for_zaak
 from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.camunda import get_process_zaak_url
@@ -27,6 +28,7 @@ from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
     ErrorSerializer,
+    HistoricUserTaskSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
     SetTaskAssigneeSerializer,
@@ -376,3 +378,31 @@ class GetBPMNView(APIView):
             if exc.response.status_code == 400:
                 raise exceptions.ValidationError(exc.response.json())
             raise
+
+
+class UserTaskHistory(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = HistoricUserTaskSerializer
+
+    @extend_schema(
+        summary=_("Retrieve the historical user task data of the ZAAK."),
+        parameters=[
+            OpenApiParameter(
+                "zaak_url",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            )
+        ],
+        responses={
+            200: serializer_class(many=True),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        zaak_url = request.GET.get("zaak_url")
+        if not zaak_url:
+            raise exceptions.ValidationError(_("Missing the zaak URL query parameter."))
+
+        user_task_history = get_camunda_history_for_zaak(zaak_url)
+        serializer = self.serializer_class(instance=user_task_history, many=True)
+        return Response(serializer.data)
