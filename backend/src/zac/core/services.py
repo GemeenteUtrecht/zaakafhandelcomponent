@@ -711,11 +711,7 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
 
     # Try to get user data
     identificatie = rol.betrokkene_identificatie["identificatie"]
-    try:
-        user = resolve_assignee(identificatie)
-    except ObjectDoesNotExist:
-        logger.warning("Couldn't find user with identificatie %s", identificatie)
-        return
+    user = resolve_assignee(identificatie)
     if isinstance(user, Group):
         return
 
