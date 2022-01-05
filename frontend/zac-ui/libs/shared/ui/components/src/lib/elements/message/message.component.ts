@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'gu-message',
@@ -9,4 +9,5 @@ export class MessageComponent {
   @Input() title: string;
   @Input() message: string;
   @Input() type: 'primary' | 'success' | 'warn'
+  @Input() isHidden: boolean;
 }

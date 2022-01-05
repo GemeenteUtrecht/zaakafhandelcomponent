@@ -49,8 +49,8 @@
       <div class="row">
 
         <!-- Tasks for current user -->
-        <div class="col-md-6 mb-4 mb-md-0">
-          <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Zelf doen</h3>
+        <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
+          <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
           <ng-container *ngFor="let task of allTaskData">
             <div class="taak d-flex justify-content-between"
                  *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"

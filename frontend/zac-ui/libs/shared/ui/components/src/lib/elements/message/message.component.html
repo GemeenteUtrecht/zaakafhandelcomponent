@@ -1,8 +1,13 @@
-<div class="gu-message" [ngClass]="{
-  'gu-message--primary': type == 'primary',
-  'gu-message--success': type == 'success',
-  'gu-message--warn': type == 'warn'
-  }">
+<div class="gu-message"
+     *ngIf="!isHidden"
+     [ngClass]="{
+      'gu-message--primary': type == 'primary',
+      'gu-message--success': type == 'success',
+      'gu-message--warn': type == 'warn'
+     }">
+  <header class="gu-message__header">
+    <gu-icon role="button" (click)="isHidden = true">close</gu-icon>
+  </header>
   <h4 *ngIf="title">{{title}}</h4>
   <p class="mb-0" *ngIf="message">{{message}}</p>
   <ng-content></ng-content>

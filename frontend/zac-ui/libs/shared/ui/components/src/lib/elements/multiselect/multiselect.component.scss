@@ -1,7 +1,6 @@
 @import './base/colors/colors';
 @import "~@ng-select/ng-select/scss/default.theme";
 
-
 :host {
   display: block;
 }
@@ -27,7 +26,7 @@
     }
     .ng-clear-wrapper {
       color: $color-text;
-      &:hover {
+      &:hover .ng-clear {
         color: $color-blue;
       }
     }

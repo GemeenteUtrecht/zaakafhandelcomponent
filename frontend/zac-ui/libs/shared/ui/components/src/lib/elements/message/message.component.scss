@@ -1,6 +1,7 @@
 @import './base/colors/colors';
 
 .gu-message {
+  position: relative;
   border: 1px solid;
   padding: 0.825rem;
   border-radius: 4px;
@@ -18,5 +19,18 @@
   }
   p {
     word-break: break-word;
+  }
+  &__header {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    gu-icon {
+      ::ng-deep .mat-icon {
+        font-size: 1rem;
+        height: fit-content;
+        width: fit-content;
+      }
+      cursor: pointer;
+    }
   }
 }
