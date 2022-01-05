@@ -25,7 +25,7 @@
 
     <!-- Show more buttons -->
     <button gu-button
-            *ngIf="!!data && data?.length > 0"
+            *ngIf="!!data && data?.length > 3"
             buttonStyle="tertiary"
             size="extrasmall"
             class="d-block mb-4"
@@ -57,7 +57,7 @@
             >
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold">{{task.name}}</p>
+                <p class="m-0 p--bold">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -102,7 +102,7 @@
             <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
+                <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
