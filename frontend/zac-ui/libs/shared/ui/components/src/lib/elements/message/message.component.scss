@@ -3,7 +3,7 @@
 .gu-message {
   position: relative;
   border: 1px solid;
-  padding: 0.825rem;
+  padding: 0.825rem 1rem 0.825rem 0.825rem ;
   border-radius: 4px;
   &--primary {
     border-color: $color-blue;
@@ -24,6 +24,15 @@
     position: absolute;
     right: 3px;
     top: 3px;
+    &--primary {
+      color: $color-blue;
+    }
+    &--warn {
+      color: $color-warn;
+    }
+    &--success {
+      color: $color-success;
+    }
     gu-icon {
       ::ng-deep .mat-icon {
         font-size: 1rem;
