@@ -26,11 +26,11 @@ export class StatusService {
   /**
    * Retrieve dashboard statuses
    * @param zaakUrl
-   * @returns {Observable<HttpResponse<any>>}
+   * @returns {Observable<BoardItem[]>}
    */
-  getDashboardStatus(zaakUrl): Observable<HttpResponse<any>>  {
+  getDashboardStatus(zaakUrl): Observable<BoardItem[]>  {
     const endpoint = encodeURI(`/api/dashboard/items?zaak=${zaakUrl}`);
-    return this.http.Get<any>(endpoint);
+    return this.http.Get<BoardItem[]>(endpoint);
   }
 
   /**
