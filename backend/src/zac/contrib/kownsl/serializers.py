@@ -15,7 +15,7 @@ from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
-    PROXY_SCHEMA_BASE = "https://kownsl.utrechtproeftuin.nl/api/v1"
+    PROXY_SCHEMA_BASE = "https://kownsl.cg-intern.ont.utrecht.nl/api/v1"
     PROXY_SCHEMA_PATH = [
         "paths",
         "/api/v1/review-requests/{uuid}",
@@ -27,6 +27,10 @@ class KownslReviewRequestSerializer(ProxySerializer):
         "schema",
     ]
     zaak = ZaakSerializer()
+    taskid = serializers.CharField(
+        help_text=_("The id of the camunda user task related to the review."),
+        required=True,
+    )
 
 
 class ZaakRevReqSummarySerializer(APIModelSerializer):
