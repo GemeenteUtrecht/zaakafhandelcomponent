@@ -90,7 +90,7 @@ export interface LineString extends Geometry {
  * @see {@link https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.5|rfc7946}
  */
 export interface MultiLineString extends Geometry {
-  type: 'LineString',
+  type: 'MultiLineString',
   coordinates: Position[][],
 }
 
