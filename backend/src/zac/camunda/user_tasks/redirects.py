@@ -3,7 +3,7 @@ User tasks of the type zac:doRedirect.
 """
 from dataclasses import dataclass
 
-from django_camunda.api import get_task_variable
+from furl import furl
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from ..data import Task
@@ -25,8 +25,12 @@ class RedirectContextSerializer(APIModelSerializer):
 
 @register("zac:doRedirect", RedirectContextSerializer)
 def get_redirect_task_context(task: Task) -> RedirectContext:
-    redirect_url = get_task_variable(task.id, "redirectTo")
-    new_window = get_task_variable(task.id, "openInNewWindow", False)
+    redirect_url = task.get_variable("redirectTo")
+    query_params = task.get_variable("queryParams", default=None)
+    if query_params:
+        redirect_url = furl(redirect_url).set(query_params).url
+    new_window = task.get_variable("openInNewWindow", default=False)
+
     return RedirectContext(
         redirect_to=redirect_url,
         open_in_new_window=new_window,

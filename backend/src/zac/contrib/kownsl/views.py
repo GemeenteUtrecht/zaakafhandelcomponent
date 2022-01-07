@@ -114,16 +114,12 @@ class BaseRequestView(APIView):
         return review_request
 
     def get(self, request, request_uuid):
-        if not (task_id := request.query_params.get("taskid")):
-            raise exceptions.ValidationError("'taskid' query parameter is required.")
-
         review_request = self.get_object()
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
                 **review_request,
                 "zaak": get_zaak(zaak_url=zaak_url),
-                "taskid": task_id,
             },
             context={"request": request, "view": self},
         )
@@ -152,15 +148,6 @@ class BaseRequestView(APIView):
 @extend_schema_view(
     get=extend_schema(
         summary=_("Retrieve advice review request"),
-        parameters=[
-            OpenApiParameter(
-                name="taskid",
-                required=True,
-                type=OpenApiTypes.UUID,
-                description=_("Id of the user task in camunda."),
-                location=OpenApiParameter.QUERY,
-            ),
-        ],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/advices",
@@ -183,15 +170,6 @@ class AdviceRequestView(BaseRequestView):
 @extend_schema_view(
     get=extend_schema(
         summary=_("Retrieve approval review request"),
-        parameters=[
-            OpenApiParameter(
-                name="taskid",
-                required=True,
-                type=OpenApiTypes.UUID,
-                description=_("Id of the user task in camunda."),
-                location=OpenApiParameter.QUERY,
-            ),
-        ],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/approvals",

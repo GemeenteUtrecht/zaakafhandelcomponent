@@ -162,13 +162,16 @@ class ViewTests(ClearCachesMixin, APITestCase):
             "kownsl:reviewrequest-approval",
             kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
         )
-        url = furl(url)
-        url.set(
-            {"taskid": "45638aa6-e177-46cc-b580-43339795d5c6"},
+        url = (
+            furl(url)
+            .set(
+                {"taskid": "45638aa6-e177-46cc-b580-43339795d5c6"},
+            )
+            .url
         )
         body = {"dummy": "data"}
 
-        response = self.client.post(url.url, body)
+        response = self.client.post(url, body)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, {"ok": "yarp"})
