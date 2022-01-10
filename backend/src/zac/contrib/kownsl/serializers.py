@@ -27,10 +27,6 @@ class KownslReviewRequestSerializer(ProxySerializer):
         "schema",
     ]
     zaak = ZaakSerializer()
-    taskid = serializers.CharField(
-        help_text=_("The id of the camunda user task related to the review."),
-        required=True,
-    )
 
 
 class ZaakRevReqSummarySerializer(APIModelSerializer):
