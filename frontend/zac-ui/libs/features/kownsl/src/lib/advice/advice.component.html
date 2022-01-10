@@ -68,10 +68,12 @@
       <!-- Collapsible table with previous advices -->
       <ng-template [ngIf]="!!adviceData.reviews && adviceData.reviews.length > 0">
         <section *ngIf="adviceData.reviews.length > 0" class="row no-gutters">
-          <h2 class="mb-4">Vorige adviezen</h2>
-          <gu-table [table]="tableData"
-                    [expandable]="true">
-          </gu-table>
+          <div class="col-12 col-lg-6">
+            <h2 class="mb-4">Vorige adviezen</h2>
+            <gu-table [table]="tableData"
+                      [expandable]="true">
+            </gu-table>
+          </div>
         </section>
       </ng-template>
 
@@ -88,7 +90,7 @@
         </ng-template>
 
         <!-- Advice text -->
-        <section class="row no-gutters">
+        <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-6">
             <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
             <gu-textarea label="Inhoudelijk advies" [control]="adviceControl" class="mb-0" id="textarea_advice"></gu-textarea>
@@ -107,7 +109,7 @@
             </button>
           </div>
         </section>
-        <div *ngIf="submitFailed" class="d-flex justify-content-end mt-2">
+        <div *ngIf="submitFailed" class="mt-2">
           <gu-message [message]="errorMessage" type="warn"></gu-message>
         </div>
       </form>
