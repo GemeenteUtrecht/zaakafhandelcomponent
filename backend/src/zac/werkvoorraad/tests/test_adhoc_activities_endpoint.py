@@ -157,6 +157,16 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         )
 
+    def test_workstack_adhoc_activities_endpoint_no_zaak(self):
+        self.refresh_index()
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(data, [])
+
     def test_other_user_logging_in(self):
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)

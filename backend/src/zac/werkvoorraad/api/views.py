@@ -62,7 +62,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     def get_queryset(self):
         grouped_activities = self.get_activities()
         activity_groups = get_activity_groups(self.request.user, grouped_activities)
-        return [ActivityGroup(**group) for group in activity_groups if "zaak" in group]
+        return activity_groups
 
 
 @extend_schema(
