@@ -1,8 +1,9 @@
+@import 'base/grid/mixins';
 
 ::ng-deep gu-features-zaak-detail .gu-features-zaak-detail__sidebar {
   height: 500px;
 
-  @media (min-width: 992px) {
+  @include media-breakpoint-up(xl) {
     background-attachment: fixed;
     height: 100%;
     position: fixed;

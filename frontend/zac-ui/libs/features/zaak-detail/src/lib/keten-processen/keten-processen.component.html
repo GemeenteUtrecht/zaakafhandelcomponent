@@ -1,5 +1,5 @@
 <div class="keten-processen card">
-  <h2 class="d-inline-block mr-2">Acties</h2>
+  <h2 class="d-inline-block mr-1">Acties</h2>
   <gu-tooltip type="primary" inline="true" (click)="openBpmnVisualisation()">Bekijk BPMN model.</gu-tooltip>
 
   <!-- First time loading  -->
@@ -25,7 +25,7 @@
 
     <!-- Show more buttons -->
     <button gu-button
-            *ngIf="!!data && data?.length > 0"
+            *ngIf="!!data && data?.length > 3"
             buttonStyle="tertiary"
             size="extrasmall"
             class="d-block mb-4"
@@ -49,15 +49,15 @@
       <div class="row">
 
         <!-- Tasks for current user -->
-        <div class="col-md-6 mb-4 mb-md-0">
-          <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Zelf doen</h3>
+        <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
+          <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
           <ng-container *ngFor="let task of allTaskData">
             <div class="taak d-flex justify-content-between"
                  *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
             >
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold">{{task.name}}</p>
+                <p class="m-0 p--bold">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -102,7 +102,7 @@
             <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
+                <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">

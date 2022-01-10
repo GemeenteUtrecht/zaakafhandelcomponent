@@ -1,4 +1,4 @@
-import { DashboardColumn } from './dashboard';
+import { Dashboard, DashboardColumn } from './dashboard';
 
 interface Zaaktype {
   url: string;
@@ -60,7 +60,7 @@ export interface BoardItem {
   uuid: string;
   objectType: string;
   object: string;
-  board: string;
+  board: Dashboard;
   column: DashboardColumn;
   zaak: Zaak;
 }

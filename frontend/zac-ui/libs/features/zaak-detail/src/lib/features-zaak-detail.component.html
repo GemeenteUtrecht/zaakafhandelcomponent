@@ -8,7 +8,7 @@
         <article class="content">
 
           <!-- Breadcrumb -->
-          <a class="anchor anchor--back mb-4" routerLink="/zaken">Alle zaken</a>
+          <a class="anchor anchor--back mb-4" [routerLink]="['/zoeken']">Alle zaken</a>
 
 
           <!-- Header -->
@@ -65,10 +65,10 @@
           <section *ngIf="!isLoading && !hasError" class="row" >
 
             <!-- Left column -->
-            <div class="col-4">
+            <div *ngIf="zaakData" class="col-md-4">
 
 
-              <!-- I don't know what this does -->
+              <!-- Show result of a case if it's finished -->
               <div *ngIf="zaakData?.resultaat" class="card card--accent">
                 <p class="p--marginsmall">Resultaat: </p>
                 <h4 [ngClass]="{
@@ -81,7 +81,7 @@
 
 
               <!-- Details -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-informatie *ngIf="zaakData" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie">
                   <gu-betrokkenen [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
                 </gu-informatie>
@@ -89,14 +89,14 @@
 
 
               <!-- Related cases -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie"
                                        [identificatie]="identificatie"></gu-gerelateerde-zaken>
               </aside>
 
 
               <!-- User permissions -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-user-permissions [bronorganisatie]="bronorganisatie"
                                      [identificatie]="identificatie"></gu-user-permissions>
               </aside>
@@ -104,10 +104,10 @@
 
 
             <!-- Right column -->
-            <div class="col-8">
+            <div *ngIf="zaakData" class="col-md-8">
 
               <!-- Status -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-status [mainZaakUrl]="mainZaakUrl"
                            [bronorganisatie]="bronorganisatie"
                            [identificatie]="identificatie"
@@ -118,7 +118,7 @@
 
 
               <!-- Processes -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-keten-processen *ngIf="currentUser"
                                     [mainZaakUrl]="mainZaakUrl"
                                     [currentUser]="currentUser"
@@ -131,14 +131,14 @@
 
 
               <!-- Approval -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
                                          [identificatie]="identificatie"></gu-adviseren-accorderen>
               </aside>
 
 
               <!-- Related objects -->
-              <aside *ngIf="zaakData" class="mb-4">
+              <aside class="mb-4">
                 <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
                                           [identificatie]="identificatie"></gu-gerelateerde-objecten>
               </aside>

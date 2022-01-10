@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { StatusService } from './status.service';
 import { SnackbarService } from '@gu/components';
-import { BoardItem, DashboardColumn } from '@gu/models';
+import { BoardItem, Dashboard, DashboardColumn } from '@gu/models';
 
 @Component({
   selector: 'gu-status',
@@ -18,6 +18,7 @@ export class StatusComponent implements OnInit {
 
   data: any;
   dashboardColumns: DashboardColumn[];
+  currentDashboard: Dashboard;
   currentDashboardItem: BoardItem;
   isLoading: boolean;
   errorMessage: string;
@@ -81,6 +82,7 @@ export class StatusComponent implements OnInit {
   getDashboardStatus() {
     this.statusService.getDashboardStatus(this.mainZaakUrl).subscribe(data => {
       if (data[0]) {
+        this.currentDashboard = data[0].board;
         this.dashboardColumns = data[0].board.columns;
         this.findCurrentDashboardItem(data);
       }
