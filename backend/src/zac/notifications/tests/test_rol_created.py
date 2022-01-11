@@ -183,7 +183,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": self.user.username,
+                "identificatie": f"user:{self.user.username}",
                 "voorletters": "",
                 "achternaam": "",
                 "voorvoegsel_achternaam": "",
@@ -228,7 +228,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "betrokkene_identificatie": {
                     "voorletters": "M.Y.",
                     "achternaam": "Surname",
-                    "identificatie": "notifs",
+                    "identificatie": "user:notifs",
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",

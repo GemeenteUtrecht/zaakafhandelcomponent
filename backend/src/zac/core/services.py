@@ -3,6 +3,7 @@ import warnings
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urljoin, urlparse
 
+from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
@@ -706,13 +707,14 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     ):
         return
 
+    from .camunda.utils import resolve_assignee
+
     # Try to get user data
     identificatie = rol.betrokkene_identificatie["identificatie"]
-    try:
-        user = User.objects.get(username=identificatie)
-    except ObjectDoesNotExist:
-        logger.warning("Couldn't find user with identificatie %s", identificatie)
+    user = resolve_assignee(identificatie)
+    if isinstance(user, Group):
         return
+
     if not user.get_full_name():
         return
 
