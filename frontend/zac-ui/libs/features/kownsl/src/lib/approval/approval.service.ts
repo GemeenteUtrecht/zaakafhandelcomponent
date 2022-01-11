@@ -20,6 +20,6 @@ export class ApprovalService {
   }
 
   postApproval(formData: ApprovalForm, uuid: string, taskid: string): Observable<any> {
-    return this.http.Post<ApprovalForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/approval?${taskid}`), formData);
+    return this.http.Post<ApprovalForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/approval?taskid=${taskid}`), formData);
   }
 }
