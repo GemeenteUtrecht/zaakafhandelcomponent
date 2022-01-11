@@ -1,18 +1,24 @@
 <mat-form-field
-  appearance="outline"
+  [appearance]="appearance"
   [hideRequiredMarker]="true"
   [floatLabel]="'always'"
 >
   <mat-label *ngIf="label">{{getLabel()}}</mat-label>
-  <input matInput
+  <input #inputRef
+         matInput
          (input)="input.emit($event)"
-         [type]="type"
-         [placeholder]="placeholder"
-         [value]="value"
-         [formControl]="control"
          [autocomplete]="autocomplete"
-         [required]="required"
          [disabled]="disabled"
+         [formControl]="control"
+         [placeholder]="placeholder"
+         [required]="required"
+         [type]="type"
+         [attr.list]="datalistId"
          [pattern]="pattern"
+         [value]="value"
   >
+
+  <datalist [id]="datalistId" *ngIf="datalist.length">
+    <option [value]="value" *ngFor="let value of datalist;">
+  </datalist>
 </mat-form-field>

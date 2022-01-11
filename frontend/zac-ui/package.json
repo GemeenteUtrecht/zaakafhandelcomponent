@@ -51,6 +51,7 @@
     "material-icons": "^0.5.4",
     "ng-multiselect-dropdown": "^0.3.0",
     "ngx-bootstrap": "^6.2.0",
+    "proj4": "^2.7.5",
     "proj4leaflet": "^1.0.2",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",

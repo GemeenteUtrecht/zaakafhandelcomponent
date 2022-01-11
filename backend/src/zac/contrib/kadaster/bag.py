@@ -5,6 +5,7 @@ from zgw_consumers.concurrent import parallel
 
 from zac.utils.decorators import cache
 
+from .decorators import catch_httperror
 from .models import KadasterConfig
 
 A_DAY = 60 * 60 * 24
@@ -33,6 +34,7 @@ class LocationServer:
         config = KadasterConfig.get_solo()
         self.url = config.locatieserver
 
+    @catch_httperror
     def get(self, path: str, *args, **kwargs):
         full_url = f"{self.url}{path}"
         response = requests.get(full_url, *args, **kwargs)

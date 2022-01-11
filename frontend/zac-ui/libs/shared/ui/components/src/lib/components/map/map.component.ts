@@ -48,6 +48,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() editable: boolean | L.PM.ToolbarOptions = false;
 
+  @Output() mapLoad: EventEmitter<any> = new EventEmitter<any>();
   @Output() shapeChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() shapeChangeComplete: EventEmitter<any> = new EventEmitter<any>();
 
@@ -173,6 +174,8 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
         }
       });
     }
+
+    this.map.on('load', this.mapLoad.emit(this.map));
 
     // Update.
     this.update();

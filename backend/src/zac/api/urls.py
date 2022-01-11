@@ -27,7 +27,7 @@ urlpatterns = [
     path("dashboard/", include("zac.contrib.board.api.urls")),
     path("dowc/", include("zac.contrib.dowc.urls")),
     path("forms/", include("zac.forms.api.urls")),
-    path("kadaster/", include("zac.contrib.kadaster.api.urls")),
+    path("kadaster/", include("zac.contrib.kadaster.urls")),
     path("kownsl/", include("zac.contrib.kownsl.urls")),
     path("search/", include("zac.elasticsearch.drf_api.urls")),
     path("workstack/", include("zac.werkvoorraad.api.urls")),
