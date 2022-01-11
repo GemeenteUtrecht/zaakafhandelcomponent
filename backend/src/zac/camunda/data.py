@@ -49,7 +49,7 @@ class Task(_Task):
     def has_form(self) -> bool:
         return bool(self.form)
 
-    def get_variable(self, name: str, default: Optional[str] = None) -> Any:
+    def get_variable(self, name: str, default: Optional[Any] = None) -> Any:
         return get_task_variable(self.id, name, default=default)
 
     def assignee_type(self) -> str:

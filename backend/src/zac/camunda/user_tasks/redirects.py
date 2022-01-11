@@ -28,7 +28,7 @@ def get_redirect_task_context(task: Task) -> RedirectContext:
     redirect_url = task.get_variable("redirectTo")
     query_params = task.get_variable("queryParams", default=None)
     if query_params:
-        redirect_url = furl(redirect_url).set(query_params).url
+        redirect_url = furl(redirect_url).add(query_params).url
     new_window = task.get_variable("openInNewWindow", default=False)
 
     return RedirectContext(

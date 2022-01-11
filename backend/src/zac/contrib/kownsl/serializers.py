@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 from furl import furl
@@ -15,7 +16,7 @@ from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
-    PROXY_SCHEMA_BASE = "https://kownsl.cg-intern.ont.utrecht.nl/api/v1"
+    PROXY_SCHEMA_BASE = settings.KOWNSL_API_SCHEMA
     PROXY_SCHEMA_PATH = [
         "paths",
         "/api/v1/review-requests/{uuid}",
