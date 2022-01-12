@@ -11,6 +11,7 @@ import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import {ZaakService} from '@gu/services'
+import { SnackbarService } from '@gu/components';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -19,6 +20,7 @@ import {ZaakService} from '@gu/services'
 })
 export class AdviceComponent implements OnInit {
   uuid: string;
+  taskid: string;
   zaakUrl: string;
   bronorganisatie: string;
 
@@ -55,11 +57,13 @@ export class AdviceComponent implements OnInit {
     private adviceService: AdviceService,
     private route: ActivatedRoute,
     private zaakService: ZaakService,
+    private snackbarService: SnackbarService,
   ) { }
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    if (this.uuid) {
+    this.taskid = this.route.snapshot.queryParams["taskid"];
+    if (this.uuid && this.taskid) {
       this.fetchData()
       this.adviceForm = this.fb.group({
         advice: this.fb.control(""),
@@ -243,17 +247,29 @@ export class AdviceComponent implements OnInit {
           }
         }),
         switchMap((formData: AdviceForm) => {
-          return this.adviceService.postAdvice(this.adviceFormData, this.uuid)
+          return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.taskid)
         })
       ).subscribe( () => {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, errorRes => {
-      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens."
-      this.submitFailed = true;
       this.isSubmitting = false;
+      this.errorMessage = "Er is een fout opgetreden bij het versturen van uw gegevens."
+      this.reportError(errorRes)
     })
+  }
 
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 
   get adviceControl(): FormControl {

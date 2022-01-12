@@ -21,8 +21,8 @@ export class AdviceService {
     return this.http.Get<any>(endpoint, options);
   }
 
-  postAdvice(formData: AdviceForm, uuid: string): Observable<AdviceForm> {
-    return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/advice`), formData);
+  postAdvice(formData: AdviceForm, uuid: string, taskid: string): Observable<AdviceForm> {
+    return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/advice?taskid=${taskid}`), formData);
   }
 
   readDocument(bronorganisatie: string, identificatie: string): Observable<ReadWriteDocument> {

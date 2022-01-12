@@ -9,13 +9,11 @@ reason, we currently need to hardcode the URLs rather than relying on operation 
 for example. In the future, we'll be able to point to
 ``#/components/schemas/ReviewRequest`` for example.
 """
+from django.conf import settings
+
 from drf_spectacular.utils import extend_schema
 
 from zac.api.utils import remote_schema_ref
-
-from .serializers import KownslReviewRequestSerializer
-
-KOWNSL_OAS = KownslReviewRequestSerializer.PROXY_SCHEMA_BASE
 
 
 def remote_kownsl_create_schema(
@@ -30,10 +28,12 @@ def remote_kownsl_create_schema(
     response_schema = [*method_path, "responses", "201", *schema_path]
     return extend_schema(
         request={
-            media_type: remote_schema_ref(KOWNSL_OAS, request_schema),
+            media_type: remote_schema_ref(settings.KOWNSL_API_SCHEMA, request_schema),
         },
         responses={
-            (status_code, media_type): remote_schema_ref(KOWNSL_OAS, response_schema),
+            (status_code, media_type): remote_schema_ref(
+                settings.KOWNSL_API_SCHEMA, response_schema
+            ),
         },
         **kwargs,
     )

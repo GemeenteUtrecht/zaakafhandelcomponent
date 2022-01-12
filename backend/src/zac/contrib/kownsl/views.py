@@ -6,8 +6,9 @@ from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import authentication, permissions, status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +16,7 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.user_tasks.api import get_task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_document, get_zaak
@@ -124,22 +126,41 @@ class BaseRequestView(APIView):
         return Response(serializer.data)
 
     def post(self, request, request_uuid):
+        if not (task_id := request.query_params.get("taskid")):
+            raise exceptions.ValidationError("'taskid' query parameter is required.")
+
+        task = get_task(task_id)
+        data = {**request.data}
+        if task.assignee_type() == AssigneeTypeChoices.group:
+            data["group"] = f"{task.assignee}"
+
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
         client = get_client(request.user)
         response = client.create(
             self._operation_resource,
-            data=request.data,
+            data=data,
             request__uuid=request_uuid,
         )
         return Response(response, status=status.HTTP_201_CREATED)
 
 
 @extend_schema_view(
-    get=extend_schema(summary=_("Retrieve advice review request")),
+    get=extend_schema(
+        summary=_("Retrieve advice review request"),
+    ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/advices",
         summary=_("Register advice for review request"),
+        parameters=[
+            OpenApiParameter(
+                name="taskid",
+                required=True,
+                type=OpenApiTypes.UUID,
+                description=_("Id of the user task in camunda."),
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
     ),
 )
 class AdviceRequestView(BaseRequestView):
@@ -147,10 +168,21 @@ class AdviceRequestView(BaseRequestView):
 
 
 @extend_schema_view(
-    get=extend_schema(summary=_("Retrieve approval review request")),
+    get=extend_schema(
+        summary=_("Retrieve approval review request"),
+    ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/approvals",
         summary=_("Register approval for review request"),
+        parameters=[
+            OpenApiParameter(
+                name="taskid",
+                required=True,
+                type=OpenApiTypes.UUID,
+                description=_("Id of the user task in camunda."),
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
     ),
 )
 class ApprovalRequestView(BaseRequestView):
