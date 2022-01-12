@@ -17,7 +17,7 @@ class GetProcessZaakUrlTests(TestCase):
             id="aProcessInstanceId", definition_id="some-process:1"
         )
         m.get(
-            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValues=false",
+            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValue=false",
             json=serialize_variable("dummy"),
         )
 
@@ -30,7 +30,7 @@ class GetProcessZaakUrlTests(TestCase):
             id="aProcessInstanceId", definition_id="some-process:1"
         )
         m.get(
-            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValues=false",
+            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValue=false",
             status_code=404,
         )
         m.get(
@@ -43,7 +43,7 @@ class GetProcessZaakUrlTests(TestCase):
             ],
         )
         m.get(
-            f"{PI_URL}/parentProcessInstanceId/variables/zaakUrl?deserializeValues=false",
+            f"{PI_URL}/parentProcessInstanceId/variables/zaakUrl?deserializeValue=false",
             json=serialize_variable("dummy"),
         )
 
@@ -56,7 +56,7 @@ class GetProcessZaakUrlTests(TestCase):
             id="aProcessInstanceId", definition_id="some-process:1"
         )
         m.get(
-            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValues=false",
+            f"{PI_URL}/aProcessInstanceId/variables/zaakUrl?deserializeValue=false",
             status_code=404,
         )
         m.get(f"{PI_URL}?subProcessInstance=aProcessInstanceId", json=[])
