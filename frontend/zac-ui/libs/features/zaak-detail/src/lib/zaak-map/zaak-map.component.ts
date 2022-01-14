@@ -3,10 +3,9 @@ import {debounceTime, distinctUntilChanged, filter, tap} from 'rxjs/operators';
 import {Subject} from 'rxjs';
 import * as L from 'leaflet';
 import proj4 from 'proj4';
-import {SnackbarService} from '@gu/components';
+import {MapGeometry, MapMarker, SnackbarService} from '@gu/components';
 import {Geometry, Position, RelatedCase, Zaak, ZaakObject, ZaakObjectGroup} from '@gu/models';
 import {KadasterService, ZaakObjectService, ZaakService} from '@gu/services';
-import {MapGeometry, MapMarker} from '../../../../../shared/ui/components/src/lib/components/map/map';
 
 
 @Component({
