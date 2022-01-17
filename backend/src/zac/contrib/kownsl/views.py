@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -16,9 +17,9 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.camunda.user_tasks.api import get_task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_document, get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
@@ -126,13 +127,13 @@ class BaseRequestView(APIView):
         return Response(serializer.data)
 
     def post(self, request, request_uuid):
-        if not (task_id := request.query_params.get("taskid")):
-            raise exceptions.ValidationError("'taskid' query parameter is required.")
+        if not (assignee := request.query_params.get("assignee")):
+            raise exceptions.ValidationError("'assignee' query parameter is required.")
 
-        task = get_task(task_id)
+        assignee = resolve_assignee(assignee)
         data = {**request.data}
-        if task.assignee_type() == AssigneeTypeChoices.group:
-            data["group"] = f"{task.assignee}"
+        if isinstance(assignee, Group):
+            data["group"] = f"{assignee}"
 
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
@@ -154,10 +155,10 @@ class BaseRequestView(APIView):
         summary=_("Register advice for review request"),
         parameters=[
             OpenApiParameter(
-                name="taskid",
+                name="assignee",
                 required=True,
-                type=OpenApiTypes.UUID,
-                description=_("Id of the user task in camunda."),
+                type=OpenApiTypes.STR,
+                description=_("Assignee of the user task in camunda."),
                 location=OpenApiParameter.QUERY,
             ),
         ],
@@ -176,10 +177,10 @@ class AdviceRequestView(BaseRequestView):
         summary=_("Register approval for review request"),
         parameters=[
             OpenApiParameter(
-                name="taskid",
+                name="assignee",
                 required=True,
-                type=OpenApiTypes.UUID,
-                description=_("Id of the user task in camunda."),
+                type=OpenApiTypes.STR,
+                description=_("Assignee of the user task in camunda."),
                 location=OpenApiParameter.QUERY,
             ),
         ],

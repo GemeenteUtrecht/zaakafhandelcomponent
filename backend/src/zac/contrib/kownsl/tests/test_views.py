@@ -14,7 +14,6 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
-from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
@@ -113,20 +112,11 @@ class ViewTests(ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create(username="some-user")
         cls.group = GroupFactory.create(name="some-group")
 
-        task = _get_task(**{"assignee": f"{AssigneeTypeChoices.group}:some-group"})
-        task.assignee = cls.group
-        cls.get_task_patcher = patch(
-            "zac.contrib.kownsl.views.get_task", return_value=task
-        )
-
     def setUp(self):
         super().setUp()
 
         self.get_zaak_patcher.start()
         self.addCleanup(self.get_zaak_patcher.stop)
-
-        self.get_task_patcher.start()
-        self.addCleanup(self.get_task_patcher.stop)
 
     def _mock_oas_get(self, m):
         mock_service_oas_get(
@@ -143,9 +133,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["'taskid' query parameter is required."])
+        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
 
-    def test_create_approval(self, m):
+    def test_create_approval_assignee_query_param(self, m):
         self._mock_oas_get(m)
         m.get(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
@@ -165,7 +155,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         url = (
             furl(url)
             .set(
-                {"taskid": "45638aa6-e177-46cc-b580-43339795d5c6"},
+                {"assignee": "group:some-group"},
             )
             .url
         )
