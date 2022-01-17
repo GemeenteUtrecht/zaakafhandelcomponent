@@ -20,7 +20,7 @@ import { SnackbarService } from '@gu/components';
 })
 export class AdviceComponent implements OnInit {
   uuid: string;
-  taskid: string;
+  assignee: string;
   zaakUrl: string;
   bronorganisatie: string;
 
@@ -62,8 +62,8 @@ export class AdviceComponent implements OnInit {
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    this.taskid = this.route.snapshot.queryParams["taskid"];
-    if (this.uuid && this.taskid) {
+    this.assignee = this.route.snapshot.queryParams["assignee"];
+    if (this.uuid && this.assignee) {
       this.fetchData()
       this.adviceForm = this.fb.group({
         advice: this.fb.control(""),
@@ -247,7 +247,7 @@ export class AdviceComponent implements OnInit {
           }
         }),
         switchMap((formData: AdviceForm) => {
-          return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.taskid)
+          return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.assignee)
         })
       ).subscribe( () => {
       this.isSubmitting = false;
