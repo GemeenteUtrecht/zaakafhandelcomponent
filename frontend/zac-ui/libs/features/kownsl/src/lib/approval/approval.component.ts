@@ -17,7 +17,7 @@ import { SnackbarService } from '@gu/components';
 })
 export class ApprovalComponent implements OnInit {
   uuid: string;
-  taskid: string;
+  assignee: string;
   zaakUrl: string;
 
   approvalData: ReviewRequest;
@@ -47,8 +47,8 @@ export class ApprovalComponent implements OnInit {
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    this.taskid = this.route.snapshot.queryParams["taskid"];
-    if (this.uuid && this.taskid) {
+    this.assignee = this.route.snapshot.queryParams["assignee"];
+    if (this.uuid && this.assignee) {
       this.fetchData()
       this.approvalForm = this.fb.group({
         approved: this.fb.control("", Validators.required),
@@ -144,7 +144,7 @@ export class ApprovalComponent implements OnInit {
 
   postApproval(formData: ApprovalForm): void {
     this.isSubmitting = true;
-    this.approvalService.postApproval(formData, this.uuid, this.taskid).subscribe(data => {
+    this.approvalService.postApproval(formData, this.uuid, this.assignee).subscribe(data => {
       this.isSubmitting = false;
       this.submitSuccess = true;
     }, errorRes => {
