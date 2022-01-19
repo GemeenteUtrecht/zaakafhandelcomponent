@@ -26,6 +26,13 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     value: 'Niet akkoord',  // As in API response.
   },
 
+  ADVICE_COMPLETE: {
+    icon: 'done',
+    iconColor: 'green',
+    label: 'Afgehandeld',
+    value: 'Afgehandeld',
+  },
+
   PENDING: {
     icon: 'timer',
     iconColor: 'orange',
@@ -56,7 +63,7 @@ export class ReviewRequestsService {
    * @return {boolean}
    */
   isReviewRequestCompleted(reviewRequest: ReviewRequestSummary): boolean {
-    return reviewRequest.completed === reviewRequest.numAssignedUsers;
+    return reviewRequest.completed >= reviewRequest.numAssignedUsers;
   }
 
   /**
@@ -87,7 +94,6 @@ export class ReviewRequestsService {
    */
   getReviewRequestStatus(reviewRequestSummary: ReviewRequestSummary, reviewRequestDetails: ReviewRequestDetails): ReviewRequestStatus {
     const responses = reviewRequestDetails?.approvals || reviewRequestDetails?.advices;
-
     // No responses.
     if (this.isReviewRequestPristine(reviewRequestSummary)) {
       return REVIEW_REQUEST_STATUSES.PENDING;
@@ -98,12 +104,19 @@ export class ReviewRequestsService {
       return REVIEW_REQUEST_STATUSES.LOADING;
     }
 
+    // All advices given.
+    if (reviewRequestSummary.reviewType === 'advice' && this.isReviewRequestCompleted(reviewRequestSummary)) {
+      return REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE;
+    }
+
     // Whether all approved.
     const isApproved = this.isReviewRequestCompleted(reviewRequestSummary) &&
       responses.length &&
       responses.every(a => {
         if(reviewRequestSummary.reviewType === 'approval') {
           return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.APPROVED.value.toLowerCase();
+        } else if (reviewRequestSummary.reviewType === 'advice') {
+          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE.value.toLowerCase();
         }
         return true;
       });
@@ -121,7 +134,7 @@ export class ReviewRequestsService {
     } else if (isNotApproved) {
       return REVIEW_REQUEST_STATUSES.NOT_APPROVED;
     } else {
-      return REVIEW_REQUEST_STATUSES.PENDING;  // One but not all approved.
+      return REVIEW_REQUEST_STATUSES.PENDING;  // One but not all approved or adviced.
     }
   }
 

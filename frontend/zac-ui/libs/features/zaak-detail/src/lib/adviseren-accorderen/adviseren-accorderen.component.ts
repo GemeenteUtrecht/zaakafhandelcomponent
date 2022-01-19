@@ -146,7 +146,7 @@ export class AdviserenAccorderenComponent implements OnInit {
             type: 'icon',
           } as ExtensiveCell,
 
-          'result': reviewRequestSummary.reviewType === 'approval' ? status.label : 'Afgehandeld ',
+          'result': status.label,
 
           'type': reviewRequestSummary.reviewType === 'approval' ? 'Akkoord aanvraag' : 'Advies aanvraag',
 
