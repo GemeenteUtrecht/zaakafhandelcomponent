@@ -4,7 +4,7 @@
  * @TODO: Use a more solid check.
  * @return {Boolean}
  */
-export const isDevelopmentEnvironment = () => {
+export const isTestEnvironment = () => {
   const url = String(window.location);
-  return Boolean(url.match('test') || url.match('localhost'));
+  return Boolean(url.match('ont') || url.match('localhost'));
 }
