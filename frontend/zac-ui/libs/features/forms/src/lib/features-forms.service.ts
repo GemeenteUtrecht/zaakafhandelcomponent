@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {ApplicationHttpClient} from '@gu/services';
 import {Observable} from 'rxjs';
 import {Form} from "./features-forms.model";
-import {isDevelopmentEnvironment, isTestEnvironment} from "@gu/utils";
+import {isTestEnvironment} from "@gu/utils";
 
 @Injectable({
   providedIn: 'root'
