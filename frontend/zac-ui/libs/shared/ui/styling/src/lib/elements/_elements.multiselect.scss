@@ -1,3 +1,9 @@
-ng-dropdown-panel {
+.ng-dropdown-panel {
   font-size: 0.875rem;
+  &.ng-select-bottom {
+    border-color: $color-blue;
+    box-shadow: inset 0 0 0 1px $color-blue;
+    border-width: 2px;
+    border-top: 1px solid $border-input;
+  }
 }

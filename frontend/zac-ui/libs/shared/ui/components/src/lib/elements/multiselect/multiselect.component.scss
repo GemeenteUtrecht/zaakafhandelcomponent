@@ -25,12 +25,6 @@
         color: $color-blue;
       }
     }
-    ::ng-deep .ng-dropdown-panel.ng-select-bottom {
-      border-color: $color-blue;
-      box-shadow: inset 0 0 0 1px $color-blue;
-      border-width: 2px;
-      border-top: 1px solid $border-input;
-    }
     .ng-placeholder {
       color: $color-text !important;
       font-size: 0.875rem;
@@ -51,9 +45,22 @@
         color: $color-blue;
       }
     }
+    .ng-value {
+      margin-top: 3px;
+    }
+    .ng-value-container .ng-input>input {
+      padding-top: 3px !important;
+    }
   }
 }
 
 .ng-select-opened + span, .ng-select-focused + span {
   color: $color-blue;
+}
+
+body .ng-dropdown-panel.ng-select-bottom {
+  border-color: $color-blue;
+  box-shadow: inset 0 0 0 1px $color-blue;
+  border-width: 2px;
+  border-top: 1px solid $border-input;
 }
