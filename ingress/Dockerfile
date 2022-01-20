@@ -5,7 +5,7 @@ ENV BACKEND_HOST=backend \
     FRONTEND_HOST=frontend  \
     FRONTEND_PORT=8080 \
     FRONTEND_PATH=/ \
-    ACS_PROXY_URL=https://alfresco.cg-intern.ont.utrecht.nl
+    ACS_PROXY_URL=https://alfresco.cg-intern.acc.utrecht.nl
 
 
 COPY wait-for-it.sh /wait-for-it.sh
