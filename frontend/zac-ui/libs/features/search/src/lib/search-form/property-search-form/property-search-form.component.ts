@@ -1,4 +1,14 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  NgZone,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -52,7 +62,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private searchService: SearchService,
     private router: Router,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private ngZone: NgZone,
+    private cdRef: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
@@ -83,8 +95,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.hasError = false;
     this.searchService.getZaaktypen().subscribe(res => {
-      this.isLoading = false;
       this.zaaktypenData = res.results;
+      this.isLoading = false;
+      this.cdRef.detectChanges();
     }, error => {
       this.isLoading = false;
       this.hasError = true;
@@ -108,6 +121,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
         this.zaaktypeEigenschappenData = res;
         this.eigenschapnaam.patchValue(undefined);
         this.isLoading = false;
+        this.cdRef.detectChanges();
       }, error => {
         this.isLoading = false;
         this.hasError = true;
