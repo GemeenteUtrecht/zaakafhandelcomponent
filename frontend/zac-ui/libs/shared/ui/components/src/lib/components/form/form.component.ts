@@ -27,6 +27,7 @@ import {FormService} from './form.service';
 export class FormComponent implements OnInit, OnChanges {
   @Input() form: FieldConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
+  @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
@@ -151,25 +152,24 @@ export class FormComponent implements OnInit, OnChanges {
         this.formService.setValidators(this.formGroup, field);
         return field
       })
-      .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evalutate activeWhen.
+      .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evaluate activeWhen.
   }
 
   updateFields() {
     const fields = this.getFields();
 
-    if(!this.fields) {
+    if (!this.fields) {
       this.fields = fields;
       return
     }
-
     fields.forEach((field) => {
       const otherField = this.fields.find((f) => f.name === field.name)
 
-      if(!otherField) {
+      if (!otherField) {
         this.fields.push(field)
+      } else {
+        Object.assign(otherField, field);
       }
-
-      Object.assign(otherField, field);
     });
   }
 
@@ -188,6 +188,11 @@ export class FormComponent implements OnInit, OnChanges {
 
     if (this.editable === 'toggle') {
       this.edit = !this.edit;
+      if (!this.edit) {
+        // reset to initial form values when exiting edit mode
+        this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
+        this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
+      }
       this.updateFields();
     }
   }

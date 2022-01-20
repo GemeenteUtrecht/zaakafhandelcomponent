@@ -19,6 +19,9 @@
     &:hover .vertical-nav {
       width: 250px;
       transform: translateX(0);
+      .menu-container {
+        overflow-y: auto;
+      }
     }
     .vertical-nav .logo {
       opacity: 0;
@@ -51,6 +54,7 @@
     align-items: center;
     justify-content: space-between;
     border: 1px solid $border-color;
+    background-color: $color-white;
     @include media-breakpoint-down(sm) {
       height: 56px;
     }
@@ -123,13 +127,13 @@
     .menu-container {
       box-sizing: border-box;
       position: relative;
-      overflow: scroll;
       display: flex;
+      overflow-x: hidden;
       flex-direction: column;
       justify-content: flex-start;
       height: calc(100vh - 125px);
       @include media-breakpoint-down(md) {
-        height: calc(100vh - calc(100px + 3.6rem));
+        height: calc(100vh - calc(100px + 5.2rem));
       }
       &::-webkit-scrollbar {
         width: 0;

@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
 import {
   Feature,
@@ -90,7 +90,8 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     private objectsService: ObjectsService,
     private searchService: SearchService,
     private zaakObjectService: ZaakObjectService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
+    private cdRef: ChangeDetectorRef,
   ) {
   }
 
@@ -178,6 +179,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             this.objectTypes = objectTypes;
             this.objectTypeVersions = objectTypeVersions;
             this.isLoading = false;
+            this.cdRef.detectChanges();
           }
         }
       )
@@ -269,15 +271,16 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
       this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
         (zaakObjects: ZaakObject[]) => {
-          this.isLoading = false;
           this.zaakObjects = zaakObjects;
-
           const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
               onClick: (event) => this._selectZaakObject(event, zaakObject),
             })
           ).filter((mapMarker) => mapMarker);
 
           this.mapMarkers.emit(activeMapMarkers);
+
+          this.isLoading = false;
+          this.cdRef.detectChanges();
         },
         this.reportError.bind(this),
       );

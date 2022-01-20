@@ -38,7 +38,7 @@ const bottomMenuItems: MenuItem[] = [
   {
     icon: 'link',
     label: 'Alfresco',
-    to: 'https://alfresco-oz.utrechtproeftuin.nl/',
+    to: 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/',
     external: true,
   },
   {
