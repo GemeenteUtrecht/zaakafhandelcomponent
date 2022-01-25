@@ -481,11 +481,13 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(
+    summary=_("List case users and atomic permissions"),
+)
 class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
     serializer_class = UserAtomicPermissionSerializer
-    schema_summary = _("List case users and atomic permissions")
 
     def get_queryset(self):
         zaak = self.get_object()
@@ -725,7 +727,7 @@ class ZaakTypenView(ListAPIView):
 
 
 @extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
-class VertrouwelijkheidsAanduidingenView(ListAPIView):
+class VertrouwelijkheidsAanduidingenView(views.APIView):
     """
     List the available confidentiality classification.
     """
@@ -734,11 +736,13 @@ class VertrouwelijkheidsAanduidingenView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = VertrouwelijkheidsAanduidingSerializer
 
-    def get_queryset(self):
-        return [
+    def get(self, request):
+        instances = [
             VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
             for choice in VertrouwelijkheidsAanduidingen.choices
         ]
+        serializer = self.serializer_class(instance=instances, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(
