@@ -458,6 +458,10 @@ SPECTACULAR_SETTINGS = {
     "EXTERNAL_DOCS": {
         "url": "https://zaakafhandelcomponent.readthedocs.io/",
     },
+    "ENUM_NAME_OVERRIDES": {
+        "AardRelatieOmgekeerdeRichtingEnum": "zgw_consumers.api_models.constants.AardRelatieChoices",
+        "VertrouwelijkheidaanduidingEnum": "zgw_consumers.api_models.constants.VertrouwelijkheidsAanduidingen",
+    },
 }
 
 # URLs from which DRF spectacular retrieves API schemas
