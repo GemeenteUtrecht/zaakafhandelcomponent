@@ -41,6 +41,7 @@ export class DocumentToevoegenComponent implements OnInit {
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
+  @Output() closeForm: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 

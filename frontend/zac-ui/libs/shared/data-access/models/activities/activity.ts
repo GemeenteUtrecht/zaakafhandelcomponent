@@ -12,7 +12,8 @@ export interface Activity {
   name: string;
   remarks: string;
   status: 'on_going' | 'finished';
-  assignee?: number;
+  userAssignee: string;
+  groupAssignee: string;
   document: string;
   created: Date;
   events: Event[];
