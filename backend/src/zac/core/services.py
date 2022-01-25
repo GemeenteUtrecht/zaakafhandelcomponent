@@ -553,6 +553,34 @@ def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
     return zaak_eigenschap
 
 
+def create_zaak_eigenschap(
+    zaak_url: str = "", naam: str = "", waarde: str = ""
+) -> Optional[ZaakEigenschap]:
+    zaak = get_zaak(zaak_url=zaak_url)
+    zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+    eigenschappen = get_eigenschappen(zaak.zaaktype)
+    try:
+        eigenschap_url = next(
+            (eigenschap.url for eigenschap in eigenschappen if eigenschap.naam == naam)
+        )
+    except StopIteration:
+        # eigenschap not found - abort
+        logger.info("Eigenschap '%s' did not exist on the zaaktype, aborting.")
+        return None
+
+    zrc_client = _client_from_url(zaak_url)
+    zaak_eigenschap = zrc_client.create(
+        "zaakeigenschap",
+        {
+            "zaak": zaak_url,
+            "eigenschap": eigenschap_url,
+            "waarde": waarde,
+        },
+        zaak_uuid=zaak_url.split("/")[-1],
+    )
+    return factory(ZaakEigenschap, zaak_eigenschap)
+
+
 def update_zaak_eigenschap(zaak_eigenschap_url: str, data: dict) -> ZaakEigenschap:
     client = _client_from_url(zaak_eigenschap_url)
     zaak_eigenschap = client.partial_update(

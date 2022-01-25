@@ -599,6 +599,20 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
         extra_kwargs = {"url": {"read_only": True}}
 
 
+class CreateZaakEigenschapSerializer(serializers.Serializer):
+    naam = serializers.CharField(
+        help_text=_(
+            "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in Catalogi API."
+        )
+    )
+    waarde = serializers.CharField(
+        help_text=_(
+            "Value of EIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
+        )
+    )
+    zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
+
+
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
     status = ZaakStatusSerializer()
 

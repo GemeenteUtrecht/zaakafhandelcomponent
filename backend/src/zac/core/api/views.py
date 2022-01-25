@@ -50,6 +50,7 @@ from zgw.models.zrc import Zaak
 from ..cache import invalidate_zaak_cache
 from ..services import (
     create_document,
+    create_zaak_eigenschap,
     delete_zaak_eigenschap,
     delete_zaak_object,
     fetch_zaak_eigenschap,
@@ -96,6 +97,7 @@ from .permissions import (
 from .serializers import (
     AddZaakDocumentSerializer,
     AddZaakRelationSerializer,
+    CreateZaakEigenschapSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
@@ -316,6 +318,24 @@ class ZaakEigenschapDetailView(views.APIView):
         self.check_object_permissions(self.request, zaak)
 
         return zaak_eigenschap
+
+    @extend_schema(
+        summary=_("Create case property"), request=CreateZaakEigenschapSerializer
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = CreateZaakEigenschapSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Check permissions
+        zaak = get_zaak(zaak_url=serializer.validated_data["zaak_url"])
+        self.check_object_permissions(request, zaak)
+
+        # Create zaakeigenschap
+        zaak_eigenschap = create_zaak_eigenschap(
+            **serializer.validated_data["zaak_url"]
+        )
+        data = self.serializer_class(instance=zaak_eigenschap).data
+        return Response(data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         summary=_("Update case property"),
