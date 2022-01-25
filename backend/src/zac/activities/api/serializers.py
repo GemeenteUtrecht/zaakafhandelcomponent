@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
+from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.utils.validators import ImmutableFieldValidator
 
@@ -22,7 +23,40 @@ class EventSerializer(serializers.ModelSerializer):
         )
 
 
-class ActivitySerializer(serializers.ModelSerializer):
+class ReadActivitySerializer(serializers.ModelSerializer):
+    group_assignee = GroupSerializer(
+        required=False,
+        help_text=_("Group assigned to activity."),
+    )
+    user_assignee = UserSerializer(
+        required=False,
+        help_text=_("User assigned to activity."),
+    )
+    events = EventSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Activity
+        fields = (
+            "created",
+            "document",
+            "events",
+            "group_assignee",
+            "id",
+            "name",
+            "remarks",
+            "status",
+            "user_assignee",
+            "zaak",
+            "url",
+        )
+        extra_kwargs = {
+            "url": {
+                "view_name": "activity-detail",
+            },
+        }
+
+
+class CreateOrUpdateActivitySerializer(serializers.ModelSerializer):
     group_assignee = serializers.SlugRelatedField(
         slug_field="name",
         queryset=Group.objects.prefetch_related("user_set").all(),
