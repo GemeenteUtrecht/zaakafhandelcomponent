@@ -57,16 +57,16 @@
               <p>{{activity.remarks}}</p>
             </div>
             <div class="activity__details col-lg-6">
-              <!--  Gebruiker toewijzen  -->
-              <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
-                       (click)="openAssigneeEditField = i; openNoteEditField = null"
-                       [color]="currentUser.username === (activity.groupAssignee || activity.userAssignee) ? 'primary' : 'tertiary'"
-                       icon="edit"
-                       class="d-inline-block mb-1"
-              >
-                {{activity.groupAssignee || activity.userAssignee}}
-              </gu-chip>
               <div class="activity__detail mb-4">
+                <!--  Gebruiker toewijzen  -->
+                <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
+                         (click)="openAssigneeEditField = i; openNoteEditField = null"
+                         [color]="currentUser.username === (activity.groupAssignee?.name || activity.userAssignee.username) ? 'primary' : 'tertiary'"
+                         icon="edit"
+                         class="d-inline-block mb-1"
+                >
+                  {{activity.groupAssignee?.name || activity.userAssignee.fullName}}
+                </gu-chip>
                 <button gu-button *ngIf="!activity.groupAssignee && !activity.userAssignee && openAssigneeEditField !== i"
                         (click)="openAssigneeEditField = i; openDocumentUploadForm = null; openNoteEditField = null"
                         class="d-block"
@@ -230,7 +230,7 @@
                           size="small"
                           class="mb-2"
                           (click)="closeActivity(activity.id)">
-                    Activiteit sluiten
+                    Activiteit afsluiten
                   </button>
                   <button gu-button buttonStyle="secondary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
                 </div>
@@ -248,7 +248,7 @@
                       class="mb-2"
                       (click)="showDeleteActivityConfirmation = i">Verwijderen</button>
               <div *ngIf="showDeleteActivityConfirmation === i">
-                <p class="mb-2">Weet je zeker dat je deze activiteit PERMANENT wilt verwijderen?</p>
+                <p class="mb-2">Weet je zeker dat je deze activiteit <strong>PERMANENT</strong> wilt verwijderen?</p>
                 <div class="">
                   <button gu-button
                           buttonStyle="primary"
@@ -290,7 +290,7 @@
                 <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
                          [color]="currentUser.username === (activity.groupAssignee || activity.userAssignee) ? 'primary' : 'tertiary'"
                          class="d-inline-block mb-1">
-                  Toegewezene: {{activity.groupAssignee || activity.userAssignee}}
+                  Toegewezene: {{activity.groupAssignee?.name || activity.userAssignee?.fullName}}
                 </gu-chip>
               </div>
               <!--  Document uploaden  -->
