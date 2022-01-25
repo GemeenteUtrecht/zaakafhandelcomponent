@@ -7,8 +7,9 @@ from django.utils.translation import gettext as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, permissions
+from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
@@ -21,7 +22,7 @@ from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search
 
-from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
+from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
@@ -94,22 +95,23 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     summary=_("List active cases"),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
-class WorkStackAssigneeCasesView(ListAPIView):
+class WorkStackAssigneeCasesView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
     ordering = ("-deadline",)
 
-    def get_queryset(self):
-        ordering = ESOrderingFilter().get_ordering(self.request, self)
+    def get(self, request):
+        ordering = ESOrderingFilter().get_ordering(request, self)
         zaken = search(
-            user=self.request.user,
-            behandelaar=self.request.user.username,
+            user=request.user,
+            behandelaar=request.user.username,
             ordering=ordering,
         )
         unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-        return unfinished_zaken
+        serializer = self.serializer_class(instance=unfinished_zaken, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(summary=_("List user tasks"))
