@@ -59,6 +59,7 @@ from ..services import (
     find_zaak,
     get_document,
     get_documenten,
+    get_eigenschap,
     get_eigenschappen,
     get_informatieobjecttype,
     get_related_zaken,
@@ -331,11 +332,17 @@ class ZaakEigenschapDetailView(views.APIView):
         self.check_object_permissions(request, zaak)
 
         # Create zaakeigenschap
-        zaak_eigenschap = create_zaak_eigenschap(
-            **serializer.validated_data["zaak_url"]
-        )
-        data = self.serializer_class(instance=zaak_eigenschap).data
-        return Response(data, status=status.HTTP_201_CREATED)
+        zaak_eigenschap = create_zaak_eigenschap(**serializer.validated_data)
+        if not zaak_eigenschap:
+            raise exceptions.NotFound(
+                detail=_("EIGENSCHAP with name %s not found.")
+                % serializer.validated_data["naam"]
+            )
+        # Resolve relation
+        zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
+
+        serializer = self.serializer_class(instance=zaak_eigenschap)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         summary=_("Update case property"),
