@@ -554,7 +554,7 @@ def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
 
 
 def create_zaak_eigenschap(
-    zaak_url: str = "", naam: str = "", waarde: str = ""
+    zaak_url: str = "", naam: str = "", value: str = ""
 ) -> Optional[ZaakEigenschap]:
     zaak = get_zaak(zaak_url=zaak_url)
     zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
@@ -574,7 +574,7 @@ def create_zaak_eigenschap(
         {
             "zaak": zaak_url,
             "eigenschap": eigenschap_url,
-            "waarde": waarde,
+            "waarde": value,
         },
         zaak_uuid=zaak_url.split("/")[-1],
     )

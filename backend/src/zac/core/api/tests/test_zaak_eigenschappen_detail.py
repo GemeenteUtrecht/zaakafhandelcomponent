@@ -350,7 +350,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
             data={
                 "zaak_url": ZAAK_URL,
                 "naam": zaak_eigenschap["naam"],
-                "waarde": zaak_eigenschap["waarde"],
+                "value": zaak_eigenschap["waarde"],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -407,7 +407,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
             data={
                 "zaak_url": ZAAK_URL,
                 "naam": "some-other-property",
-                "waarde": "10",
+                "value": "10",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

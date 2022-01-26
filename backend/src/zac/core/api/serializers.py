@@ -605,9 +605,9 @@ class CreateZaakEigenschapSerializer(serializers.Serializer):
             "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in Catalogi API."
         )
     )
-    waarde = serializers.CharField(
+    value = serializers.CharField(
         help_text=_(
-            "Value of EIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
+            "Value of ZAAKEIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
         )
     )
     zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
