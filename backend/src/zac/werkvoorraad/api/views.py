@@ -15,6 +15,7 @@ from zgw_consumers.concurrent import parallel
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
+from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
@@ -95,23 +96,21 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     summary=_("List active cases"),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
-class WorkStackAssigneeCasesView(views.APIView):
+class WorkStackAssigneeCasesView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
     ordering = ("-deadline",)
 
-    def get(self, request):
-        ordering = ESOrderingFilter().get_ordering(request, self)
+    def get_objects(self):
+        ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken = search(
-            user=request.user,
-            behandelaar=request.user.username,
+            user=self.request.user,
+            behandelaar=self.request.user.username,
             ordering=ordering,
         )
-        unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-        serializer = self.serializer_class(instance=unfinished_zaken, many=True)
-        return Response(serializer.data)
+        return [zaak for zaak in zaken if not zaak.einddatum]
 
 
 @extend_schema(summary=_("List user tasks"))

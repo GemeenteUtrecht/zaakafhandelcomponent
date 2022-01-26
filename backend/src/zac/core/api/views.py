@@ -727,7 +727,7 @@ class ZaakTypenView(ListAPIView):
 
 
 @extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
-class VertrouwelijkheidsAanduidingenView(views.APIView):
+class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
     """
     List the available confidentiality classification.
     """
@@ -736,13 +736,11 @@ class VertrouwelijkheidsAanduidingenView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = VertrouwelijkheidsAanduidingSerializer
 
-    def get(self, request):
-        instances = [
+    def get_objects(self):
+        return [
             VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
             for choice in VertrouwelijkheidsAanduidingen.choices
         ]
-        serializer = self.serializer_class(instance=instances, many=True)
-        return Response(serializer.data)
 
 
 @extend_schema(
