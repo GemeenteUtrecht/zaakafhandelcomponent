@@ -7,13 +7,15 @@ from django.utils.translation import gettext as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, permissions
+from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
+from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
@@ -21,7 +23,7 @@ from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search
 
-from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
+from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
@@ -94,22 +96,21 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     summary=_("List active cases"),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
-class WorkStackAssigneeCasesView(ListAPIView):
+class WorkStackAssigneeCasesView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
     ordering = ("-deadline",)
 
-    def get_queryset(self):
+    def get_objects(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken = search(
             user=self.request.user,
             behandelaar=self.request.user.username,
             ordering=ordering,
         )
-        unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-        return unfinished_zaken
+        return [zaak for zaak in zaken if not zaak.einddatum]
 
 
 @extend_schema(summary=_("List user tasks"))
