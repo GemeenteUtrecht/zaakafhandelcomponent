@@ -1,10 +1,9 @@
 <form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
-  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="editable === 'toggle' && (isHovered && showEditOnHover) || !showEditOnHover">
+  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="isToggleable()">
     {{edit ? 'Annuleren' : 'Bewerken' }}
   </button>
 
   <h2 *ngIf="title">{{ title }}</h2>
-
 
   <fieldset class="form__body">
     <div *ngFor="let field of fields; let i = index">
