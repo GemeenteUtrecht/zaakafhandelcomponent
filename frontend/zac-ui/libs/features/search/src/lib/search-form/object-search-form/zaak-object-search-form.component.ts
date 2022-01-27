@@ -220,7 +220,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       const objectType = this.objectTypes.find((o) => o.url === objectTypeVersion.objectType);
       const properties = objectTypeVersion.jsonSchema.properties;
 
-      if(!properties) {
+      if (!properties) {
         return;
       }
 
@@ -240,7 +240,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         required: false,
         value: choices[0].value,
       }
-    }).filter(f=>f);
+    }).filter(f => f);
   }
 
   //
@@ -262,29 +262,27 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   submitForm(data): void {
     this.searchObjects.emit();
-    if (data.geometry) {
-      this.isLoading = true;
-      const geometry: Geometry = JSON.parse(data.geometry);
+    this.isLoading = true;
+    const geometry: Geometry = (data.geometry) ? JSON.parse(data.geometry) : null;
 
-      this.zaakObjects = [];
-      this.showZaakObjecten = true;
+    this.zaakObjects = [];
+    this.showZaakObjecten = true;
 
-      this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
-        (zaakObjects: ZaakObject[]) => {
-          this.zaakObjects = zaakObjects;
-          const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
-              onClick: (event) => this._selectZaakObject(event, zaakObject),
-            })
-          ).filter((mapMarker) => mapMarker);
+    this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
+      (zaakObjects: ZaakObject[]) => {
+        this.zaakObjects = zaakObjects;
+        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
+            onClick: (event) => this._selectZaakObject(event, zaakObject),
+          })
+        ).filter((mapMarker) => mapMarker);
 
-          this.mapMarkers.emit(activeMapMarkers);
+        this.mapMarkers.emit(activeMapMarkers);
 
-          this.isLoading = false;
-          this.cdRef.detectChanges();
-        },
-        this.reportError.bind(this),
-      );
-    }
+        this.isLoading = false;
+        this.cdRef.detectChanges();
+      },
+      this.reportError.bind(this),
+    );
   }
 
   /**
