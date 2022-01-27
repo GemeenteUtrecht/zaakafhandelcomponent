@@ -9,7 +9,11 @@ from rest_framework.response import Response
 from ..models import Activity, Event
 from .filters import ActivityFilter
 from .permissions import CanReadOrWriteActivitiesPermission, CanWriteEventsPermission
-from .serializers import ActivitySerializer, EventSerializer
+from .serializers import (
+    CreateOrUpdateActivitySerializer,
+    EventSerializer,
+    ReadActivitySerializer,
+)
 
 
 @extend_schema_view(
@@ -46,7 +50,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
         CanReadOrWriteActivitiesPermission,
     )
     filterset_class = ActivityFilter
-    serializer_class = ActivitySerializer
     http_method_names = ["get", "post", "patch", "delete"]
 
     def filter_queryset(self, queryset):
@@ -59,6 +62,15 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 return queryset.none()
 
         return qs
+
+    def get_serializer_class(self):
+        mapping = {
+            "GET": ReadActivitySerializer,
+            "POST": CreateOrUpdateActivitySerializer,
+            "PATCH": CreateOrUpdateActivitySerializer,
+            "DELETE": CreateOrUpdateActivitySerializer,
+        }
+        return mapping[self.request.method]
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

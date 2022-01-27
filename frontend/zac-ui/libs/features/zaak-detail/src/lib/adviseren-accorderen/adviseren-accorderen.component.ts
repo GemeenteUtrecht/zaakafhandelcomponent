@@ -39,6 +39,8 @@ export class AdviserenAccorderenComponent implements OnInit {
   /** @type {ReviewRequestDetails} The id of the selected review request. */
   selectedReviewRequestDetails: ReviewRequestDetails;
 
+  tableData: Table;
+
   constructor(
     private modalService: ModalService,
     private reviewRequestsService: ReviewRequestsService,
@@ -51,18 +53,6 @@ export class AdviserenAccorderenComponent implements OnInit {
    */
   public update() {
     this.getContextData();
-  }
-
-  //
-  // Getters / setters.
-  //
-
-  /**
-   * Returns the table to render.
-   * @return {Table}
-   */
-  get table(): Table {
-    return this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
   }
 
   //
@@ -108,10 +98,17 @@ export class AdviserenAccorderenComponent implements OnInit {
 
     this.isDetailsLoading = true;
 
+    this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
+
     this.reviewRequestsService.retrieveReviewRequestDetailsBatch(relevantUuids).subscribe(
-      (reviewRequesetDetails) => this.reviewRequestDetails[reviewRequesetDetails.id] = reviewRequesetDetails,
+      (reviewRequestDetails) => {
+        this.reviewRequestDetails[reviewRequestDetails.id] = reviewRequestDetails;
+        this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
+      },
       this.reportError.bind(this),
-      () => this.isDetailsLoading = false,
+      () => {
+        this.isDetailsLoading = false;
+      }
     );
   }
 
@@ -130,9 +127,9 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @return {Table}
    */
   reviewRequestSummaryAsTable(reviewRequestSummaries: ReviewRequestSummary[]): Table {
-    const headData = ['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update'];
+    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update'], []);
 
-    const bodyData: RowData[] = reviewRequestSummaries.map((reviewRequestSummary): RowData => {
+    table.bodyData = reviewRequestSummaries.map((reviewRequestSummary): RowData => {
       const reviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
       const [icon, iconColor] = this.reviewRequestsService.getReviewRequestIcon(reviewRequestSummary, reviewRequestDetails);
       const status = this.reviewRequestsService.getReviewRequestStatus(reviewRequestSummary, reviewRequestDetails);
@@ -162,7 +159,7 @@ export class AdviserenAccorderenComponent implements OnInit {
       } as RowData;
     });
 
-    return new Table(headData, bodyData);
+    return table;
   }
 
   /**

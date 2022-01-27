@@ -341,6 +341,7 @@ export class ActiviteitenComponent implements OnInit {
   patchActivity(activityId, formData) {
     this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
       this.assignUserForm.reset();
+      this.users = null;
       this.openAssigneeEditField = null;
       this.fetchActivities();
     }, res =>  {
@@ -407,8 +408,19 @@ export class ActiviteitenComponent implements OnInit {
    */
   readDocument(readUrl) {
     this.actvititeitenService.readDocument(readUrl).subscribe((res: ReadWriteDocument) => {
-      window.open(res.magicUrl, "_blank");
+      window.open(res.magicUrl, "_self");
     })
+  }
+
+  /**
+   * When closing activity is pressed.
+   * @param i
+   */
+  onCloseActivityConfirmation(i) {
+    this.showCloseActivityConfirmation = i;
+    this.openAssigneeEditField = null;
+    this.openNoteEditField = null;
+    this.openNoteEditField = null;
   }
 
   //
