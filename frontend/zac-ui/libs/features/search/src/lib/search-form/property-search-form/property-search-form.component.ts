@@ -114,10 +114,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.isLoading = true;
       this.hasError = false;
 
-      const catalogus = zaaktype.catalogus;
-      const omschrijving = zaaktype.omschrijving;
+      const zaaktypeUrl = zaaktype.url;
 
-      this.searchService.getZaaktypeEigenschappen(catalogus, omschrijving).subscribe(res => {
+      this.searchService.getZaaktypeEigenschappen(zaaktypeUrl).subscribe(res => {
         this.zaaktypeEigenschappenData = res;
         this.eigenschapnaam.patchValue(undefined);
         this.isLoading = false;

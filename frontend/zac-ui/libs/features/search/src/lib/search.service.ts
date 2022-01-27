@@ -19,8 +19,8 @@ export class SearchService {
     return this.http.Get<Zaaktype>(endpoint);
   }
 
-  getZaaktypeEigenschappen(catalogus, zaaktype_omschrijving): Observable<ZaaktypeEigenschap[]> {
-    const endpoint = encodeURI(`/api/core/eigenschappen?catalogus=${catalogus}&zaaktype_omschrijving=${zaaktype_omschrijving}`);
+  getZaaktypeEigenschappen(zaaktypeUrl): Observable<ZaaktypeEigenschap[]> {
+    const endpoint = encodeURI(`/api/core/eigenschappen?zaaktype=${zaaktypeUrl}`);
     return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
   }
 

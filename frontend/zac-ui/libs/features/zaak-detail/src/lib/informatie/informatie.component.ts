@@ -212,7 +212,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   fetchZaakTypeEigenschappen(zaak: Zaak) {
     this.isCaseAPILoading = true;
-    this.searchService.getZaaktypeEigenschappen(zaak.zaaktype.catalogus, zaak.zaaktype.omschrijving).subscribe(
+    this.searchService.getZaaktypeEigenschappen(zaak.zaaktype.url).subscribe(
       (zaaktypeEigenschappen: ZaaktypeEigenschap[]) => {
         this.zaaktypeEigenschappen = zaaktypeEigenschappen;
         this.isCaseAPILoading = false;
@@ -315,8 +315,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isCaseAPILoading = true;
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
-        this.fetchZaak();
-        this.isCaseAPILoading = false
+        this.getContextData();
       },
       this.reportError.bind(this),
     );
@@ -331,8 +330,11 @@ export class InformatieComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    const message = error.error.value[0] || this.errorMessage;
+    this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isCaseAPILoading = false;
+    this.isPropertyAPILoading = 0;
+    this.isCreatePropertyAPILoading = 0;
     console.error(error);
   }
 }
