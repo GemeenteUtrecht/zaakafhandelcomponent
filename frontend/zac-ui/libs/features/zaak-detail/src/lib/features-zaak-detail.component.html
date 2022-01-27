@@ -3,8 +3,8 @@
 
 <section *ngIf="!isLoading" class="row m-0">
   <div class="col-xl-10 p-0">
-    <div class="feature-container pb-0">
-      <div class="content-background mb-0">
+    <div class="feature-container">
+      <div class="content-background mb-0" [ngClass]="(zaakData.resultaat ? 'content-background--yellow' : '')">
         <article class="content">
 
           <!-- Breadcrumb -->
@@ -124,6 +124,7 @@
                                     [currentUser]="currentUser"
                                     [bronorganisatie]="bronorganisatie"
                                     [identificatie]="identificatie"
+                                    [zaak]="zaakData"
                                     (update)="ketenProcessenUpdate($event)"
                                     class="zaak-detail__section">
                 </gu-keten-processen>
