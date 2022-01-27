@@ -39,6 +39,7 @@ from zac.core.services import (
     fetch_zaaktype,
     get_document,
     get_documenten,
+    get_informatieobjecttypen_for_zaak,
     get_statustypen,
     get_zaak,
 )
@@ -52,7 +53,6 @@ from .utils import (
     TypeChoices,
     ValidExpandChoices,
     ValidFieldChoices,
-    get_informatieobjecttypen_for_zaak,
 )
 
 

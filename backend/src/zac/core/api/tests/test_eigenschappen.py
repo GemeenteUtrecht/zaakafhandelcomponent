@@ -77,6 +77,12 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 0)
 
+        mock_resource_get(m, self.zaaktype)
+        response = self.client.get(self.endpoint, {"zaaktype": self.zaaktype["url"]})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 0)
+
     def test_has_perm_but_not_for_zaaktype(self, m):
         zaaktype2 = generate_oas_component(
             "ztc",
@@ -112,6 +118,12 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 0)
 
+        mock_resource_get(m, self.zaaktype)
+        response = self.client.get(self.endpoint, {"zaaktype": self.zaaktype["url"]})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 0)
+
     def test_is_superuser(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
@@ -128,12 +140,14 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(
             self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         data = response.json()
-
         self.assertEqual(len(data), 1)
+
+        mock_resource_get(m, self.zaaktype)
+        response = self.client.get(self.endpoint, {"zaaktype": self.zaaktype["url"]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
 
     def test_has_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -160,12 +174,14 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(
             self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         data = response.json()
-
         self.assertEqual(len(data), 1)
+
+        mock_resource_get(m, self.zaaktype)
+        response = self.client.get(self.endpoint, {"zaaktype": self.zaaktype["url"]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
 
 
 class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
@@ -318,25 +334,45 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
+    def test_get_eigenschappen_with_all_query_params(self):
+        response = self.client.get(
+            self.endpoint,
+            {
+                "catalogus": "some-url",
+                "zaaktype_omschrijving": "ZT1",
+                "zaaktype": "some-zaaktype",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            [
+                "Zaaktype is mutually exclusive from (zaaktype_omschrijving and catalogus)."
+            ],
+        )
+
     def test_get_eigenschappen_without_query_params(self):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(),
-            {
-                "zaaktypeOmschrijving": ["Dit veld is vereist."],
-                "catalogus": ["Dit veld is vereist."],
-            },
+            [
+                "The catalogus and zaaktype_omschrijving are both required if one is given."
+            ],
         )
 
     def test_get_eigenschappen_with_invalid_query_param(self):
         response = self.client.get(
             self.endpoint, {"catalogus": "some-url", "zaaktype_omschrijving": "ZT1"}
         )
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"catalogus": ["Voer een geldige URL in."]})
+
+        response = self.client.get(self.endpoint, {"zaaktype": "some-url"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {"zaaktype": ["Voer een geldige URL in."]})
 
     @requests_mock.Mocker()
     def test_get_eigenschappen_with_same_name_and_spec(self, m):
@@ -423,7 +459,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.logger")
+    @patch("zac.core.services.logger")
     @requests_mock.Mocker()
     def test_get_eigenschappen_with_same_name_but_different_spec(self, m_logger, m_req):
         zaaktype1 = generate_oas_component(

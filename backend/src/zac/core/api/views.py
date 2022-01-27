@@ -29,7 +29,6 @@ from rest_framework.response import Response
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User, UserAtomicPermission
@@ -61,7 +60,9 @@ from ..services import (
     get_documenten,
     get_eigenschap,
     get_eigenschappen,
+    get_eigenschappen_for_zaaktypen,
     get_informatieobjecttype,
+    get_informatieobjecttypen_for_zaak,
     get_related_zaken,
     get_resultaat,
     get_rollen,
@@ -71,6 +72,7 @@ from ..services import (
     get_zaak,
     get_zaak_eigenschappen,
     get_zaakobjecten,
+    get_zaaktype,
     get_zaaktypen,
     relate_document_to_zaak,
     resolve_documenten_informatieobjecttypen,
@@ -124,10 +126,7 @@ from .serializers import (
     ZaakStatusSerializer,
     ZaakTypeAggregateSerializer,
 )
-from .utils import (
-    convert_eigenschap_spec_to_json_schema,
-    get_informatieobjecttypen_for_zaak,
-)
+from .utils import convert_eigenschap_spec_to_json_schema
 
 logger = logging.getLogger(__name__)
 
@@ -332,11 +331,13 @@ class ZaakEigenschapDetailView(views.APIView):
         self.check_object_permissions(request, zaak)
 
         # Create zaakeigenschap
-        zaak_eigenschap = create_zaak_eigenschap(**serializer.validated_data)
+        zaak_eigenschap = create_zaak_eigenschap(
+            user=request.user, **serializer.validated_data
+        )
         if not zaak_eigenschap:
             raise exceptions.NotFound(
-                detail=_("EIGENSCHAP with name %s not found.")
-                % serializer.validated_data["naam"]
+                detail=_("EIGENSCHAP with name %s not found for zaaktype %s.")
+                % (serializer.validated_data["naam"], zaak.zaaktype)
             )
         # Resolve relation
         zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
@@ -807,12 +808,13 @@ class StatusTypenView(views.APIView):
 @extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
 class EigenschappenView(ListAPIView):
     """
-    List the available eigenschappen for a given zaaktype.
+    List the available eigenschappen for a given `zaaktype` OR a `zaaktype_omschrijving` within a `catalogus`.
+    If the `zaaktype_omschrijving` is submitted, the `catalogus` is also required.
+    If the `catalogus` is submitted, the `zaaktype_omschrijving` is required.
+    The `zaaktype` is mutually exclusive from the `zaaktype_omschrijving` and `catalogus`.
 
-    Given the `zaaktype_omschrijving`, all versions of the matching zaaktype are
-    considered. Returns the eigenschappen available for the aggregated set of zaaktype
-    versions.
-
+    Given the `zaaktype_omschrijving`, all versions of the matching zaaktype are considered,
+    and returns the eigenschappen available for the aggregated set of zaaktype versions.
     Note that only the zaaktypen that the authenticated user has read-permissions for
     are considered.
     """
@@ -825,65 +827,38 @@ class EigenschappenView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         # validate query params
-        filterset = self.filterset_class(
-            data=self.request.query_params, request=self.request
-        )
+        filterset = self.filterset_class(data=request.query_params, request=request)
         if not filterset.is_valid():
             raise exceptions.ValidationError(filterset.errors)
 
-        zaaktypen = self.get_zaaktypen()
-        eigenschappen = self.get_eigenschappen(zaaktypen)
+        if zt := request.query_params.get("zaaktype"):
+            zaaktype = get_zaaktype(
+                zt,
+                user=request.user,
+            )
+            if not zaaktype:
+                return Response([])
 
-        serializer = self.get_serializer(eigenschappen, many=True)
-        return Response(serializer.data)
+            eigenschappen = get_eigenschappen(zaaktype)
 
-    def get_zaaktypen(self):
-        catalogus = self.request.query_params.get("catalogus")
-        zaaktype_omschrijving = self.request.query_params.get("zaaktype_omschrijving")
+        else:
+            zaaktypen = get_zaaktypen(
+                user=request.user,
+                catalogus=request.query_params.get("catalogus"),
+                omschrijving=request.query_params.get("zaaktype_omschrijving"),
+            )
+            eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
 
-        return get_zaaktypen(
-            self.request.user,
-            catalogus=catalogus,
-            omschrijving=zaaktype_omschrijving,
-        )
-
-    def get_eigenschappen(self, zaaktypen):
-        with parallel() as executor:
-            _eigenschappen = executor.map(get_eigenschappen, zaaktypen)
-
-        eigenschappen = sum(list(_eigenschappen), [])
-
-        # transform values and remove duplicates
-        eigenschappen_aggregated = []
-        for eigenschap in eigenschappen:
-            eigenschap_data = {
-                "name": eigenschap.naam,
-                "spec": convert_eigenschap_spec_to_json_schema(eigenschap.specificatie),
+        eigenschappen_data = [
+            {
+                "name": e.naam,
+                "spec": convert_eigenschap_spec_to_json_schema(e.specificatie),
             }
+            for e in eigenschappen
+        ]
 
-            existing_eigenschappen = [
-                e
-                for e in eigenschappen_aggregated
-                if e["name"] == eigenschap_data["name"]
-            ]
-            if existing_eigenschappen:
-                if eigenschap_data["spec"] != existing_eigenschappen[0]["spec"]:
-                    logger.warning(
-                        "Eigenschappen '%(name)s' which belong to zaaktype '%(zaaktype)s' have different specs"
-                        % {
-                            "name": eigenschap.naam,
-                            "zaaktype": eigenschap.zaaktype.omschrijving,
-                        }
-                    )
-                continue
-
-            eigenschappen_aggregated.append(eigenschap_data)
-
-        eigenschappen_aggregated = sorted(
-            eigenschappen_aggregated, key=lambda e: e["name"]
-        )
-
-        return eigenschappen_aggregated
+        serializer = self.get_serializer(eigenschappen_data, many=True)
+        return Response(serializer.data)
 
 
 #

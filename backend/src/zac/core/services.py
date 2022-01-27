@@ -41,6 +41,7 @@ from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
 
+from .api.utils import convert_eigenschap_spec_to_json_schema
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
 from .rollen import Rol
@@ -162,6 +163,36 @@ def fetch_zaaktype(url: str) -> ZaakType:
     return factory(ZaakType, result)
 
 
+def get_zaaktype(url: str, user: Optional[User] = None) -> Optional[ZaakType]:
+    """
+    Calls fetch_zaaktype, but filters the result on the user's permissions.
+    """
+    zaaktype = fetch_zaaktype(url)
+    if user is None or user.is_superuser:
+        return zaaktype
+
+    zaaktypen_policies = (
+        BlueprintPermission.objects.for_user(user)
+        .filter(object_type=PermissionObjectTypeChoices.zaak)
+        .actual()
+        .values_list("policy", flat=True)
+        .distinct()
+    )
+    zaaktypen_policies = list(zaaktypen_policies)
+    return (
+        zaaktype
+        if [
+            policy
+            for policy in zaaktypen_policies
+            if policy["catalogus"] == zaaktype.catalogus
+            and policy["zaaktype_omschrijving"] == zaaktype.omschrijving
+            and VA_ORDER[policy["max_va"]]
+            >= VA_ORDER[zaaktype.vertrouwelijkheidaanduiding]
+        ]
+        else None
+    )
+
+
 @cache_result("zt:statustypen:{zaaktype.url}", timeout=A_DAY)
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     client = _client_from_object(zaaktype)
@@ -221,6 +252,40 @@ def get_eigenschap(url: str) -> Eigenschap:
     client = _client_from_url(url)
     result = client.retrieve("eigenschap", url)
     return factory(Eigenschap, result)
+
+
+def get_eigenschappen_for_zaaktypen(zaaktypen: List[ZaakType]) -> List[Eigenschap]:
+    with parallel() as executor:
+        _eigenschappen = executor.map(get_eigenschappen, zaaktypen)
+
+    eigenschappen = sum(list(_eigenschappen), [])
+
+    # transform values and remove duplicates
+    eigenschappen_aggregated = []
+    for eigenschap in eigenschappen:
+        existing_eigenschappen = [
+            e for e in eigenschappen_aggregated if e.naam == eigenschap.naam
+        ]
+        if existing_eigenschappen:
+            if convert_eigenschap_spec_to_json_schema(
+                eigenschap.specificatie
+            ) != convert_eigenschap_spec_to_json_schema(
+                existing_eigenschappen[0].specificatie
+            ):
+                logger.warning(
+                    "Eigenschappen '%(name)s' which belong to zaaktype '%(zaaktype)s' have different specs"
+                    % {
+                        "name": eigenschap.naam,
+                        "zaaktype": eigenschap.zaaktype.omschrijving,
+                    }
+                )
+            continue
+
+        eigenschappen_aggregated.append(eigenschap)
+
+    eigenschappen_aggregated = sorted(eigenschappen_aggregated, key=lambda e: e.naam)
+
+    return eigenschappen_aggregated
 
 
 @cache_result("roltype:{url}", timeout=A_DAY)
@@ -554,18 +619,25 @@ def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
 
 
 def create_zaak_eigenschap(
-    zaak_url: str = "", naam: str = "", value: str = ""
+    user: Optional[User] = None, zaak_url: str = "", naam: str = "", value: str = ""
 ) -> Optional[ZaakEigenschap]:
     zaak = get_zaak(zaak_url=zaak_url)
-    zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
-    eigenschappen = get_eigenschappen(zaak.zaaktype)
+    zaaktype = get_zaaktype(zaak.zaaktype, user=user)
+    if not zaaktype:
+        logger.info(
+            "Zaaktype %s could not be retrieved for user with username '%s', aborting."
+            % (zaak.zaaktype, user.username)
+        )
+        return None
+
+    eigenschappen = get_eigenschappen(zaaktype)
     try:
         eigenschap_url = next(
             (eigenschap.url for eigenschap in eigenschappen if eigenschap.naam == naam)
         )
     except StopIteration:
         # eigenschap not found - abort
-        logger.info("Eigenschap '%s' did not exist on the zaaktype, aborting.")
+        logger.info("Eigenschap '%s' did not exist on the zaaktype, aborting." % naam)
         return None
 
     zrc_client = _client_from_url(zaak_url)
@@ -763,6 +835,13 @@ def get_zaak_informatieobjecten(zaak: Zaak) -> list:
         "zaakinformatieobject", query_params={"zaak": zaak.url}
     )
     return zaak_informatieobjecten
+
+
+def get_informatieobjecttypen_for_zaak(url: str) -> List[InformatieObjectType]:
+    zaak = get_zaak(zaak_url=url)
+    zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+    informatieobjecttypen = get_informatieobjecttypen_for_zaaktype(zaak.zaaktype)
+    return informatieobjecttypen
 
 
 def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Status:
