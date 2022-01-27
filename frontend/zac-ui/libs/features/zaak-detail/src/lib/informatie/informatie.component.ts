@@ -1,6 +1,6 @@
 import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
-import {EigenschapWaarde, Zaak, ZaaktypeEigenschap} from '@gu/models';
+import {EigenschapWaarde, NieuweEigenschap, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
 import {SearchService} from '../../../../search/src/lib/search.service';
 
@@ -18,6 +18,7 @@ import {SearchService} from '../../../../search/src/lib/search.service';
   styleUrls: ['./informatie.component.scss']
 })
 export class InformatieComponent implements OnInit, OnChanges {
+  @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
 
@@ -28,6 +29,9 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   /** @type {number} Whether the property API is loading. */
   isPropertyAPILoading = 0;
+
+  /** @type {number} Whether the property API is loading. */
+  isCreatePropertyAPILoading = 0;
 
   /** @type {Object[]} The confidentiality choices. */
   confidentialityChoices: Array<{ label: string, value: string }>;
@@ -216,6 +220,28 @@ export class InformatieComponent implements OnInit, OnChanges {
     )
   }
 
+  /**
+   * Find matching key pairs in object
+   * @param data
+   * @param keys
+   */
+  findMatchingKeyPairs(data, keys) {
+    return Object.entries(data)
+      .filter(([key]) => keys.indexOf(key) > -1)
+      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
+  }
+
+  /**
+   * Find mismatching key pairs in object
+   * @param data
+   * @param keys
+   */
+  findMismatchingKeyPairs(data, keys) {
+    return Object.entries(data)
+      .filter(([key]) => keys.indexOf(key) === -1)
+      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
+  }
+
   //
   // Events.
   //
@@ -225,26 +251,48 @@ export class InformatieComponent implements OnInit, OnChanges {
    * @param {Object} data
    */
   submitForm(data) {
-    const propertyKeys = this.properties.map((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam)
-    const propertyData = Object.entries(data)
-      .filter(([key]) => propertyKeys.indexOf(key) > -1)
-      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
+    const propertyKeys = this.properties.map((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam);
+    const zaakKeys = Object.keys(this.zaak);
 
+    const existingPropertyData = this.findMatchingKeyPairs(data, propertyKeys);
+    const otherPropertyData = this.findMismatchingKeyPairs(data, propertyKeys);
+    const zaakData = this.findMatchingKeyPairs(otherPropertyData, zaakKeys);
+    const newPropertyData = this.findMismatchingKeyPairs(otherPropertyData, zaakKeys)
 
-    const zaakData = Object.entries(data)
-      .filter(([key]) => propertyKeys.indexOf(key) === -1)
-      .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
-
-    this.submitProperties(propertyData);
-    this.submitZaak(zaakData);
+    this.updateProperties(existingPropertyData);
+    this.createProperties(newPropertyData);
+    this.updateZaak(zaakData);
   }
-
 
   /**
    * Submits the properties.
    * @param {Object} data
    */
-  submitProperties(data: Object): void {
+  createProperties(data: Object): void {
+    this.isCreatePropertyAPILoading = Object.entries(data).reduce((acc, [key, value], index) => {
+      const newProperty: NieuweEigenschap = {
+        naam: key,
+        value: value,
+        zaakUrl: this.mainZaakUrl
+      }
+
+      if (newProperty.value) {
+        this.zaakService.createCaseProperty(newProperty).subscribe(
+          () => {},
+          this.reportError.bind(this),
+          () => this.isCreatePropertyAPILoading--,
+        );
+      }
+
+      return acc + 1;
+    }, 0);
+  }
+
+  /**
+   * Submits the properties.
+   * @param {Object} data
+   */
+  updateProperties(data: Object): void {
     this.isPropertyAPILoading = Object.entries(data).reduce((acc, [key, value], index) => {
       const property = this.properties.find((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam === key)
       property.value = value;
@@ -263,7 +311,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * Submits the zaak.
    * @param {Object} data
    */
-  submitZaak(data: Object): void {
+  updateZaak(data: Object): void {
     this.isCaseAPILoading = true;
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
       () => {
