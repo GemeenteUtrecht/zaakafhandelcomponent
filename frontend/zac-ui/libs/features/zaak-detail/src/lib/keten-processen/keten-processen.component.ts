@@ -13,7 +13,7 @@ import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
 import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
-import {Task, User} from '@gu/models';
+import {Task, User, Zaak} from '@gu/models';
 import {catchError, concatMap, filter} from 'rxjs/operators';
 import {interval, of, Subscription} from 'rxjs';
 import {isEqual as _isEqual} from 'lodash';
@@ -49,6 +49,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
   @Input() currentUser: User;
+  @Input() zaak: Zaak;
 
   @Output() update = new EventEmitter<any>();
 
@@ -97,7 +98,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.identificatie = params['identificatie'];
 
       this.fetchCurrentUser();
-      this.fetchProcesses();
+
+      if (!this.zaak.resultaat) {
+        this.fetchProcesses();
+      }
     });
   }
 
@@ -115,7 +119,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   ngAfterViewInit() {
     this.route.queryParams.subscribe(params => {
       const userTaskId = params['user-task'];
-      if (userTaskId) {
+      if (userTaskId && !this.zaak.resultaat) {
         this.executeTask(userTaskId);
       }
     });

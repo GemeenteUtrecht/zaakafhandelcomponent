@@ -7,8 +7,11 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
+  <!-- Result set -->
+  <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
+
   <!-- Loaded -->
-  <ng-container *ngIf="!!data && data?.length > 0">
+  <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
 
     <!-- Action buttons -->
     <div class="keten-processen__msg-btns-container">
@@ -172,7 +175,7 @@
 </gu-modal>
 
 <!-- Keten processen modal -->
-<gu-modal id="ketenprocessenModal" [closeIcon]="true">
+<gu-modal id="ketenprocessenModal" [closeIcon]="true" (onClose)="fetchProcesses()">
 
   <!-- Loading -->
   <ng-container *ngIf="isLoadingContext">
