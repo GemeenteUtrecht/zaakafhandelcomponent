@@ -173,6 +173,32 @@ export class FormComponent implements OnInit, OnChanges {
     });
   }
 
+  /**
+   * Returns whether the toggle should be shown.
+   * @return {boolean}
+   */
+  isToggleable(): boolean {
+    switch (typeof this.editable) {
+      case 'boolean':
+        // Predefined form state, don't toggle.
+        return false;
+
+      case 'string':
+          // Check if properly set to toggle.
+          if(this.editable!=='toggle') {
+            throw new Error('Invalid value for editable input in form');
+          }
+
+          // Always show toggle for form.
+          if(!this.showEditOnHover) {
+            return true;
+          }
+
+          // Show toggle based on hover.
+          return this.isHovered;
+    }
+  }
+
   //
   // Events.
   //
