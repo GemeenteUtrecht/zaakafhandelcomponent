@@ -27,6 +27,7 @@ export class FeaturesWorkstackComponent implements OnInit {
     taskData: UserTask[];
     groupTaskData: UserTask[];
     activitiesData: AdHocActivities[];
+    groupActivitiesData: AdHocActivities[];
     accessRequestData: AccessRequests[];
 
     zakenTableData: Table = new Table(tableHead, []);
@@ -117,7 +118,8 @@ export class FeaturesWorkstackComponent implements OnInit {
                 this.taskData = res[1];
                 this.groupTaskData = res[2];
                 this.activitiesData = res[3];
-                this.accessRequestData = res[4];
+                this.groupActivitiesData = res[4];
+                this.accessRequestData = res[5];
                 this.zakenTableData.bodyData = this.getTableRows(
                     this.zakenData
                 );
