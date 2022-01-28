@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 import requests_mock
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -302,6 +303,120 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("url" in response.json())
+
+    def test_create_zaak_eigenschap(self, m):
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            url=f"{CATALOGI_ROOT}eigenschappen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            zaaktype=self.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "2",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+        zaak_eigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            url=ZAAK_EIGENSCHAP_URL,
+            zaak=ZAAK_URL,
+            eigenschap=eigenschap["url"],
+            naam=eigenschap["naam"],
+            waarde="10",
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, eigenschap)
+        eigenschappen_url = furl(CATALOGI_ROOT)
+        eigenschappen_url.path.segments += ["eigenschappen"]
+        eigenschappen_url.path.normalize()
+        eigenschappen_url.query = {"zaaktype": self.zaaktype["url"]}
+        m.get(eigenschappen_url.url, json=paginated_response([eigenschap]))
+
+        zei_url = furl(self.zaak["url"])
+        zei_url.path.segments += ["zaakeigenschappen"]
+        zei_url.path.normalize()
+
+        m.post(zei_url.url, json=zaak_eigenschap, status_code=201)
+        response = self.client.post(
+            self.endpoint,
+            data={
+                "zaak_url": ZAAK_URL,
+                "naam": zaak_eigenschap["naam"],
+                "value": zaak_eigenschap["waarde"],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.json(),
+            {
+                "url": "http://zaken.nl/api/v1/zaken/e3f5c6d2-0e49-4293-8428-26139f630950/zaakeigenschappen/829ba774-ffd4-4727-8aa3-bf91db611f77",
+                "formaat": "getal",
+                "eigenschap": {
+                    "url": "http://catalogus.nl/api/v1/eigenschappen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                    "naam": "some-property",
+                    "toelichting": eigenschap["toelichting"],
+                    "specificatie": {
+                        "groep": "dummy",
+                        "formaat": "getal",
+                        "lengte": "2",
+                        "kardinaliteit": "1",
+                        "waardenverzameling": [],
+                    },
+                },
+                "value": "10.00",
+            },
+        )
+
+    def test_create_zaak_eigenschap_fail_name(self, m):
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            url=f"{CATALOGI_ROOT}eigenschappen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            zaaktype=self.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "2",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, eigenschap)
+        eigenschappen_url = furl(CATALOGI_ROOT)
+        eigenschappen_url.path.segments += ["eigenschappen"]
+        eigenschappen_url.path.normalize()
+        eigenschappen_url.query = {"zaaktype": self.zaaktype["url"]}
+        m.get(eigenschappen_url.url, json=paginated_response([eigenschap]))
+
+        response = self.client.post(
+            self.endpoint,
+            data={
+                "zaak_url": ZAAK_URL,
+                "naam": "some-other-property",
+                "value": "10",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": "EIGENSCHAP with name some-other-property not found for zaaktype http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60."
+            },
+        )
 
     def test_delete_zaak_eigenschap(self, m):
         eigenschap = generate_oas_component(

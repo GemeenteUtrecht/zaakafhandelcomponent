@@ -2,7 +2,7 @@ import {HttpParams, HttpResponse} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak} from '@gu/models';
+import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak, NieuweEigenschap} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
@@ -98,6 +98,16 @@ export class ZaakService {
     }, {
       params: params,
     })
+  }
+
+  /**
+   * Create case property
+   * @param {NieuweEigenschap} newProperty
+   */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
+  createCaseProperty(newProperty: NieuweEigenschap) {
+    const endpoint = encodeURI(`/api/core/cases/properties`);
+    return this.http.Post(endpoint, newProperty)
   }
 
   /**

@@ -39,6 +39,7 @@ from zac.core.services import (
     fetch_zaaktype,
     get_document,
     get_documenten,
+    get_informatieobjecttypen_for_zaak,
     get_statustypen,
     get_zaak,
 )
@@ -52,7 +53,6 @@ from .utils import (
     TypeChoices,
     ValidExpandChoices,
     ValidFieldChoices,
-    get_informatieobjecttypen_for_zaak,
 )
 
 
@@ -597,6 +597,20 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
             "eigenschap",
         )
         extra_kwargs = {"url": {"read_only": True}}
+
+
+class CreateZaakEigenschapSerializer(serializers.Serializer):
+    naam = serializers.CharField(
+        help_text=_(
+            "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in Catalogi API."
+        )
+    )
+    value = serializers.CharField(
+        help_text=_(
+            "Value of ZAAKEIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
+        )
+    )
+    zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
