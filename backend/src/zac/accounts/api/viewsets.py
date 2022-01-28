@@ -207,8 +207,8 @@ class RoleViewSet(
     UpdateModelMixin,
     viewsets.ReadOnlyModelViewSet,
 ):
-    # authentication_classes = [SessionAuthentication]
-    # permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
 
