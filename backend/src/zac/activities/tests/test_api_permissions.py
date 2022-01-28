@@ -14,7 +14,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..permissions import activiteiten_schrijven, activities_read
+from ..permissions import activiteiten_inzien, activiteiten_schrijven
 from .factories import ActivityFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
@@ -104,7 +104,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up user permissions
         BlueprintPermissionFactory.create(
-            role__permissions=[activities_read.name],
+            role__permissions=[activiteiten_inzien.name],
             for_user=user,
             policy={
                 "catalogus": catalogus,
@@ -143,7 +143,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up user permissions
         BlueprintPermissionFactory.create(
-            role__permissions=[activities_read.name],
+            role__permissions=[activiteiten_inzien.name],
             for_user=user,
             policy={
                 "catalogus": catalogus,
@@ -176,7 +176,7 @@ class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up user permissions
         AtomicPermissionFactory.create(
-            for_user=user, permission=activities_read.name, object_url=zaak["url"]
+            for_user=user, permission=activiteiten_inzien.name, object_url=zaak["url"]
         )
 
         # set up test data
@@ -258,7 +258,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            role__permissions=[activities_read.name],
+            role__permissions=[activiteiten_inzien.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -281,7 +281,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         # set up user permissions
         BlueprintPermissionFactory.create(
-            role__permissions=[activities_read.name],
+            role__permissions=[activiteiten_inzien.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
@@ -304,7 +304,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         # set up user permissions
         AtomicPermissionFactory.create(
-            permission=activities_read.name,
+            permission=activiteiten_inzien.name,
             for_user=self.user,
             object_url=self.zaak["url"],
         )

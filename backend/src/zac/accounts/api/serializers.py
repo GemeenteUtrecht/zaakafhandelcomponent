@@ -551,13 +551,18 @@ def get_permission_choices():
 
 class RoleSerializer(serializers.ModelSerializer):
     permissions = serializers.ListSerializer(
-        child=serializers.ChoiceField(choices=get_permission_choices()),
+        child=serializers.ChoiceField(
+            choices=(("", ""),),
+        ),
         help_text=_("List of the permissions"),
     )
 
     class Meta:
         model = Role
         fields = ("id", "name", "permissions")
+
+    def set_permissions_choices(self):
+        self.fields["permissions"].child.choices = get_permission_choices()
 
 
 class PermissionSerializer(serializers.Serializer):

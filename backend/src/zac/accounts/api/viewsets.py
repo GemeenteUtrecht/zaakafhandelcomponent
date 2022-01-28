@@ -207,7 +207,22 @@ class RoleViewSet(
     UpdateModelMixin,
     viewsets.ReadOnlyModelViewSet,
 ):
-    authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    # authentication_classes = [SessionAuthentication]
+    # permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Return the serializer instance that should be used for validating and
+        deserializing input, and for serializing output.
+        """
+        serializer_class = self.get_serializer_class()
+        kwargs.setdefault("context", self.get_serializer_context())
+        serializer = serializer_class(*args, **kwargs)
+        if kwargs.get("many", False):
+            serializer.child.set_permissions_choices()
+        else:
+            serializer.set_permissions_choices()
+
+        return serializer
