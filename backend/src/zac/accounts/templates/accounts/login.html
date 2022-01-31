@@ -19,7 +19,7 @@
     <div class="divider divider--short"></div>
 {% endif %}
 
-
+{% if settings.ENVIRONMENT and settings.ENVIRONMENT != 'production' %}
 <form action="." method="post" class="form form--centered form--large">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.GET.next }}">
@@ -37,5 +37,5 @@
         {% widget 'form:submit' label=_("Log in") primary=True %}
     {% endif %}
 </form>
-
+{% endif %}
 {% endblock content %}
