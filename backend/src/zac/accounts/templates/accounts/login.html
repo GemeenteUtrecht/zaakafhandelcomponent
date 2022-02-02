@@ -19,23 +19,25 @@
     <div class="divider divider--short"></div>
 {% endif %}
 
-{% if settings.ENVIRONMENT and settings.ENVIRONMENT != 'production' %}
-<form action="." method="post" class="form form--centered form--large">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
+{% if settings.ENVIRONMENT %} 
+    {% if not settings.ENVIRONMENT == 'utrecht-otomi-acc' and not settings.ENVIRONMENT == 'production'  %}
+        <form action="." method="post" class="form form--centered form--large">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
 
-    {% load_widgets form='sniplates/forms.html' %}
+            {% load_widgets form='sniplates/forms.html' %}
 
-    {% widget 'form:non_field_errors' %}
+            {% widget 'form:non_field_errors' %}
 
-    {% form_field form.username %}
-    {% form_field form.password %}
+            {% form_field form.username %}
+            {% form_field form.password %}
 
-    {% if adfs_config.enabled %}
-        {% widget 'form:submit' label=_("Log in") primary=False %}
-    {% else %}
-        {% widget 'form:submit' label=_("Log in") primary=True %}
+            {% if adfs_config.enabled %}
+                {% widget 'form:submit' label=_("Log in") primary=False %}
+            {% else %}
+                {% widget 'form:submit' label=_("Log in") primary=True %}
+            {% endif %}
+        </form>
     {% endif %}
-</form>
 {% endif %}
 {% endblock content %}

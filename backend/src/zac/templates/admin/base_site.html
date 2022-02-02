@@ -8,45 +8,47 @@
     <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/admin/admin_overrides.css' %}">
 
-    {% if settings.ENVIRONMENT and settings.ENVIRONMENT != 'production' %}
-        <!-- Environment notice -->
-        <style type="text/css">
-            body:before {
-                display: block;
-                line-height: 35px;
-                text-align: center;
-                font-weight: bold;
-                text-transform: uppercase;
-                color: white;
-                content: "{{ settings.ENVIRONMENT }}";
-                {% if settings.ENVIRONMENT == 'development' %}
-                    background-color: #ff00ff;
-                {% else %}
-                    background-color: #ff0000;
-                {% endif %}
-                position: fixed;
-                top: 0;
-                height: 35px;
-                width: 100%;
-                z-index: 100000;
-            }
+    {% if settings.ENVIRONMENT %} 
+        {% if not settings.ENVIRONMENT == 'utrecht-otomi-acc' and not settings.ENVIRONMENT == 'production'  %}
+            <!-- Environment notice -->
+            <style type="text/css">
+                body:before {
+                    display: block;
+                    line-height: 35px;
+                    text-align: center;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    color: white;
+                    content: "{{ settings.ENVIRONMENT }}";
+                    {% if settings.ENVIRONMENT == 'development' %}
+                        background-color: #ff00ff;
+                    {% else %}
+                        background-color: #ff0000;
+                    {% endif %}
+                    position: fixed;
+                    top: 0;
+                    height: 35px;
+                    width: 100%;
+                    z-index: 100000;
+                }
 
-            body {
-                margin-top: 35px;
-            }
+                body {
+                    margin-top: 35px;
+                }
 
-            #header {
-                top: 35px !important;
-            }
+                #header {
+                    top: 35px !important;
+                }
 
-            .login #header {
-                top: 0 !important;
-            }
+                .login #header {
+                    top: 0 !important;
+                }
 
-            .breadcrumbs {
-                top: 83px !important;
-            }
-        </style>
+                .breadcrumbs {
+                    top: 83px !important;
+                }
+            </style>
+        {% endif %}
     {% endif %}
 {% endblock %}
 

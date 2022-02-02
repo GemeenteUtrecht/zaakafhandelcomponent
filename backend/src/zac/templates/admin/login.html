@@ -27,27 +27,29 @@
 {% endblocktrans %}
 </p>
 {% endif %}
-{% if settings.ENVIRONMENT and settings.ENVIRONMENT != 'production' %}
-<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
-  <div class="form-row">
-    {{ form.username.errors }}
-    {{ form.username.label_tag }} {{ form.username }}
-  </div>
-  <div class="form-row">
-    {{ form.password.errors }}
-    {{ form.password.label_tag }} {{ form.password }}
-    <input type="hidden" name="next" value="{{ next }}">
-  </div>
-  {% url 'admin_password_reset' as password_reset_url %}
-  {% if password_reset_url %}
-  <div class="password-reset-link">
-    <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
-  </div>
+{% if settings.ENVIRONMENT %} 
+  {% if not settings.ENVIRONMENT == 'utrecht-otomi-acc' and not settings.ENVIRONMENT == 'production'  %}
+    <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+      <div class="form-row">
+        {{ form.username.errors }}
+        {{ form.username.label_tag }} {{ form.username }}
+      </div>
+      <div class="form-row">
+        {{ form.password.errors }}
+        {{ form.password.label_tag }} {{ form.password }}
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+      {% url 'admin_password_reset' as password_reset_url %}
+      {% if password_reset_url %}
+      <div class="password-reset-link">
+        <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
+      </div>
+      {% endif %}
+      <div class="submit-row">
+        <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}">
+      </div>
+    </form>
   {% endif %}
-  <div class="submit-row">
-    <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}">
-  </div>
-</form>
 {% endif %}
 </div>
 
