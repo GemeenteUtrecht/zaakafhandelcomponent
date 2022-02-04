@@ -178,14 +178,12 @@ class BaseRequestView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
-ASSIGNEE_PARAMETER = (
-    OpenApiParameter(
-        name="assignee",
-        required=True,
-        type=OpenApiTypes.STR,
-        description=_("Assignee of the user task in camunda."),
-        location=OpenApiParameter.QUERY,
-    ),
+ASSIGNEE_PARAMETER = OpenApiParameter(
+    name="assignee",
+    required=True,
+    type=OpenApiTypes.STR,
+    description=_("Assignee of the user task in camunda."),
+    location=OpenApiParameter.QUERY,
 )
 
 
