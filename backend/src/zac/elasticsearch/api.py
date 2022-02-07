@@ -94,6 +94,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         deadline=zaak.deadline,
         toelichting=zaak.toelichting,
         zaakgeometrie=zaak.zaakgeometrie,
+        omschrijving=zaak.zaakomschrijving,
     )
     return zaak_document
 
