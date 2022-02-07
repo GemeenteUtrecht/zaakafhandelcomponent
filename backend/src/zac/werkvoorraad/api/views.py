@@ -81,15 +81,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 )
 class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     def get_activities(self) -> List[dict]:
-        group_assignee = self.request.query_params.get("group_assignee")
-        if not group_assignee:
-            return []
-
-        group = get_object_or_404(Group, name__iexact=group_assignee)
-        if group in self.request.user.groups.all():
-            return Activity.objects.as_werkvoorraad(group=group)
-
-        return []
+        return Activity.objects.as_werkvoorraad(groups=self.request.user.groups.all())
 
 
 @extend_schema(
