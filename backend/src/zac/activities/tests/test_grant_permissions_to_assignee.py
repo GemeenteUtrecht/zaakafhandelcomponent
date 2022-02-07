@@ -12,7 +12,7 @@ from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFac
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..permissions import activiteiten_schrijven, activities_read
+from ..permissions import activiteiten_inzien, activiteiten_schrijven
 from .factories import ActivityFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
@@ -74,7 +74,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:
@@ -101,7 +101,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:
@@ -129,7 +129,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:

@@ -10,7 +10,11 @@ activiteiten_schrijven = Permission(
 )
 
 
-activities_read = Permission(
-    name="activities:read",
-    description="",
+activiteiten_inzien = Permission(
+    name="activiteiten:inzien",
+    description=(
+        "Laat toe om activiteiten aan te lezen. Activiteiten zijn "
+        "willekeurige activiteiten die niet in een BPMN-proces gevat kunnen worden, "
+        "en worden geregistreerd bij een specifieke zaak."
+    ),
 )
