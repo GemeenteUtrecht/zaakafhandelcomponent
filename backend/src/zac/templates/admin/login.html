@@ -27,8 +27,8 @@
 {% endblocktrans %}
 </p>
 {% endif %}
-{% if settings.ENVIRONMENT %} 
-  {% if not settings.ENVIRONMENT == 'utrecht-otomi-acc' and not settings.ENVIRONMENT == 'production'  %}
+{% get_solo 'core.CoreConfig' as core_config %}
+{% if core_config.non_adfs_login_enabled %}
     <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
       <div class="form-row">
         {{ form.username.errors }}
@@ -49,7 +49,6 @@
         <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}">
       </div>
     </form>
-  {% endif %}
 {% endif %}
 </div>
 
