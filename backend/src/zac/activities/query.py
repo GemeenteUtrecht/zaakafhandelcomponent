@@ -21,13 +21,13 @@ class ActivityQuerySet(models.QuerySet):
         return zaken
 
     def as_werkvoorraad(
-        self, user: Optional[User] = None, groups: Optional[models.QuerySet] = None
+        self, user: Optional[User] = None, group: Optional[Group] = None
     ) -> List[dict]:
         """
         Retrieve the on-going activities for a given user.
 
         """
-        if not user and not groups:
+        if not user and not group:
             qs = self.none()
             return qs
 
@@ -37,8 +37,8 @@ class ActivityQuerySet(models.QuerySet):
             ).order_by("zaak", "created")
             return self.as_grouped_by_zaak(qs)
 
-        if groups:
+        if group:
             qs = self.filter(
-                status=ActivityStatuses.on_going, group_assignee__in=groups
+                status=ActivityStatuses.on_going, group_assignee=group
             ).order_by("zaak", "created")
             return self.as_grouped_by_zaak(qs)

@@ -55,26 +55,15 @@ class WorkStackAccessRequestsSerializer(APIModelSerializer):
         )
 
 
-class SummaryActivitySerializer(serializers.ModelSerializer):
-    group_assignee = serializers.SlugRelatedField(
-        slug_field="name",
-        help_text=_("Name of the group assignee."),
-        read_only=True,
-    )
-    user_assignee = serializers.SlugRelatedField(
-        slug_field="username",
-        help_text=_("Username of the user assignee."),
-        read_only=True,
-    )
-
+class ActivityNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("name", "group_assignee", "user_assignee")
+        fields = ("name",)
 
 
 class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
-    activities = SummaryActivitySerializer(
-        many=True, help_text=_("Summary of the activities.")
+    activities = ActivityNameSerializer(
+        many=True, help_text=_("Names of the activities.")
     )
     zaak = SummaryZaakDocumentSerializer(help_text=_("ZAAK that activity belongs to."))
 

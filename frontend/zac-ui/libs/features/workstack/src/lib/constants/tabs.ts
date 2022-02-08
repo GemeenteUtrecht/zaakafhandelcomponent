@@ -22,13 +22,8 @@ const tabs: Tab[] = [
   },
   {
     component: 'activities',
-    label: 'Activiteiten',
+    label: 'Zaakactiviteiten',
     endpoint: '/api/workstack/activities'
-  },
-  {
-    component: 'group-activities',
-    label: 'Groepsactiviteiten',
-    endpoint: '/api/workstack/group-activities'
   },
   {
     component: 'access-request',

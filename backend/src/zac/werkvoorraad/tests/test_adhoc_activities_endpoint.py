@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from django.urls import reverse
 
 from freezegun import freeze_time
+from furl import furl
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
@@ -39,8 +40,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         cls.user = UserFactory.create()
-        cls.group_1 = GroupFactory.create()
-        cls.group_2 = GroupFactory.create()
+        cls.group = GroupFactory.create()
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -80,7 +80,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         EventFactory.create(activity=user_activity)
 
         group_activity = ActivityFactory.create(
-            zaak=cls.zaak["url"], group_assignee=cls.group_1
+            zaak=cls.zaak["url"], group_assignee=cls.group
         )
         cls.group_activity_group = ActivityGroup(
             activities=[group_activity],
@@ -101,8 +101,6 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                 "activities": [
                     {
                         "name": self.user_activity_group.activities[0].name,
-                        "user_assignee": self.user.username,
-                        "group_assignee": None,
                     }
                 ],
                 "zaak": {
@@ -142,8 +140,6 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                     "activities": [
                         {
                             "name": self.user_activity_group.activities[0].name,
-                            "groupAssignee": None,
-                            "userAssignee": self.user.username,
                         }
                     ],
                     "zaak": {
@@ -208,16 +204,20 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        endpoint = reverse("werkvoorraad:group-activities")
+        endpoint = furl(
+            reverse(
+                "werkvoorraad:group-activities",
+            )
+        )
+        endpoint.add({"group_assignee": self.group.name})
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
+        response = self.client.get(endpoint.url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data, [])
 
     def test_workstack_adhoc_group_activities_group_specified(self):
-        self.user.groups.add(self.group_1)
-        self.user.groups.add(self.group_2)
+        self.user.groups.add(self.group)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -233,9 +233,14 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        endpoint = reverse("werkvoorraad:group-activities")
+        endpoint = furl(
+            reverse(
+                "werkvoorraad:group-activities",
+            )
+        )
+        endpoint.add({"group_assignee": self.group.name})
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
+        response = self.client.get(endpoint.url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
@@ -243,11 +248,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             [
                 {
                     "activities": [
-                        {
-                            "name": self.group_activity_group.activities[0].name,
-                            "userAssignee": None,
-                            "groupAssignee": self.group_1.name,
-                        }
+                        {"name": self.group_activity_group.activities[0].name}
                     ],
                     "zaak": {
                         "url": self.zaak["url"],
@@ -263,30 +264,4 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                 }
             ],
         )
-        self.user.groups.remove(self.group_1)
-        self.user.groups.remove(self.group_2)
-
-    def test_workstack_adhoc_group_activities_part_of_different_group(self):
-        self.user.groups.add(self.group_2)
-        zaak_document = self.create_zaak_document(self.zaak)
-        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=self.user,
-            policy={
-                "catalogus": self.catalogus,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-
-        endpoint = reverse("werkvoorraad:group-activities")
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
-        self.user.groups.remove(self.group_2)
+        self.user.groups.remove(self.group)
