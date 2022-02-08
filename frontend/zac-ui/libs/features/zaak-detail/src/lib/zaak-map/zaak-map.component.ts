@@ -182,8 +182,12 @@ export class ZaakMapComponent implements OnInit, AfterViewInit {
 
         this.mapGeometries = [...this.mapGeometries, {
           geometry: this.transformGeometry(pand.bagObject.geometrie),
-          title: `${pand.adres.straatnaam} ${pand.adres.nummer}`
-        }]
+          title: `${pand.adres.straatnaam} ${pand.adres.nummer}`,
+          actions: [{
+            label: 'Gebruik als zaakgeometrie',
+            onClick: (mapGeometry) => this.updateCaseGeometry(mapGeometry.geometry),
+          }]
+        } as MapGeometry]
       }, this.reportError.bind(this));
     }, this.reportError.bind(this));
   }
@@ -290,6 +294,14 @@ export class ZaakMapComponent implements OnInit, AfterViewInit {
       this.updatedMapGeometry = null;
     }
 
+    this.updateCaseGeometry(geometry);
+  }
+
+  /**
+   * Updates the zaak (case) geometry.
+   * @param geometry
+   */
+  updateCaseGeometry(geometry): void {
     this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, {
       reden: 'SYSTEM: geolocation change.',
       vertrouwelijkheidaanduiding: this.zaak.vertrouwelijkheidaanduiding,
