@@ -38,6 +38,12 @@ export class GerelateerdeObjectenComponent implements OnInit {
   /** @type {ZaakObjectGroup[]} The list of groups of objects (Related objects are grouped on objecttype) */
   relatedObjects: ZaakObjectGroup[];
 
+  /** @type {{ title: string; table: Table }[]} The tables to render. */
+  tables: { title: string; table: Table }[] = [];
+
+  /** @type {FieldConfiguration[]} The (modal) form. */
+  form: FieldConfiguration[] = null;
+
   /**
    * Constructor method.
    * @param {ModalService} modalService
@@ -48,34 +54,62 @@ export class GerelateerdeObjectenComponent implements OnInit {
   }
 
   //
-  // Getters / setters.
+  // Angular lifecycle.
   //
 
-  get form(): FieldConfiguration[] {
-    return [
-      {
-        label: 'Gerelateerd object toevoegen:',
-        name: 'object',
-        readonly: true,
-        value: (this.activeZaakObject)
-          ? this.zaakObjectService.stringifyZaakObject(this.activeZaakObject)
-          : null,
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit(): void {
+    this.getContextData();
+  }
+
+  /**
+   * A function optionally passed into the NgForOf directive to customize how NgForOf uniquely identifies items in an
+   * iterable.
+   *
+   * In all of these scenarios it is usually desirable to only update the DOM elements associated with the items
+   * affected by the change. This behavior is important to:
+   *
+   *  - preserve any DOM-specific UI state (like cursor position, focus, text selection) when the iterable is modified
+   *  - enable animation of item addition, removal, and iterable reordering
+   *  - preserve the value of the <select> element when nested <option> elements are dynamically populated using NgForOf
+   *    and the bound iterable is updated
+   *
+   * @param {number} index
+   * @param {Table} table
+   * @return {number}
+   */
+  trackRow(index: number, table: Table) {
+    return this.tables?.findIndex((titleAndTable: { title: string, table: Table }) => titleAndTable.table === table);
+  }
+
+  //
+  // Context.
+  //
+
+  /**
+   * Fetches the objects related to a zaak
+   */
+  getContextData(): void {
+    this.isLoading = true;
+
+    this.zaakService.listRelatedObjects(this.bronorganisatie, this.identificatie).subscribe(
+      (data) => {
+        this.relatedObjects = data;
+        this.tables = this.getTables();
       },
-      {
-        label: 'Beschrijving',
-        name: 'objectTypeDescription',
-        pattern: "[a-zA-Z_]{1,100}",
-        placeholder: 'Beschrijving van het type object (maximaal 100 tekens).',
-        value: '',
-      }
-    ];
+      this.reportError.bind(this),
+      () => this.isLoading = false
+    );
   }
 
   /**
    * Returns the tables to render.
    * @returns {{title: string, table: Table}[]}
    */
-  get tables(): { title: string; table: Table }[] {
+  getTables(): { title: string; table: Table }[] {
     return this.relatedObjects.map((group: ZaakObjectGroup) => {
       /* Use the latest version of the ObjectType to make the table headers */
       const latestZaakObjectGroup = group.items[0];
@@ -140,53 +174,28 @@ export class GerelateerdeObjectenComponent implements OnInit {
     });
   }
 
-  //
-  // Angular lifecycle.
-  //
-
   /**
-   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
-   * ngOnInit() method to handle any additional initialization tasks.
+   * Returns the (modal) form.
+   * @return {FieldConfiguration[]}
    */
-  ngOnInit(): void {
-    this.getContextData();
-  }
-
-  /**
-   * A function optionally passed into the NgForOf directive to customize how NgForOf uniquely identifies items in an
-   * iterable.
-   *
-   * In all of these scenarios it is usually desirable to only update the DOM elements associated with the items
-   * affected by the change. This behavior is important to:
-   *
-   *  - preserve any DOM-specific UI state (like cursor position, focus, text selection) when the iterable is modified
-   *  - enable animation of item addition, removal, and iterable reordering
-   *  - preserve the value of the <select> element when nested <option> elements are dynamically populated using NgForOf
-   *    and the bound iterable is updated
-   *
-   * @param {number} index
-   * @param {Table} table
-   * @return {number}
-   */
-  trackRow(index: number, table: Table) {
-    return this.tables?.findIndex((titleAndTable: { title: string, table: Table }) => titleAndTable.table === table);
-  }
-
-  //
-  // Context.
-  //
-
-  /**
-   * Fetches the objects related to a zaak
-   */
-  getContextData(): void {
-    this.isLoading = true;
-
-    this.zaakService.listRelatedObjects(this.bronorganisatie, this.identificatie).subscribe(
-      (data) => this.relatedObjects = data,
-      this.reportError.bind(this),
-      () => this.isLoading = false
-    );
+  getForm(): FieldConfiguration[] {
+    return [
+      {
+        label: 'Gerelateerd object toevoegen:',
+        name: 'object',
+        readonly: true,
+        value: (this.activeZaakObject)
+          ? this.zaakObjectService.stringifyZaakObject(this.activeZaakObject)
+          : null,
+      },
+      {
+        label: 'Beschrijving',
+        name: 'objectTypeDescription',
+        pattern: "[a-zA-Z_]{1,100}",
+        placeholder: 'Beschrijving van het type object (maximaal 100 tekens).',
+        value: '',
+      }
+    ];
   }
 
   //
@@ -206,6 +215,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
    * @param {Object} data
    */
   formSubmit(data): void {
+    this.isLoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak) => this.zaakObjectService
         .createZaakObjectRelation(zaak, this.activeZaakObject, String(data.objectTypeDescription).toLowerCase())
@@ -214,7 +224,8 @@ export class GerelateerdeObjectenComponent implements OnInit {
             this.modalService.close(this.modalFormId);
             this.getContextData.bind(this);
           },
-          this.reportError.bind(this)
+          this.reportError.bind(this),
+          () => this.isLoading = false,
         ),
       this.reportError.bind(this),
     );
@@ -226,6 +237,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
    */
   selectZaakObject(zaakObject: ZaakObject): void {
     this.activeZaakObject = zaakObject;
+    this.form = this.getForm();
     this.modalService.close(this.modalObjectSearchId);
     this.modalService.open(this.modalFormId);
   }
@@ -255,6 +267,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
   reportError(error: any): void {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
+    this.isLoading = false;
   }
 
 }
