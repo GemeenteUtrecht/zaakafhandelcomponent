@@ -75,7 +75,7 @@ export class AdviceComponent implements OnInit {
 
   fetchData(): void {
     this.isLoading = true;
-    this.adviceService.getAdvice(this.uuid)
+    this.adviceService.getAdvice(this.uuid, this.assignee)
       .pipe(
         tap( res => {
           this.setLayout(res);

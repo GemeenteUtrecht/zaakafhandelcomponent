@@ -61,7 +61,7 @@ export class ApprovalComponent implements OnInit {
 
   fetchData(): void {
     this.isLoading = true;
-    this.approvalService.getApproval(this.uuid)
+    this.approvalService.getApproval(this.uuid, this.assignee)
       .pipe(
         tap(res => {
           this.setLayout(res);
