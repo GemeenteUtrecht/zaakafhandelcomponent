@@ -40,7 +40,8 @@
   <gu-modal [closeIcon]="true"
             [id]="modalFormId"
             size="small">
-      <gu-form *ngIf="activeZaakObject" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+      <gu-form *ngIf="activeZaakObject && !isLoading" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+      <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   </gu-modal>
   <!-- End modal form -->
 </div>

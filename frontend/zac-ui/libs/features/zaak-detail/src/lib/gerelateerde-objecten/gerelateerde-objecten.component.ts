@@ -215,6 +215,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
    * @param {Object} data
    */
   formSubmit(data): void {
+    this.isLoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak) => this.zaakObjectService
         .createZaakObjectRelation(zaak, this.activeZaakObject, String(data.objectTypeDescription).toLowerCase())
@@ -223,7 +224,8 @@ export class GerelateerdeObjectenComponent implements OnInit {
             this.modalService.close(this.modalFormId);
             this.getContextData.bind(this);
           },
-          this.reportError.bind(this)
+          this.reportError.bind(this),
+          () => this.isLoading = false,
         ),
       this.reportError.bind(this),
     );
@@ -265,6 +267,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
   reportError(error: any): void {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
+    this.isLoading = false;
   }
 
 }
