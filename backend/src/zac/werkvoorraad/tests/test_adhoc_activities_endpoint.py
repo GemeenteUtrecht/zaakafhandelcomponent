@@ -101,6 +101,8 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                 "activities": [
                     {
                         "name": self.user_activity_group.activities[0].name,
+                        "user_assignee": self.user.username,
+                        "group_assignee": None,
                     }
                 ],
                 "zaak": {
@@ -140,6 +142,8 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                     "activities": [
                         {
                             "name": self.user_activity_group.activities[0].name,
+                            "groupAssignee": None,
+                            "userAssignee": self.user.username,
                         }
                     ],
                     "zaak": {
@@ -239,7 +243,11 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
             [
                 {
                     "activities": [
-                        {"name": self.group_activity_group.activities[0].name}
+                        {
+                            "name": self.group_activity_group.activities[0].name,
+                            "userAssignee": None,
+                            "groupAssignee": self.group_1.name,
+                        }
                     ],
                     "zaak": {
                         "url": self.zaak["url"],
