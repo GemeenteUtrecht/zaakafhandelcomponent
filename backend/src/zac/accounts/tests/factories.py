@@ -67,6 +67,7 @@ class RoleFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.Role"
+        django_get_or_create = ("name",)
 
 
 class BlueprintPermissionFactory(factory.django.DjangoModelFactory):
