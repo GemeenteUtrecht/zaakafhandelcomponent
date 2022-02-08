@@ -116,7 +116,38 @@
               </div>
             </ng-container>
             <ng-template #noActivity>
-              <p>Er zijn geen ad-hoc activiteiten gevonden.</p>
+              <p>Er zijn geen activiteiten.</p>
+            </ng-template>
+          </div>
+
+          <!-- Groepsactiviteiten -->
+          <div class="tab-content" *ngSwitchCase="'group-activities'">
+
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="groupActivitiesData?.length > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{groupActivitiesData?.length}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <ng-container *ngIf="groupActivitiesData?.length > 0; else noGroupActivity" >
+              <div class="task-link" *ngFor="let groupActivity of groupActivitiesData">
+                <a class="anchor mb-2"
+                   [routerLink]="getZaakPath(groupActivity.zaak)"
+                   [queryParams]="{'activities': true}"
+                >
+                  {{groupActivity.zaak.identificatie}}: {{groupActivity.activities[0].name}}
+                </a>
+                <label class="label label--small d-block">{{groupActivity.activities[0].groupAssignee}}</label>
+              </div>
+            </ng-container>
+            <ng-template #noGroupActivity>
+              <p>Er zijn geen groepsactiviteiten.</p>
             </ng-template>
           </div>
 
