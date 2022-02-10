@@ -123,6 +123,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     return this.zaaktypeEigenschappen.map((zaaktypeEigenschap: ZaaktypeEigenschap): FieldConfiguration => {
       const property = this.properties.find((p: EigenschapWaarde) => p.eigenschap.naam === zaaktypeEigenschap.name)
       const value = (property?.value) ? String(property.value) : null;
+      const type = (zaaktypeEigenschap.spec.format === 'date') ? 'date' : null;
 
       return {
         label: zaaktypeEigenschap.name,
@@ -130,6 +131,7 @@ export class InformatieComponent implements OnInit, OnChanges {
         readonly: false,
         required: false,
         value: value,
+        type: type,
       };
     })
   }

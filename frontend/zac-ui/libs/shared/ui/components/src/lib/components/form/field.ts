@@ -127,7 +127,7 @@ export class Field {
       return 'select'
     }
 
-    if (fieldConfiguration.type) {
+    if (fieldConfiguration.type && fieldConfiguration.type.toUpperCase() !== 'DATE') {
       return fieldConfiguration.type;
     }
 
