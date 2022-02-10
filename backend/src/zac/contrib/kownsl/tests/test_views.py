@@ -109,7 +109,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
 
-        cls.user = UserFactory.create(username="some-user")
+        cls.user = UserFactory.create(
+            username="some-user", first_name="John", last_name="Doe"
+        )
         cls.group = GroupFactory.create(name="some-group")
 
     def setUp(self):
@@ -196,12 +198,12 @@ class ViewTests(ClearCachesMixin, APITestCase):
         url = furl(url).set({"assignee": f"user:{self.user}"})
 
         response = self.client.get(url.url)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(
             response.json(),
-            [
-                "Review for review request `45638aa6-e177-46cc-b580-43339795d5b5` is already given by assignee `some-user`."
-            ],
+            {
+                "detail": "Review for review request `45638aa6-e177-46cc-b580-43339795d5b5` is already given by assignee(s) `John Doe`."
+            },
         )
 
     def test_create_approval_assignee_query_param(self, m):
@@ -209,6 +211,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
         m.get(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
             json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[],
         )
         m.post(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",

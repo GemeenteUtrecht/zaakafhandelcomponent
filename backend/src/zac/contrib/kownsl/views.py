@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,11 +13,9 @@ from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
@@ -33,9 +30,7 @@ from .api import (
     retrieve_advices,
     retrieve_approvals,
 )
-from .constants import KownslTypes
-from .data import ReviewRequest
-from .permissions import IsReviewUser
+from .permissions import HasNotReviewed, IsReviewUser
 from .serializers import (
     KownslReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
@@ -107,7 +102,10 @@ class BaseRequestView(APIView):
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
 
-    permission_classes = (IsAuthenticated & IsReviewUser,)
+    permission_classes = (
+        IsAuthenticated & IsReviewUser,
+        HasNotReviewed,
+    )
     _operation_id = NotImplemented
     serializer_class = KownslReviewRequestSerializer
 
@@ -119,35 +117,11 @@ class BaseRequestView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    def check_if_review_is_already_given(
-        self, rr: ReviewRequest, assignee: Union[User, Group]
-    ):
-        if rr.review_type == KownslTypes.advice:
-            reviews = retrieve_advices(rr)
-        else:
-            reviews = retrieve_approvals(rr)
-
-        error_msg = "Review for review request `%s` is already given by assignee `%s`."
-        for review in reviews:
-            if review.group:
-                if assignee.name == review.group:
-                    raise exceptions.ValidationError(error_msg % (rr.id, assignee.name))
-            else:
-                if assignee.username == review.author.username:
-                    raise exceptions.ValidationError(
-                        error_msg % (rr.id, assignee.username)
-                    )
-
     def get(self, request, request_uuid):
-        if not (assignee := request.query_params.get("assignee")):
+        if not (request.query_params.get("assignee")):
             raise exceptions.ValidationError("'assignee' query parameter is required.")
 
-        assignee = resolve_assignee(assignee)
         review_request = self.get_object()
-        self.check_if_review_is_already_given(
-            factory(ReviewRequest, review_request), assignee
-        )
-
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
             instance={
@@ -161,9 +135,8 @@ class BaseRequestView(APIView):
     def post(self, request, request_uuid):
         if not (assignee := request.query_params.get("assignee")):
             raise exceptions.ValidationError("'assignee' query parameter is required.")
-
-        assignee = resolve_assignee(assignee)
         data = {**request.data}
+        assignee = resolve_assignee(assignee)
         if isinstance(assignee, Group):
             data["group"] = f"{assignee}"
 
