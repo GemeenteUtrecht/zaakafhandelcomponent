@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
 import { AdviceForm } from '../../models/advice-form';
-import { HttpResponse } from '@angular/common/http';
+import {HttpParams, HttpResponse} from '@angular/common/http';
 import { CloseDocument } from '../../models/close-document';
 import {DocumentUrls, ReadWriteDocument} from "@gu/models";
 
@@ -13,10 +13,11 @@ export class AdviceService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getAdvice(uuid: string): Observable<HttpResponse<any>> {
+  getAdvice(uuid: string, assignee: string): Observable<HttpResponse<any>> {
     const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/advice`);
     const options = {
-      observe: 'response' as 'response'
+      observe: 'response' as 'response',
+      params: new HttpParams().set('assignee', assignee),
     }
     return this.http.Get<any>(endpoint, options);
   }

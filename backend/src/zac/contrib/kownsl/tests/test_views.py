@@ -25,7 +25,7 @@ REVIEW_REQUEST = {
     "created": "2020-12-16T14:15:22Z",
     "id": "45638aa6-e177-46cc-b580-43339795d5b5",
     "forZaak": "https://zaken.nl/api/v1/zaak/123",
-    "reviewType": "advice",
+    "reviewType": "approval",
     "documents": [],
     "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
     "numAdvices": 1,
@@ -109,7 +109,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
 
-        cls.user = UserFactory.create(username="some-user")
+        cls.user = UserFactory.create(
+            username="some-user", first_name="John", last_name="Doe"
+        )
         cls.group = GroupFactory.create(name="some-group")
 
     def setUp(self):
@@ -123,7 +125,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
             m, self.service.api_root, "kownsl", oas_url=self.service.oas
         )
 
-    def test_taskid_query_parameter(self, m):
+    def test_fail_create_review_query_param(self, m):
         self.client.force_authenticate(user=self.user)
         url = reverse(
             "kownsl:reviewrequest-approval",
@@ -135,11 +137,84 @@ class ViewTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), ["'assignee' query parameter is required."])
 
+    def test_fail_get_review_query_param(self, m):
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
+
+    def test_success_get_review(self, m):
+        self._mock_oas_get(m)
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[],
+        )
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        url = furl(url).set({"assignee": f"user:{self.user}"})
+
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_fail_get_review_already_exists(self, m):
+        self._mock_oas_get(m)
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[
+                {
+                    "created": "2020-12-16T14:15:22Z",
+                    "author": {
+                        "username": self.user.username,
+                        "first_name": self.user.first_name,
+                        "last_name": self.user.last_name,
+                    },
+                    "approved": True,
+                    "group": "",
+                    "toelichting": "",
+                }
+            ],
+        )
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        url = furl(url).set({"assignee": f"user:{self.user}"})
+
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": "Review for review request `45638aa6-e177-46cc-b580-43339795d5b5` is already given by assignee(s) `John Doe`."
+            },
+        )
+
     def test_create_approval_assignee_query_param(self, m):
         self._mock_oas_get(m)
         m.get(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
             json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[],
         )
         m.post(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",

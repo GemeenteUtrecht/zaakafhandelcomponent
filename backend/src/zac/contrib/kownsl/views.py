@@ -30,7 +30,7 @@ from .api import (
     retrieve_advices,
     retrieve_approvals,
 )
-from .permissions import IsReviewUser
+from .permissions import HasNotReviewed, IsReviewUser
 from .serializers import (
     KownslReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
@@ -102,7 +102,10 @@ class BaseRequestView(APIView):
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
 
-    permission_classes = (IsAuthenticated & IsReviewUser,)
+    permission_classes = (
+        IsAuthenticated & IsReviewUser,
+        HasNotReviewed,
+    )
     _operation_id = NotImplemented
     serializer_class = KownslReviewRequestSerializer
 
@@ -115,6 +118,9 @@ class BaseRequestView(APIView):
         return review_request
 
     def get(self, request, request_uuid):
+        if not (request.query_params.get("assignee")):
+            raise exceptions.ValidationError("'assignee' query parameter is required.")
+
         review_request = self.get_object()
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
@@ -129,9 +135,8 @@ class BaseRequestView(APIView):
     def post(self, request, request_uuid):
         if not (assignee := request.query_params.get("assignee")):
             raise exceptions.ValidationError("'assignee' query parameter is required.")
-
-        assignee = resolve_assignee(assignee)
         data = {**request.data}
+        assignee = resolve_assignee(assignee)
         if isinstance(assignee, Group):
             data["group"] = f"{assignee}"
 
@@ -146,22 +151,24 @@ class BaseRequestView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+ASSIGNEE_PARAMETER = OpenApiParameter(
+    name="assignee",
+    required=True,
+    type=OpenApiTypes.STR,
+    description=_("Assignee of the user task in camunda."),
+    location=OpenApiParameter.QUERY,
+)
+
+
 @extend_schema_view(
     get=extend_schema(
         summary=_("Retrieve advice review request"),
+        parameters=[ASSIGNEE_PARAMETER],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/advices",
         summary=_("Register advice for review request"),
-        parameters=[
-            OpenApiParameter(
-                name="assignee",
-                required=True,
-                type=OpenApiTypes.STR,
-                description=_("Assignee of the user task in camunda."),
-                location=OpenApiParameter.QUERY,
-            ),
-        ],
+        parameters=[ASSIGNEE_PARAMETER],
     ),
 )
 class AdviceRequestView(BaseRequestView):
@@ -171,19 +178,12 @@ class AdviceRequestView(BaseRequestView):
 @extend_schema_view(
     get=extend_schema(
         summary=_("Retrieve approval review request"),
+        parameters=[ASSIGNEE_PARAMETER],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/approvals",
         summary=_("Register approval for review request"),
-        parameters=[
-            OpenApiParameter(
-                name="assignee",
-                required=True,
-                type=OpenApiTypes.STR,
-                description=_("Assignee of the user task in camunda."),
-                location=OpenApiParameter.QUERY,
-            ),
-        ],
+        parameters=[ASSIGNEE_PARAMETER],
     ),
 )
 class ApprovalRequestView(BaseRequestView):
