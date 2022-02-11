@@ -81,7 +81,7 @@ export class AdviceComponent implements OnInit {
           this.setLayout(res);
         }),
         catchError(res => {
-          this.errorMessage = res.error[0] ? res.error[0] : 'Er is een fout opgetreden';
+          this.errorMessage = res.error.detail ? res.error.detail : 'Er is een fout opgetreden';
           this.hasError = true;
           this.isLoading = false;
           return of(null)
