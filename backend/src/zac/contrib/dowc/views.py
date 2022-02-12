@@ -19,7 +19,7 @@ from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
 from .serializers import DowcResponseSerializer, DowcSerializer
 
-DOWC_BASE = "https://dowc.utrechtproeftuin.nl/api/v1"
+DOWC_BASE = "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:

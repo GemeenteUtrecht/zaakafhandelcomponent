@@ -471,15 +471,15 @@ KOWNSL_API_SCHEMA = config(
 )
 OBJECTS_API_SCHEMA = config(
     "OBJECTS_API_SCHEMA",
-    "https://objects.utrechtproeftuin.nl/api/v1/schema/openapi.yaml",
+    "https://objects.cg-intern.ont.utrecht.nl/api/v1/schema/openapi.yaml",
 )
 OBJECTTYPES_API_SCHEMA = config(
     "OBJECTTYPES_API_SCHEMA",
-    "https://objecttypes.utrechtproeftuin.nl/api/v1/schema/openapi.yaml",
+    "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1/schema/openapi.yaml",
 )
 ZRC_API_SCHEMA = config(
     "ZRC_API_SCHEMA",
-    "https://openzaak.utrechtproeftuin.nl/zaken/api/v1/schema/openapi.json",
+    "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/schema/openapi.json",
 )
 
 #
