@@ -6,21 +6,22 @@ from django_camunda.utils import deserialize_variable
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
+from zac.camunda.api.data import HistoricUserTask
 from zac.camunda.data import Task
 from zac.camunda.dynamic_forms.context import get_field_definition
 from zac.camunda.forms import extract_task_form_fields, extract_task_form_key
+from zac.camunda.processes import get_process_instances
 from zac.core.services import A_DAY
 from zac.utils.decorators import cache
-
-from ..api.data import HistoricActivityInstanceDetail, HistoricUserTask
-from ..data import Task
-from ..processes import get_process_instances
 
 
 @cache("historical_tasks:{pid}", timeout=A_DAY)
 def get_task_history_for_process_instance(
-    pid: CamundaId, client: Camunda
+    pid: CamundaId, client: Optional[Camunda] = None
 ) -> Dict[str, Dict]:
+    if not client:
+        client = get_client()
+
     results = client.get("history/task", {"processInstanceId": pid, "finished": "true"})
     tasks = {}
     for task in results:
@@ -32,7 +33,7 @@ def get_completed_user_tasks_for_zaak(
     zaak_url: str, client: Optional[Camunda] = None
 ) -> Dict[CamundaId, Task]:
     """
-    The camunda rest api exposes the historic (i.e., finished) user tasks
+    The camunda rest api exposes the historic (i.e., completed) user tasks
     of completed and ongoing process instances.
 
     We use the historic user tasks data to show who submitted what at
@@ -49,11 +50,12 @@ def get_completed_user_tasks_for_zaak(
 
     def _get_historic_tasks(pid: CamundaId):
         nonlocal client, tasks
-        tasks.update(**get_task_history_for_process_instance(pid, client))
+        tasks.update(**get_task_history_for_process_instance(pid, client=client))
 
     with parallel() as executor:
         list(executor.map(_get_historic_tasks, all_process_instances.keys()))
 
+    # Abuse for factory purposes
     tasks = [
         factory(
             Task,
@@ -67,13 +69,16 @@ def get_completed_user_tasks_for_zaak(
         )
         for task in tasks.values()
     ]
-
     return {task.id: task for task in tasks}
 
 
 @cache("historical_activity_detail:{activity_instance_id}", timeout=A_DAY)
-def get_historic_activity_details(activity_instance_id: str) -> List[dict]:
-    client = get_client()
+def get_historic_activity_details(
+    activity_instance_id: str, client: Optional[Camunda] = None
+) -> List[dict]:
+    if not client:
+        client = get_client()
+
     historic_activity_details = client.get(
         "history/detail",
         {"activityInstanceId": activity_instance_id, "deserializeValues": False},
@@ -83,7 +88,7 @@ def get_historic_activity_details(activity_instance_id: str) -> List[dict]:
 
 def get_historic_activity_variables_from_task(
     task: Task, client: Optional[Camunda] = None
-) -> List[HistoricActivityInstanceDetail]:
+) -> List[dict]:
     """
     The camunda rest api exposes the historic details of a process.
 
@@ -95,25 +100,24 @@ def get_historic_activity_variables_from_task(
     if not client:
         client = get_client()
 
-    historic_activity_details = get_historic_activity_details(task.activity_instance_id)
+    historic_activity_details = get_historic_activity_details(
+        task.activity_instance_id, client=client
+    )
     for detail in historic_activity_details:
+        # func deserialize_variable requires the `type` key - not `variable_type`.
         detail["type"] = detail["variable_type"]
         detail["value"] = deserialize_variable(detail)
 
-    return factory(HistoricActivityInstanceDetail, historic_activity_details)
+    return historic_activity_details
 
 
-def get_historic_form_labels_from_task(
-    task: Task, client: Optional[Camunda] = None
-) -> Dict[str, str]:
+def get_historic_form_labels_from_task(task: Task) -> Dict[str, str]:
     """
     From the BPMN definition we can retrieve form field data such as labels.
 
-    We use the labels to replicate the form the user was presented in at a
+    We use the labels to replicate the form the user was presented at a
     particular point in a process.
     """
-    if not client:
-        client = get_client()
 
     formfields = extract_task_form_fields(task) or []
     form_fields = [get_field_definition(field) for field in formfields]
@@ -130,19 +134,18 @@ def get_camunda_history_for_zaak(
     zaak_url: str,
 ) -> List[HistoricUserTask]:
     """
-    The finished camunda user tasks are fetched here and returned in reverse order based on creation date.
+    The completed camunda user tasks are fetched here and returned in reverse order based
+    on creation date.
 
-    First the completed user tasks for a zaak_url are fetched. They are fetched from the camunda rest api
+    First the completed user tasks for a zaak_url are fetched from the camunda rest api
     based on the (historical) process instances that have the zaak_url as a process variable.
 
-    The form key of the user task is not returned from the camunda rest api
-    and so it needs to be fetched separately based on the BPMN.
-
-    Based on the task activity instance, the historical variable instances are fetched.
-    The variable instance is then enriched in case the user task has a camunda user form.
+    Based on the task activity instance, the historical variable instances are then fetched.
+    Finally, the variable instance is enriched with form labels in case the user task has a
+    camunda user form. The form key of the user task is not returned from the camunda rest
+    api and so it needs to be fetched separately from the BPMN file.
     """
-    client = get_client()
-    tasks = get_completed_user_tasks_for_zaak(zaak_url, client=client)
+    tasks = get_completed_user_tasks_for_zaak(zaak_url)
 
     def _extract_task_form_key(task: Task):
         nonlocal tasks
@@ -159,11 +162,12 @@ def get_camunda_history_for_zaak(
 
     # Declare zaak_history for non-local use in _get_historic_activity_variables_from_task
     user_task_history = {}
+    client = get_client()
 
     # Get all variables that are set in activity instance of task
     def _get_historic_activity_variables_from_task(task: Task):
         nonlocal client, user_task_history
-        history = get_historic_activity_variables_from_task(task, client)
+        history = get_historic_activity_variables_from_task(task, client=client)
         user_task_history[task.id] = {
             "task": task,
             "history": history,
@@ -175,15 +179,11 @@ def get_camunda_history_for_zaak(
 
     # Add camunda form labels to zaak_history if task has a camunda form
     def _add_camunda_form_labels_to_user_task_history(task: Task):
-        nonlocal client, user_task_history
-        if task.form_key:
-            return
-
-        form_labels = get_historic_form_labels_from_task(task, client)
-
+        nonlocal user_task_history
+        form_labels = get_historic_form_labels_from_task(task)
         for var in user_task_history[task.id]["history"]:
-            if form_label := form_labels.get(var.variable_name):
-                var.label = form_label
+            if form_label := form_labels.get(var["variable_name"]):
+                var["label"] = form_label
 
     with parallel() as executor:
         list(executor.map(_add_camunda_form_labels_to_user_task_history, tasks))
@@ -196,4 +196,4 @@ def get_camunda_history_for_zaak(
     )
 
 
-zaak_url = "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/zaken/b724f70f-e6b8-4514-b7c5-0017a3f635ca"
+zaak_url = "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/zaken/b18c8f02-d276-4518-974c-258d1754fdfd"

@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-from django.test import TestCase
 from django.test.testcases import TransactionTestCase
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _

@@ -10,7 +10,7 @@ from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 
-from ..api.data import HistoricActivityInstanceDetail, HistoricUserTask
+from ..api.data import HistoricUserTask
 from ..constants import AssigneeTypeChoices
 from ..data import BPMN
 from ..user_tasks.context import REGISTRY
@@ -223,27 +223,36 @@ class BPMNSerializer(APIModelSerializer):
         }
 
 
-class HistoricActivityInstanceDetailSerializer(APIModelSerializer):
-    value = serializers.SerializerMethodField()
+class HistoricActivityInstanceDetailSerializer(serializers.Serializer):
+    naam = serializers.CharField(
+        source="variable_name", help_text=_("Name of user task variable.")
+    )
+    waarde = serializers.SerializerMethodField(
+        help_text=_("Value of user task variable.")
+    )
+    label = serializers.CharField(
+        required=False,
+        help_text=_("Label of user task variable in the Camunda user task form."),
+    )
 
-    class Meta:
-        model = HistoricActivityInstanceDetail
-        fields = (
-            "variable_name",
-            "value",
-            "label",
-        )
-
-    def get_value(self, value: Any) -> Any:
-        return value
+    def get_waarde(self, obj) -> Any:
+        return obj.get("value")
 
 
 class HistoricUserTaskSerializer(APIModelSerializer):
-    assignee = UserSerializer()
-    completed = serializers.DateTimeField(source="task.end_time")
-    created = serializers.DateTimeField(source="task.created")
-    name = serializers.CharField(source="task.name")
-    history = HistoricActivityInstanceDetailSerializer(many=True)
+    assignee = UserSerializer(
+        help_text=_("User assigned to user task."),
+    )
+    completed = serializers.DateTimeField(
+        source="task.end_time", help_text=_("Datetime user task was completed.")
+    )
+    created = serializers.DateTimeField(
+        source="task.created", help_text=_("Datetime user task was created.")
+    )
+    name = serializers.CharField(source="task.name", help_text=_("Name of user task."))
+    history = HistoricActivityInstanceDetailSerializer(
+        many=True, help_text=_("List of variables set by the user task.")
+    )
 
     class Meta:
         model = HistoricUserTask

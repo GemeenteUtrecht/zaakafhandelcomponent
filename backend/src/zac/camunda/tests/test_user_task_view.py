@@ -30,7 +30,6 @@ from zgw.models.zrc import Zaak
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
-PI_URL = "https://camunda.example.com/engine-rest/process-instance"
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {

@@ -12,9 +12,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..user_tasks.history import get_camunda_history_for_zaak
 from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.api.permissions import CanReadZaken
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
@@ -24,6 +24,7 @@ from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
+from ..user_tasks.history import get_camunda_history_for_zaak
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
@@ -380,9 +381,11 @@ class GetBPMNView(APIView):
             raise
 
 
-class UserTaskHistory(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = HistoricUserTaskSerializer
+class UserTaskHistoryView(APIView):
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+
+    def get_serializer(self, **kwargs):
+        return HistoricUserTaskSerializer(**kwargs)
 
     @extend_schema(
         summary=_("Retrieve the historical user task data of the ZAAK."),
@@ -394,9 +397,6 @@ class UserTaskHistory(APIView):
                 required=True,
             )
         ],
-        responses={
-            200: serializer_class(many=True),
-        },
     )
     def get(self, request, *args, **kwargs):
         zaak_url = request.GET.get("zaak_url")
@@ -404,5 +404,5 @@ class UserTaskHistory(APIView):
             raise exceptions.ValidationError(_("Missing the zaak URL query parameter."))
 
         user_task_history = get_camunda_history_for_zaak(zaak_url)
-        serializer = self.serializer_class(instance=user_task_history, many=True)
+        serializer = self.get_serializer(instance=user_task_history, many=True)
         return Response(serializer.data)

@@ -7,8 +7,6 @@ from zac.camunda.data import Task
 from zac.camunda.forms import extract_task_form
 from zac.core.camunda.utils import FORM_KEYS, resolve_assignee
 
-from ..data import Task
-
 
 def get_task(task_id: CamundaId, check_history=False) -> Optional[Task]:
     task = _get_task(task_id, check_history=check_history, factory_cls=Task)

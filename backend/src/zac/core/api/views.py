@@ -283,8 +283,8 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
 
 
 class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
-    # permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
     schema_summary = _("List case properties (eigenschappen)")
 
@@ -819,8 +819,8 @@ class EigenschappenView(ListAPIView):
     are considered.
     """
 
-    # authentication_classes = (authentication.SessionAuthentication,)
-    # permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
     filter_backends = (ApiFilterBackend,)
     filterset_class = EigenschappenFilterSet
