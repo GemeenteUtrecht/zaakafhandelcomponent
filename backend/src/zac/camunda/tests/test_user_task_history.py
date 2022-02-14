@@ -51,7 +51,7 @@ COMPLETED_TASK_DATA = {
     "description": None,
     "deleteReason": "completed",
     "owner": None,
-    "assignee": "ammer001",
+    "assignee": "some-user",
     "startTime": "2022-02-11T16:24:31.545+0000",
     "endTime": "2022-02-11T16:24:43.006+0000",
     "duration": 11461,
@@ -74,6 +74,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         config.root_url = CAMUNDA_ROOT
         config.rest_api_path = CAMUNDA_API_PATH
         config.save()
+        self.user = SuperUserFactory.create(username="some-user")
 
     def test_success_get_task_history_for_process_instance(self, m):
         m.get(
@@ -182,8 +183,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         self.assertEqual(historic_activity_details[0]["value"], "Ja")
 
     def test_fail_get_user_task_history_missing_query_parameter(self, m):
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user)
+        self.client.force_authenticate(self.user)
         url = furl(reverse("user-task-history"))
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 400)
@@ -251,22 +251,22 @@ class UserTaskHistoryTests(APITransactionTestCase):
 
         url = furl(reverse("user-task-history"))
         url.set({"zaak_url": ZAAK_URL})
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user)
-        response = self.client.get(url.url)
+        self.client.force_authenticate(self.user)
+        with patch("zac.camunda.api.data.resolve_assignee", return_value=self.user):
+            response = self.client.get(url.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
             [
                 {
                     "assignee": {
-                        "id": 2,
-                        "username": "ammer001",
-                        "firstName": "",
-                        "fullName": "",
-                        "lastName": "",
-                        "isStaff": False,
-                        "email": "",
+                        "id": self.user.id,
+                        "username": self.user.username,
+                        "firstName": self.user.first_name,
+                        "fullName": self.user.get_full_name(),
+                        "lastName": self.user.last_name,
+                        "isStaff": self.user.is_staff,
+                        "email": self.user.email,
                         "groups": [],
                     },
                     "completed": "2022-02-11T16:24:43.006000Z",
