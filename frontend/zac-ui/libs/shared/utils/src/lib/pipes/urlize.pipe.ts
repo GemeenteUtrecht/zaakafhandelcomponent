@@ -18,9 +18,10 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 export class UrlizePipe implements PipeTransform {
   constructor(private domSanitizer: DomSanitizer) {}
 
-  transform(value: string, target='_self'): SafeHtml {
+  transform(unsafeValue: string, target='_self'): SafeHtml {
+    const safeValue = new DOMParser().parseFromString(unsafeValue, 'text/html').body.textContent;
     const regExp = new RegExp("(?:(?:https?://)|(?:www))[^\s]+", "gi")
-    const html = value.replace(regExp, (match) => `<a href="${match}" target="${target}">${match}</a>`);
+    const html = safeValue.replace(regExp, (match) => `<a href="${match}" target="${target}">${match}</a>`);
     return this.domSanitizer.bypassSecurityTrustHtml(html);
   }
 }
