@@ -79,7 +79,7 @@ export class TaskHistoryComponent implements OnInit {
                 waarde: {
                   label: historicalUserTaskDataItem.waarde,
                   target: '_blank',
-                  type: (historicalUserTaskDataItem.waarde.match('http')) ? 'link' : 'text',
+                  type: (JSON.stringify(historicalUserTaskDataItem.waarde)?.match('http')) ? 'link' : 'text',
                   url: historicalUserTaskDataItem.waarde,
                 },
               }
