@@ -1,0 +1,9 @@
+<!-- Loading -->
+<ng-container *ngIf="isLoading">
+  <gu-loading-indicator></gu-loading-indicator>
+</ng-container>
+<!-- End loading -->
+
+<!-- Tables -->
+<gu-table *ngIf="table" [table]="table" expandable="true"></gu-table>
+<!-- End Tables -->
