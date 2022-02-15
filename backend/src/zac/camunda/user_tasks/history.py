@@ -11,11 +11,8 @@ from zac.camunda.data import Task
 from zac.camunda.dynamic_forms.context import get_field_definition
 from zac.camunda.forms import extract_task_form_fields, extract_task_form_key
 from zac.camunda.processes import get_process_instances
-from zac.core.services import A_DAY
-from zac.utils.decorators import cache
 
 
-@cache("historical_tasks:{pid}", timeout=A_DAY)
 def get_task_history_for_process_instance(
     pid: CamundaId, client: Optional[Camunda] = None
 ) -> Dict[str, Dict]:
@@ -72,7 +69,6 @@ def get_completed_user_tasks_for_zaak(
     return {task.id: task for task in tasks}
 
 
-@cache("historical_activity_detail:{activity_instance_id}", timeout=A_DAY)
 def get_historic_activity_details(
     activity_instance_id: str, client: Optional[Camunda] = None
 ) -> List[dict]:
@@ -108,7 +104,7 @@ def get_historic_activity_variables_from_task(
         detail["type"] = detail["variable_type"]
         detail["value"] = deserialize_variable(detail)
 
-    return historic_activity_details
+    return sorted(historic_activity_details, key=lambda obj: obj["variable_name"])
 
 
 def get_historic_form_labels_from_task(task: Task) -> Dict[str, str]:
@@ -188,12 +184,4 @@ def get_camunda_history_for_zaak(
     with parallel() as executor:
         list(executor.map(_add_camunda_form_labels_to_user_task_history, tasks))
 
-    # Latest task shows first
-    return sorted(
-        factory(HistoricUserTask, [h for h in user_task_history.values()]),
-        key=lambda h: h.task.created,
-        reverse=True,
-    )
-
-
-zaak_url = "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/zaken/b18c8f02-d276-4518-974c-258d1754fdfd"
+    return factory(HistoricUserTask, [h for h in user_task_history.values()])

@@ -389,6 +389,9 @@ class UserTaskHistoryView(APIView):
 
     @extend_schema(
         summary=_("Retrieve the historical user task data of the ZAAK."),
+        description=_(
+            "User tasks are reverse sorted on the `created` key. The history array is sorted alphabetically on the `variable_name` key."
+        ),
         parameters=[
             OpenApiParameter(
                 "zaak_url",
@@ -404,5 +407,6 @@ class UserTaskHistoryView(APIView):
             raise exceptions.ValidationError(_("Missing the zaak URL query parameter."))
 
         user_task_history = get_camunda_history_for_zaak(zaak_url)
+        user_task_history.sort(key=lambda obj: obj.task.created, reverse=True)
         serializer = self.get_serializer(instance=user_task_history, many=True)
         return Response(serializer.data)
