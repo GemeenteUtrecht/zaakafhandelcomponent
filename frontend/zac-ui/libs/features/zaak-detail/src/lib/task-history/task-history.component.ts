@@ -17,7 +17,7 @@ export class TaskHistoryComponent implements OnInit {
   /** @type {Table} The tables to render. */
   table: Table = null;
 
-  readonly errorMessage = 'Er is een fout opgetreden bij het laden van de taak geschiedenis.'
+  readonly errorMessage = 'Er is een fout opgetreden bij het laden van de taakgeschiedenis.'
 
   /**
    * Constructor method.
@@ -62,11 +62,11 @@ export class TaskHistoryComponent implements OnInit {
    */
   getTable(historicalUserTasksData: HistoricalUserTaskData[]): Table {
     return {
-      headData: ['Name', 'Assignee', 'Created', 'Completed'],
+      headData: ['Actie', 'Gebruiker', 'Aangemaakt', 'Voltooid'],
       bodyData: historicalUserTasksData.map((historicalUserTaskData: HistoricalUserTaskData) => ({
           cellData: {
             name: historicalUserTaskData.name,
-            assignee: historicalUserTaskData.assignee.fullName || historicalUserTaskData.assignee.username,
+            assignee: historicalUserTaskData.assignee ? (historicalUserTaskData.assignee.fullName || historicalUserTaskData.assignee.username) :'',
             created: {date: historicalUserTaskData.created, type: 'date'},
             completed: {date: historicalUserTaskData.completed, type: 'date'},
           },
@@ -77,7 +77,7 @@ export class TaskHistoryComponent implements OnInit {
                 label: historicalUserTaskDataItem.label,
                 naam: historicalUserTaskDataItem.naam,
                 waarde: {
-                  label: historicalUserTaskDataItem.waarde,
+                  label: JSON.stringify(historicalUserTaskDataItem.waarde),
                   target: '_blank',
                   type: (JSON.stringify(historicalUserTaskDataItem.waarde)?.match('http')) ? 'link' : 'text',
                   url: historicalUserTaskDataItem.waarde,
