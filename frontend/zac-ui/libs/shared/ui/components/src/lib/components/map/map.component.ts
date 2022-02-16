@@ -9,7 +9,7 @@ import {
   Output, ViewEncapsulation
 } from '@angular/core';
 import {Position} from '@gu/models';
-import {MapGeometry, MapMarker} from './map';
+import {MapGeometry, MapMarker, MapAction} from './map';
 import {RD_CRS} from './rd';
 import * as L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
@@ -48,6 +48,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() editable: boolean | L.PM.ToolbarOptions = false;
 
+  @Output() mapLoad: EventEmitter<any> = new EventEmitter<any>();
   @Output() shapeChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() shapeChangeComplete: EventEmitter<any> = new EventEmitter<any>();
 
@@ -174,6 +175,8 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
 
+    this.map.on('load', this.mapLoad.emit(this.map));
+
     // Update.
     this.update();
   }
@@ -238,27 +241,24 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
     // Add geometries
     this.mapGeometries.filter(v => v).forEach((mapGeometry) => {
       // @ts-ignore
-      const layer = L.geoJSON(mapGeometry.geometry, )
+      const mapGeometryLayer = L.geoJSON(mapGeometry.geometry);
+      this.addPopUp(mapGeometry, mapGeometryLayer);
 
-      if(mapGeometry.title) {
-        layer.bindTooltip(mapGeometry.title);
-      }
-
-      layer.addEventListener('click', () => mapGeometry.onClick ? mapGeometry.onClick() : null);
-      this.map.addLayer(layer);
+      mapGeometryLayer.addEventListener('click', () => mapGeometry.onClick ? mapGeometry.onClick() : null);
+      this.map.addLayer(mapGeometryLayer);
 
       if (mapGeometry.editable) {
         // @ts-ignore
-        layer.pm.enable({draggable: true});
+        mapGeometryLayer.pm.enable({draggable: true});
       }
 
       if (mapGeometry.onChange) {
-        layer.on('pm:edit', (e) => mapGeometry.onChange(e));
-        layer.on('pm:update', (e) => mapGeometry.onChange(e));
-        layer.on('pm:drag', (e) => mapGeometry.onChange(e));
-        layer.on('pm:dragstart', (e) => mapGeometry.onChange(e));
-        layer.on('pm:dragend', (e) => mapGeometry.onChange(e));
-        layer.on('pm:rotate', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:edit', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:update', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:drag', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:dragstart', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:dragend', (e) => mapGeometry.onChange(e));
+        mapGeometryLayer.on('pm:rotate', (e) => mapGeometry.onChange(e));
       }
     })
 
@@ -267,39 +267,37 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
     this.mapMarkers.filter(v => v).map((mapMarker: MapMarker) => {
       const iconSize = (mapMarker.iconSize || [25, 41]) as L.PointExpression;
       const icon = new L.Icon({
-        iconAnchor: (mapMarker.iconAnchor || [iconSize[0]/2, iconSize[1]]) as L.PointExpression,
+        iconAnchor: (mapMarker.iconAnchor || [iconSize[0] / 2, iconSize[1]]) as L.PointExpression,
         iconUrl: mapMarker.iconUrl,
         iconSize: iconSize,
         shadowAnchor: (mapMarker.shadowAnchor || [14, 62]) as L.PointExpression,
-        shadowSize: (mapMarker.shadowSize || [50,64]) as L.PointExpression,
-        shadowUrl: mapMarker.shadowUrl || `${LEAFLET_ASSETS}marker-shadow.png`,
+        shadowSize: (mapMarker.shadowSize || [50, 64]) as L.PointExpression,
+        shadowUrl: mapMarker.shadowUrl || `assets/vendor/leaflet/marker-shadow.png`,
       })
 
       const markerOptions = {
         icon: mapMarker.iconUrl ? icon : undefined,
       }
 
-      const marker = L.marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as L.LatLngExpression, markerOptions);
+      const mapMarkerlayer = L.marker([mapMarker.coordinates[0], mapMarker.coordinates[1]] as L.LatLngExpression, markerOptions);
+      this.addPopUp(mapMarker, mapMarkerlayer);
 
-      if(mapMarker.title) {
-        marker.bindTooltip(mapMarker.title);
-      }
 
-      marker.addEventListener('click', () => mapMarker.onClick ? mapMarker.onClick() : null);
-      this.map.addLayer(marker);
+      mapMarkerlayer.addEventListener('click', () => mapMarker.onClick ? mapMarker.onClick() : null);
+      this.map.addLayer(mapMarkerlayer);
 
       if (mapMarker.editable) {
         // @ts-ignore
-        marker.pm.enable({draggable: true});
+        mapMarkerlayer.pm.enable({draggable: true});
       }
 
       if (mapMarker.onChange) {
-        marker.on('pm:edit', (e) => mapMarker.onChange(e));
-        marker.on('pm:update', (e) => mapMarker.onChange(e));
-        marker.on('pm:drag', (e) => mapMarker.onChange(e));
-        marker.on('pm:dragstart', (e) => mapMarker.onChange(e));
-        marker.on('pm:dragend', (e) => mapMarker.onChange(e));
-        marker.on('pm:rotate', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:edit', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:update', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:drag', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:dragstart', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:dragend', (e) => mapMarker.onChange(e));
+        mapMarkerlayer.on('pm:rotate', (e) => mapMarker.onChange(e));
       }
     });
 
@@ -342,6 +340,40 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
         });
         this.map.pm.Toolbar.changeControlOrder(['Edit'])
       }
+    }
+  }
+
+  /**
+   * Adds a popup to a MapGeometry or MapMarker.
+   * @param {MapGeometry | MapMarker} mapGeometryOrMapMarker
+   * @param layer
+   */
+  addPopUp(mapGeometryOrMapMarker: MapGeometry | MapMarker, layer): void {
+    const popUp = L.popup()
+    const popUpContent = document.createElement('div');
+
+    if (mapGeometryOrMapMarker.title) {
+      const title = document.createElement('h4');
+      title.textContent = mapGeometryOrMapMarker.title;
+      popUpContent.appendChild(title)
+    }
+
+    if (mapGeometryOrMapMarker.actions) {
+      mapGeometryOrMapMarker.actions.forEach((mapAction: MapAction) => {
+        const button = document.createElement('button');
+        button.innerText = mapAction.label
+        button.addEventListener('click', () => {
+          mapAction.onClick(mapGeometryOrMapMarker);
+          popUp.closePopup();
+
+        });
+        popUpContent.appendChild(button);
+      })
+    }
+
+    if (popUpContent.innerHTML) {
+      popUp.setContent(popUpContent)
+      layer.bindPopup(popUp)
     }
   }
 }

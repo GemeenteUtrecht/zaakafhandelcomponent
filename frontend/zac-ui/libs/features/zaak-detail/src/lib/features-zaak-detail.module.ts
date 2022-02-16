@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {HttpClientModule, HttpClientXsrfModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
+import {RouterModule} from '@angular/router';
 import {FormGroupDirective, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {TabsModule} from 'ngx-bootstrap/tabs';
 import {MultiselectModule, SharedUiComponentsModule} from '@gu/components';
@@ -34,6 +35,7 @@ import {UserPermissionsComponent} from './user-permissions/user-permissions.comp
     KetenProcessenModule,
     MultiselectModule,
     ReactiveFormsModule,
+    RouterModule,
     FeaturesSearchModule,
     SharedUiComponentsModule,
     TabsModule.forRoot(),

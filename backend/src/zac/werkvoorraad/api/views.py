@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from django.contrib.auth.models import Group
@@ -6,13 +7,15 @@ from django.utils.translation import gettext as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, permissions
+from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
+from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
@@ -20,7 +23,7 @@ from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search
 
-from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
+from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
@@ -32,6 +35,8 @@ from .utils import (
     get_camunda_group_tasks,
     get_camunda_user_tasks,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @extend_schema(summary=_("List access requests"))
@@ -59,7 +64,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     def get_queryset(self):
         grouped_activities = self.get_activities()
         activity_groups = get_activity_groups(self.request.user, grouped_activities)
-        return [ActivityGroup(**group) for group in activity_groups if "zaak" in group]
+        return activity_groups
 
 
 @extend_schema(
@@ -76,37 +81,28 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 )
 class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     def get_activities(self) -> List[dict]:
-        group_assignee = self.request.query_params.get("group_assignee")
-        if not group_assignee:
-            return []
-
-        group = get_object_or_404(Group, name__iexact=group_assignee)
-        if group in self.request.user.groups.all():
-            return Activity.objects.as_werkvoorraad(group=group)
-
-        return []
+        return Activity.objects.as_werkvoorraad(groups=self.request.user.groups.all())
 
 
 @extend_schema(
     summary=_("List active cases"),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
-class WorkStackAssigneeCasesView(ListAPIView):
+class WorkStackAssigneeCasesView(ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
     ordering = ("-deadline",)
 
-    def get_queryset(self):
+    def get_objects(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken = search(
             user=self.request.user,
             behandelaar=self.request.user.username,
             ordering=ordering,
         )
-        unfinished_zaken = [zaak for zaak in zaken if not zaak.einddatum]
-        return unfinished_zaken
+        return [zaak for zaak in zaken if not zaak.einddatum]
 
 
 @extend_schema(summary=_("List user tasks"))
@@ -133,9 +129,21 @@ class WorkStackUserTasksView(ListAPIView):
                 urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
             )
         }
-        task_zaken = {tzu[0]: zaken.get(tzu[1]) for tzu in task_ids_and_zaak_urls}
+        task_zaken = {}
+        for task_id, zaak_url in task_ids_and_zaak_urls:
+            if not (zaak := zaken.get(zaak_url)):
+                logger.warning(
+                    "Couldn't find a ZAAK in Elasticsearch for task with id %s."
+                    % task_id
+                )
 
-        return [TaskAndCase(task=task, zaak=task_zaken[task.id]) for task in tasks]
+            task_zaken[task_id] = zaak
+
+        return [
+            TaskAndCase(task=task, zaak=task_zaken[task.id])
+            for task in tasks
+            if task_zaken[task.id]
+        ]
 
 
 @extend_schema(summary=_("List user tasks assigned to groups related to user"))

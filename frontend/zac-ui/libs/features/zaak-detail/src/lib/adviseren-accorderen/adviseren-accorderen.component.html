@@ -6,9 +6,9 @@
   <!-- Table -->
   <ng-container *ngIf="reviewRequestSummaries && !isSummariesLoading">
     <gu-table
-      *ngIf="(reviewRequestSummaries.length > 0) && table"
+      *ngIf="(reviewRequestSummaries.length > 0) && tableData"
       [sortable]="true"
-      [table]="table"
+      [table]="tableData"
       (tableOutput)="tableClick($event)">
     </gu-table>
     <p *ngIf="(reviewRequestSummaries.length === 0)">Er is niets gevonden.</p>

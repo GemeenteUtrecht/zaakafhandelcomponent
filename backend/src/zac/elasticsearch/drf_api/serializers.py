@@ -1,3 +1,5 @@
+import re
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -70,6 +72,9 @@ class SearchSerializer(serializers.Serializer):
         default=False,
     )
 
+    def validate_omschrijving(self, omschrijving):
+        return re.escape(omschrijving)
+
     def validate_fields(self, fields):
         if isinstance(fields, set):
             fields.add("identificatie")
@@ -87,7 +92,7 @@ class SearchSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "'Eigenschappen' fields should include 'value' attribute"
                 )
-            validated_data[name] = value["value"]
+            validated_data[name] = re.escape(value["value"])
         return validated_data
 
 

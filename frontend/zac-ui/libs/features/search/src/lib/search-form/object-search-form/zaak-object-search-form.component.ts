@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
 import {
   Feature,
@@ -90,7 +90,8 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     private objectsService: ObjectsService,
     private searchService: SearchService,
     private zaakObjectService: ZaakObjectService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
+    private cdRef: ChangeDetectorRef,
   ) {
   }
 
@@ -103,14 +104,19 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   get form(): FieldConfiguration[] {
     return [
+      this.objectTypesAsFieldConfiguration(),
       {
+        activeWhen: (formGroup) => {
+          const objectTypeURL = formGroup.getRawValue().objectType;
+          const objectType = this.objectTypes.find((o: ObjectType) => o.url === objectTypeURL);
+          return objectType?.allowGeometry
+        },
         choices: OBJECT_SEARCH_GEOMETRY_CHOICES,
         label: 'Gebied',
         name: 'geometry',
         required: false,
         value: OBJECT_SEARCH_GEOMETRY_CHOICES[0].value,
       },
-      this.objectTypesAsFieldConfiguration(),
       ...this.objectTypeVersionsAsFieldConfigurations(),
       {
         label: 'Zoekopdracht',
@@ -173,6 +179,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             this.objectTypes = objectTypes;
             this.objectTypeVersions = objectTypeVersions;
             this.isLoading = false;
+            this.cdRef.detectChanges();
           }
         }
       )
@@ -211,9 +218,14 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   objectTypeVersionsAsFieldConfigurations(): FieldConfiguration[] {
     return this.objectTypeVersions.map((objectTypeVersion: ObjectTypeVersion) => {
       const objectType = this.objectTypes.find((o) => o.url === objectTypeVersion.objectType);
+      const properties = objectTypeVersion.jsonSchema.properties;
+
+      if (!properties) {
+        return;
+      }
 
       const choices = Object
-        .keys(objectTypeVersion.jsonSchema.properties)
+        .keys(properties)
         .map((propertyName): Choice => ({
           label: propertyName,
           value: propertyName,
@@ -228,7 +240,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         required: false,
         value: choices[0].value,
       }
-    });
+    }).filter(f => f);
   }
 
   //
@@ -250,8 +262,8 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   submitForm(data): void {
     this.searchObjects.emit();
-
-    const geometry: Geometry = JSON.parse(data.geometry);
+    this.isLoading = true;
+    const geometry: Geometry = (data.geometry) ? JSON.parse(data.geometry) : null;
 
     this.zaakObjects = [];
     this.showZaakObjecten = true;
@@ -259,13 +271,15 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
       (zaakObjects: ZaakObject[]) => {
         this.zaakObjects = zaakObjects;
-
         const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
             onClick: (event) => this._selectZaakObject(event, zaakObject),
           })
         ).filter((mapMarker) => mapMarker);
 
         this.mapMarkers.emit(activeMapMarkers);
+
+        this.isLoading = false;
+        this.cdRef.detectChanges();
       },
       this.reportError.bind(this),
     );
@@ -290,6 +304,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
+    this.isLoading = false;
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }

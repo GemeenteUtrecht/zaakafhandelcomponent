@@ -12,7 +12,8 @@
              [formControl]="control"
              [required]="required"
              [searchable]="searchable"
-             [appendTo]="appendTo"
+             [appendTo]="appendTo || 'body'"
+             [clearable]="clearable"
   >
   </ng-select>
   <span>{{label}}</span>

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
-import { Result } from '../../../../models/user-search';
+import { UserSearchResult } from '../../../../models/user-search';
 import { UserGroupResult } from '../../../../models/user-group-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
@@ -37,7 +37,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   steps = 1;
   minDate = new Date();
-  searchResultUsers: Result[] = [];
+  searchResultUsers: UserSearchResult[] = [];
   searchResultUserGroups: UserGroupResult[] = [];
 
   assignUsersForm: FormGroup;
@@ -77,6 +77,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   assignedUserGroupControl(index: number): FormControl {
     return this.assignedUsers.at(index).get('assignees').get('userGroups') as FormControl;
+  }
+
+  assignedEmailNotificationControl(index: number): FormControl {
+    return this.assignedUsers.at(index).get('emailNotification') as FormControl;
   }
 
   assignedDeadlineControl(index: number): FormControl {
@@ -150,6 +154,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
         users: [[]],
         userGroups: [[]],
       }, { validators: [this.atLeastOneAssignee]}),
+      emailNotification: [false],
       extraStep: ['']
     })
   }
@@ -260,20 +265,26 @@ export class AdviserenAccorderenComponent implements OnChanges {
    */
   submitForm() {
     this.isSubmitting = true;
+
     const selectedDocuments = this.documents.value
       .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
       .filter(v => v !== null);
+
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
         const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
-        const users = this.assignedUsersControl(i).value;
-        const userGroups = this.assignedUserGroupControl(i).value;
+        const users = this.assignedUsersControl(i).value ? this.assignedUsersControl(i).value : [];
+        const userGroups = this.assignedUserGroupControl(i).value ? this.assignedUserGroupControl(i).value : [];
+        const emailNotification = this.assignedEmailNotificationControl(i).value ? this.assignedEmailNotificationControl(i).value : false;
+
         return {
           deadline: deadline,
           userAssignees: users,
-          groupAssignees: userGroups
+          groupAssignees: userGroups,
+          emailNotification: emailNotification
         }
       })
+
     const toelichting = this.toelichting.value;
     const formData = {
       form: this.taskContextData.form,
@@ -281,6 +292,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
       selectedDocuments: selectedDocuments,
       toelichting: toelichting
     };
+
     this.putForm(formData);
   }
 

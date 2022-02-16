@@ -1,19 +1,9 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices import ChoiceItem, DjangoChoices
 from rest_framework import serializers
-from zgw_consumers.api_models.catalogi import InformatieObjectType
-
-from ..services import fetch_zaaktype, get_informatieobjecttypen_for_zaaktype, get_zaak
-
-
-def get_informatieobjecttypen_for_zaak(url: str) -> List[InformatieObjectType]:
-    zaak = get_zaak(zaak_url=url)
-    zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
-    informatieobjecttypen = get_informatieobjecttypen_for_zaaktype(zaak.zaaktype)
-    return informatieobjecttypen
 
 
 class ValidFieldChoices(DjangoChoices):

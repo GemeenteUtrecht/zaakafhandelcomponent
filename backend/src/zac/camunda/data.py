@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 from uuid import UUID
 
 from django.contrib.auth.models import Group
@@ -49,8 +49,8 @@ class Task(_Task):
     def has_form(self) -> bool:
         return bool(self.form)
 
-    def get_variable(self, name: str) -> Any:
-        return get_task_variable(self.id, name)
+    def get_variable(self, name: str, default: Optional[Any] = None) -> Any:
+        return get_task_variable(self.id, name, default=default)
 
     def assignee_type(self) -> str:
         if self.assignee:

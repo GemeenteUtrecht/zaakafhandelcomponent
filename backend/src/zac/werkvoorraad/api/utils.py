@@ -1,3 +1,4 @@
+import logging
 from itertools import groupby
 from typing import List
 
@@ -12,6 +13,8 @@ from zac.core.permissions import zaken_handle_access
 from zac.elasticsearch.searches import search
 
 from .data import ActivityGroup
+
+logger = logging.getLogger(__name__)
 
 
 def get_camunda_user_tasks(user: User) -> List[Task]:
@@ -74,7 +77,20 @@ def get_activity_groups(user: User, grouped_activities: dict) -> List[ActivityGr
     )
     es_results = search(user=user, urls=zaak_urls)
     zaken = {zaak.url: zaak for zaak in es_results}
-    for activity_group in grouped_activities:
-        activity_group["zaak"] = zaken.get(activity_group["zaak_url"])
 
-    return grouped_activities
+    # Make sure activities without a zaak are not returned.
+    ignore_these_activities = []
+    for group in grouped_activities:
+        zaak_url = group["zaak_url"]
+        zaak = zaken.get(zaak_url)
+        if not zaak:
+            ignore_these_activities.append(zaak_url)
+            logger.warning("Can't find a zaak for url %s in elastic search." % zaak_url)
+            continue
+        group["zaak"] = zaak
+
+    return [
+        ActivityGroup(**group)
+        for group in grouped_activities
+        if group["zaak_url"] not in ignore_these_activities
+    ]

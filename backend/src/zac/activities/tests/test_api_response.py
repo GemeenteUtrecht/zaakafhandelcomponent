@@ -55,7 +55,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
     def test_list_activity(self, m):
         self.client.force_authenticate(user=self.user)
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
 
@@ -67,7 +67,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "name": "some-activity",
         }
 
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
 
         # Assert current activity count is 1
         self.assertEqual(Activity.objects.count(), 1)
@@ -87,7 +87,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         activity = ActivityFactory.create(zaak=self.zaak["url"])
-        endpoint = reverse("activities:activity-detail", kwargs={"pk": activity.pk})
+        endpoint = reverse("activity-detail", kwargs={"pk": activity.pk})
 
         # Assert current activity count is 2
         self.assertEqual(Activity.objects.count(), 2)
@@ -109,9 +109,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "zaak": self.zaak["url"],
             "user_assignee": self.user.username,
         }
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Get old assignee value for assertion purposes
         old_assignee = self.activity.user_assignee
@@ -132,7 +130,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         # Assert response data is as expected (different serializer than request)
         expected_data = {
             "id": self.activity.id,
-            "url": f"http://testserver/activities/api/activities/{self.activity.id}",
+            "url": f"http://testserver/api/activities/activities/{self.activity.id}",
             "zaak": self.zaak["url"],
             "name": self.activity.name,
             "remarks": "",
@@ -155,9 +153,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "zaak": self.zaak["url"],
             "group_assignee": group.name,
         }
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
         m.get(self.zaak["url"], json=self.zaak)
@@ -176,7 +172,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         # Assert response data is as expected (different serializer than request)
         expected_data = {
             "id": self.activity.id,
-            "url": f"http://testserver/activities/api/activities/{self.activity.id}",
+            "url": f"http://testserver/api/activities/activities/{self.activity.id}",
             "zaak": self.zaak["url"],
             "name": self.activity.name,
             "remarks": "",
@@ -197,9 +193,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "zaak": self.zaak["url"],
             "user_assignee": "some-invalid-user",
         }
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
         m.get(self.zaak["url"], json=self.zaak)
@@ -217,9 +211,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "zaak": self.zaak["url"] + "invalidate-this-url",
             "user_assignee": self.user.username,
         }
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
         m.get(self.zaak["url"] + "invalidate-this-url", json=self.zaak)
@@ -238,9 +230,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "zaak": self.zaak["url"] + "invalidate-this-url",
             "user_assignee": self.user.username,
         }
-        endpoint = reverse(
-            "activities:activity-detail", kwargs={"pk": self.activity.pk}
-        )
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
         m.get(self.zaak["url"], json=self.zaak)

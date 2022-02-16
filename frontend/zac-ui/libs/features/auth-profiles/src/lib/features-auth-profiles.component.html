@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-lg-8 col-xl-6">
-    <h1>Autorisatieprofielen</h1>
+    <h1>Autorisaties</h1>
     <gu-tab-group>
       <gu-tab label="Autorisatieprofielen">
         <div class="p-4">
@@ -10,6 +10,11 @@
       <gu-tab label="Rollen">
         <div class="p-4">
           <gu-roles *ngIf="roles" (reloadRoles)="getRoles()" [roles]="roles"></gu-roles>
+        </div>
+      </gu-tab>
+      <gu-tab label="Groepen">
+        <div class="p-4">
+          <gu-user-groups></gu-user-groups>
         </div>
       </gu-tab>
     </gu-tab-group>

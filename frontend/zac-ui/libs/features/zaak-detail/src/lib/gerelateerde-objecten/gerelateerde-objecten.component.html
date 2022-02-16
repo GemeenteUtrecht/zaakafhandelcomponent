@@ -1,17 +1,6 @@
 <div class="gerelateerde-objecten card">
 
-  <header class="card__actions">
-    <button (click)="addClick($event)"
-            gu-button
-            class="card__action"
-            icon="add"
-            size="extrasmall"
-            buttonStyle="tertiary">
-      Gerelateerd object toevoegen
-    </button>
-  </header>
-
-  <h2 class="d-inline-block mr-2">Gerelateerde objecten</h2>
+  <h2 class="d-inline-block mr-1">Gerelateerde objecten</h2>
   <gu-tooltip type="primary" inline="true">Objecten die gerelateerd zijn aan deze zaak zoals een pand</gu-tooltip>
 
   <!-- Loading -->
@@ -30,6 +19,15 @@
   </ng-container>
   <!-- End table -->
 
+  <footer class="card__actions">
+    <button (click)="addClick($event)"
+            gu-button
+            icon="add"
+            buttonStyle="tertiary">
+      Gerelateerd object toevoegen
+    </button>
+  </footer>
+
   <!-- Modal object search -->
   <gu-modal [closeIcon]="true"
             [id]="modalObjectSearchId"
@@ -42,7 +40,8 @@
   <gu-modal [closeIcon]="true"
             [id]="modalFormId"
             size="small">
-      <gu-form *ngIf="activeZaakObject" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+      <gu-form *ngIf="activeZaakObject && !isLoading" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Toevoegen"></gu-form>
+      <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   </gu-modal>
   <!-- End modal form -->
 </div>

@@ -30,7 +30,7 @@ Each permission provides the right to perform one of the following types of oper
     * ``zaken:nieuwe-relaties-toevoegen`` - to add new relations to the case
     * ``zaken:toegang-aanvragen`` - to request access to the case
     * ``zaken:toegang-verlenen`` - to manage access to the case
-    * ``activities:read`` - to read activities of the case
+    * ``activiteiten:inzien`` - to read activities of the case
     * ``activiteiten:schrijven`` - to add activities to the case
 
 * document permissions:

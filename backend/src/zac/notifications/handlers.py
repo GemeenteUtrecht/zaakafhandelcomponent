@@ -2,6 +2,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status
 
+from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
@@ -99,6 +100,8 @@ class ZakenHandler:
     def _handle_zaak_destroy(self, zaak_url: str):
         Activity.objects.filter(zaak=zaak_url).delete()
         BoardItem.objects.filter(object=zaak_url).delete()
+        AccessRequest.objects.filter(zaak=zaak_url).delete()
+
         # index in ES
         delete_zaak_document(zaak_url)
 

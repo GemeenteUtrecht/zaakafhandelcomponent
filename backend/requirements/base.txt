@@ -4,14 +4,8 @@
 #
 #    ./bin/compile_dependencies.sh
 #
-amqp==2.5.1
-    # via kombu
 attrs==19.1.0
     # via jsonschema
-billiard==3.6.1.0
-    # via celery
-celery==4.3.0
-    # via django-camunda
 certifi==2019.9.11
     # via
     #   elastic-apm
@@ -42,7 +36,7 @@ django-axes==5.0.13
     # via -r requirements/base.in
 django-better-admin-arrayfield==1.4.0
     # via -r requirements/base.in
-django-camunda==0.10.0
+django-camunda==0.11.1
     # via -r requirements/base.in
 django-choices==1.7.0
     # via
@@ -81,7 +75,7 @@ django-solo==1.1.3
     #   django-auth-adfs-db
     #   django-camunda
     #   zgw-consumers
-django==2.2.24
+django==2.2.25
     # via
     #   -r requirements/base.in
     #   django-appconf
@@ -111,7 +105,7 @@ djangorestframework==3.12.2
     #   -r requirements/base.in
     #   drf-spectacular
     #   zgw-consumers
-drf-spectacular==0.17.2
+drf-spectacular==0.21.1
     # via -r requirements/base.in
 elastic-apm==6.6.0
     # via -r requirements/base.in
@@ -131,8 +125,6 @@ gemma-zds-client==1.0.1
     #   zgw-consumers
 idna==2.8
     # via requests
-importlib-metadata==0.23
-    # via kombu
 inflection==0.3.1
     # via
     #   django-camunda
@@ -143,12 +135,8 @@ jdcal==1.4.1
     # via openpyxl
 jsonschema==3.2.0
     # via drf-spectacular
-kombu==4.6.4
-    # via celery
 markuppy==1.14
     # via tablib
-more-itertools==7.2.0
-    # via zipp
 odfpy==1.4.0
     # via tablib
 openpyxl==3.0.0
@@ -182,7 +170,6 @@ python-dotenv==0.19.1
 pytz==2021.3
     # via
     #   -r requirements/base.in
-    #   celery
     #   django
 pyyaml==5.4.1
     # via
@@ -237,18 +224,12 @@ urllib3==1.26.5
     #   sentry-sdk
 uwsgi==2.0.20
     # via -r requirements/base.in
-vine==1.3.0
-    # via
-    #   amqp
-    #   celery
 xlrd==1.2.0
     # via tablib
 xlwt==1.3.0
     # via tablib
-zgw-consumers[drf]==0.15.0
+zgw-consumers[drf]==0.16.1
     # via -r requirements/base.in
-zipp==0.6.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

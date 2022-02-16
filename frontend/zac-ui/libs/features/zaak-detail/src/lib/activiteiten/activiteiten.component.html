@@ -57,20 +57,20 @@
               <p>{{activity.remarks}}</p>
             </div>
             <div class="activity__details col-lg-6">
-              <!--  Gebruiker toewijzen  -->
-              <gu-chip *ngIf="activity.assignee"
-                       (click)="openAssigneeEditField = i; openNoteEditField = null"
-                       [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
-                       icon="edit"
-                       class="d-inline-block mb-1"
-              >
-                {{activity.assignee}}
-              </gu-chip>
               <div class="activity__detail mb-4">
-                <button gu-button *ngIf="!activity.assignee && openAssigneeEditField !== i"
-                        (click)="openAssigneeEditField = i; openNoteEditField = null"
+                <!--  Gebruiker toewijzen  -->
+                <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
+                         (click)="openAssigneeEditField = i; openNoteEditField = null"
+                         [color]="currentUser.username === (activity.groupAssignee?.name || activity.userAssignee.username) ? 'primary' : 'tertiary'"
+                         icon="edit"
+                         class="d-inline-block mb-1"
+                >
+                  {{activity.groupAssignee?.name || activity.userAssignee.fullName}}
+                </gu-chip>
+                <button gu-button *ngIf="!activity.groupAssignee && !activity.userAssignee && openAssigneeEditField !== i"
+                        (click)="openAssigneeEditField = i; openDocumentUploadForm = null; openNoteEditField = null"
                         class="d-block"
-                        buttonStyle="primary"
+                        buttonStyle="tertiary"
                         size="extrasmall"
                         icon="person_add">
                   Gebruiker of groep toewijzen
@@ -89,17 +89,17 @@
                                     placeholder="Zoek een gebruiker"
                                     class="mb-2">
                     </gu-multiselect>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-end">
+                      <button gu-button (click)="openAssigneeEditField = null; users = null;"
+                              buttonStyle="tertiary"
+                              size="small">
+                        Sluiten
+                      </button>
                       <button gu-button (click)="submitAssign(activity.id, i, 'user')"
                               [disabled]="!assignedUserControlIndex(i).valid"
                               buttonStyle="primary"
                               size="small">
                         Gebruiker toewijzen
-                      </button>
-                      <button gu-button (click)="openAssigneeEditField = null"
-                              buttonStyle="tertiary"
-                              size="small">
-                        Sluiten
                       </button>
                     </div>
                   </gu-tab>
@@ -116,17 +116,17 @@
                                     placeholder="Zoek een groep"
                                     class="mb-2">
                     </gu-multiselect>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-end">
+                      <button gu-button (click)="openAssigneeEditField = null"
+                              buttonStyle="tertiary"
+                              size="small">
+                        Sluiten
+                      </button>
                       <button gu-button (click)="submitAssign(activity.id, i, 'userGroup')"
                               [disabled]="!assignedUserGroupControlIndex(i).valid"
                               buttonStyle="primary"
                               size="small">
                         Groep toewijzen
-                      </button>
-                      <button gu-button (click)="openAssigneeEditField = null"
-                              buttonStyle="tertiary"
-                              size="small">
-                        Sluiten
                       </button>
                     </div>
                   </gu-tab>
@@ -139,9 +139,9 @@
                   <p class="p--bold d-inline">{{ ongoingActivityDocs[i] ? 'Document: ' : ''}}</p><a class="anchor" *ngIf="ongoingActivityDocs[i] !== null" (click)="readDocument(ongoingActivityDocs[i].readUrl)">{{ongoingActivityDocs[i].titel}}</a>
                   <ng-container *ngIf="ongoingActivityDocs[i] === null">
                     <button gu-button *ngIf="openDocumentUploadForm !== i"
-                            (click)="openDocumentUploadForm = i; openAssigneeEditField = null"
+                            (click)="openDocumentUploadForm = i; openAssigneeEditField = null; openNoteEditField = null"
                             class="d-block"
-                            buttonStyle="primary"
+                            buttonStyle="tertiary"
                             size="extrasmall"
                             icon="upload_file">
                       Document toevoegen
@@ -151,7 +151,7 @@
                                            [bronorganisatie]="bronorganisatie"
                                            [identificatie]="identificatie"
                                            [activity]="activity.name"
-                                           (close)="openDocumentUploadForm = null"
+                                           (closeForm)="openDocumentUploadForm = null"
                                            (uploadedDocument)="patchActivityDocument(activity.id, $event)"
                                            (reload)="fetchActivities()">
                     </gu-document-toevoegen>
@@ -189,7 +189,7 @@
               <div class="activity__detail">
                 <form *ngIf="activityForm" [formGroup]="activityForm">
                   <button gu-button *ngIf="openNoteEditField !== i"
-                             (click)="openNoteEditField = i; openAssigneeEditField = null"
+                             (click)="openNoteEditField = i; openAssigneeEditField = null; openDocumentUploadForm = null"
                              class="d-block"
                              buttonStyle="tertiary"
                              size="extrasmall"
@@ -202,7 +202,7 @@
                       <span>Notitie</span>
                       <textarea class="form-control mb-0" [formControl]="notes(i)"></textarea>
                     </label>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-end">
                       <button gu-button (click)="openNoteEditField = null"
                               buttonStyle="tertiary"
                                  size="small">
@@ -222,40 +222,42 @@
             <hr class="d-lg-none">
             <!--  Afsluiten of verwijderen  -->
             <div class="activity__buttons col-lg-2">
-              <button gu-button *ngIf="showCloseActivityConfirmation !== i"
-                      buttonStyle="secondary"
-                      size="small"
-                      class="mb-2"
-                      (click)="showCloseActivityConfirmation = i">Afsluiten</button>
-              <div *ngIf="showCloseActivityConfirmation === i" class="d-flex">
-                <p>Weet je zeker dat je deze activiteit wilt sluiten?</p>
+              <div *ngIf="showCloseActivityConfirmation === i">
+                <p class="mb-2">Weet je zeker dat je deze activiteit wilt sluiten?</p>
                 <div class="">
                   <button gu-button
                           buttonStyle="primary"
                           size="small"
                           class="mb-2"
                           (click)="closeActivity(activity.id)">
-                    Bevestigen
+                    Activiteit afsluiten
                   </button>
-                  <button gu-button buttonStyle="primary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
+                  <button gu-button buttonStyle="secondary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
                 </div>
               </div>
-              <button gu-button *ngIf="showDeleteActivityConfirmation !== i"
+              <button gu-button *ngIf="showCloseActivityConfirmation !== i && showDeleteActivityConfirmation !== i"
+                      buttonStyle="secondary"
+                      size="small"
+                      class="mb-2"
+                      (click)="onCloseActivityConfirmation(i)">
+                Afsluiten
+              </button>
+              <button gu-button *ngIf="showDeleteActivityConfirmation !== i && showCloseActivityConfirmation !== i"
                       buttonStyle="tertiary"
                       size="small"
                       class="mb-2"
                       (click)="showDeleteActivityConfirmation = i">Verwijderen</button>
-              <div *ngIf="showDeleteActivityConfirmation === i" class="d-flex">
-                <p>Weet je zeker dat je deze activiteit PERMANENT wilt verwijderen?</p>
+              <div *ngIf="showDeleteActivityConfirmation === i">
+                <p class="mb-2">Weet je zeker dat je deze activiteit <strong>PERMANENT</strong> wilt verwijderen?</p>
                 <div class="">
                   <button gu-button
                           buttonStyle="primary"
                           size="small"
                           class="mb-2"
                           (click)="deleteActivity(activity.id)">
-                    Bevestigen
+                    Permanent verwijderen
                   </button>
-                  <button gu-button buttonStyle="primary" size="small" class="mb-2" (click)="showDeleteActivityConfirmation = null">Annuleren</button>
+                  <button gu-button buttonStyle="secondary" size="small" class="mb-2" (click)="showDeleteActivityConfirmation = null">Annuleren</button>
                 </div>
               </div>
             </div>
@@ -285,16 +287,16 @@
             <div class="activity__details col-lg-8">
               <!--  Gebruiker toewijzen  -->
               <div class="activity__detail mb-4">
-                <gu-chip *ngIf="activity.assignee"
-                         [color]="currentUser.id === activity.assignee ? 'primary' : 'tertiary'"
+                <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
+                         [color]="currentUser.username === (activity.groupAssignee || activity.userAssignee) ? 'primary' : 'tertiary'"
                          class="d-inline-block mb-1">
-                  Toegewezene: {{activity.assignee}}
+                  Toegewezene: {{activity.groupAssignee?.name || activity.userAssignee?.fullName}}
                 </gu-chip>
               </div>
               <!--  Document uploaden  -->
-              <ng-container *ngIf="activityDocs">
+              <div class="activity__detail mb-4">
                 <p class="p--bold d-inline">{{ finishedActivityDocs[i] ? 'Document: ' : ''}}</p> <a class="anchor" *ngIf="finishedActivityDocs[i]" (click)="readDocument(finishedActivityDocs[i].readUrl)">{{finishedActivityDocs[i].titel}}</a>
-              </ng-container>
+              </div>
               <!--  Notities  -->
               <div class="activity__detail mb-4">
                 <div class="timeline">

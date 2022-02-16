@@ -1,0 +1,14 @@
+<div *ngIf="selectedUserGroup" class="delete-user-group">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <p>Weet je zeker dat je de gebruikersgroep <strong>{{selectedUserGroup.name}}</strong> wilt verwijderen?</p>
+  <div class="d-flex justify-content-end">
+    <div>
+      <button gu-button buttonStyle="tertiary" size="small" (click)="deleteUserGroup()">
+        Verwijderen
+      </button>
+      <button gu-button buttonStyle="primary" size="small" (click)="closeModal()">
+        Annuleren
+      </button>
+    </div>
+  </div>
+</div>

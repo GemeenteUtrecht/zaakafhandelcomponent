@@ -1,7 +1,8 @@
 Frontend
 ========
 
-The frontend is mostly React-driven at the moment.
+The frontend is an Angular application generated using Nx (https://nx.dev) .
+
 
 Installing dependencies
 -----------------------
@@ -12,17 +13,19 @@ Install the NodeJS dependencies:
 
     $ npm i
 
-Running the dev-build
+Running the frontend
 ---------------------
 
-The dev-build will watch for file changes and recompile the sass/JS:
+The most easy way to start the (frontend) application is using docker-compose.
 
 .. code-block:: bash
 
-    $ npm start
+    % docker-compose up -d --build ingress-dev
 
-Alternatively, if you want a one-off production build:
+Alternatively, if you want a to be able to modify backend files as well.
 
 .. code-block:: bash
 
-    $ npm run build
+    $ docker-compose up -d --build ingress-dev-fullstack
+
+The frontend might take several minutes to become available. Under certain conditions: the commands listed above might timeout the first time. In such cases re-running the command will likely solve the issue.

@@ -1,49 +1,42 @@
-export interface Column {
-  uuid: string;
-  name: string;
-  slug: string;
-  order: number;
-  created: Date;
-  modified: Date;
-}
+import { Dashboard, DashboardColumn } from './dashboard';
 
-export interface Zaaktype {
+interface Zaaktype {
   url: string;
   catalogus: string;
   omschrijving: string;
 }
 
-export interface BetrokkeneIdentificatie {
+interface BetrokkeneIdentificatie {
   identificatie: string;
 }
 
-export interface Rollen {
+interface Rollen {
   url: string;
   betrokkeneType: string;
   omschrijvingGeneriek: string;
   betrokkeneIdentificatie: BetrokkeneIdentificatie;
 }
 
-export interface Eigenschappen {
+interface Eigenschappen {
   tekst: string;
   getal: string;
   datum: string;
   datumTijd: Date;
 }
 
-export interface Status {
+interface Status {
   url: string;
   statustype: string;
   datumStatusGezet: Date;
   statustoelichting: string;
 }
 
-export interface Zaakobjecten {
+interface Zaakobjecten {
   url: string;
   object: string;
 }
 
-export interface Zaak {
+interface Zaak {
   url: string;
   zaaktype: Zaaktype;
   identificatie: string;
@@ -67,7 +60,7 @@ export interface BoardItem {
   uuid: string;
   objectType: string;
   object: string;
-  board: string;
-  column: Column;
+  board: Dashboard;
+  column: DashboardColumn;
   zaak: Zaak;
 }

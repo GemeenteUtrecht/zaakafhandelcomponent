@@ -44,7 +44,7 @@
                               label="Personen"
                               bindLabel="fullName"
                               bindValue="username"
-                              placeholder="Zoek collega's">
+                              placeholder="Zoek personen...">
               </gu-multiselect>
             </div>
             <div class="col-md-6">
@@ -53,10 +53,10 @@
                               [items]="searchResultUserGroups"
                               [multiple]="true"
                               [control]="assignedUserGroupControl(i)"
-                              label="Gebruikersgroepen"
+                              label="Groepen"
                               bindLabel="name"
                               bindValue="name"
-                              placeholder="Zoek gebruikersgroepen...">
+                              placeholder="Zoek groepen...">
               </gu-multiselect>
             </div>
             <div class="col-md-6">
@@ -66,6 +66,13 @@
                              [required]="true"
                              id="kp-adv-acc-deadline--{{i}}"
               ></gu-datepicker>
+            </div>
+          </div>
+          <div class="row pl-3">
+            <div class="col-12">
+              <gu-checkbox [control]="assignedEmailNotificationControl(i)">
+                <p class="mb-0">Verstuur een e-mail notificatie naar de geselecteerde personen/groepen.</p>
+              </gu-checkbox>
             </div>
           </div>
           <div class="row pl-3">

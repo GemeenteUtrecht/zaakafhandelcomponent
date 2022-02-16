@@ -3,7 +3,7 @@ import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
 import { UserSearch } from '../../models/user-search';
 import {Activity, ReadWriteDocument} from "@gu/models";
-import { UserGroupSearch } from '../../models/user-group-search';
+import { UserGroupList } from '../../models/user-group-search';
 
 @Injectable({
   providedIn: 'root'
@@ -12,16 +12,31 @@ export class ActiviteitenService {
 
   constructor(private http: ApplicationHttpClient) { }
 
+  /**
+   * Retrieve user accounts.
+   * @param {string} searchInput
+   * @returns {Observable<UserSearch>}
+   */
   getAccounts(searchInput: string): Observable<UserSearch> {
     const endpoint = encodeURI(`/api/accounts/users?search=${searchInput}`);
     return this.http.Get<UserSearch>(endpoint);
   }
 
-  getUserGroups(searchInput: string): Observable<UserGroupSearch>{
+  /**
+   * Retrieve user group list.
+   * @param {string} searchInput
+   * @returns {Observable<UserGroupList>}
+   */
+  getUserGroups(searchInput: string): Observable<UserGroupList>{
     const endpoint = encodeURI(`/api/accounts/groups?search=${searchInput}`);
-    return this.http.Get<UserGroupSearch>(endpoint);
+    return this.http.Get<UserGroupList>(endpoint);
   }
 
+  /**
+   * Get documents for an activity.
+   * @param {Activity[]} activities
+   * @returns {Observable<any>}
+   */
   getDocuments(activities: Activity[]): Observable<any> {
     const observables = [];
     activities.forEach(activity => {
@@ -35,27 +50,58 @@ export class ActiviteitenService {
     return forkJoin(observables)
   }
 
+  /**
+   * Retrieve activities.
+   * @param mainZaakUrl
+   * @returns {Observable<Activity[]>}
+   */
   getActivities(mainZaakUrl): Observable<Activity[]> {
-    const endpoint = `/activities/api/activities?zaak=${mainZaakUrl}`;
+    const endpoint = `/api/activities/activities?zaak=${mainZaakUrl}`;
     return this.http.Get<Activity[]>(endpoint);
   }
 
+  /**
+   * Patch activity.
+   * @param id
+   * @param formData
+   * @returns {Observable<any>}
+   */
   patchActivity(id, formData): Observable<any> {
-    return this.http.Patch<any>(encodeURI(`/activities/api/activities/${id}`), formData);
+    return this.http.Patch<any>(encodeURI(`/api/activities/activities/${id}`), formData);
   }
 
+  /**
+   * Delete activity.
+   * @param id
+   * @returns {Observable<any>}
+   */
   deleteActivity(id): Observable<any> {
-    return this.http.Delete<any>(encodeURI(`/activities/api/activities/${id}`));
+    return this.http.Delete<any>(encodeURI(`/api/activities/activities/${id}`));
   }
 
+  /**
+   * Create new activity.
+   * @param formData
+   * @returns {Observable<any>}
+   */
   postNewActivity(formData): Observable<any> {
-    return this.http.Post<any>(encodeURI('/activities/api/activities'), formData);
+    return this.http.Post<any>(encodeURI('/api/activities/activities'), formData);
   }
 
+  /**
+   * Create note for activity.
+   * @param formData
+   * @returns {Observable<any>}
+   */
   postNotes(formData): Observable<any> {
-    return this.http.Post<any>(encodeURI('/activities/api/events'), formData);
+    return this.http.Post<any>(encodeURI('/api/activities/events'), formData);
   }
 
+  /**
+   * Open document
+   * @param endpoint
+   * @returns {Observable<ReadWriteDocument>}
+   */
   readDocument(endpoint) {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }

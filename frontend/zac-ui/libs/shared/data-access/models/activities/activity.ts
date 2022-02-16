@@ -12,7 +12,21 @@ export interface Activity {
   name: string;
   remarks: string;
   status: 'on_going' | 'finished';
-  assignee?: number;
+  userAssignee: {
+    id: number;
+    username: string;
+    firstName: string
+    fullName: string;
+    lastName: string;
+    isStaff: boolean;
+    email: string;
+    groups: string[];
+  };
+  groupAssignee: {
+    id: number;
+    name: string;
+    fullName: string;
+  };
   document: string;
   created: Date;
   events: Event[];

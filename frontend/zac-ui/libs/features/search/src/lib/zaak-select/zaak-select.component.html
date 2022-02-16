@@ -1,12 +1,14 @@
-<gu-multiselect
-  [control]="control"
-  [items]="choices"
-  [selectedValue]="value"
-  [placeholder]="placeholder"
-  [label]="label"
-  (search)="onSearch($event)"
-  (change)="onChange($event)"
-  bindLabel="label"
-  bindValue="value"
-  appendTo="body"
-></gu-multiselect>
+<div class="zaak-select">
+  <gu-multiselect
+    [control]="control"
+    [items]="choices"
+    [selectedValue]="value"
+    [placeholder]="placeholder"
+    [label]="label"
+    (search)="onSearch($event)"
+    (change)="onChange($event)"
+    bindLabel="label"
+    bindValue="value"
+    [appendTo]="'.zaak-select'"
+  ></gu-multiselect>
+</div>

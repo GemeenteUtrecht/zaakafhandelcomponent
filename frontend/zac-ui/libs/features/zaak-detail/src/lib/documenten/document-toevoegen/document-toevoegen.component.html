@@ -28,12 +28,19 @@
     </div>
     <div class="d-flex justify-content-end">
       <button gu-button
+              *ngIf="activity"
+              buttonStyle="tertiary"
+              [size]="activity ? 'small' : 'large'"
+              (click)="closeForm.emit(true)">
+        Sluiten
+      </button>
+      <button gu-button
               [disabled]="!addDocumentForm.valid || isSubmitting"
               [loading]="isSubmitting"
               buttonStyle="primary"
               [size]="activity ? 'small' : 'large'"
               (click)="submitForm()">
-        Document {{ updateDocument ? 'overschrijven' : 'toevoegen'}}
+        Opslaan
       </button>
     </div>
   </form>

@@ -49,6 +49,12 @@ class CoreConfig(SingletonModel):
         default="",
     )
 
+    non_adfs_login_enabled = models.BooleanField(
+        _("Non-ADFS login enabled"),
+        help_text=_("A flag that allows non-ADFS login (True) or not (False)."),
+        default=True,
+    )
+
     class Meta:
         verbose_name = _("global configuration")
 

@@ -27,6 +27,7 @@ import {FormService} from './form.service';
 export class FormComponent implements OnInit, OnChanges {
   @Input() form: FieldConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
+  @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
@@ -138,7 +139,7 @@ export class FormComponent implements OnInit, OnChanges {
 
     this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
     this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
-    this.fields = this.getFields();
+    this.updateFields();
   }
 
   /**
@@ -151,7 +152,51 @@ export class FormComponent implements OnInit, OnChanges {
         this.formService.setValidators(this.formGroup, field);
         return field
       })
-      .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evalutate activeWhen.
+      .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evaluate activeWhen.
+  }
+
+  updateFields() {
+    const fields = this.getFields();
+
+    if (!this.fields) {
+      this.fields = fields;
+      return
+    }
+    fields.forEach((field) => {
+      const otherField = this.fields.find((f) => f.name === field.name)
+
+      if (!otherField) {
+        this.fields.push(field)
+      } else {
+        Object.assign(otherField, field);
+      }
+    });
+  }
+
+  /**
+   * Returns whether the toggle should be shown.
+   * @return {boolean}
+   */
+  isToggleable(): boolean {
+    switch (typeof this.editable) {
+      case 'boolean':
+        // Predefined form state, don't toggle.
+        return false;
+
+      case 'string':
+          // Check if properly set to toggle.
+          if(this.editable!=='toggle') {
+            throw new Error('Invalid value for editable input in form');
+          }
+
+          // Always show toggle for form.
+          if(!this.showEditOnHover) {
+            return true;
+          }
+
+          // Show toggle based on hover.
+          return this.isHovered;
+    }
   }
 
   //
@@ -169,16 +214,24 @@ export class FormComponent implements OnInit, OnChanges {
 
     if (this.editable === 'toggle') {
       this.edit = !this.edit;
-      this.fields = this.getFields();
+      if (!this.edit) {
+        // reset to initial form values when exiting edit mode
+        this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
+        this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
+      }
+      this.updateFields();
     }
   }
 
   /**
    * Gets called when input is changed.
    */
-  inputChanged() {
-    this.fields = this.getFields();
+  inputChanged(event, field: Field) {
+    this.updateFields();
     this.formChange.emit(this.formGroup.getRawValue())
+    if (field.onChange) {
+      field.onChange(event, field);
+    }
   }
 
   /**
@@ -189,8 +242,17 @@ export class FormComponent implements OnInit, OnChanges {
   selectChanged(choice: Choice, field: Field): void {
     field.control.markAsDirty();
     field.control.markAsTouched();
-    this.fields = this.getFields();
+    this.updateFields();
     this.formChange.emit(this.formGroup.getRawValue())
+    if(field.onChange) {
+      field.onChange(choice, field)
+    }
+  }
+
+  selectSearch(term: string, field: Field): void {
+    if(field.onSearch) {
+      field.onSearch(term, field);
+    }
   }
 
 

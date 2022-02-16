@@ -1,4 +1,5 @@
 import { MenuItem } from '@gu/models';
+import {isTestEnvironment} from "@gu/utils";
 
 const menuItems: MenuItem[] = [
   {
@@ -38,13 +39,13 @@ const bottomMenuItems: MenuItem[] = [
   {
     icon: 'link',
     label: 'Alfresco',
-    to: 'https://alfresco-oz.utrechtproeftuin.nl/',
+    to: isTestEnvironment() ? 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/' : 'https://alfresco-tezza.cg-intern.acc.utrecht.nl/',
     external: true,
   },
   {
     icon: 'manage_accounts',
-    label: 'Autorisatieprofielen',
-    to: '/autorisatieprofielen',
+    label: 'Autorisaties',
+    to: '/autorisaties',
     // roles: [UserRole.Admin],
   },
   {

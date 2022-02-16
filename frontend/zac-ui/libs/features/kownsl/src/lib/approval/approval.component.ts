@@ -8,6 +8,7 @@ import {ActivatedRoute} from '@angular/router';
 import {catchError, switchMap, tap} from 'rxjs/operators';
 import {Observable, of} from 'rxjs';
 import {ZaakService} from "@gu/services";
+import { SnackbarService } from '@gu/components';
 
 @Component({
   selector: 'gu-features-kownsl-approval',
@@ -16,6 +17,7 @@ import {ZaakService} from "@gu/services";
 })
 export class ApprovalComponent implements OnInit {
   uuid: string;
+  assignee: string;
   zaakUrl: string;
 
   approvalData: ReviewRequest;
@@ -39,25 +41,27 @@ export class ApprovalComponent implements OnInit {
     private approvalService: ApprovalService,
     private route: ActivatedRoute,
     private zaakService: ZaakService,
+    private snackbarService: SnackbarService,
   ) {
   }
 
   ngOnInit(): void {
     this.uuid = this.route.snapshot.queryParams["uuid"];
-    if (this.uuid) {
+    this.assignee = this.route.snapshot.queryParams["assignee"];
+    if (this.uuid && this.assignee) {
       this.fetchData()
       this.approvalForm = this.fb.group({
         approved: this.fb.control("", Validators.required),
         toelichting: this.fb.control("")
       })
     } else {
-      this.errorMessage = "Er is geen geldig zaaknummer gevonden..."
+      this.errorMessage = "Er is geen geldig zaaknummer gevonden."
     }
   }
 
   fetchData(): void {
     this.isLoading = true;
-    this.approvalService.getApproval(this.uuid)
+    this.approvalService.getApproval(this.uuid, this.assignee)
       .pipe(
         tap(res => {
           this.setLayout(res);
@@ -140,14 +144,27 @@ export class ApprovalComponent implements OnInit {
 
   postApproval(formData: ApprovalForm): void {
     this.isSubmitting = true;
-    this.approvalService.postApproval(formData, this.uuid).subscribe(data => {
+    this.approvalService.postApproval(formData, this.uuid, this.assignee).subscribe(data => {
       this.isSubmitting = false;
       this.submitSuccess = true;
-    }, error => {
-      this.errorMessage = "Er is een fout opgetreden bij het verzenden van uw gegevens..."
-      this.submitFailed = true;
+    }, errorRes => {
       this.isSubmitting = false;
+      this.errorMessage = "Er is een fout opgetreden bij het versturen van uw gegevens."
+      this.reportError(errorRes)
     })
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 
   get toelichtingControl(): FormControl {

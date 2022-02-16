@@ -12,7 +12,7 @@ export class ActivitiesService {
   }
 
   getActivities(zaakUrl): Observable<Activity[]> {
-    const endpoint = `/activities/api/activities?zaak=${zaakUrl}`;
+    const endpoint = `/api/activities/activities?zaak=${zaakUrl}`;
     return this.http.Get<Activity[]>(endpoint);
   }
 }

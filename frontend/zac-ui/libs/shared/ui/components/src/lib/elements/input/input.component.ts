@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { MatFormField } from '@angular/material/form-field';
+import {Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {MatFormField} from '@angular/material/form-field';
 
 /**
  * <gu-input [control]="formControl" label="Input">I'm a input field</gu-input>
@@ -22,8 +22,9 @@ import { MatFormField } from '@angular/material/form-field';
   templateUrl: './input.component.html',
   styleUrls: ['./input.component.scss']
 })
-export class InputComponent {
+export class InputComponent implements OnChanges {
   @Input() control: FormControl;
+  @Input() datalist: string[] = [];
   @Input() type: string;
   @Input() label: string;
   @Input() required: boolean;
@@ -32,13 +33,33 @@ export class InputComponent {
   @Input() placeholder: string;
   @Input() value: string | number;
   @Input() autocomplete?: 'on' | 'off';
+  @Input() hideNotRequiredLabel: boolean;
+
+  @Input() appearance: 'outline' | 'fill' = 'outline';
+
+  @Output() input: EventEmitter<any> = new EventEmitter<any>();
+
+  @ViewChild('inputRef') inputRef: ElementRef;
+
+  datalistId = '';
+
+  ngOnChanges() {
+    if (!this.datalist.length) {
+      return null;
+    }
+    this.datalistId = this.inputRef.nativeElement.id + '-datalist';
+  }
 
   /**
    * Creates input label.
    * @returns {string}
    */
   getLabel() {
-    return this.required ? this.label : (this.label + ' (niet verplicht)')
+    if (!this.hideNotRequiredLabel) {
+      return this.required ? this.label : (this.label + ' (niet verplicht)')
+    } else {
+      return this.label;
+    }
   }
 }
 

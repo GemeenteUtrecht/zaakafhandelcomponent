@@ -12,7 +12,7 @@ const tableHeadMapping = {
   'Omschrijving': 'omschrijving',
   'Zaaktype': 'zaaktype.omschrijving',
   'Startdatum': 'startdatum',
-  'Uiterste einddatum': 'deadline',
+  'Uiterste einddatum': 'einddatum',
   'Vertrouwelijkheid': 'vertrouwelijkheidaanduiding'
 }
 

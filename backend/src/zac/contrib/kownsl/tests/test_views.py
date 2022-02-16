@@ -4,6 +4,8 @@ from django.urls import reverse
 
 import jwt
 import requests_mock
+from django_camunda.utils import underscoreize
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -11,7 +13,8 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.camunda.data import Task
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
@@ -22,7 +25,7 @@ REVIEW_REQUEST = {
     "created": "2020-12-16T14:15:22Z",
     "id": "45638aa6-e177-46cc-b580-43339795d5b5",
     "forZaak": "https://zaken.nl/api/v1/zaak/123",
-    "reviewType": "advice",
+    "reviewType": "approval",
     "documents": [],
     "frontend_url": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
     "numAdvices": 1,
@@ -38,6 +41,37 @@ REVIEW_REQUEST = {
     "reviews": [],
 }
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+
+
+# Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
+TASK_DATA = {
+    "id": "45638aa6-e177-46cc-b580-43339795d5c6",
+    "name": "aName",
+    "assignee": None,
+    "created": "2013-01-23T13:42:42.000+0200",
+    "due": "2013-01-23T13:49:42.576+0200",
+    "followUp": "2013-01-23T13:44:42.437+0200",
+    "delegationState": "RESOLVED",
+    "description": "aDescription",
+    "executionId": "anExecution",
+    "owner": "anOwner",
+    "parentTaskId": None,
+    "priority": 42,
+    "processDefinitionId": "aProcDefId",
+    "processInstanceId": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+    "caseDefinitionId": "aCaseDefId",
+    "caseInstanceId": "aCaseInstId",
+    "caseExecutionId": "aCaseExecution",
+    "taskDefinitionKey": "aTaskDefinitionKey",
+    "suspended": False,
+    "formKey": "",
+    "tenantId": "aTenantId",
+}
+
+
+def _get_task(**overrides):
+    data = underscoreize({**TASK_DATA, **overrides})
+    return factory(Task, data)
 
 
 @requests_mock.Mocker()
@@ -75,7 +109,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
 
-        cls.user = UserFactory.create(username="some-user")
+        cls.user = UserFactory.create(
+            username="some-user", first_name="John", last_name="Doe"
+        )
+        cls.group = GroupFactory.create(name="some-group")
 
     def setUp(self):
         super().setUp()
@@ -88,11 +125,96 @@ class ViewTests(ClearCachesMixin, APITestCase):
             m, self.service.api_root, "kownsl", oas_url=self.service.oas
         )
 
-    def test_create_approval(self, m):
+    def test_fail_create_review_query_param(self, m):
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        body = {"dummy": "data"}
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
+
+    def test_fail_get_review_query_param(self, m):
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
+
+    def test_success_get_review(self, m):
         self._mock_oas_get(m)
         m.get(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
             json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[],
+        )
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        url = furl(url).set({"assignee": f"user:{self.user}"})
+
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_fail_get_review_already_exists(self, m):
+        self._mock_oas_get(m)
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[
+                {
+                    "created": "2020-12-16T14:15:22Z",
+                    "author": {
+                        "username": self.user.username,
+                        "first_name": self.user.first_name,
+                        "last_name": self.user.last_name,
+                    },
+                    "approved": True,
+                    "group": "",
+                    "toelichting": "",
+                }
+            ],
+        )
+        self.client.force_authenticate(user=self.user)
+        url = reverse(
+            "kownsl:reviewrequest-approval",
+            kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        url = furl(url).set({"assignee": f"user:{self.user}"})
+
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": "Review for review request `45638aa6-e177-46cc-b580-43339795d5b5` is already given by assignee(s) `John Doe`."
+            },
+        )
+
+    def test_create_approval_assignee_query_param(self, m):
+        self._mock_oas_get(m)
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
+            json=[],
         )
         m.post(
             "https://kownsl.nl/api/v1/review-requests/45638aa6-e177-46cc-b580-43339795d5b5/approvals",
@@ -104,6 +226,13 @@ class ViewTests(ClearCachesMixin, APITestCase):
         url = reverse(
             "kownsl:reviewrequest-approval",
             kwargs={"request_uuid": "45638aa6-e177-46cc-b580-43339795d5b5"},
+        )
+        url = (
+            furl(url)
+            .set(
+                {"assignee": "group:some-group"},
+            )
+            .url
         )
         body = {"dummy": "data"}
 
@@ -118,3 +247,6 @@ class ViewTests(ClearCachesMixin, APITestCase):
         claims = jwt.decode(token, verify=False)
         self.assertEqual(claims["client_id"], "zac")
         self.assertEqual(claims["user_id"], "some-user")
+        self.assertEqual(
+            m.last_request.json(), {"dummy": "data", "group": "some-group"}
+        )

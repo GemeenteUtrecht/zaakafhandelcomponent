@@ -3,7 +3,7 @@ import { ActiviteitenService } from './activiteiten.service';
 import { first } from 'rxjs/operators';
 import {Activity, User, ShortDocument, ReadWriteDocument} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Result } from '../../models/user-search';
+import { UserSearchResult } from '../../models/user-search';
 import {Document} from '@gu/models';
 import { UserGroupResult } from '../../models/user-group-search';
 import { SnackbarService } from '@gu/components';
@@ -33,7 +33,7 @@ export class ActiviteitenComponent implements OnInit {
   addActivityForm: FormGroup;
   assignUserForm: FormGroup;
 
-  users: Result[] = [];
+  users: UserSearchResult[] = [];
   userGroups: UserGroupResult[] = [];
 
   ongoingData: Activity[] = [];
@@ -213,10 +213,12 @@ export class ActiviteitenComponent implements OnInit {
   fetchActivities() {
     if (this.mainZaakUrl) {
       this.actvititeitenService.getActivities(this.mainZaakUrl)
-        .pipe(first())
         .subscribe(res => {
           this.activityData = res;
           this.createForm();
+        }, error => {
+          console.error(error);
+          this.reportError(error)
         });
     }
   }
@@ -315,17 +317,18 @@ export class ActiviteitenComponent implements OnInit {
    */
   submitAssign(activityId, index, assignType: 'user' | 'userGroup') {
     this.isLoading = true
-    let assignee;
+    let formData = {};
     switch (assignType) {
       case 'user':
-        assignee = this.assignedUserControlIndex(index).value;
+        formData = {
+          userAssignee: this.assignedUserControlIndex(index).value,
+        };
         break;
       case 'userGroup':
-        assignee = this.assignedUserGroupControlIndex(index).value;
+        formData = {
+          groupAssignee: this.assignedUserGroupControlIndex(index).value,
+        };
         break;
-    }
-    const formData = {
-      assignee: assignee
     }
     this.patchActivity(activityId, formData)
   }
@@ -338,6 +341,7 @@ export class ActiviteitenComponent implements OnInit {
   patchActivity(activityId, formData) {
     this.actvititeitenService.patchActivity(activityId, formData).subscribe(() => {
       this.assignUserForm.reset();
+      this.users = null;
       this.openAssigneeEditField = null;
       this.fetchActivities();
     }, res =>  {
@@ -404,8 +408,19 @@ export class ActiviteitenComponent implements OnInit {
    */
   readDocument(readUrl) {
     this.actvititeitenService.readDocument(readUrl).subscribe((res: ReadWriteDocument) => {
-      window.open(res.magicUrl, "_blank");
+      window.open(res.magicUrl, "_self");
     })
+  }
+
+  /**
+   * When closing activity is pressed.
+   * @param i
+   */
+  onCloseActivityConfirmation(i) {
+    this.showCloseActivityConfirmation = i;
+    this.openAssigneeEditField = null;
+    this.openNoteEditField = null;
+    this.openNoteEditField = null;
   }
 
   //

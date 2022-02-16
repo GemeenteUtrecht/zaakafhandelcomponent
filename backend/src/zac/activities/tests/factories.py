@@ -7,6 +7,11 @@ class ActivityFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "activities.Activity"
+        # To avoid database integrity errors because of unique constraint on model
+        django_get_or_create = (
+            "zaak",
+            "name",
+        )
 
 
 class EventFactory(factory.django.DjangoModelFactory):

@@ -1,6 +1,10 @@
 // Activities
 export * from './activities/activity';
 
+// Dashboard
+export * from './dashboard/dashboard';
+export * from './dashboard/board-item';
+
 // Geojson
 export * from './geojson/geojson';
 export * from './geojson/provinces';
@@ -27,6 +31,7 @@ export * from './accounts/auth-profile';
 export * from './accounts/permission';
 export * from './accounts/role';
 export * from './accounts/user';
+export * from './accounts/user-group';
 export * from './accounts/user-permissions';
 
 // Zaken
@@ -37,3 +42,4 @@ export * from './zaken/zaak-permission'
 export * from './zaken/task'
 export * from './zaken/zaak'
 export * from './zaken/zaak-eigenschap'
+export * from './zaken/zaaktype-eigenschap'

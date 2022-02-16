@@ -20,7 +20,9 @@ export class SearchResultsComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.tableData = this.createTableData(changes.resultData.currentValue);
+    if(changes.resultData) {
+      this.tableData = this.createTableData(changes.resultData.currentValue);
+    }
   }
 
   createTableData(resultData: Zaak[]): Table {

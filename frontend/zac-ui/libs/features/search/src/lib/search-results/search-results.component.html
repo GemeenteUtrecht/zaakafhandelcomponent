@@ -1,5 +1,5 @@
 <ng-container *ngIf="resultData && tableData">
-  <h3 class="mb-4">Resultaten ({{resultLength}})</h3>
+  <h3 class="mb-4">Resultaten ({{resultLength ? resultLength : 0}})</h3>
   <section *ngIf="resultData.length > 0">
     <gu-table [table]="tableData"
               [sortable]="true"

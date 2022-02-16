@@ -12,7 +12,7 @@ from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFac
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..permissions import activiteiten_schrijven, activities_read
+from ..permissions import activiteiten_inzien, activiteiten_schrijven
 from .factories import ActivityFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
@@ -44,7 +44,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_login(self.user)
 
     def test_create_activity_without_assignee(self):
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -58,7 +58,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_with_assignee(self):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -74,7 +74,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:
@@ -85,7 +85,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_activity_with_group_assignement(self):
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-list")
+        endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
             "name": "Dummy",
@@ -101,7 +101,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:
@@ -117,7 +117,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         activity = ActivityFactory.create(zaak=ZAAK_URL)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("activities:activity-detail", args=[activity.id])
+        endpoint = reverse("activity-detail", args=[activity.id])
         data = {"user_assignee": self.assignee.username}
 
         response = self.client.patch(endpoint, data)
@@ -129,7 +129,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             AtomicPermission.objects.for_user(self.assignee).all()
         )
         self.assertEqual(permission_zaak.permission, zaken_inzien.name)
-        self.assertEqual(permission_read.permission, activities_read.name)
+        self.assertEqual(permission_read.permission, activiteiten_inzien.name)
         self.assertEqual(permission_write.permission, activiteiten_schrijven.name)
 
         for permission in [permission_zaak, permission_read, permission_write]:

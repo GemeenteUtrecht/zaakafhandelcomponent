@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {ApplicationHttpClient} from '@gu/services';
 import {Observable} from 'rxjs';
 import {Form} from "./features-forms.model";
-import {isDevelopmentEnvironment} from "@gu/utils";
+import {isTestEnvironment} from "@gu/utils";
 
 @Injectable({
   providedIn: 'root'
@@ -27,11 +27,11 @@ export class FeaturesFormsService {
    * @return {string}
    */
   getAbsoluteFormURL(form: Form): string {
-    const useTestURL = isDevelopmentEnvironment();
+    const useTestURL = isTestEnvironment();
     const scheme = 'https://'
     const hostname = useTestURL
-      ? 'formulieren-test.utrechtproeftuin.nl'
-      : 'formulieren.utrechtproeftuin.nl'
+      ? 'formulieren.cg-intern.ont.utrecht.nl'
+      : 'formulieren.cg-intern.acc.utrecht.nl'
 
     return `${scheme}${hostname}/forms/${form.slug}/`;
   }

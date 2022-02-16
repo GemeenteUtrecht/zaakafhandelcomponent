@@ -4,26 +4,14 @@
 #
 #    ./bin/compile_dependencies.sh
 #
-amqp==2.5.1
-    # via
-    #   -r requirements/base.txt
-    #   kombu
 attrs==19.1.0
     # via
     #   -r requirements/base.txt
     #   jsonschema
 beautifulsoup4==4.8.2
     # via webtest
-billiard==3.6.1.0
-    # via
-    #   -r requirements/base.txt
-    #   celery
 black==21.10b0
     # via -r requirements/test-tools.in
-celery==4.3.0
-    # via
-    #   -r requirements/base.txt
-    #   django-camunda
 certifi==2019.9.11
     # via
     #   -r requirements/base.txt
@@ -74,7 +62,7 @@ django-axes==5.0.13
     # via -r requirements/base.txt
 django-better-admin-arrayfield==1.4.0
     # via -r requirements/base.txt
-django-camunda==0.10.0
+django-camunda==0.11.1
     # via -r requirements/base.txt
 django-choices==1.7.0
     # via
@@ -122,7 +110,7 @@ django-solo==1.1.3
     #   zgw-consumers
 django-webtest==1.9.7
     # via -r requirements/test-tools.in
-django==2.2.24
+django==2.2.25
     # via
     #   -r requirements/base.txt
     #   django-appconf
@@ -152,7 +140,7 @@ djangorestframework==3.12.2
     #   -r requirements/base.txt
     #   drf-spectacular
     #   zgw-consumers
-drf-spectacular==0.17.2
+drf-spectacular==0.21.1
     # via -r requirements/base.txt
 elastic-apm==6.6.0
     # via -r requirements/base.txt
@@ -185,10 +173,6 @@ idna==2.8
     # via
     #   -r requirements/base.txt
     #   requests
-importlib-metadata==0.23
-    # via
-    #   -r requirements/base.txt
-    #   kombu
 inflection==0.3.1
     # via
     #   -r requirements/base.txt
@@ -206,20 +190,12 @@ jsonschema==3.2.0
     # via
     #   -r requirements/base.txt
     #   drf-spectacular
-kombu==4.6.4
-    # via
-    #   -r requirements/base.txt
-    #   celery
 lxml==4.6.3
     # via pyquery
 markuppy==1.14
     # via
     #   -r requirements/base.txt
     #   tablib
-more-itertools==7.2.0
-    # via
-    #   -r requirements/base.txt
-    #   zipp
 mypy-extensions==0.4.3
     # via black
 odfpy==1.4.0
@@ -273,7 +249,6 @@ python-dotenv==0.19.1
 pytz==2021.3
     # via
     #   -r requirements/base.txt
-    #   celery
     #   django
 pyyaml==5.4.1
     # via
@@ -358,11 +333,6 @@ urllib3==1.26.5
     #   sentry-sdk
 uwsgi==2.0.20
     # via -r requirements/base.txt
-vine==1.3.0
-    # via
-    #   -r requirements/base.txt
-    #   amqp
-    #   celery
 waitress==1.4.3
     # via webtest
 webob==1.8.6
@@ -377,12 +347,8 @@ xlwt==1.3.0
     # via
     #   -r requirements/base.txt
     #   tablib
-zgw-consumers[drf]==0.15.0
+zgw-consumers[drf]==0.16.1
     # via -r requirements/base.txt
-zipp==0.6.0
-    # via
-    #   -r requirements/base.txt
-    #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

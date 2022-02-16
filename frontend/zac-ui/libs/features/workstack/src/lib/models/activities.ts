@@ -1,5 +1,7 @@
 export interface Activity {
   name: string;
+  groupAssignee: string;
+  userAssignee: string;
 }
 
 export interface Zaak {

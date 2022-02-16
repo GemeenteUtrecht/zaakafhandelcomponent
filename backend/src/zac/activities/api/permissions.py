@@ -6,7 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 from zac.api.permissions import ZaakDefinitionPermission
 
 from ..models import Activity
-from ..permissions import activiteiten_schrijven, activities_read
+from ..permissions import activiteiten_inzien, activiteiten_schrijven
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class CanReadOrWriteActivitiesPermission(ZaakDefinitionPermission):
     def get_permission(self, request):
         if request.method == "GET":
-            return activities_read
+            return activiteiten_inzien
         return activiteiten_schrijven
 
     def has_permission(self, request: Request, view: ModelViewSet):

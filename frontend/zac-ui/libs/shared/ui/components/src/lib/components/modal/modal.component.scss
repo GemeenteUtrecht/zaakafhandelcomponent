@@ -22,9 +22,17 @@ gu-modal {
       margin: 40px auto;
       border-radius: 6px;
       max-width: 800px;
+
       &--small {
         max-width: 500px;
       }
+
+      &--huge {
+        height: 80vh;
+        max-width: 80vw;
+        width: 80vw;
+      }
+
       &--right {
         min-height: 100vh;
         margin: unset;
@@ -38,6 +46,9 @@ gu-modal {
     .gu-modal-header {
       display: flex;
       justify-content: flex-end;
+      position: relative;
+      z-index: 10;
+
       &--mb {
         margin-bottom: 0.45rem;
       }

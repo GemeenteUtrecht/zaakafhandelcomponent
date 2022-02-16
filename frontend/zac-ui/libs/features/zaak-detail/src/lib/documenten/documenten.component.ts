@@ -128,7 +128,7 @@ export class DocumentenComponent implements OnChanges {
     this.isLoading = true;
     this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
       this.isLoading = false;
-      window.open(res.magicUrl, "_blank");
+      window.open(res.magicUrl, "_self");
     }, () => {
       this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
       this.isLoading = false;
@@ -183,7 +183,7 @@ export class DocumentenComponent implements OnChanges {
     this.isLoading = true;
     this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
       // Open document
-      window.open(res.magicUrl, "_blank");
+      window.open(res.magicUrl, "_self");
 
       // Refresh table layout so "Bewerkingen opslaan" button will be shown
       this.fetchDocuments();

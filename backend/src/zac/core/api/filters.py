@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import fields
+from rest_framework import exceptions, fields
 
 from zac.utils.filters import ApiFilterSet
 
@@ -21,12 +21,38 @@ class ZaaktypenFilterSet(ApiFilterSet):
 class EigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_queryset() method.
     # This filterset is used just to validate query params
+    zaaktype = fields.URLField(
+        required=False, help_text=_("Url reference of related ZAAKTYPE")
+    )
     zaaktype_omschrijving = fields.CharField(
+        required=False,
         help_text=_(
             "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
-        )
+        ),
     )
-    catalogus = fields.URLField(help_text=_("Url reference of related CATALOGUS"))
+    catalogus = fields.URLField(
+        required=False, help_text=_("Url reference of related CATALOGUS")
+    )
+
+    def is_valid(self):
+        zt = self.data.get("zaaktype")
+        zto = self.data.get("zaaktype_omschrijving")
+        cat = self.data.get("catalogus")
+
+        if zt:
+            if zto or cat:
+                raise exceptions.ValidationError(
+                    _(
+                        "Zaaktype is mutually exclusive from (zaaktype_omschrijving and catalogus)."
+                    )
+                )
+        elif not (zto and cat):
+            raise exceptions.ValidationError(
+                _(
+                    "The catalogus and zaaktype_omschrijving are both required if one is given."
+                )
+            )
+        return super().is_valid()
 
 
 class ZaakEigenschappenFilterSet(ApiFilterSet):

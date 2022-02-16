@@ -1,4 +1,5 @@
 export interface ObjectType {
+  allowGeometry: boolean,
   contactEmail: string,
   contactPerson: string,
   createdAt: string,

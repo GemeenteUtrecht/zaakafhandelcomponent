@@ -1,10 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NiceDateFormatPipe } from './helpers/nice-date-format.pipe';
+import { CapitalizePipe } from './pipes/capitalize.pipe';
+import { NiceDateFormatPipe } from './pipes/nice-date-format.pipe';
+import { UrlizePipe } from './pipes/urlize.pipe';
 
 @NgModule({
   imports: [CommonModule],
-  declarations: [NiceDateFormatPipe],
-  exports: [NiceDateFormatPipe],
+  declarations: [
+    CapitalizePipe,
+    NiceDateFormatPipe,
+    UrlizePipe,
+  ],
+  exports: [
+    CapitalizePipe,
+    NiceDateFormatPipe,
+    UrlizePipe,
+  ],
 })
 export class SharedUtilsModule {}

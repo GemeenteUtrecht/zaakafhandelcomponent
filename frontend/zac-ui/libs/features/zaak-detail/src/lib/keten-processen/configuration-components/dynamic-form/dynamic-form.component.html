@@ -1,9 +1,11 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
-  <h2>{{taskContextData.task.name}}</h2>
+  <h2>{{taskContextData.task.name | capitalize}}</h2>
   <form class="configuration-form" [formGroup]="dynamicForm">
-    <article class="configuration-details" *ngFor="let formField of formFields">
-      <div class="col-md-6 form-group">
-        <label class="h4 d-inline-block">{{formField.label | titlecase}}</label>
+    <div class="configuration-details row" *ngFor="let formField of formFields">
+      <div class="col-md-6">
+        <label class="label">{{formField.label | capitalize}}</label>
+      </div>
+      <div class="col-md-6">
         <ng-container [ngSwitch]="formField.inputType">
 <!--          enum-->
           <ng-container *ngSwitchCase="'enum'">
@@ -52,7 +54,7 @@
           </ng-container>
         </ng-container>
       </div>
-    </article>
+    </div>
     <div class="d-flex justify-content-end">
       <button gu-button size="large"
                  (click)="submitForm()"

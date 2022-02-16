@@ -12,6 +12,12 @@ export interface EigenschapWaarde {
   value: string;
 }
 
+export interface NieuweEigenschap {
+  naam: string;
+  value: string;
+  zaakUrl: string;
+}
+
 export interface Specificatie {
   groep: string;
   formaat: string;

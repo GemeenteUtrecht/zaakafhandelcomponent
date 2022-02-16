@@ -1,8 +1,8 @@
-import {HttpParams} from "@angular/common/http";
+import {HttpParams, HttpResponse} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak} from '@gu/models';
+import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak, NieuweEigenschap} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
@@ -101,6 +101,16 @@ export class ZaakService {
   }
 
   /**
+   * Create case property
+   * @param {NieuweEigenschap} newProperty
+   */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
+  createCaseProperty(newProperty: NieuweEigenschap) {
+    const endpoint = encodeURI(`/api/core/cases/properties`);
+    return this.http.Post(endpoint, newProperty)
+  }
+
+  /**
    * List case users and atomic permissions.
    * @param {string} bronorganisatie
    * @param {string} identificatie
@@ -147,6 +157,16 @@ export class ZaakService {
   createAccessRequest(formData): Observable<any> {
     const endpoint = encodeURI("/api/accounts/access-requests");
     return this.http.Post<any>(endpoint, formData);
+  }
+
+  /**
+   * Searches zaken (cases) based on identificatie.
+   * @param {string} identificatie (Partial) identificatie of zaak (case).
+   * @return {Observable}
+   */
+  searchZaken(identificatie: string): Observable<Zaak[]> {
+    const endpoint = encodeURI(`/api/search/zaken/autocomplete?identificatie=${identificatie}`);
+    return this.http.Get<Zaak[]>(endpoint);
   }
 
   /**

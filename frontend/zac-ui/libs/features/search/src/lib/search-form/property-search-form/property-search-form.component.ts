@@ -1,11 +1,20 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  NgZone,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Zaak, TableSort } from '@gu/models';
+import {Zaak, TableSort, ZaaktypeEigenschap} from '@gu/models';
 import { Search } from '../../../models/search';
 import { Result } from '../../../models/zaaktype';
-import { ZaaktypeEigenschap } from '../../../models/zaaktype-eigenschappen';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
@@ -28,6 +37,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
+  @Output() isLoadingResult: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   searchForm: FormGroup
   search: Search;
@@ -52,7 +62,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private searchService: SearchService,
     private router: Router,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private ngZone: NgZone,
+    private cdRef: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
@@ -83,8 +95,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.hasError = false;
     this.searchService.getZaaktypen().subscribe(res => {
-      this.isLoading = false;
       this.zaaktypenData = res.results;
+      this.isLoading = false;
+      this.cdRef.detectChanges();
     }, error => {
       this.isLoading = false;
       this.hasError = true;
@@ -101,13 +114,13 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.isLoading = true;
       this.hasError = false;
 
-      const catalogus = zaaktype.catalogus;
-      const omschrijving = zaaktype.omschrijving;
+      const zaaktypeUrl = zaaktype.url;
 
-      this.searchService.getZaaktypeEigenschappen(catalogus, omschrijving).subscribe(res => {
+      this.searchService.getZaaktypeEigenschappen(zaaktypeUrl).subscribe(res => {
         this.zaaktypeEigenschappenData = res;
         this.eigenschapnaam.patchValue(undefined);
         this.isLoading = false;
+        this.cdRef.detectChanges();
       }, error => {
         this.isLoading = false;
         this.hasError = true;
@@ -197,6 +210,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
    */
   postSearchZaken(formData: Search, page, sortData?: TableSort) {
     this.isSubmitting = true;
+    this.isLoadingResult.emit(true);
 
     const orderingDirection = sortData?.order === 'desc' ? '-' : '';
     const orderingParam = sortData ? tableHeadMapping[sortData.value] : '';
@@ -206,10 +220,12 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.loadResult.emit(res.results);
       this.resultLength.emit(res.count);
       this.isSubmitting = false;
+      this.isLoadingResult.emit(false);
     }, error => {
       this.hasError = true;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het zoeken."
       this.isSubmitting = false;
+      this.isLoadingResult.emit(false);
     })
   }
 

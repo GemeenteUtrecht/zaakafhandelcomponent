@@ -1,13 +1,17 @@
 <div class="keten-processen card">
-  <h2 class="d-inline-block mr-2">Acties</h2>
+  <h2 class="d-inline-block mr-1">Acties</h2>
+  <gu-tooltip type="primary" inline="true" (click)="openBpmnVisualisation()">Bekijk BPMN model.</gu-tooltip>
 
   <!-- First time loading  -->
-  <ng-container *ngIf="isLoading">
+  <ng-container *ngIf="isLoading && !zaak.resultaat">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
+  <!-- Result set -->
+  <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
+
   <!-- Loaded -->
-  <ng-container *ngIf="!!data && data?.length > 0">
+  <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
 
     <!-- Action buttons -->
     <div class="keten-processen__msg-btns-container">
@@ -24,7 +28,7 @@
 
     <!-- Show more buttons -->
     <button gu-button
-            *ngIf="!!data && data?.length > 0"
+            *ngIf="!!data && data?.length > 3"
             buttonStyle="tertiary"
             size="extrasmall"
             class="d-block mb-4"
@@ -37,7 +41,7 @@
     <div class="d-flex flex-column mb-4" *ngIf="isPolling">
       <mat-progress-bar class="mb-2" mode="buffer"></mat-progress-bar>
       <gu-message
-        message="Er wordt gezocht naar nieuwe taken. Zodra een nieuwe taak gereed is om uitgevoerd te worden, zal deze hieronder verschijnen. Dit kan een even duren."
+        message="Er wordt gezocht naar nieuwe taken. Zodra een nieuwe taak gereed is om uitgevoerd te worden, zal deze hieronder verschijnen. Dit kan even duren."
         type="primary"
         class="mb-2"
       ></gu-message>
@@ -48,15 +52,15 @@
       <div class="row">
 
         <!-- Tasks for current user -->
-        <div class="col-md-6 mb-4 mb-md-0">
-          <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Zelf doen</h3>
+        <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
+          <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
           <ng-container *ngFor="let task of allTaskData">
             <div class="taak d-flex justify-content-between"
                  *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
             >
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold">{{task.name}}</p>
+                <p class="m-0 p--bold">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -72,7 +76,7 @@
               </div>
 
               <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center">
+              <div class="d-flex flex-column justify-content-center align-items-end">
                 <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
                   <button gu-button class="mb-2" buttonStyle="primary" size="small" (click)="executeTask(task.id)">
                     Behandelen
@@ -101,7 +105,7 @@
             <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
               <!-- Description -->
               <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold" *ngIf="task.name">{{task.name}}</p>
+                <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
 
                 <!-- Double click shows id. -->
                 <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -122,7 +126,7 @@
               </div>
 
               <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center">
+              <div class="d-flex flex-column justify-content-center align-items-end">
                 <button gu-button
                         *ngIf="ketenProcessenService.isTaskAssigned(task)"
                         buttonStyle="tertiary"
@@ -165,8 +169,13 @@
 </div>
 
 
-<!-- Modal -->
-<gu-modal id="ketenprocessenModal" [closeIcon]="true">
+<!-- BPMN modal -->
+<gu-modal id="bpmnModal" [closeIcon]="true" [size]="'huge'">
+  <div class="bpmn"></div>
+</gu-modal>
+
+<!-- Keten processen modal -->
+<gu-modal id="ketenprocessenModal" [closeIcon]="true" (onClose)="fetchProcesses()">
 
   <!-- Loading -->
   <ng-container *ngIf="isLoadingContext">
@@ -208,4 +217,5 @@
       </gu-tab>
     </gu-tab-group>
   </ng-container>
+
 </gu-modal>

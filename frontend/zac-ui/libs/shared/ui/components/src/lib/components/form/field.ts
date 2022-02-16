@@ -65,6 +65,12 @@ export interface FieldConfiguration {
 
   /** @type {boolean} Whether a select takes multiple values. */
   multiple?: boolean;
+
+  /** @type {Function} Function to call when field changes. */
+  onChange?: Function
+
+  /** @type {Function} Function to call when multiselect searches for value. */
+  onSearch?: Function
 }
 
 /**
@@ -89,6 +95,9 @@ export class Field {
   widgetType: string;
   writeonly?: boolean;
   multiple?: boolean;
+  onChange?: Function
+  onSearch?: Function
+
 
   /**
    * Construction method.
@@ -118,7 +127,7 @@ export class Field {
       return 'select'
     }
 
-    if (fieldConfiguration.type) {
+    if (fieldConfiguration.type && fieldConfiguration.type.toUpperCase() !== 'DATE') {
       return fieldConfiguration.type;
     }
 

@@ -1,13 +1,15 @@
 import logging
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client as get_camunda_client
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import authentication, permissions, status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +19,7 @@ from zgw_consumers.models import Service
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_document, get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
@@ -27,7 +30,7 @@ from .api import (
     retrieve_advices,
     retrieve_approvals,
 )
-from .permissions import IsReviewUser
+from .permissions import HasNotReviewed, IsReviewUser
 from .serializers import (
     KownslReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
@@ -99,7 +102,10 @@ class BaseRequestView(APIView):
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines
     """
 
-    permission_classes = (IsAuthenticated & IsReviewUser,)
+    permission_classes = (
+        IsAuthenticated & IsReviewUser,
+        HasNotReviewed,
+    )
     _operation_id = NotImplemented
     serializer_class = KownslReviewRequestSerializer
 
@@ -112,6 +118,9 @@ class BaseRequestView(APIView):
         return review_request
 
     def get(self, request, request_uuid):
+        if not (request.query_params.get("assignee")):
+            raise exceptions.ValidationError("'assignee' query parameter is required.")
+
         review_request = self.get_object()
         zaak_url = review_request["forZaak"]
         serializer = self.serializer_class(
@@ -124,22 +133,42 @@ class BaseRequestView(APIView):
         return Response(serializer.data)
 
     def post(self, request, request_uuid):
+        if not (assignee := request.query_params.get("assignee")):
+            raise exceptions.ValidationError("'assignee' query parameter is required.")
+        data = {**request.data}
+        assignee = resolve_assignee(assignee)
+        if isinstance(assignee, Group):
+            data["group"] = f"{assignee}"
+
         # Check if user is allowed to get and post based on source review request user_deadlines value.
         self.get_object()
         client = get_client(request.user)
         response = client.create(
             self._operation_resource,
-            data=request.data,
+            data=data,
             request__uuid=request_uuid,
         )
         return Response(response, status=status.HTTP_201_CREATED)
 
 
+ASSIGNEE_PARAMETER = OpenApiParameter(
+    name="assignee",
+    required=True,
+    type=OpenApiTypes.STR,
+    description=_("Assignee of the user task in camunda."),
+    location=OpenApiParameter.QUERY,
+)
+
+
 @extend_schema_view(
-    get=extend_schema(summary=_("Retrieve advice review request")),
+    get=extend_schema(
+        summary=_("Retrieve advice review request"),
+        parameters=[ASSIGNEE_PARAMETER],
+    ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/advices",
         summary=_("Register advice for review request"),
+        parameters=[ASSIGNEE_PARAMETER],
     ),
 )
 class AdviceRequestView(BaseRequestView):
@@ -147,10 +176,14 @@ class AdviceRequestView(BaseRequestView):
 
 
 @extend_schema_view(
-    get=extend_schema(summary=_("Retrieve approval review request")),
+    get=extend_schema(
+        summary=_("Retrieve approval review request"),
+        parameters=[ASSIGNEE_PARAMETER],
+    ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/approvals",
         summary=_("Register approval for review request"),
+        parameters=[ASSIGNEE_PARAMETER],
     ),
 )
 class ApprovalRequestView(BaseRequestView):

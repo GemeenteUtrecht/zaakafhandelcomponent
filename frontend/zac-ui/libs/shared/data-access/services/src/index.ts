@@ -1,5 +1,6 @@
 export * from './lib/activities/activities.service';
 export * from './lib/http/http-client';
+export * from './lib/kadaster/kadaster.service';
 export * from './lib/meta/meta.service';
 export * from './lib/shared-data-access-services.module';
 export * from './lib/objects/objects.service'
