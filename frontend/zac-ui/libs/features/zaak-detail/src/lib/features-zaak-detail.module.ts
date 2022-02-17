@@ -20,6 +20,7 @@ import {StatusComponent} from './status/status.component';
 import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
 import {ZaakMapComponent} from './zaak-map/zaak-map.component';
 import {UserPermissionsComponent} from './user-permissions/user-permissions.component';
+import {TaskHistoryComponent} from './task-history/task-history.component';
 
 @NgModule({
   imports: [
@@ -41,15 +42,16 @@ import {UserPermissionsComponent} from './user-permissions/user-permissions.comp
     TabsModule.forRoot(),
   ],
   declarations: [
-    FeaturesZaakDetailComponent,
-    InformatieComponent,
-    BetrokkenenComponent,
-    StatusComponent,
-    GerelateerdeObjectenComponent,
-    AdviserenAccorderenComponent,
-    DetailModalComponent,
-    ToegangVerlenenComponent,
     ActiviteitenComponent,
+    AdviserenAccorderenComponent,
+    BetrokkenenComponent,
+    DetailModalComponent,
+    FeaturesZaakDetailComponent,
+    GerelateerdeObjectenComponent,
+    InformatieComponent,
+    StatusComponent,
+    TaskHistoryComponent,
+    ToegangVerlenenComponent,
     UserPermissionsComponent,
     ZaakMapComponent,
   ],

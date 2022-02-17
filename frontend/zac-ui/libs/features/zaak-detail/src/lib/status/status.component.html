@@ -18,50 +18,60 @@
       </gu-multiselect>
     </div>
   </div>
-  <h4 class="d-inline-block mr-1">Doorlooptijd</h4>
-  <gu-tooltip type="primary" inline="true">Tijd tot de deadline van de zaak</gu-tooltip>
-  <ng-container *ngIf="isLoading">
-    <gu-loading-indicator></gu-loading-indicator>
-  </ng-container>
-  <ng-container *ngIf="data && data[0] && !isLoading">
-    <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
-                     [finished]="finished"
-                     endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
-                     class="d-block mb-3"></gu-progress-bar>
-    <div class="d-flex">
-      <p class="mr-1">Uiterlijke einddatum:</p>
-      <p class="p--bold" *ngIf="deadline">{{deadline}}</p>
-    </div>
-    <div class="timeline mb-2" *ngIf="data">
-      <div class="timeline__row row no-gutters"
-           *ngFor="let status of data; let last = last; let first = first; let i = index"
-           [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
-           [hidden]="!isExpanded && i >= 3"
-      >
-        <div class="col-1">
-          <div class="timeline-item__dot"></div>
+
+  <gu-tab-group>
+    <gu-tab label="Doorlooptijd">
+      <div *ngIf="isLoading" class="p-4">
+        <gu-loading-indicator></gu-loading-indicator>
+      </div>
+
+      <div *ngIf="data && data[0] && !isLoading"  class="p-4">
+        <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
+                         [finished]="finished"
+                         endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
+                         class="d-block mb-3"></gu-progress-bar>
+        <div class="d-flex">
+          <p class="mr-1">Uiterlijke einddatum:</p>
+          <p class="p--bold" *ngIf="deadline">{{deadline}}</p>
         </div>
-        <div class="timeline-item timeline-item--left col-5">
-          <div class="item-left__info">
-            <p class="p--nomargin p--bold">{{status.statustype.omschrijving}}</p>
+        <div class="timeline mb-2" *ngIf="data">
+          <div class="timeline__row row no-gutters"
+               *ngFor="let status of data; let last = last; let first = first; let i = index"
+               [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
+               [hidden]="!isExpanded && i >= 3"
+          >
+            <div class="col-1">
+              <div class="timeline-item__dot"></div>
+            </div>
+            <div class="timeline-item timeline-item--left col-5">
+              <div class="item-left__info">
+                <p class="p--nomargin p--bold">{{status.statustype.omschrijving}}</p>
+              </div>
+            </div>
+            <div class="timeline-item timeline-item--right col-2">
+              <label class="label label--small p-0 m-0">{{status.datumStatusGezet | date:'shortDate'}}</label>
+            </div>
+            <div class="timeline-item timeline-item--right col-4">
+              <p class="p--nomargin">{{status.statustoelichting}}</p>
+            </div>
           </div>
         </div>
-        <div class="timeline-item timeline-item--right col-2">
-          <label class="label label--small p-0 m-0">{{status.datumStatusGezet | date:'shortDate'}}</label>
-        </div>
-        <div class="timeline-item timeline-item--right col-4">
-          <p class="p--nomargin">{{status.statustoelichting}}</p>
+        <div class="d-flex justify-content-end">
+          <button gu-button *ngIf="data?.length > 3"
+                  buttonStyle="tertiary"
+                  size="extrasmall"
+                  [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+                  (click)="isExpanded = !isExpanded">
+            {{isExpanded ? 'Toon minder' : 'Toon meer'}}
+          </button>
         </div>
       </div>
-    </div>
-    <div class="d-flex justify-content-end">
-      <button gu-button *ngIf="data?.length > 3"
-              buttonStyle="tertiary"
-                 size="extrasmall"
-                 [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-                 (click)="isExpanded = !isExpanded">
-        {{isExpanded ? 'Toon minder' : 'Toon meer'}}
-      </button>
-    </div>
-  </ng-container>
+    </gu-tab>
+
+    <gu-tab label="Taakgeschiedenis">
+      <div class="p-4">
+        <gu-task-history [mainZaakUrl]="mainZaakUrl"></gu-task-history>
+      </div>
+    </gu-tab>
+  </gu-tab-group>
 </div>
