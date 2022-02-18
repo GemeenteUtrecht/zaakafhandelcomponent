@@ -196,17 +196,27 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         help_text=_("URL of the case."),
         allow_blank=False,
     )
+    bestandsnaam = serializers.CharField(
+        help_text=_("Filename with extension."),
+        required=False,
+    )
 
     def validate(self, data):
         document_url = data.get("url")
         zaak = get_zaak(zaak_url=data["zaak"])
         documenten, gone = get_documenten(zaak)
         documenten = {document.url: document for document in documenten}
-        try:
-            documenten[document_url]
-        except KeyError:
+
+        if document := documenten.get(document_url):
+            if new_fn := data.get("bestandsnaam"):
+                if new_fn.split(".")[-1] != document.bestandsnaam.split(".")[-1]:
+                    raise serializers.ValidationError(
+                        _("You are not allowed to change the file extension.")
+                    )
+                data["titel"] = new_fn
+        else:
             raise serializers.ValidationError(
-                _("The document is unrelated to the case.")
+                _("The document is unrelated to ZAAK %s." % zaak.url)
             )
 
         return data
