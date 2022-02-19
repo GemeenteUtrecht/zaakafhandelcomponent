@@ -1,0 +1,7 @@
+<div class="document-bestandsnaam-wijzigen" *ngIf="mainZaakUrl && selectedDocument">
+  <p>Huidige bestandsnaam: <strong>{{selectedDocument.bestandsnaam}}</strong></p>
+  <gu-form [form]="form"
+           (formSubmit)="formSubmit($event)"
+           [isLoading]="isLoading">
+  </gu-form>
+</div>

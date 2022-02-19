@@ -77,7 +77,7 @@
   </div>
 
   <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block" [disabled]="!formGroup.valid">
+    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block" [disabled]="!formGroup.valid" [loading]="isLoading">
       {{buttonLabel}}
     </button>
   </footer>

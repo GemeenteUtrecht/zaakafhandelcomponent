@@ -34,6 +34,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() showEditOnHover: boolean;
+  @Input() isLoading = false;
 
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
