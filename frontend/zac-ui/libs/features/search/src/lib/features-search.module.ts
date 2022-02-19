@@ -31,6 +31,8 @@ import {ZaakObjectStringPipe} from "./search-form/object-search-form/zaak-object
     ],
   exports: [
     FeaturesSearchComponent,
+    PropertySearchFormComponent,
+    SearchResultsComponent,
     ZaakObjectSearchFormComponent,
   ],
   declarations: [

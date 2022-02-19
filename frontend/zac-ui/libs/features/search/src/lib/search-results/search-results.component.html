@@ -4,7 +4,9 @@
     <gu-table [table]="tableData"
               [sortable]="true"
               [expandable]="true"
-              (sortOutput)="sortOutput.emit($event)"></gu-table>
+              (sortOutput)="sortOutput.emit($event)"
+              (tableOutput)="tableOutput.emit($event)"
+    ></gu-table>
     <gu-paginator (page)="pageOutput.emit($event)"
                   [length]="resultLength"
     ></gu-paginator>
