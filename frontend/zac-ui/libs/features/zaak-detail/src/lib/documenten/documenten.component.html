@@ -54,7 +54,9 @@
           title="Bestandsnaam wijzigen"
           size="small">
   <gu-document-bestandsnaam-wijzigen [mainZaakUrl]="mainZaakUrl"
-                                     [selectedDocument]="selectedDocument">
+                                     [selectedDocument]="selectedDocument"
+                                     (closeModal)="closeModal('bestandsnaam-wijzigen-modal')"
+                                     (reload)="fetchDocuments()">
   </gu-document-bestandsnaam-wijzigen>
 </gu-modal>
 

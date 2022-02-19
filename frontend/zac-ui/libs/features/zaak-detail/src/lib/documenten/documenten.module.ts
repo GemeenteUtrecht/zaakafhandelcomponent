@@ -28,7 +28,8 @@ import { DocumentBestandsnaamWijzigenComponent } from './document-bestandsnaam-w
   exports: [
     DocumentenComponent,
     DocumentToevoegenComponent,
-    DocumentVertrouwelijkheidWijzigenComponent
+    DocumentVertrouwelijkheidWijzigenComponent,
+    DocumentBestandsnaamWijzigenComponent
   ]
 })
 export class DocumentenModule { }
