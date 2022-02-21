@@ -1,3 +1,4 @@
+import pathlib
 from decimal import ROUND_05UP
 from typing import Optional
 
@@ -197,7 +198,7 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         allow_blank=False,
     )
     bestandsnaam = serializers.CharField(
-        help_text=_("Filename with extension."),
+        help_text=_("Filename without extension."),
         required=False,
     )
 
@@ -209,11 +210,9 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
 
         if document := documenten.get(document_url):
             if new_fn := data.get("bestandsnaam"):
-                if new_fn.split(".")[-1] != document.bestandsnaam.split(".")[-1]:
-                    raise serializers.ValidationError(
-                        _("You are not allowed to change the file extension.")
-                    )
-                data["titel"] = new_fn
+                suffixes = pathlib.Path(document.bestandsnaam).suffixes
+                data["bestandsnaam"] = new_fn + "".join(suffixes)
+                data["titel"] = data["bestandsnaam"]
         else:
             raise serializers.ValidationError(
                 _("The document is unrelated to ZAAK %s." % zaak.url)

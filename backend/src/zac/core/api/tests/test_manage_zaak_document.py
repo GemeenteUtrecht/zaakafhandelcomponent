@@ -797,38 +797,3 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "writeUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/write",
         }
         self.assertEqual(data, expected_data)
-
-    def test_fail_patch_extension_of_filename_of_document(self, m):
-        user = SuperUserFactory.create()
-        self.client.force_authenticate(user)
-        self._setupMocks(m)
-
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            informatieobjecttype=self.informatieobjecttype["url"],
-            versie=1,
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-            locked=False,
-            bestandsnaam="some-file.extension",
-        )
-        m.get(document["url"], json=document)
-
-        post_data = {
-            "reden": "daarom",
-            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "bestandsnaam": "some-file.someotherextension",
-        }
-        with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
-        ):
-            response = self.client.patch(self.endpoint, post_data, format="multipart")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response = response.json()
-        self.assertEqual(
-            response,
-            {"nonFieldErrors": ["You are not allowed to change the file extension."]},
-        )
