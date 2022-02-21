@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.api.permissions import CanReadZaken
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
@@ -21,12 +22,14 @@ from zgw.models import Zaak
 from ..data import Task
 from ..messages import get_messages
 from ..process_instances import get_process_instance
-from ..processes import get_process_instances
+from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
+from ..user_tasks.history import get_camunda_history_for_zaak
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
     ErrorSerializer,
+    HistoricUserTaskSerializer,
     MessageSerializer,
     ProcessInstanceSerializer,
     SetTaskAssigneeSerializer,
@@ -68,7 +71,7 @@ class ProcessInstanceFetchView(APIView):
             err_serializer = ErrorSerializer({"detail": "missing zaak_url"})
             return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
-        process_instances = get_process_instances(zaak_url)
+        process_instances = get_top_level_process_instances(zaak_url)
         serializer = self.serializer_class(process_instances, many=True)
 
         return Response(serializer.data)
@@ -160,7 +163,8 @@ class UserTaskView(APIView):
 
         The exact shape of the data depends on the Camunda task type. On succesful,
         valid submission, the user task in Camunda is completed and the resulting
-        process variables are set.
+        process variables are set. The final assignee of the user task is also set
+        for history trail purposes.
 
         The ZAC always injects its own ``bptlAppId`` process variable so that BPTL
         executes tasks from the right context.
@@ -181,6 +185,19 @@ class UserTaskView(APIView):
             **get_bptl_app_id_variable(),
             **serializer.get_process_variables(),
         }
+
+        # For case history purposes set assignee if no assignee is set yet, has changed or the assignee is a group.
+        if (
+            not task.assignee
+            or task.assignee != f"{AssigneeTypeChoices.user}:{request.user}"
+            or task.assignee_type == AssigneeTypeChoices.group
+        ):
+            camunda_client = get_client()
+            assignee = f"{AssigneeTypeChoices.user}:{request.user}"
+            camunda_client.post(
+                f"task/{task.id}/assignee",
+                json={"userId": assignee},
+            )
 
         complete_task(task.id, variables)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -362,3 +379,34 @@ class GetBPMNView(APIView):
             if exc.response.status_code == 400:
                 raise exceptions.ValidationError(exc.response.json())
             raise
+
+
+class UserTaskHistoryView(APIView):
+    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+
+    def get_serializer(self, **kwargs):
+        return HistoricUserTaskSerializer(**kwargs)
+
+    @extend_schema(
+        summary=_("Retrieve the historical user task data of the ZAAK."),
+        description=_(
+            "User tasks are reverse sorted on the `created` key. The history array is sorted alphabetically on the `variable_name` key."
+        ),
+        parameters=[
+            OpenApiParameter(
+                "zaak_url",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            )
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        zaak_url = request.GET.get("zaak_url")
+        if not zaak_url:
+            raise exceptions.ValidationError(_("Missing the zaak URL query parameter."))
+
+        user_task_history = get_camunda_history_for_zaak(zaak_url)
+        user_task_history.sort(key=lambda obj: obj.task.created, reverse=True)
+        serializer = self.get_serializer(instance=user_task_history, many=True)
+        return Response(serializer.data)

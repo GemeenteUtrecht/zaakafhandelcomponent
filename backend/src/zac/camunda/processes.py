@@ -22,17 +22,24 @@ def add_subprocesses(
     process_instance: ProcessInstance,
     process_instances: Dict[str, ProcessInstance],
     client: Camunda,
+    historic: bool = False,
 ):
     if process_instance.sub_processes:
         return
 
-    response = client.get(
-        "process-instance", {"superProcessInstance": process_instance.id}
-    )
+    if historic:
+        url = "history/process-instance"
+        query_params = {"superProcessInstanceId": process_instance.id}
+    else:
+        url = "process-instance"
+        query_params = {"superProcessInstance": process_instance.id}
+
+    response = client.get(url, query_params)
+
     # todo restrict for other zaakUrls
     for data in response:
         sub_process_instance = process_instances.get(
-            data["id"], factory(ProcessInstance, data)
+            data["id"], factory(ProcessInstance, {**data, "historical": historic})
         )
 
         sub_process_instance.parent_process = process_instance
@@ -42,16 +49,27 @@ def add_subprocesses(
             or sub_process_instance != process_instances[sub_process_instance.id]
         ):
             process_instances[sub_process_instance.id] = sub_process_instance
-            add_subprocesses(sub_process_instance, process_instances, client)
+            add_subprocesses(
+                sub_process_instance, process_instances, client, historic=historic
+            )
 
 
-def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
+def get_process_instances(
+    zaak_url: str, historic: bool = False
+) -> List[ProcessInstance]:
     client = get_client()
 
-    #  get process-instances for particular zaak
-    response = client.get("process-instance", {"variables": f"zaakUrl_eq_{zaak_url}"})
+    #  get (historical) process-instances for particular zaak
+    if historic:
+        url = "history/process-instance"
+    else:
+        url = "process-instance"
+
+    response = client.get(url, {"variables": f"zaakUrl_eq_{zaak_url}"})
+
     process_instances = {
-        data["id"]: factory(ProcessInstance, data) for data in response
+        data["id"]: factory(ProcessInstance, {**data, "historical": historic})
+        for data in response
     }
     # fill in all subprocesses into the dict
     pids = [
@@ -59,12 +77,17 @@ def get_process_instances(zaak_url: str) -> List[ProcessInstance]:
     ]
 
     def _add_subprocesses(pid: ProcessInstance):
-        nonlocal process_instances, client
-        add_subprocesses(pid, process_instances, client)
+        nonlocal process_instances, client, historic
+        add_subprocesses(pid, process_instances, client, historic=historic)
 
     with parallel() as executor:
         list(executor.map(_add_subprocesses, pids))
 
+    return process_instances
+
+
+def get_top_level_process_instances(zaak_url: str) -> List[ProcessInstance]:
+    process_instances = get_process_instances(zaak_url)
     # add definitions add user tasks
     definition_ids = [p.definition_id for p in process_instances.values()]
     definitions = {

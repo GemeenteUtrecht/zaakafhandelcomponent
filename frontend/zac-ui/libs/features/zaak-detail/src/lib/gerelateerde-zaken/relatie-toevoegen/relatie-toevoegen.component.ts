@@ -1,4 +1,10 @@
-import {Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import {Choice, Field, FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
 import {Zaak} from '@gu/models';
 import {ZaakService} from '@gu/services';
@@ -6,7 +12,8 @@ import {ZaakService} from '@gu/services';
 @Component({
   selector: 'gu-relatie-toevoegen',
   templateUrl: './relatie-toevoegen.component.html',
-  styleUrls: ['./relatie-toevoegen.component.scss']
+  styleUrls: ['./relatie-toevoegen.component.scss'],
+
 })
 export class RelatieToevoegenComponent implements OnInit {
   @Input() mainZaakUrl: string;
@@ -14,6 +21,8 @@ export class RelatieToevoegenComponent implements OnInit {
 
   form: FieldConfiguration[];
   isLoading: boolean;
+  resultData: Zaak[] = [];
+  selectedTabIndex = -1;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
@@ -58,16 +67,18 @@ export class RelatieToevoegenComponent implements OnInit {
   //
 
   /**
-   * Returns the field configurations for the form..
+   * Returns the field configurations for the form.
+   * @param {Zaak} zaak If given, preselect zaak.
    */
-  getForm(): FieldConfiguration[] {
+  getForm(zaak: Zaak = null): FieldConfiguration[] {
     return [
       {
         label: 'Identificatie',
         name: 'relation_zaak',
         required: true,
-        choices: [],
-        onSearch: this.updateZaakChoices.bind(this)
+        choices: (zaak) ? [{value: zaak.url, label: zaak.identificatie}] : [],
+        onSearch: this.updateZaakChoices.bind(this),
+        value: (zaak) ? zaak.url : null,
       },
       {
         label: 'Aard relatie',
@@ -96,7 +107,7 @@ export class RelatieToevoegenComponent implements OnInit {
    * @param {Field} field
    */
   updateZaakChoices(identificatie: string, field: Field): void {
-    if(!identificatie) {
+    if (!identificatie) {
       return
     }
 
@@ -113,6 +124,30 @@ export class RelatieToevoegenComponent implements OnInit {
   // Events.
   //
 
+  /**
+   * Gets called when search results are loaded.
+   * @param {Zaak[]} results
+   */
+  onLoadResult(results: Zaak[]) {
+    this.resultData = results;
+  }
+
+  /**
+   * Gets called when a zaak (case) is selected from search results.
+   * @param {Zaak} zaak
+   */
+  onTableOutput(zaak: Zaak) {
+    this.selectedTabIndex = 0;
+    this.form = null;
+    setTimeout(() => {
+      this.form = this.getForm(zaak);
+    });
+  }
+
+  /**
+   * Gets called when the form is submitted.
+   * @param {Object} formData
+   */
   submitForm(formData): void {
     this.isLoading = true;
     this.zaakService.addRelatedCase(formData).subscribe(() => {

@@ -11,7 +11,10 @@ import {PageEvent} from '@angular/material/paginator';
 export class SearchResultsComponent implements OnChanges {
   @Input() resultData: Zaak[];
   @Input() resultLength: number;
+  @Input() controlled = false;
+
   @Output() sortOutput = new EventEmitter<any>();
+  @Output() tableOutput = new EventEmitter<any>();
   @Output() pageOutput = new EventEmitter<PageEvent>();
 
   tableData: Table = new Table([], []);
@@ -30,11 +33,11 @@ export class SearchResultsComponent implements OnChanges {
 
     // Add table body data
     tableData.bodyData = resultData.map(result => {
-      const url = `/ui/zaken/${result.bronorganisatie}/${result.identificatie}`;
+      const url = (this.controlled) ? '#' : `/ui/zaken/${result.bronorganisatie}/${result.identificatie}`;
       const rowData: RowData = {
         cellData: {
           url: {
-            type: 'link',
+            type: this.controlled ? 'text': 'link',
             label: result.identificatie,
             url: url
           },
@@ -45,7 +48,8 @@ export class SearchResultsComponent implements OnChanges {
             date: result.deadline
           }
         },
-        expandData: result.toelichting
+        expandData: result.toelichting,
+        clickOutput: result,
       }
       return rowData
     });
