@@ -2,6 +2,7 @@ const tableHead = [
   'Zaaknummer',
   'Omschrijving',
   'Zaaktype',
+  'Status',
   'Startdatum',
   'Uiterste einddatum',
   'Vertrouwelijkheid'

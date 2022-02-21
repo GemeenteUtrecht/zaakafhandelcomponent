@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {RowData, Zaak, Table, UserTask, UserTaskZaak} from '@gu/models';
+import { RowData, Table, UserTask, UserTaskZaak, WorkstackCase } from '@gu/models';
 import {FeaturesWorkstackService} from './features-workstack.service';
 import {tabs, Tab} from './constants/tabs';
 import {tableHead} from './constants/zaken-tablehead';
@@ -23,7 +23,7 @@ export class FeaturesWorkstackComponent implements OnInit {
     currentActiveTab = 0;
 
     allData: any;
-    zakenData: Zaak[];
+    zakenData: WorkstackCase[];
     taskData: UserTask[];
     groupTaskData: UserTask[];
     activitiesData: AdHocActivities[];
@@ -65,7 +65,7 @@ export class FeaturesWorkstackComponent implements OnInit {
      * @param {Zaak[]} zaken
      * @return {RowData}
      */
-    getTableRows(zaken: Zaak[]): RowData[] {
+    getTableRows(zaken: WorkstackCase[]): RowData[] {
         return zaken.map((element) => {
             const zaakUrl = `/ui/zaken/${element.bronorganisatie}/${element.identificatie}`;
 
@@ -78,6 +78,7 @@ export class FeaturesWorkstackComponent implements OnInit {
                     },
                     omschrijving: element.omschrijving,
                     zaaktype: element.zaaktype.omschrijving,
+                    zaakstatus: element.status?.statustype || '',
                     startdatum: {
                         type: element.startdatum ? 'date' : 'text',
                         date: element.startdatum

@@ -34,6 +34,13 @@ export interface Status {
   statustype: Statustype;
 }
 
+export interface WorkstackStatus {
+  url: string;
+  datumStatusGezet: Date;
+  statustoelichting: string;
+  statustype: string;
+}
+
 export interface Zaak {
   url: string;
   identificatie: string;
@@ -52,5 +59,26 @@ export interface Zaak {
   resultaat: Resultaat;
   status: Status;
   zaakgeometrie: Geometry;
+}
+
+export interface WorkstackCase {
+  url: string;
+  identificatie: string;
+  bronorganisatie: string;
+  zaaktype: Zaaktype;
+  omschrijving: string;
+  toelichting: string;
+  registratiedatum: string;
+  startdatum: string;
+  einddatum?: string;
+  einddatumGepland?: string;
+  uiterlijkeEinddatumAfdoening?: string;
+  vertrouwelijkheidaanduiding: string;
+  deadline: string;
+  deadlineProgress: number;
+  resultaat: Resultaat;
+  status: WorkstackStatus;
+  zaakgeometrie: Geometry;
 
 }
+
