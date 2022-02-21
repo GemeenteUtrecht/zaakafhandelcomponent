@@ -162,12 +162,12 @@ ASSIGNEE_PARAMETER = OpenApiParameter(
 
 @extend_schema_view(
     get=extend_schema(
-        summary=_("Retrieve advice review request"),
+        summary=_("Retrieve advice review request."),
         parameters=[ASSIGNEE_PARAMETER],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/advices",
-        summary=_("Register advice for review request"),
+        summary=_("Register advice for review request."),
         parameters=[ASSIGNEE_PARAMETER],
     ),
 )
@@ -177,12 +177,12 @@ class AdviceRequestView(BaseRequestView):
 
 @extend_schema_view(
     get=extend_schema(
-        summary=_("Retrieve approval review request"),
+        summary=_("Retrieve approval review request."),
         parameters=[ASSIGNEE_PARAMETER],
     ),
     post=remote_kownsl_create_schema(
         "/api/v1/review-requests/{request__uuid}/approvals",
-        summary=_("Register approval for review request"),
+        summary=_("Register approval for review request."),
         parameters=[ASSIGNEE_PARAMETER],
     ),
 )
@@ -197,7 +197,7 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     def get_serializer(self, **kwargs):
         return ZaakRevReqSummarySerializer(many=True, **kwargs)
 
-    @extend_schema(summary=_("List review requests summary for a ZAAK"))
+    @extend_schema(summary=_("List review requests summary for a ZAAK."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         review_requests = get_review_requests(zaak)
@@ -211,7 +211,7 @@ class ZaakReviewRequestDetailView(APIView):
     serializer_class = ZaakRevReqDetailSerializer
 
     @extend_schema(
-        summary=_("Retrieve review request details"),
+        summary=_("Retrieve review request."),
         responses={
             "200": ZaakRevReqDetailSerializer,
         },

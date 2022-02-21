@@ -211,7 +211,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         return mapping[self.request.method](**kwargs)
 
     @extend_schema(
-        summary=_("Retrieve ZAAK details"),
+        summary=_("Retrieve ZAAK."),
         responses={
             200: ZaakDetailSerializer,
             403: PermissionDeniedSerializer,
@@ -226,7 +226,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Update ZAAK details"),
+        summary=_("Partially update ZAAK."),
         responses={
             204: None,
             403: PermissionDeniedSerializer,
@@ -260,14 +260,14 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
     serializer_class = ZaakStatusSerializer
 
-    @extend_schema(summary=_("List ZAAK STATUSsen"))
+    @extend_schema(summary=_("List ZAAK STATUSsen."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
         serializer = self.serializer_class(instance=statussen, many=True)
         return Response(serializer.data)
 
-    @extend_schema(summary=_("Add ZAAK STATUS"))
+    @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
         serializer = self.serializer_class(
@@ -288,7 +288,7 @@ class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
-    schema_summary = _("List ZAAKEIGENSCHAPpen")
+    schema_summary = _("List ZAAKEIGENSCHAPpen.")
 
     def get_objects(self):
         zaak = self.get_object()
@@ -322,7 +322,7 @@ class ZaakEigenschapDetailView(views.APIView):
         return zaak_eigenschap
 
     @extend_schema(
-        summary=_("Create ZAAKEIGENSCHAP"), request=CreateZaakEigenschapSerializer
+        summary=_("Create ZAAKEIGENSCHAP."), request=CreateZaakEigenschapSerializer
     )
     def post(self, request, *args, **kwargs):
         serializer = CreateZaakEigenschapSerializer(data=request.data)
@@ -354,7 +354,7 @@ class ZaakEigenschapDetailView(views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
-        summary=_("Update ZAAKEIGENSCHAP"),
+        summary=_("Partially update ZAAKEIGENSCHAP."),
         parameters=[
             OpenApiParameter(
                 name="url",
@@ -379,7 +379,7 @@ class ZaakEigenschapDetailView(views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Delete ZAAKEIGENSCHAP"),
+        summary=_("Delete ZAAKEIGENSCHAP."),
         parameters=[
             OpenApiParameter(
                 name="url",
@@ -400,7 +400,7 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RelatedZaakSerializer
-    schema_summary = _("List related ZAAKen")
+    schema_summary = _("List related ZAAKen.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -423,7 +423,7 @@ class CreateZaakRelationView(views.APIView):
         return AddZaakRelationSerializer(data=self.request.data)
 
     @extend_schema(
-        summary=_("Add related ZAAK"),
+        summary=_("Add related ZAAK."),
         description=_("Relate a ZAAK to another ZAAK and create the reverse relation."),
     )
     def post(self, request: Request) -> Response:
@@ -477,7 +477,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RolSerializer
-    schema_summary = _("List ROLlen of ZAAK")
+    schema_summary = _("List ROLlen of ZAAK.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -490,7 +490,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakObjectGroupSerializer
-    schema_summary = _("List related OBJECTs of a ZAAK")
+    schema_summary = _("List related OBJECTs of a ZAAK.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -518,7 +518,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("List ZAAK users and atomic permissions"),
+    summary=_("List ZAAK users and atomic permissions."),
 )
 class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -551,7 +551,7 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 ###############################
 
 
-@extend_schema(summary=_("List ZAAK documents"))
+@extend_schema(summary=_("List ZAAK documents."))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
@@ -624,7 +624,7 @@ class ZaakDocumentView(views.APIView):
         return document_data
 
     @extend_schema(
-        summary=_("Edit ZAAK document"),
+        summary=_("Partially update ZAAK document."),
         responses=GetZaakDocumentSerializer,
     )
     def patch(self, request: Request, *args, **kwargs) -> Response:
@@ -653,7 +653,7 @@ class ZaakDocumentView(views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Add document to ZAAK"),
+        summary=_("Add document to ZAAK."),
         responses=GetZaakDocumentSerializer,
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
@@ -691,14 +691,14 @@ class ZaakDocumentView(views.APIView):
 
 
 @extend_schema(
-    summary=_("List document types"),
+    summary=_("List document types for a ZAAK."),
     tags=["meta"],
     parameters=[
         OpenApiParameter(
             name="zaak",
             required=True,
             type=OpenApiTypes.URI,
-            description=_("ZAAK to list available document types for"),
+            description=_("ZAAK to list available document types for."),
             location=OpenApiParameter.QUERY,
         )
     ],
@@ -720,7 +720,7 @@ class InformatieObjectTypeListView(generics.ListAPIView):
         return get_informatieobjecttypen_for_zaak(zaak_url)
 
 
-@extend_schema(summary=_("List ZAAKTYPEs"), tags=["meta"])
+@extend_schema(summary=_("List ZAAKTYPEs."), tags=["meta"])
 class ZaakTypenView(ListAPIView):
     """
     List a collection of zaaktypen available to the end user.
@@ -762,7 +762,7 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen_aggregated
 
 
-@extend_schema(summary=_("List vertrouwelijkheidaanduidingen"), tags=["meta"])
+@extend_schema(summary=_("List vertrouwelijkheidaanduidingen."), tags=["meta"])
 class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
     """
     List the available vertrouwelijkheidaanduidingen.
@@ -780,14 +780,14 @@ class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("List STATUSTYPEs"),
+    summary=_("List STATUSTYPEs for a ZAAK."),
     tags=["meta"],
     parameters=[
         OpenApiParameter(
             name="zaak",
             required=True,
             type=OpenApiTypes.URI,
-            description=_("ZAAK to list available STATUSTYPEs for"),
+            description=_("ZAAK to list available STATUSTYPEs for."),
             location=OpenApiParameter.QUERY,
         )
     ],
@@ -813,7 +813,7 @@ class StatusTypenView(views.APIView):
         return Response(serializer.data)
 
 
-@extend_schema(summary=_("List ZAAKTYPE EIGENSCHAPpen"), tags=["meta"])
+@extend_schema(summary=_("List ZAAKTYPE EIGENSCHAPpen."), tags=["meta"])
 class EigenschappenView(ListAPIView):
     """
     List the available eigenschappen for a given `zaaktype` OR a `zaaktype_omschrijving` within a `catalogus`.
@@ -875,7 +875,7 @@ class EigenschappenView(ListAPIView):
 
 
 @extend_schema(
-    summary=_("List OBJECTTYPEs"),
+    summary=_("List OBJECTTYPEs."),
     description=_("Retrieves all OBJECTTYPEs from the configured OBJECTTYPES API."),
     tags=["objects"],
 )
@@ -890,7 +890,7 @@ class ObjecttypeListView(ListMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("Read OBJECTTYPE version"),
+    summary=_("Read OBJECTTYPE version."),
     description=_("Read the details of a particular OBJECTTYPE version."),
     tags=["objects"],
 )
@@ -904,7 +904,7 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("Search OBJECTs"),
+    summary=_("Search OBJECTs."),
     description=_("Search for OBJECTs in the OBJECTS API."),
     responses={(200, "application/json"): ObjectProxySerializer},
     tags=["objects"],
@@ -950,7 +950,7 @@ class ZaakObjectChangeView(views.APIView):
         return zaak_object
 
     @extend_schema(
-        summary=_("Create ZAAKOBJECT"),
+        summary=_("Create ZAAKOBJECT."),
         description=_("Relate an OBJECT to a ZAAK."),
         responses={(201, "application/json"): ZaakObjectProxySerializer},
         tags=["objects"],
@@ -969,13 +969,13 @@ class ZaakObjectChangeView(views.APIView):
         return Response(status=201, data=created_zaakobject)
 
     @extend_schema(
-        summary=_("Delete ZAAKOBJECT"),
+        summary=_("Delete ZAAKOBJECT."),
         parameters=[
             OpenApiParameter(
                 name="url",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("URL-reference of ZAAKOBJECT in ZAKEN API"),
+                description=_("URL-reference of ZAAKOBJECT in ZAKEN API."),
                 location=OpenApiParameter.QUERY,
             )
         ],

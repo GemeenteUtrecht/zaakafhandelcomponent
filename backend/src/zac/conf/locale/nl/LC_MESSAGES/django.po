@@ -115,7 +115,7 @@ msgstr "'result'-veld moet gedefinieerd zijn wanneer een toegangsverzoek in beha
 
 #: zac/accounts/api/serializers.py:385
 msgid "This access request has already been handled"
-msgstr Dit toegangsverzoek is al afgehandeld"
+msgstr "Dit toegangsverzoek is al afgehandeld"
 
 #: zac/accounts/api/serializers.py:446
 msgid "List of blueprint shapes"
@@ -151,100 +151,100 @@ msgid "Access Request to %(zaak)s"
 msgstr "Toegangsverzoek voor %(zaak)s"
 
 #: zac/accounts/api/views.py:48
-msgid "List permissions"
-msgstr "Haal rechten op"
+msgid "List permissions."
+msgstr "Alle rechten opvragen."
 
 #: zac/accounts/api/views.py:49
 msgid "Returns all available permissions and their description."
 msgstr "Geeft alle beschikbare rechten en hun beschrijving terug."
 
 #: zac/accounts/api/viewsets.py:41
-msgid "List user accounts"
-msgstr "Haal gebruikersaccounts op"
+msgid "List user accounts."
+msgstr "Alle gebruikersaccounts opvragen."
 
 #: zac/accounts/api/viewsets.py:42
-msgid "Retrieve user account"
-msgstr "Haal gebruikersaccount op"
+msgid "Retrieve user account."
+msgstr "Een specificieke gebruikersaccount opvragen."
 
 #: zac/accounts/api/viewsets.py:55
-msgid "Current logged in user"
-msgstr "Huidige ingelogde gebruiker"
+msgid "Retrieve current logged in user."
+msgstr "Huidig ingelogde gebruiker opvragen."
 
 #: zac/accounts/api/viewsets.py:63
-msgid "List user groups"
-msgstr "Haal gebruikersgroepen op"
+msgid "List user groups."
+msgstr "Alle gebruikersgroepen opvragen."
 
 #: zac/accounts/api/viewsets.py:64
-msgid "Retrieve a user group"
-msgstr "Haal de gebruikersgroep op"
+msgid "Retrieve a user group."
+msgstr "Een specifieke gebruikersgroep opvragen."
 
 #: zac/accounts/api/viewsets.py:65
-msgid "Create a user group"
-msgstr "Maak een gebruikersgroep aan"
+msgid "Create a user group."
+msgstr "Maak een gebruikersgroep aan."
 
 #: zac/accounts/api/viewsets.py:66
-msgid "Update a user group"
-msgstr "Bewerk een gebruikersgroep"
+msgid "Update a user group."
+msgstr "Werk een gebruikersgroep in zijn geheel bij."
 
 #: zac/accounts/api/viewsets.py:67
-msgid "Delete a user group"
-msgstr "Verwijder een gebruikersgroep"
+msgid "Delete a user group."
+msgstr "Verwijder een gebruikersgroep."
 
 #: zac/accounts/api/viewsets.py:90
-msgid "Retrieve access requests"
-msgstr "Haal toegangsverzoeken op"
+msgid "Retrieve access requests."
+msgstr "Alle toegangsverzoeken opvragen."
 
 #: zac/accounts/api/viewsets.py:92
-msgid "Create an access request"
-msgstr "Maak een toegangsverzoek aan"
+msgid "Create an access request."
+msgstr "Maak een toegangsverzoek aan."
 
 #: zac/accounts/api/viewsets.py:97
-msgid "Handle an access request"
-msgstr "Behandel een toegangsverzoek"
+msgid "Handle an access request."
+msgstr "Behandel een toegangsverzoek."
 
 #: zac/accounts/api/viewsets.py:126
-msgid "Retrieve atomic permission"
-msgstr "Haal atomische rechten op"
+msgid "Retrieve atomic permission."
+msgstr "Alle atomische rechten opvragen."
 
 #: zac/accounts/api/viewsets.py:128
-msgid "Grant atomic permission to ZAAK"
-msgstr "Geef atomisch recht aan een ZAAK"
+msgid "Grant atomic permission to ZAAK."
+msgstr "Geef een atomisch recht aan een ZAAK."
 
 #: zac/accounts/api/viewsets.py:132
-msgid "Delete atomic permission"
-msgstr "Verwijder atomisch recht"
+msgid "Delete atomic permission."
+msgstr "Verwijder een atomisch recht."
 
 #: zac/accounts/api/viewsets.py:182
-msgid "List authorization profiles"
-msgstr "Haal autorisatieprofielen op"
+msgid "List authorization profiles."
+msgstr "Alle autorisatieprofielen opvragen."
 
 #: zac/accounts/api/viewsets.py:183
-msgid "Retrieve authorization profile"
-msgstr "Haal een autorisatieprofiel op"
+msgid "Retrieve authorization profile."
+msgstr "Een specifieke autorisatieprofiel opvragen."
 
 #: zac/accounts/api/viewsets.py:184
-msgid "Create authorization profile"
-msgstr "Maak een autorisatieprofiel aan"
+msgid "Create authorization profile."
+msgstr "Maak een autorisatieprofiel aan."
 
 #: zac/accounts/api/viewsets.py:185
-msgid "Update authorization profile"
-msgstr "Bewerk een autorisatieprofiel"
+msgid "Update authorization profile."
+msgstr "Werk een autorisatieprofiel in zijn geheel bij."
 
 #: zac/accounts/api/viewsets.py:200
-msgid "List roles"
-msgstr "Haal rollen op"
+msgid "List roles."
+msgstr "Alle rollen opvragen."
 
 #: zac/accounts/api/viewsets.py:201
-msgid "Retrieve role"
-msgstr "Haal rol op"
+msgid "Retrieve role."
+msgstr "Een specifieke rol opvragen."
 
 #: zac/accounts/api/viewsets.py:202
-msgid "Create role"
-msgstr "Maak rol aan"
+msgid "Create role."
+msgstr "Maak een rol aan."
 
 #: zac/accounts/api/viewsets.py:203
-msgid "Update role"
-msgstr "Bewerk rol"
+msgid "Update role."
+msgstr "Werk een rol in zijn geheel bij."
 
 #: zac/accounts/constants.py:7
 msgid "approved"
@@ -517,32 +517,32 @@ msgid "`username` of the user."
 msgstr "`username` van de gebruiker."
 
 #: zac/activities/api/viewsets.py:21
-msgid "List activities"
-msgstr "Haal activiteiten op"
+msgid "List activities."
+msgstr "Alle activiteiten opvragen."
 
 #: zac/activities/api/viewsets.py:27
 msgid "URL-reference of the ZAAK related to the activities."
 msgstr "URL-referentie van de ZAAK gerelateerd aan de activiteiten."
 
 #: zac/activities/api/viewsets.py:32
-msgid "Retrieve activity"
-msgstr "Haal activiteit op"
+msgid "Retrieve activity."
+msgstr "Een specifieke activiteit opvragen."
 
 #: zac/activities/api/viewsets.py:33
-msgid "Create activity"
-msgstr "Maak activiteit aan"
+msgid "Create activity."
+msgstr "Maak een activiteit aan."
 
 #: zac/activities/api/viewsets.py:35
-msgid "Update activity"
-msgstr "Bewerk activiteit"
+msgid "Update activity."
+msgstr "Werk een activiteit in zijn geheel bij."
 
 #: zac/activities/api/viewsets.py:37
-msgid "Destroy activity"
-msgstr "Vernietig activiteit"
+msgid "Destroy activity."
+msgstr "Vernietig een activiteit."
 
 #: zac/activities/api/viewsets.py:86
-msgid "Create event"
-msgstr "Maak gebeurtenis aan"
+msgid "Create event."
+msgstr "Maak een gebeurtenis aan."
 
 #: zac/activities/constants.py:7
 msgid "On-going"
@@ -735,32 +735,32 @@ msgid "A group with `name` {name} does not exist."
 msgstr "Een groep met `name` {name} bestaat niet."
 
 #: zac/camunda/api/views.py:46
-msgid "List process instances for a ZAAK"
-msgstr "Haal process instances op voor een ZAAK"
+msgid "List process instances for a ZAAK."
+msgstr "Alle process instances voor een ZAAK opvragen."
 
 #: zac/camunda/api/views.py:134
-msgid "Retrieve user task data and context"
-msgstr "Haal gebruikerstaak data en context op"
+msgid "Retrieve user task data and context."
+msgstr "Een specifieke gebruikerstaak data en context opvragen."
 
 #: zac/camunda/api/views.py:151
-msgid "Submit user task data"
-msgstr "Dien gebruikerstaak data in"
+msgid "Submit user task data."
+msgstr "Werk een gebruikerstaak data in zijn geheel bij."
 
 #: zac/camunda/api/views.py:230
-msgid "Send BPMN message"
-msgstr "Verstuur BPMN bericht"
+msgid "Send BPMN message."
+msgstr "Verstuur een BPMN bericht."
 
 #: zac/camunda/api/views.py:321
-msgid "Set task assignee or delegate"
-msgstr "Stel de aangewezene of gedelegeerde in voor de taak"
+msgid "Set task assignee or delegate."
+msgstr "Stel de aangewezene of gedelegeerde in voor de taak."
 
 #: zac/camunda/api/views.py:365
-msgid "Retrieve the XML of the BPMN"
-msgstr "Haal de XML van de BPMN op"
+msgid "Retrieve the XML of the BPMN."
+msgstr "De XML van een specifieke BPMN opvragen."
 
 #: zac/camunda/api/views.py:391
 msgid "Retrieve the historical user task data of the ZAAK."
-msgstr "Haal de historische gebruikerstaakdata van de ZAAK op."
+msgstr "Een specifieke historische gebruikerstaak data van de ZAAK opvragen."
 
 #: zac/camunda/api/views.py:393
 msgid ""
@@ -822,7 +822,7 @@ msgid ""
 "The task context shape depends on the `form` property. The value will be "
 "`null` if the backend does not 'know' the user task `formKey`."
 msgstr "De vorm van de taakcontext hangt af van het `form` eigenschap. De waarde is"
-"`null` als de backend de `formKey` van de gebruikerstaak niet kent.
+"`null` als de backend de `formKey` van de gebruikerstaak niet kent."
 
 #: zac/contrib/board/api/filters.py:10
 msgid "UUID of the board"
@@ -832,7 +832,7 @@ msgstr "UUID van het bord"
 msgid "Slug of the board"
 msgstr "Slug van het bord"
 
-#: zac/contrib/board/api/filters.py:15
+#: zac/contrib/board/api/filters.py:15 zac/core/api/serializers.py:196
 msgid "URL-reference of the ZAAK"
 msgstr "URL-referentie van de ZAAK"
 
@@ -869,36 +869,36 @@ msgid "The board of the item can't be changed"
 msgstr "De bord van het item kan niet worden veranderd"
 
 #: zac/contrib/board/api/views.py:15
-msgid "List boards"
-msgstr "Haal borden op"
+msgid "List boards."
+msgstr "Alle borden opvragen."
 
 #: zac/contrib/board/api/views.py:16
-msgid "Retrieve board"
-msgstr "Haal bord op"
+msgid "Retrieve board."
+msgstr "Een specifiek bord opvragen."
 
 #: zac/contrib/board/api/views.py:27
-msgid "List board items"
-msgstr "Haal borditems op"
+msgid "List board items."
+msgstr "Alle borditems opvragen."
 
 #: zac/contrib/board/api/views.py:28
-msgid "Retrieve board item"
-msgstr "Haal borditem op"
+msgid "Retrieve board item."
+msgstr "Een specifieke borditem opvragen."
 
 #: zac/contrib/board/api/views.py:29
-msgid "Create board item"
-msgstr "Maak borditem aan"
+msgid "Create board item."
+msgstr "Maak een borditem aan."
 
 #: zac/contrib/board/api/views.py:30
-msgid "Update board item"
-msgstr "Bewerk borditem"
+msgid "Update board item."
+msgstr "Werk een borditem in zijn geheel bij."
 
 #: zac/contrib/board/api/views.py:31
-msgid "Patch board item"
-msgstr "Verstel borditem"
+msgid "Patch board item."
+msgstr "Werk een borditem deels bij."
 
 #: zac/contrib/board/api/views.py:32
-msgid "Delete board item"
-msgstr "Verwijder borditem"
+msgid "Delete board item."
+msgstr "Verwijder een borditem."
 
 #: zac/contrib/board/models.py:14 zac/contrib/board/models.py:41
 #: zac/contrib/board/models.py:76
@@ -1024,16 +1024,16 @@ msgid ""
 msgstr "Een DELETE request naar deze URL zal de bron aanpassen en verwijderen."
 
 #: zac/contrib/dowc/views.py:32
-msgid "Open document for viewing or editing"
-msgstr "Open het document om te bekijken of aan te passen"
+msgid "Retrieve a document."
+msgstr "Een specifiek document opvragen."
 
 #: zac/contrib/dowc/views.py:38
 msgid "Version of the document."
 msgstr "Versie van het document"
 
 #: zac/contrib/dowc/views.py:73
-msgid "Finalize opened document"
-msgstr "Voltooi geopened document"
+msgid "Update and delete a document."
+msgstr "Bewerk en verwijder een document."
 
 #: zac/contrib/kadaster/api.py:123
 #, python-format
@@ -1172,23 +1172,23 @@ msgid "Address of verblijfsobject."
 msgstr "Adres van verblijfsobject."
 
 #: zac/contrib/kadaster/views.py:23
-msgid "List BAG address suggestions"
-msgstr "Haal suggesties van BAG adressen op"
+msgid "List BAG address suggestions."
+msgstr "Alle suggesties van BAG adressen opvragen."
 
 #: zac/contrib/kadaster/views.py:30
 msgid ""
 "The search query. The Solr-syntax can be used, for example: combining "
 "searches with `and` or using double quotes for sequenced searches. Searches "
 "are allowed to be incomplete and you can use synonyms."
-msgstr "Hiermee worden de zoektermen opgegeven. De Solr-syntax voor zoektermen kan hier worden toegepast, bijv. combineren met and, en het gebruik van dubbele quotes voor opeenvolgende zoektermen. Zoektermen mogen incompleet zijn. Ook wordt er gebruik gemaakt van synoniemen."
+msgstr "De zoekopdracht. Hierin worden de zoektermen opgegeven. De Solr-syntax voor zoektermen kan hier worden toegepast, bijv. combineren met and, en het gebruik van dubbele quotes voor opeenvolgende zoektermen. Zoektermen mogen incompleet zijn. Ook wordt er gebruik gemaakt van synoniemen."
 
 #: zac/contrib/kadaster/views.py:45
 msgid "Missing query parameter 'q'"
 msgstr "Mist de `q` query parameter."
 
 #: zac/contrib/kadaster/views.py:57
-msgid "Retrieve pand from BAG API"
-msgstr "Haal pand op van BAG API"
+msgid "Retrieve pand from BAG API."
+msgstr "Een specifiek pand van de BAG API opvragen."
 
 #: zac/contrib/kadaster/views.py:64 zac/contrib/kadaster/views.py:98
 msgid ""
@@ -1201,8 +1201,8 @@ msgid "Missing query parameter 'id'"
 msgstr "Mist de `id` query parameter"
 
 #: zac/contrib/kadaster/views.py:91
-msgid "Retrieve verblijfsobject from BAG API"
-msgstr "Haal verblijfsobject op van BAG API"
+msgid "Retrieve verblijfsobject from BAG API."
+msgstr "Een specifiek verblijfsobject van de BAG API opvragen."
 
 #: zac/contrib/kownsl/camunda.py:95
 msgid "Users assigned to the review request."
@@ -1336,28 +1336,28 @@ msgid "Assignee of the user task in camunda."
 msgstr "Aangewezene van de gebruikerstaak in camunda."
 
 #: zac/contrib/kownsl/views.py:165
-msgid "Retrieve advice review request"
-msgstr "Haal adviesverzoeken op"
+msgid "Retrieve advice review request."
+msgstr "Alle adviesverzoeken opvragen."
 
 #: zac/contrib/kownsl/views.py:170
-msgid "Register advice for review request"
-msgstr "Registreer een advies voor een verzoek"
+msgid "Register advice for review request."
+msgstr "Maak een advies voor een verzoek aan."
 
 #: zac/contrib/kownsl/views.py:180
-msgid "Retrieve approval review request"
-msgstr "Haal accorderingsverzoek op"
+msgid "Retrieve approval review request."
+msgstr "Een specifiek accorderingsverzoek opvragen."
 
 #: zac/contrib/kownsl/views.py:185
-msgid "Register approval for review request"
-msgstr "Registreer een accordering voor een verzoek"
+msgid "Register approval for review request."
+msgstr "Maak een accordering voor een verzoek aan."
 
 #: zac/contrib/kownsl/views.py:200
-msgid "List review requests summary for a ZAAK"
-msgstr "Haal verzoeksoverzichten op voor een ZAAK"
+msgid "List review requests summary for a ZAAK."
+msgstr "Alle verzoeksoverzichten voor een ZAAK opvragen."
 
 #: zac/contrib/kownsl/views.py:214
-msgid "Retrieve review request details"
-msgstr "Haal verzoekdetails op"
+msgid "Retrieve review request."
+msgstr "Een specifiek verzoek opvragen."
 
 #: zac/contrib/organisatieonderdelen/models.py:11
 msgid "organisatie-onderdeel"
@@ -1500,10 +1500,6 @@ msgstr "URL-referentie van document"
 #: zac/core/api/serializers.py:191
 msgid "Vertrouwelijkheidaanduiding of DOCUMENT."
 msgstr "Vertrouwelijkheidaanduiding van DOCUMENT."
-
-#: zac/core/api/serializers.py:196
-msgid "URL-reference of the ZAAK"
-msgstr "URL-referentie van de ZAAK"
 
 #: zac/core/api/serializers.py:209
 msgid "The document is unrelated to the ZAAK."
@@ -1680,145 +1676,141 @@ msgid ""
 msgstr "Geselecteerde documenten: {invalid_docs} zijn ongeldig. Kies alstublieft een van de volgende documenten: {valid_docs}."
 
 #: zac/core/api/views.py:212
-msgid "Retrieve ZAAK details"
-msgstr "Haal ZAAKdetails op"
+msgid "Retrieve ZAAK."
+msgstr "Een specifieke ZAAK opvragen."
 
 #: zac/core/api/views.py:227
-msgid "Update ZAAK details"
-msgstr "Bewerk ZAAKdetails"
+msgid "Partially update ZAAK."
+msgstr "Werk een ZAAK in deels bij."
 
 #: zac/core/api/views.py:261
-msgid "List ZAAK STATUSsen"
-msgstr "Haal ZAAKSTATUSsen op"
+msgid "List ZAAK STATUSsen."
+msgstr "Alle STATUSsen van een ZAAK opvragen."
 
 #: zac/core/api/views.py:268
-msgid "Add ZAAK STATUS"
-msgstr "Voeg ZAAKSTATUS toe"
+msgid "Add STATUS to ZAAK."
+msgstr "Voeg een STATUS aan een ZAAK toe."
 
 #: zac/core/api/views.py:289
-msgid "List ZAAKEIGENSCHAPpen"
-msgstr "Haal ZAAKEIGENSCHAPpen op"
+msgid "List ZAAKEIGENSCHAPpen."
+msgstr "Alle ZAAKEIGENSCHAPpen opvragen."
 
 #: zac/core/api/views.py:323
-msgid "Create ZAAKEIGENSCHAP"
-msgstr "Maak ZAAKEIGENSCHAP aan"
+msgid "Create ZAAKEIGENSCHAP."
+msgstr "Maak een ZAAKEIGENSCHAP aan."
 
 #: zac/core/api/views.py:340
 #, python-brace-format
 msgid "EIGENSCHAP with name {eigenschap} not found for ZAAKTYPE {zaaktype}."
-msgstr "EIGENSCHAP met naam"
+msgstr "EIGENSCHAP met naam {eigenschap} werd niet gevonden voor ZAAKTYPE {zaaktype}."
 
 #: zac/core/api/views.py:355
-msgid "Update ZAAKEIGENSCHAP"
-msgstr "Bewerk ZAAKEIGENSCHAP"
-
-#: zac/core/api/views.py:361
-msgid "URL-reference of ZAAKEIGENSCHAP in ZAKEN API"
-msgstr "URL-referentie naar ZAAKEIGENSCHAP in ZAKEN API"
+msgid "Partially update ZAAKEIGENSCHAP."
+msgstr "Werk een ZAAKEIGENSCHAP deels bij."
 
 #: zac/core/api/views.py:380
-msgid "Delete ZAAKEIGENSCHAP"
-msgstr "Verwijder ZAAKEIGENSCHAP"
+msgid "Delete ZAAKEIGENSCHAP."
+msgstr "Verwijder een ZAAKEIGENSCHAP."
 
 #: zac/core/api/views.py:401
-msgid "List related ZAAKen"
-msgstr "Haal gerelateerde ZAAKen op"
+msgid "List related ZAAKen."
+msgstr "Alle gerelateerde ZAAKen opvragen."
 
 #: zac/core/api/views.py:424
-msgid "Add related ZAAK"
-msgstr "Voeg gerelateerde ZAAK toe"
+msgid "Add related ZAAK."
+msgstr "Voeg een gerelateerde ZAAK toe."
 
 #: zac/core/api/views.py:425
 msgid "Relate a ZAAK to another ZAAK and create the reverse relation."
 msgstr "Relateer een ZAAK aan een andere ZAAK en maak de inverse relatie aan"
 
 #: zac/core/api/views.py:478
-msgid "List ROLlen of ZAAK"
-msgstr "Haal ROLlen van ZAAK op"
+msgid "List ROLlen of ZAAK."
+msgstr "Alle ROLlen van een ZAAK opvragen."
 
 #: zac/core/api/views.py:491
-msgid "List related OBJECTs of a ZAAK"
-msgstr "Haal gerelateerde OBJECTen van een ZAAK op"
+msgid "List related OBJECTs of a ZAAK."
+msgstr "Alle gerelateerde OBJECTen van een ZAAK opvragen."
 
 #: zac/core/api/views.py:519
-msgid "List ZAAK users and atomic permissions"
-msgstr "Haal ZAAKgebruikers en atomische rechten op"
+msgid "List ZAAK users and atomic permissions."
+msgstr "Alle gebruikers en atomische rechten van een ZAAK opvragen."
 
 #: zac/core/api/views.py:552
-msgid "List ZAAK documents"
-msgstr "Haal ZAAKdocumenten op"
+msgid "List ZAAK documents."
+msgstr "Alle ZAAKdocumenten opvragen."
 
 #: zac/core/api/views.py:625
-msgid "Edit ZAAK document"
-msgstr "Bewerk ZAAKdocument"
+msgid "Partially update ZAAK document."
+msgstr "Werk een ZAAKdocument deels bij."
 
 #: zac/core/api/views.py:654
-msgid "Add DOCUMENT to ZAAK"
-msgstr "Voeg DOCUMENT toe aan ZAAK"
+msgid "Add document to ZAAK."
+msgstr "Voeg een document toe aan een ZAAK."
 
 #: zac/core/api/views.py:692
-msgid "List document types"
-msgstr "Haal documenttypes op"
+msgid "List document types for a ZAAK."
+msgstr "Alle documenttypes voor een ZAAK opvragen."
 
 #: zac/core/api/views.py:699
-msgid "ZAAK to list available document types for"
-msgstr "ZAAK waar de beschikbare documenttypes voor opgehaald moeten worden"
+msgid "ZAAK to list available document types for."
+msgstr "ZAAK waar de beschikbare documenttypes voor opgehaald moeten worden."
 
 #: zac/core/api/views.py:721
-msgid "List ZAAKTYPEs"
-msgstr "Haal ZAAKTYPEn op"
+msgid "List ZAAKTYPEs."
+msgstr "Alle ZAAKTYPEn opvragen."
 
 #: zac/core/api/views.py:763
-msgid "List vertrouwelijkheidaanduidingen"
-msgstr "Haal vertrouwelijkheidaanduidingen op"
+msgid "List vertrouwelijkheidaanduidingen."
+msgstr "Alle vertrouwelijkheidaanduidingen opvragen."
 
 #: zac/core/api/views.py:781
-msgid "List STATUSTYPEs"
-msgstr "Haal STATUSTYPEs op"
+msgid "List STATUSTYPEs for a ZAAK."
+msgstr "Alle STATUSTYPEs voor een ZAAK opvragen."
 
 #: zac/core/api/views.py:788
-msgid "ZAAK to list available STATUSTYPEs for"
-msgstr "ZAAK waar de beschikbare STATUSTYPEs voor opgehaald moeten worden"
+msgid "ZAAK to list available STATUSTYPEs for."
+msgstr "ZAAK waar de beschikbare STATUSTYPEs voor opgehaald moeten worden."
 
 #: zac/core/api/views.py:814
-msgid "List ZAAKTYPE EIGENSCHAPpen"
-msgstr "Haal EIGENSCHAPpen voor ZAAKTYPE op"
+msgid "List ZAAKTYPE EIGENSCHAPpen."
+msgstr "Alle EIGENSCHAPpen voor een ZAAKTYPE opvragen."
 
 #: zac/core/api/views.py:876
-msgid "List OBJECTTYPEs"
-msgstr "Haal OBJECTTYPEs op"
+msgid "List OBJECTTYPEs."
+msgstr "Alle OBJECTTYPEs opvragen."
 
 #: zac/core/api/views.py:877
 msgid "Retrieves all OBJECTTYPEs from the configured OBJECTTYPES API."
 msgstr "Haalt alle OBJECTTYPEs van configureerde OBJECTTYPES API op."
 
 #: zac/core/api/views.py:891
-msgid "Read OBJECTTYPE version"
-msgstr "Lees OBJECTTYPE versie"
+msgid "Read OBJECTTYPE version."
+msgstr "Lees de OBJECTTYPE versie."
 
 #: zac/core/api/views.py:892
 msgid "Read the details of a particular OBJECTTYPE version."
 msgstr "Lees de details van een specifieke OBJECTTYPE versie."
 
 #: zac/core/api/views.py:905
-msgid "Search OBJECTs"
-msgstr "Zoek OBJECTen"
+msgid "Search OBJECTs."
+msgstr "Zoek naar een OBJECT in de OBJECTS API."
 
 #: zac/core/api/views.py:906
 msgid "Search for OBJECTs in the OBJECTS API."
-msgstr "Zoek voor OBJECTen in OBJECTS API."
+msgstr "Zoek naar OBJECTen in OBJECTS API."
 
 #: zac/core/api/views.py:951
-msgid "Create ZAAKOBJECT"
-msgstr "Maak ZAAKOBJECT aan"
+msgid "Create ZAAKOBJECT."
+msgstr "Maak een ZAAKOBJECT aan."
 
 #: zac/core/api/views.py:952
 msgid "Relate an OBJECT to a ZAAK."
 msgstr "Relateer een OBJECT aan een ZAAK."
 
 #: zac/core/api/views.py:970
-msgid "Delete ZAAKOBJECT"
-msgstr "Verwijder ZAAKOBJECT"
+msgid "Delete ZAAKOBJECT."
+msgstr "Verwijder een ZAAKOBJECT."
 
 #: zac/core/api/views.py:970
 msgid "URL-reference of ZAAKOBJECT in ZAKEN API."
@@ -1831,7 +1823,7 @@ msgstr "zaakafhandelcomponent"
 #: zac/core/base_views.py:59
 #, python-format
 msgid "No %(verbose_name)s found matching the query"
-msgstr "Geen %(verbose_name)en gevonden die de query matchen"
+msgstr "Geen %(verbose_name)s gevonden die de query matchen"
 
 #: zac/core/blueprints.py:18
 msgid "URL-reference to CATALOGUS where ZAAKTYPEs are located"
@@ -2195,39 +2187,39 @@ msgstr "Een GeoJSON die de geometrische informatie gerelateerd aan de ZAAK bevat
 
 #: zac/elasticsearch/drf_api/views.py:41
 msgid "Autocomplete search ZAAKen"
-msgstr "Autocomplate zoek ZAAKen"
+msgstr "Autocomplete zoek ZAAKen"
 
 #: zac/elasticsearch/drf_api/views.py:103
-msgid "Search ZAAKen"
-msgstr ""
+msgid "Search for ZAAKen in Elasticsearch."
+msgstr "Zoek naar ZAAKen in Elasticsearch."
 
 #: zac/elasticsearch/drf_api/views.py:142
-msgid "Create search report"
-msgstr "Maak zoekrapport aan"
+msgid "Create search report."
+msgstr "Maak een zoekrapport aan."
 
 #: zac/elasticsearch/drf_api/views.py:143
-msgid "Destroy search report"
-msgstr "Vernietig zoekrapport"
+msgid "Destroy search report."
+msgstr "Vernietig een zoekrapport."
 
 #: zac/elasticsearch/drf_api/views.py:145
-msgid "List search reports"
-msgstr "Haal zoekrapporten op"
+msgid "List search reports."
+msgstr "Alle zoekrapporten opvragen."
 
 #: zac/elasticsearch/drf_api/views.py:147
-msgid "Partially update search report"
-msgstr "Bewerk gedeeltelijk zoekrapport"
+msgid "Partially update search report."
+msgstr "Werk een zoekrapport deels bij."
 
 #: zac/elasticsearch/drf_api/views.py:148
-msgid "Retrieve search report"
-msgstr "Haal zoekrapport op"
+msgid "Retrieve search report."
+msgstr "Een specifiek zoekrapport opvragen."
 
 #: zac/elasticsearch/drf_api/views.py:149
-msgid "Update search report"
-msgstr "Bewerk geheel zoekrapport"
+msgid "Update search report."
+msgstr "Werk een zoekrapport in zijn geheel bij."
 
 #: zac/elasticsearch/drf_api/views.py:152
-msgid "Retrieve search report results"
-msgstr "Haal zoekrapportresultaten op"
+msgid "Retrieve search report results."
+msgstr "Alle zoekrapportresultaten opvragen."
 
 #: zac/elasticsearch/models.py:8
 msgid "search query"
@@ -2438,28 +2430,28 @@ msgid "ZAAK that camunda task belongs to."
 msgstr "ZAAK waar camundataak aan toebehoort."
 
 #: zac/werkvoorraad/api/views.py:42
-msgid "List access requests"
-msgstr "Haal toegangsverzoeken op"
+msgid "List access requests for logged in user."
+msgstr "Alle toegangsverzoeken voor ingelogde gebruiker opvragen."
 
 #: zac/werkvoorraad/api/views.py:54
-msgid "List activities for user"
-msgstr "Haal activiteiten op voor gebruiker"
+msgid "List activities for logged in user."
+msgstr "Alle activiteiten voor ingelogde gebruiker opvragen."
 
 #: zac/werkvoorraad/api/views.py:71
-msgid "List activities for groups of user"
-msgstr "Haal activiteiten op voor groepen van gebruiker"
+msgid "List activities for groups of logged in user."
+msgstr "Alle activiteiten voor groepen van ingelogde gebruiker opvragen."
 
 #: zac/werkvoorraad/api/views.py:88
-msgid "List active ZAAKen"
-msgstr "Haal openstaande ZAAKen op"
+msgid "List active ZAAKen for logged in user."
+msgstr "Alle openstaande ZAAKen voor ingelogde gebruiker opvragen."
 
 #: zac/werkvoorraad/api/views.py:108
-msgid "List user tasks"
-msgstr "Haal gebruikerstaken op"
+msgid "List user tasks for logged in user."
+msgstr "Alle gebruikerstaken voor ingelogde gebruiker opvragen."
 
 #: zac/werkvoorraad/api/views.py:149
-msgid "List user tasks assigned to groups related to user"
-msgstr "Haal gebruikerstaken van gebruikersgroepen op"
+msgid "List user tasks assigned to groups related to logged in user."
+msgstr "Alle gebruikerstaken van gebruikersgroepen van ingelogde gebruiker opvragen."
 
 #~ msgid "permission sets"
 #~ msgstr "rechtencollecties"

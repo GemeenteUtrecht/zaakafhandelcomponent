@@ -45,7 +45,7 @@ class InformatieobjecttypenJSONView(views.APIView):
 
 
 @extend_schema(
-    summary=_("List permissions"),
+    summary=_("List permissions."),
     description=_("Returns all available permissions and their description."),
 )
 class PermissionView(ListMixin, views.APIView):

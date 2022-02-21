@@ -43,7 +43,7 @@ class ProcessInstanceFetchView(APIView):
     serializer_class = ProcessInstanceSerializer
 
     @extend_schema(
-        summary=_("List process instances for a ZAAK"),
+        summary=_("List process instances for a ZAAK."),
         parameters=[
             OpenApiParameter(
                 "zaak_url",
@@ -131,7 +131,7 @@ class UserTaskView(APIView):
         return [renderer() for renderer in item.renderers]
 
     @extend_schema(
-        summary=_("Retrieve user task data and context"),
+        summary=_("Retrieve user task data and context."),
         responses={
             200: UserTaskContextSerializer,
             403: ErrorSerializer,
@@ -148,7 +148,7 @@ class UserTaskView(APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Submit user task data"),
+        summary=_("Submit user task data."),
         responses={
             204: None,
             400: OpenApiTypes.OBJECT,
@@ -227,7 +227,7 @@ class SendMessageView(APIView):
         return serializer
 
     @extend_schema(
-        summary=_("Send BPMN message"),
+        summary=_("Send BPMN message."),
         request=MessageSerializer,
         responses={
             204: None,
@@ -318,7 +318,7 @@ class SetTaskAssigneeView(APIView):
         zrc_client.create("rol", data)
 
     @extend_schema(
-        summary=_("Set task assignee or delegate"),
+        summary=_("Set task assignee or delegate."),
         responses={
             204: None,
         },
@@ -362,7 +362,7 @@ class GetBPMNView(APIView):
     serializer_class = BPMNSerializer
 
     @extend_schema(
-        summary=_("Retrieve the XML of the BPMN"),
+        summary=_("Retrieve the XML of the BPMN."),
         responses={
             200: BPMNSerializer,
         },
