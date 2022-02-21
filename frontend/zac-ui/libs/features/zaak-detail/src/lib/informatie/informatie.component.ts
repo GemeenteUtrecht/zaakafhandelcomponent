@@ -214,7 +214,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   fetchZaakTypeEigenschappen(zaak: Zaak) {
     this.isCaseAPILoading = true;
-    this.searchService.getZaaktypeEigenschappen(zaak.zaaktype.url).subscribe(
+    this.metaService.getZaaktypeEigenschappenByUrl(zaak.zaaktype.url).subscribe(
       (zaaktypeEigenschappen: ZaaktypeEigenschap[]) => {
         this.zaaktypeEigenschappen = zaaktypeEigenschappen;
         this.isCaseAPILoading = false;
