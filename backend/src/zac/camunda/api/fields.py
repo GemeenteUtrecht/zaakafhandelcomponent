@@ -13,7 +13,7 @@ class TaskField(UUIDField):
         super().__init__(**kwargs)
         kwargs["write_only"] = True
         self.default_error_messages["not_found"] = _(
-            "The task with given task ID does not exist (anymore)."
+            "The task with given `id` does not exist (anymore)."
         )
 
     def to_internal_value(self, data) -> Optional[Task]:

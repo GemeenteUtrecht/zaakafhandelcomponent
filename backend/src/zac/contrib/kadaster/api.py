@@ -120,8 +120,9 @@ def get_verblijfsobject(address_id: str) -> Optional[Verblijfsobject]:
     if not ao["type"] == "verblijfsobject":
         raise NotFound(
             detail=_(
-                "verblijfsobject not found for adresseerbaarobject_id %s"
-                % doc["adresseerbaarobject_id"]
+                "verblijfsobject not found for adresseerbaarobject_id {adresseerbaarobject_id}".format(
+                    {"adresseerbaarobject_id": doc["adresseerbaarobject_id"]}
+                )
             )
         )
 

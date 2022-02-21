@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=150,
         unique=True,
         help_text=_("Required. 150 characters or fewer."),
-        error_messages={"unique": _("A user with that username already exists.")},
+        error_messages={"unique": _("A user with that `username` already exists.")},
     )
     first_name = models.CharField(_("first name"), max_length=255, blank=True)
     last_name = models.CharField(_("last name"), max_length=255, blank=True)
@@ -213,7 +213,7 @@ class AccessRequest(models.Model):
     zaak = models.URLField(
         _("zaak"),
         max_length=1000,
-        help_text=_("URL reference to the zaak in its API"),
+        help_text=_("URL-reference to the ZAAK in its API"),
     )
     comment = models.CharField(
         _("comment"),
@@ -334,7 +334,7 @@ class BlueprintPermission(models.Model):
         _("policy"),
         help_text=_(
             "Blueprint permission definitions, used to check the access to objects based "
-            "on their properties i.e. zaaktype, informatieobjecttype"
+            "on their properties i.e. ZAAKTYPE, INFORMATIEOBJECTTYPE"
         ),
     )
 

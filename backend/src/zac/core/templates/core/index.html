@@ -12,11 +12,11 @@
 
 <form class="filters" action="." method="get">
 
-    {% nested_widget 'filters:filter' name="identificatie" index=0 label=_("Identificatie") %}
+    {% nested_widget 'filters:filter' name="identificatie" index=0 label=_("Identification") %}
         {% form_field filter_form.identificatie %}
     {% endnested %}
 
-    {% nested_widget 'filters:filter' name="zaaktypen" index=1 label=_("Zaaktype(n)") %}
+    {% nested_widget 'filters:filter' name="zaaktypen" index=1 label=_("Zaaktype(s)") %}
         {{ filter_form.fields.zaaktypen.choices|json_script:"zaaktypeChoices" }}
         {{ filter_form.zaaktypen.value|json_script:"selectedZaaktypen" }}
         <div class="zaaktypen-select" data-name="zaaktypen"> {# React managed #} </div>

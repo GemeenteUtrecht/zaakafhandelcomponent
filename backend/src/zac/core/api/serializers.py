@@ -112,28 +112,28 @@ class GetZaakDocumentSerializer(APIModelSerializer):
 
 class AddZaakDocumentSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(
-        required=False, help_text=_("Description of the document")
+        required=False, help_text=_("Description of the DOCUMENT")
     )
     file = serializers.FileField(
         required=False,
         use_url=False,
-        help_text=_("Content of the document. Mutually exclusive with `url` attribute"),
+        help_text=_("Content of the DOCUMENT. Mutually exclusive with `url` attribute"),
     )
     informatieobjecttype = serializers.URLField(
         required=False,
         help_text=_(
-            "URL of informatiobjecttype in Catalogi API. Required if `file` is provided"
+            "URL-reference of INFORMATIEOBJECTTYPE in CATALOGI API. Required if `file` is provided"
         ),
     )
     url = serializers.URLField(
         required=False,
         help_text=_(
-            "URL of document in Documenten API. Mutually exclusive with `file` attribute"
+            "URL-reference of DOCUMENT in DOCUMENTEN API. Mutually exclusive with `file` attribute"
         ),
     )
     zaak = serializers.URLField(
         required=True,
-        help_text=_("URL of the zaak in Zaken API"),
+        help_text=_("URL-reference of the ZAAK in ZAKEN API"),
         allow_blank=False,
     )
 
@@ -186,15 +186,17 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         required=True,
         allow_null=True,
     )
-    url = serializers.URLField(help_text=_("URL of document"), allow_blank=False)
+    url = serializers.URLField(
+        help_text=_("URL-reference of DOCUMENT"), allow_blank=False
+    )
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
-        help_text=_("Confidentiality classification."),
+        help_text=_("Vertrouwelijkheidaanduiding of DOCUMENT."),
         required=False,
     )
     zaak = serializers.URLField(
         required=True,
-        help_text=_("URL of the case."),
+        help_text=_("URL-reference of the ZAAK"),
         allow_blank=False,
     )
     bestandsnaam = serializers.CharField(
@@ -288,7 +290,8 @@ class AddZaakRelationSerializer(serializers.Serializer):
         ),
     )
     main_zaak = serializers.URLField(
-        required=True, help_text=_("The URL-reference to the main ZAAK.")
+        required=True,
+        help_text=_("URL-reference to the main ZAAK in the ZAKEN API."),
     )
     aard_relatie_omgekeerde_richting = serializers.ChoiceField(
         required=True,
@@ -301,12 +304,12 @@ class AddZaakRelationSerializer(serializers.Serializer):
 
         if data["relation_zaak"] == data["main_zaak"]:
             raise serializers.ValidationError(
-                _("Zaken kunnen niet met zichzelf gerelateerd worden.")
+                _("ZAAKen cannot be related to themselves.")
             )
 
         if data["aard_relatie"] == data["aard_relatie_omgekeerde_richting"]:
             raise serializers.ValidationError(
-                _("De aard van de zaak relaties kunnen niet hetzelfde zijn.")
+                _("The nature of the ZAAK-relations cannot be the same.")
             )
 
         return data
@@ -357,7 +360,7 @@ class ZaakDetailSerializer(APIModelSerializer):
     resultaat = ResultaatSerializer()
     zaakgeometrie = serializers.JSONField(
         required=False,
-        help_text=_("GeoJSON which represents the coordinates of the zaak"),
+        help_text=_("GeoJSON which represents the coordinates of the ZAAK"),
     )
 
     class Meta:
@@ -392,12 +395,12 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         VertrouwelijkheidsAanduidingen.choices,
         required=False,
-        help_text=_("The confidentiality level of the case."),
+        help_text=_("The confidentiality level of the ZAAK."),
     )
     zaakgeometrie = NullableJsonField(
         required=False,
         allow_null=True,
-        help_text=_("GeoJSON which represents the coordinates of the zaak"),
+        help_text=_("GeoJSON which represents the coordinates of the ZAAK"),
     )
 
     class Meta:
@@ -477,7 +480,7 @@ class StatusTypeSerializer(APIModelSerializer):
 
         statustypen = get_statustypen(zaaktype)
         if not url in [st.url for st in statustypen]:
-            raise serializers.ValidationError("Invalid statustype URL given.")
+            raise serializers.ValidationError("Invalid STATUSTYPE URL given.")
         return url
 
 
@@ -517,7 +520,7 @@ class EigenschapSpecificatieSerializer(APIModelSerializer):
 
 
 class EigenschapSerializer(APIModelSerializer):
-    specificatie = EigenschapSpecificatieSerializer(label=_("property definition"))
+    specificatie = EigenschapSpecificatieSerializer(label=_("EIGENSCHAP definition"))
 
     class Meta:
         model = Eigenschap
@@ -531,7 +534,7 @@ class EigenschapSerializer(APIModelSerializer):
 
 class CharValueSerializer(APIModelSerializer):
     value = serializers.CharField(
-        label=_("property value"),
+        label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
@@ -543,7 +546,7 @@ class CharValueSerializer(APIModelSerializer):
 class NumberValueSerializer(APIModelSerializer):
     # TODO: Ideally this should be dynamic based on eigenschapsspecificatie
     value = serializers.DecimalField(
-        label=_("property value"),
+        label=_("EIGENSCHAP value"),
         source="get_waarde",
         max_digits=100,
         decimal_places=2,
@@ -557,7 +560,7 @@ class NumberValueSerializer(APIModelSerializer):
 
 class DateValueSerializer(APIModelSerializer):
     value = serializers.DateField(
-        label=_("property value"),
+        label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
@@ -568,7 +571,7 @@ class DateValueSerializer(APIModelSerializer):
 
 class DateTimeValueSerializer(APIModelSerializer):
     value = serializers.DateTimeField(
-        label=_("property value"),
+        label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
@@ -611,7 +614,7 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
 class CreateZaakEigenschapSerializer(serializers.Serializer):
     naam = serializers.CharField(
         help_text=_(
-            "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in Catalogi API."
+            "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in CATALOGI API."
         )
     )
     value = serializers.CharField(
@@ -703,9 +706,9 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
     items = serializers.ListField(
         child=serializers.JSONField(),
         help_text=_(
-            "Collection of object-type specific items. "
+            "Collection of OBJECTTYPE specific items. "
             "The schema is determined by the upstream API(s). "
-            "Each item has `zaakobjectUrl` attribute which is the url of case-object "
+            "Each item has `zaakobjectUrl` attribute which is the url of ZAAK-OBJECT "
             "relations in ZAKEN API and should be used to change/delete the relations. "
             "See `zac.core.zaakobjecten` for the available implementations."
         ),
@@ -795,7 +798,7 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
     permissions = AtomicPermissionSerializer(
         many=True,
         source="zaak_atomic_permissions",
-        help_text=_("Atomic permissions for the case"),
+        help_text=_("Atomic permissions for the ZAAK"),
     )
 
     class Meta:

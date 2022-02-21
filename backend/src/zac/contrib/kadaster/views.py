@@ -54,7 +54,7 @@ class PandFetchView(APIView):
     serializer_class = PandSerializer
 
     @extend_schema(
-        summary=_("Retrieve pand from BAG API."),
+        summary=_("Retrieve pand from BAG API"),
         parameters=[
             OpenApiParameter(
                 "id",
@@ -88,7 +88,7 @@ class VerblijfsobjectFetchView(APIView):
     serializer_class = VerblijfsobjectSerializer
 
     @extend_schema(
-        summary=_("Retrieve verblijfsobject from BAG API."),
+        summary=_("Retrieve verblijfsobject from BAG API"),
         parameters=[
             OpenApiParameter(
                 "id",

@@ -24,7 +24,7 @@ from .serializers import (
                 name="zaak",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("The url of the case related to the activities."),
+                description=_("URL-reference of the ZAAK related to the activities."),
                 location=OpenApiParameter.QUERY,
             )
         ],

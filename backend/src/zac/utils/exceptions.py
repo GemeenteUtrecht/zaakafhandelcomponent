@@ -52,7 +52,7 @@ def handle_zaak_permission_denied(response, context):
     reason = (
         _("User doesn't have permissions to request the access")
         if not has_perm_to_request_access
-        else _("User has pending access request for this zaak")
+        else _("User has pending access request for this ZAAK")
         if has_pending_access_request
         else ""
     )
@@ -66,10 +66,10 @@ def handle_zaak_permission_denied(response, context):
 
 class PermissionDeniedSerializer(serializers.Serializer):
     can_request_access = serializers.BooleanField(
-        help_text=_("Boolean indicating if the user can request access for the zaak")
+        help_text=_("Boolean indicating if the user can request access for the ZAAK")
     )
     reason = serializers.CharField(
         max_length=1000,
         allow_blank=True,
-        help_text=_("Reason why the user can't request access for the zaak"),
+        help_text=_("Reason why the user can't request access for the ZAAK"),
     )

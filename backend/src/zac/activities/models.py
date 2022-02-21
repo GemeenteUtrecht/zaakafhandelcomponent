@@ -15,9 +15,9 @@ class Activity(models.Model):
     """
 
     zaak = models.URLField(
-        _("zaak URL"),
+        _("ZAAK-URL"),
         max_length=1000,
-        help_text=_("URL reference to the zaak in its API"),
+        help_text=_("URL-reference to the ZAAK in its API"),
     )
     name = models.CharField(_("name"), max_length=100)
     remarks = models.TextField(_("remarks"), blank=True)

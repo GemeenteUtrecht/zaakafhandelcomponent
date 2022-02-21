@@ -15,17 +15,17 @@ from .permissions import zaken_handle_access
 
 class ZaakTypeBlueprint(Blueprint):
     catalogus = serializers.URLField(
-        help_text=_("Catalog where zaaktypen are located"),
+        help_text=_("URL-reference to CATALOGUS where ZAAKTYPEs are located"),
     )
     zaaktype_omschrijving = serializers.CharField(
         max_length=100,
-        help_text=_("Zaaktype to which the connected permission applies to"),
+        help_text=_("ZAAKTYPE to which the connected permission applies to"),
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
         initial=VertrouwelijkheidsAanduidingen.openbaar,
         help_text=_(
-            "Spans Zaken until and including this vertrouwelijkheidaanduiding."
+            "Spans ZAAKen until and including this `vertrouwelijkheidaanduiding`."
         ),
     )
 
@@ -81,18 +81,20 @@ class ZaakTypeBlueprint(Blueprint):
 
 class InformatieObjectTypeBlueprint(Blueprint):
     catalogus = serializers.URLField(
-        help_text=_("Catalog where informatieobjecttypen are located"),
+        help_text=_(
+            "URL-reference to CATALOGUS where INFORMATIEOBJECTTYPEs are located"
+        ),
     )
     iotype_omschrijving = serializers.CharField(
         max_length=100,
         help_text=_(
-            "Informatieobjecttype to which the connected permission applies to"
+            "INFORMATIEOBJECTTYPE to which the connected permission applies to"
         ),
     )
     max_va = serializers.ChoiceField(
         choices=VertrouwelijkheidsAanduidingen.choices,
         initial=VertrouwelijkheidsAanduidingen.openbaar,
-        help_text=_("Maximum confidential level of the informatieobject"),
+        help_text=_("Maximum vertrouwelijkheidaanduiding of the INFORMATIEOBJECT"),
     )
 
     def has_access(self, document: Document, permission: str = None):

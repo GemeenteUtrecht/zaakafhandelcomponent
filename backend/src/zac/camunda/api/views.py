@@ -40,10 +40,10 @@ from .utils import get_bptl_app_id_variable
 
 
 class ProcessInstanceFetchView(APIView):
-    schema_summary = _("List process instances for a zaak")
     serializer_class = ProcessInstanceSerializer
 
     @extend_schema(
+        summary=_("List process instances for a ZAAK"),
         parameters=[
             OpenApiParameter(
                 "zaak_url",
@@ -59,9 +59,9 @@ class ProcessInstanceFetchView(APIView):
     )
     def get(self, request: Request, *args, **kwargs):
         """
-        Get the Camunda process instances for a given zaak.
+        Get the Camunda process instances for a given ZAAK.
 
-        Retrieve the process instances where the zaak URL is matches the process
+        Retrieve the process instances where the ZAAK-URL is matches the process
         `zaakUrl` variable. Process instances return the available message that can be
         sent into the process and the available user tasks. The response includes the
         child-process instances of each matching process instance.
@@ -92,7 +92,7 @@ class UserTaskView(APIView):
             task = get_task(self.kwargs["task_id"], check_history=False)
             if task is None:
                 raise exceptions.NotFound(
-                    _("The task with given task ID does not exist (anymore).")
+                    _("The task with given task `id` does not exist (anymore).")
                 )
             self._task = task
         return self._task
@@ -404,7 +404,9 @@ class UserTaskHistoryView(APIView):
     def get(self, request, *args, **kwargs):
         zaak_url = request.GET.get("zaak_url")
         if not zaak_url:
-            raise exceptions.ValidationError(_("Missing the zaak URL query parameter."))
+            raise exceptions.ValidationError(
+                _("Missing the `zaak_url` query parameter.")
+            )
 
         user_task_history = get_camunda_history_for_zaak(zaak_url)
         user_task_history.sort(key=lambda obj: obj.task.created, reverse=True)

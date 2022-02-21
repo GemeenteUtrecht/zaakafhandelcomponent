@@ -125,7 +125,7 @@ class AccessRequestViewSet(
 @extend_schema_view(
     retrieve=extend_schema(summary=_("Retrieve atomic permission")),
     create=extend_schema(
-        summary=_("Grant atomic permission to zaak"),
+        summary=_("Grant atomic permission to ZAAK"),
         request=GrantPermissionSerializer,
         responses={201: GrantPermissionSerializer},
     ),

@@ -51,7 +51,7 @@ class WorkStackAccessRequestsView(ListAPIView):
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
-@extend_schema(summary=_("List adhoc activities by user"))
+@extend_schema(summary=_("List activities for user"))
 class WorkStackAdhocActivitiesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -68,16 +68,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 
 
 @extend_schema(
-    summary=_("List adhoc activities by the group of a user"),
-    parameters=[
-        OpenApiParameter(
-            name="group_assignee",
-            required=True,
-            type=OpenApiTypes.STR,
-            description=_("The name of the group assigned to the activity."),
-            location=OpenApiParameter.QUERY,
-        )
-    ],
+    summary=_("List activities for groups of user"),
 )
 class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     def get_activities(self) -> List[dict]:
@@ -85,7 +76,7 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
 
 
 @extend_schema(
-    summary=_("List active cases"),
+    summary=_("List active ZAAKen"),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
 class WorkStackAssigneeCasesView(ListMixin, views.APIView):

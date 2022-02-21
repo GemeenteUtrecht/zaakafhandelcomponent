@@ -13,12 +13,11 @@ class SelectDocumentsField(fields.ListField):
     ]
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("label", _("Selecteer de relevante documenten"))
+        kwargs.setdefault("label", _("Select the relevant documents"))
         kwargs.setdefault(
             "help_text",
             _(
-                "Dit zijn de documenten die bij de zaak horen. Selecteer de relevante "
-                "documenten."
+                "These are the documents that belong to the ZAAK. Please select relevant documents."
             ),
         )
         super().__init__(*args, **kwargs)

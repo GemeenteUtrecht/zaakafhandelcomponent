@@ -197,7 +197,7 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     def get_serializer(self, **kwargs):
         return ZaakRevReqSummarySerializer(many=True, **kwargs)
 
-    @extend_schema(summary=_("List review requests summary for a case"))
+    @extend_schema(summary=_("List review requests summary for a ZAAK"))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         review_requests = get_review_requests(zaak)
@@ -223,7 +223,7 @@ class ZaakReviewRequestDetailView(APIView):
             zaak = get_zaak(review_request.for_zaak)
 
         except ObjectDoesNotExist:
-            raise Http404(f"No zaak is found for url: {review_request.for_zaak}.")
+            raise Http404(f"No ZAAK is found for url: {review_request.for_zaak}.")
 
         self.check_object_permissions(self.request, zaak)
 

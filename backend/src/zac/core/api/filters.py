@@ -22,7 +22,7 @@ class EigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_queryset() method.
     # This filterset is used just to validate query params
     zaaktype = fields.URLField(
-        required=False, help_text=_("Url reference of related ZAAKTYPE")
+        required=False, help_text=_("URL-reference of related ZAAKTYPE")
     )
     zaaktype_omschrijving = fields.CharField(
         required=False,
@@ -31,7 +31,7 @@ class EigenschappenFilterSet(ApiFilterSet):
         ),
     )
     catalogus = fields.URLField(
-        required=False, help_text=_("Url reference of related CATALOGUS")
+        required=False, help_text=_("URL-reference of related CATALOGUS")
     )
 
     def is_valid(self):
@@ -43,13 +43,13 @@ class EigenschappenFilterSet(ApiFilterSet):
             if zto or cat:
                 raise exceptions.ValidationError(
                     _(
-                        "Zaaktype is mutually exclusive from (zaaktype_omschrijving and catalogus)."
+                        "ZAAKTYPE is mutually exclusive from (zaaktype_omschrijving and CATALOGUS)."
                     )
                 )
         elif not (zto and cat):
             raise exceptions.ValidationError(
                 _(
-                    "The catalogus and zaaktype_omschrijving are both required if one is given."
+                    "The CATALOGUS and zaaktype_omschrijving are both required if one is given."
                 )
             )
         return super().is_valid()
@@ -59,7 +59,7 @@ class ZaakEigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_object() method.
     # This filterset is used just to validate query params
     url = fields.URLField(
-        required=True, help_text=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API")
+        required=True, help_text=_("URL-reference of ZAAKEIGENSCHAP in ZAKEN API")
     )
 
 
@@ -67,5 +67,5 @@ class ZaakObjectFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_object() method.
     # This filterset is used just to validate query params
     url = fields.URLField(
-        required=True, help_text=_("URL reference of ZAAK OBJECT in ZAKEN API")
+        required=True, help_text=_("URL-reference of ZAAKOBJECT in ZAKEN API")
     )

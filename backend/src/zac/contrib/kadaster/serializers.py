@@ -72,7 +72,9 @@ class SuggestResultSerializer(APIModelSerializer):
         extra_kwargs = {
             "type": {"help_text": _("BAG types such as addresses or cities.")},
             "weergavenaam": {"help_text": _("Human readable name of BAG object.")},
-            "id": {"help_text": _("ID of BAG object. Can be used in lookup service.")},
+            "id": {
+                "help_text": _("`id` of BAG object. Can be used in lookup service.")
+            },
             "score": {
                 "help_text": _(
                     "Score of BAG object related to search. A higher score means a better result."

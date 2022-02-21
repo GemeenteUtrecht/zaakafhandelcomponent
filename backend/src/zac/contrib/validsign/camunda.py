@@ -37,7 +37,7 @@ class ValidSignContextSerializer(APIModelSerializer):
 class ValidSignUserSerializer(serializers.Serializer):
     username = serializers.CharField(
         label=_("username"),
-        help_text=_("Username of signer."),
+        help_text=_("`username` of signer."),
         required=False,
     )
     email = serializers.EmailField(
@@ -104,7 +104,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
                 ):
                     raise serializers.ValidationError(
                         _(
-                            "User with username: {username} is unknown. Please provide all other details."
+                            "User with `username`: {username} is unknown. Please provide all other details."
                         ).format(username=au["username"]),
                         code="missing-signer-details",
                     )
@@ -113,7 +113,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
                 if not user_in_db["email"] and not au["email"]:
                     raise serializers.ValidationError(
                         _(
-                            "Email address for user with username: {username} is unknown. Please provide their email address."
+                            "Email address for user with `username`: {username} is unknown. Please provide their email address."
                         ).format(username=au["username"]),
                         code="unknown-email",
                     )
@@ -123,7 +123,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
                 if not user_in_db["first_name"] and not au["first_name"]:
                     raise serializers.ValidationError(
                         _(
-                            "First name for user with username: {username} is unknown. Please provide their first name."
+                            "First name for user with `username`: {username} is unknown. Please provide their first name."
                         ).format(username=au["username"]),
                         code="unknown-first-name",
                     )
@@ -133,7 +133,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
                 if not user_in_db["last_name"] and not au["last_name"]:
                     raise serializers.ValidationError(
                         _(
-                            "Last name for user with username: {username} is unknown. Please provide their last name."
+                            "Last name for user with `username`: {username} is unknown. Please provide their last name."
                         ).format(username=au["username"]),
                         code="unknown-last-name",
                     )

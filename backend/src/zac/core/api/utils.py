@@ -36,7 +36,7 @@ class CSMultipleChoiceField(serializers.Field):
     def to_representation(self, data):
         if not isinstance(data, list):
             raise serializers.ValidationError(
-                _(f"Error: Verwachtte een list maar kreeg {type(data).__name__}.")
+                _(f"Error: expected a `list` but received {type(data).__name__}.")
             )
         data = ",".join(data)
         return data
@@ -44,12 +44,12 @@ class CSMultipleChoiceField(serializers.Field):
     def to_internal_value(self, data):
         if not isinstance(data, str):
             raise serializers.ValidationError(
-                _(f"Error: Verwachtte een str maar kreeg {type(data).__name__}.")
+                _(f"Error: expected a `str` but received {type(data).__name__}.")
             )
 
         if not data and self.required:
             raise serializers.ValidationError(
-                _("Error: Dit veld is verplicht en mag niet leeg zijn.")
+                _("Error: this field is required and cannot be empty.")
             )
 
         values = data.split(",")
@@ -66,7 +66,7 @@ class CSMultipleChoiceField(serializers.Field):
                 valid_choices_string = ", ".join([choice for choice, _ in self.choices])
                 raise serializers.ValidationError(
                     _(
-                        f"Error: Dit veld bevatte: {invalid_choices_string}, maar mag alleen een (sub)set zijn van: {valid_choices_string}."
+                        f"Error: this field contained: {invalid_choices_string}, but can only be a subset of: {valid_choices_string}."
                     )
                 )
             else:
