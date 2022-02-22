@@ -217,7 +217,9 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
                 data["titel"] = data["bestandsnaam"]
         else:
             raise serializers.ValidationError(
-                _("The document is unrelated to ZAAK %s." % zaak.url)
+                _("The document is unrelated to {zaak}.").format(
+                    zaak=zaak.identificatie
+                )
             )
 
         return data

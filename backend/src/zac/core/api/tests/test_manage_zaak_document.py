@@ -100,7 +100,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        zaak = generate_oas_component(
+        self.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/456",
@@ -108,9 +108,11 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             bronorganisatie="123456782",
             identificatie="ZAAK-2020-0010",
         )
-        m.get(zaak["url"], json=zaak)
+        m.get(self.zaak["url"], json=self.zaak)
 
-        patch_find_zaak = patch("zac.core.services.search", return_value=[zaak["url"]])
+        patch_find_zaak = patch(
+            "zac.core.services.search", return_value=[self.zaak["url"]]
+        )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
 
@@ -672,9 +674,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
         expected_data = {
-            "nonFieldErrors": [
-                f"The document is unrelated to ZAAK {ZAKEN_ROOT}zaken/456."
-            ]
+            "nonFieldErrors": [f"Het document is ongerelateerd aan ZAAK-2020-0010."]
         }
         self.assertEqual(data, expected_data)
 

@@ -1493,7 +1493,6 @@ msgid "Reason for the edit, used in audit trail."
 msgstr "Reden voor de wijziging, wordt gebruikt in audit trail."
 
 #: zac/core/api/serializers.py:188
-#| msgid "document URL"
 msgid "URL-reference of document"
 msgstr "URL-referentie van document"
 
@@ -1502,8 +1501,8 @@ msgid "Vertrouwelijkheidaanduiding of DOCUMENT."
 msgstr "Vertrouwelijkheidaanduiding van DOCUMENT."
 
 #: zac/core/api/serializers.py:209
-msgid "The document is unrelated to the ZAAK."
-msgstr "Het document is ongerelateerd aan de ZAAK."
+msgid "The document is unrelated to {zaak}."
+msgstr "Het document is ongerelateerd aan {zaak}."
 
 #: zac/core/api/serializers.py:272
 msgid "The ZAAK that is to be related to the main ZAAK."
