@@ -90,9 +90,9 @@ export class DocumentenService {
         label: element.vertrouwelijkheidaanduiding,
         value: element
       }
-      const docNameButton: ExtensiveCell | string = element.locked ? element.bestandsnaam : {
+      const docNameButton: ExtensiveCell | string = element.locked ? element.titel : {
         type: 'button',
-        label: element.bestandsnaam,
+        label: element.titel,
         value: element
       }
       const cellData: RowData = {

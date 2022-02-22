@@ -8,7 +8,7 @@ export interface Document {
   informatieobjecttype: InformatieObjectType;
   locked: boolean;
   readUrl: string;
-  title: string;
+  titel: string;
   url: string;
   vertrouwelijkheidaanduiding: string;
   versie: number,
