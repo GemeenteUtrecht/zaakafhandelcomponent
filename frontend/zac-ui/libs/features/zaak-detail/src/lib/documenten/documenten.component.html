@@ -34,6 +34,7 @@
   </div>
 </div>
 
+<!-- Add document -->
 <gu-modal id="document-toevoegen-modal"
           [closeIcon]="true"
           title="Document toevoegen"
@@ -46,6 +47,20 @@
                                   (reload)="fetchDocuments()">
   </gu-document-toevoegen-contezza>
 </gu-modal>
+
+<!-- Change document name -->
+<gu-modal id="bestandsnaam-wijzigen-modal"
+          [closeIcon]="true"
+          title="Bestandsnaam wijzigen"
+          size="small">
+  <gu-document-bestandsnaam-wijzigen [mainZaakUrl]="mainZaakUrl"
+                                     [selectedDocument]="selectedDocument"
+                                     (closeModal)="closeModal('bestandsnaam-wijzigen-modal')"
+                                     (reload)="fetchDocuments()">
+  </gu-document-bestandsnaam-wijzigen>
+</gu-modal>
+
+<!-- Change document file -->
 <gu-modal id="document-overschrijven-modal"
           [closeIcon]="true"
           title="Document overschrijven"
@@ -59,15 +74,14 @@
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>
+
+<!-- Change confidentiality -->
 <gu-modal id="document-vertrouwelijkheid-wijzigen-modal"
           [closeIcon]="true"
           size="small">
   <gu-document-vertrouwelijkheid-wijzigen [mainZaakUrl]="mainZaakUrl"
-                                          [bronorganisatie]="bronorganisatie"
-                                          [identificatie]="identificatie"
                                           [selectedDocument]="selectedDocument"
                                           (closeModal)="closeModal('document-vertrouwelijkheid-wijzigen-modal')"
                                           (reload)="fetchDocuments()">
-
   </gu-document-vertrouwelijkheid-wijzigen>
 </gu-modal>

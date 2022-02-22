@@ -671,7 +671,11 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
-        expected_data = {"nonFieldErrors": ["The document is unrelated to the case."]}
+        expected_data = {
+            "nonFieldErrors": [
+                f"The document is unrelated to ZAAK {ZAKEN_ROOT}zaken/456."
+            ]
+        }
         self.assertEqual(data, expected_data)
 
     def test_patch_document_already_locked(self, m):
@@ -722,6 +726,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             versie=1,
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             locked=False,
+            bestandsnaam="some-bestandsnaam.extension",
         )
         m.get(document["url"], json=document)
 
@@ -737,18 +742,38 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         m.patch(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            json=document,
+            json={
+                **document,
+                "bestandsnaam": "some-other-bestandsnaam.extension",
+                "titel": "some-other-bestandsnaam.extension",
+            },
         )
         post_data = {
             "reden": "daarom",
             "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "bestandsnaam": "some-other-bestandsnaam.extension",
         }
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=factory(
+                Document,
+                {
+                    **document,
+                    **{
+                        "bestandsnaam": "some-other-bestandsnaam.extension",
+                        "titel": "some-other-bestandsnaam.extension",
+                    },
+                },
+            ),
         ):
-            response = self.client.patch(self.endpoint, post_data, format="multipart")
+            with patch(
+                "zac.core.api.serializers.get_documenten",
+                return_value=[[factory(Document, document)], []],
+            ):
+                response = self.client.patch(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()

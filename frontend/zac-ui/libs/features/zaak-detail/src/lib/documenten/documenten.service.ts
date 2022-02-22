@@ -90,6 +90,11 @@ export class DocumentenService {
         label: element.vertrouwelijkheidaanduiding,
         value: element
       }
+      const docNameButton: ExtensiveCell | string = element.locked ? element.titel : {
+        type: 'button',
+        label: element.titel,
+        value: element
+      }
       const cellData: RowData = {
         cellData: {
           opSlot: {
@@ -98,7 +103,7 @@ export class DocumentenService {
             iconColor: iconColor,
             iconInfo: iconInfo
           },
-          bestandsnaam: element.bestandsnaam,
+          bestandsnaam: docNameButton,
           versie: String(element.versie),
           lezen: {
             type: 'button',

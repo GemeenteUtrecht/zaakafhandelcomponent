@@ -105,6 +105,9 @@ export class DocumentenComponent implements OnChanges {
     const actionUrl = action[actionType];
 
     switch (actionType) {
+      case 'bestandsnaam':
+        this.patchDocumentName(actionUrl);
+        break;
       case 'lezen':
         this.readDocument(actionUrl);
         break;
@@ -164,6 +167,15 @@ export class DocumentenComponent implements OnChanges {
   patchDocument(documentUrl) {
     this.selectedDocumentUrl = documentUrl;
     this.openModal('document-overschrijven-modal')
+  }
+
+  /**
+   * Opens the "gu-bestandsnaam-wijzigen-modal" component
+   * @param document
+   */
+  patchDocumentName(document) {
+    this.selectedDocument = document;
+    this.openModal('bestandsnaam-wijzigen-modal')
   }
 
   /**

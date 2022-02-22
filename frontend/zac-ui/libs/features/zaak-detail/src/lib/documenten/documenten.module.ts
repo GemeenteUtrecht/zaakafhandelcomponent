@@ -7,13 +7,15 @@ import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { DocumentVertrouwelijkheidWijzigenComponent } from './document-vertrouwelijkheid-wijzigen/document-vertrouwelijkheid-wijzigen.component';
 import {FeaturesContezzaDocumentSearchModule} from "@gu/contezza-document-search";
 import { DocumentToevoegenContezzaComponent } from './document-toevoegen-contezza/document-toevoegen-contezza.component';
+import { DocumentBestandsnaamWijzigenComponent } from './document-bestandsnaam-wijzigen/document-bestandsnaam-wijzigen.component';
 
 @NgModule({
   declarations: [
     DocumentenComponent,
     DocumentToevoegenComponent,
     DocumentVertrouwelijkheidWijzigenComponent,
-    DocumentToevoegenContezzaComponent
+    DocumentToevoegenContezzaComponent,
+    DocumentBestandsnaamWijzigenComponent
   ],
   imports: [
     CommonModule,
@@ -26,7 +28,8 @@ import { DocumentToevoegenContezzaComponent } from './document-toevoegen-contezz
   exports: [
     DocumentenComponent,
     DocumentToevoegenComponent,
-    DocumentVertrouwelijkheidWijzigenComponent
+    DocumentVertrouwelijkheidWijzigenComponent,
+    DocumentBestandsnaamWijzigenComponent
   ]
 })
 export class DocumentenModule { }

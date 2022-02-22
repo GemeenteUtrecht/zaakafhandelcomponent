@@ -12,8 +12,6 @@ import {SnackbarService} from "@gu/components";
 })
 export class DocumentVertrouwelijkheidWijzigenComponent implements OnInit, OnChanges {
   @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
   @Input() selectedDocument: Document;
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
