@@ -501,7 +501,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": False,
-                "reason": "User doesn't have permissions to request the access",
+                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
             },
         )
 
@@ -534,7 +534,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": False,
-                "reason": "User doesn't have permissions to request the access",
+                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
             },
         )
 
@@ -567,7 +567,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": False,
-                "reason": "User doesn't have permissions to request the access",
+                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
             },
         )
 
@@ -628,7 +628,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": False,
-                "reason": "User has pending access request for this zaak",
+                "reason": "Je hebt al een toegangsverzoek voor deze ZAAK",
             },
         )
 

@@ -299,7 +299,7 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             [
-                f"User {self.requester.username} already has an access to zaak {ZAAK_URL}"
+                f"Gebruiker {self.requester.username} heeft al toegang tot ZAAK {ZAAK_URL}"
             ],
         )
 

@@ -121,7 +121,7 @@ def get_verblijfsobject(address_id: str) -> Optional[Verblijfsobject]:
         raise NotFound(
             detail=_(
                 "verblijfsobject not found for adresseerbaarobject_id {adresseerbaarobject_id}".format(
-                    {"adresseerbaarobject_id": doc["adresseerbaarobject_id"]}
+                    adresseerbaarobject_id=doc["adresseerbaarobject_id"]
                 )
             )
         )

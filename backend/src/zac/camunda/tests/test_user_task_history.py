@@ -187,7 +187,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         url = furl(reverse("user-task-history"))
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["Missing the zaak URL query parameter."])
+        self.assertEqual(response.json(), ["Mist de `zaak_url` query parameter."])
 
     def test_success_get_user_task_history(self, m):
         # Mocks for get_completed_user_tasks_for_zaak

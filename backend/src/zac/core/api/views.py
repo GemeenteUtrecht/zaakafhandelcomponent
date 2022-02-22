@@ -341,10 +341,7 @@ class ZaakEigenschapDetailView(views.APIView):
                 detail=_(
                     "EIGENSCHAP with name {eigenschap} not found for zaaktype {zaaktype}."
                 ).format(
-                    {
-                        "eigenschap": serializer.validated_data["naam"],
-                        "zaaktype": zaak.zaaktype,
-                    }
+                    eigenschap=serializer.validated_data["naam"], zaaktype=zaak.zaaktype
                 )
             )
         # Resolve relation

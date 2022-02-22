@@ -179,7 +179,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                         "name": TASK_DATA["name"],
                         "assignee": {
                             "id": self.groups[0].id,
-                            "fullName": f"Group: {self.groups[0].name}",
+                            "fullName": f"Groep: {self.groups[0].name}",
                             "name": self.groups[0].name,
                         },
                         "assigneeType": "group",

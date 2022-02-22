@@ -231,7 +231,7 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
             response.status_code,
         )
         self.assertEqual(
-            {"statustype": {"url": ["Invalid statustype URL given."]}}, response.json()
+            {"statustype": {"url": ["Invalid STATUSTYPE URL given."]}}, response.json()
         )
 
 

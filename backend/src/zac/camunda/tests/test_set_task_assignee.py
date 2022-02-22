@@ -71,15 +71,15 @@ class SetTaskAssigneeSerializerTests(APITestCase):
 
         self.assertEqual(
             exc.exception.detail["task"][0],
-            "The task with given task ID does not exist (anymore).",
+            "The task with given `id` does not exist (anymore).",
         )
         self.assertEqual(
             exc.exception.detail["assignee"][0],
-            "A user with username some-user does not exist. A group with name some-user does not exist.",
+            "Een gebruiker met `username` some-user bestaat niet. Een groep met `name` some-user bestaat niet.",
         )
         self.assertEqual(
             exc.exception.detail["delegate"][0],
-            "A user with username some-delegate does not exist. A group with name some-delegate does not exist.",
+            "Een gebruiker met `username` some-delegate bestaat niet. Een groep met `name` some-delegate bestaat niet.",
         )
 
     def test_serializer_success(self):
@@ -218,7 +218,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"task": ["The task with given task ID does not exist (anymore)."]},
+            {"task": ["The task with given `id` does not exist (anymore)."]},
         )
 
     @requests_mock.Mocker()

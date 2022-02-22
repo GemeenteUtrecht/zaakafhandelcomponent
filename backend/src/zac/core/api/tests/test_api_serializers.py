@@ -32,7 +32,8 @@ class TestCSMultipleChoiceField(TestCase):
 
         exception_details = cm.exception.get_full_details()[0]
         self.assertEqual(
-            exception_details["message"], "Error: Verwachtte een list maar kreeg str."
+            exception_details["message"],
+            "Error: verwachtte een `list` maar kreeg `str`.",
         )
         self.assertEqual(exception_details["code"], "invalid")
 
@@ -44,7 +45,8 @@ class TestCSMultipleChoiceField(TestCase):
 
         exception_details = cm.exception.get_full_details()[0]
         self.assertEqual(
-            exception_details["message"], "Error: Verwachtte een str maar kreeg list."
+            exception_details["message"],
+            "Error: verwachtte een `str` maar kreeg `list`.",
         )
         self.assertEqual(exception_details["code"], "invalid")
 
@@ -57,7 +59,7 @@ class TestCSMultipleChoiceField(TestCase):
         exception_details = cm.exception.get_full_details()[0]
         self.assertEqual(
             exception_details["message"],
-            "Error: Dit veld bevatte: 3, maar mag alleen een (sub)set zijn van: 1, 2.",
+            "Error: dit veld bevatte: 3, maar mag alleen een (sub)set zijn van: 1, 2.",
         )
 
     def test_field_values_part_of_choices(self):

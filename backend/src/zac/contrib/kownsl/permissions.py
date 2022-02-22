@@ -40,16 +40,14 @@ class HasNotReviewed(permissions.BasePermission):
             if review.group:
                 if assignee.name == review.group:
                     self.message = self._message.format(
-                        {"assignee": assignee.name, "identificatie": zaak.identificatie}
+                        assignee=assignee.name, identificatie=zaak.identificatie
                     )
                     return False
             else:
                 if assignee.username == review.author.username:
                     self.message = self._message.format(
-                        {
-                            "assignee": assignee.get_full_name(),
-                            "identificatie": zaak.identificatie,
-                        }
+                        assignee=assignee.get_full_name(),
+                        identificatie=zaak.identificatie,
                     )
                     return False
         return True

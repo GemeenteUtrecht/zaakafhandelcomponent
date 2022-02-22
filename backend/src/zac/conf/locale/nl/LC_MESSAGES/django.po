@@ -93,9 +93,9 @@ msgid "ZAAK to request access for"
 msgstr "ZAAK waar toegang toe wordt gevraagd"
 
 #: zac/accounts/api/serializers.py:326
-#, python-format
-msgid "User %(requester)s already has a pending access request to ZAAK %(zaak)s"
-msgstr "Er is al een toegangsverzoek tot ZAAK %(zaak)s voor gebruiker %(requester)s in behandeling"
+#, python-brace-format
+msgid "User {requester} already has a pending access request to ZAAK {zaak}"
+msgstr "Er is al een toegangsverzoek tot ZAAK {zaak} voor gebruiker {requester} in behandeling"
 
 #: zac/accounts/api/serializers.py:351
 msgid "Comment of the handler"
@@ -1645,24 +1645,23 @@ msgid "Atomic permissions for the ZAAK"
 msgstr "Atomische rechten voor de ZAAK"
 
 #: zac/core/api/utils.py:39
-msgid "Error: expected a `list` but received {type(data).__name__}."
-msgstr "Error: Verwachtte een `list` maar kreeg {type(data).__name__}."
+msgid "Error: expected a `list` but received `{datatype}`."
+msgstr "Error: verwachtte een `list` maar kreeg `{datatype}`."
 
 #: zac/core/api/utils.py:47
-msgid "Error: expected a `str` but received {type(data).__name__}."
-msgstr "Error: Verwachtte een `str` maar kreeg {type(data).__name__}."
+msgid "Error: expected a `str` but received `{datatype}`."
+msgstr "Error: verwachtte een `str` maar kreeg `{datatype}`."
 
 #: zac/core/api/utils.py:52
 msgid "Error: this field is required and cannot be empty."
-msgstr "Error: Dit veld is verplicht en mag niet leeg zijn."
+msgstr "Error: dit veld is verplicht en mag niet leeg zijn."
 
 #: zac/core/api/utils.py:69
 #, python-brace-format
 msgid ""
 "Error: this field contained: {invalid_choices_string}, but can only be a subset of: {valid_choices_string}."
 msgstr ""
-"Error: Dit veld bevatte: {invalid_choices_string}, maar mag alleen een "
-"(sub)set zijn van: {valid_choices_string}."
+"Error: dit veld bevatte: {invalid_choices_string}, maar mag alleen een (sub)set zijn van: {valid_choices_string}."
 
 #: zac/core/api/validators.py:18
 msgid "Please select each document only once."

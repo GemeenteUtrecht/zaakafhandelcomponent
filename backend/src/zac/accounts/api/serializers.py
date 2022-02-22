@@ -192,10 +192,7 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
         ):
             raise serializers.ValidationError(
                 _("User {requester} already has access to ZAAK {zaak}.").format(
-                    {
-                        "requester": user.username,
-                        "zaak": atomic_permission["object_url"],
-                    }
+                    requester=user.username, zaak=atomic_permission["object_url"]
                 )
             )
 
@@ -316,8 +313,9 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             .exists()
         ):
             raise serializers.ValidationError(
-                _("User %(requester)s already has access to ZAAK %(zaak)s")
-                % {"requester": requester.username, "zaak": zaak.url}
+                _("User {requester} already has access to ZAAK {zaak}.").format(
+                    requester=requester.username, zaak=zaak.url
+                )
             )
 
         if (
@@ -327,9 +325,8 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         ):
             raise serializers.ValidationError(
                 _(
-                    "User %(requester)s already has a pending access request to ZAAK %(zaak)s"
-                )
-                % {"requester": requester.username, "zaak": zaak.url}
+                    "User {requester} already has a pending access request to ZAAK {zaak}"
+                ).format(requester=requester.username, zaak=zaak.url)
             )
 
         valid_data["requester"] = requester

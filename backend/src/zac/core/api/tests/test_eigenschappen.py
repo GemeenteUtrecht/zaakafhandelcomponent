@@ -348,7 +348,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json(),
             [
-                "Zaaktype is mutually exclusive from (zaaktype_omschrijving and catalogus)."
+                "ZAAKTYPE en (zaaktype_omschrijving en CATALOGUS) zijn elkaar uitsluitend."
             ],
         )
 
@@ -359,7 +359,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json(),
             [
-                "The catalogus and zaaktype_omschrijving are both required if one is given."
+                "De CATALOGUS en zaaktype_omschrijving zijn beide vereist als 1 is opgegeven."
             ],
         )
 

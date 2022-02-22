@@ -218,7 +218,7 @@ class BrpApiViewTests(APITestCase):
             response.json(),
             {
                 "fields": [
-                    "Error: Dit veld bevatte: test,hello,geboorte, maar mag alleen een (sub)set zijn van: geboorte.datum, geboorte.land, kinderen, partners, verblijfplaats."
+                    "Error: dit veld bevatte: test,hello,geboorte, maar mag alleen een (sub)set zijn van: geboorte.datum, geboorte.land, kinderen, partners, verblijfplaats."
                 ]
             },
         )
