@@ -18,6 +18,7 @@ import { Result } from '../../../models/zaaktype';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
+import { MetaService } from '@gu/services';
 
 
 /**
@@ -61,6 +62,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private searchService: SearchService,
+    private metaService: MetaService,
     private router: Router,
     private datePipe: DatePipe,
     private ngZone: NgZone,
@@ -114,9 +116,10 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.isLoading = true;
       this.hasError = false;
 
-      const zaaktypeUrl = zaaktype.url;
+      const catalogus = zaaktype.catalogus;
+      const omschrijving = zaaktype.omschrijving;
 
-      this.searchService.getZaaktypeEigenschappen(zaaktypeUrl).subscribe(res => {
+      this.metaService.getZaaktypeEigenschappenByCatalogus(catalogus, omschrijving).subscribe(res => {
         this.zaaktypeEigenschappenData = res;
         this.eigenschapnaam.patchValue(undefined);
         this.isLoading = false;
