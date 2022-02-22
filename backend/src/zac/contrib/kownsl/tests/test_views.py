@@ -105,10 +105,12 @@ class ViewTests(ClearCachesMixin, APITestCase):
         )
 
         zaak = factory(Zaak, cls.zaak)
-        cls.get_zaak_patcher = patch(
+        cls.views_get_zaak_patcher = patch(
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
-
+        cls.permissions_get_zaak_patcher = patch(
+            "zac.contrib.kownsl.permissions.get_zaak", return_value=zaak
+        )
         cls.user = UserFactory.create(
             username="some-user", first_name="John", last_name="Doe"
         )
@@ -117,8 +119,11 @@ class ViewTests(ClearCachesMixin, APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.get_zaak_patcher.start()
-        self.addCleanup(self.get_zaak_patcher.stop)
+        self.views_get_zaak_patcher.start()
+        self.addCleanup(self.views_get_zaak_patcher.stop)
+
+        self.permissions_get_zaak_patcher.start()
+        self.addCleanup(self.permissions_get_zaak_patcher.stop)
 
     def _mock_oas_get(self, m):
         mock_service_oas_get(
@@ -202,7 +207,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "detail": "Review for review request `45638aa6-e177-46cc-b580-43339795d5b5` is already given by assignee(s) `John Doe`."
+                "detail": f"Dit verzoek is al afgehandeld door {self.user.get_full_name()} vanuit ZAAK {self.zaak['identificatie']}."
             },
         )
 
@@ -237,7 +242,6 @@ class ViewTests(ClearCachesMixin, APITestCase):
         body = {"dummy": "data"}
 
         response = self.client.post(url, body)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, {"ok": "yarp"})
 

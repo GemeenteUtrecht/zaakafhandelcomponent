@@ -18,23 +18,23 @@ from .serializers import (
 
 @extend_schema_view(
     list=extend_schema(
-        summary=_("List activities"),
+        summary=_("List activities."),
         parameters=[
             OpenApiParameter(
                 name="zaak",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("The url of the case related to the activities."),
+                description=_("URL-reference of the ZAAK related to the activities."),
                 location=OpenApiParameter.QUERY,
             )
         ],
     ),
-    retrieve=extend_schema(summary=_("Retrieve activity")),
-    create=extend_schema(summary=_("Create activity")),
+    retrieve=extend_schema(summary=_("Retrieve activity.")),
+    create=extend_schema(summary=_("Create activity.")),
     partial_update=extend_schema(
-        summary=_("Update activity"),
+        summary=_("Update activity."),
     ),
-    destroy=extend_schema(summary=_("Destroy activity")),
+    destroy=extend_schema(summary=_("Destroy activity.")),
 )
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = (
@@ -83,7 +83,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    create=extend_schema(summary=_("Create event")),
+    create=extend_schema(summary=_("Create event.")),
 )
 class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Event.objects.none()

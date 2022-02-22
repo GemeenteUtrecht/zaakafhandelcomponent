@@ -19,7 +19,7 @@ class InformatieobjecttypenJSONView(views.APIView):
     schema = None
 
     def get(self, request):
-        """Return the informatieobjecttypen for a catalogus"""
+        """Returns the informatieobjecttypen for a catalogus"""
         catalogus_url_serializer = CatalogusURLSerializer(
             data={"url": request.GET.get("catalogus")}
         )
@@ -45,8 +45,8 @@ class InformatieobjecttypenJSONView(views.APIView):
 
 
 @extend_schema(
-    summary=_("List permissions"),
-    description=_("Return all available permissions and their description"),
+    summary=_("List permissions."),
+    description=_("Returns all available permissions and their description."),
 )
 class PermissionView(ListMixin, views.APIView):
     authentication_classes = [SessionAuthentication]

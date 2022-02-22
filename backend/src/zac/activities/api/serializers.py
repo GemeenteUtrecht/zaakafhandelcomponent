@@ -67,7 +67,7 @@ class CreateOrUpdateActivitySerializer(serializers.ModelSerializer):
         slug_field="username",
         queryset=User.objects.all(),
         required=False,
-        help_text=_("Username of the user."),
+        help_text=_("`username` of the user."),
     )
     events = EventSerializer(many=True, read_only=True)
 

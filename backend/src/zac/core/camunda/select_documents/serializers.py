@@ -66,14 +66,14 @@ class DocumentSelectContextSerializer(APIModelSerializer):
 
 class SelectedDocumentSerializer(serializers.Serializer):
     document = serializers.URLField(
-        label=_("Selected document"),
-        help_text=_("The URL of the selected document from the relevant case."),
+        label=_("selected DOCUMENT"),
+        help_text=_("URL-reference of the selected DOCUMENT from the relevant ZAAK."),
         allow_blank=False,
     )
 
     document_type = serializers.URLField(
-        label=_("Selected document type"),
-        help_text=_("The URL of the selected document type."),
+        label=_("selected document type"),
+        help_text=_("URL-reference of the selected document type."),
         allow_blank=False,
     )
 

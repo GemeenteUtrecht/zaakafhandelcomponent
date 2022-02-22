@@ -38,8 +38,8 @@ from .serializers import (
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List user accounts")),
-    retrieve=extend_schema(summary=_("Retrieve user account")),
+    list=extend_schema(summary=_("List user accounts.")),
+    retrieve=extend_schema(summary=_("Retrieve user account.")),
 )
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.prefetch_related("groups").all().order_by("username")
@@ -52,7 +52,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ["username", "first_name", "last_name", "email"]
     filterset_class = UserFilter
 
-    @extend_schema(summary=_("Current logged in user"))
+    @extend_schema(summary=_("Retrieve current logged in user."))
     @action(detail=False)
     def me(self, request, *args, **kwargs):
         self.kwargs["pk"] = self.request.user.id
@@ -60,11 +60,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List user groups")),
-    retrieve=extend_schema(summary=_("Retrieve a user group")),
-    create=extend_schema(summary=_("Create a user group")),
-    update=extend_schema(summary=_("Update a user group")),
-    destroy=extend_schema(summary=_("Delete a user group")),
+    list=extend_schema(summary=_("List user groups.")),
+    retrieve=extend_schema(summary=_("Retrieve a user group.")),
+    create=extend_schema(summary=_("Create a user group.")),
+    update=extend_schema(summary=_("Update a user group.")),
+    destroy=extend_schema(summary=_("Delete a user group.")),
     partial_update=extend_schema(exclude=True),
 )
 class GroupViewSet(viewsets.ModelViewSet):
@@ -87,14 +87,14 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    retrieve=extend_schema(summary=_("Retrieve access requests")),
+    retrieve=extend_schema(summary=_("Retrieve access requests.")),
     create=extend_schema(
-        summary=_("Create an access request"),
+        summary=_("Create an access request."),
         request=CreateAccessRequestSerializer,
         responses={201: CreateAccessRequestSerializer},
     ),
     partial_update=extend_schema(
-        summary=_("Handle an access request"),
+        summary=_("Handle an access request."),
         request=HandleAccessRequestSerializer,
         responses={200: HandleAccessRequestSerializer},
     ),
@@ -123,13 +123,13 @@ class AccessRequestViewSet(
 
 
 @extend_schema_view(
-    retrieve=extend_schema(summary=_("Retrieve atomic permission")),
+    retrieve=extend_schema(summary=_("Retrieve atomic permission.")),
     create=extend_schema(
-        summary=_("Grant atomic permission to zaak"),
+        summary=_("Grant atomic permission to ZAAK."),
         request=GrantPermissionSerializer,
         responses={201: GrantPermissionSerializer},
     ),
-    destroy=extend_schema(summary=_("Delete atomic permission")),
+    destroy=extend_schema(summary=_("Delete atomic permission.")),
 )
 class AtomicPermissionViewSet(
     mixins.CreateModelMixin,
@@ -179,10 +179,10 @@ class AtomicPermissionViewSet(
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List authorization profiles")),
-    retrieve=extend_schema(summary=_("Retrieve authorization profile")),
-    create=extend_schema(summary=_("Create authorization profile")),
-    update=extend_schema(summary=_("Update authorization profile")),
+    list=extend_schema(summary=_("List authorization profiles.")),
+    retrieve=extend_schema(summary=_("Retrieve authorization profile.")),
+    create=extend_schema(summary=_("Create authorization profile.")),
+    update=extend_schema(summary=_("Update authorization profile.")),
 )
 class AuthProfileViewSet(
     mixins.CreateModelMixin,
@@ -197,10 +197,10 @@ class AuthProfileViewSet(
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List roles")),
-    retrieve=extend_schema(summary=_("Retrieve role")),
-    create=extend_schema(summary=_("Create role")),
-    update=extend_schema(summary=_("Update role")),
+    list=extend_schema(summary=_("List roles.")),
+    retrieve=extend_schema(summary=_("Retrieve role.")),
+    create=extend_schema(summary=_("Create role.")),
+    update=extend_schema(summary=_("Update role.")),
 )
 class RoleViewSet(
     mixins.CreateModelMixin,

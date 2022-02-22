@@ -12,8 +12,8 @@ from .serializer import BoardItemSerializer, BoardSerializer
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List boards")),
-    retrieve=extend_schema(summary=_("Retrieve board")),
+    list=extend_schema(summary=_("List boards.")),
+    retrieve=extend_schema(summary=_("Retrieve board.")),
 )
 class BoardViewSet(ReadOnlyModelViewSet):
     authentication_classes = [SessionAuthentication]
@@ -24,12 +24,12 @@ class BoardViewSet(ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(summary=_("List board items")),
-    retrieve=extend_schema(summary=_("Retrieve board item")),
-    create=extend_schema(summary=_("Create board item")),
-    update=extend_schema(summary=_("Update board item")),
-    partial_update=extend_schema(summary=_("Patch board item")),
-    destroy=extend_schema(summary=_("Delete board item")),
+    list=extend_schema(summary=_("List board items.")),
+    retrieve=extend_schema(summary=_("Retrieve board item.")),
+    create=extend_schema(summary=_("Create board item.")),
+    update=extend_schema(summary=_("Update board item.")),
+    partial_update=extend_schema(summary=_("Patch board item.")),
+    destroy=extend_schema(summary=_("Delete board item.")),
 )
 class BoardItemViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication]

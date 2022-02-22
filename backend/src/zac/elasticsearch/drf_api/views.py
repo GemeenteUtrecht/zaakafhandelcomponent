@@ -38,7 +38,7 @@ class GetZakenView(views.APIView):
         return ZaakSerializer(many=True, **kwargs)
 
     @extend_schema(
-        summary=_("Autocomplete search zaken"),
+        summary=_("Autocomplete search ZAAKen."),
         parameters=input_serializer_to_parameters(ZaakIdentificatieSerializer),
     )
     def get(self, request: Request) -> Response:
@@ -100,7 +100,7 @@ class SearchView(PerformSearchMixin, views.APIView):
         return self.paginator.get_paginated_response(data, fields)
 
     @extend_schema(
-        summary=_("Search zaken"),
+        summary=_("Search for ZAAKen in Elasticsearch."),
         parameters=[
             es_document_to_ordering_parameters(ZaakDocument),
             OpenApiParameter(
@@ -139,17 +139,17 @@ class SearchView(PerformSearchMixin, views.APIView):
 
 
 @extend_schema_view(
-    create=extend_schema(summary=_("Create a search report")),
-    destroy=extend_schema(summary=_("Destroy a search report")),
+    create=extend_schema(summary=_("Create search report.")),
+    destroy=extend_schema(summary=_("Destroy search report.")),
     list=extend_schema(
-        summary=_("Retrieve a list of search reports"),
+        summary=_("List search reports."),
     ),
-    partial_update=extend_schema(summary=_("Partially update a search report")),
-    retrieve=extend_schema(summary=_("Retrieve a search report")),
-    update=extend_schema(summary=_("Update a search report")),
+    partial_update=extend_schema(summary=_("Partially update search report.")),
+    retrieve=extend_schema(summary=_("Retrieve search report.")),
+    update=extend_schema(summary=_("Update search report.")),
     results=extend_schema(
         operation_id="search_reports_results",
-        summary=_("Retrieve the results of a search report"),
+        summary=_("Retrieve search report results."),
         parameters=[
             es_document_to_ordering_parameters(ZaakDocument),
             OpenApiParameter(

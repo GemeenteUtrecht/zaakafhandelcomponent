@@ -92,7 +92,7 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
     user_assignees = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
-        help_text=_("Users assigned to the review request"),
+        help_text=_("Users assigned to the review request."),
         many=True,
         allow_null=True,
         required=True,
@@ -100,14 +100,14 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
     group_assignees = serializers.SlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        help_text=_("Groups assigned to the review request"),
+        help_text=_("Groups assigned to the review request."),
         many=True,
         allow_null=True,
         required=True,
     )
     email_notification = serializers.BooleanField(
         default=False,
-        help_text=_("Send an email notification about the review request or not."),
+        help_text=_("Send an email notification about the review request."),
     )
     deadline = serializers.DateField(
         input_formats=["%Y-%m-%d"],

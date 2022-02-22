@@ -144,7 +144,7 @@ class AtomicPermissionSerializer(serializers.ModelSerializer):
         source="user",
         slug_field="username",
         queryset=User.objects.all(),
-        help_text=_("User to give the permission to"),
+        help_text=_("`username` to give the permission to"),
     )
     permission = serializers.CharField(
         max_length=255,
@@ -154,7 +154,7 @@ class AtomicPermissionSerializer(serializers.ModelSerializer):
     )
     zaak = serializers.URLField(
         max_length=1000,
-        help_text=_("URL of the zaak this permission applies to"),
+        help_text=_("URL-reference of the ZAAK this permission applies to"),
         source="atomic_permission.object_url",
     )
 
@@ -191,8 +191,9 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
             .exists()
         ):
             raise serializers.ValidationError(
-                _("User %(requester)s already has an access to zaak %(zaak)s")
-                % {"requester": user.username, "zaak": atomic_permission["object_url"]}
+                _("User {requester} already has access to ZAAK {zaak}.").format(
+                    requester=user.username, zaak=atomic_permission["object_url"]
+                )
             )
 
         return valid_data
@@ -259,14 +260,14 @@ class AccessRequestDetailSerializer(serializers.HyperlinkedModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
-        help_text=_("Username of access requester/grantee"),
+        help_text=_("`username` of access requester/grantee"),
     )
     handler = serializers.SlugRelatedField(
         slug_field="username",
         read_only=True,
-        help_text=_("Username of access handler/granter"),
+        help_text=_("`username` of access handler/granter"),
     )
-    zaak = ZaakShortSerializer(help_text=_("Zaak to request access for"))
+    zaak = ZaakShortSerializer(help_text=_("ZAAK to request access for"))
 
     class Meta:
         model = AccessRequest
@@ -286,9 +287,9 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         read_only=True,
-        help_text=_("Username of access requester/grantee"),
+        help_text=_("`username` of access requester/grantee"),
     )
-    zaak = ZaakShortSerializer(help_text=_("Zaak to request access for"))
+    zaak = ZaakShortSerializer(help_text=_("ZAAK to request access for"))
 
     class Meta:
         model = AccessRequest
@@ -312,8 +313,9 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             .exists()
         ):
             raise serializers.ValidationError(
-                _("User %(requester)s already has an access to zaak %(zaak)s")
-                % {"requester": requester.username, "zaak": zaak.url}
+                _("User {requester} already has access to ZAAK {zaak}.").format(
+                    requester=requester.username, zaak=zaak.url
+                )
             )
 
         if (
@@ -323,9 +325,8 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         ):
             raise serializers.ValidationError(
                 _(
-                    "User %(requester)s already has an pending access request to zaak %(zaak)s"
-                )
-                % {"requester": requester.username, "zaak": zaak.url}
+                    "User {requester} already has a pending access request to ZAAK {zaak}"
+                ).format(requester=requester.username, zaak=zaak.url)
             )
 
         valid_data["requester"] = requester

@@ -5,6 +5,7 @@ from zgw_consumers.api_models.base import factory
 
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.services import get_zaak
 
 from .api import retrieve_advices, retrieve_approvals
 from .constants import KownslTypes
@@ -22,11 +23,14 @@ class IsReviewUser(permissions.BasePermission):
 
 
 class HasNotReviewed(permissions.BasePermission):
-    _message = _("Review for review request `%s` is already given by assignee(s) `%s`.")
+    _message = _(
+        "This request is already handled by assignee `{assignee}` from within ZAAK {identificatie}."
+    )
 
     def has_object_permission(self, request, view, obj):
         assignee = resolve_assignee(request.query_params.get("assignee"))
         rr = factory(ReviewRequest, obj)
+        zaak = get_zaak(zaak_url=rr.for_zaak)
         if rr.review_type == KownslTypes.advice:
             reviews = retrieve_advices(rr)
         else:
@@ -35,10 +39,15 @@ class HasNotReviewed(permissions.BasePermission):
         for review in reviews:
             if review.group:
                 if assignee.name == review.group:
-                    self.message = self._message % (rr.id, assignee.name)
+                    self.message = self._message.format(
+                        assignee=assignee.name, identificatie=zaak.identificatie
+                    )
                     return False
             else:
                 if assignee.username == review.author.username:
-                    self.message = self._message % (rr.id, assignee.get_full_name())
+                    self.message = self._message.format(
+                        assignee=assignee.get_full_name(),
+                        identificatie=zaak.identificatie,
+                    )
                     return False
         return True

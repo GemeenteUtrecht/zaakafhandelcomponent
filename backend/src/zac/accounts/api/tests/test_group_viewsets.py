@@ -82,7 +82,7 @@ class GroupViewsetTests(APITestCase):
             {
                 "id": self.groups[0].id,
                 "name": self.groups[0].name,
-                "fullName": "Group: " + self.groups[0].name,
+                "fullName": "Groep: " + self.groups[0].name,
                 "users": [self.user.username],
             },
         )
@@ -101,7 +101,7 @@ class GroupViewsetTests(APITestCase):
             {
                 "id": self.groups[0].id,
                 "name": self.groups[0].name,
-                "fullName": "Group: " + self.groups[0].name,
+                "fullName": "Groep: " + self.groups[0].name,
                 "users": [self.user.username],
             },
         )

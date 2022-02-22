@@ -38,7 +38,7 @@ class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
     )
     column = BoardColumnSerializer(help_text=_("Column of the board"), read_only=True)
     zaak = ZaakDocumentSerializer(
-        source="zaak_document", read_only=True, help_text=_("Details of the zaak")
+        source="zaak_document", read_only=True, help_text=_("Details of the ZAAK")
     )
 
     class Meta:
@@ -71,7 +71,7 @@ class BoardItemSerializer(serializers.HyperlinkedModelSerializer):
                 object=object, column__board=column.board
             ).exists()
         ):
-            raise serializers.ValidationError(_("This object is already on the board"))
+            raise serializers.ValidationError(_("This OBJECT is already on the board"))
 
         return validated_attrs
 

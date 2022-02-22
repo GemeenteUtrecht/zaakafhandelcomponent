@@ -29,7 +29,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 
 
 @extend_schema(
-    summary=_("Open document for viewing or editing"),
+    summary=_("Retrieve a document."),
     parameters=[
         OpenApiParameter(
             name="versie",
@@ -70,7 +70,7 @@ class OpenDowcView(APIView):
 
 
 @extend_schema(
-    summary=_("Finalize opened document"),
+    summary=_("Update and delete a document."),
     responses={
         (200, "application/json"): remote_schema_ref(
             DOWC_BASE,

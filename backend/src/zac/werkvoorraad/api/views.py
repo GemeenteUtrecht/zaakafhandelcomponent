@@ -39,7 +39,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(summary=_("List access requests"))
+@extend_schema(summary=_("List access requests for logged in user."))
 class WorkStackAccessRequestsView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
@@ -51,7 +51,7 @@ class WorkStackAccessRequestsView(ListAPIView):
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
-@extend_schema(summary=_("List adhoc activities by user"))
+@extend_schema(summary=_("List activities for logged in user."))
 class WorkStackAdhocActivitiesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -68,16 +68,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 
 
 @extend_schema(
-    summary=_("List adhoc activities by the group of a user"),
-    parameters=[
-        OpenApiParameter(
-            name="group_assignee",
-            required=True,
-            type=OpenApiTypes.STR,
-            description=_("The name of the group assigned to the activity."),
-            location=OpenApiParameter.QUERY,
-        )
-    ],
+    summary=_("List activities for groups of logged in user."),
 )
 class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     def get_activities(self) -> List[dict]:
@@ -85,7 +76,7 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
 
 
 @extend_schema(
-    summary=_("List active cases"),
+    summary=_("List active ZAAKen for logged in user."),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
 class WorkStackAssigneeCasesView(ListMixin, views.APIView):
@@ -105,7 +96,7 @@ class WorkStackAssigneeCasesView(ListMixin, views.APIView):
         return [zaak for zaak in zaken if not zaak.einddatum]
 
 
-@extend_schema(summary=_("List user tasks"))
+@extend_schema(summary=_("List user tasks for logged in user."))
 class WorkStackUserTasksView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
@@ -146,7 +137,9 @@ class WorkStackUserTasksView(ListAPIView):
         ]
 
 
-@extend_schema(summary=_("List user tasks assigned to groups related to user"))
+@extend_schema(
+    summary=_("List user tasks assigned to groups related to logged in user.")
+)
 class WorkStackGroupTasksView(WorkStackUserTasksView):
     def get_camunda_tasks(self) -> List[Task]:
         return get_camunda_group_tasks(self.request.user)

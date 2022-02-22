@@ -69,20 +69,20 @@ class BesluitForm(forms.Form):
         required=True,
         label=_("Type"),
         help_text=_(
-            "Selecteer een besluittype. Deze besluittypen horen bij het zaaktype van de zaak."
+            "Select a besluittype. These besluittypes belong to the ZAAKTYPE of the ZAAK."
         ),
     )
     beslisdatum = forms.DateField(
-        label=_("Beslisdatum"),
+        label=_("Decision date"),
         required=True,
         initial=date.today,
         help_text=_("De beslisdatum (AWB) van het besluit."),
     )
     ingangsdatum = forms.DateField(
-        label=_("Ingangsdatum"),
+        label=_("Starting date"),
         required=True,
         initial=date.today,
-        help_text=_("Ingangsdatum van de werkingsperiode van het besluit."),
+        help_text=_("Starting date of the duration of the resolution."),
     )
 
     document = AlfrescoDocumentField(

@@ -88,7 +88,9 @@ class BoardItem(models.Model):
     object = models.URLField(
         _("object"),
         db_index=True,
-        help_text=_("URL of the object in one of ZGW APIs this board item relates to"),
+        help_text=_(
+            "URL-reference of the OBJECT in one of ZGW APIs this board item relates to"
+        ),
     )
 
     objects = BoardItemQuerySet.as_manager()

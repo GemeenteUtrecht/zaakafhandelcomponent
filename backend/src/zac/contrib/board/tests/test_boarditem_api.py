@@ -556,7 +556,7 @@ class BoardItemAPITests(ESMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(), {"nonFieldErrors": ["This object is already on the board"]}
+            response.json(), {"nonFieldErrors": ["Dit OBJECT staat al op het bord"]}
         )
 
     def test_update_item_column_success(self):
@@ -582,7 +582,8 @@ class BoardItemAPITests(ESMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(), {"columnUuid": ["The board of the item can't be changed"]}
+            response.json(),
+            {"columnUuid": ["De bord van het item kan niet worden veranderd"]},
         )
 
     def test_update_item_change_object(self):
@@ -592,7 +593,9 @@ class BoardItemAPITests(ESMixin, APITestCase):
         response = self.client.patch(url, {"object": ZAAK_URL})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"object": ["This field can't be changed."]})
+        self.assertEqual(
+            response.json(), {"object": ["Dit veld kan niet veranderd worden."]}
+        )
 
     def test_delete_item_success(self):
         item = BoardItemFactory.create()

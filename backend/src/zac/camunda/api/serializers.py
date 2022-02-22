@@ -55,7 +55,7 @@ class TaskSerializer(PolymorphicSerializer):
     assignee_type = serializers.ChoiceField(
         required=True,
         choices=AssigneeTypeChoices.choices + ("", ""),
-        help_text=_("The assignee type that was assigned to the user task."),
+        help_text=_("The `assigneeType` of the user task."),
     )
 
 
@@ -92,7 +92,7 @@ class BaseUserTaskSerializer(PolymorphicSerializer):
         label=_("Form to render"),
         source="task.form_key",
         help_text=_(
-            "The form key of the form to render. Note that unknown form keys (= not "
+            "The `formKey` of the form to render. Note that unknown `formKeys` (= not "
             "present in the enum) will be returned as is."
         ),
         choices=(),
@@ -151,8 +151,8 @@ class SubmitUserTaskSerializer(BaseUserTaskSerializer):
 
 class MessageSerializer(serializers.Serializer):
     process_instance_id = serializers.UUIDField(
-        label=_("Process instance ID"),
-        help_text=_("The ID of the process instance where the message is sent to."),
+        label=_("Process instance `id`"),
+        help_text=_("The `id` of the process instance where the message is sent to."),
     )
     message = serializers.ChoiceField(
         choices=(("", ""),),
@@ -166,8 +166,10 @@ class MessageSerializer(serializers.Serializer):
 
 class SetTaskAssigneeSerializer(serializers.Serializer):
     task = TaskField(
-        label=_("Task ID"),
-        help_text=_("The ID of the task to which the assignee/delegate is to be set."),
+        label=_("Task `id`"),
+        help_text=_(
+            "The `id` of the task to which the assignee/delegate is to be set."
+        ),
     )
     assignee = serializers.CharField(
         label=_("assignee"),
@@ -213,7 +215,7 @@ class BPMNSerializer(APIModelSerializer):
         )
         extra_kwargs = {
             "id": {
-                "help_text": _("The process definition id."),
+                "help_text": _("The process definition `id`."),
             },
             "bpmn20_xml": {
                 "help_text": _(

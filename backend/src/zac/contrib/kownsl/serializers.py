@@ -69,14 +69,10 @@ class ApprovalSerializer(APIModelSerializer):
 
 class AdviceDocumentSerializer(APIModelSerializer):
     advice_url = serializers.SerializerMethodField(
-        help_text=_(
-            "URL that points to the advice version of the document on the DoWC."
-        )
+        help_text=_("URL-reference to the advice version of the document on the DoWC.")
     )
     source_url = serializers.SerializerMethodField(
-        help_text=_(
-            "URL that points to the advice version of the document on the DoWC."
-        )
+        help_text=_("URL-reference to the source version of the document on the DoWC.")
     )
     title = serializers.CharField(
         source="document.bestandsnaam", help_text=_("The name of the document.")
@@ -143,7 +139,7 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     }
     discriminator_field = "review_type"
 
-    id = serializers.UUIDField(help_text=_("The uuid of the review request."))
+    id = serializers.UUIDField(help_text=_("The `id` of the review request."))
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices, help_text=_("The review type.")
     )

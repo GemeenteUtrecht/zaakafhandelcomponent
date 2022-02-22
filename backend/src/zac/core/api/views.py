@@ -137,7 +137,9 @@ class GetDocumentInfoView(views.APIView):
     def get(self, request: Request) -> Response:
         document_url = request.query_params.get("document")
         if not document_url:
-            raise exceptions.ValidationError("'document' query parameter is required.")
+            raise exceptions.ValidationError(
+                _("'document' query parameter is required.")
+            )
 
         document = get_document(document_url)
         document.informatieobjecttype = get_informatieobjecttype(
@@ -195,7 +197,7 @@ class GetZaakMixin:
         try:
             zaak = find_zaak(**self.kwargs)
         except ObjectDoesNotExist:
-            raise Http404("No zaak matches the given query.")
+            raise Http404("No ZAAK matches the given query.")
         self.check_object_permissions(self.request, zaak)
         return zaak
 
@@ -209,7 +211,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         return mapping[self.request.method](**kwargs)
 
     @extend_schema(
-        summary=_("Retrieve case details"),
+        summary=_("Retrieve ZAAK."),
         responses={
             200: ZaakDetailSerializer,
             403: PermissionDeniedSerializer,
@@ -224,7 +226,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Update case details"),
+        summary=_("Partially update ZAAK."),
         responses={
             204: None,
             403: PermissionDeniedSerializer,
@@ -258,14 +260,14 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
     serializer_class = ZaakStatusSerializer
 
-    @extend_schema(summary=_("List case statussen"))
+    @extend_schema(summary=_("List ZAAK STATUSsen."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
         serializer = self.serializer_class(instance=statussen, many=True)
         return Response(serializer.data)
 
-    @extend_schema(summary=_("Add case status"))
+    @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
         serializer = self.serializer_class(
@@ -286,7 +288,7 @@ class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakEigenschapSerializer
-    schema_summary = _("List case properties (eigenschappen)")
+    schema_summary = _("List ZAAKEIGENSCHAPpen.")
 
     def get_objects(self):
         zaak = self.get_object()
@@ -311,7 +313,7 @@ class ZaakEigenschapDetailView(views.APIView):
         try:
             zaak_eigenschap = fetch_zaak_eigenschap(url)
         except ClientError as exc:
-            raise Http404("No zaak eigenschap matches the given url.")
+            raise Http404("No ZAAKEIGENSCHAP matches the given url.")
 
         # check permissions
         zaak = get_zaak(zaak_url=zaak_eigenschap.zaak)
@@ -320,7 +322,7 @@ class ZaakEigenschapDetailView(views.APIView):
         return zaak_eigenschap
 
     @extend_schema(
-        summary=_("Create case property"), request=CreateZaakEigenschapSerializer
+        summary=_("Create ZAAKEIGENSCHAP."), request=CreateZaakEigenschapSerializer
     )
     def post(self, request, *args, **kwargs):
         serializer = CreateZaakEigenschapSerializer(data=request.data)
@@ -336,8 +338,11 @@ class ZaakEigenschapDetailView(views.APIView):
         )
         if not zaak_eigenschap:
             raise exceptions.NotFound(
-                detail=_("EIGENSCHAP with name %s not found for zaaktype %s.")
-                % (serializer.validated_data["naam"], zaak.zaaktype)
+                detail=_(
+                    "EIGENSCHAP with name {eigenschap} not found for zaaktype {zaaktype}."
+                ).format(
+                    eigenschap=serializer.validated_data["naam"], zaaktype=zaak.zaaktype
+                )
             )
         # Resolve relation
         zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
@@ -346,13 +351,13 @@ class ZaakEigenschapDetailView(views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
-        summary=_("Update case property"),
+        summary=_("Partially update ZAAKEIGENSCHAP."),
         parameters=[
             OpenApiParameter(
                 name="url",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                description=_("URL-reference of ZAAKEIGENSCHAP in ZAKEN API"),
                 location=OpenApiParameter.QUERY,
             )
         ],
@@ -371,13 +376,13 @@ class ZaakEigenschapDetailView(views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Delete case property"),
+        summary=_("Delete ZAAKEIGENSCHAP."),
         parameters=[
             OpenApiParameter(
                 name="url",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("URL reference of ZAAK EIGENSCHAP in ZAKEN API"),
+                description=_("URL-reference of ZAAKEIGENSCHAP in ZAKEN API"),
                 location=OpenApiParameter.QUERY,
             )
         ],
@@ -392,7 +397,7 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RelatedZaakSerializer
-    schema_summary = _("List related cases")
+    schema_summary = _("List related ZAAKen.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -415,8 +420,8 @@ class CreateZaakRelationView(views.APIView):
         return AddZaakRelationSerializer(data=self.request.data)
 
     @extend_schema(
-        summary=_("Add related zaak"),
-        description=_("Relate a zaak to another zaak and create the reverse relation."),
+        summary=_("Add related ZAAK."),
+        description=_("Relate a ZAAK to another ZAAK and create the reverse relation."),
     )
     def post(self, request: Request) -> Response:
         serializer = self.get_serializer()
@@ -469,7 +474,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = RolSerializer
-    schema_summary = _("List case roles")
+    schema_summary = _("List ROLlen of ZAAK.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -482,7 +487,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
     serializer_class = ZaakObjectGroupSerializer
-    schema_summary = _("List related objects of a case")
+    schema_summary = _("List related OBJECTs of a ZAAK.")
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -510,7 +515,7 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("List case users and atomic permissions"),
+    summary=_("List ZAAK users and atomic permissions."),
 )
 class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -543,7 +548,7 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 ###############################
 
 
-@extend_schema(summary=_("List case documents"))
+@extend_schema(summary=_("List ZAAK documents."))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
@@ -616,7 +621,7 @@ class ZaakDocumentView(views.APIView):
         return document_data
 
     @extend_schema(
-        summary=_("Edit case document"),
+        summary=_("Partially update ZAAK document."),
         responses=GetZaakDocumentSerializer,
     )
     def patch(self, request: Request, *args, **kwargs) -> Response:
@@ -645,12 +650,12 @@ class ZaakDocumentView(views.APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Add document to case"),
+        summary=_("Add document to ZAAK."),
         responses=GetZaakDocumentSerializer,
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         """
-        Upload a document to the Documenten API and relate it to a case.
+        Upload a document to the Documenten API and relate it to a ZAAK.
         """
         serializer = self.get_serializer(
             data=request.data,
@@ -683,14 +688,14 @@ class ZaakDocumentView(views.APIView):
 
 
 @extend_schema(
-    summary=_("List document types"),
+    summary=_("List document types for a ZAAK."),
     tags=["meta"],
     parameters=[
         OpenApiParameter(
             name="zaak",
             required=True,
             type=OpenApiTypes.URI,
-            description=_("Zaak to list available document types for"),
+            description=_("ZAAK to list available document types for."),
             location=OpenApiParameter.QUERY,
         )
     ],
@@ -712,7 +717,7 @@ class InformatieObjectTypeListView(generics.ListAPIView):
         return get_informatieobjecttypen_for_zaak(zaak_url)
 
 
-@extend_schema(summary=_("List zaaktypen"), tags=["meta"])
+@extend_schema(summary=_("List ZAAKTYPEs."), tags=["meta"])
 class ZaakTypenView(ListAPIView):
     """
     List a collection of zaaktypen available to the end user.
@@ -754,10 +759,10 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen_aggregated
 
 
-@extend_schema(summary=_("List confidentiality classifications"), tags=["meta"])
+@extend_schema(summary=_("List vertrouwelijkheidaanduidingen."), tags=["meta"])
 class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
     """
-    List the available confidentiality classification.
+    List the available vertrouwelijkheidaanduidingen.
     """
 
     authentication_classes = (authentication.SessionAuthentication,)
@@ -772,14 +777,14 @@ class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("List statustypes"),
+    summary=_("List STATUSTYPEs for a ZAAK."),
     tags=["meta"],
     parameters=[
         OpenApiParameter(
             name="zaak",
             required=True,
             type=OpenApiTypes.URI,
-            description=_("Zaak to list available statustypes for"),
+            description=_("ZAAK to list available STATUSTYPEs for."),
             location=OpenApiParameter.QUERY,
         )
     ],
@@ -797,7 +802,7 @@ class StatusTypenView(views.APIView):
     def get(self, request):
         zaak_url = request.query_params.get("zaak")
         if not zaak_url:
-            raise exceptions.ValidationError("'zaak' query parameter is required.")
+            raise exceptions.ValidationError(_("'zaak' query parameter is required."))
         zaak = get_zaak(zaak_url=zaak_url)
         zaaktype = fetch_zaaktype(zaak.zaaktype)
         statusstypen = get_statustypen(zaaktype)
@@ -805,7 +810,7 @@ class StatusTypenView(views.APIView):
         return Response(serializer.data)
 
 
-@extend_schema(summary=_("List zaaktype eigenschappen"), tags=["meta"])
+@extend_schema(summary=_("List ZAAKTYPE EIGENSCHAPpen."), tags=["meta"])
 class EigenschappenView(ListAPIView):
     """
     List the available eigenschappen for a given `zaaktype` OR a `zaaktype_omschrijving` within a `catalogus`.
@@ -867,8 +872,8 @@ class EigenschappenView(ListAPIView):
 
 
 @extend_schema(
-    summary=_("List objecttypes"),
-    description=_("Retrieves all object types from the configured Objecttypes API."),
+    summary=_("List OBJECTTYPEs."),
+    description=_("Retrieves all OBJECTTYPEs from the configured OBJECTTYPES API."),
     tags=["objects"],
 )
 class ObjecttypeListView(ListMixin, views.APIView):
@@ -882,8 +887,8 @@ class ObjecttypeListView(ListMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("Read objecttype version"),
-    description=_("Read the details of a particular objecttype version"),
+    summary=_("Read OBJECTTYPE version."),
+    description=_("Read the details of a particular OBJECTTYPE version."),
     tags=["objects"],
 )
 class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
@@ -896,8 +901,8 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 
 
 @extend_schema(
-    summary=_("Search objects"),
-    description=_("Search for objects in the Objects API"),
+    summary=_("Search OBJECTs."),
+    description=_("Search for OBJECTs in the OBJECTS API."),
     responses={(200, "application/json"): ObjectProxySerializer},
     tags=["objects"],
 )
@@ -933,7 +938,7 @@ class ZaakObjectChangeView(views.APIView):
         try:
             zaak_object = fetch_zaak_object(url)
         except ClientError as exc:
-            raise Http404("No zaak object matches the given url.")
+            raise Http404("No ZAAKOBJECT matches the given url.")
 
         # check permissions
         zaak = get_zaak(zaak_url=zaak_object.zaak)
@@ -942,8 +947,8 @@ class ZaakObjectChangeView(views.APIView):
         return zaak_object
 
     @extend_schema(
-        summary=_("Create zaakobject"),
-        description=_("Relate an object to a zaak"),
+        summary=_("Create ZAAKOBJECT."),
+        description=_("Relate an OBJECT to a ZAAK."),
         responses={(201, "application/json"): ZaakObjectProxySerializer},
         tags=["objects"],
     )
@@ -961,13 +966,13 @@ class ZaakObjectChangeView(views.APIView):
         return Response(status=201, data=created_zaakobject)
 
     @extend_schema(
-        summary=_("Delete zaak object"),
+        summary=_("Delete ZAAKOBJECT."),
         parameters=[
             OpenApiParameter(
                 name="url",
                 required=True,
                 type=OpenApiTypes.URI,
-                description=_("URL reference of ZAAK OBJECT in ZAKEN API"),
+                description=_("URL-reference of ZAAKOBJECT in ZAKEN API."),
                 location=OpenApiParameter.QUERY,
             )
         ],

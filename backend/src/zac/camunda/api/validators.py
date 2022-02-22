@@ -7,7 +7,7 @@ from zac.accounts.models import User
 
 
 class UserValidator:
-    message = _("A user with username {username} does not exist.")
+    message = _("A user with `username` {username} does not exist.")
 
     def __call__(self, username):
         try:
@@ -17,7 +17,7 @@ class UserValidator:
 
 
 class GroupValidator:
-    message = _("A group with name {name} does not exist.")
+    message = _("A group with `name` {name} does not exist.")
 
     def __call__(self, name):
         try:

@@ -20,7 +20,7 @@ class AdresSearchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     @extend_schema(
-        summary=_("List BAG address suggestions"),
+        summary=_("List BAG address suggestions."),
         parameters=[
             OpenApiParameter(
                 "q",
