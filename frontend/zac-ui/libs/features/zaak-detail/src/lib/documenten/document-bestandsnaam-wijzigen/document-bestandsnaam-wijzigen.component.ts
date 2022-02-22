@@ -22,34 +22,27 @@ export class DocumentBestandsnaamWijzigenComponent {
   readonly errorMessage = 'Wijzigen bestandsnaam niet gelukt.';
 
   isLoading: boolean;
+  form: FieldConfiguration[] = [
+    {
+      label: 'Nieuwe bestandsnaam',
+      name: 'bestandsnaam',
+      required: true,
+      autocomplete: 'off',
+      value: '',
+    },
+    {
+      label: 'Reden wijziging',
+      name: 'reden',
+      required: true,
+      autocomplete: 'off',
+      value: '',
+    },
+  ];
 
   constructor(
     private documentService: DocumentenService,
     private snackbarService: SnackbarService,
   ) { }
-
-  /**
-   * Form for changing document name.
-   * @returns {FieldConfiguration[]}
-   */
-  get form(): FieldConfiguration[] {
-    return [
-      {
-        label: 'Nieuwe bestandsnaam',
-        name: 'bestandsnaam',
-        required: true,
-        autocomplete: 'off',
-        value: '',
-      },
-      {
-        label: 'Reden wijziging',
-        name: 'reden',
-        required: true,
-        autocomplete: 'off',
-        value: '',
-      },
-    ];
-  }
 
   /**
    * Submit form data.
