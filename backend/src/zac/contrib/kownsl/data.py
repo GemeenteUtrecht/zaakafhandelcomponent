@@ -27,7 +27,7 @@ class ReviewRequest(Model):
     documents: List[str] = field(default_factory=list)
     for_zaak: str = ""
     frontend_url: str = ""
-    requester: str = ""
+    requester: Dict = field(default_factory=dict)
     toelichting: str = ""
     user_deadlines: Dict = field(default_factory=dict)
 
@@ -40,6 +40,7 @@ class Author(Model):
     username: str
     first_name: str
     last_name: str
+    full_name: str
 
     @property
     def user(self):

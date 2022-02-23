@@ -24,7 +24,12 @@ class ConvertToJsonTests(TestCase):
             "numAssignedUsers": 1,
             "toelichting": "Like a flash of light in an endless night.",
             "userDeadlines": {},
-            "requester": "Henkie",
+            "requester": {
+                "username": "Henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         advice_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -32,6 +37,7 @@ class ConvertToJsonTests(TestCase):
                 "username": "foo",
                 "firstName": "",
                 "lastName": "",
+                "fullName": "",
             },
             "group": "",
             "advice": "dummy",
@@ -69,6 +75,7 @@ class ConvertToJsonTests(TestCase):
                                 "username": "foo",
                                 "first_name": "",
                                 "last_name": "",
+                                "full_name": "",
                             },
                             "group": "",
                             "advice": "dummy",
@@ -76,7 +83,12 @@ class ConvertToJsonTests(TestCase):
                         }
                     ],
                     "user_deadlines": {},
-                    "requester": "Henkie",
+                    "requester": {
+                        "username": "Henkie",
+                        "first_name": "",
+                        "last_name": "",
+                        "full_name": "",
+                    },
                 }
             ],
         )
@@ -94,7 +106,12 @@ class ConvertToJsonTests(TestCase):
             "numAssignedUsers": 1,
             "toelichting": "I pity the living, envy for the dead",
             "userDeadlines": {},
-            "requester": "Henkie",
+            "requester": {
+                "username": "Henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         approval_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -102,6 +119,7 @@ class ConvertToJsonTests(TestCase):
                 "username": "foo",
                 "firstName": "",
                 "lastName": "",
+                "fullName": "",
             },
             "group": "",
             "approved": True,
@@ -139,6 +157,7 @@ class ConvertToJsonTests(TestCase):
                                 "username": "foo",
                                 "first_name": "",
                                 "last_name": "",
+                                "full_name": "",
                             },
                             "group": "",
                             "approved": True,
@@ -146,7 +165,12 @@ class ConvertToJsonTests(TestCase):
                         }
                     ],
                     "user_deadlines": {},
-                    "requester": "Henkie",
+                    "requester": {
+                        "username": "Henkie",
+                        "first_name": "",
+                        "last_name": "",
+                        "full_name": "",
+                    },
                 }
             ],
         )

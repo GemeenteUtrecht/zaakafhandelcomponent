@@ -137,7 +137,12 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "user:some-user": "2021-01-07",
                 "user:some-user-2": "2021-01-08",
             },
-            "requester": "some-other-user",
+            "requester": {
+                "username": "some-other-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         review_request = factory(ReviewRequest, review_request)
 
@@ -160,6 +165,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             "username": cls.user.username,
             "firstName": "some-first-name",
             "lastName": "some-last-name",
+            "fullName": "some-first-name some-last-name",
         }
 
         advices = [
@@ -260,6 +266,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                             "firstName": "some-first-name",
                             "lastName": "some-last-name",
                             "username": self.user.username,
+                            "fullName": "some-first-name some-last-name",
                         },
                         "group": "",
                         "advice": "some-advice",
@@ -405,7 +412,12 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
                 "user:some-user": "2021-01-07",
                 "user:some-user-2": "2021-01-08",
             },
-            "requester": "some-other-user",
+            "requester": {
+                "username": "some-other-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         cls.review_request = factory(ReviewRequest, cls.review_request_data)
 
@@ -419,6 +431,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "username": "some-user-name",
             "firstName": "some-first-name",
             "lastName": "some-last-name",
+            "fullName": "some-first-name some-last-name",
         }
 
         advices = [

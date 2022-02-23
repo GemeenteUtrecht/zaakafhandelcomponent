@@ -31,7 +31,12 @@ REVIEW_REQUEST = {
     "numAssignedUsers": 2,
     "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
     "userDeadlines": {"user:bob": "2020-11-05"},
-    "requester": "alice",
+    "requester": {
+        "username": "alice",
+        "firstName": "",
+        "lastName": "",
+        "fullName": "",
+    },
     "metadata": {
         "processInstanceId": "fa962a23-ff20-4184-ba98-b390f2407353",
         "taskDefinitionId": "Activity_e56r7y",

@@ -46,7 +46,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
 class AuthorSerializer(APIModelSerializer):
     class Meta:
         model = Author
-        fields = ("first_name", "last_name", "username")
+        fields = ("first_name", "last_name", "username", "full_name")
 
 
 class ApprovalSerializer(APIModelSerializer):

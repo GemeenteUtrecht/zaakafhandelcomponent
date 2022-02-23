@@ -44,7 +44,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReviewRequest'
+                  $ref: '#/components/schemas/SummaryReviewRequest'
           description: ''
     post:
       operationId: review_requests_create
@@ -315,7 +315,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: List approvals
       parameters:
@@ -346,7 +346,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: Register an approval
       parameters:
@@ -387,7 +387,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: Retrieve approval details
       parameters:
@@ -422,7 +422,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: Replace an approval
       parameters:
@@ -468,7 +468,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: Update an approval
       parameters:
@@ -514,7 +514,7 @@ paths:
       description: |-
         Manage approvals for a given review request.
 
-        Approvals can only be created if the end-user has not submitted an advice yet and
+        Approvals can only be created if the end-user has not submitted an approval yet and
         they are listed in the user deadlines.
       summary: Destroy an approval
       parameters:
@@ -682,6 +682,10 @@ components:
           - $ref: '#/components/schemas/User'
           readOnly: true
           description: Author of the review
+        group:
+          type: string
+          default: ''
+          description: Group for which the user has submitted the review.
         advice:
           type: string
           description: Het inhoudelijke advies
@@ -707,6 +711,10 @@ components:
           - $ref: '#/components/schemas/User'
           readOnly: true
           description: Author of the review
+        group:
+          type: string
+          default: ''
+          description: Group for which the user has submitted the review.
         approved:
           type: boolean
           description: Vink dit aan om akkoord te gaan met het/de document(en).
@@ -767,6 +775,10 @@ components:
           - $ref: '#/components/schemas/User'
           readOnly: true
           description: Author of the review
+        group:
+          type: string
+          default: ''
+          description: Group for which the user has submitted the review.
         advice:
           type: string
           description: Het inhoudelijke advies
@@ -789,6 +801,10 @@ components:
           - $ref: '#/components/schemas/User'
           readOnly: true
           description: Author of the review
+        group:
+          type: string
+          default: ''
+          description: Group for which the user has submitted the review.
         approved:
           type: boolean
           description: Vink dit aan om akkoord te gaan met het/de document(en).
@@ -841,9 +857,9 @@ components:
           type: object
           additionalProperties: {}
         requester:
-          type: string
-          description: Username of user who requested review request
-          maxLength: 100
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
         metadata:
           type: object
           additionalProperties: {}
@@ -851,8 +867,7 @@ components:
         zaakDocuments:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/ZaakDocument'
           readOnly: true
           description: The documents with their download url and relevant metadata.
         reviews:
@@ -908,9 +923,9 @@ components:
           type: object
           additionalProperties: {}
         requester:
-          type: string
-          description: Username of user who requested review request
-          maxLength: 100
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
         metadata:
           type: object
           additionalProperties: {}
@@ -918,8 +933,7 @@ components:
         zaakDocuments:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/ZaakDocument'
           readOnly: true
           description: The documents with their download url and relevant metadata.
         reviews:
@@ -936,6 +950,7 @@ components:
       - id
       - numAdvices
       - numApprovals
+      - requester
       - reviewType
       - reviews
       - zaakDocuments
@@ -944,6 +959,51 @@ components:
       - advice
       - approval
       type: string
+    SummaryReviewRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reviewType:
+          $ref: '#/components/schemas/ReviewTypeEnum'
+        numAdvices:
+          type: integer
+          readOnly: true
+          description: The number of advices registered for this request.
+        numApprovals:
+          type: integer
+          readOnly: true
+          description: The number of approvals registered for this request. Note that
+            does not mean they are all positive approvals - this includes the rejections.
+        numAssignedUsers:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        completed:
+          type: integer
+          readOnly: true
+          description: The number of completed requests.
+        userDeadlines:
+          type: object
+          additionalProperties: {}
+        advices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advice'
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Approval'
+      required:
+      - advices
+      - approvals
+      - completed
+      - id
+      - numAdvices
+      - numApprovals
+      - reviewType
     User:
       type: object
       properties:
@@ -957,8 +1017,39 @@ components:
         lastName:
           type: string
           maxLength: 255
+        fullName:
+          type: string
+          description: The full name of the requesting user.
       required:
+      - fullName
       - username
+    ZaakDocument:
+      type: object
+      properties:
+        bronorganisatie:
+          type: string
+        identificatie:
+          type: string
+        downloadUrl:
+          type: string
+          readOnly: true
+          description: URL to download the document
+        name:
+          type: string
+          readOnly: true
+        extra:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+      required:
+      - bronorganisatie
+      - downloadUrl
+      - extra
+      - identificatie
+      - name
+      - title
   securitySchemes:
     ZGWAuthentication:
       type: http

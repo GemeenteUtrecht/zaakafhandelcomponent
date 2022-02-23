@@ -267,7 +267,12 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "numAssignedUsers": 1,
             "toelichting": "some-toelichting",
             "userDeadlines": {},
-            "requester": "some-henkie",
+            "requester": {
+                "username": "some-henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         cls.review_request = factory(ReviewRequest, review_request_data)
 
