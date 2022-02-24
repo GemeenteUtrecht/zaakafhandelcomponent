@@ -5,6 +5,8 @@
   </ng-container>
   <!-- End loading -->
 
+  <a class="anchor d-inline-block mb-4" target="_blank" *ngIf="isVisibleTezzaLink && tezzaLink" href="{{tezzaLink}}">Stationaire zaak in Tezza</a>
+
   <div class='mb-4' *ngIf="zaak && properties && !isLoading">
     <gu-form [title]="'Zaak informatie'"
              [form]="form"

@@ -11,7 +11,15 @@
         <!-- Read-only field. -->
         <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
           <div class="col-12">
-            <p class="p--bold mb-0">{{field.label}}</p>
+            {{link}}
+            <p class="p--bold mb-0" *ngIf="!link">{{field.label}}</p>
+            <a class="anchor" target="_blank" *ngIf="link" href="{{field.value}}">{{field.label}}</a>
+          </div>
+
+          <div class="row" *ngIf="field.widgetType == 'readonly' && link && !field.writeonly">
+            <div class="col-12">
+              <a class="anchor" target="_blank" *ngIf="link" href="{{field.value}}">{{field.label}}</a>
+            </div>
           </div>
 
           <div class="col-12" *ngIf="!field.choices">
