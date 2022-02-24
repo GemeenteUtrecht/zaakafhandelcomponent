@@ -55,9 +55,9 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   readonly zaaktypenWithTezzaLink = [
     "Aanvraag HARVO behandelen",
-    "Huisvestingsbehoefte",
+    "Huisvestingsbehoefte behandelen en uitvoeren",
     "Eigendomsdossier",
-    "Routingformulier",
+    "Routingformulier VGU behandelen",
     "Vastgoedobject beheren",
     "Vastgoedobject behandelen"
   ]
