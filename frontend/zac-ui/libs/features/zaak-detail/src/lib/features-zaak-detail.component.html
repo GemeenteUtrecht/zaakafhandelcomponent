@@ -82,7 +82,11 @@
 
               <!-- Details -->
               <aside class="mb-4">
-                <gu-informatie *ngIf="zaakData" [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie">
+                <gu-informatie *ngIf="zaakData"
+                               [mainZaakUrl]="mainZaakUrl"
+                               [bronorganisatie]="bronorganisatie"
+                               [identificatie]="identificatie"
+                               [zaaktypeOmschrijving]="zaakData.zaaktype?.omschrijving">
                   <gu-betrokkenen [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
                 </gu-informatie>
               </aside>

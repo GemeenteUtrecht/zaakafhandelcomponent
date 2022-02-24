@@ -3,6 +3,7 @@ import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {EigenschapWaarde, NieuweEigenschap, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
 import {SearchService} from '../../../../search/src/lib/search.service';
+import { isTestEnvironment } from '@gu/utils';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
@@ -21,6 +22,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   @Input() mainZaakUrl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
+  @Input() zaaktypeOmschrijving: string;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van zaakinformatie.'
 
@@ -44,6 +46,20 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   /** @type {ZaaktypeEigenschap[]} The zaaktype eigenschappen for the zaak. */
   zaaktypeEigenschappen: ZaaktypeEigenschap[] = []
+
+  /** @type {string} Link to case in Tezza. */
+  tezzaLink: string;
+
+  /** @type {boolean} Wether to show the link to Tezza. */
+  isVisibleTezzaLink = false;
+
+  readonly zaaktypenWithTezzaLink = [
+    "Aanvraag HARVO behandelen",
+    "Huisvestingsbehoefte",
+    "Routingformulier",
+    "Vastgoedobject beheren",
+    "Vastgoedobject behandelen"
+  ]
 
   /**
    * Constructor method.
@@ -160,6 +176,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * to handle the changes.
    */
   ngOnChanges(): void {
+    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaaktypeOmschrijving);
     this.getContextData();
   };
 
@@ -201,6 +218,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isCaseAPILoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak: Zaak) => {
+        this.tezzaLink = this.zaakService.createTezzaUrl(zaak);
         this.zaak = zaak;
         this.isCaseAPILoading = false;
 
