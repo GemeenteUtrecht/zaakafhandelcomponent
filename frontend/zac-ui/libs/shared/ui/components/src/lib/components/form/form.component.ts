@@ -31,7 +31,6 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() editable: boolean | string = true;
   @Input() title = '';
   @Input() keys?: string[] = null;
-  @Input() link: string;
   @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() showEditOnHover: boolean;

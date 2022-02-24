@@ -85,7 +85,6 @@ export class Field {
   control: AbstractControl;
   key?: string;
   label: string;
-  link?: boolean;
   name?: string;
   pattern?: string;
   placeholder: string;

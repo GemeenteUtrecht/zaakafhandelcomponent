@@ -176,6 +176,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * to handle the changes.
    */
   ngOnChanges(): void {
+    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaaktypeOmschrijving);
     this.getContextData();
   };
 
@@ -198,18 +199,6 @@ export class InformatieComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Form the URL to case in Tezza.
-   * @param {Zaak} zaak
-   */
-  createTezzaUrl(zaak: Zaak) {
-    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaaktypeOmschrijving);
-
-    const zaakUuid = zaak.url.split('/api/v1/zaken/')[1]; // Extract case uuid from open zaak url
-    const tezzaHost = isTestEnvironment() ? 'https://alfresco-tezza.cg-intern.ont.utrecht.nl' : 'https://alfresco-tezza.cg-intern.acc.utrecht.nl';
-    this.tezzaLink = `${tezzaHost}/#/details/cases/${zaakUuid}`
-  }
-
-  /**
    * Fetches the confidentiality choices
    */
   fetchConfidentialityChoices() {
@@ -229,7 +218,7 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isCaseAPILoading = true;
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
       (zaak: Zaak) => {
-        this.createTezzaUrl(zaak);
+        this.tezzaLink = this.zaakService.createTezzaUrl(zaak);
         this.zaak = zaak;
         this.isCaseAPILoading = false;
 
