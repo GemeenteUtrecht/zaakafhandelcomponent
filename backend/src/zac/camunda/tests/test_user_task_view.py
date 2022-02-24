@@ -560,7 +560,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
             "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.advice,
+            "reviewType": KownslTypes.approval,
             "documents": [self.document],
             "frontendUrl": "http://some.kownsl.com/frontendurl/",
             "numAdvices": 0,
@@ -568,13 +568,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "numAssignedUsers": 1,
             "toelichting": "some-toelichting",
             "userDeadlines": {},
-            "requester": "some-henkie",
+            "requester": {
+                "username": "some-henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
-        revreq_data = {
-            **review_request_data,
-            **{"review_type": KownslTypes.approval},
-        }
-        review_request = factory(ReviewRequest, revreq_data)
+        review_request = factory(ReviewRequest, review_request_data)
 
         m.post(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",

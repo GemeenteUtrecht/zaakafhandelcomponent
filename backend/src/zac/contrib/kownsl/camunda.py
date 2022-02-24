@@ -261,12 +261,12 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         zaak_context = get_zaak_context(self.context["task"])
         self.review_request = create_review_request(
             zaak_context.zaak.url,
+            self.context["request"].user,
             documents=self.validated_data["selected_documents"],
             review_type=review_type,
             num_assigned_users=count_users,
             toelichting=self.validated_data["toelichting"],
             user_deadlines=user_deadlines,
-            requester=self.context["request"].user.username,
         )
         # add permission for advisors to see the zaak-detail page
         add_permissions_for_advisors(self.review_request)

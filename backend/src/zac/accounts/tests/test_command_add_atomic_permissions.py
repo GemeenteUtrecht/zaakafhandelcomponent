@@ -111,16 +111,19 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
         )
-        review_request = generate_oas_component(
-            "kownsl",
-            "schemas/ReviewRequest",
-            id="1b864f55-0880-4207-9246-9b454cb69cca",
-            forZaak=zaak["url"],
-            userDeadlines={f"user:{self.user.username}": "2099-01-01"},
-            metadata={},
-            zaakDocuments={},
-            reviews={},
-        )
+        review_request = {
+            "id": "1b864f55-0880-4207-9246-9b454cb69cca",
+            "created": "2020-12-16T14:15:22Z",
+            "forZaak": zaak["url"],
+            "reviewType": "advice",
+            "documents": [],
+            "frontendUrl": "",
+            "numAdvices": 0,
+            "numApprovals": 0,
+            "numAssignedUsers": 0,
+            "toelichting": "",
+            "userDeadlines": {f"user:{self.user.username}": "2099-01-01"},
+        }
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))

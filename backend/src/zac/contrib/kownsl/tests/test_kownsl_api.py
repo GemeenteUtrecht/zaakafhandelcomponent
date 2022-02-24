@@ -10,6 +10,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
+from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
@@ -84,13 +85,20 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "numApprovals": 0,
             "numAssignedUsers": 0,
             "toelichting": "",
+            "requester": {
+                "username": "Henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         m.post(
             "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
         )
-
+        user = UserFactory.create(username="Henkie")
         review_request = create_review_request(
             "https://zaken.nl/api/v1/zaak/123",
+            user,
             documents=["https://doc.nl/123"],
         )
 
@@ -111,6 +119,12 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "numApprovals": 0,
             "numAssignedUsers": 1,
             "toelichting": "Longing for the past but dreading the future",
+            "requester": {
+                "username": "Henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         review_request = factory(ReviewRequest, _review_request)
         response = [
@@ -120,6 +134,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "username": "foo",
                     "firstName": "",
                     "lastName": "",
+                    "fullName": "",
                 },
                 "group": "",
                 "advice": "dummy",
@@ -160,6 +175,12 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "numApprovals": 1,
             "numAssignedUsers": 1,
             "toelichting": "Are a thousand tears worth a single smile?",
+            "requester": {
+                "username": "Henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
         }
         review_request = factory(ReviewRequest, _review_request)
         response = [
@@ -169,6 +190,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                     "username": "foo",
                     "firstName": "",
                     "lastName": "",
+                    "fullName": "",
                 },
                 "group": "",
                 "approved": True,
@@ -220,6 +242,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "numApprovals": 0,
             "numAssignedUsers": 0,
             "toelichting": "",
+            "userDeadlines": {},
         }
         m.get(
             f"https://kownsl.nl/api/v1/review-requests?for_zaak={zaak.url}",

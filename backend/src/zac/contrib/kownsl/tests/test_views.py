@@ -35,7 +35,12 @@ REVIEW_REQUEST = {
     "userDeadlines": {
         "user:some-user": "2020-12-20",
     },
-    "requester": "other-user",
+    "requester": {
+        "username": "some-other-user",
+        "firstName": "",
+        "lastName": "",
+        "fullName": "",
+    },
     "metadata": {},
     "zaakDocuments": [],
     "reviews": [],
@@ -188,6 +193,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
                         "username": self.user.username,
                         "first_name": self.user.first_name,
                         "last_name": self.user.last_name,
+                        "full_name": "",
                     },
                     "approved": True,
                     "group": "",

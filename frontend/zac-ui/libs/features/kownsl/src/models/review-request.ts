@@ -9,6 +9,13 @@ export interface Metadata {
   processInstanceId: string;
 }
 
+export interface Requester {
+  username: string,
+  firstName: string,
+  lastName: string,
+  fullName: string,
+}
+
 export interface ReviewRequest {
   created: Date;
   id: string;
@@ -21,7 +28,7 @@ export interface ReviewRequest {
   numAssignedUsers: number;
   toelichting: string;
   userDeadlines: any;
-  requester: string;
+  requester: Requester;
   metadata: Metadata;
   zaakDocuments: ZaakDocument[];
   reviews: Review[];
