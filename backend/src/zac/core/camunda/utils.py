@@ -73,22 +73,23 @@ def get_task(*args, **kwargs) -> Optional[Task]:
     return get_task(*args, **kwargs)
 
 
-def get_process_zaak_url(process: ProcessInstance) -> str:
-    camunda_client = get_client()
-
+def get_process_zaak_url(
+    process: ProcessInstance, zaak_url_variable: str = "zaakUrl"
+) -> str:
     try:
-        return process.get_variable("zaakUrl")
+        return process.get_variable(zaak_url_variable)
     except requests.RequestException as exc:
         if exc.response.status_code != 404:
             raise
 
+    camunda_client = get_client()
     # search parent processes
     parent_processes_response = camunda_client.get(
         "process-instance", {"subProcessInstance": process.id}
     )
     if not parent_processes_response:
         raise RuntimeError(
-            "None of the (parent) processes had a zaakUrl process variable!"
+            f"None of the (parent) processes had a {zaak_url_variable} process variable!"
         )
 
     parent_process = factory(ProcessInstance, parent_processes_response[0])

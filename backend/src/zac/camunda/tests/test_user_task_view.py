@@ -125,21 +125,9 @@ class GetUserTaskContextViewTests(APITestCase):
                 cls.document,
             ],
         )
-
-        process_instance_id = uuid.uuid4()
-        process_definition_id = uuid.uuid4()
-        definition_id = f"BBV_vragen:3:{process_definition_id}"
-        cls.process_instance = {
-            "id": str(process_instance_id),
-            "definition_id": definition_id,
-        }
-
-        process_instance = factory(ProcessInstance, cls.process_instance)
-        process_instance.get_variable = MagicMock()
-        process_instance.get_variable.return_value = None
-        cls.patch_get_process_instance = patch(
-            "zac.core.camunda.select_documents.context.get_process_instance",
-            return_value=process_instance,
+        cls.patch_get_process_zaak_url = patch(
+            "zac.core.camunda.select_documents.context.get_process_zaak_url",
+            return_value=cls.zaak.url,
         )
 
         cls.patch_get_zaaktype = patch(
@@ -160,8 +148,8 @@ class GetUserTaskContextViewTests(APITestCase):
         super().setUp()
         self.client.force_authenticate(self.user)
 
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
+        self.patch_get_process_zaak_url.start()
+        self.addCleanup(self.patch_get_process_zaak_url.stop)
 
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)

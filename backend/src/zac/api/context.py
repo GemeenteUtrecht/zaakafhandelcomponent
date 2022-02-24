@@ -20,16 +20,25 @@ class ZaakContext(Context):
     zaaktype: Optional[ZaakType] = None
 
 
-def get_zaak_url_from_context(task: Task) -> Tuple[UUID, str]:
+def get_zaak_url_from_context(
+    task: Task, zaak_url_variable: str = "zaakUrl"
+) -> Tuple[UUID, str]:
     process_instance = get_process_instance(task.process_instance_id)
-    zaak_url = get_process_zaak_url(process_instance)
+    zaak_url = get_process_zaak_url(
+        process_instance, zaak_url_variable=zaak_url_variable
+    )
     return task.id, zaak_url
 
 
 def get_zaak_context(
-    task: Task, require_zaaktype: bool = False, require_documents: bool = False
+    task: Task,
+    require_zaaktype: bool = False,
+    require_documents: bool = False,
+    zaak_url_variable: str = "zaakUrl",
 ) -> ZaakContext:
-    task_pid, zaak_url = get_zaak_url_from_context(task)
+    task_pid, zaak_url = get_zaak_url_from_context(
+        task, zaak_url_variable=zaak_url_variable
+    )
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype) if require_zaaktype else None
     docs_context = get_documenten(zaak) if require_documents else (None, None)

@@ -90,8 +90,8 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
 
     def validate_selected_documents(self, selected_docs):
         # Validate selected documents
-        hoofd_zaak = self.get_zaak_from_context()
         doc_urls = [doc["document"] for doc in selected_docs]
+        hoofd_zaak = self.get_zaak_from_context()
         validate_zaak_documents(doc_urls, hoofd_zaak)
 
         # Validated selected document types according to case type
@@ -106,21 +106,19 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         if invalid_doc_types:
             raise serializers.ValidationError(
                 _(
-                    "Selected document types: {invalid_doc_types} are invalid choices."
+                    "Selected document types: {invalid_doc_types} are invalid choices based on the related ZAAKTYPE {zaaktype}."
                 ).format(
                     invalid_doc_types=invalid_doc_types,
+                    zaaktype=related_zaaktype.omschrijving,
                 ),
                 code="invalid-choice",
             )
         return selected_docs
 
     def get_zaak_from_context(self) -> Zaak:
-        try:
-            return self._hoofd_zaak
-        except AttributeError:
-            self._hoofd_zaak = get_zaak_context(self.context["task"]).zaak
-
-        return self._hoofd_zaak
+        return get_zaak_context(
+            self.context["task"], zaak_url_variable="hoofdZaakUrl"
+        ).zaak
 
     def get_process_variables(self) -> Dict:
         """
