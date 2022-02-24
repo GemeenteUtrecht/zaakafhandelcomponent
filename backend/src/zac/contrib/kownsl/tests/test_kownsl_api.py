@@ -95,7 +95,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.post(
             "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
         )
-        user = UserFactory.create()
+        user = UserFactory.create(username="Henkie")
         review_request = create_review_request(
             "https://zaken.nl/api/v1/zaak/123",
             user,
@@ -242,6 +242,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             "numApprovals": 0,
             "numAssignedUsers": 0,
             "toelichting": "",
+            "userDeadlines": {},
         }
         m.get(
             f"https://kownsl.nl/api/v1/review-requests?for_zaak={zaak.url}",

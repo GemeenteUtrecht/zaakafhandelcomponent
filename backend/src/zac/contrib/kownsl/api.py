@@ -48,7 +48,6 @@ def create_review_request(
         "documents": documents,
         "toelichting": toelichting,
         "user_deadlines": user_deadlines,
-        "requester": requester.username,
     }
     resp = client.create("review_requests", data=data)
     return factory(ReviewRequest, resp)
