@@ -222,7 +222,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
         .subscribe(
           () => {
             this.modalService.close(this.modalFormId);
-            this.getContextData.bind(this);
+            this.getContextData();
           },
           this.reportError.bind(this),
           () => this.isLoading = false,
