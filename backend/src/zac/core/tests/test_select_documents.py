@@ -80,10 +80,13 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
         )
         cls.zaak = factory(Zaak, zaak)
-
         cls.patch_get_zaak = patch(
             "zac.core.camunda.select_documents.context.get_zaak",
             return_value=cls.zaak,
+        )
+        cls.patch_get_process_zaak_url = patch(
+            "zac.core.camunda.select_documents.context.get_process_zaak_url",
+            return_value=cls.zaak.url,
         )
 
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
@@ -116,22 +119,6 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             return_value=[cls.document],
         )
 
-        process_instance_id = uuid.uuid4()
-        process_definition_id = uuid.uuid4()
-        definition_id = f"BBV_vragen:3:{process_definition_id}"
-        cls.process_instance = {
-            "id": str(process_instance_id),
-            "definition_id": definition_id,
-        }
-
-        process_instance = factory(ProcessInstance, cls.process_instance)
-        process_instance.get_variable = MagicMock()
-        process_instance.get_variable.return_value = None
-        cls.patch_get_process_instance = patch(
-            "zac.core.camunda.select_documents.context.get_process_instance",
-            return_value=process_instance,
-        )
-
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -158,14 +145,14 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         self.patch_get_zaak.start()
         self.addCleanup(self.patch_get_zaak.stop)
 
+        self.patch_get_process_zaak_url.start()
+        self.addCleanup(self.patch_get_process_zaak_url.stop)
+
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
 
         self.patch_resolve_documenten.start()
         self.addCleanup(self.patch_resolve_documenten.stop)
-
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
 
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)

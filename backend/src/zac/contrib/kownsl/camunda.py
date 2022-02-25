@@ -258,9 +258,9 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
         # Derive review_type from task.form_key
         review_type = FORM_KEY_REVIEW_TYPE_MAPPING[self.context["task"].form_key]
-        zaak_context = get_zaak_context(self.context["task"])
+        zaak = self.get_zaak_from_context()
         self.review_request = create_review_request(
-            zaak_context.zaak.url,
+            zaak.url,
             self.context["request"].user,
             documents=self.validated_data["selected_documents"],
             review_type=review_type,
