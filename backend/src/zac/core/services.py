@@ -41,6 +41,7 @@ from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
 
+from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
 from .cache import invalidate_document_cache, invalidate_zaak_cache
 from .models import CoreConfig
@@ -1143,6 +1144,15 @@ def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
         },
     )
     return response
+
+
+def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
+    drc_client = _client_from_url(document_url)
+    doc_uuid = furl(document_url).path.segments[-1]
+    audit_trail = drc_client.list(
+        "audittrail", enkelvoudiginformatieobject_uuid=doc_uuid
+    )
+    return factory(AuditTrailData, audit_trail)
 
 
 ###################################################

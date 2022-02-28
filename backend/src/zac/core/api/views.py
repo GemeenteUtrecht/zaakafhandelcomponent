@@ -29,6 +29,7 @@ from rest_framework.response import Response
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User, UserAtomicPermission
@@ -52,6 +53,7 @@ from ..services import (
     create_zaak_eigenschap,
     delete_zaak_eigenschap,
     delete_zaak_object,
+    fetch_document_audit_trail,
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
@@ -573,11 +575,27 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
         referer = request.headers.get("referer", "")
         open_documenten = get_open_documenten(request.user, referer)
 
+        # Resolve audit trail
+        with parallel() as executor:
+            audittrails = list(
+                executor.map(
+                    fetch_document_audit_trail, [doc.url for doc in resolved_documenten]
+                )
+            )
+
+        editing_history = {}
+        for at in audittrails:
+            at = sorted(at, key=lambda obj: obj.aanmaakdatum, reverse=True)
+            bumped_versions = [edit for edit in at if edit.was_bumped] or at
+            bumped_version = bumped_versions[0]
+            editing_history[bumped_version.resource_url] = bumped_version.modified
+
         serializer = self.serializer_class(
             instance=resolved_documenten,
             many=True,
             context={
-                "open_documenten": [dowc.unversioned_url for dowc in open_documenten]
+                "open_documenten": [dowc.drc_url for dowc in open_documenten],
+                "editing_history": editing_history,
             },
         )
         return Response(serializer.data)
