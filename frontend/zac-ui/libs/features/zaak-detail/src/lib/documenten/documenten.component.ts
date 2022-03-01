@@ -38,8 +38,8 @@ export class DocumentenComponent implements OnChanges {
     'Acties',
     '',
     '',
+    'Auteur',
     'Type',
-    'Vertrouwelijkheid',
   ]
 
   tableData: Table = new Table(this.tableHead, []);
@@ -117,9 +117,6 @@ export class DocumentenComponent implements OnChanges {
       case 'overschrijven':
         this.patchDocument(actionUrl);
         break;
-      case 'vertrouwelijkheid':
-        this.patchConfidentiality(actionUrl);
-        break;
     }
   }
 
@@ -131,7 +128,13 @@ export class DocumentenComponent implements OnChanges {
     this.isLoading = true;
     this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
       this.isLoading = false;
-      window.open(res.magicUrl, "_self");
+
+      // Check if Microsoft Office application file
+      if (res.magicUrl.substr(0,3) === "ms-") {
+        window.open(res.magicUrl, "_self");
+      } else {
+        window.open(res.magicUrl, "_blank");
+      }
     }, () => {
       this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
       this.isLoading = false;
@@ -170,21 +173,12 @@ export class DocumentenComponent implements OnChanges {
   }
 
   /**
-   * Opens the "gu-bestandsnaam-wijzigen-modal" component
+   * Opens the "gu-bestandseigenschappen-wijzigen-modal" component
    * @param document
    */
   patchDocumentName(document) {
     this.selectedDocument = document;
-    this.openModal('bestandsnaam-wijzigen-modal')
-  }
-
-  /**
-   * Opens the "gu-document-vertrouwelijkheid-wijzigen" component
-   * @param {Document} document
-   */
-  patchConfidentiality(document: Document) {
-    this.selectedDocument = document;
-    this.openModal('document-vertrouwelijkheid-wijzigen-modal')
+    this.openModal('bestandseigenschappen-wijzigen-modal')
   }
 
   /**
@@ -194,8 +188,13 @@ export class DocumentenComponent implements OnChanges {
   openDocumentEdit(writeUrl) {
     this.isLoading = true;
     this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
-      // Open document
-      window.open(res.magicUrl, "_self");
+
+      // Check if Microsoft Office application file
+      if (res.magicUrl.substr(0,3) === "ms-") {
+        window.open(res.magicUrl, "_self");
+      } else {
+        window.open(res.magicUrl, "_blank");
+      }
 
       // Refresh table layout so "Bewerkingen opslaan" button will be shown
       this.fetchDocuments();

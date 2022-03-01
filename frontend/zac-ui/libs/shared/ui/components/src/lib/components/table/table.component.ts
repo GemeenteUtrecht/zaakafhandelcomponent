@@ -94,7 +94,7 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
         this.dataSource.sort = this.sort;
         this.dataSource.sortingDataAccessor = (data, sortHeadId) => {
             const element = data[sortHeadId];
-            return element.value || element.label || element.date;
+            return element.sortValue || element.value || element.label || element.date;
         }
     }
 

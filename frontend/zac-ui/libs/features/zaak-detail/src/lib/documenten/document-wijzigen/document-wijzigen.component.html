@@ -1,0 +1,9 @@
+<div class="document-wijzigen mt-4" *ngIf="mainZaakUrl && selectedDocument && form">
+  <gu-form [form]="form"
+           [title]="'Document eigenschappen'"
+           [editable]="'toggle'"
+           [buttonSize]="'small'"
+           (formSubmit)="formSubmit($event)"
+           [isLoading]="isLoading">
+  </gu-form>
+</div>
