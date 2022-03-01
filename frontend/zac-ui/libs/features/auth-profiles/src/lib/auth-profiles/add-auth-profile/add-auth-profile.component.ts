@@ -100,8 +100,8 @@ export class AddAuthProfileComponent implements OnInit {
     const bluePrintPermissions = this.blueprintPermissionControl.controls
       .map( (bperm, i) => {
         const policies = [];
-        this.zaaktypeControl(i).value.forEach(zaaktypeId => {
-          const zaaktype = this.caseTypes.results.find(caseType => caseType.identificatie === zaaktypeId);
+        this.zaaktypeControl(i).value.forEach(zaaktypeOmschrijving => {
+          const zaaktype = this.caseTypes.results.find(caseType => caseType.omschrijving === zaaktypeOmschrijving);
           const policy = {
             catalogus: zaaktype.catalogus,
             zaaktypeOmschrijving: zaaktype.omschrijving,
