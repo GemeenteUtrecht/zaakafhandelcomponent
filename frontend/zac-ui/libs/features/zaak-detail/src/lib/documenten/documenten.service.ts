@@ -85,15 +85,11 @@ export class DocumentenService {
         value: element.url,
         buttonInfo: 'Met deze knop kan je een oud document vervangen door een nieuw document'
       };
-      const confidentialityButton: ExtensiveCell | string = element.locked ? element.vertrouwelijkheidaanduiding : {
-        type: 'button',
-        label: element.vertrouwelijkheidaanduiding,
-        value: element
-      }
       const docNameButton: ExtensiveCell | string = element.locked ? element.titel : {
         type: 'button',
         label: element.titel,
-        value: element
+        value: element,
+        sortValue: element.titel
       }
       const cellData: RowData = {
         cellData: {
@@ -112,8 +108,8 @@ export class DocumentenService {
           },
           bewerken: showEditCell ? editCell : '',
           overschrijven: element.locked ? '' : overwriteCell,
+          auteur: element.auteur,
           type: element.informatieobjecttype['omschrijving'],
-          vertrouwelijkheid: confidentialityButton
         }
       }
       return cellData;

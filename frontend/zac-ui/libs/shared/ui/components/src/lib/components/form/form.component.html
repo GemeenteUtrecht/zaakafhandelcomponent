@@ -7,7 +7,7 @@
 
   <fieldset class="form__body">
     <div *ngFor="let field of fields; let i = index">
-      <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit">
+      <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
         <!-- Read-only field. -->
         <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
           <div class="col-12">
@@ -15,8 +15,8 @@
           </div>
 
           <div class="col-12" *ngIf="!field.choices">
-            <p class="p--pre-wrap " *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
-            <p class="p--pre-wrap " *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+            <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
+            <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
           </div>
 
 
@@ -30,7 +30,7 @@
 
         <!-- Regular field. -->
         <gu-input
-          *ngIf="field.widgetType == 'input'"
+          *ngIf="field.widgetType == 'input' && edit"
           [control]="field.control"
           [label]="field.label"
           [pattern]="field.pattern || null"

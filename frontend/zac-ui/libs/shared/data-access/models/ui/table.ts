@@ -33,6 +33,7 @@ export interface ExtensiveCell {
   url?: string;
   value?: any;
   date?: string;
+  sortValue?: any;
 }
 
 export interface TableSort {

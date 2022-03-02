@@ -47,9 +47,9 @@
                     </ng-container>
 
                     <!-- Date -->
-                  <ng-container *ngSwitchCase="'date'">
-                    {{dataRow[column.name].date | date:"dd-MM-yyyy" }}
-                  </ng-container>
+                    <ng-container *ngSwitchCase="'date'">
+                      {{dataRow[column.name].date | date:"dd-MM-yyyy" }}
+                    </ng-container>
 
                     <!-- Icon -->
                     <ng-container *ngSwitchCase="'icon'">
@@ -71,7 +71,9 @@
                     <!-- Link -->
                     <ng-container *ngSwitchCase="'link'">
                         <a class="anchor" [href]="dataRow[column.name].url"
-                           target="{{ dataRow[column.name].target || '_self' }}">{{ dataRow[column.name].label }}</a>
+                           target="{{ dataRow[column.name].target || '_self' }}">
+                          {{ dataRow[column.name].label }}
+                        </a>
                     </ng-container>
 
                     <!-- Table -->
