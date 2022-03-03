@@ -86,6 +86,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             "purpose": cls.purpose,
             "magicUrl": "webdav-stuff:http://some-url.com/to-a-document/",
             "uuid": cls.uuid,
+            "unversionedUrl": document.url,
         }
 
         cls.find_document_patcher = patch(
@@ -163,6 +164,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
                     "dowc:patch-destroy-doc",
                     kwargs={"dowc_uuid": self.dowc_response["uuid"]},
                 ),
+                "unversionedUrl": self.dowc_response["unversionedUrl"],
             },
         )
 
