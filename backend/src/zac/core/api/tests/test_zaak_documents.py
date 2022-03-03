@@ -113,7 +113,11 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         doc_versioned_url = furl(doc_obj.url)
         doc_versioned_url.args["versie"] = doc_obj.versie
         dowc = DowcResponse(
-            drc_url=doc_versioned_url.url, magic_url="", purpose="write", uuid=uuid4()
+            drc_url=doc_versioned_url.url,
+            magic_url="",
+            purpose="write",
+            uuid=uuid4(),
+            unversioned_url=doc_obj.url,
         )
 
         with patch("zac.core.api.views.find_zaak", return_value=zaak):
@@ -270,7 +274,11 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         cls.doc_obj = factory(Document, cls.document)
 
         cls.dowc = DowcResponse(
-            drc_url=cls.doc_obj.url, magic_url="", purpose="write", uuid=uuid4()
+            drc_url=cls.doc_obj.url,
+            magic_url="",
+            purpose="write",
+            uuid=uuid4(),
+            unversioned_url=cls.doc_obj.url,
         )
         cls.get_open_documenten_patcher = patch(
             "zac.core.api.views.get_open_documenten", return_value=[cls.dowc]
