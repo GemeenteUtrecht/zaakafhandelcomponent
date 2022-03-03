@@ -23,12 +23,16 @@ class DowcResponseSerializer(APIModelSerializer):
             "purpose",
             "magic_url",
             "delete_url",
+            "unversioned_url",
         )
         extra_kwargs = {
             "purpose": {
                 "read_only": True,
             },
             "magic_url": {
+                "read_only": True,
+            },
+            "unversioned_url": {
                 "read_only": True,
             },
         }

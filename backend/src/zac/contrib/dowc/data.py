@@ -10,3 +10,4 @@ class DowcResponse(Model):
     magic_url: str
     purpose: str
     uuid: UUID
+    unversioned_url: str
