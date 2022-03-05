@@ -153,6 +153,7 @@ class ZaaktypenHandler:
         if data["resource"] == "zaaktype":
             if data["actie"] in ["create", "update", "partial_update"]:
                 invalidate_zaaktypen_cache(catalogus=data["kenmerken"]["catalogus"])
+                invalidate_zaaktypen_cache()
 
 
 class InformatieObjecttypenHandler:
@@ -162,6 +163,7 @@ class InformatieObjecttypenHandler:
                 invalidate_informatieobjecttypen_cache(
                     catalogus=data["kenmerken"]["catalogus"]
                 )
+                invalidate_informatieobjecttypen_cache()
 
 
 class RoutingHandler:
