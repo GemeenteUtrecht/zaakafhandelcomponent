@@ -19,8 +19,9 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_wijzigen
+from zac.core.services import get_zaakobjecten
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 OBJECTS_ROOT = "https://objects.nl/api/v1/"
@@ -170,6 +171,61 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
+    def test_create_object_relation_cache_invalidation(self, m):
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        mock_resource_get(m, self.zaak)
+        m.post(
+            f"{ZRC_ROOT}zaakobjecten",
+            status_code=201,
+            json={
+                "url": f"{ZRC_ROOT}zaakobjecten/bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "uuid": "bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                "zaak": self.zaak["url"],
+                "object": f"{OBJECT_1['url']}",
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "relatieomschrijving": "",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        self.assertEqual(m.call_count, 0)
+
+        # call to populate cache
+        get_zaakobjecten(factory(Zaak, self.zaak))
+        self.assertEqual(
+            m.call_count, 2
+        )  # one request for schema, one for the actual request
+
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+                "objectType": "overige",
+                "objectTypeOverige": "Laadpaal uitbreiding",
+                "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
+            },
+        )
+        self.assertEqual(
+            m.call_count, 4
+        )  # one get request for zaak, one post request for zaakobject
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        # second get_zaakobjecten call should not hit the cache
+        get_zaakobjecten(factory(Zaak, self.zaak))
+        self.assertEqual(
+            m.call_count, 5
+        )  # one get request for zaak, one post request for zaakobject
+        self.assertEqual(m.request_history[1].url, m.request_history[4].url)
+
     def test_create_object_relation_invalid_data(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
@@ -212,6 +268,47 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         last_request = m.request_history[-1]
         self.assertEqual(last_request.method, "DELETE")
         self.assertEqual(last_request.url, ZAAK_OBJECT_URL)
+
+    def test_delete_object_relation_cache_invalidation(self, m):
+        zaak_object = generate_oas_component(
+            "zrc", "schemas/ZaakObject", url=ZAAK_OBJECT_URL, zaak=self.zaak["url"]
+        )
+        zaak_object["objectIdentificatie"] = {}
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, zaak_object)
+        m.delete(ZAAK_OBJECT_URL, status_code=204)
+
+        url = f"{reverse('zaakobject-create')}?url={ZAAK_OBJECT_URL}"
+
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        self.assertEqual(m.call_count, 0)
+
+        # call to populate cache
+        get_zaakobjecten(factory(Zaak, self.zaak))
+        self.assertEqual(
+            m.call_count, 2
+        )  # one request for schema, one for the actual request
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(
+            m.call_count, 5
+        )  # one get request for fetch_zaakobject, one get request for get_zaak, one delete request for zaakobject
+
+        self.assertEqual(m.request_history[-1].method, "DELETE")
+        self.assertEqual(m.request_history[-1].url, ZAAK_OBJECT_URL)
+
+        # second get_zaakobjecten call should not hit the cache
+        get_zaakobjecten(factory(Zaak, self.zaak))
+        self.assertEqual(
+            m.call_count, 6
+        )  # one get request for zaak, one post request for zaakobject
+        self.assertEqual(m.request_history[1].url, m.request_history[5].url)
 
 
 class ZaakPropertiesDetailPermissionTests(APITestCase):
