@@ -46,7 +46,7 @@ from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
-from ..cache import invalidate_zaak_cache
+from ..cache import invalidate_zaak_cache, invalidate_zaakobjecten_cache
 from ..services import (
     create_document,
     create_zaak_eigenschap,
@@ -927,25 +927,6 @@ class ZaakObjectChangeView(views.APIView):
     serializer_class = ZaakObjectProxySerializer
     filterset_class = ZaakObjectFilterSet
 
-    def get_object(self):
-        filterset = self.filterset_class(
-            data=self.request.query_params, request=self.request
-        )
-        if not filterset.is_valid():
-            raise exceptions.ValidationError(filterset.errors)
-        url = self.request.query_params.get("url")
-
-        try:
-            zaak_object = fetch_zaak_object(url)
-        except ClientError as exc:
-            raise Http404("No ZAAKOBJECT matches the given url.")
-
-        # check permissions
-        zaak = get_zaak(zaak_url=zaak_object.zaak)
-        self.check_object_permissions(self.request, zaak)
-
-        return zaak_object
-
     @extend_schema(
         summary=_("Create ZAAKOBJECT."),
         description=_("Relate an OBJECT to a ZAAK."),
@@ -963,6 +944,7 @@ class ZaakObjectChangeView(views.APIView):
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
 
+        invalidate_zaakobjecten_cache(zaak)
         return Response(status=201, data=created_zaakobject)
 
     @extend_schema(
@@ -979,6 +961,22 @@ class ZaakObjectChangeView(views.APIView):
         tags=["objects"],
     )
     def delete(self, request, *args, **kwargs):
-        zaak_object = self.get_object()
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+        url = self.request.query_params.get("url")
+
+        try:
+            zaak_object = fetch_zaak_object(url)
+        except ClientError as exc:
+            raise Http404("No ZAAKOBJECT matches the given url.")
+
+        # check permissions
+        zaak = get_zaak(zaak_url=zaak_object.zaak)
+        self.check_object_permissions(self.request, zaak)
+
         delete_zaak_object(zaak_object.url)
+        invalidate_zaakobjecten_cache(zaak)
         return Response(status=status.HTTP_204_NO_CONTENT)
