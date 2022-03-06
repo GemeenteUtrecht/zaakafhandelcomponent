@@ -64,3 +64,25 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
             m.request_history[1].url,
             m.request_history[2].url,
         )
+
+    def test_zaaktype_created_invalidated_catalogusless_cache(self, m, *mocks):
+        mock_service_oas_get(m, "https://some.ztc.nl/api/v1/", "ztc")
+        m.get(
+            f"https://some.ztc.nl/api/v1/zaaktypen",
+            json=paginated_response([]),
+        )
+
+        # call to populate cache
+        get_zaaktypen()
+
+        # post the notification
+        response = self.client.post(reverse("notifications:callback"), NOTIFICATION)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # second call should not hit the cache
+        get_zaaktypen()
+        self.assertEqual(m.call_count, 3)  # 1 call for API spec
+        self.assertEqual(
+            m.request_history[1].url,
+            m.request_history[2].url,
+        )
