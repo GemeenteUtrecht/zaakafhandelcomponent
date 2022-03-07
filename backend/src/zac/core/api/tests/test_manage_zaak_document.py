@@ -210,7 +210,11 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "zac.core.api.views.get_open_documenten",
             return_value=[
                 DowcResponse(
-                    drc_url=document["url"], magic_url="", purpose="write", uuid=uuid4()
+                    drc_url=document["url"],
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                    unversioned_url="",
                 )
             ],
         ):
@@ -408,6 +412,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
+                            unversioned_url="",
                         )
                     ],
                 ):
@@ -562,6 +567,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=[
                 DowcResponse(
                     drc_url=document["url"],
+                    unversioned_url="",
                     magic_url="",
                     purpose="write",
                     uuid=uuid4(),
@@ -669,6 +675,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=[
                 DowcResponse(
                     drc_url=document["url"],
+                    unversioned_url="",
                     magic_url="",
                     purpose="write",
                     uuid=uuid4(),
@@ -932,6 +939,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=[
                         DowcResponse(
                             drc_url=document["url"],
+                            unversioned_url="",
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
