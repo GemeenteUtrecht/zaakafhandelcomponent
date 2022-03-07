@@ -27,7 +27,7 @@ class AuditTrailWijzigingenData(Model):
 @dataclass
 class AuditTrailData(Model):
     aanmaakdatum: datetime
-    wijzigingen: List[AuditTrailWijzigingenData]
+    wijzigingen: AuditTrailWijzigingenData
     resource_url: str
 
     @property
@@ -35,3 +35,9 @@ class AuditTrailData(Model):
         if self.wijzigingen.nieuw.version_label:
             return True
         return False
+
+    @property
+    def last_edited_date(self) -> datetime:
+        if modified := self.wijzigingen.nieuw.modified:
+            return modified
+        return self.aanmaakdatum
