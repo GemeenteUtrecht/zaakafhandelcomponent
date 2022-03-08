@@ -25,6 +25,7 @@ from zac.accounts.tests.factories import (
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.data import DowcResponse
 from zac.contrib.kownsl.models import KownslConfig
+from zac.core.api.data import AuditTrailData
 from zac.core.permissions import zaken_download_documents, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -87,6 +88,27 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         )
         doc_obj = factory(Document, document)
         doc_obj.informatieobjecttype = factory(InformatieObjectType, documenttype)
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
 
         zaaktype = generate_oas_component(
             "ztc",
@@ -132,7 +154,11 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                         "zac.core.api.views.get_open_documenten",
                         return_value=[dowc],
                     ):
-                        response = self.client.get(self.endpoint)
+                        with patch(
+                            "zac.core.api.views.fetch_document_audit_trail",
+                            return_value=[audit_trail],
+                        ):
+                            response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
@@ -142,7 +168,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 "beschrijving": "some-beschrijving",
                 "bestandsnaam": "some-bestandsnaam",
                 "bestandsomvang": 10,
-                "currentUserIsEditing": True,
+                "currentUserIsEditing": False,
                 "identificatie": "DOC-2020-007",
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
@@ -169,6 +195,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                         "purpose": DocFileTypes.write,
                     },
                 ),
+                "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
             }
         ]
         self.assertEqual(response_data, expected)
@@ -272,6 +299,14 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         cls.doc_obj = factory(Document, cls.document)
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+            hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+            wijzigingen={"nieuw": {}, "oud": {}},
+        )
+        cls.audit_trail = [factory(AuditTrailData, audit_trail)]
 
         cls.dowc = DowcResponse(
             drc_url=cls.doc_obj.url,
@@ -427,5 +462,9 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         with patch(
             "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
         ):
-            response = self.client.get(self.endpoint)
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=self.audit_trail,
+            ):
+                response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -1,5 +1,6 @@
 from io import BytesIO
 from unittest.mock import patch
+from uuid import uuid4
 
 from django.urls import reverse
 
@@ -20,6 +21,8 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.data import DowcResponse
+from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
@@ -162,8 +165,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
         )
-
         m.post(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
             json=document,
@@ -182,8 +185,46 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "file": BytesIO(b"foobar"),
         }
 
-        response = self.client.post(self.endpoint, post_data, format="multipart")
-
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+        with patch(
+            "zac.core.api.views.get_open_documenten",
+            return_value=[
+                DowcResponse(
+                    drc_url=document["url"],
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                    unversioned_url="",
+                )
+            ],
+        ):
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=[audit_trail],
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @requests_mock.Mocker()
@@ -333,6 +374,27 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
 
         with patch(
             "zac.core.api.serializers.get_documenten",
@@ -342,9 +404,25 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "zac.core.api.views.update_document",
                 return_value=factory(Document, document),
             ):
-                response = self.client.patch(
-                    self.endpoint, post_data, format="multipart"
-                )
+                with patch(
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[
+                        DowcResponse(
+                            drc_url=document["url"],
+                            magic_url="",
+                            purpose="write",
+                            uuid=uuid4(),
+                            unversioned_url="",
+                        )
+                    ],
+                ):
+                    with patch(
+                        "zac.core.api.views.fetch_document_audit_trail",
+                        return_value=[audit_trail],
+                    ):
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -471,7 +549,38 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "file": BytesIO(b"foobar"),
         }
 
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.views.get_open_documenten",
+            return_value=[
+                DowcResponse(
+                    drc_url=document["url"],
+                    unversioned_url="",
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                )
+            ],
+        ):
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=[audit_trail],
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         called_urls = [req.url for req in m.request_history]
         # Check that informatieobjecttype url was called
@@ -488,7 +597,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": document["bestandsomvang"],
-            "currentUserIsEditing": None,
+            "currentUserIsEditing": False,
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -501,6 +610,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Openbaar",
             "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(expected_data, data)
 
@@ -547,7 +657,38 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "url": DOCUMENT_URL,
         }
 
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.views.get_open_documenten",
+            return_value=[
+                DowcResponse(
+                    drc_url=document["url"],
+                    unversioned_url="",
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                )
+            ],
+        ):
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=[audit_trail],
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         # Check that zaakinformatieobjecten url was called
         called_urls = [req.url for req in m.request_history]
@@ -561,7 +702,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": document["bestandsomvang"],
-            "currentUserIsEditing": None,
+            "currentUserIsEditing": False,
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -574,6 +715,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Openbaar",
             "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(expected_data, data)
 
@@ -754,6 +896,27 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "zaak": f"{ZAKEN_ROOT}zaken/456",
             "bestandsnaam": "some-other-bestandsnaam.extension",
         }
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
         with patch(
             "zac.core.api.serializers.get_documenten",
             return_value=factory(
@@ -771,9 +934,25 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "zac.core.api.serializers.get_documenten",
                 return_value=[[factory(Document, document)], []],
             ):
-                response = self.client.patch(
-                    self.endpoint, post_data, format="multipart"
-                )
+                with patch(
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[
+                        DowcResponse(
+                            drc_url=document["url"],
+                            unversioned_url="",
+                            magic_url="",
+                            purpose="write",
+                            uuid=uuid4(),
+                        )
+                    ],
+                ):
+                    with patch(
+                        "zac.core.api.views.fetch_document_audit_trail",
+                        return_value=[audit_trail],
+                    ):
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -782,7 +961,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": None,
-            "currentUserIsEditing": None,
+            "currentUserIsEditing": False,
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": self.informatieobjecttype["url"],
@@ -795,5 +974,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Zaakvertrouwelijk",
             "writeUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/write",
+            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(data, expected_data)

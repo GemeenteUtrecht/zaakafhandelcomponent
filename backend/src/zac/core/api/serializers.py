@@ -1,4 +1,5 @@
 import pathlib
+from datetime import datetime
 from decimal import ROUND_05UP
 from typing import Optional
 
@@ -74,6 +75,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
     )
     informatieobjecttype = InformatieObjectTypeSerializer()
     current_user_is_editing = serializers.SerializerMethodField()
+    last_edited_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -85,6 +87,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "current_user_is_editing",
             "identificatie",
             "informatieobjecttype",
+            "last_edited_date",
             "locked",
             "read_url",
             "titel",
@@ -105,6 +108,11 @@ class GetZaakDocumentSerializer(APIModelSerializer):
                 return True
             else:
                 return False
+        return None
+
+    def get_last_edited_date(self, obj) -> Optional[datetime]:
+        if "editing_history" in self.context:
+            return self.context["editing_history"][obj.url]
         return None
 
 
