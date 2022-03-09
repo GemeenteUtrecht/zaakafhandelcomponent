@@ -2,7 +2,7 @@ from io import BytesIO
 from unittest.mock import patch
 from uuid import uuid4
 
-from django.urls import reverse
+from django.urls import reverse_lazy
 
 import requests_mock
 from furl import furl
@@ -35,7 +35,7 @@ DOCUMENT_URL = f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/148c998d-85ea-4d4
 
 
 class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse("zaak-document")
+    endpoint = reverse_lazy("zaak-document")
 
     def setUp(self):
         super().setUp()
@@ -429,7 +429,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
 @requests_mock.Mocker()
 class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
-    endpoint = reverse("zaak-document")
+    endpoint = reverse_lazy("zaak-document")
 
     def setUp(self):
         super().setUp()

@@ -1,5 +1,6 @@
 from typing import Any, Optional
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
@@ -18,8 +19,6 @@ from zac.core.services import find_document, get_document
 from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
 from .serializers import DowcResponseSerializer, DowcSerializer
-
-DOWC_BASE = "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -69,20 +68,20 @@ class OpenDowcView(APIView):
         return Response(serializer.data, status=status_code)
 
 
-@extend_schema(
-    summary=_("Update and delete a document."),
-    responses={
-        (200, "application/json"): remote_schema_ref(
-            DOWC_BASE,
-            ["components", "schemas", "UnlockedDocument"],
-        ),
-    },
-)
 class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
     serializer_class = DowcSerializer
 
+    @extend_schema(
+        summary=_("Update and delete a document."),
+        responses={
+            (200, "application/json"): remote_schema_ref(
+                settings.DOWC_API_SCHEMA,
+                ["components", "schemas", "UnlockedDocument"],
+            ),
+        },
+    )
     def delete(self, request, dowc_uuid):
         """
         Delete the dowc object in the dowc API. This implies that the dowc will

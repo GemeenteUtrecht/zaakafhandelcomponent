@@ -657,6 +657,18 @@ class ZaakDocumentView(views.APIView):
         referer = self.request.headers.get("referer", "")
         return get_open_documenten(self.request.user, referer)
 
+    def get_response_serializer(self, instance: Document) -> GetZaakDocumentSerializer:
+        open_documenten = self.get_open_documenten()
+        editing_history = self.get_document_audit_trail(instance)
+        serializer = GetZaakDocumentSerializer(
+            instance=instance,
+            context={
+                "open_documenten": open_documenten,
+                "editing_history": editing_history,
+            },
+        )
+        return serializer
+
     @extend_schema(
         summary=_("Partially update ZAAK document."),
         responses=GetZaakDocumentSerializer,
@@ -684,13 +696,7 @@ class ZaakDocumentView(views.APIView):
             document.informatieobjecttype
         )
 
-        serializer = GetZaakDocumentSerializer(
-            instance=document,
-            context={
-                "open_documenten": self.get_open_documenten(),
-                "editing_history": self.get_document_audit_trail(document),
-            },
-        )
+        serializer = self.get_response_serializer(document)
         return Response(serializer.data)
 
     @extend_schema(
@@ -722,13 +728,8 @@ class ZaakDocumentView(views.APIView):
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
         )
-        serializer = GetZaakDocumentSerializer(
-            instance=document,
-            context={
-                "open_documenten": self.get_open_documenten(),
-                "editing_history": self.get_document_audit_trail(document),
-            },
-        )
+
+        serializer = self.get_response_serializer(document)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

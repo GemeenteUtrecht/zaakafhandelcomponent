@@ -21,7 +21,7 @@ from .models import DowcConfig
 
 def get_client(user: User) -> Client:
     config = DowcConfig.get_solo()
-    assert config.service, "A service must be configured first"
+    assert config.service, "The DoWC service must be configured first"
     service = config.service
 
     # override the actual logged in user in the `user_id` claim, so that Do.W.C. is
