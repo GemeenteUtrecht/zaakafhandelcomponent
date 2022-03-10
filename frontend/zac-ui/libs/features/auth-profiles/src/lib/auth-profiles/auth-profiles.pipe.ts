@@ -1,6 +1,4 @@
 import {Pipe} from '@angular/core';
-import {ZaakObject} from '@gu/models';
-import {ZaakObjectService} from "@gu/services";
 
 /**
  * Turns a ZaakObject into a human-readable string.
@@ -16,7 +14,7 @@ import {ZaakObjectService} from "@gu/services";
 export class AuthProfilesPipe {
 
   /**
-   * Transforms object type to human readible text
+   * Transforms object type to human readable text
    * @param objectType
    * @returns {string}
    */

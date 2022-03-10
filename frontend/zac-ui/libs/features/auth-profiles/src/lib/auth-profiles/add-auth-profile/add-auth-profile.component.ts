@@ -1,8 +1,7 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaConfidentiality, MetaZaaktype, Role } from '@gu/models';
+import { AuthProfile, BlueprintPermission, MetaConfidentiality, MetaZaaktype, Role } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {MetaService} from "@gu/services";
 
@@ -20,7 +19,9 @@ import {MetaService} from "@gu/services";
   templateUrl: './add-auth-profile.component.html',
   styleUrls: ['./add-auth-profile.component.scss']
 })
-export class AddAuthProfileComponent implements OnInit {
+export class AddAuthProfileComponent implements OnInit, OnChanges {
+  @Input() type: "create" | "edit";
+  @Input() selectedAuthProfile: AuthProfile;
   @Input() roles: Role[];
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -28,7 +29,6 @@ export class AddAuthProfileComponent implements OnInit {
 
   authProfileForm: FormGroup;
 
-  authProfiles: AuthProfile[];
   caseTypes: MetaZaaktype;
   confidentiality: MetaConfidentiality[];
 
@@ -37,7 +37,7 @@ export class AddAuthProfileComponent implements OnInit {
   isLoading: boolean;
   errorMessage: string;
 
-  nBlueprintPermissions = 1;
+  nBlueprintPermissions = 0;
 
   constructor(
     private fService: FeaturesAuthProfilesService,
@@ -51,9 +51,51 @@ export class AddAuthProfileComponent implements OnInit {
     })
   }
 
+  //
+  // Getters / setters.
+  //
+
+  get authProfileNameControl() {
+    return this.authProfileForm.get('name') as FormControl;
+  }
+
+  get blueprintPermissionControl() {
+    return this.authProfileForm.get('bluePrintPermissions') as FormArray;
+  }
+
+  //
+  // Angular lifecycle.
+  //
+
   ngOnInit(): void {
     this.getCaseTypes();
     this.getConfidentiality();
+  }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(): void {
+    console.log(this.blueprintPermissionControl);
+    if (this.type === "edit" && this.selectedAuthProfile) {
+      this.setContextEditMode();
+    }
+  }
+
+  //
+  // Context.
+  //
+
+  /**
+   * Set data for edit mode.
+   */
+  setContextEditMode() {
+    this.authProfileNameControl.patchValue(this.selectedAuthProfile.name);
+    const bluePrintPermissions = this.selectedAuthProfile.blueprintPermissions.map(permission => {
+      return this.addBlueprintPermission(permission)
+    })
+    this.blueprintPermissionControl.controls = bluePrintPermissions;
   }
 
   /**
@@ -142,20 +184,22 @@ export class AddAuthProfileComponent implements OnInit {
    * Form Controls
    */
 
-  addBlueprintPermission() {
-    return this.fb.group({
-      role: ["", Validators.required],
-      policies: [[], Validators.required],
-      confidentiality: ["", Validators.required]
-    })
-  }
-
-  get authProfileNameControl() {
-    return this.authProfileForm.get('name') as FormControl;
-  }
-
-  get blueprintPermissionControl() {
-    return this.authProfileForm.get('bluePrintPermissions') as FormArray;
+  addBlueprintPermission(permission?: BlueprintPermission) {
+    console.log(permission);
+    if (permission) {
+      return this.fb.group({
+        role: [permission.role, Validators.required],
+        policies: [permission.policies, Validators.required],
+        confidentiality: [permission.policies[0]['maxVa'], Validators.required]
+      })
+    } else {
+      console.log(2);
+      return this.fb.group({
+        role: ["", Validators.required],
+        policies: [[], Validators.required],
+        confidentiality: ["", Validators.required]
+      })
+    }
   }
 
   roleControl(i) {

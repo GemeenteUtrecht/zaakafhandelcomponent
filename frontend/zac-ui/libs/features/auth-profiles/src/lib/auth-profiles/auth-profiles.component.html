@@ -36,6 +36,14 @@
                 </ul>
               </mat-expansion-panel>
             </ng-container>
+            <div class="d-flex justify-content-between align-items-center">
+              <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile)">
+                Wijzigen
+              </button>
+              <button gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
+                Verwijderen
+              </button>
+            </div>
           </mat-accordion>
         </ng-container>
 
@@ -48,11 +56,22 @@
   </mat-accordion>
 
   <!-- Modal content -->
+
+  <!-- Create auth profile -->
   <gu-modal id="add-auth-profile-modal"
             [closeIcon]="true"
             size="medium"
             title="Autorisatieprofiel aanmaken"
   >
-    <gu-add-auth-profile *ngIf="roles" [roles]="roles" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'create'" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+  </gu-modal>
+
+  <!-- Edit auth profile -->
+  <gu-modal id="edit-authprofile-modal"
+            [closeIcon]="true"
+            size="medium"
+            title="Autorisatieprofiel wijzigen"
+  >
+    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'edit'" [selectedAuthProfile]="selectedAuthProfile" (reload)="getAuthProfiles()"></gu-add-auth-profile>
   </gu-modal>
 </div>

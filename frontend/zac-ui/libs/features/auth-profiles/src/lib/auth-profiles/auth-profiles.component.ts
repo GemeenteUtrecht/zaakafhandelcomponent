@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaZaaktype, Role } from '@gu/models';
+import { AuthProfile, MetaZaaktype, Role, UserGroupDetail } from '@gu/models';
 
 
 /**
@@ -19,6 +19,7 @@ export class AuthProfilesComponent implements OnInit {
   readonly getAuthProfilesErrorMessage = "Er is een fout opgetreden bij het ophalen van de autorisatieprofielen.";
 
   authProfiles: AuthProfile[];
+  selectedAuthProfile: AuthProfile;
   caseTypes: MetaZaaktype;
 
   isLoading: boolean;
@@ -41,6 +42,24 @@ export class AuthProfilesComponent implements OnInit {
    */
   openModal(id) {
     this.modalService.open(id)
+  }
+
+  /**
+   * Open modal to edit auth profile.
+   * @param {AuthProfile} authProfile
+   */
+  editAuthProfile(authProfile: AuthProfile) {
+    this.selectedAuthProfile = authProfile;
+    this.openModal('edit-authprofile-modal');
+  }
+
+  /**
+   * Open modal to delete auth profile.
+   * @param {AuthProfile} authProfile
+   */
+  deleteAuthProfile(authProfile: AuthProfile) {
+    this.selectedAuthProfile = authProfile;
+    this.openModal('delete-authprofile-modal');
   }
 
   /**
