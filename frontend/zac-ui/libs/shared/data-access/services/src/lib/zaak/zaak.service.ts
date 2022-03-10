@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak, NieuweEigenschap} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
-import { CachedObservableMethod, ClearCacheOnMethodCall, isTestEnvironment } from '@gu/utils';
+import {CachedObservableMethod, ClearCacheOnMethodCall, isTestEnvironment} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
 
 
@@ -88,13 +88,21 @@ export class ZaakService {
   /**
    * Update case property
    * @param {EigenschapWaarde} property
+   * @return {Observable}
    */
   @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
-  updateCaseProperty(property: EigenschapWaarde) {
+  updateCaseProperty(property: EigenschapWaarde):Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/properties`);
     const params = new HttpParams().set('url', property.url)
+    const value = property.value;
+    if (!value) {
+      return this.http.Delete(endpoint, {
+        params: params
+      })
+    }
+
     return this.http.Patch(endpoint, {
-      value: property.value,
+      value: value,
     }, {
       params: params,
     })
