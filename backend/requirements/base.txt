@@ -75,7 +75,7 @@ django-solo==1.1.3
     #   django-auth-adfs-db
     #   django-camunda
     #   zgw-consumers
-django==2.2.25
+django==2.2.27
     # via
     #   -r requirements/base.in
     #   django-appconf
@@ -208,7 +208,7 @@ six==1.12.0
     #   requests-mock
 sly==0.3
     # via scim2-filter-parser
-sqlparse==0.3.0
+sqlparse==0.4.2
     # via django
 tablib==0.14.0
     # via django-import-export
