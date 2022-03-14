@@ -87,6 +87,8 @@ django-import-export==2.7.1
     # via -r requirements/base.in
 django-ipware==2.1.0
     # via django-axes
+django-nested-admin==3.4.0
+    # via -r requirements/base.in
 django-redis==5.2.0
     # via -r requirements/base.in
 django-relativedelta==1.1.1
@@ -169,6 +171,8 @@ python-decouple==3.5
     # via -r requirements/base.in
 python-dotenv==0.19.1
     # via -r requirements/base.in
+python-monkey-business==1.0.0
+    # via django-nested-admin
 pytz==2021.3
     # via
     #   -r requirements/base.in
@@ -202,12 +206,14 @@ six==1.16.0
     #   django-choices
     #   django-compat
     #   django-extra-views
+    #   django-nested-admin
     #   elasticsearch-dsl
     #   furl
     #   isodate
     #   jsonschema
     #   orderedmultidict
     #   python-dateutil
+    #   python-monkey-business
     #   requests-mock
 sly==0.3
     # via scim2-filter-parser

@@ -1,0 +1,145 @@
+from django.db.models import Prefetch
+from django.utils.translation import gettext_lazy as _
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import exceptions, mixins, permissions, viewsets
+
+from zac.core.services import get_zaaktype
+
+from ..models import (
+    Checklist,
+    ChecklistAnswer,
+    ChecklistQuestion,
+    ChecklistType,
+    QuestionChoice,
+)
+from .filters import ChecklistFilter
+from .permissions import CanReadOrWriteChecklistsPermission
+from .serializers import (
+    ChecklistSerializer,
+    ChecklistTypeSerializer,
+    ReadChecklistSerializer,
+)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary=_("List checklisttype and related questions."),
+        parameters=[
+            OpenApiParameter(
+                name="zaaktype",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_(
+                    "URL-reference of the ZAAKTYPE related to the checklisttype."
+                ),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    ),
+)
+class ChecklistTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = ChecklistType.objects.prefetch_related(
+        Prefetch(
+            "checklistquestion_set",
+            queryset=ChecklistQuestion.objects.prefetch_related(
+                "questionchoice_set"
+            ).all(),
+        )
+    ).all()
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrWriteChecklistsPermission,
+    )
+    http_method_names = [
+        "get",
+    ]
+    serializer_class = ChecklistTypeSerializer
+
+    def filter_queryset(self, queryset):
+        qs = super().filter_queryset(queryset)
+        zaaktype = get_zaaktype(self.request.GET.get("zaaktype"))
+        qs.filter(
+            zaaktype_omschrijving=zaaktype.omschrijving,
+            zaaktype_catalogus=zaaktype.catalogus,
+        )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        if not request.GET.get("zaaktype"):
+            raise exceptions.ValidationError(
+                _("Missing the `zaaktype` query parameter.")
+            )
+
+        return super().list(request, *args, **kwargs)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary=_("List checklist and related answers."),
+        parameters=[
+            OpenApiParameter(
+                name="zaak",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL-reference of the ZAAK related to the checklist."),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    ),
+    create=extend_schema(summary=_("Create checklist and related answers.")),
+    partial_update=extend_schema(
+        summary=_("Update checklist and related answers."),
+    ),
+)
+class ChecklistViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = (
+        Checklist.objects.select_related("checklist_type")
+        .select_related("user_assignee")
+        .select_related("group_assignee")
+        .select_related("checklist_type")
+        .prefetch_related(
+            Prefetch(
+                "checklistanswer_set",
+                queryset=ChecklistAnswer.objects.prefetch_related(
+                    "question",
+                    Prefetch(
+                        "question__questionchoice_set",
+                        queryset=QuestionChoice.objects.all(),
+                    ),
+                ).all(),
+            )
+        )
+        .all()
+    )
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrWriteChecklistsPermission,
+    )
+    filterset_class = ChecklistFilter
+    http_method_names = [
+        "get",
+        "post",
+        "patch",
+    ]
+    serializer_class = ChecklistSerializer
+
+    def get_serializer_class(self):
+        mapping = {
+            "GET": ReadChecklistSerializer,
+            "POST": ChecklistSerializer,
+            "PATCH": ChecklistSerializer,
+        }
+        return mapping[self.request.method]
+
+    def list(self, request, *args, **kwargs):
+        if not request.GET.get("zaak"):
+            raise exceptions.ValidationError(_("Missing the `zaak` query parameter."))
+
+        return super().list(request, *args, **kwargs)
