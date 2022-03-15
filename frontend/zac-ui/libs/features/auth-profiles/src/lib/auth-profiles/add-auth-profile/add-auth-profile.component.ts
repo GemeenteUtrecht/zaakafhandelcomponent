@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, BlueprintPermission, MetaConfidentiality, MetaZaaktype, Role } from '@gu/models';
+import {AuthProfile, BlueprintPermission, MetaConfidentiality, MetaZaaktype, Role, ZaakPolicy} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {MetaService} from "@gu/services";
 
@@ -37,13 +37,14 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   isLoading: boolean;
   errorMessage: string;
 
-  nBlueprintPermissions = 0;
+  nBlueprintPermissions = 1;
 
   constructor(
     private fService: FeaturesAuthProfilesService,
     private metaService: MetaService,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
+    private cdRef: ChangeDetectorRef,
     private fb: FormBuilder) {
     this.authProfileForm = this.fb.group({
       name: this.fb.control("", Validators.required),
@@ -63,6 +64,18 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     return this.authProfileForm.get('bluePrintPermissions') as FormArray;
   }
 
+  roleControl(i) {
+    return this.blueprintPermissionControl.at(i).get('role') as FormControl;
+  }
+
+  zaaktypeControl(i) {
+    return this.blueprintPermissionControl.at(i).get('policies') as FormControl;
+  }
+
+  confidentialityControl(i) {
+    return this.blueprintPermissionControl.at(i).get('confidentiality') as FormControl;
+  }
+
   //
   // Angular lifecycle.
   //
@@ -77,7 +90,6 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * to handle the changes.
    */
   ngOnChanges(): void {
-    console.log(this.blueprintPermissionControl);
     if (this.type === "edit" && this.selectedAuthProfile) {
       this.setContextEditMode();
     }
@@ -91,11 +103,33 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * Set data for edit mode.
    */
   setContextEditMode() {
+    // Set auth profile name
     this.authProfileNameControl.patchValue(this.selectedAuthProfile.name);
-    const bluePrintPermissions = this.selectedAuthProfile.blueprintPermissions.map(permission => {
-      return this.addBlueprintPermission(permission)
+
+    // Clear controls
+    this.blueprintPermissionControl.clear();
+
+    // Extract permissions with object type zaak
+    const relevantPermissions = this.selectedAuthProfile.blueprintPermissions.filter(x => x.objectType === "zaak");
+    this.nBlueprintPermissions = relevantPermissions.length;
+
+    // Create control for each permission
+    relevantPermissions.forEach(() => {
+      const bpPerm = this.addBlueprintPermission();
+        this.blueprintPermissionControl.push(bpPerm)
     })
-    this.blueprintPermissionControl.controls = bluePrintPermissions;
+    this.cdRef.detectChanges();
+
+    // Update values in controls
+    relevantPermissions.forEach((permission, i) => {
+      const policies: ZaakPolicy[] = permission.policies.map(policy => {
+        return policy['zaaktypeOmschrijving']
+      })
+      const confidentiality = permission.policies[0]['maxVa']
+      this.roleControl(i).patchValue(permission.role);
+      this.zaaktypeControl(i).patchValue(policies);
+      this.confidentialityControl(i).patchValue(confidentiality);
+    })
   }
 
   /**
@@ -161,7 +195,28 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       name: this.authProfileNameControl.value,
       blueprintPermissions: bluePrintPermissions
     };
-    this.createProfile(formData);
+    if (this.type === "edit" && this.selectedAuthProfile) {
+      this.updateProfile(formData, this.selectedAuthProfile.uuid);
+    } else {
+      this.createProfile(formData);
+    }
+  }
+
+  /**
+   * PATCH form data to API.
+   * @param formData
+   * @param uuid
+   */
+  updateProfile(formData, uuid) {
+    this.fService.updateAuthProfile(formData, uuid).subscribe(
+      () => {
+        this.closeModal('edit-auth-profile-modal');
+        this.snackbarService.openSnackBar(this.createAuthProfileSuccessMessage, 'Sluiten', 'primary');
+        this.authProfileForm.reset();
+        this.reload.emit(true)
+        this.isLoading = false;
+      }, this.reportError.bind(this)
+    )
   }
 
   /**
@@ -185,33 +240,11 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    */
 
   addBlueprintPermission(permission?: BlueprintPermission) {
-    console.log(permission);
-    if (permission) {
-      return this.fb.group({
-        role: [permission.role, Validators.required],
-        policies: [permission.policies, Validators.required],
-        confidentiality: [permission.policies[0]['maxVa'], Validators.required]
-      })
-    } else {
-      console.log(2);
-      return this.fb.group({
-        role: ["", Validators.required],
-        policies: [[], Validators.required],
-        confidentiality: ["", Validators.required]
-      })
-    }
-  }
-
-  roleControl(i) {
-    return this.blueprintPermissionControl.at(i).get('role') as FormControl;
-  }
-
-  zaaktypeControl(i) {
-    return this.blueprintPermissionControl.at(i).get('policies') as FormControl;
-  }
-
-  confidentialityControl(i) {
-    return this.blueprintPermissionControl.at(i).get('confidentiality') as FormControl;
+    return this.fb.group({
+      role: ["", Validators.required],
+      policies: [[], Validators.required],
+      confidentiality: ["", Validators.required]
+    })
   }
 
   /**

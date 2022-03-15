@@ -1,0 +1,14 @@
+<div *ngIf="selectedAuthProfile" class="delete-auth-profile">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <p>Weet je zeker dat je de autorisatieprofiel <strong>{{selectedAuthProfile.name}}</strong> wilt verwijderen?</p>
+  <div class="d-flex justify-content-end">
+    <div>
+      <button gu-button buttonStyle="tertiary" size="small" (click)="deleteAuthProfile()">
+        Verwijderen
+      </button>
+      <button gu-button buttonStyle="primary" size="small" (click)="closeModal()">
+        Annuleren
+      </button>
+    </div>
+  </div>
+</div>

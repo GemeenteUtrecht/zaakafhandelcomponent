@@ -45,12 +45,20 @@ export class AuthProfilesComponent implements OnInit {
   }
 
   /**
+   * Closes the modal.
+   * @param id
+   */
+  closeModal(id) {
+    this.modalService.close(id);
+  }
+
+  /**
    * Open modal to edit auth profile.
    * @param {AuthProfile} authProfile
    */
   editAuthProfile(authProfile: AuthProfile) {
     this.selectedAuthProfile = authProfile;
-    this.openModal('edit-authprofile-modal');
+    this.openModal('edit-auth-profile-modal');
   }
 
   /**
@@ -59,7 +67,7 @@ export class AuthProfilesComponent implements OnInit {
    */
   deleteAuthProfile(authProfile: AuthProfile) {
     this.selectedAuthProfile = authProfile;
-    this.openModal('delete-authprofile-modal');
+    this.openModal('delete-auth-profile-modal');
   }
 
   /**

@@ -19,12 +19,12 @@
             {{user}}
           </li>
         </ul>
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-end align-items-center">
+          <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteUserGroup(group)">
+            Verwijderen
+          </button>
           <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editUserGroup(group)">
             Wijzigen
-          </button>
-          <button gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteUserGroup(group)">
-            Verwijderen
           </button>
         </div>
       </mat-expansion-panel>
