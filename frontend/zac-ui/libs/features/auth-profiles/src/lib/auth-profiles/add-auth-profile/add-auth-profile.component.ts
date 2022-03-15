@@ -116,7 +116,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     // Create control for each permission
     relevantPermissions.forEach(() => {
       const bpPerm = this.addBlueprintPermission();
-        this.blueprintPermissionControl.push(bpPerm)
+      this.blueprintPermissionControl.push(bpPerm)
     })
     this.cdRef.detectChanges();
 
@@ -239,7 +239,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * Form Controls
    */
 
-  addBlueprintPermission(permission?: BlueprintPermission) {
+  addBlueprintPermission() {
     return this.fb.group({
       role: ["", Validators.required],
       policies: [[], Validators.required],
