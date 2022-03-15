@@ -49,7 +49,7 @@
               { "glob": "**/*", "input": "node_modules/leaflet/dist/images/", "output": "./assets/vendor/leaflet" },
               { "glob": "**/*", "input": "libs/shared/ui/components/src/lib/components/map/assets", "output": "./assets/map" },
               "apps/zac-ui/src/favicon.ico",
-              "apps/zac-ui/src/assets",
+              "apps/zac-ui/src/assets"
             ],
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
