@@ -443,6 +443,7 @@ SPECTACULAR_SETTINGS = {
         "drf_spectacular.hooks.postprocess_schema_enums",
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
         "zac.api.drf_spectacular.djangorestframework_camel_case.camelize_discriminators",
+        "zac.api.drf_spectacular.component_titles.add_title_to_component_schema",
     ],
     "TOS": None,
     # Optional: MAY contain "name", "url", "email"
