@@ -14,9 +14,6 @@ import {TaskContextData} from '../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
 import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
-import {catchError, concatMap, filter} from 'rxjs/operators';
-import {interval, of, Subscription} from 'rxjs';
-import {isEqual as _isEqual} from 'lodash';
 import {UserService} from '@gu/services';
 import BpmnJS from 'bpmn-js';
 
@@ -135,7 +132,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   * Poll tasks every 30 seconds.
+   * Poll tasks every 5 seconds.
    */
   pollProcesses() {
     this.isPolling = true;
@@ -144,17 +141,17 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   fetchPollProcesses() {
     if (this.isPolling) {
-      const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
       this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(resData => {
-        if (!_isEqual(this.data, resData)) {
+        if (JSON.stringify(this.data) !== JSON.stringify(resData)) {
+          const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
           this.setNewestTask(resData, currentTaskIds);
+          this.updateProcessData(resData);
         }
-        this.updateProcessData(resData);
 
-        // Poll every 3s
+        // Poll every 5s
         setTimeout(() => {
           this.fetchPollProcesses();
-        }, 3000)
+        }, 5000)
 
         // Reset fail counter
         this.nPollingFails = 0;
@@ -162,7 +159,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         // Add to fail counter
         this.nPollingFails += 1;
 
-        // Poll again after 3s if it fails
+        // Poll again after 5s if it fails
         setTimeout(errorRes => {
           this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
           this.reportError(errorRes);
@@ -173,7 +170,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
             this.isPolling = false;
             this.nPollingFails = 0;
           }
-        }, 3000)
+        }, 5000)
       });
     }
   }
