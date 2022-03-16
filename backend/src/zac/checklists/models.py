@@ -27,12 +27,11 @@ class ChecklistAnswer(ChecklistMeta):
         on_delete=models.PROTECT,
         help_text=_("Checklist this answer is related to."),
     )
-    question = models.ForeignKey(
-        "ChecklistQuestion",
-        on_delete=models.PROTECT,
-        help_text=_("Question this answers."),
+    question = models.TextField(
+        _("Related question"),
+        max_length=1000,
     )
-    answer = models.TextField(_("Answer to the question"))
+    answer = models.TextField(_("Answer to the question"), max_length=1000)
 
     class Meta:
         verbose_name = _("checklist answer")
@@ -73,7 +72,7 @@ class ChecklistQuestion(ChecklistMeta):
         _("Text of the question"),
         max_length=1000,
     )
-    order = models.SmallIntegerField(
+    order = models.PositiveSmallIntegerField(
         _("Order"),
         unique=True,
         help_text=_(

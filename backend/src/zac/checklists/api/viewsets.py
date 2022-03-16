@@ -39,7 +39,12 @@ from .serializers import (
         ],
     ),
 )
-class ChecklistTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class ChecklistTypeViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = ChecklistType.objects.prefetch_related(
         Prefetch(
             "checklistquestion_set",
@@ -48,22 +53,25 @@ class ChecklistTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             ).all(),
         )
     ).all()
-    permission_classes = (
-        permissions.IsAuthenticated,
-        CanReadOrWriteChecklistsPermission,
-    )
+    # permission_classes = (
+    #     permissions.IsAuthenticated,
+    #     CanReadOrWriteChecklistsPermission,
+    # )
     http_method_names = [
         "get",
+        "post",
+        "put",
     ]
     serializer_class = ChecklistTypeSerializer
 
     def filter_queryset(self, queryset):
         qs = super().filter_queryset(queryset)
-        zaaktype = get_zaaktype(self.request.GET.get("zaaktype"))
-        qs.filter(
-            zaaktype_omschrijving=zaaktype.omschrijving,
-            zaaktype_catalogus=zaaktype.catalogus,
-        )
+        if self.action == "list":
+            zaaktype = get_zaaktype(self.request.GET.get("zaaktype"))
+            qs.filter(
+                zaaktype_omschrijving=zaaktype.omschrijving,
+                zaaktype_catalogus=zaaktype.catalogus,
+            )
         return qs
 
     def list(self, request, *args, **kwargs):
@@ -118,10 +126,10 @@ class ChecklistViewSet(
         )
         .all()
     )
-    permission_classes = (
-        permissions.IsAuthenticated,
-        CanReadOrWriteChecklistsPermission,
-    )
+    # permission_classes = (
+    #     permissions.IsAuthenticated,
+    #     CanReadOrWriteChecklistsPermission,
+    # )
     filterset_class = ChecklistFilter
     http_method_names = [
         "get",

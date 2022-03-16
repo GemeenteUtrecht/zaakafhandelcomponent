@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
+from zac.core.services import get_zaaktype
 from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import (
@@ -31,44 +32,109 @@ class ChecklistQuestionSerializer(serializers.ModelSerializer):
         many=True, required=False, source="questionchoice_set"
     )
 
+    # Overwrite modelserializer unique validation at this point
+    # Do this in the parent serializer
+    order = serializers.IntegerField()
+
     class Meta:
         model = ChecklistQuestion
-        fields = ("pk", "question", "order", "choices", "is_multiple_choice")
+        fields = ("question", "order", "choices", "is_multiple_choice")
 
 
 class ChecklistTypeSerializer(serializers.ModelSerializer):
-    questions = ChecklistQuestionSerializer(many=True, source="checklistquestion_set")
+    questions = ChecklistQuestionSerializer(
+        many=True, source="checklistquestion_set", required=True
+    )
 
     class Meta:
         model = ChecklistType
         fields = (
             "uuid",
+            "created",
+            "modified",
             "questions",
+            "zaaktype",
+            "zaaktype_catalogus",
+            "zaaktype_omschrijving",
         )
-
-
-class ChecklistAnswerSerializer(serializers.ModelSerializer):
-    question = serializers.PrimaryKeyRelatedField(
-        help_text=_("Primary key of related question"),
-        queryset=ChecklistQuestion.objects.all(),
-    )
-
-    class Meta:
-        model = ChecklistAnswer
-        fields = ("question", "answer")
+        extra_kwargs = {
+            "uuid": {"read_only": True},
+            "created": {"read_only": True},
+            "modified": {"read_only": True},
+            "zaaktype_catalogus": {"read_only": True},
+            "zaaktype_omschrijving": {"read_only": True},
+        }
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
-        question = validated_data["question"]
-        if (valid_choices := list(question.valid_choice_values)) and attrs[
-            "answer"
-        ] not in valid_choices:
-            raise serializers.ValidationError(
-                _(
-                    f"Answer `{attrs['answer']}` was not found in the options: {valid_choices}."
-                )
+        zt = get_zaaktype(validated_data["zaaktype"])
+        validated_data["zaaktype_omschrijving"] = zt.omschrijving
+        validated_data["zaaktype_catalogus"] = zt.catalogus
+
+        # validate uniqueness of question order
+        if questions := validated_data.get("checklistquestion_set"):
+            orders = {}
+            for question in questions:
+                if question["order"] in orders:
+                    raise serializers.ValidationError(
+                        _(
+                            f"The order of the questions has to be unique. "
+                            f"Question `{question['question']}` and question `{orders[question['order']]}` "
+                            f"both have order `{question['order']}`."
+                        )
+                    )
+                orders[question["order"]] = question["question"]
+
+            # Set order of questions logically - monotonically increasing
+            for order, question in enumerate(
+                sorted(questions, key=lambda q: q["order"])
+            ):
+                question["order"] = order + 1
+
+        return validated_data
+
+    def create_questions(self, checklist_type: ChecklistType, questions: Dict):
+        for question in questions:
+            checklist_question = ChecklistQuestion.objects.create(
+                checklist_type=checklist_type,
+                question=question["question"],
+                order=question["order"],
             )
-        return attrs
+            if choices := question.get("questionchoice_set"):
+                QuestionChoice.objects.bulk_create(
+                    [
+                        QuestionChoice(
+                            question=checklist_question,
+                            name=choice["name"],
+                            value=choice["value"],
+                        )
+                        for choice in choices
+                    ]
+                )
+
+    @transaction.atomic
+    def create(self, validated_data):
+        questions = validated_data.pop("checklistquestion_set")
+        checklist_type = super().create(validated_data)
+        self.create_questions(checklist_type, questions)
+        return checklist_type
+
+    @transaction.atomic
+    def update(self, checklist_type, validated_data):
+        # Delete all old questions
+        checklist_type.checklistquestion_set.all().delete()
+
+        # Create entirely new set of questions
+        new_questions = validated_data.pop("checklistquestion_set")
+        checklist_type = super().update(checklist_type, validated_data)
+        self.create_questions(checklist_type, new_questions)
+        return checklist_type
+
+
+class ChecklistAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChecklistAnswer
+        fields = ("question", "answer")
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):
@@ -153,6 +219,30 @@ class ChecklistSerializer(BaseChecklistSerializer):
             for user in users:
                 add_permissions_for_checklist_assignee(checklist, user)
 
+    def bulk_validate_answers(
+        self, checklist: Checklist, answers: Dict[str, Union[str, ChecklistQuestion]]
+    ):
+        # Validate answers to multiple choice questions
+        questions = {
+            question.question: question
+            for question in checklist.checklist_type.checklistquestion_set.prefetch_related(
+                "questionchoice_set"
+            ).exclude(
+                questionchoice=None
+            )
+        }
+        for answer in answers:
+            # It's possible that a question has been altered or deleted
+            if question := questions.get(answer["question"]):
+                if (valid_choices := question.valid_choice_values) and answer[
+                    "answer"
+                ] not in valid_choices:
+                    raise serializers.ValidationError(
+                        _(
+                            f"Answer `{answer['answer']}` was not found in the options: {valid_choices}."
+                        )
+                    )
+
     def bulk_create_answers(
         self, checklist: Checklist, answers: Dict[str, Union[str, ChecklistQuestion]]
     ):
@@ -172,6 +262,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
         answers = validated_data.pop("checklistanswer_set", False)
         checklist = super().create(validated_data)
         if answers:
+            self.bulk_validate_answers(checklist, answers)
             self.bulk_create_answers(checklist, answers)
 
         self._add_permissions_for_checklist_assignee(checklist)
@@ -197,6 +288,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
         answers = validated_data.pop("checklistanswer_set", False)
         checklist = super().update(instance, validated_data)
         if answers:
+            self.bulk_validate_answers(checklist, answers)
             self.bulk_create_answers(checklist, answers)
 
         # add permissions to assignee
