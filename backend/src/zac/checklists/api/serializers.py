@@ -134,7 +134,7 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
 class ChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "answer")
+        fields = ("question", "answer", "created")
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):

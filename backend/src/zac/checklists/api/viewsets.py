@@ -32,6 +32,8 @@ from .serializers import (
             )
         ],
     ),
+    create=extend_schema(summary=_("Create checklisttype and related questions.")),
+    update=extend_schema(summary=_("Update checklisttype and related questions.")),
 )
 class ChecklistTypeViewSet(
     mixins.ListModelMixin,
@@ -91,7 +93,7 @@ class ChecklistTypeViewSet(
         ],
     ),
     create=extend_schema(summary=_("Create checklist and related answers.")),
-    partial_update=extend_schema(
+    update=extend_schema(
         summary=_("Update checklist and related answers."),
     ),
 )
