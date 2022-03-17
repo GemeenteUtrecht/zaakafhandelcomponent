@@ -7,13 +7,7 @@ from rest_framework import exceptions, mixins, permissions, viewsets
 
 from zac.core.services import get_zaaktype
 
-from ..models import (
-    Checklist,
-    ChecklistAnswer,
-    ChecklistQuestion,
-    ChecklistType,
-    QuestionChoice,
-)
+from ..models import Checklist, ChecklistAnswer, ChecklistQuestion, ChecklistType
 from .filters import ChecklistFilter
 from .permissions import CanReadOrWriteChecklistsPermission
 from .serializers import (
@@ -115,7 +109,9 @@ class ChecklistViewSet(
         .prefetch_related(
             Prefetch(
                 "checklistanswer_set",
-                queryset=ChecklistAnswer.objects.all(),
+                queryset=ChecklistAnswer.objects.order_by(
+                    "question", "-created"
+                ).distinct("question"),
             )
         )
         .all()
@@ -128,7 +124,7 @@ class ChecklistViewSet(
     http_method_names = [
         "get",
         "post",
-        "patch",
+        "put",
     ]
     serializer_class = ChecklistSerializer
 
@@ -136,7 +132,7 @@ class ChecklistViewSet(
         mapping = {
             "GET": ReadChecklistSerializer,
             "POST": ChecklistSerializer,
-            "PATCH": ChecklistSerializer,
+            "PUT": ChecklistSerializer,
         }
         return mapping[self.request.method]
 
