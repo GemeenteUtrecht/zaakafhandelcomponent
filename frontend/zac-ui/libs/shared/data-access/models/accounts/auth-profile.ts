@@ -10,7 +10,7 @@ enum MaxVertrouwelijkheidsAanduiding {
 }
 
 // Zaak
-interface ZaakPolicy {
+export interface ZaakPolicy {
   catalogus: string;
   zaaktypeOmschrijving: string;
   maxVa: MaxVertrouwelijkheidsAanduiding;

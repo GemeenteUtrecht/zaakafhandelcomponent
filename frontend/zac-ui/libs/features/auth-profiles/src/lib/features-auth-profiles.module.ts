@@ -12,6 +12,7 @@ import { AuthProfilesPipe } from './auth-profiles/auth-profiles.pipe';
 import { UserGroupsComponent } from './user-groups/user-groups.component';
 import { CreateGroupComponent } from './user-groups/create-group/create-group.component';
 import { DeleteGroupComponent } from './user-groups/delete-group/delete-group.component';
+import { DeleteAuthProfileComponent } from './auth-profiles/delete-auth-profile/delete-auth-profile.component';
 
 @NgModule({
   imports: [
@@ -34,7 +35,8 @@ import { DeleteGroupComponent } from './user-groups/delete-group/delete-group.co
     AuthProfilesPipe,
     UserGroupsComponent,
     CreateGroupComponent,
-    DeleteGroupComponent
+    DeleteGroupComponent,
+    DeleteAuthProfileComponent
   ],
 })
 export class FeaturesAuthProfilesModule {}

@@ -29,11 +29,27 @@ export class FeaturesAuthProfilesService {
   }
 
   /**
-   * Request the authorization profiles from API.
+   * Delete authorization profile.
+   */
+  deleteAuthProfile(uuid): Observable<AuthProfile> {
+    const endpoint = encodeURI(`/api/accounts/auth-profiles/${uuid}`);
+    return this.http.Delete<AuthProfile>(endpoint);
+  }
+
+  /**
+   * Create authorization profile.
    */
   createAuthProfile(data): Observable<AuthProfile> {
     const endpoint = encodeURI(`/api/accounts/auth-profiles`);
     return this.http.Post<AuthProfile>(endpoint, data);
+  }
+
+  /**
+   * Update authorization profile.
+   */
+  updateAuthProfile(data, uuid): Observable<AuthProfile> {
+    const endpoint = encodeURI(`/api/accounts/auth-profiles/${uuid}`);
+    return this.http.Patch<AuthProfile>(endpoint, data);
   }
 
   /**
