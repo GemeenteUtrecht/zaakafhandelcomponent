@@ -86,13 +86,12 @@ export class KetenProcessenService {
       return []
     }
 
-    const mainTasksArray = ketenProcessenData[0].tasks;
     const subTasksArray = [];
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
       subProcess.tasks.forEach( task => subTasksArray.push(task))
     })
 
-    return mainTasksArray
+    return ketenProcessenData[0].tasks
       .concat(subTasksArray)
       .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }
