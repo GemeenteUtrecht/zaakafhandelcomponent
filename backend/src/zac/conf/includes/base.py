@@ -465,17 +465,21 @@ SPECTACULAR_SETTINGS = {
 }
 
 # URLs from which DRF spectacular retrieves API schemas
+DOWC_API_SCHEMA = config(
+    "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
+)
+
 KOWNSL_API_SCHEMA = config(
     "KOWNSL_API_SCHEMA",
-    "https://kownsl.cg-intern.ont.utrecht.nl/api/v1/schema",
+    "https://kownsl.cg-intern.ont.utrecht.nl/api/v1",
 )
 OBJECTS_API_SCHEMA = config(
     "OBJECTS_API_SCHEMA",
-    "https://objects.cg-intern.ont.utrecht.nl/api/v1/schema/openapi.yaml",
+    "https://objects.cg-intern.ont.utrecht.nl/api/v1",
 )
 OBJECTTYPES_API_SCHEMA = config(
     "OBJECTTYPES_API_SCHEMA",
-    "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1/schema/openapi.yaml",
+    "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1",
 )
 ZRC_API_SCHEMA = config(
     "ZRC_API_SCHEMA",

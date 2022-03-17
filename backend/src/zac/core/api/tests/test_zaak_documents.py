@@ -2,7 +2,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.urls import reverse
+from django.urls import reverse_lazy
 
 import requests_mock
 from furl import furl
@@ -44,7 +44,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
     Test the API response body for zaak-documents endpoint.
     """
 
-    endpoint = reverse(
+    endpoint = reverse_lazy(
         "zaak-documents",
         kwargs={
             "bronorganisatie": "123456782",
@@ -176,7 +176,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 },
                 "versie": 1,
                 "locked": True,
-                "readUrl": reverse(
+                "readUrl": reverse_lazy(
                     "dowc:request-doc",
                     kwargs={
                         "bronorganisatie": "123456782",
@@ -187,7 +187,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 "titel": "some-titel",
                 "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
                 "vertrouwelijkheidaanduiding": "Openbaar",
-                "writeUrl": reverse(
+                "writeUrl": reverse_lazy(
                     "dowc:request-doc",
                     kwargs={
                         "bronorganisatie": "123456782",
@@ -319,7 +319,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.core.api.views.get_open_documenten", return_value=[cls.dowc]
         )
 
-        cls.endpoint = reverse(
+        cls.endpoint = reverse_lazy(
             "zaak-documents",
             kwargs={
                 "bronorganisatie": "123456782",
