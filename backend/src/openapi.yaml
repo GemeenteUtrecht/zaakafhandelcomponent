@@ -3638,6 +3638,7 @@ components:
       - bijdrage
       - onderwerp
       type: string
+      title: AardRelatieOmgekeerdeRichtingEnum
     AccessRequest:
       type: object
       properties:
@@ -3650,6 +3651,7 @@ components:
       required:
       - id
       - requester
+      title: AccessRequest
     AccessRequestDetail:
       type: object
       properties:
@@ -3695,6 +3697,7 @@ components:
       - requester
       - url
       - zaak
+      title: AccessRequestDetail
     AddZaakDocument:
       type: object
       properties:
@@ -3720,6 +3723,7 @@ components:
           description: URL-referentie naar de ZAAK in de ZAKEN API
       required:
       - zaak
+      title: AddZaakDocument
     AddZaakRelation:
       type: object
       properties:
@@ -3745,6 +3749,7 @@ components:
       - aardRelatieOmgekeerdeRichting
       - mainZaak
       - relationZaak
+      title: AddZaakRelation
     Address:
       type: object
       properties:
@@ -3767,6 +3772,7 @@ components:
       - gemeentenaam
       - nummer
       - straatnaam
+      title: Address
     AddressSearchResponse:
       type: object
       properties:
@@ -3776,6 +3782,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/SpellCheck'
           description: Spelsuggesties in het geval dat een spelfout wordt vermoed.
+      title: AddressSearchResponse
     Advice:
       type: object
       properties:
@@ -3803,6 +3810,7 @@ components:
       - created
       - documents
       - group
+      title: Advice
     AdviceApprovalContext:
       type: object
       properties:
@@ -3821,6 +3829,7 @@ components:
       - reviewType
       - title
       - zaakInformatie
+      title: AdviceApprovalContext
     AdviceApprovalTaskData:
       type: object
       properties:
@@ -3834,6 +3843,7 @@ components:
             kent.
       required:
       - context
+      title: AdviceApprovalTaskData
     AdviceDocument:
       type: object
       properties:
@@ -3860,6 +3870,7 @@ components:
       - sourceUrl
       - sourceVersion
       - title
+      title: AdviceDocument
     AdviceReviews:
       type: object
       properties:
@@ -3869,6 +3880,7 @@ components:
             $ref: '#/components/schemas/Advice'
       required:
       - advices
+      title: AdviceReviews
     Approval:
       type: object
       properties:
@@ -3894,6 +3906,7 @@ components:
       - group
       - status
       - toelichting
+      title: Approval
     ApprovalReviews:
       type: object
       properties:
@@ -3903,11 +3916,13 @@ components:
             $ref: '#/components/schemas/Approval'
       required:
       - approvals
+      title: ApprovalReviews
     AssigneeTypeEnum:
       enum:
       - user
       - group
       type: string
+      title: AssigneeTypeEnum
     AtomicPermission:
       type: object
       properties:
@@ -3954,6 +3969,7 @@ components:
       - reason
       - requester
       - zaak
+      title: AtomicPermission
     AuthProfile:
       type: object
       properties:
@@ -3981,6 +3997,7 @@ components:
       - name
       - url
       - uuid
+      title: AuthProfile
     Author:
       type: object
       properties:
@@ -3997,6 +4014,7 @@ components:
       - fullName
       - lastName
       - username
+      title: Author
     BPMN:
       type: object
       properties:
@@ -4010,6 +4028,7 @@ components:
       required:
       - bpmn20Xml
       - id
+      title: BPMN
     BagLocation:
       type: object
       properties:
@@ -4033,12 +4052,14 @@ components:
       - maxScore
       - numFound
       - start
+      title: BagLocation
     BetrokkeneIdentificatie:
       type: object
       properties:
         identificatie:
           type: string
           description: Identificatie van de betrokkene
+      title: BetrokkeneIdentificatie
     BetrokkeneTypeEnum:
       enum:
       - natuurlijk_persoon
@@ -4047,9 +4068,11 @@ components:
       - organisatorische_eenheid
       - medewerker
       type: string
+      title: BetrokkeneTypeEnum
     BlankEnum:
       enum:
       - ''
+      title: BlankEnum
     Board:
       type: object
       properties:
@@ -4095,6 +4118,7 @@ components:
       - name
       - slug
       - url
+      title: Board
     BoardColumn:
       type: object
       properties:
@@ -4136,6 +4160,7 @@ components:
       - name
       - order
       - slug
+      title: BoardColumn
     BoardItem:
       type: object
       properties:
@@ -4186,10 +4211,12 @@ components:
       - url
       - uuid
       - zaak
+      title: BoardItem
     BoardItemObjectTypeEnum:
       enum:
       - zaak
       type: string
+      title: BoardItemObjectTypeEnum
     Boolean:
       type: object
       properties:
@@ -4200,6 +4227,7 @@ components:
           description: Huidige of standaard waarde.
       required:
       - value
+      title: Boolean
     CharValue:
       type: object
       properties:
@@ -4208,6 +4236,7 @@ components:
           title: waarde van eigenschap
       required:
       - value
+      title: CharValue
     ConfigureReviewRequest:
       type: object
       description: |-
@@ -4234,6 +4263,7 @@ components:
       - assignedUsers
       - selectedDocuments
       - toelichting
+      title: ConfigureReviewRequest
     CreateAccessRequest:
       type: object
       properties:
@@ -4258,6 +4288,7 @@ components:
       - requester
       - url
       - zaak
+      title: CreateAccessRequest
     CreateOrUpdateActivity:
       type: object
       properties:
@@ -4312,6 +4343,7 @@ components:
       - name
       - url
       - zaak
+      title: CreateOrUpdateActivity
     CreateZaakEigenschap:
       type: object
       properties:
@@ -4331,6 +4363,7 @@ components:
       - naam
       - value
       - zaakUrl
+      title: CreateZaakEigenschap
     DateTimeValue:
       type: object
       properties:
@@ -4340,6 +4373,7 @@ components:
           title: waarde van eigenschap
       required:
       - value
+      title: DateTimeValue
     DateValue:
       type: object
       properties:
@@ -4349,6 +4383,7 @@ components:
           title: waarde van eigenschap
       required:
       - value
+      title: DateValue
     Datetime:
       type: object
       properties:
@@ -4360,6 +4395,7 @@ components:
           description: Huidige of standaard waarde.
       required:
       - value
+      title: Datetime
     Document:
       type: object
       properties:
@@ -4390,6 +4426,7 @@ components:
       - readUrl
       - url
       - versie
+      title: Document
     DocumentSelectContext:
       type: object
       properties:
@@ -4404,6 +4441,7 @@ components:
       required:
       - documents
       - informatieobjecttypen
+      title: DocumentSelectContext
     DocumentSelectTask:
       type: object
       description: |-
@@ -4417,6 +4455,7 @@ components:
             $ref: '#/components/schemas/SelectedDocument'
       required:
       - selectedDocuments
+      title: DocumentSelectTask
     DocumentSelectTaskData:
       type: object
       properties:
@@ -4430,6 +4469,7 @@ components:
             kent.
       required:
       - context
+      title: DocumentSelectTaskData
     DocumentUserTask:
       type: object
       properties:
@@ -4451,6 +4491,7 @@ components:
       - bestandsnaam
       - readUrl
       - url
+      title: DocumentUserTask
     DowcResponse:
       type: object
       properties:
@@ -4476,6 +4517,7 @@ components:
       - magicUrl
       - purpose
       - unversionedUrl
+      title: DowcResponse
     DynamicForm:
       type: object
       properties:
@@ -4486,6 +4528,7 @@ components:
           readOnly: true
       required:
       - formFields
+      title: DynamicForm
     DynamicFormTaskData:
       type: object
       properties:
@@ -4499,6 +4542,7 @@ components:
             kent.
       required:
       - context
+      title: DynamicFormTaskData
     Eigenschap:
       type: object
       properties:
@@ -4517,6 +4561,7 @@ components:
       - specificatie
       - toelichting
       - url
+      title: Eigenschap
     EigenschapDocument:
       type: object
       properties:
@@ -4532,6 +4577,7 @@ components:
         datumTijd:
           type: string
           format: date-time
+      title: EigenschapDocument
     EigenschapSpecificatie:
       type: object
       properties:
@@ -4555,6 +4601,7 @@ components:
       - kardinaliteit
       - lengte
       - waardenverzameling
+      title: EigenschapSpecificatie
     Enum:
       type: object
       properties:
@@ -4577,6 +4624,7 @@ components:
       required:
       - enum
       - value
+      title: Enum
     Error:
       type: object
       properties:
@@ -4584,6 +4632,7 @@ components:
           type: string
       required:
       - detail
+      title: Error
     Event:
       type: object
       properties:
@@ -4605,6 +4654,7 @@ components:
       - created
       - id
       - notes
+      title: Event
     FieldsEnum:
       enum:
       - url
@@ -4633,6 +4683,7 @@ components:
       - zaakobjecten.object
       - zaakgeometrie
       type: string
+      title: FieldsEnum
     Form:
       type: object
       properties:
@@ -4652,6 +4703,7 @@ components:
       - layouts
       - name
       - slug
+      title: Form
     FormEnum:
       enum:
       - zac:doRedirect
@@ -4660,13 +4712,14 @@ components:
       - zac:configureApprovalRequest
       - zac:validSign:configurePackage
       type: string
+      title: FormEnum
     FormField:
       oneOf:
+      - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldEnum'
       - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldDatetime'
-      - $ref: '#/components/schemas/FormFieldEnum'
-      - $ref: '#/components/schemas/FormFieldInt'
       discriminator:
         propertyName: inputType
         mapping:
@@ -4675,22 +4728,27 @@ components:
           int: '#/components/schemas/FormFieldInt'
           boolean: '#/components/schemas/FormFieldBoolean'
           date: '#/components/schemas/FormFieldDatetime'
+      title: FormField
     FormFieldBoolean:
       allOf:
       - $ref: '#/components/schemas/FormFieldShared'
       - $ref: '#/components/schemas/Boolean'
+      title: FormFieldBoolean
     FormFieldDatetime:
       allOf:
       - $ref: '#/components/schemas/FormFieldShared'
       - $ref: '#/components/schemas/Datetime'
+      title: FormFieldDatetime
     FormFieldEnum:
       allOf:
       - $ref: '#/components/schemas/FormFieldShared'
       - $ref: '#/components/schemas/Enum'
+      title: FormFieldEnum
     FormFieldInt:
       allOf:
       - $ref: '#/components/schemas/FormFieldShared'
       - $ref: '#/components/schemas/Int'
+      title: FormFieldInt
     FormFieldShared:
       type: object
       properties:
@@ -4710,10 +4768,12 @@ components:
       - inputType
       - label
       - name
+      title: FormFieldShared
     FormFieldString:
       allOf:
       - $ref: '#/components/schemas/FormFieldShared'
       - $ref: '#/components/schemas/String'
+      title: FormFieldString
     FormaatEnum:
       enum:
       - tekst
@@ -4721,10 +4781,12 @@ components:
       - datum
       - datum_tijd
       type: string
+      title: FormaatEnum
     GenericObject:
       type: object
       description: Generic object
       additionalProperties: true
+      title: GenericObject
     GetZaakDocument:
       type: object
       properties:
@@ -4790,6 +4852,7 @@ components:
       - versie
       - vertrouwelijkheidaanduiding
       - writeUrl
+      title: GetZaakDocument
     GrantPermission:
       type: object
       properties:
@@ -4836,6 +4899,7 @@ components:
       - reason
       - requester
       - zaak
+      title: GrantPermission
     Group:
       type: object
       properties:
@@ -4854,23 +4918,27 @@ components:
       - fullName
       - id
       - name
+      title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
           zaak: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
           document: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      title: GroupBlueprint
     GroupBlueprintPoliciesInformatieObjectTypeBlueprint:
       allOf:
       - $ref: '#/components/schemas/GroupBlueprintShared'
       - $ref: '#/components/schemas/PoliciesInformatieObjectTypeBlueprint'
+      title: GroupBlueprintPoliciesInformatieObjectTypeBlueprint
     GroupBlueprintPoliciesZaakTypeBlueprint:
       allOf:
       - $ref: '#/components/schemas/GroupBlueprintShared'
       - $ref: '#/components/schemas/PoliciesZaakTypeBlueprint'
+      title: GroupBlueprintPoliciesZaakTypeBlueprint
     GroupBlueprintShared:
       type: object
       description: polymorhic fields are grouped into one particular field
@@ -4885,11 +4953,13 @@ components:
       required:
       - objectType
       - role
+      title: GroupBlueprintShared
     GroupBlueprintSharedObjectTypeEnum:
       enum:
       - zaak
       - document
       type: string
+      title: GroupBlueprintSharedObjectTypeEnum
     HandleAccessRequest:
       type: object
       properties:
@@ -4925,6 +4995,7 @@ components:
       - handler
       - requester
       - url
+      title: HandleAccessRequest
     HistoricActivityInstanceDetail:
       type: object
       properties:
@@ -4940,6 +5011,7 @@ components:
       required:
       - naam
       - waarde
+      title: HistoricActivityInstanceDetail
     HistoricUserTask:
       type: object
       properties:
@@ -4969,6 +5041,7 @@ components:
       - created
       - history
       - name
+      title: HistoricUserTask
     InformatieObjectType:
       type: object
       properties:
@@ -4979,6 +5052,7 @@ components:
       required:
       - omschrijving
       - url
+      title: InformatieObjectType
     InformatieObjectTypeBlueprint:
       type: object
       description: class to validate and manage blueprint permissions
@@ -5000,6 +5074,7 @@ components:
       - catalogus
       - iotypeOmschrijving
       - maxVa
+      title: InformatieObjectTypeBlueprint
     InputTypeEnum:
       enum:
       - enum
@@ -5008,6 +5083,7 @@ components:
       - boolean
       - date
       type: string
+      title: InputTypeEnum
     Int:
       type: object
       properties:
@@ -5018,10 +5094,12 @@ components:
           description: Huidige of standaard waarde.
       required:
       - value
+      title: Int
     KownslReviewRequest:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Buuid%7D/get/responses/200/content/application%2Fjson/schema
       - $ref: '#/components/schemas/KownslReviewRequestExtras'
+      title: KownslReviewRequest
     KownslReviewRequestExtras:
       type: object
       properties:
@@ -5029,6 +5107,7 @@ components:
           $ref: '#/components/schemas/Zaak'
       required:
       - zaak
+      title: KownslReviewRequestExtras
     ManageGroup:
       type: object
       properties:
@@ -5051,6 +5130,7 @@ components:
       - fullName
       - id
       - name
+      title: ManageGroup
     Message:
       type: object
       properties:
@@ -5069,12 +5149,15 @@ components:
       required:
       - message
       - processInstanceId
+      title: Message
     MessageEnum:
       enum: []
       type: string
+      title: MessageEnum
     NullEnum:
       enum:
       - null
+      title: NullEnum
     NumberValue:
       type: object
       properties:
@@ -5085,30 +5168,39 @@ components:
           title: waarde van eigenschap
       required:
       - value
+      title: NumberValue
     ObjectFilterProxy:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fobjects%2Fsearch/post/requestBody/content/application%2Fjson/schema
       - $ref: '#/components/schemas/ObjectFilterProxyExtras'
+      title: ObjectFilterProxy
     ObjectFilterProxyExtras:
       type: object
+      title: ObjectFilterProxyExtras
     ObjectProxy:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/Object
       - $ref: '#/components/schemas/ObjectProxyExtras'
+      title: ObjectProxy
     ObjectProxyExtras:
       type: object
+      title: ObjectProxyExtras
     ObjecttypeProxy:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectType
       - $ref: '#/components/schemas/ObjecttypeProxyExtras'
+      title: ObjecttypeProxy
     ObjecttypeProxyExtras:
       type: object
+      title: ObjecttypeProxyExtras
     ObjecttypeVersionProxy:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectVersion
       - $ref: '#/components/schemas/ObjecttypeVersionProxyExtras'
+      title: ObjecttypeVersionProxy
     ObjecttypeVersionProxyExtras:
       type: object
+      title: ObjecttypeVersionProxyExtras
     PaginatedGroupList:
       type: object
       properties:
@@ -5129,6 +5221,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Group'
+      title: PaginatedGroupList
     PaginatedUserList:
       type: object
       properties:
@@ -5149,6 +5242,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+      title: PaginatedUserList
     PaginatedZaakDocumentList:
       type: object
       properties:
@@ -5199,6 +5293,7 @@ components:
           - zaakobjecten.url
           - zaakobjecten.object
           - zaakgeometrie
+      title: PaginatedZaakDocumentList
     PaginatedZaakTypeAggregateList:
       type: object
       properties:
@@ -5219,6 +5314,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ZaakTypeAggregate'
+      title: PaginatedZaakTypeAggregateList
     Pand:
       type: object
       properties:
@@ -5233,6 +5329,7 @@ components:
       required:
       - adres
       - bagObject
+      title: Pand
     PandBagData:
       type: object
       properties:
@@ -5254,6 +5351,7 @@ components:
       - oorspronkelijkBouwjaar
       - status
       - url
+      title: PandBagData
     PatchedBoardItem:
       type: object
       properties:
@@ -5296,6 +5394,7 @@ components:
           - $ref: '#/components/schemas/ZaakDocument'
           readOnly: true
           description: Details van de ZAAK
+      title: PatchedBoardItem
     PatchedCreateOrUpdateActivity:
       type: object
       properties:
@@ -5343,6 +5442,7 @@ components:
           type: string
           format: uri
           readOnly: true
+      title: PatchedCreateOrUpdateActivity
     PatchedHandleAccessRequest:
       type: object
       properties:
@@ -5374,6 +5474,7 @@ components:
           type: string
           format: date
           description: Einddatum van de toegang
+      title: PatchedHandleAccessRequest
     PatchedSearchReport:
       type: object
       properties:
@@ -5386,6 +5487,7 @@ components:
           maxLength: 100
         query:
           $ref: '#/components/schemas/Search'
+      title: PatchedSearchReport
     PatchedUpdateZaakDetail:
       type: object
       properties:
@@ -5415,6 +5517,7 @@ components:
           additionalProperties: {}
           nullable: true
           description: GeoJSON die de coordinaten van de ZAAK representeert
+      title: PatchedUpdateZaakDetail
     PatchedUpdateZaakDocument:
       type: object
       properties:
@@ -5441,12 +5544,13 @@ components:
         bestandsnaam:
           type: string
           description: Filename without extension.
+      title: PatchedUpdateZaakDocument
     PatchedZaakEigenschap:
       oneOf:
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -5454,6 +5558,7 @@ components:
           getal: '#/components/schemas/ZaakEigenschapNumberValue'
           datum: '#/components/schemas/ZaakEigenschapDateValue'
           datum_tijd: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      title: PatchedZaakEigenschap
     Permission:
       type: object
       properties:
@@ -5467,6 +5572,7 @@ components:
       required:
       - description
       - name
+      title: Permission
     PermissionDenied:
       type: object
       properties:
@@ -5482,6 +5588,7 @@ components:
       required:
       - canRequestAccess
       - reason
+      title: PermissionDenied
     PermissionsEnum:
       enum:
       - zaken:inzien
@@ -5500,6 +5607,7 @@ components:
       - activiteiten:schrijven
       - activiteiten:inzien
       type: string
+      title: PermissionsEnum
     PoliciesInformatieObjectTypeBlueprint:
       type: object
       properties:
@@ -5510,6 +5618,7 @@ components:
           description: Lijst van blueprintshapes
       required:
       - policies
+      title: PoliciesInformatieObjectTypeBlueprint
     PoliciesZaakTypeBlueprint:
       type: object
       properties:
@@ -5520,6 +5629,7 @@ components:
           description: Lijst van blueprintshapes
       required:
       - policies
+      title: PoliciesZaakTypeBlueprint
     ProcessInstance:
       type: object
       properties:
@@ -5547,6 +5657,7 @@ components:
       - messages
       - tasks
       - title
+      title: ProcessInstance
     ReadActivity:
       type: object
       properties:
@@ -5603,6 +5714,7 @@ components:
       - name
       - url
       - zaak
+      title: ReadActivity
     ReasonEnum:
       enum:
       - betrokkene
@@ -5611,6 +5723,7 @@ components:
       - adviseur
       - accordeur
       type: string
+      title: ReasonEnum
     RedirectContext:
       type: object
       properties:
@@ -5621,6 +5734,7 @@ components:
       required:
       - openInNewWindow
       - redirectTo
+      title: RedirectContext
     RedirectTaskData:
       type: object
       properties:
@@ -5634,6 +5748,7 @@ components:
             kent.
       required:
       - context
+      title: RedirectTaskData
     RelatedZaak:
       type: object
       properties:
@@ -5644,6 +5759,7 @@ components:
       required:
       - aardRelatie
       - zaak
+      title: RelatedZaak
     RelatedZaakDetail:
       type: object
       properties:
@@ -5712,11 +5828,13 @@ components:
       - url
       - vertrouwelijkheidaanduiding
       - zaaktype
+      title: RelatedZaakDetail
     ResultEnum:
       enum:
       - approve
       - reject
       type: string
+      title: ResultEnum
     Resultaat:
       type: object
       properties:
@@ -5730,6 +5848,7 @@ components:
       - resultaattype
       - toelichting
       - url
+      title: Resultaat
     ResultaatType:
       type: object
       properties:
@@ -5740,11 +5859,13 @@ components:
       required:
       - omschrijving
       - url
+      title: ResultaatType
     ReviewTypeEnum:
       enum:
       - advice
       - approval
       type: string
+      title: ReviewTypeEnum
     Rol:
       type: object
       properties:
@@ -5777,6 +5898,7 @@ components:
       - registratiedatum
       - roltoelichting
       - url
+      title: Rol
     RolDocument:
       type: object
       properties:
@@ -5797,6 +5919,7 @@ components:
       required:
       - betrokkeneType
       - omschrijvingGeneriek
+      title: RolDocument
     Role:
       type: object
       properties:
@@ -5817,6 +5940,7 @@ components:
       - id
       - name
       - permissions
+      title: Role
     Search:
       type: object
       properties:
@@ -5875,6 +5999,7 @@ components:
           type: boolean
           default: false
           description: Include closed ZAKEN.
+      title: Search
     SearchEigenschap:
       type: object
       properties:
@@ -5889,6 +6014,7 @@ components:
       required:
       - name
       - spec
+      title: SearchEigenschap
     SearchEigenschapSpecificatie:
       type: object
       properties:
@@ -5912,6 +6038,7 @@ components:
           description: Een array van verschillende waardes
       required:
       - type
+      title: SearchEigenschapSpecificatie
     SearchReport:
       type: object
       properties:
@@ -5928,6 +6055,7 @@ components:
       - id
       - name
       - query
+      title: SearchReport
     SearchZaaktype:
       type: object
       properties:
@@ -5942,6 +6070,7 @@ components:
       required:
       - catalogus
       - omschrijving
+      title: SearchZaaktype
     SelectUsersRevReq:
       type: object
       description: |-
@@ -5972,6 +6101,7 @@ components:
       - deadline
       - groupAssignees
       - userAssignees
+      title: SelectUsersRevReq
     SelectedDocument:
       type: object
       properties:
@@ -5989,6 +6119,7 @@ components:
       required:
       - document
       - documentType
+      title: SelectedDocument
     SetTaskAssignee:
       type: object
       properties:
@@ -6010,6 +6141,7 @@ components:
       - assignee
       - delegate
       - task
+      title: SetTaskAssignee
     SpellCheck:
       type: object
       properties:
@@ -6020,6 +6152,7 @@ components:
           description: Mogelijke foutgespelde zoektermen en spellingssuggesties.
       required:
       - suggestions
+      title: SpellCheck
     SpellSuggestions:
       type: object
       properties:
@@ -6048,6 +6181,7 @@ components:
       - searchTerm
       - startOffset
       - suggestion
+      title: SpellSuggestions
     StatusDocument:
       type: object
       properties:
@@ -6065,11 +6199,13 @@ components:
         statustoelichting:
           type: string
           description: Toelichting op de STATUS.
+      title: StatusDocument
     StatusEnum:
       enum:
       - on_going
       - finished
       type: string
+      title: StatusEnum
     StatusType:
       type: object
       properties:
@@ -6097,6 +6233,7 @@ components:
       - statustekst
       - url
       - volgnummer
+      title: StatusType
     String:
       type: object
       properties:
@@ -6107,12 +6244,13 @@ components:
           description: Huidige of standaard waarde.
       required:
       - value
+      title: String
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
       - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       discriminator:
         propertyName: form
         mapping:
@@ -6122,18 +6260,22 @@ components:
           zac:configureAdviceRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:configureApprovalRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:validSign:configurePackage: '#/components/schemas/SubmitUserTaskValidSignTask'
+      title: SubmitUserTask
     SubmitUserTaskConfigureReviewRequest:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/ConfigureReviewRequest'
+      title: SubmitUserTaskConfigureReviewRequest
     SubmitUserTaskDocumentSelectTask:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/DocumentSelectTask'
+      title: SubmitUserTaskDocumentSelectTask
     SubmitUserTaskGenericObject:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/GenericObject'
+      title: SubmitUserTaskGenericObject
     SubmitUserTaskShared:
       type: object
       properties:
@@ -6149,10 +6291,12 @@ components:
           - $ref: '#/components/schemas/NullEnum'
       required:
       - form
+      title: SubmitUserTaskShared
     SubmitUserTaskValidSignTask:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/ValidSignTask'
+      title: SubmitUserTaskValidSignTask
     SuggestResult:
       type: object
       properties:
@@ -6175,6 +6319,7 @@ components:
       - score
       - type
       - weergavenaam
+      title: SuggestResult
     SummaryActivity:
       type: object
       properties:
@@ -6194,6 +6339,7 @@ components:
       - groupAssignee
       - name
       - userAssignee
+      title: SummaryActivity
     SummaryZaakDocument:
       type: object
       properties:
@@ -6216,10 +6362,11 @@ components:
       - identificatie
       - status
       - url
+      title: SummaryZaakDocument
     Task:
       oneOf:
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       discriminator:
         propertyName: assigneeType
@@ -6228,12 +6375,14 @@ components:
           group: '#/components/schemas/TaskTaskAssigneeGroup'
           ? ''
           : '#/components/schemas/TaskTaskAssigneeFallback'
+      title: Task
     TaskAssigneeFallback:
       type: object
       properties:
         assignee:
           type: string
           default: ''
+      title: TaskAssigneeFallback
     TaskAssigneeGroup:
       type: object
       properties:
@@ -6241,6 +6390,7 @@ components:
           $ref: '#/components/schemas/Group'
       required:
       - assignee
+      title: TaskAssigneeGroup
     TaskAssigneeUser:
       type: object
       properties:
@@ -6248,6 +6398,7 @@ components:
           $ref: '#/components/schemas/User'
       required:
       - assignee
+      title: TaskAssigneeUser
     TaskShared:
       type: object
       properties:
@@ -6273,23 +6424,28 @@ components:
       - hasForm
       - id
       - name
+      title: TaskShared
     TaskTaskAssigneeFallback:
       allOf:
       - $ref: '#/components/schemas/TaskShared'
       - $ref: '#/components/schemas/TaskAssigneeFallback'
+      title: TaskTaskAssigneeFallback
     TaskTaskAssigneeGroup:
       allOf:
       - $ref: '#/components/schemas/TaskShared'
       - $ref: '#/components/schemas/TaskAssigneeGroup'
+      title: TaskTaskAssigneeGroup
     TaskTaskAssigneeUser:
       allOf:
       - $ref: '#/components/schemas/TaskShared'
       - $ref: '#/components/schemas/TaskAssigneeUser'
+      title: TaskTaskAssigneeUser
     TypeEnum:
       enum:
       - string
       - number
       type: string
+      title: TypeEnum
     User:
       type: object
       properties:
@@ -6329,6 +6485,7 @@ components:
       - groups
       - id
       - username
+      title: User
     UserAtomicPermission:
       type: object
       properties:
@@ -6345,13 +6502,15 @@ components:
       required:
       - permissions
       - username
+      title: UserAtomicPermission
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -6362,22 +6521,27 @@ components:
           zac:configureAdviceRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:configureApprovalRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:validSign:configurePackage: '#/components/schemas/UserTaskContextValidSignTaskData'
+      title: UserTaskContext
     UserTaskContextAdviceApprovalTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/AdviceApprovalTaskData'
+      title: UserTaskContextAdviceApprovalTaskData
     UserTaskContextDocumentSelectTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/DocumentSelectTaskData'
+      title: UserTaskContextDocumentSelectTaskData
     UserTaskContextDynamicFormTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/DynamicFormTaskData'
+      title: UserTaskContextDynamicFormTaskData
     UserTaskContextRedirectTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/RedirectTaskData'
+      title: UserTaskContextRedirectTaskData
     UserTaskContextShared:
       type: object
       properties:
@@ -6398,10 +6562,12 @@ components:
       required:
       - form
       - task
+      title: UserTaskContextShared
     UserTaskContextValidSignTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/ValidSignTaskData'
+      title: UserTaskContextValidSignTaskData
     ValidSignContext:
       type: object
       properties:
@@ -6411,6 +6577,7 @@ components:
             $ref: '#/components/schemas/Document'
       required:
       - documents
+      title: ValidSignContext
     ValidSignTask:
       type: object
       description: |-
@@ -6432,6 +6599,7 @@ components:
       required:
       - assignedUsers
       - selectedDocuments
+      title: ValidSignTask
     ValidSignTaskData:
       type: object
       properties:
@@ -6445,6 +6613,7 @@ components:
             kent.
       required:
       - context
+      title: ValidSignTaskData
     ValidSignUser:
       type: object
       properties:
@@ -6465,6 +6634,7 @@ components:
           type: string
           title: achternaam
           description: Achternaam van ondertekenaar
+      title: ValidSignUser
     Verblijfsobject:
       type: object
       properties:
@@ -6479,6 +6649,7 @@ components:
       required:
       - adres
       - bagObject
+      title: Verblijfsobject
     VerblijfsobjectData:
       type: object
       properties:
@@ -6500,6 +6671,7 @@ components:
       - oppervlakte
       - status
       - url
+      title: VerblijfsobjectData
     VertrouwelijkheidaanduidingEnum:
       enum:
       - openbaar
@@ -6511,6 +6683,7 @@ components:
       - geheim
       - zeer_geheim
       type: string
+      title: VertrouwelijkheidaanduidingEnum
     VertrouwelijkheidsAanduiding:
       type: object
       properties:
@@ -6523,6 +6696,7 @@ components:
       required:
       - label
       - value
+      title: VertrouwelijkheidsAanduiding
     WorkStackAccessRequests:
       type: object
       properties:
@@ -6538,6 +6712,7 @@ components:
       required:
       - accessRequests
       - zaak
+      title: WorkStackAccessRequests
     WorkStackAdhocActivities:
       type: object
       properties:
@@ -6553,6 +6728,7 @@ components:
       required:
       - activities
       - zaak
+      title: WorkStackAdhocActivities
     WorkStackTask:
       type: object
       properties:
@@ -6567,6 +6743,7 @@ components:
       required:
       - task
       - zaak
+      title: WorkStackTask
     Zaak:
       type: object
       properties:
@@ -6581,6 +6758,7 @@ components:
       - bronorganisatie
       - identificatie
       - url
+      title: Zaak
     ZaakDetail:
       type: object
       properties:
@@ -6646,6 +6824,7 @@ components:
       - url
       - vertrouwelijkheidaanduiding
       - zaaktype
+      title: ZaakDetail
     ZaakDocument:
       type: object
       properties:
@@ -6718,12 +6897,13 @@ components:
             de ZAAK bevat.
       required:
       - bronorganisatie
+      title: ZaakDocument
     ZaakEigenschap:
       oneOf:
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -6731,22 +6911,27 @@ components:
           getal: '#/components/schemas/ZaakEigenschapNumberValue'
           datum: '#/components/schemas/ZaakEigenschapDateValue'
           datum_tijd: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      title: ZaakEigenschap
     ZaakEigenschapCharValue:
       allOf:
       - $ref: '#/components/schemas/ZaakEigenschapShared'
       - $ref: '#/components/schemas/CharValue'
+      title: ZaakEigenschapCharValue
     ZaakEigenschapDateTimeValue:
       allOf:
       - $ref: '#/components/schemas/ZaakEigenschapShared'
       - $ref: '#/components/schemas/DateTimeValue'
+      title: ZaakEigenschapDateTimeValue
     ZaakEigenschapDateValue:
       allOf:
       - $ref: '#/components/schemas/ZaakEigenschapShared'
       - $ref: '#/components/schemas/DateValue'
+      title: ZaakEigenschapDateValue
     ZaakEigenschapNumberValue:
       allOf:
       - $ref: '#/components/schemas/ZaakEigenschapShared'
       - $ref: '#/components/schemas/NumberValue'
+      title: ZaakEigenschapNumberValue
     ZaakEigenschapShared:
       type: object
       properties:
@@ -6764,6 +6949,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/Eigenschap'
           readOnly: true
+      title: ZaakEigenschapShared
     ZaakInformatieTask:
       type: object
       properties:
@@ -6774,6 +6960,7 @@ components:
       required:
       - omschrijving
       - toelichting
+      title: ZaakInformatieTask
     ZaakObjectDocument:
       type: object
       properties:
@@ -6785,6 +6972,7 @@ components:
           type: string
           format: uri
           description: URL-referentie naar het OBJECT in de OBJECTS API
+      title: ZaakObjectDocument
     ZaakObjectGroup:
       type: object
       properties:
@@ -6806,12 +6994,15 @@ components:
       - items
       - label
       - objectType
+      title: ZaakObjectGroup
     ZaakObjectProxy:
       allOf:
       - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/ZaakObject
       - $ref: '#/components/schemas/ZaakObjectProxyExtras'
+      title: ZaakObjectProxy
     ZaakObjectProxyExtras:
       type: object
+      title: ZaakObjectProxyExtras
     ZaakRevReqDetail:
       oneOf:
       - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
@@ -6821,14 +7012,17 @@ components:
         mapping:
           advice: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
           approval: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      title: ZaakRevReqDetail
     ZaakRevReqDetailAdviceReviews:
       allOf:
       - $ref: '#/components/schemas/ZaakRevReqDetailShared'
       - $ref: '#/components/schemas/AdviceReviews'
+      title: ZaakRevReqDetailAdviceReviews
     ZaakRevReqDetailApprovalReviews:
       allOf:
       - $ref: '#/components/schemas/ZaakRevReqDetailShared'
       - $ref: '#/components/schemas/ApprovalReviews'
+      title: ZaakRevReqDetailApprovalReviews
     ZaakRevReqDetailShared:
       type: object
       properties:
@@ -6843,6 +7037,7 @@ components:
       required:
       - id
       - reviewType
+      title: ZaakRevReqDetailShared
     ZaakRevReqSummary:
       type: object
       properties:
@@ -6863,6 +7058,7 @@ components:
       - id
       - numAssignedUsers
       - reviewType
+      title: ZaakRevReqSummary
     ZaakShort:
       type: object
       properties:
@@ -6877,6 +7073,7 @@ components:
       - bronorganisatie
       - identificatie
       - url
+      title: ZaakShort
     ZaakStatus:
       type: object
       properties:
@@ -6896,6 +7093,7 @@ components:
       - statustoelichting
       - statustype
       - url
+      title: ZaakStatus
     ZaakType:
       type: object
       properties:
@@ -6913,6 +7111,7 @@ components:
       - omschrijving
       - url
       - versiedatum
+      title: ZaakType
     ZaakTypeAggregate:
       type: object
       properties:
@@ -6932,6 +7131,7 @@ components:
       - catalogus
       - identificatie
       - omschrijving
+      title: ZaakTypeAggregate
     ZaakTypeBlueprint:
       type: object
       description: class to validate and manage blueprint permissions
@@ -6952,6 +7152,7 @@ components:
       - catalogus
       - maxVa
       - zaaktypeOmschrijving
+      title: ZaakTypeBlueprint
     ZaakTypeDocument:
       type: object
       properties:
@@ -6965,6 +7166,7 @@ components:
         omschrijving:
           type: string
           description: Omschrijving van de ZAAKTYPE.
+      title: ZaakTypeDocument
     Zaakgeometrie:
       type: object
       properties:
@@ -6976,15 +7178,18 @@ components:
       required:
       - coordinates
       - type
+      title: Zaakgeometrie
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: zac_sessionid
+      title: cookieAuth
     tokenAuth:
       type: apiKey
       in: header
       name: Authorization
       description: Token-based authentication with required prefix "Token"
+      title: tokenAuth
 externalDocs:
   url: https://zaakafhandelcomponent.readthedocs.io/
