@@ -115,13 +115,7 @@ class ChecklistViewSet(
         .prefetch_related(
             Prefetch(
                 "checklistanswer_set",
-                queryset=ChecklistAnswer.objects.prefetch_related(
-                    "question",
-                    Prefetch(
-                        "question__questionchoice_set",
-                        queryset=QuestionChoice.objects.all(),
-                    ),
-                ).all(),
+                queryset=ChecklistAnswer.objects.all(),
             )
         )
         .all()

@@ -74,7 +74,6 @@ class ChecklistQuestion(ChecklistMeta):
     )
     order = models.PositiveSmallIntegerField(
         _("Order"),
-        unique=True,
         help_text=_(
             "Order of the questions as they should be presented in the checklist."
         ),
@@ -101,7 +100,7 @@ class ChecklistQuestion(ChecklistMeta):
     class Meta:
         verbose_name = _("question")
         verbose_name_plural = _("questions")
-        unique_together = (("question", "checklist_type"),)
+        unique_together = (("question", "checklist_type"), ("checklist_type", "order"))
 
 
 class ChecklistType(ChecklistMeta):

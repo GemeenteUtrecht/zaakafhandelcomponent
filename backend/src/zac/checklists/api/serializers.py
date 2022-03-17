@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
-from zac.core.services import get_zaaktype
+from zac.core.services import get_zaak, get_zaaktype
 from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import (
@@ -205,11 +205,26 @@ class ChecklistSerializer(BaseChecklistSerializer):
         }
 
     def validate(self, attrs):
+        validated_data = super().validate(attrs)
         if attrs.get("user_assignee") and attrs.get("group_assignee"):
             raise serializers.ValidationError(
                 "A checklist can not be assigned to both a user and a group."
             )
-        return attrs
+        zaak = attrs["zaak"]
+        zaak = get_zaak(zaak_url=zaak)
+        zaaktype = get_zaaktype(zaak.zaaktype)
+        checklist_type = attrs["checklist_type"]
+        if not (
+            checklist_type.zaaktype_omschrijving == zaaktype.omschrijving
+            and checklist_type.zaaktype_catalogus == zaaktype.catalogus
+        ):
+            raise serializers.ValidationError(
+                _(
+                    "ZAAKTYPE of checklisttype is not related to the ZAAKTYPE of the ZAAK."
+                )
+            )
+
+        return validated_data
 
     def _add_permissions_for_checklist_assignee(self, checklist):
         if checklist.user_assignee:
