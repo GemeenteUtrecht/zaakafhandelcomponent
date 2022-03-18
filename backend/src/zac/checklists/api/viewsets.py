@@ -9,7 +9,10 @@ from zac.core.services import get_zaaktype
 
 from ..models import Checklist, ChecklistAnswer, ChecklistQuestion, ChecklistType
 from .filters import ChecklistFilter
-from .permissions import CanReadOrWriteChecklistsPermission
+from .permissions import (
+    CanReadOrWriteChecklistsPermission,
+    CanReadOrWriteChecklistTypePermission,
+)
 from .serializers import (
     ChecklistSerializer,
     ChecklistTypeSerializer,
@@ -49,10 +52,10 @@ class ChecklistTypeViewSet(
             ).all(),
         )
     ).all()
-    # permission_classes = (
-    #     permissions.IsAuthenticated,
-    #     CanReadOrWriteChecklistsPermission,
-    # )
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrWriteChecklistTypePermission,
+    )
     http_method_names = [
         "get",
         "post",
@@ -118,10 +121,10 @@ class ChecklistViewSet(
         )
         .all()
     )
-    # permission_classes = (
-    #     permissions.IsAuthenticated,
-    #     CanReadOrWriteChecklistsPermission,
-    # )
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrWriteChecklistsPermission,
+    )
     filterset_class = ChecklistFilter
     http_method_names = [
         "get",

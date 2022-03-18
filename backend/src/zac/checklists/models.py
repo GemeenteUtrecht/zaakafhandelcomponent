@@ -40,8 +40,13 @@ class ChecklistAnswer(ChecklistMeta):
     def clean(self):
         # If the related question has related "choices"
         # check if the answer is one of the choices
-        if choices := self.question.questionchoice_set.all().values_list(
-            "value", flat=True
+        checklist_question = self.checklist.checklist_type.checklistquestion_set.filter(
+            question=self.question
+        )
+        if checklist_question.exists() and (
+            choices := checklist_question.questionchoice_set.all().values_list(
+                "value", flat=True
+            )
         ):
             if self.answer not in choices:
                 raise ValidationError(f"{self.answer} is not found in {choices}.")
