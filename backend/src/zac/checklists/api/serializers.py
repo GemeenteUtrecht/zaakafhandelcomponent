@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from django.contrib.auth.models import Group
 from django.db import transaction
@@ -134,7 +134,7 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
 class ChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "answer", "created")
+        fields = ("question", "answer", "created", "pk")
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):
@@ -234,9 +234,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
             for user in users:
                 add_permissions_for_checklist_assignee(checklist, user)
 
-    def bulk_validate_answers(
-        self, checklist: Checklist, answers: Dict[str, Union[str, ChecklistQuestion]]
-    ):
+    def bulk_validate_answers(self, checklist: Checklist, answers: Dict):
         # Validate answers to multiple choice questions
         questions = {
             question.question: question
@@ -248,7 +246,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
         }
         for answer in answers:
             # It's possible that a question has been altered or deleted
-            if question := questions.get(answer["question"]):
+            if answer["answer"] and (question := questions.get(answer["question"])):
                 if (valid_choices := question.valid_choice_values) and answer[
                     "answer"
                 ] not in valid_choices:
@@ -258,9 +256,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
                         )
                     )
 
-    def bulk_create_answers(
-        self, checklist: Checklist, answers: Dict[str, Union[str, ChecklistQuestion]]
-    ):
+    def bulk_create_answers(self, checklist: Checklist, answers: List):
         ChecklistAnswer.objects.bulk_create(
             [
                 ChecklistAnswer(
@@ -283,6 +279,17 @@ class ChecklistSerializer(BaseChecklistSerializer):
         self._add_permissions_for_checklist_assignee(checklist)
         return checklist
 
+    def bulk_update_answers(self, checklist: Checklist, answers: List):
+        pk_answers = {answer["pk"]: answer["answer"] for answer in answers}
+        updated_answers = []
+        for answer in checklist.checklistanswer_set.all():
+            if (
+                new_answer := pk_answers.get(answer.pk)
+            ) and answer.answer != new_answer:
+                answer.answer = new_answer
+                updated_answers.append(answer)
+        ChecklistAnswer.objects.bulk_update(updated_answers, ["answer"])
+
     @transaction.atomic
     def update(self, instance, validated_data):
         user_assignee = validated_data.get("user_assignee")
@@ -304,7 +311,10 @@ class ChecklistSerializer(BaseChecklistSerializer):
         checklist = super().update(instance, validated_data)
         if answers:
             self.bulk_validate_answers(checklist, answers)
-            self.bulk_create_answers(checklist, answers)
+            updated_answers = [answer for answer in answers if answer.get("pk")]
+            self.bulk_update_answers(checklist, updated_answers)
+            create_answers = [answer for answer in answers if not answer.get("pk")]
+            self.bulk_create_answers(checklist, create_answers)
 
         # add permissions to assignee
         if grant_permissions:

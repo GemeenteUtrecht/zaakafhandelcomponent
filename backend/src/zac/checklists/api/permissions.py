@@ -71,14 +71,13 @@ class CanReadZaakChecklistTypePermission(ZaakDefinitionPermission):
 
 class CanReadOrWriteChecklistTypePermission:
     def get_permission(self, request, view: APIView) -> DefinitionBasePermission:
-        if view.action == "list":
-            return CanReadZaakChecklistTypePermission()
-        if (
-            view.action == "retrieve"
-            or view.action == "create"
-            or view.action == "update"
-        ):
-            return IsAdminUser()
+        action_permission_mapping = {
+            "list": CanReadZaakChecklistTypePermission(),
+            "retrieve": IsAdminUser(),
+            "create": IsAdminUser(),
+            "update": IsAdminUser(),
+        }
+        return action_permission_mapping[view.action]
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         permission = self.get_permission(request, view)

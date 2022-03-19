@@ -48,14 +48,11 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_read_not_logged_in(self):
         response = self.client.get(self.endpoint)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_read_logged_in_no_filter(self):
         user = UserFactory.create()
         self.client.force_authenticate(user)
-        ChecklistFactory.create()
-
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), ["Missing the `zaak` query parameter."])
@@ -64,7 +61,6 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
     def test_read_logged_in_zaak_no_permission(self, m):
         user = UserFactory.create()
         self.client.force_authenticate(user)
-        ChecklistFactory.create()
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         zaak = generate_oas_component(
             "zrc",
@@ -73,9 +69,7 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
         )
         m.get(zaak["url"], json=zaak)
-
         response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -101,8 +95,6 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=zaaktype["url"],
         )
         m.get(zaak["url"], json=zaak)
-
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
             for_user=user,
@@ -112,9 +104,7 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-
         response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -140,8 +130,6 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
             zaaktype=zaaktype["url"],
         )
         m.get(zaak["url"], json=zaak)
-
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
             for_user=user,
@@ -153,16 +141,10 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
         )
         # set up test data
         ChecklistFactory.create(zaak="https://some-other-zaak-url.com")
-        checklist = ChecklistFactory.create(zaak=zaak["url"])
-
+        ChecklistFactory.create(zaak=zaak["url"])
         response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(
-            response.data[0]["checklist_type"], checklist.checklist_type.uuid
-        )
-        self.assertEqual(response.data[0]["zaak"], checklist.zaak)
 
     @requests_mock.Mocker()
     def test_read_logged_in_zaak_permission_atomic(self, m):
@@ -183,16 +165,10 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
 
         # set up test data
         ChecklistFactory.create(zaak="https://some-other-zaak-url.com")
-        checklist = ChecklistFactory.create(zaak=zaak["url"])
-
+        ChecklistFactory.create(zaak=zaak["url"])
         response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(
-            response.data[0]["checklist_type"], checklist.checklist_type.uuid
-        )
-        self.assertEqual(response.data[0]["zaak"], checklist.zaak)
 
 
 class CreatePermissionTests(ClearCachesMixin, APITestCase):
@@ -241,12 +217,10 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         self.user = UserFactory.create()
 
     def test_create_checklist_not_logged_in(self):
         response = self.client.post(self.endpoint)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -263,14 +237,12 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.post(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_create_checklist_logged_in_with_permissions_for_other_zaak(self, m):
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -292,15 +264,12 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.post(self.endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_create_checklist_logged_in_with_permissions(self, m):
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -322,15 +291,12 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.post(self.endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @requests_mock.Mocker()
     def test_create_checklist_logged_in_with_atomic_permissions(self, m):
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         AtomicPermissionFactory.create(
             permission=checklists_schrijven.name,
             for_user=self.user,
@@ -348,9 +314,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.post(self.endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -402,14 +366,11 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         self.user = UserFactory.create()
 
     def test_update_checklist_not_logged_in(self):
         endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-
         response = self.client.patch(endpoint, {})
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -427,16 +388,13 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.put(endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_update_checklist_logged_in_with_permissions_for_other_zaak(self, m):
         endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -457,16 +415,13 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.put(endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_update_checklist_logged_in_with_permissions(self, m):
         endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -487,16 +442,13 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.put(endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @requests_mock.Mocker()
     def test_update_checklist_logged_in_with_atomic_permissions(self, m):
         endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
         self.client.force_authenticate(user=self.user)
-        # set up user permissions
         AtomicPermissionFactory.create(
             permission=checklists_schrijven.name,
             for_user=self.user,
@@ -513,7 +465,5 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-
         response = self.client.put(endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)

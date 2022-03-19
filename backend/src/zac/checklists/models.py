@@ -1,4 +1,5 @@
 import uuid
+from tabnanny import verbose
 from typing import Optional
 
 from django.conf import settings
@@ -31,7 +32,7 @@ class ChecklistAnswer(ChecklistMeta):
         _("Related question"),
         max_length=1000,
     )
-    answer = models.TextField(_("Answer to the question"), max_length=1000)
+    answer = models.TextField(_("Answer to the question"), max_length=1000, blank=True)
 
     class Meta:
         verbose_name = _("checklist answer")
@@ -40,16 +41,19 @@ class ChecklistAnswer(ChecklistMeta):
     def clean(self):
         # If the related question has related "choices"
         # check if the answer is one of the choices
-        checklist_question = self.checklist.checklist_type.checklistquestion_set.filter(
-            question=self.question
-        )
-        if checklist_question.exists() and (
-            choices := checklist_question.questionchoice_set.all().values_list(
-                "value", flat=True
+        if self.answer:
+            checklist_question = (
+                self.checklist.checklist_type.checklistquestion_set.filter(
+                    question=self.question
+                )
             )
-        ):
-            if self.answer not in choices:
-                raise ValidationError(f"{self.answer} is not found in {choices}.")
+            if checklist_question.exists() and (
+                choices := checklist_question.questionchoice_set.all().values_list(
+                    "value", flat=True
+                )
+            ):
+                if self.answer not in choices:
+                    raise ValidationError(f"{self.answer} is not found in {choices}.")
 
 
 class QuestionChoice(ChecklistMeta):

@@ -5,7 +5,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import exceptions, mixins, permissions, viewsets
 
-from zac.core.services import get_zaaktype
+from zac.core.services import get_zaak, get_zaaktype
 
 from ..models import Checklist, ChecklistAnswer, ChecklistQuestion, ChecklistType
 from .filters import ChecklistFilter
@@ -40,6 +40,7 @@ from .serializers import (
 )
 class ChecklistTypeViewSet(
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -66,18 +67,17 @@ class ChecklistTypeViewSet(
     def filter_queryset(self, queryset):
         qs = super().filter_queryset(queryset)
         if self.action == "list":
-            zaaktype = get_zaaktype(self.request.GET.get("zaaktype"))
-            qs.filter(
+            zaak = get_zaak(zaak_url=self.request.GET.get("zaak"))
+            zaaktype = get_zaaktype(zaak.zaaktype)
+            qs = qs.filter(
                 zaaktype_omschrijving=zaaktype.omschrijving,
                 zaaktype_catalogus=zaaktype.catalogus,
             )
         return qs
 
     def list(self, request, *args, **kwargs):
-        if not request.GET.get("zaaktype"):
-            raise exceptions.ValidationError(
-                _("Missing the `zaaktype` query parameter.")
-            )
+        if not request.GET.get("zaak"):
+            raise exceptions.ValidationError(_("Missing the `zaak` query parameter."))
 
         return super().list(request, *args, **kwargs)
 
@@ -112,12 +112,7 @@ class ChecklistViewSet(
         .select_related("group_assignee")
         .select_related("checklist_type")
         .prefetch_related(
-            Prefetch(
-                "checklistanswer_set",
-                queryset=ChecklistAnswer.objects.order_by(
-                    "question", "-created"
-                ).distinct("question"),
-            )
+            Prefetch("checklistanswer_set", queryset=ChecklistAnswer.objects.all())
         )
         .all()
     )
