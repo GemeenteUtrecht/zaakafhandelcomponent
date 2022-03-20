@@ -1,4 +1,4 @@
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 
 import requests_mock
 from rest_framework import status

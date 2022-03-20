@@ -1,10 +1,11 @@
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
@@ -78,9 +79,7 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
                 if question["order"] in orders:
                     raise serializers.ValidationError(
                         _(
-                            f"The order of the questions has to be unique. "
-                            f"Question `{question['question']}` and question `{orders[question['order']]}` "
-                            f"both have order `{question['order']}`."
+                            f"The order of the questions has to be unique. Question `{question['question']}` and question `{orders[question['order']]}` both have order `{question['order']}`."
                         )
                     )
                 orders[question["order"]] = question["question"]
@@ -115,7 +114,11 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         questions = validated_data.pop("checklistquestion_set")
-        checklist_type = super().create(validated_data)
+        try:
+            checklist_type = super().create(validated_data)
+        except ValidationError as err:
+            raise exceptions.ValidationError(err.messages)
+
         self.create_questions(checklist_type, questions)
         return checklist_type
 
@@ -134,7 +137,7 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
 class ChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "answer", "created", "pk")
+        fields = ("question", "answer", "created", "modified")
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):
@@ -210,8 +213,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
             raise serializers.ValidationError(
                 "A checklist can not be assigned to both a user and a group."
             )
-        zaak = attrs["zaak"]
-        zaak = get_zaak(zaak_url=zaak)
+        zaak = get_zaak(zaak_url=attrs["zaak"])
         zaaktype = get_zaaktype(zaak.zaaktype)
         checklist_type = attrs["checklist_type"]
         if not (
@@ -220,7 +222,7 @@ class ChecklistSerializer(BaseChecklistSerializer):
         ):
             raise serializers.ValidationError(
                 _(
-                    "ZAAKTYPE of checklisttype is not related to the ZAAKTYPE of the ZAAK."
+                    "ZAAKTYPE of checklist_type is not related to the ZAAKTYPE of the ZAAK."
                 )
             )
 
@@ -235,24 +237,29 @@ class ChecklistSerializer(BaseChecklistSerializer):
                 add_permissions_for_checklist_assignee(checklist, user)
 
     def bulk_validate_answers(self, checklist: Checklist, answers: Dict):
-        # Validate answers to multiple choice questions
-        questions = {
-            question.question: question
-            for question in checklist.checklist_type.checklistquestion_set.prefetch_related(
+        # Validate answers to multiple choice questions and
+        # if they answer a question of the related checklist_type
+        checklist_questions = (
+            checklist.checklist_type.checklistquestion_set.prefetch_related(
                 "questionchoice_set"
-            ).exclude(
-                questionchoice=None
             )
-        }
+        )
+        questions = {question.question: question for question in checklist_questions}
         for answer in answers:
-            # It's possible that a question has been altered or deleted
+            if answer["question"] not in questions:
+                raise serializers.ValidationError(
+                    _(
+                        f"Answer with question: `{answer['question']}` didn't answer a question of the related checklist_type: {checklist.checklist_type}."
+                    )
+                )
+
             if answer["answer"] and (question := questions.get(answer["question"])):
                 if (valid_choices := question.valid_choice_values) and answer[
                     "answer"
                 ] not in valid_choices:
                     raise serializers.ValidationError(
                         _(
-                            f"Answer `{answer['answer']}` was not found in the options: {valid_choices}."
+                            f"Answer `{answer['answer']}` was not found in the options: {list(valid_choices)}."
                         )
                     )
 
@@ -279,16 +286,20 @@ class ChecklistSerializer(BaseChecklistSerializer):
         self._add_permissions_for_checklist_assignee(checklist)
         return checklist
 
-    def bulk_update_answers(self, checklist: Checklist, answers: List):
-        pk_answers = {answer["pk"]: answer["answer"] for answer in answers}
+    def bulk_update_answers(self, checklist: Checklist, answers: List) -> List:
+        questions_answers = {answer["question"]: answer["answer"] for answer in answers}
+        answers_to_update = []
         updated_answers = []
         for answer in checklist.checklistanswer_set.all():
             if (
-                new_answer := pk_answers.get(answer.pk)
+                new_answer := questions_answers.get(answer.question)
             ) and answer.answer != new_answer:
                 answer.answer = new_answer
-                updated_answers.append(answer)
-        ChecklistAnswer.objects.bulk_update(updated_answers, ["answer"])
+                answers_to_update.append(answer)
+                updated_answers.append(answer.question)
+        ChecklistAnswer.objects.bulk_update(answers_to_update, ["answer"])
+
+        return updated_answers
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -311,9 +322,12 @@ class ChecklistSerializer(BaseChecklistSerializer):
         checklist = super().update(instance, validated_data)
         if answers:
             self.bulk_validate_answers(checklist, answers)
-            updated_answers = [answer for answer in answers if answer.get("pk")]
-            self.bulk_update_answers(checklist, updated_answers)
-            create_answers = [answer for answer in answers if not answer.get("pk")]
+            updated_answers = self.bulk_update_answers(checklist, answers)
+            create_answers = [
+                answer
+                for answer in answers
+                if answer["question"] not in updated_answers
+            ]
             self.bulk_create_answers(checklist, create_answers)
 
         # add permissions to assignee

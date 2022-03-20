@@ -48,9 +48,9 @@ class ChecklistAnswer(ChecklistMeta):
                 )
             )
             if checklist_question.exists() and (
-                choices := checklist_question.questionchoice_set.all().values_list(
-                    "value", flat=True
-                )
+                choices := checklist_question[0]
+                .questionchoice_set.all()
+                .values_list("value", flat=True)
             ):
                 if self.answer not in choices:
                     raise ValidationError(f"{self.answer} is not found in {choices}.")
@@ -140,7 +140,7 @@ class ChecklistType(ChecklistMeta):
         unique_together = (("zaaktype_catalogus", "zaaktype_omschrijving"),)
 
     def __str__(self):
-        return f"Checklist type of {self.zaaktype_omschrijving} within {self.zaaktype_catalogus}"
+        return f"Checklist type of `{self.zaaktype_omschrijving}` within `{self.zaaktype_catalogus}`"
 
 
 class Checklist(ChecklistMeta):

@@ -9,8 +9,14 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..models import Checklist
-from .factories import ChecklistFactory, ChecklistTypeFactory
+from ..models import Checklist, ChecklistAnswer
+from .factories import (
+    ChecklistAnswerFactory,
+    ChecklistFactory,
+    ChecklistQuestionFactory,
+    ChecklistTypeFactory,
+    QuestionChoiceFactory,
+)
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -87,145 +93,279 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Checklist.objects.count(), 1)
 
-    # def test_update_activity(self, m):
-    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-    #     self.client.force_authenticate(user=self.user)
-    #     ChecklistFactory.create(
-    #         zaak="https://some-zaak-url.com",
-    #         answers=[]
-    #     )
-    #     data = {
-    #         "zaak": "https://some-zaak-url.com",
-    #         "answers": []
-    #     }
-    #     endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+    def test_create_checklist_fail_different_checklist_type(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.client.force_authenticate(user=self.user)
+        clt = ChecklistTypeFactory.create(
+            zaaktype=self.zaaktype["url"],
+            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
+        clt2 = ChecklistTypeFactory.create(
+            zaaktype_omschrijving="some-other-omschrijving",
+            zaaktype_catalogus="https://some-other-catalogus-url.com/",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=self.zaaktype["url"],
+        )
+        data = {"zaak": zaak["url"], "checklistType": clt2.pk, "answers": []}
 
-    #     # Get old assignee value for assertion purposes
-    #     old_assignee = self.activity.user_assignee
+        endpoint = reverse("checklist-list")
 
-    #     # Mock zaak
-    #     m.get(self.zaak["url"], json=self.zaak)
+        # Mock zaak
+        m.get(zaak["url"], json=zaak)
 
-    #     # Patch activity
-    #     response = self.client.patch(endpoint, data=data)
+        # Mock zaaktype
+        m.get(self.zaaktype["url"], json=self.zaaktype)
 
-    #     # Assert response code is 200
-    #     self.assertEqual(response.status_code, 200)
+        # Create checklist
+        response = self.client.post(endpoint, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "ZAAKTYPE of checklist_type is not related to the ZAAKTYPE of the ZAAK."
+                ]
+            },
+        )
 
-    #     # Assert activity has been updated
-    #     activity = Activity.objects.get(pk=self.activity.pk)
-    #     self.assertTrue(old_assignee != activity.user_assignee)
+    def test_create_checklist_fail_two_assignees(self, m):
+        self.client.force_authenticate(user=self.user)
+        group = GroupFactory.create()
+        checklist_type = ChecklistTypeFactory.create()
+        data = {
+            "zaak": "https://some-zaak-url.com/",
+            "checklistType": checklist_type.pk,
+            "userAssignee": self.user.username,
+            "groupAssignee": group.name,
+            "answers": [],
+        }
 
-    #     # Assert response data is as expected (different serializer than request)
-    #     expected_data = {
-    #         "id": self.activity.id,
-    #         "url": f"http://testserver/api/activities/activities/{self.activity.id}",
-    #         "zaak": self.zaak["url"],
-    #         "name": self.activity.name,
-    #         "remarks": "",
-    #         "status": self.activity.status,
-    #         "userAssignee": self.user.username,
-    #         "groupAssignee": None,
-    #         "document": self.activity.document,
-    #         "created": "1999-12-31T23:59:59Z",
-    #         "events": [],
-    #     }
-    #     data = response.json()
-    #     self.assertEqual(expected_data, data)
+        endpoint = reverse("checklist-list")
 
-    # def test_partial_update_assignee_from_user_to_group_activity(self, m):
-    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-    #     self.client.force_authenticate(user=self.user)
-    #     group = GroupFactory.create()
-    #     self.user.groups.add(group)
-    #     data = {
-    #         "zaak": self.zaak["url"],
-    #         "group_assignee": group.name,
-    #     }
-    #     endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        # Create checklist
+        response = self.client.post(endpoint, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "A checklist can not be assigned to both a user and a group."
+                ]
+            },
+        )
 
-    #     # Mock zaak
-    #     m.get(self.zaak["url"], json=self.zaak)
+    def test_create_checklist_answer_not_found_in_mc(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.client.force_authenticate(user=self.user)
+        checklist_type = ChecklistTypeFactory.create(
+            zaaktype=self.zaaktype["url"],
+            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
+        question = ChecklistQuestionFactory.create(
+            checklist_type=checklist_type, question="some-question", order=1
+        )
+        QuestionChoiceFactory.create(
+            question=question, name="Some answer", value="some-answer"
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=self.zaaktype["url"],
+        )
+        data = {
+            "zaak": zaak["url"],
+            "checklist_type": checklist_type.uuid,
+            "answers": [
+                {"question": "some-question", "answer": "some-wrong-answer"},
+            ],
+        }
+        endpoint = reverse("checklist-list")
 
-    #     # Patch activity
-    #     response = self.client.patch(endpoint, data=data)
+        # Mock zaak
+        m.get(zaak["url"], json=zaak)
 
-    #     # Assert response code is 200
-    #     self.assertEqual(response.status_code, 200)
+        # Mock zaaktype
+        m.get(self.zaaktype["url"], json=self.zaaktype)
 
-    #     # Assert activity has been updated
-    #     activity = Activity.objects.get(pk=self.activity.pk)
-    #     self.assertEqual(activity.user_assignee, None)
-    #     self.assertEqual(activity.group_assignee, group)
+        # Create checklist
+        response = self.client.post(endpoint, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            [
+                "Answer `some-wrong-answer` was not found in the options: ['some-answer']."
+            ],
+        )
 
-    #     # Assert response data is as expected (different serializer than request)
-    #     expected_data = {
-    #         "id": self.activity.id,
-    #         "url": f"http://testserver/api/activities/activities/{self.activity.id}",
-    #         "zaak": self.zaak["url"],
-    #         "name": self.activity.name,
-    #         "remarks": "",
-    #         "status": self.activity.status,
-    #         "userAssignee": None,
-    #         "groupAssignee": group.name,
-    #         "document": self.activity.document,
-    #         "created": "1999-12-31T23:59:59Z",
-    #         "events": [],
-    #     }
-    #     data = response.json()
-    #     self.assertEqual(expected_data, data)
+    def test_create_checklist_answer_answers_wrong_question(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.client.force_authenticate(user=self.user)
+        checklist_type = ChecklistTypeFactory.create(
+            zaaktype=self.zaaktype["url"],
+            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
+        question = ChecklistQuestionFactory.create(
+            checklist_type=checklist_type, question="some-question", order=1
+        )
+        QuestionChoiceFactory.create(
+            question=question, name="Some answer", value="some-answer"
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=self.zaaktype["url"],
+        )
+        data = {
+            "zaak": zaak["url"],
+            "checklist_type": checklist_type.uuid,
+            "answers": [
+                {
+                    "question": "some-non-existent-question",
+                    "answer": "some-wrong-answer",
+                },
+            ],
+        }
+        endpoint = reverse("checklist-list")
 
-    # def test_fail_partial_update_activity_invalid_assignee(self, m):
-    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-    #     self.client.force_authenticate(user=self.user)
-    #     data = {
-    #         "zaak": self.zaak["url"],
-    #         "user_assignee": "some-invalid-user",
-    #     }
-    #     endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        # Mock zaak
+        m.get(zaak["url"], json=zaak)
 
-    #     # Mock zaak
-    #     m.get(self.zaak["url"], json=self.zaak)
+        # Mock zaaktype
+        m.get(self.zaaktype["url"], json=self.zaaktype)
 
-    #     # Patch activity
-    #     response = self.client.patch(endpoint, data=data)
+        # Create checklist
+        response = self.client.post(endpoint, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            [
+                "Answer with question: `some-non-existent-question` didn't answer a question of the related checklist_type: Checklist type of `ZT1` within `https://open-zaak.nl/catalogi/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd`."
+            ],
+        )
 
-    #     # Assert response code is 400
-    #     self.assertEqual(response.status_code, 400)
+    def test_update_checklist(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.client.force_authenticate(user=self.user)
+        checklist_type = ChecklistTypeFactory.create(
+            zaaktype=self.zaaktype["url"],
+            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
+        question = ChecklistQuestionFactory.create(
+            checklist_type=checklist_type, question="some-question", order=1
+        )
+        question_2 = ChecklistQuestionFactory.create(
+            checklist_type=checklist_type, question="some-other-question", order=2
+        )
+        QuestionChoiceFactory.create(
+            question=question, name="Some answer", value="some-answer"
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=self.zaaktype["url"],
+        )
+        checklist = ChecklistFactory.create(
+            zaak=zaak["url"], checklist_type=checklist_type
+        )
+        answer = ChecklistAnswerFactory.create(
+            checklist=checklist,
+            question="some-other-question",
+            answer="some-other-answer",
+        )
+        data = {
+            "zaak": zaak["url"],
+            "checklist_type": checklist_type.uuid,
+            "userAssignee": self.user.username,
+            "answers": [
+                {"question": "some-question", "answer": "some-answer"},
+                {
+                    "question": answer.question,
+                    "answer": "some-updated-answer",
+                },
+            ],
+        }
+        endpoint = reverse("checklist-detail", kwargs={"pk": checklist.pk})
 
-    # def test_fail_partial_update_activity_invalid_zaak_url(self, m):
-    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-    #     self.client.force_authenticate(user=self.user)
-    #     data = {
-    #         "zaak": self.zaak["url"] + "invalidate-this-url",
-    #         "user_assignee": self.user.username,
-    #     }
-    #     endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        # Mock zaak
+        m.get(zaak["url"], json=zaak)
 
-    #     # Mock zaak
-    #     m.get(self.zaak["url"] + "invalidate-this-url", json=self.zaak)
-    #     m.get(self.zaak["url"], json=self.zaak)
+        # Mock zaaktype
+        m.get(self.zaaktype["url"], json=self.zaaktype)
 
-    #     # Patch activity
-    #     response = self.client.patch(endpoint, data=data)
+        # assert one answer already exists
+        self.assertEqual(ChecklistAnswer.objects.filter(checklist=checklist).count(), 1)
+        self.assertEqual(
+            ChecklistAnswer.objects.get(
+                checklist=checklist, question="some-other-question"
+            ).answer,
+            "some-other-answer",
+        )
 
-    #     # Assert response code is 400
-    #     self.assertEqual(response.status_code, 400)
+        # Put checklist
+        response = self.client.put(endpoint, data=data)
 
-    # def test_fail_not_allowed_to_put_activity(self, m):
-    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-    #     self.client.force_authenticate(user=self.user)
-    #     data = {
-    #         "zaak": self.zaak["url"] + "invalidate-this-url",
-    #         "user_assignee": self.user.username,
-    #     }
-    #     endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        # Assert response code is 200
+        self.assertEqual(response.status_code, 200)
 
-    #     # Mock zaak
-    #     m.get(self.zaak["url"], json=self.zaak)
+        # Assert answer: only 1 exists and has value of answer
+        self.assertTrue(
+            ChecklistAnswer.objects.filter(checklist=checklist).exists(),
+        )
+        self.assertEqual(
+            ChecklistAnswer.objects.filter(checklist=checklist).count(),
+            2,
+        )
+        self.assertEqual(
+            ChecklistAnswer.objects.get(
+                checklist=checklist, question="some-question"
+            ).answer,
+            "some-answer",
+        )
+        self.assertEqual(
+            ChecklistAnswer.objects.get(
+                checklist=checklist, question="some-other-question"
+            ).answer,
+            "some-updated-answer",
+        )
 
-    #     # Put activity
-    #     response = self.client.put(endpoint, data=data)
+        # Assert response data is as expected
+        expected_data = {
+            "url": f"http://testserver/api/checklists/checklists/{checklist.pk}",
+            "created": "1999-12-31T23:59:59Z",
+            "checklistType": str(checklist_type.uuid),
+            "groupAssignee": None,
+            "userAssignee": self.user.username,
+            "zaak": "https://open-zaak.nl/zaken/api/v1/zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            "answers": [
+                {
+                    "question": "some-other-question",
+                    "answer": "some-updated-answer",
+                    "created": "1999-12-31T23:59:59Z",
+                    "modified": "1999-12-31T23:59:59Z",
+                },
+                {
+                    "question": "some-question",
+                    "answer": "some-answer",
+                    "created": "1999-12-31T23:59:59Z",
+                    "modified": "1999-12-31T23:59:59Z",
+                },
+            ],
+        }
 
-    #     # Assert response code is 405
-    #     self.assertEqual(response.status_code, 405)
+        data = response.json()
+        self.assertEqual(expected_data, data)

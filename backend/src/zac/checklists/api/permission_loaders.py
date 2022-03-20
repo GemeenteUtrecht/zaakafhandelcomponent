@@ -18,7 +18,7 @@ def add_permissions_for_checklist_assignee(
             user,
             checklist.zaak,
             permission_name=permission.name,
-            reason=PermissionReason.activiteit,
+            reason=PermissionReason.checklist,
         )
         if user_atomic_permission:
             user_atomic_permissions.append(user_atomic_permission)
