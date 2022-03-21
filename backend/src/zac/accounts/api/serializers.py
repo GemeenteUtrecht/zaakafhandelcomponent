@@ -36,6 +36,7 @@ from ..models import (
     Role,
     User,
     UserAtomicPermission,
+    UserAuthorizationProfile,
 )
 from ..permissions import object_type_registry, registry
 
@@ -569,3 +570,39 @@ class RoleSerializer(serializers.ModelSerializer):
 class PermissionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100, help_text="Name of the permission")
     description = serializers.CharField(help_text=_("Description of the permission"))
+
+
+class BaseUserAuthProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAuthorizationProfile
+        fields = ("start", "end", "user", "auth_profile")
+
+
+class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=False,
+        slug_field="username",
+        queryset=User.objects.all(),
+    )
+    auth_profile = serializers.SlugRelatedField(
+        read_only=False,
+        slug_field="uuid",
+        queryset=AuthorizationProfile.objects.all(),
+    )
+
+    class Meta(BaseUserAuthProfileSerializer.Meta):
+        model = BaseUserAuthProfileSerializer.Meta.model
+        fields = BaseUserAuthProfileSerializer.Meta.fields
+
+
+class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
+    user = UserSerializer(
+        help_text=_("User related to the authorization profile."), required=True
+    )
+    auth_profile = AuthProfileSerializer(
+        help_text=_("Authorization profile related to the user."), required=True
+    )
+
+    class Meta(BaseUserAuthProfileSerializer.Meta):
+        model = BaseUserAuthProfileSerializer.Meta.model
+        fields = BaseUserAuthProfileSerializer.Meta.fields
