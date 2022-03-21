@@ -22,52 +22,51 @@
       }
     }
   },
-  "projects": {
-    "zac-ui": {
-      "tags": []
+  "cli": {
+    "defaultCollection": "@nrwl/angular"
+  },
+  "generators": {
+    "@nrwl/workspace": {
+      "library": {
+        "linter": "tslint"
+      }
     },
-    "zac-ui-e2e": {
-      "tags": [],
-      "implicitDependencies": ["zac-ui"]
+    "@nrwl/cypress": {
+      "cypress-project": {
+        "linter": "tslint"
+      }
     },
-    "features-kownsl": {
-      "tags": []
+    "@nrwl/node": {
+      "application": {
+        "linter": "tslint"
+      },
+      "library": {
+        "linter": "tslint"
+      }
     },
-    "shared-ui-components": {
-      "tags": []
+    "@nrwl/nest": {
+      "application": {
+        "linter": "tslint"
+      },
+      "library": {
+        "linter": "tslint"
+      }
     },
-    "shared-ui-styling": {
-      "tags": []
+    "@nrwl/express": {
+      "application": {
+        "linter": "tslint"
+      },
+      "library": {
+        "linter": "tslint"
+      }
     },
-    "shared-data-access-services": {
-      "tags": []
+    "@nrwl/angular:application": {
+      "unitTestRunner": "jest",
+      "e2eTestRunner": "cypress"
     },
-    "shared-utils": {
-      "tags": []
-    },
-    "features-zaak-detail": {
-      "tags": []
-    },
-    "features-search": {
-      "tags": []
-    },
-    "features-workstack": {
-      "tags": []
-    },
-    "features-reports": {
-      "tags": []
-    },
-    "features-forms": {
-      "tags": []
-    },
-    "features-auth-profiles": {
-      "tags": []
-    },
-    "features-contezza-document-search": {
-      "tags": []
-    },
-    "features-dashboard": {
-      "tags": []
+    "@nrwl/angular:library": {
+      "unitTestRunner": "jest"
     }
-  }
+  },
+  "defaultProject": "zac-ui"
 }
