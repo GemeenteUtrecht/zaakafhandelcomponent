@@ -20,6 +20,7 @@ from ..models import (
     Role,
     User,
     UserAtomicPermission,
+    UserAuthorizationProfile,
 )
 from .filters import UserFilter
 from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess, ManageGroup
@@ -32,7 +33,9 @@ from .serializers import (
     GroupSerializer,
     HandleAccessRequestSerializer,
     ManageGroupSerializer,
+    ReadUserAuthorizationProfileSerializer,
     RoleSerializer,
+    UserAuthorizationProfileSerializer,
     UserSerializer,
 )
 
@@ -183,17 +186,15 @@ class AtomicPermissionViewSet(
     retrieve=extend_schema(summary=_("Retrieve authorization profile.")),
     create=extend_schema(summary=_("Create authorization profile.")),
     update=extend_schema(summary=_("Update authorization profile.")),
+    destroy=extend_schema(summary=_("Delete authorization profile.")),
 )
-class AuthProfileViewSet(
-    mixins.CreateModelMixin,
-    UpdateModelMixin,
-    viewsets.ReadOnlyModelViewSet,
-):
+class AuthProfileViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = AuthorizationProfile.objects.all()
     serializer_class = AuthProfileSerializer
     lookup_field = "uuid"
+    http_method_names = ["get", "post", "put", "delete"]
 
 
 @extend_schema_view(
@@ -226,3 +227,37 @@ class RoleViewSet(
             serializer.set_permissions_choices()
 
         return serializer
+
+
+@extend_schema_view(
+    list=extend_schema(summary=_("List user authorization profiles.")),
+    retrieve=extend_schema(summary=_("Retrieve user authorization profile.")),
+    create=extend_schema(summary=_("Create user authorization profile.")),
+    partial_update=extend_schema(
+        summary=_("Partially update user authorization profile.")
+    ),
+    update=extend_schema(summary=_("Update user authorization profile.")),
+    destroy=extend_schema(summary=_("Delete user authorization profile.")),
+)
+class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = (
+        UserAuthorizationProfile.objects.select_related("user")
+        .select_related("auth_profile")
+        .all()
+        .order_by("user", "auth_profile")
+    )
+    pagination_class = BffPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["user", "auth_profile"]
+
+    def get_serializer_class(self):
+        mapping = {
+            "GET": ReadUserAuthorizationProfileSerializer,
+            "POST": UserAuthorizationProfileSerializer,
+            "PUT": UserAuthorizationProfileSerializer,
+            "PATCH": UserAuthorizationProfileSerializer,
+            "DELETE": UserAuthorizationProfileSerializer,
+        }
+        return mapping[self.request.method]

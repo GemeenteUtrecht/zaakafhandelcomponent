@@ -97,3 +97,11 @@ class UserAtomicPermissionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.UserAtomicPermission"
+
+
+class UserAuthProfileFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    auth_profile = factory.SubFactory(AuthorizationProfileFactory)
+
+    class Meta:
+        model = "accounts.UserAuthorizationProfile"

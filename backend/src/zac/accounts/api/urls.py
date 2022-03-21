@@ -9,6 +9,7 @@ from .viewsets import (
     AuthProfileViewSet,
     GroupViewSet,
     RoleViewSet,
+    UserAuthorizationProfileViewSet,
     UserViewSet,
 )
 
@@ -19,6 +20,7 @@ router.register("access-requests", AccessRequestViewSet)
 router.register("cases/access", AtomicPermissionViewSet, basename="accesses")
 router.register("auth-profiles", AuthProfileViewSet)
 router.register("roles", RoleViewSet)
+router.register("user-auth-profiles", UserAuthorizationProfileViewSet)
 
 urlpatterns = router.urls + [
     path(

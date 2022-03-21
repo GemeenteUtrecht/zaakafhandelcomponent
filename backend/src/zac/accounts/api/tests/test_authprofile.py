@@ -762,3 +762,41 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "max_va": "zeer_geheim",
             },
         )
+
+    def test_delete_auth_profile(self):
+        role1, role2 = RoleFactory.create_batch(2)
+        blueprint_permission1 = BlueprintPermissionFactory.create(
+            role=role1,
+            object_type=PermissionObjectTypeChoices.zaak,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        blueprint_permission2 = BlueprintPermissionFactory.create(
+            role=role1,
+            object_type=PermissionObjectTypeChoices.zaak,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT2",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
+        blueprint_permission3 = BlueprintPermissionFactory.create(
+            role=role2,
+            object_type=PermissionObjectTypeChoices.document,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "iotype_omschrijving": "DT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
+        auth_profile = AuthorizationProfileFactory.create()
+        auth_profile.blueprint_permissions.add(
+            blueprint_permission1, blueprint_permission2, blueprint_permission3
+        )
+        url = reverse("authorizationprofile-detail", args=[auth_profile.uuid])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
