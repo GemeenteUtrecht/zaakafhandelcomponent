@@ -22,6 +22,7 @@ export class RelatieToevoegenComponent implements OnInit {
   form: FieldConfiguration[];
   isLoading: boolean;
   resultData: Zaak[] = [];
+  resultLength: number;
   selectedTabIndex = -1;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
@@ -130,6 +131,14 @@ export class RelatieToevoegenComponent implements OnInit {
    */
   onLoadResult(results: Zaak[]) {
     this.resultData = results;
+  }
+
+  /**
+   * Gets called on result length.
+   * @param data
+   */
+  onResultLength(data): void {
+    this.resultLength = data;
   }
 
   /**
