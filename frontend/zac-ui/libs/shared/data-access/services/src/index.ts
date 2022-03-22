@@ -7,3 +7,5 @@ export * from './lib/objects/objects.service'
 export * from './lib/objects/zaak-object.service'
 export * from './lib/user/user.service'
 export * from './lib/zaak/zaak.service'
+
+export * from './lib/openapi/index'

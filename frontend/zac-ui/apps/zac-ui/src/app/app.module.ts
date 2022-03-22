@@ -21,6 +21,14 @@ import { ZaakSelectModule } from '@gu/search';
 import { AuthProfilesModule } from './components/auth-profiles/auth-profiles.module';
 import { DashboardModule } from './components/dashboard/dashboard.module';
 
+import { ApiModule, Configuration, ConfigurationParameters } from '@gu/services';
+
+export function apiConfigFactory(): Configuration {
+  const params: ConfigurationParameters = {
+    basePath: '',
+  };
+  return new Configuration(params);
+}
 
 registerLocaleData(localeNL);
 
@@ -29,6 +37,7 @@ registerLocaleData(localeNL);
     AppComponent,
   ],
   imports: [
+    ApiModule.forRoot(apiConfigFactory),
     AppRoutingModule,
     AuthProfilesModule,
     BrowserAnimationsModule,
