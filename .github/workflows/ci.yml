@@ -96,47 +96,74 @@ jobs:
     name: Build (and push) backend Docker image
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
+    steps: 
+      -
+        name: Checkout
+        uses: actions/checkout@v2
 
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set tag
+      -
+        name: Construct tag
         id: vars
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
+          
           # Strip "v" prefix from tag name (if present at all)
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
-          # Use Docker `latest` tag convention
+          # Use `latest` tag for the main branch
           [ "$VERSION" == "main" ] && VERSION=latest
 
           echo ::set-output name=tag::${VERSION}
           echo ::set-output name=git_hash::${GITHUB_SHA}
 
-      - name: Build the Docker image
-        env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      -
+        name: Login to Harbor Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.HARBOR_URL_ONT }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_TOKEN }}
+
+      -
+        name: Image Build
+        uses: docker/build-push-action@v2
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: | 
+            COMMIT_HASH=${{ steps.vars.outputs.git_hash }}
+            RELEASE=${{ steps.vars.outputs.tag }}
+          tags: |
+            scrumteamzgw/zaakafhandelcomponent:${{ steps.vars.outputs.tag }}
+            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-backend:${{ steps.vars.outputs.tag }}
+
+      -
+        name: Image Push
+        if: github.event_name == 'push'  # exclude PRs
         run: |
-          docker build \
-            --tag $BACKEND_IMAGE_NAME:$RELEASE_VERSION \
-            --build-arg COMMIT_HASH=${{ steps.vars.outputs.git_hash }} \
-            --build-arg RELEASE=${{ steps.vars.outputs.tag }} \
-            .
+          docker push scrumteamzgw/zaakafhandelcomponent:${{ steps.vars.outputs.tag }}
+          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-backend:${{ steps.vars.outputs.tag }}
 
-      - name: Log into registry
-        if: github.event_name == 'push'  # exclude PRs
-        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Push the Docker image
-        if: github.event_name == 'push'  # exclude PRs
-        env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-        run: docker push $BACKEND_IMAGE_NAME:$RELEASE_VERSION
 
   frontend-docker:
     # needs: frontend-tests
@@ -144,36 +171,66 @@ jobs:
     name: Build (and push) frontend Docker image
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
+    steps: 
+      -
+        name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Set tag
+      -
+        name: Construct tag
         id: vars
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
+          
           # Strip "v" prefix from tag name (if present at all)
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
-          # Use Docker `latest` tag convention
+          # Use `latest` tag for the main branch
           [ "$VERSION" == "main" ] && VERSION=latest
 
           echo ::set-output name=tag::${VERSION}
 
-      - name: Build the Docker image
-        env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-        run: docker build . --tag $FRONTEND_IMAGE_NAME:$RELEASE_VERSION
-        working-directory: frontend/zac-ui
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Log into registry
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      -
+        name: Login to Harbor Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.HARBOR_URL_ONT }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_TOKEN }}
+
+      -
+        name: Image Build
+        uses: docker/build-push-action@v2
+        with:
+          context: frontend/zac-ui
+          platforms: linux/amd64
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}
+            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-frontend:${{ steps.vars.outputs.tag }}
+  
+      -
+        name: Image Push
         if: github.event_name == 'push'  # exclude PRs
-        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Push the Docker image
-        if: github.event_name == 'push'  # exclude PRs
-        env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-        run: docker push $FRONTEND_IMAGE_NAME:$RELEASE_VERSION
-
+        run: |
+          docker push scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}
+          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-frontend:${{ steps.vars.outputs.tag }}
