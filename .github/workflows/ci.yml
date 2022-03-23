@@ -137,8 +137,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ${{ secrets.HARBOR_URL_ONT }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_TOKEN }}
+          username: ${{ secrets.HARBOR_USERNAME_BACKEND }}
+          password: ${{ secrets.HARBOR_TOKEN_BACKEND }}
 
       -
         name: Image Build
@@ -155,14 +155,14 @@ jobs:
             RELEASE=${{ steps.vars.outputs.tag }}
           tags: |
             scrumteamzgw/zaakafhandelcomponent:${{ steps.vars.outputs.tag }}
-            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-backend:${{ steps.vars.outputs.tag }}
+            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT_BACKEND }}/zac-backend:${{ steps.vars.outputs.tag }}
 
       -
         name: Image Push
         if: github.event_name == 'push'  # exclude PRs
         run: |
           docker push scrumteamzgw/zaakafhandelcomponent:${{ steps.vars.outputs.tag }}
-          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-backend:${{ steps.vars.outputs.tag }}
+          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT_BACKEND }}/zac-backend:${{ steps.vars.outputs.tag }}
 
 
   frontend-docker:
@@ -211,8 +211,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ${{ secrets.HARBOR_URL_ONT }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_TOKEN }}
+          username: ${{ secrets.HARBOR_USERNAME_FRONTEND }}
+          password: ${{ secrets.HARBOR_TOKEN_FRONTEND }}
 
       -
         name: Image Build
@@ -226,11 +226,11 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}
-            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-frontend:${{ steps.vars.outputs.tag }}
+            ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT_FRONTEND }}/zac-frontend:${{ steps.vars.outputs.tag }}
   
       -
         name: Image Push
         if: github.event_name == 'push'  # exclude PRs
         run: |
           docker push scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}
-          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT }}/zac-frontend:${{ steps.vars.outputs.tag }}
+          docker push ${{ secrets.HARBOR_URL_ONT }}/${{ secrets.HARBOR_PROJECT_FRONTEND }}/zac-frontend:${{ steps.vars.outputs.tag }}
