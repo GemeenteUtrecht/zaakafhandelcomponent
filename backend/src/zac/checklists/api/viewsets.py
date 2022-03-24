@@ -25,11 +25,11 @@ from .serializers import (
         summary=_("List checklisttype and related questions."),
         parameters=[
             OpenApiParameter(
-                name="zaaktype",
+                name="zaak",
                 required=True,
                 type=OpenApiTypes.URI,
                 description=_(
-                    "URL-reference of the ZAAKTYPE related to the checklisttype."
+                    "URL-reference of the ZAAK with ZAAKTYPE related to the checklisttype."
                 ),
                 location=OpenApiParameter.QUERY,
             )

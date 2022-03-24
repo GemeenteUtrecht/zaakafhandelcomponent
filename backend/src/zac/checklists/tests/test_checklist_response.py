@@ -58,6 +58,11 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.get(endpoint, {"zaak": "https://some-zaak-url.com"})
         self.assertEqual(response.status_code, 200)
 
+        response = self.client.get(
+            endpoint, {"zaak": "https://some-other-zaak-url.com"}
+        )
+        self.assertEqual(response.status_code, 200)
+
     def test_create_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
