@@ -155,7 +155,6 @@ class BaseChecklistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Checklist
         fields = (
-            "url",
             "created",
             "checklist_type",
             "group_assignee",
@@ -163,11 +162,6 @@ class BaseChecklistSerializer(serializers.ModelSerializer):
             "zaak",
             "answers",
         )
-        extra_kwargs = {
-            "url": {
-                "view_name": "checklist-detail",
-            },
-        }
 
 
 class ReadChecklistSerializer(BaseChecklistSerializer):

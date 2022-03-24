@@ -1,4 +1,4 @@
-from django.urls import reverse
+from django.urls import reverse_lazy
 
 import requests_mock
 from freezegun import freeze_time
@@ -8,6 +8,8 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 
 from ..models import Checklist, ChecklistAnswer
 from .factories import (
@@ -20,11 +22,18 @@ from .factories import (
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
+BRONORGANISATIE = "123456789"
+IDENTIFICATIE = "ZAAK-0000001"
 
 
 @requests_mock.Mocker()
 @freeze_time("1999-12-31T23:59:59Z")
-class ApiResponseTests(ClearCachesMixin, APITestCase):
+class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
+    endpoint = reverse_lazy(
+        "zaak-checklist",
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+    )
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -37,62 +46,66 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
         cls.catalogus = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             catalogus=cls.catalogus,
-            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
-            identificatie="ZT1",
             omschrijving="ZT1",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=cls.zaaktype["url"],
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
         )
         cls.user = SuperUserFactory.create(is_staff=True)
 
-    def test_list_checklists(self, m):
-        ChecklistFactory.create(zaak="https://some-zaak-url.com")
-        self.client.force_authenticate(user=self.user)
-        endpoint = reverse("checklist-list")
-        response = self.client.get(endpoint, {"zaak": "https://some-zaak-url.com"})
-        self.assertEqual(response.status_code, 200)
+    def test_retrieve_checklist(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        response = self.client.get(
-            endpoint, {"zaak": "https://some-other-zaak-url.com"}
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
         )
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        ChecklistFactory.create(zaak=self.zaak["url"])
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
 
     def test_create_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.client.force_authenticate(user=self.user)
-        clt = ChecklistTypeFactory.create(
+
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        checklist_type = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
-        data = {"zaak": zaak["url"], "checklistType": clt.pk, "answers": []}
-
-        endpoint = reverse("checklist-list")
+        data = {
+            "zaak": self.zaak["url"],
+            "checklistType": checklist_type.pk,
+            "answers": [],
+        }
 
         # Assert current checklist count is 0
         self.assertEqual(Checklist.objects.count(), 0)
 
-        # Mock zaak
-        m.get(zaak["url"], json=zaak)
-
-        # Mock zaaktype
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-
-        # Create checklist
-        response = self.client.post(endpoint, data=data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data=data)
 
         # Assert response code is 201 and checklist count is 1
         self.assertEqual(response.status_code, 201)
@@ -101,34 +114,31 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_fail_different_checklist_type(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.client.force_authenticate(user=self.user)
-        clt = ChecklistTypeFactory.create(
+
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
-        clt2 = ChecklistTypeFactory.create(
-            zaaktype_omschrijving="some-other-omschrijving",
-            zaaktype_catalogus="https://some-other-catalogus-url.com/",
+        checklist_type2 = ChecklistTypeFactory.create(
+            zaaktype="https://some-other-zaaktype.com/",
+            zaaktype_omschrijving="ZT2",
+            zaaktype_catalogus=self.zaaktype["catalogus"],
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
-        data = {"zaak": zaak["url"], "checklistType": clt2.pk, "answers": []}
+        data = {
+            "zaak": self.zaak["url"],
+            "checklistType": checklist_type2.pk,
+            "answers": [],
+        }
 
-        endpoint = reverse("checklist-list")
+        # Assert current checklist count is 0
+        self.assertEqual(Checklist.objects.count(), 0)
 
-        # Mock zaak
-        m.get(zaak["url"], json=zaak)
-
-        # Mock zaaktype
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-
-        # Create checklist
-        response = self.client.post(endpoint, data=data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -140,21 +150,29 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_create_checklist_fail_two_assignees(self, m):
-        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        checklist_type = ChecklistTypeFactory.create(
+            zaaktype=self.zaaktype["url"],
+            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
         group = GroupFactory.create()
-        checklist_type = ChecklistTypeFactory.create()
         data = {
-            "zaak": "https://some-zaak-url.com/",
+            "zaak": self.zaak["url"],
             "checklistType": checklist_type.pk,
             "userAssignee": self.user.username,
             "groupAssignee": group.name,
             "answers": [],
         }
 
-        endpoint = reverse("checklist-list")
-
         # Create checklist
-        response = self.client.post(endpoint, data=data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -168,7 +186,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_answer_not_found_in_mc(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.client.force_authenticate(user=self.user)
+
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
         checklist_type = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
@@ -180,29 +201,17 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
         data = {
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "checklist_type": checklist_type.uuid,
             "answers": [
                 {"question": "some-question", "answer": "some-wrong-answer"},
             ],
         }
-        endpoint = reverse("checklist-list")
-
-        # Mock zaak
-        m.get(zaak["url"], json=zaak)
-
-        # Mock zaaktype
-        m.get(self.zaaktype["url"], json=self.zaaktype)
 
         # Create checklist
-        response = self.client.post(endpoint, data=data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -214,7 +223,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_answer_answers_wrong_question(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.client.force_authenticate(user=self.user)
+
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
         checklist_type = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
@@ -226,14 +238,8 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
         data = {
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "checklist_type": checklist_type.uuid,
             "answers": [
                 {
@@ -242,16 +248,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
                 },
             ],
         }
-        endpoint = reverse("checklist-list")
-
-        # Mock zaak
-        m.get(zaak["url"], json=zaak)
-
-        # Mock zaaktype
-        m.get(self.zaaktype["url"], json=self.zaaktype)
 
         # Create checklist
-        response = self.client.post(endpoint, data=data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
@@ -263,7 +263,14 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
     def test_update_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.client.force_authenticate(user=self.user)
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaak["url"], json=self.zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
         checklist_type = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
@@ -278,14 +285,8 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
         checklist = ChecklistFactory.create(
-            zaak=zaak["url"], checklist_type=checklist_type
+            zaak=self.zaak["url"], checklist_type=checklist_type
         )
         answer = ChecklistAnswerFactory.create(
             checklist=checklist,
@@ -293,7 +294,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             answer="some-other-answer",
         )
         data = {
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "checklist_type": checklist_type.uuid,
             "userAssignee": self.user.username,
             "answers": [
@@ -304,13 +305,6 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
                 },
             ],
         }
-        endpoint = reverse("checklist-detail", kwargs={"pk": checklist.pk})
-
-        # Mock zaak
-        m.get(zaak["url"], json=zaak)
-
-        # Mock zaaktype
-        m.get(self.zaaktype["url"], json=self.zaaktype)
 
         # assert one answer already exists
         self.assertEqual(ChecklistAnswer.objects.filter(checklist=checklist).count(), 1)
@@ -322,7 +316,8 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         )
 
         # Put checklist
-        response = self.client.put(endpoint, data=data)
+        self.client.force_authenticate(self.user)
+        response = self.client.put(self.endpoint, data=data)
 
         # Assert response code is 200
         self.assertEqual(response.status_code, 200)
@@ -350,7 +345,6 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
         # Assert response data is as expected
         expected_data = {
-            "url": f"http://testserver/api/checklists/checklists/{checklist.pk}",
             "created": "1999-12-31T23:59:59Z",
             "checklistType": str(checklist_type.uuid),
             "groupAssignee": None,

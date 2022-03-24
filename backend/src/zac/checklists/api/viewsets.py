@@ -3,15 +3,15 @@ from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import exceptions, mixins, permissions, viewsets
+from rest_framework import mixins, permissions, viewsets
+from rest_framework.generics import get_object_or_404
 
-from zac.core.services import get_zaak, get_zaaktype
+from zac.core.services import find_zaak
 
 from ..models import Checklist, ChecklistAnswer, ChecklistQuestion, ChecklistType
-from .filters import ChecklistFilter
 from .permissions import (
     CanReadOrWriteChecklistsPermission,
-    CanReadOrWriteChecklistTypePermission,
+    CanReadZaakChecklistTypePermission,
 )
 from .serializers import (
     ChecklistSerializer,
@@ -35,6 +35,7 @@ from .serializers import (
             )
         ],
     ),
+    retrieve=extend_schema(summary=_("Retrieve checklisttype and related questions.")),
     create=extend_schema(summary=_("Create checklisttype and related questions.")),
     update=extend_schema(summary=_("Update checklisttype and related questions.")),
 )
@@ -55,7 +56,7 @@ class ChecklistTypeViewSet(
     ).all()
     permission_classes = (
         permissions.IsAuthenticated,
-        CanReadOrWriteChecklistTypePermission,
+        permissions.IsAdminUser,
     )
     http_method_names = [
         "get",
@@ -64,45 +65,103 @@ class ChecklistTypeViewSet(
     ]
     serializer_class = ChecklistTypeSerializer
 
-    def filter_queryset(self, queryset):
-        qs = super().filter_queryset(queryset)
-        if self.action == "list":
-            zaak = get_zaak(zaak_url=self.request.GET.get("zaak"))
-            zaaktype = get_zaaktype(zaak.zaaktype)
-            qs = qs.filter(
-                zaaktype_omschrijving=zaaktype.omschrijving,
-                zaaktype_catalogus=zaaktype.catalogus,
-            )
-        return qs
 
-    def list(self, request, *args, **kwargs):
-        if not request.GET.get("zaak"):
-            raise exceptions.ValidationError(_("Missing the `zaak` query parameter."))
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary=_("Retrieve checklisttype and related questions for ZAAK."),
+        parameters=[
+            OpenApiParameter(
+                name="bronorganisatie",
+                required=True,
+                type=OpenApiTypes.STR,
+                description=_(
+                    "Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+                ),
+                location=OpenApiParameter.PATH,
+            ),
+            OpenApiParameter(
+                name="identificatie",
+                required=True,
+                type=OpenApiTypes.STR,
+                description=_(
+                    "Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+                ),
+                location=OpenApiParameter.PATH,
+            ),
+        ],
+    ),
+)
+class ZaakChecklistTypeViewSet(
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = ChecklistType.objects.prefetch_related(
+        Prefetch(
+            "checklistquestion_set",
+            queryset=ChecklistQuestion.objects.prefetch_related(
+                "questionchoice_set"
+            ).all(),
+        )
+    ).all()
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaakChecklistTypePermission,
+    )
+    serializer_class = ChecklistTypeSerializer
 
-        return super().list(request, *args, **kwargs)
+    def get_object(self) -> ChecklistType:
+        queryset = self.filter_queryset(self.get_queryset())
+        bronorganisatie = self.request.parser_context["kwargs"]["bronorganisatie"]
+        identificatie = self.request.parser_context["kwargs"]["identificatie"]
+        zaak = find_zaak(bronorganisatie, identificatie)
+        filter_kwargs = {
+            "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
+            "zaaktype_catalogus": zaak.zaaktype.catalogus,
+        }
+        checklist_type = get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, zaak)
+        return checklist_type
+
+
+zaak_checklist_parameters = [
+    OpenApiParameter(
+        name="bronorganisatie",
+        required=True,
+        type=OpenApiTypes.STR,
+        description=_(
+            "Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+        ),
+        location=OpenApiParameter.PATH,
+    ),
+    OpenApiParameter(
+        name="identificatie",
+        required=True,
+        type=OpenApiTypes.STR,
+        description=_(
+            "Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+        ),
+        location=OpenApiParameter.PATH,
+    ),
+]
 
 
 @extend_schema_view(
-    list=extend_schema(
-        summary=_("List checklist and related answers."),
-        parameters=[
-            OpenApiParameter(
-                name="zaak",
-                required=True,
-                type=OpenApiTypes.URI,
-                description=_("URL-reference of the ZAAK related to the checklist."),
-                location=OpenApiParameter.QUERY,
-            )
-        ],
+    retrieve=extend_schema(
+        summary=_("Retrieve checklist and related answers."),
+        parameters=zaak_checklist_parameters,
     ),
-    create=extend_schema(summary=_("Create checklist and related answers.")),
+    create=extend_schema(
+        summary=_("Create checklist and related answers."),
+        parameters=zaak_checklist_parameters,
+    ),
     update=extend_schema(
         summary=_("Update checklist and related answers."),
+        parameters=zaak_checklist_parameters,
     ),
 )
-class ChecklistViewSet(
+class ZaakChecklistViewSet(
     mixins.CreateModelMixin,
-    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -120,7 +179,6 @@ class ChecklistViewSet(
         permissions.IsAuthenticated,
         CanReadOrWriteChecklistsPermission,
     )
-    filterset_class = ChecklistFilter
     http_method_names = [
         "get",
         "post",
@@ -136,8 +194,14 @@ class ChecklistViewSet(
         }
         return mapping[self.request.method]
 
-    def list(self, request, *args, **kwargs):
-        if not request.GET.get("zaak"):
-            raise exceptions.ValidationError(_("Missing the `zaak` query parameter."))
-
-        return super().list(request, *args, **kwargs)
+    def get_object(self) -> ChecklistType:
+        queryset = self.filter_queryset(self.get_queryset())
+        bronorganisatie = self.request.parser_context["kwargs"]["bronorganisatie"]
+        identificatie = self.request.parser_context["kwargs"]["identificatie"]
+        zaak = find_zaak(bronorganisatie, identificatie)
+        filter_kwargs = {
+            "zaak": zaak.url,
+        }
+        checklist = get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, checklist)
+        return checklist

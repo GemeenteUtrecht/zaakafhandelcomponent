@@ -1,4 +1,4 @@
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 
 import requests_mock
 from rest_framework import status
@@ -13,21 +13,29 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 
 from ..permissions import checklists_inzien, checklists_schrijven
 from .factories import ChecklistFactory, ChecklistQuestionFactory, ChecklistTypeFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
+BRONORGANISATIE = "123456789"
+IDENTIFICATIE = "ZAAK-0000001"
 
 
-class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
+@requests_mock.Mocker()
+class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     """
-    Test the checklist list endpoint permissions.
+    Test the checklist retrieve endpoint permissions.
 
     """
 
-    endpoint = reverse_lazy("checklist-list")
+    endpoint = reverse_lazy(
+        "zaak-checklist",
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+    )
 
     @classmethod
     def setUpTestData(cls):
@@ -41,134 +49,143 @@ class ListChecklistsPermissionTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
-    def test_read_not_logged_in(self):
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_read_logged_in_no_filter(self):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["Missing the `zaak` query parameter."])
-
-    @requests_mock.Mocker()
-    def test_read_logged_in_zaak_no_permission(self, m):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        cls.catalogus = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
-        m.get(zaak["url"], json=zaak)
-        response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_read_logged_in_permissions_for_other_zaak(self, m):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        zaaktype = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
-            catalogus=catalogus,
-            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
-            identificatie="ZT1",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            catalogus=cls.catalogus,
             omschrijving="ZT1",
         )
-        m.get(zaaktype["url"], json=zaaktype)
-        zaak = generate_oas_component(
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=zaaktype["url"],
+            zaaktype=cls.zaaktype["url"],
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
         )
-        m.get(zaak["url"], json=zaak)
+        cls.user = UserFactory.create()
+
+    def test_read_not_logged_in(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_read_logged_in_not_found(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, 404)
+
+    def test_read_logged_in_zaak_no_permission(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        ChecklistFactory.create(zaak=self.zaak["url"])
+
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_read_logged_in_permissions_for_other_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        ChecklistFactory.create(zaak=self.zaak["url"])
+
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
-            for_user=user,
+            for_user=self.user,
             policy={
-                "catalogus": catalogus,
+                "catalogus": self.catalogus,
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-        response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
     def test_read_logged_in_zaak_permission(self, m):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            catalogus=catalogus,
-            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
-            identificatie="ZT1",
-            omschrijving="ZT1",
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
         )
-        m.get(zaaktype["url"], json=zaaktype)
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=zaaktype["url"],
-        )
-        m.get(zaak["url"], json=zaak)
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        ChecklistFactory.create(zaak=self.zaak["url"])
+
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
-            for_user=user,
+            for_user=self.user,
             policy={
-                "catalogus": catalogus,
-                "zaaktype_omschrijving": "ZT1",
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-        # set up test data
-        ChecklistFactory.create(zaak="https://some-other-zaak-url.com")
-        ChecklistFactory.create(zaak=zaak["url"])
-        response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
 
-    @requests_mock.Mocker()
     def test_read_logged_in_zaak_permission_atomic(self, m):
-        user = UserFactory.create()
-        self.client.force_authenticate(user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-        )
-        m.get(zaak["url"], json=zaak)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        # set up user permissions
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        ChecklistFactory.create(zaak=self.zaak["url"])
+
         AtomicPermissionFactory.create(
-            for_user=user, permission=checklists_inzien.name, object_url=zaak["url"]
+            for_user=self.user,
+            permission=checklists_inzien.name,
+            object_url=self.zaak["url"],
         )
-
-        # set up test data
-        ChecklistFactory.create(zaak="https://some-other-zaak-url.com")
-        ChecklistFactory.create(zaak=zaak["url"])
-        response = self.client.get(self.endpoint, {"zaak": zaak["url"]})
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
 
 
-class CreatePermissionTests(ClearCachesMixin, APITestCase):
-    endpoint = reverse_lazy("checklist-list")
+@requests_mock.Mocker()
+class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
+    endpoint = reverse_lazy(
+        "zaak-checklist",
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+    )
 
     @classmethod
     def setUpTestData(cls):
@@ -199,6 +216,8 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
         )
         cls.checklist_type = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
@@ -210,22 +229,21 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
             checklist_type=cls.checklist_type,
             order=1,
         )
+        cls.user = UserFactory.create()
 
-    def setUp(self):
-        super().setUp()
-        self.user = UserFactory.create()
-
-    def test_create_checklist_not_logged_in(self):
+    def test_create_checklist_not_logged_in(self, m):
         response = self.client.post(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
     def test_create_checklist_logged_in_no_permissions(self, m):
-        self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
         data = {
             "zaak": self.zaak["url"],
             "checklistType": self.checklist_type.uuid,
@@ -233,12 +251,26 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
+        self.client.force_authenticate(user=self.user)
         response = self.client.post(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
     def test_create_checklist_logged_in_with_permissions_for_other_zaak(self, m):
-        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+        data = {
+            "zaak": self.zaak["url"],
+            "checklistType": self.checklist_type.uuid,
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -248,9 +280,17 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_checklist_logged_in_with_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
@@ -260,24 +300,26 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-        response = self.client.post(self.endpoint, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_create_checklist_logged_in_with_permissions(self, m):
-        self.client.force_authenticate(user=self.user)
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
                 "catalogus": self.catalogus,
-                "zaaktype_omschrijving": "ZT1",
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_checklist_logged_in_with_atomic_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
@@ -287,34 +329,23 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-        response = self.client.post(self.endpoint, data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @requests_mock.Mocker()
-    def test_create_checklist_logged_in_with_atomic_permissions(self, m):
-        self.client.force_authenticate(user=self.user)
         AtomicPermissionFactory.create(
             permission=checklists_schrijven.name,
             for_user=self.user,
             object_url=self.zaak["url"],
         )
-
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-        data = {
-            "zaak": self.zaak["url"],
-            "checklistType": self.checklist_type.uuid,
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
+        self.client.force_authenticate(user=self.user)
         response = self.client.post(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
-class UpdatePermissionTests(ClearCachesMixin, APITestCase):
+@requests_mock.Mocker()
+class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
+    endpoint = reverse_lazy(
+        "zaak-checklist",
+        kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+    )
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -344,6 +375,8 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
         )
         cls.checklist_type = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
@@ -359,24 +392,23 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
             zaak=cls.zaak["url"],
             checklist_type=cls.checklist_type,
         )
+        cls.user = UserFactory.create()
 
-    def setUp(self):
-        super().setUp()
-        self.user = UserFactory.create()
-
-    def test_update_checklist_not_logged_in(self):
-        endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-        response = self.client.patch(endpoint, {})
+    def test_update_checklist_not_logged_in(self, m):
+        response = self.client.patch(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
     def test_update_checklist_logged_in_no_permission(self, m):
-        endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-        self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
+
         data = {
             "checklistType": self.checklist_type.uuid,
             "zaak": self.zaak["url"],
@@ -384,13 +416,28 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-        response = self.client.put(endpoint, data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
     def test_update_checklist_logged_in_with_permissions_for_other_zaak(self, m):
-        endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json=self.zaak)
+
+        data = {
+            "checklistType": self.checklist_type.uuid,
+            "zaak": self.zaak["url"],
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -400,10 +447,21 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_checklist_logged_in_with_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
+
         data = {
             "checklistType": self.checklist_type.uuid,
             "zaak": self.zaak["url"],
@@ -411,13 +469,6 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-        response = self.client.put(endpoint, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_update_checklist_logged_in_with_permissions(self, m):
-        endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-        self.client.force_authenticate(user=self.user)
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
@@ -427,10 +478,21 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_checklist_logged_in_with_atomic_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
+
         data = {
             "checklistType": self.checklist_type.uuid,
             "zaak": self.zaak["url"],
@@ -438,28 +500,11 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
         }
-        response = self.client.put(endpoint, data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    @requests_mock.Mocker()
-    def test_update_checklist_logged_in_with_atomic_permissions(self, m):
-        endpoint = reverse("checklist-detail", kwargs={"pk": self.checklist.pk})
-        self.client.force_authenticate(user=self.user)
         AtomicPermissionFactory.create(
             permission=checklists_schrijven.name,
             for_user=self.user,
             object_url=self.zaak["url"],
         )
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-        data = {
-            "checklistType": self.checklist_type.uuid,
-            "zaak": self.zaak["url"],
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
-        response = self.client.put(endpoint, data)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -11,6 +11,8 @@ from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import paginated_response
 
 from ..permissions import checklists_inzien, checklists_schrijven
 from .factories import ChecklistFactory, ChecklistTypeFactory
@@ -18,10 +20,12 @@ from .factories import ChecklistFactory, ChecklistTypeFactory
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
+BRONORGANISATIE = "123456789"
+IDENTIFICATIE = "ZAAK-0000001"
 
 
 @requests_mock.Mocker()
-class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
+class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -45,7 +49,12 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
             omschrijving="ZT1",
         )
         cls.zaak = generate_oas_component(
-            "zrc", "schemas/Zaak", url=ZAAK_URL, zaaktype=cls.zaaktype["url"]
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            zaaktype=cls.zaaktype["url"],
+            bronorganisatie=BRONORGANISATIE,
+            identificatie=IDENTIFICATIE,
         )
         cls.user = SuperUserFactory.create()
         cls.assignee = UserFactory.create()
@@ -66,9 +75,17 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_without_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaak["url"], json=self.zaak)
         m.get(self.zaaktype["url"], json=self.zaaktype)
-        endpoint = reverse("checklist-list")
+        endpoint = reverse(
+            "zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         data = {
             "zaak": ZAAK_URL,
             "checklistType": self.checklist_type.pk,
@@ -83,11 +100,19 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_with_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaak["url"], json=self.zaak)
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
-        endpoint = reverse("checklist-list")
+        endpoint = reverse(
+            "zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         data = {
             "zaak": ZAAK_URL,
             "checklistType": self.checklist_type.pk,
@@ -114,12 +139,20 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
     def test_create_checklist_with_group_assignement(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaak["url"], json=self.zaak)
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("checklist-list")
+        endpoint = reverse(
+            "zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         data = {
             "zaak": ZAAK_URL,
             "checklistType": self.checklist_type.pk,
@@ -147,6 +180,11 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
     def test_update_checklist_change_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaak["url"], json=self.zaak)
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
@@ -155,7 +193,10 @@ class GrantChecklistPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
-        endpoint = reverse("checklist-detail", args=[checklist.id])
+        endpoint = reverse(
+            "zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
         data = {
             "zaak": ZAAK_URL,
             "checklistType": str(self.checklist_type.pk),

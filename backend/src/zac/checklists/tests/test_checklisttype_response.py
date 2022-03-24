@@ -46,24 +46,14 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         cls.user = SuperUserFactory.create(is_staff=True)
 
     def test_list_checklisttypes(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
-            zaaktype=self.zaaktype["url"],
-        )
         self.client.force_authenticate(user=self.user)
-        m.get(zaak["url"], json=zaak)
-        m.get(self.zaaktype["url"], json=self.zaaktype)
         endpoint = reverse("checklisttype-list")
-        response = self.client.get(endpoint, {"zaak": zaak["url"]})
+        response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
 
     def test_create_checklisttype(self, m):
