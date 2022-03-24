@@ -302,6 +302,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 {
                     "question": answer.question,
                     "answer": "some-updated-answer",
+                    "document": "https://some-document-url.com/",
+                    "remarks": "some-remarks",
                 },
             ],
         }
@@ -343,28 +345,32 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "some-updated-answer",
         )
 
+        self.maxDiff = None
         # Assert response data is as expected
         expected_data = {
             "created": "1999-12-31T23:59:59Z",
-            "checklistType": str(checklist_type.uuid),
+            "checklistType": str(checklist_type.pk),
             "groupAssignee": None,
             "userAssignee": self.user.username,
-            "zaak": "https://open-zaak.nl/zaken/api/v1/zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            "zaak": self.zaak["url"],
             "answers": [
                 {
-                    "question": "some-other-question",
-                    "answer": "some-updated-answer",
-                    "created": "1999-12-31T23:59:59Z",
-                    "modified": "1999-12-31T23:59:59Z",
-                },
-                {
-                    "question": "some-question",
                     "answer": "some-answer",
                     "created": "1999-12-31T23:59:59Z",
+                    "document": "",
                     "modified": "1999-12-31T23:59:59Z",
+                    "question": "some-question",
+                    "remarks": "",
+                },
+                {
+                    "answer": "some-updated-answer",
+                    "created": "1999-12-31T23:59:59Z",
+                    "document": "https://some-document-url.com/",
+                    "modified": "1999-12-31T23:59:59Z",
+                    "question": "some-other-question",
+                    "remarks": "some-remarks",
                 },
             ],
         }
-
         data = response.json()
         self.assertEqual(expected_data, data)

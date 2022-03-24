@@ -259,17 +259,9 @@ class ChecklistSerializer(BaseChecklistSerializer):
                     )
 
     def bulk_create_answers(self, checklist: Checklist, answers: List):
+
         ChecklistAnswer.objects.bulk_create(
-            [
-                ChecklistAnswer(
-                    checklist=checklist,
-                    question=answer["question"],
-                    answer=answer["answer"],
-                    remarks=answer["remarks"],
-                    document=answer["document"],
-                )
-                for answer in answers
-            ]
+            [ChecklistAnswer(checklist=checklist, **answer) for answer in answers]
         )
 
     @transaction.atomic
@@ -284,17 +276,20 @@ class ChecklistSerializer(BaseChecklistSerializer):
         return checklist
 
     def bulk_update_answers(self, checklist: Checklist, answers: List) -> List:
-        questions_answers = {answer["question"]: answer["answer"] for answer in answers}
+        questions_answers = {answer["question"]: answer for answer in answers}
         answers_to_update = []
         updated_answers = []
         for answer in checklist.checklistanswer_set.all():
             if (
                 new_answer := questions_answers.get(answer.question)
             ) and answer.answer != new_answer:
-                answer.answer = new_answer
+                for attribute, value in new_answer.items():
+                    setattr(answer, attribute, value)
                 answers_to_update.append(answer)
                 updated_answers.append(answer.question)
-        ChecklistAnswer.objects.bulk_update(answers_to_update, ["answer"])
+        ChecklistAnswer.objects.bulk_update(
+            answers_to_update, ["answer", "remarks", "document"]
+        )
 
         return updated_answers
 
