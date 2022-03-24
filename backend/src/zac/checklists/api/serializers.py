@@ -137,7 +137,8 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
 class ChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "answer", "created", "modified")
+        fields = ("question", "answer", "created", "modified", "remarks", "document")
+        extra_kwargs = {"remarks": {"required": False}, "document": {"required": False}}
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):
@@ -264,6 +265,8 @@ class ChecklistSerializer(BaseChecklistSerializer):
                     checklist=checklist,
                     question=answer["question"],
                     answer=answer["answer"],
+                    remarks=answer["remarks"],
+                    document=answer["document"],
                 )
                 for answer in answers
             ]

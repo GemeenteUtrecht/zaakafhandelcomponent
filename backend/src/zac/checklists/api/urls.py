@@ -14,12 +14,12 @@ router.register("checklisttypes", ChecklistTypeViewSet)
 urlpatterns = router.urls
 urlpatterns += [
     path(
-        "checklisttype/<str:bronorganisatie>/<str:identificatie>",
+        "zaak-checklisttypes/<str:bronorganisatie>/<str:identificatie>",
         ZaakChecklistTypeViewSet.as_view({"get": "retrieve"}),
         name="zaak-checklist-type",
     ),
     path(
-        "checklist/<str:bronorganisatie>/<str:identificatie>",
+        "zaak-checklists/<str:bronorganisatie>/<str:identificatie>",
         ZaakChecklistViewSet.as_view(
             {"get": "retrieve", "post": "create", "put": "update"}
         ),

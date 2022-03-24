@@ -32,7 +32,14 @@ class ChecklistAnswer(ChecklistMeta):
         _("Related question"),
         max_length=1000,
     )
-    answer = models.TextField(_("Answer to the question"), max_length=1000, blank=True)
+    answer = models.TextField(_("Answer to the question"), blank=True)
+    remarks = models.TextField(_("remarks"), blank=True)
+    document = models.URLField(
+        _("document URL"),
+        max_length=1000,
+        blank=True,
+        help_text=_("Document in the Documents API."),
+    )
 
     class Meta:
         verbose_name = _("checklist answer")
