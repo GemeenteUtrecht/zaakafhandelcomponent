@@ -3,9 +3,9 @@ from typing import List, Optional
 
 from django.core.cache import cache, caches
 
+from furl import furl
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import Rol
 from zgw_consumers.client import Client
 
 from zgw.models.zrc import Zaak
@@ -65,8 +65,14 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
 
 
 def invalidate_document_cache(document: Document):
+    versioned_url = furl(document.url).set({"versie": document.versie}).url
+    alfresco_zero_version_url = furl(document.url).set({"versie": 0}).url
     keys = [
+        f"document:{document.bronorganisatie}:{document.identificatie}:0",
+        f"document:{document.bronorganisatie}:{document.identificatie}:{document.versie}",
         f"document:{document.bronorganisatie}:{document.identificatie}:None",
+        f"document:{alfresco_zero_version_url}",
+        f"document:{versioned_url}",
         f"document:{document.url}",
     ]
     cache.delete_many(keys)

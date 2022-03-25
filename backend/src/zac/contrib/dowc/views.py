@@ -46,10 +46,9 @@ class OpenDowcView(APIView):
     serializer_class = DowcResponseSerializer
 
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
-        if not self.document:
-            versie = _cast(self.request.GET.get("versie", None), int)
-            self.document = find_document(bronorganisatie, identificatie, versie=versie)
-        return self.document
+        versie = _cast(self.request.GET.get("versie", None), int)
+        document = find_document(bronorganisatie, identificatie, versie=versie)
+        return document
 
     def post(self, request, bronorganisatie, identificatie, purpose):
         """
