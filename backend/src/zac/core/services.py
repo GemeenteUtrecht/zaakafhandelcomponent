@@ -911,12 +911,10 @@ def cache_document(
         if cache_key_url not in cache:
             cache.set(cache_key_url, response, timeout=timeout)
 
-        if (
-            not versie
-        ):  # add cache of document with versie as well - this timeout can be extended as versies should be immutable
+        if not versie:
             cache_key_versie = f"document:{document.bronorganisatie}:{document.identificatie}:{document.versie}"
             if cache_key_versie not in cache:
-                cache.set(cache_key_versie, document, timeout=A_DAY)
+                cache.set(cache_key_versie, document, timeout=AN_HOUR / 2)
 
             document_furl.args["versie"] = document.versie
             cache_key_version_url = f"document:{document_furl.url}"

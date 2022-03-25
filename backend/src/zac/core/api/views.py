@@ -598,7 +598,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
             instance=resolved_documenten,
             many=True,
             context={
-                "open_documenten": [dowc.drc_url for dowc in open_documenten],
+                "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
                 "editing_history": editing_history,
             },
         )

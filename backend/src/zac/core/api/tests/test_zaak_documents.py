@@ -168,7 +168,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 "beschrijving": "some-beschrijving",
                 "bestandsnaam": "some-bestandsnaam",
                 "bestandsomvang": 10,
-                "currentUserIsEditing": False,
+                "currentUserIsEditing": True,
                 "identificatie": "DOC-2020-007",
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
