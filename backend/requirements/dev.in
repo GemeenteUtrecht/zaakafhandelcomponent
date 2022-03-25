@@ -1,5 +1,5 @@
 # Helpers
-pip-tools~=5.5
+pip-tools
 bumpversion
 
 # Debug tooling
