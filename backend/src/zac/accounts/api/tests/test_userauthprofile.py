@@ -25,7 +25,7 @@ CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d"
 
 
-class AuthProfilePermissionsTests(APITestCase):
+class UserAuthProfilePermissionsTests(APITestCase):
     url = reverse_lazy("userauthorizationprofile-list")
 
     def test_no_staff_user(self):
@@ -54,7 +54,7 @@ class AuthProfilePermissionsTests(APITestCase):
 
 
 @freeze_time("1999-12-31T23:59:59Z")
-class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
+class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self) -> None:
         super().setUp()
 
@@ -92,6 +92,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "previous": None,
                 "results": [
                     {
+                        "id": userauthprofile.id,
                         "start": "1999-12-31T23:59:59Z",
                         "end": None,
                         "user": {
@@ -127,7 +128,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-    def test_retrieve_auth_profile(self):
+    def test_retrieve_user_auth_profile(self):
         role = RoleFactory.create()
         blueprint_permission = BlueprintPermissionFactory.create(
             role=role,
@@ -151,6 +152,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json(),
             {
+                "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
                 "end": None,
                 "user": {
@@ -206,11 +208,15 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             "start": "1999-12-31T23:59:59Z",
             "end": None,
         }
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
+        userauthprofile = UserAuthorizationProfile.objects.get()
         self.assertEqual(
             response.json(),
             {
+                "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
                 "end": None,
                 "user": self.user.username,
@@ -239,11 +245,16 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         data = {"user": user2.username}
         self.assertEqual(userauthprofile.user.username, self.user.username)
         url = reverse_lazy("userauthorizationprofile-detail", args=[userauthprofile.pk])
+
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
         response = self.client.patch(url, data)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
             {
+                "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
                 "end": None,
                 "user": user2.username,
@@ -277,11 +288,14 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         }
         self.assertEqual(userauthprofile.user.username, self.user.username)
         url = reverse_lazy("userauthorizationprofile-detail", args=[userauthprofile.pk])
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
         response = self.client.put(url, data)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
             {
+                "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
                 "end": "2099-12-31T23:59:59Z",
                 "user": user2.username,

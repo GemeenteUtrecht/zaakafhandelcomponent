@@ -575,7 +575,7 @@ class PermissionSerializer(serializers.Serializer):
 class BaseUserAuthProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAuthorizationProfile
-        fields = ("start", "end", "user", "auth_profile")
+        fields = "__all__"
 
 
 class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
