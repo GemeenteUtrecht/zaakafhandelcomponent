@@ -4930,11 +4930,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldEnum'
-      - $ref: '#/components/schemas/FormFieldString'
-      - $ref: '#/components/schemas/FormFieldBoolean'
-      - $ref: '#/components/schemas/FormFieldDatetime'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5136,8 +5136,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -5784,6 +5784,13 @@ components:
     PatchedUserAuthorizationProfile:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+        authProfile:
+          type: string
         start:
           type: string
           format: date-time
@@ -5792,10 +5799,6 @@ components:
           format: date-time
           nullable: true
           title: Einde
-        user:
-          type: string
-        authProfile:
-          type: string
       title: PatchedUserAuthorizationProfile
     PatchedZaakEigenschap:
       oneOf:
@@ -5970,14 +5973,9 @@ components:
     ReadUserAuthorizationProfile:
       type: object
       properties:
-        start:
-          type: string
-          format: date-time
-        end:
-          type: string
-          format: date-time
-          nullable: true
-          title: Einde
+        id:
+          type: integer
+          readOnly: true
         user:
           allOf:
           - $ref: '#/components/schemas/User'
@@ -5986,8 +5984,17 @@ components:
           allOf:
           - $ref: '#/components/schemas/AuthProfile'
           description: Authorization profile related to the user.
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+          nullable: true
+          title: Einde
       required:
       - authProfile
+      - id
       - user
       title: ReadUserAuthorizationProfile
     ReasonEnum:
@@ -6523,9 +6530,9 @@ components:
     SubmitUserTask:
       oneOf:
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
       - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
+      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
       discriminator:
         propertyName: form
         mapping:
@@ -6640,9 +6647,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -6781,6 +6788,13 @@ components:
     UserAuthorizationProfile:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+        authProfile:
+          type: string
         start:
           type: string
           format: date-time
@@ -6789,21 +6803,18 @@ components:
           format: date-time
           nullable: true
           title: Einde
-        user:
-          type: string
-        authProfile:
-          type: string
       required:
       - authProfile
+      - id
       - user
       title: UserAuthorizationProfile
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       discriminator:
         propertyName: form
         mapping:
