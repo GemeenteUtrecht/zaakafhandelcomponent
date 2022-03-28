@@ -28,7 +28,7 @@
 
     <!-- Show more buttons -->
     <button gu-button
-            *ngIf="!!data && data?.length > 3"
+            *ngIf="!!data && data[0]?.messages?.length > 3"
             buttonStyle="tertiary"
             size="extrasmall"
             class="d-block mb-4"

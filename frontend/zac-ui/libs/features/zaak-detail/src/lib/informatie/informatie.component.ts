@@ -259,7 +259,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   findMismatchingKeyPairs(data, keys) {
     return Object.entries(data)
-      .filter(([key]) => keys.indexOf(key) === -1)
+      .filter(([key]) => keys.indexOf(key) === -1 && key !== 'reden')
       .reduce((acc, [key, value]) => ({...acc, [key]: value}), {});
   }
 
@@ -279,6 +279,11 @@ export class InformatieComponent implements OnInit, OnChanges {
     const otherPropertyData = this.findMismatchingKeyPairs(data, propertyKeys);
     const zaakData = this.findMatchingKeyPairs(otherPropertyData, zaakKeys);
     const newPropertyData = this.findMismatchingKeyPairs(otherPropertyData, zaakKeys)
+
+    // Property reden needs to be handled seperately
+    if (data.reden) {
+      zaakData['reden'] = data.reden;
+    }
 
     this.updateProperties(existingPropertyData);
     this.createProperties(newPropertyData);
@@ -330,11 +335,12 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   /**
    * Submits the zaak.
-   * @param {Object} data
+   * @param {Object} zaakData
    */
-  updateZaak(data: Object): void {
+  updateZaak(zaakData: Object): void {
     this.isCaseAPILoading = true;
-    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, data).subscribe(
+
+    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, zaakData).subscribe(
       () => {
         this.getContextData();
       },

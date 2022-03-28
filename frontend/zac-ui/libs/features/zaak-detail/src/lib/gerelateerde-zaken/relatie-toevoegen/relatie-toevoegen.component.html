@@ -8,8 +8,8 @@
 
     <gu-tab label="Zoeken">
       <div class="p-4">
-        <gu-property-search-form (loadResult)="onLoadResult($event)"></gu-property-search-form>
-        <gu-search-results [controlled]="true" [resultData]="resultData" (tableOutput)="onTableOutput($event)"></gu-search-results>
+        <gu-property-search-form (loadResult)="onLoadResult($event)" (resultLength)="onResultLength($event)"></gu-property-search-form>
+        <gu-search-results [controlled]="true" [resultData]="resultData" [resultLength]="resultLength" (tableOutput)="onTableOutput($event)"></gu-search-results>
       </div>
     </gu-tab>
   </gu-tab-group>
