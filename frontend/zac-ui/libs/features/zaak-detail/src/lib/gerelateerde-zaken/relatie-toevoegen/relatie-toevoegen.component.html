@@ -2,7 +2,7 @@
   <gu-tab-group alignTabs="center" [selectedIndex]="(selectedTabIndex) > -1 ? selectedTabIndex : null" (click)="selectedTabIndex=-1">
     <gu-tab label="Op zaaknummer">
       <div class="p-4">
-        <gu-form *ngIf="form" [form]="form" (formSubmit)="submitForm($event)"></gu-form>
+        <gu-form *ngIf="form" [form]="form" [isLoading]="isLoading" (formSubmit)="submitForm($event)"></gu-form>
       </div>
     </gu-tab>
 
