@@ -87,7 +87,7 @@ django-import-export==2.7.1
     # via -r requirements/base.in
 django-ipware==2.1.0
     # via django-axes
-django-redis==4.10.0
+django-redis==5.2.0
     # via -r requirements/base.in
 django-relativedelta==1.1.1
     # via zgw-consumers
