@@ -22,7 +22,6 @@ import {ChipComponent} from './elements/chip/chip.component';
 import {LoadingIndicatorComponent} from './elements/loading-indicator/loading-indicator.component';
 import {RadioComponent} from './elements/radio/radio.component';
 import {TooltipComponent} from './elements/tooltip/tooltip.component';
-import {CollapsibleComponent} from './elements/collapsible/collapsible.component';
 import {ProgressBarComponent} from './elements/progress-bar/progress-bar.component';
 import {CheckboxComponent} from './elements/checkbox/checkbox.component';
 import {InputFieldComponent} from './elements/input-field/input-field.component';
@@ -76,7 +75,6 @@ patchMatFormField();
   declarations: [
     ButtonComponent,
     ChipComponent,
-    CollapsibleComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,
@@ -103,7 +101,6 @@ patchMatFormField();
   exports: [
     ButtonComponent,
     ChipComponent,
-    CollapsibleComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,

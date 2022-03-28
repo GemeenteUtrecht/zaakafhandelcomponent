@@ -31,8 +31,10 @@ export * from './accounts/auth-profile';
 export * from './accounts/permission';
 export * from './accounts/role';
 export * from './accounts/user';
+export * from './accounts/user-auth-profile';
 export * from './accounts/user-group';
 export * from './accounts/user-permissions';
+export * from './accounts/user-search';
 
 // Zaken
 export * from './zaken/assignee'

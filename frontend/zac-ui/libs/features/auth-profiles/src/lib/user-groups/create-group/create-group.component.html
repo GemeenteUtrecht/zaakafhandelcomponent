@@ -33,7 +33,7 @@
                  [checked]="isInSelectedUser(user)"
                  class="d-inline-block mr-1"
     >
-      {{user.fullName}}
+      {{user.fullName || user.username}}
     </gu-checkbox>
   </li>
 </ul>

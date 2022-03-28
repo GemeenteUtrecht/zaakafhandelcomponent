@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
 import { TaskContextData } from '../../models/task-context';
-import { UserSearch } from '../../models/user-search';
-import { ReadWriteDocument, Task, User } from '@gu/models';
+import { ReadWriteDocument, Task, User, UserSearch } from '@gu/models';
 import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
 import { UserGroupList } from '../../models/user-group-search';
 

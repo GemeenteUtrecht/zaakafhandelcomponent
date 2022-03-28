@@ -1,10 +1,9 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserSearchResult } from '../../../../../zaak-detail/src/models/user-search';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { UserGroupDetail } from '@gu/models';
+import { UserGroupDetail, UserSearchResult } from '@gu/models';
 
 /**
  * Allows user to create or edit a user group.
@@ -183,7 +182,7 @@ export class CreateGroupComponent implements OnChanges {
    * @returns {string[]}
    */
   showSelectedUsers() {
-    return this.selectedUsers.map(userObj => ' ' + userObj.fullName).sort();
+    return this.selectedUsers.map(userObj => ' ' + (userObj.fullName || userObj.username)).sort();
   }
 
   //

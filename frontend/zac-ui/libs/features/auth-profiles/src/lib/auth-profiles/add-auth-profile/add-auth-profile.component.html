@@ -16,9 +16,9 @@
       <div class="mb-2"
            formArrayName="bluePrintPermissions"
            *ngFor="let blueprintPermission of blueprintPermissionControl.controls; let i = index; let last = last;">
-        <div *ngIf="nBlueprintPermissions > 1" class="bperm-title mb-2">
-          <b><span>{{i + 1}}.</span></b>
-          <gu-icon *ngIf="nBlueprintPermissions > 1 && (i+1) === nBlueprintPermissions" class="bperm-title__delete d-inline-block" (click)="deleteStep()">delete_outline</gu-icon>
+        <div class="bperm-title mb-2 d-flex justify-content-between">
+          <span>{{i + 1}}.</span>
+          <gu-icon class="bperm-title__delete d-inline-block mr-4" (click)="deleteStep(i)">delete_outline</gu-icon>
         </div>
         <div class="row" [formGroupName]="i">
           <!-- Select role -->
@@ -71,7 +71,7 @@
       Rol toevoegen
     </button>
 
-    <footer class="d-flex justify-content-end">
+    <div class="d-flex justify-content-end">
       <button *ngIf="type === 'create'" gu-button type="submit" buttonStyle="primary" size="large" class="d-inline-block" [disabled]="!authProfileForm.valid">
         Aanmaken
       </button>
@@ -79,6 +79,42 @@
       <button *ngIf="type === 'edit'" gu-button type="submit" buttonStyle="primary" size="large" class="d-inline-block" [disabled]="!authProfileForm.valid">
         Opslaan
       </button>
-    </footer>
+    </div>
+
+    <h3>Gebruikers</h3>
+    <p class="mb-4">Selecteer gebruikers die je wilt toevoegen aan de groep.</p>
+    <div *ngIf="selectedUsers.length > 0" class="mb-4">
+      <p class="mb-2"><strong>Geselecteerde gebruikers:</strong></p>
+      <ul class="p-0">
+        <li class="auth-profile-user" *ngFor="let user of showSelectedUsers()">
+          <gu-chip (click)="updateSelectedUsers(user)"
+                   class="mr-1"
+                   icon="close"
+                   [color]="'primary'">
+            {{user.fullName || user.username}}
+          </gu-chip>
+        </li>
+      </ul>
+    </div>
+
+    <gu-input [control]="searchValueControl"
+              (input)="searchUsers()"
+              [hideNotRequiredLabel]="true"
+              autocomplete="off"
+              type="text"
+              placeholder="Typ om gebruikers te zoeken..."
+              class="mb-4">
+    </gu-input>
+
+    <ul class="p-0">
+      <li class="auth-profile-user" *ngFor="let user of searchResultUsers">
+        <gu-chip (click)="updateSelectedUsers(user)"
+                 icon="add"
+                 [color]="'tertiary'"
+                 class="d-inline-block mr-1">
+          {{user.fullName || user.username}}
+        </gu-chip>
+      </li>
+    </ul>
   </form>
 </div>

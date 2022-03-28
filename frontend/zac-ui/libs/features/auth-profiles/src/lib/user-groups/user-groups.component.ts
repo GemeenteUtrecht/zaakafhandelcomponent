@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { UserGroupResult } from '../../../../zaak-detail/src/models/user-group-search';
 import { ModalService, SnackbarService } from '@gu/components';
-import { UserGroupDetail } from '@gu/models';
-import { UserSearchResult } from '../../../../zaak-detail/src/models/user-search';
+import { UserGroupDetail, UserSearchResult } from '@gu/models';
 
 /**
  * Managing component for user groups.

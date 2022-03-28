@@ -1,8 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaZaaktype, Role, UserGroupDetail } from '@gu/models';
-
+import { AuthProfile, MetaZaaktype, Role, UserAuthProfile } from '@gu/models';
 
 /**
  * Displays the retrieved authorisation profiles with its roles and policies.
@@ -20,6 +19,7 @@ export class AuthProfilesComponent implements OnInit {
 
   authProfiles: AuthProfile[];
   selectedAuthProfile: AuthProfile;
+  userAuthProfiles: UserAuthProfile[];
   caseTypes: MetaZaaktype;
 
   isLoading: boolean;
@@ -33,6 +33,7 @@ export class AuthProfilesComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAuthProfiles();
+    this.getUserAuthProfiles();
     this.getCaseTypes();
   }
 
@@ -89,6 +90,15 @@ export class AuthProfilesComponent implements OnInit {
     return authProfile.blueprintPermissions.some(perm => perm.objectType === "zaak")
   }
 
+  filterUserAuthProfiles(uuid) {
+    return this.userAuthProfiles.filter((profile) => profile.authProfile.uuid === uuid);
+  }
+
+  filterUserAuthProfileUsers(uuid) {
+    const profiles = this.filterUserAuthProfiles(uuid);
+    return profiles.map((profile) => profile.user);
+  }
+
   /**
    * Retrieve auth profiles.
    */
@@ -97,7 +107,27 @@ export class AuthProfilesComponent implements OnInit {
     this.fService.getAuthProfiles().subscribe(
       (data) => {
         this.isLoading = false;
-        this.authProfiles = data},
+        this.authProfiles = data
+      },
+      (err) => {
+        this.isLoading = false;
+        this.errorMessage = this.getAuthProfilesErrorMessage;
+        this.reportError(err);
+      }
+    );
+  }
+
+  /**
+   * Retrieve auth profiles.
+   */
+  getUserAuthProfiles() {
+    this.isLoading = true;
+    this.fService.getUserAuthProfiles().subscribe(
+      (data) => {
+        this.isLoading = false;
+        this.userAuthProfiles = data.results;
+        console.log(data);
+      },
       (err) => {
         this.isLoading = false;
         this.errorMessage = this.getAuthProfilesErrorMessage;

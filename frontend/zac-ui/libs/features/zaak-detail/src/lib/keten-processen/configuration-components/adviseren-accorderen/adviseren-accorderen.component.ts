@@ -2,12 +2,11 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
-import { UserSearchResult } from '../../../../models/user-search';
 import { UserGroupResult } from '../../../../models/user-group-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import {ReadWriteDocument} from "@gu/models";
+import {ReadWriteDocument, UserSearchResult} from "@gu/models";
 import { ModalService, SnackbarService } from '@gu/components';
 
 /**

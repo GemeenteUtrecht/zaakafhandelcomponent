@@ -1,9 +1,8 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { UserSearchResult, UserSearch } from '../../models/user-search';
+import { UserSearchResult, UserSearch } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gu-toegang-verlenen',

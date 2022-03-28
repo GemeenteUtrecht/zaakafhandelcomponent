@@ -1,10 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ActiviteitenService } from './activiteiten.service';
-import { first } from 'rxjs/operators';
-import {Activity, User, ShortDocument, ReadWriteDocument} from '@gu/models';
+import { Activity, Document, ReadWriteDocument, ShortDocument, User, UserSearchResult } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserSearchResult } from '../../models/user-search';
-import {Document} from '@gu/models';
 import { UserGroupResult } from '../../models/user-group-search';
 import { SnackbarService } from '@gu/components';
 

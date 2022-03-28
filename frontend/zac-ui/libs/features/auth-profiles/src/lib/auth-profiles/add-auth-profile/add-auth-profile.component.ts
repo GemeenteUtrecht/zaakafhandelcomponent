@@ -1,9 +1,28 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import {AuthProfile, BlueprintPermission, MetaConfidentiality, MetaZaaktype, Role, ZaakPolicy} from '@gu/models';
+import {
+  AuthProfile,
+  MetaConfidentiality,
+  MetaZaaktype,
+  Role, User,
+  UserAuthProfile,
+  UserSearchResult,
+  ZaakPolicy
+} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {MetaService} from "@gu/services";
+import { atleastOneValidator } from '@gu/utils';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 
 /**
@@ -22,17 +41,25 @@ import {MetaService} from "@gu/services";
 export class AddAuthProfileComponent implements OnInit, OnChanges {
   @Input() type: "create" | "edit";
   @Input() selectedAuthProfile: AuthProfile;
+  @Input() selectedAuthProfileUuid: string;
   @Input() roles: Role[];
+  @Input() preselectedUsers: User[];
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   readonly createAuthProfileSuccessMessage = "Het profiel is aangemaakt."
+  readonly updateAuthProfileSuccessMessage = "Het profiel is bijgewerkt."
 
   authProfileForm: FormGroup;
+  currentAuthProfileUuid: string;
 
   caseTypes: MetaZaaktype;
-  confidentiality: MetaConfidentiality[];
 
+  confidentiality: MetaConfidentiality[];
   selectedObjectType: 'zaak' | 'document' | 'search_report';
+
+  currentSearchValue: string;
+  searchResultUsers: UserSearchResult[];
+  selectedUsers: UserSearchResult[] | User[] = [];
 
   isLoading: boolean;
   errorMessage: string;
@@ -48,7 +75,8 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     private fb: FormBuilder) {
     this.authProfileForm = this.fb.group({
       name: this.fb.control("", Validators.required),
-      bluePrintPermissions: this.fb.array([this.addBlueprintPermission()]),
+      searchValue: this.fb.control(""),
+      bluePrintPermissions: this.fb.array([this.addBlueprintPermission()], atleastOneValidator()),
     })
   }
 
@@ -58,6 +86,10 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
 
   get authProfileNameControl() {
     return this.authProfileForm.get('name') as FormControl;
+  }
+
+  get searchValueControl() {
+    return this.authProfileForm.get('searchValue') as FormControl;
   }
 
   get blueprintPermissionControl() {
@@ -89,9 +121,12 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
    * to handle the changes.
    */
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    const isUpdatedAuthProfile = this.currentAuthProfileUuid !== this.selectedAuthProfileUuid;
+    this.currentAuthProfileUuid = isUpdatedAuthProfile ? this.selectedAuthProfileUuid : this.currentAuthProfileUuid;
+
     if (this.type === "edit" && this.selectedAuthProfile) {
-      this.setContextEditMode();
+      this.setContextEditMode(isUpdatedAuthProfile);
     }
   }
 
@@ -102,34 +137,43 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   /**
    * Set data for edit mode.
    */
-  setContextEditMode() {
+  setContextEditMode(isUpdatedAuthProfile) {
     // Set auth profile name
-    this.authProfileNameControl.patchValue(this.selectedAuthProfile.name);
+    this.authProfileNameControl.patchValue(this.selectedAuthProfile?.name ? this.selectedAuthProfile.name : '');
 
-    // Clear controls
-    this.blueprintPermissionControl.clear();
+    // Prefill controls if the auth profile has changed or the blueprint permissions are not filled
+    if (isUpdatedAuthProfile || !this.roleControl(0).value) {
+      this.selectedUsers = this.preselectedUsers;
 
-    // Extract permissions with object type zaak
-    const relevantPermissions = this.selectedAuthProfile.blueprintPermissions.filter(x => x.objectType === "zaak");
-    this.nBlueprintPermissions = relevantPermissions.length;
+      // Clear search results
+      this.searchValueControl.patchValue('')
+      this.searchResultUsers = [];
 
-    // Create control for each permission
-    relevantPermissions.forEach(() => {
-      const bpPerm = this.addBlueprintPermission();
-      this.blueprintPermissionControl.push(bpPerm)
-    })
-    this.cdRef.detectChanges();
+      // Clear controls
+      this.blueprintPermissionControl.clear();
 
-    // Update values in controls
-    relevantPermissions.forEach((permission, i) => {
-      const policies: ZaakPolicy[] = permission.policies.map(policy => {
-        return policy['zaaktypeOmschrijving']
+      // Extract permissions with object type zaak
+      const relevantPermissions = this.selectedAuthProfile.blueprintPermissions.filter(x => x.objectType === "zaak");
+      this.nBlueprintPermissions = relevantPermissions.length;
+
+      // Create control for each permission
+      relevantPermissions.forEach(() => {
+        const bpPerm = this.addBlueprintPermission();
+        this.blueprintPermissionControl.push(bpPerm)
       })
-      const confidentiality = permission.policies[0]['maxVa']
-      this.roleControl(i).patchValue(permission.role);
-      this.zaaktypeControl(i).patchValue(policies);
-      this.confidentialityControl(i).patchValue(confidentiality);
-    })
+      this.cdRef.detectChanges();
+
+      // Update values in controls
+      relevantPermissions.forEach((permission, i) => {
+        const policies: ZaakPolicy[] = permission.policies.map(policy => {
+          return policy['zaaktypeOmschrijving']
+        })
+        const confidentiality = permission.policies[0]['maxVa']
+        this.roleControl(i).patchValue(permission.role);
+        this.zaaktypeControl(i).patchValue(policies);
+        this.confidentialityControl(i).patchValue(confidentiality);
+      })
+    }
   }
 
   /**
@@ -203,18 +247,14 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   }
 
   /**
-   * PATCH form data to API.
+   * PUT form data to API.
    * @param formData
    * @param uuid
    */
   updateProfile(formData, uuid) {
     this.fService.updateAuthProfile(formData, uuid).subscribe(
-      () => {
-        this.closeModal('edit-auth-profile-modal');
-        this.snackbarService.openSnackBar(this.createAuthProfileSuccessMessage, 'Sluiten', 'primary');
-        this.authProfileForm.reset();
-        this.reload.emit(true)
-        this.isLoading = false;
+      (res) => {
+        this.updateUserAuthProfiles(res.uuid);
       }, this.reportError.bind(this)
     )
   }
@@ -225,12 +265,49 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    */
   createProfile(formData) {
     this.fService.createAuthProfile(formData).subscribe(
+      (res) => {
+        this.createUserAuthProfiles(res.uuid);
+      }, this.reportError.bind(this)
+    )
+  }
+
+  /**
+   * POST form data to API.
+   */
+  createUserAuthProfiles(uuid) {
+    this.fService.createUserAuthProfile(this.selectedUsers, uuid).subscribe(
       () => {
         this.closeModal('add-auth-profile-modal');
         this.snackbarService.openSnackBar(this.createAuthProfileSuccessMessage, 'Sluiten', 'primary');
         this.authProfileForm.reset();
         this.reload.emit(true)
         this.isLoading = false;
+      }, this.reportError.bind(this)
+    )
+  }
+
+  /**
+   * POST form data to API.
+   */
+  updateUserAuthProfiles(uuid) {
+    const newUsers = this.selectedUsers.filter(({ id: id1 }) => !this.preselectedUsers.some(({ id: id2 }) => id2 === id1));
+    const removedUsers = this.preselectedUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+    console.log('removed users');
+    console.log(removedUsers);
+
+    // @TODO: retrieve user auth profile ID of each user that has to be removed and use the DELETE endpoint
+    const removedUserAuthProfiles = []
+
+    this.fService.createUserAuthProfile(newUsers, uuid).subscribe(
+      () => {
+        this.fService.deleteUserAuthProfile(removedUserAuthProfiles).subscribe(
+          () => {
+            this.closeModal('edit-auth-profile-modal');
+            this.snackbarService.openSnackBar(this.updateAuthProfileSuccessMessage, 'Sluiten', 'primary');
+            this.authProfileForm.reset();
+            this.reload.emit(true)
+            this.isLoading = false;
+          }, this.reportError.bind(this))
       }, this.reportError.bind(this)
     )
   }
@@ -255,9 +332,63 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     this.blueprintPermissionControl.push(this.addBlueprintPermission());
   }
 
-  deleteStep() {
-    this.nBlueprintPermissions--
-    this.blueprintPermissionControl.removeAt(this.blueprintPermissionControl.length - 1);
+  deleteStep(i) {
+    if (this.nBlueprintPermissions >= 1 ) {
+      this.nBlueprintPermissions--
+      this.blueprintPermissionControl.removeAt(i);
+    }
+  }
+
+  /**
+   * Search accounts.
+   */
+  searchUsers(isForced?) {
+    if ((this.searchValueControl.value !== this.currentSearchValue) || isForced) {
+      this.currentSearchValue = this.searchValueControl.value;
+      this.fService.getAccounts(this.currentSearchValue).subscribe(res => {
+        this.searchResultUsers = res.results.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+        this.cdRef.detectChanges();
+      }, error => {
+        this.reportError(error)
+      })
+    }
+  }
+
+  /**
+   * Update selected users array.
+   * @param {UserSearchResult} user
+   */
+  updateSelectedUsers(user: UserSearchResult) {
+    const isInSelectedUsers = this.isInSelectedUser(user);
+    if (!isInSelectedUsers) {
+      this.selectedUsers.push(user);
+      this.searchResultUsers = this.searchResultUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+      this.cdRef.detectChanges();
+    } else if (isInSelectedUsers) {
+      const i = this.selectedUsers.findIndex(userObj => userObj.id === user.id);
+      this.selectedUsers.splice(i, 1);
+      this.searchUsers(true);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  /**
+   * Check if user exists in current selected users array.
+   * @param {UserSearchResult} user
+   * @returns {boolean}
+   */
+  isInSelectedUser(user: UserSearchResult) {
+    return this.selectedUsers.some(userObj => {
+      return userObj.id === user.id
+    });
+  }
+
+  /**
+   * Convert selected users to human readible string.
+   * @returns {string[]}
+   */
+  showSelectedUsers() {
+    return this.selectedUsers.sort((a,b) => ((a.fullName || a.username) > (b.fullName || b.username)) ? 1 : (((b.fullName || b.username) > (a.fullName || a.username)) ? -1 : 0))
   }
 
   //
