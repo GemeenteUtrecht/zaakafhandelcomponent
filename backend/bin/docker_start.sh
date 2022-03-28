@@ -37,5 +37,8 @@ then
         cmd="${cmd} --py-autoreload 1"
 fi
 
+# build openapi schema
+python src/manage.py spectacular --file src/openapi.yaml
+
 # Start server
 exec $cmd

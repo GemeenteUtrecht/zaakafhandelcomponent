@@ -4930,11 +4930,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldEnum'
       - $ref: '#/components/schemas/FormFieldString'
-      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldInt'
+      - $ref: '#/components/schemas/FormFieldEnum'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5136,8 +5136,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -5803,9 +5803,9 @@ components:
     PatchedZaakEigenschap:
       oneOf:
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -6529,10 +6529,10 @@ components:
       title: String
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
+      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
       discriminator:
         propertyName: form
         mapping:
@@ -6647,9 +6647,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
-      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
+      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -6810,10 +6810,10 @@ components:
       title: UserAuthorizationProfile
     UserTaskContext:
       oneOf:
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       discriminator:
         propertyName: form
@@ -7205,9 +7205,9 @@ components:
     ZaakEigenschap:
       oneOf:
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
