@@ -4,6 +4,7 @@ import { User } from './user';
 export interface UserAuthProfile {
   start: Date;
   end?: any;
+  id: number;
   user: User;
   authProfile: AuthProfile;
 }

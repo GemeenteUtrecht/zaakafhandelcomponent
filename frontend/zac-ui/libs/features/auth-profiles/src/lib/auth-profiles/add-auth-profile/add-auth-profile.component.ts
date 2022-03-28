@@ -22,7 +22,6 @@ import {
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {MetaService} from "@gu/services";
 import { atleastOneValidator } from '@gu/utils';
-import { MatCheckboxChange } from '@angular/material/checkbox';
 
 
 /**
@@ -40,6 +39,7 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 })
 export class AddAuthProfileComponent implements OnInit, OnChanges {
   @Input() type: "create" | "edit";
+  @Input() selectedUserAuthProfiles: UserAuthProfile[];
   @Input() selectedAuthProfile: AuthProfile;
   @Input() selectedAuthProfileUuid: string;
   @Input() roles: Role[];
@@ -292,11 +292,9 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   updateUserAuthProfiles(uuid) {
     const newUsers = this.selectedUsers.filter(({ id: id1 }) => !this.preselectedUsers.some(({ id: id2 }) => id2 === id1));
     const removedUsers = this.preselectedUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
-    console.log('removed users');
-    console.log(removedUsers);
 
-    // @TODO: retrieve user auth profile ID of each user that has to be removed and use the DELETE endpoint
-    const removedUserAuthProfiles = []
+    // Retrieve user auth profile id of each user that has to be removed
+    const removedUserAuthProfiles = this.selectedUserAuthProfiles.filter(({ user: user }) => removedUsers.some(({ id: id }) => id === user.id));
 
     this.fService.createUserAuthProfile(newUsers, uuid).subscribe(
       () => {

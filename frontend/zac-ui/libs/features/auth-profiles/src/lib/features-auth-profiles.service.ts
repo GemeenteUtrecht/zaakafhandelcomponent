@@ -5,7 +5,7 @@ import {
   MetaDocType,
   MetaZaaktype,
   Permission,
-  Role,
+  Role, UserAuthProfile,
   UserGroupDetail,
   UserSearch
 } from '@gu/models';
@@ -85,11 +85,11 @@ export class FeaturesAuthProfilesService {
   /**
    * Delete the user authorization profile.
    */
-  deleteUserAuthProfile(userAuthProfileIds): Observable<any> {
-    if (userAuthProfileIds.length > 0) {
+  deleteUserAuthProfile(userAuthProfiles: UserAuthProfile[]): Observable<any> {
+    if (userAuthProfiles.length > 0) {
       const observables = [];
-      userAuthProfileIds.forEach(id => {
-        const endpoint = encodeURI(`/api/accounts/user-auth-profiles/${id}`);
+      userAuthProfiles.forEach(userAuthProfile => {
+        const endpoint = encodeURI(`/api/accounts/user-auth-profiles/${userAuthProfile.id}`);
         observables.push(this.http.Delete<any>(endpoint));
       });
       return forkJoin(observables)

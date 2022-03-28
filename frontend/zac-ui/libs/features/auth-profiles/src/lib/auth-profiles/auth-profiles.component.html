@@ -7,7 +7,7 @@
     </button>
   </div>
   <p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
-  <mat-accordion *ngIf="authProfiles && caseTypes" multi>
+  <mat-accordion *ngIf="authProfiles && userAuthProfiles && caseTypes" multi>
     <ng-container *ngFor="let authProfile of authProfiles">
       <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
       <mat-expansion-panel *ngIf="showAuthProfile(authProfile)">
@@ -52,7 +52,7 @@
             <p class="mb-2">Gebruikers</p>
             <ng-container *ngIf="filterUserAuthProfiles(authProfile.uuid).length > 0">
               <ul>
-                <ng-container *ngFor="let userAuthProfile of filterUserAuthProfiles(authProfile.uuid) as res; let index = index; let count = count">
+                <ng-container *ngFor="let userAuthProfile of filterUserAuthProfiles(authProfile.uuid) as userAuthProfiles;">
                   <li>
                     {{userAuthProfile.user.fullName || userAuthProfile.user.username}}
                   </li>
@@ -67,7 +67,7 @@
           <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
             Verwijderen
           </button>
-          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile)">
+          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile, filterUserAuthProfiles(authProfile.uuid))">
             Wijzigen
           </button>
         </div>
@@ -96,6 +96,7 @@
     <gu-add-auth-profile *ngIf="roles && selectedAuthProfile"
                          [roles]="roles"
                          [type]="'edit'"
+                         [selectedUserAuthProfiles]="selectedUserAuthProfiles"
                          [selectedAuthProfile]="selectedAuthProfile"
                          [selectedAuthProfileUuid]="selectedAuthProfile.uuid"
                          [preselectedUsers]="filterUserAuthProfileUsers(selectedAuthProfile.uuid)"

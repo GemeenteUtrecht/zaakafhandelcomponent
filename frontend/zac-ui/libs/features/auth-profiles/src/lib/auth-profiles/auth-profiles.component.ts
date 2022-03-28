@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaZaaktype, Role, UserAuthProfile } from '@gu/models';
+import { AuthProfile, MetaZaaktype, Role, UserAuthProfile, UserAuthProfiles } from '@gu/models';
 
 /**
  * Displays the retrieved authorisation profiles with its roles and policies.
@@ -19,6 +19,7 @@ export class AuthProfilesComponent implements OnInit {
 
   authProfiles: AuthProfile[];
   selectedAuthProfile: AuthProfile;
+  selectedUserAuthProfiles: UserAuthProfile[];
   userAuthProfiles: UserAuthProfile[];
   caseTypes: MetaZaaktype;
 
@@ -53,12 +54,15 @@ export class AuthProfilesComponent implements OnInit {
     this.modalService.close(id);
   }
 
+
   /**
    * Open modal to edit auth profile.
-   * @param {AuthProfile} authProfile
+   * @param authProfile
+   * @param userAuthProfiles
    */
-  editAuthProfile(authProfile: AuthProfile) {
+  editAuthProfile(authProfile: AuthProfile, userAuthProfiles: UserAuthProfile[]) {
     this.selectedAuthProfile = authProfile;
+    this.selectedUserAuthProfiles = userAuthProfiles;
     this.openModal('edit-auth-profile-modal');
   }
 
@@ -91,7 +95,8 @@ export class AuthProfilesComponent implements OnInit {
   }
 
   filterUserAuthProfiles(uuid) {
-    return this.userAuthProfiles.filter((profile) => profile.authProfile.uuid === uuid);
+    return this.userAuthProfiles.filter((profile) => profile.authProfile.uuid === uuid)
+      .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
   }
 
   filterUserAuthProfileUsers(uuid) {
@@ -123,10 +128,9 @@ export class AuthProfilesComponent implements OnInit {
   getUserAuthProfiles() {
     this.isLoading = true;
     this.fService.getUserAuthProfiles().subscribe(
-      (data) => {
+      (data: UserAuthProfiles) => {
         this.isLoading = false;
         this.userAuthProfiles = data.results;
-        console.log(data);
       },
       (err) => {
         this.isLoading = false;
