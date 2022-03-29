@@ -1,8 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { AuthProfile, MetaZaaktype, Role, UserGroupDetail } from '@gu/models';
-
+import { AuthProfile, MetaZaaktype, Role, UserAuthProfile, UserAuthProfiles } from '@gu/models';
 
 /**
  * Displays the retrieved authorisation profiles with its roles and policies.
@@ -20,6 +19,8 @@ export class AuthProfilesComponent implements OnInit {
 
   authProfiles: AuthProfile[];
   selectedAuthProfile: AuthProfile;
+  selectedUserAuthProfiles: UserAuthProfile[];
+  userAuthProfiles: UserAuthProfile[];
   caseTypes: MetaZaaktype;
 
   isLoading: boolean;
@@ -33,6 +34,7 @@ export class AuthProfilesComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAuthProfiles();
+    this.getUserAuthProfiles();
     this.getCaseTypes();
   }
 
@@ -52,12 +54,15 @@ export class AuthProfilesComponent implements OnInit {
     this.modalService.close(id);
   }
 
+
   /**
    * Open modal to edit auth profile.
-   * @param {AuthProfile} authProfile
+   * @param authProfile
+   * @param userAuthProfiles
    */
-  editAuthProfile(authProfile: AuthProfile) {
+  editAuthProfile(authProfile: AuthProfile, userAuthProfiles: UserAuthProfile[]) {
     this.selectedAuthProfile = authProfile;
+    this.selectedUserAuthProfiles = userAuthProfiles;
     this.openModal('edit-auth-profile-modal');
   }
 
@@ -89,6 +94,16 @@ export class AuthProfilesComponent implements OnInit {
     return authProfile.blueprintPermissions.some(perm => perm.objectType === "zaak")
   }
 
+  filterUserAuthProfiles(uuid) {
+    return this.userAuthProfiles.filter((profile) => profile.authProfile.uuid === uuid)
+      .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
+  }
+
+  filterUserAuthProfileUsers(uuid) {
+    const profiles = this.filterUserAuthProfiles(uuid);
+    return profiles.map((profile) => profile.user);
+  }
+
   /**
    * Retrieve auth profiles.
    */
@@ -97,7 +112,26 @@ export class AuthProfilesComponent implements OnInit {
     this.fService.getAuthProfiles().subscribe(
       (data) => {
         this.isLoading = false;
-        this.authProfiles = data},
+        this.authProfiles = data
+      },
+      (err) => {
+        this.isLoading = false;
+        this.errorMessage = this.getAuthProfilesErrorMessage;
+        this.reportError(err);
+      }
+    );
+  }
+
+  /**
+   * Retrieve auth profiles.
+   */
+  getUserAuthProfiles() {
+    this.isLoading = true;
+    this.fService.getUserAuthProfiles().subscribe(
+      (data: UserAuthProfiles) => {
+        this.isLoading = false;
+        this.userAuthProfiles = data.results;
+      },
       (err) => {
         this.isLoading = false;
         this.errorMessage = this.getAuthProfilesErrorMessage;

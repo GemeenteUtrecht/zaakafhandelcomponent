@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import { UserSearchResult } from '../../../../models/user-search';
+import { UserSearchResult } from '@gu/models';
 import { ModalService } from '@gu/components';
 
 @Component({

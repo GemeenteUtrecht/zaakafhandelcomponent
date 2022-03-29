@@ -1,16 +1,26 @@
 @import './base/colors/colors';
 
 .add-auth-profile {
-  .bperm-title__delete {
-    ::ng-deep .mat-icon {
-      font-size: 1.2rem;
-      width: 1.2rem;
-      height: 1.2rem;
-      display: inline-block;
-      vertical-align: text-bottom;
-      color: $color-warn;
-      cursor: pointer;
-      margin-left: 5px;
+  .bperm-title {
+    span {
+      font-size: 0.825rem;
+      font-weight: bold;
     }
+    &__delete {
+      ::ng-deep .mat-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        display: inline-block;
+        vertical-align: text-bottom;
+        color: $color-blue;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+    }
+  }
+  .auth-profile-user {
+    list-style: none;
+    display: flex;
   }
 }

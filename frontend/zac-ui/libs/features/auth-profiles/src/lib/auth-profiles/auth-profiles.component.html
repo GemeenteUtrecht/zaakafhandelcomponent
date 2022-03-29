@@ -1,12 +1,13 @@
 <div class="auth-profiles">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <div class="d-flex justify-content-between">
     <h2 class="d-inline-block">Autorisatieprofielen</h2>
     <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-auth-profile-modal')">
-      Authorisatieprofiel toevoegen
+      Autorisatieprofiel toevoegen
     </button>
   </div>
   <p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
-  <mat-accordion *ngIf="authProfiles && caseTypes" multi>
+  <mat-accordion *ngIf="authProfiles && userAuthProfiles && caseTypes" multi>
     <ng-container *ngFor="let authProfile of authProfiles">
       <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
       <mat-expansion-panel *ngIf="showAuthProfile(authProfile)">
@@ -17,39 +18,59 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <!-- Inner accordion to show blueprint permissions-->
-        <ng-container *ngIf="authProfile.blueprintPermissions?.length > 0">
-          <p class="mb-2">Bijbehorende rollen</p>
-          <mat-accordion multi>
-            <ng-container *ngFor="let blueprintPermission of authProfile.blueprintPermissions">
-              <mat-expansion-panel *ngIf="blueprintPermission.objectType === 'zaak'">
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <strong>{{getRoleName(blueprintPermission.role)}}</strong>
-                  </mat-panel-title>
-                </mat-expansion-panel-header>
-                <p class="mb-2">Zaaktypen</p>
-                <ul>
-                  <li *ngFor="let policy of blueprintPermission.policies">
-                    {{ policy.zaaktypeOmschrijving }} <small>({{policy.maxVa}})</small>
-                  </li>
-                </ul>
-              </mat-expansion-panel>
+        <div class="row">
+          <div class="col-md-6 mb-4 mb-md-0">
+            <!-- Inner accordion to show blueprint permissions-->
+            <ng-container *ngIf="authProfile.blueprintPermissions?.length > 0">
+              <p class="mb-2">Bijbehorende rollen</p>
+              <mat-accordion multi>
+                <ng-container *ngFor="let blueprintPermission of authProfile.blueprintPermissions">
+                  <mat-expansion-panel *ngIf="blueprintPermission.objectType === 'zaak'">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <strong>{{getRoleName(blueprintPermission.role)}}</strong>
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <p class="mb-2">Zaaktypen</p>
+                    <ul>
+                      <li *ngFor="let policy of blueprintPermission.policies">
+                        {{ policy.zaaktypeOmschrijving }} <small>({{policy.maxVa}})</small>
+                      </li>
+                    </ul>
+                  </mat-expansion-panel>
+                </ng-container>
+              </mat-accordion>
             </ng-container>
-            <div class="mt-4 d-flex justify-content-end align-items-center">
-              <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
-                Verwijderen
-              </button>
-              <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile)">
-                Wijzigen
-              </button>
-            </div>
-          </mat-accordion>
-        </ng-container>
 
-        <ng-container *ngIf="authProfile.blueprintPermissions?.length === 0">
-          <p>Dit profiel heeft geen rollen.</p>
-        </ng-container>
+            <ng-container *ngIf="authProfile.blueprintPermissions?.length === 0">
+              <p>Dit profiel heeft geen rollen.</p>
+            </ng-container>
+          </div>
+
+          <div class="col-md-auto">
+            <!-- Inner accordion to show assign users for auth profile-->
+            <p class="mb-2">Gebruikers</p>
+            <ng-container *ngIf="filterUserAuthProfiles(authProfile.uuid).length > 0">
+              <ul>
+                <ng-container *ngFor="let userAuthProfile of filterUserAuthProfiles(authProfile.uuid) as userAuthProfiles;">
+                  <li>
+                    {{userAuthProfile.user.fullName || userAuthProfile.user.username}}
+                  </li>
+                </ng-container>
+              </ul>
+            </ng-container>
+            <p class="p p--muted" *ngIf="filterUserAuthProfiles(authProfile.uuid).length === 0"> Dit profiel heeft geen gebruikers.</p>
+          </div>
+
+        </div>
+        <div class="mt-4 d-flex justify-content-end align-items-center">
+          <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
+            Verwijderen
+          </button>
+          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile, filterUserAuthProfiles(authProfile.uuid))">
+            Wijzigen
+          </button>
+        </div>
 
       </mat-expansion-panel>
     </ng-container>
@@ -63,7 +84,7 @@
             size="medium"
             title="Autorisatieprofiel aanmaken"
   >
-    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'create'" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'create'" (reload)="getAuthProfiles(); getUserAuthProfiles()"></gu-add-auth-profile>
   </gu-modal>
 
   <!-- Edit auth profile -->
@@ -72,7 +93,15 @@
             size="medium"
             title="Autorisatieprofiel wijzigen"
   >
-    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'edit'" [selectedAuthProfile]="selectedAuthProfile" (reload)="getAuthProfiles()"></gu-add-auth-profile>
+    <gu-add-auth-profile *ngIf="roles && selectedAuthProfile"
+                         [roles]="roles"
+                         [type]="'edit'"
+                         [selectedUserAuthProfiles]="selectedUserAuthProfiles"
+                         [selectedAuthProfile]="selectedAuthProfile"
+                         [selectedAuthProfileUuid]="selectedAuthProfile.uuid"
+                         [preselectedUsers]="filterUserAuthProfileUsers(selectedAuthProfile.uuid)"
+                         (reload)="getAuthProfiles(); getUserAuthProfiles()">
+    </gu-add-auth-profile>
   </gu-modal>
 
   <!-- Delete user group-->
@@ -84,7 +113,7 @@
     <gu-delete-auth-profile
       *ngIf="selectedAuthProfile"
       [selectedAuthProfile]="selectedAuthProfile"
-      (reload)="getAuthProfiles(); closeModal('delete-authprofile-modal');">
+      (reload)="getAuthProfiles(); closeModal('delete-auth-profile-modal');">
     </gu-delete-auth-profile>
   </gu-modal>
 </div>

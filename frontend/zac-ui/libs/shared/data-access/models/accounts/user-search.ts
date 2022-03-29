@@ -6,6 +6,7 @@ export interface UserSearchResult {
   lastName: string;
   isStaff: boolean;
   email: string;
+  groups: string[];
 }
 
 export interface UserSearch {

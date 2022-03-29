@@ -5,12 +5,14 @@ import {
   MetaDocType,
   MetaZaaktype,
   Permission,
-  Role, UserGroupDetail
+  Role, UserAuthProfile,
+  UserGroupDetail,
+  UserSearch
 } from '@gu/models';
-import {ApplicationHttpClient} from '@gu/services';
+import { ApplicationHttpClient } from '@gu/services';
 import { UserGroupList, UserGroupResult } from '../../../zaak-detail/src/models/user-group-search';
 import { catchError } from 'rxjs/operators';
-import { UserSearch } from '../../../zaak-detail/src/models/user-search';
+import { UserAuthProfiles } from '../../../../shared/data-access/models/accounts/user-auth-profile';
 
 @Injectable({
   providedIn: 'root'
@@ -49,7 +51,51 @@ export class FeaturesAuthProfilesService {
    */
   updateAuthProfile(data, uuid): Observable<AuthProfile> {
     const endpoint = encodeURI(`/api/accounts/auth-profiles/${uuid}`);
-    return this.http.Patch<AuthProfile>(endpoint, data);
+    return this.http.Put<AuthProfile>(endpoint, data);
+  }
+
+  /**
+   * Request the user authorization profiles from API.
+   */
+  getUserAuthProfiles(): Observable<UserAuthProfiles> {
+    const endpoint = encodeURI(`/api/accounts/user-auth-profiles`);
+    return this.http.Get<UserAuthProfiles>(endpoint);
+  }
+
+  /**
+   * Create user authorization profile.
+   */
+  createUserAuthProfile(users, authProfileUuid): Observable<any> {
+    const endpoint = encodeURI(`/api/accounts/user-auth-profiles`);
+    if (users.length > 0) {
+      const observables = [];
+      users.forEach(user => {
+        const data = {
+          user: user.username,
+          authProfile: authProfileUuid
+        }
+        observables.push(this.http.Post<UserAuthProfiles>(endpoint, data));
+      });
+      return forkJoin(observables)
+    } else {
+      return of(true);
+    }
+  }
+
+  /**
+   * Delete the user authorization profile.
+   */
+  deleteUserAuthProfile(userAuthProfiles: UserAuthProfile[]): Observable<any> {
+    if (userAuthProfiles.length > 0) {
+      const observables = [];
+      userAuthProfiles.forEach(userAuthProfile => {
+        const endpoint = encodeURI(`/api/accounts/user-auth-profiles/${userAuthProfile.id}`);
+        observables.push(this.http.Delete<any>(endpoint));
+      });
+      return forkJoin(observables)
+    } else {
+      return of(true);
+    }
   }
 
   /**
