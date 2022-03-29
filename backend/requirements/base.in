@@ -31,6 +31,7 @@ django-filter
 django-hijack
 django-hijack-admin
 django-import-export
+django-nested-admin
 django-redis
 django-sniplates
 django-scim2

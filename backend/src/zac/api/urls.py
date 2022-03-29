@@ -23,6 +23,7 @@ urlpatterns = [
     path("accounts/", include("zac.accounts.api.urls")),
     path("activities/", include("zac.activities.api.urls")),
     path("camunda/", include("zac.camunda.api.urls")),
+    path("checklists/", include("zac.checklists.api.urls")),
     path("core/", include("zac.core.api.bff_urls")),
     path("dashboard/", include("zac.contrib.board.api.urls")),
     path("dowc/", include("zac.contrib.dowc.urls")),

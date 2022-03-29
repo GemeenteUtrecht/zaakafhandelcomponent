@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "hijack_admin",
     "django_better_admin_arrayfield",
     "django_scim",
+    "nested_admin",
     # Project applications.
     "zac.elasticsearch",
     "zac.accounts",
@@ -150,6 +151,7 @@ INSTALLED_APPS = [
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
     "zac.contrib.dowc",
+    "zac.checklists",
 ]
 
 MIDDLEWARE = [

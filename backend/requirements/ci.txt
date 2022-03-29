@@ -119,6 +119,8 @@ django-ipware==2.1.0
     # via
     #   -r requirements/base.txt
     #   django-axes
+django-nested-admin==3.4.0
+    # via -r requirements/base.txt
 django-redis==5.2.0
     # via -r requirements/base.txt
 django-relativedelta==1.1.1
@@ -250,6 +252,10 @@ python-decouple==3.5
     # via -r requirements/base.txt
 python-dotenv==0.19.1
     # via -r requirements/base.txt
+python-monkey-business==1.0.0
+    # via
+    #   -r requirements/base.txt
+    #   django-nested-admin
 pytz==2021.3
     # via
     #   -r requirements/base.txt
@@ -292,6 +298,7 @@ six==1.16.0
     #   django-choices
     #   django-compat
     #   django-extra-views
+    #   django-nested-admin
     #   elasticsearch-dsl
     #   freezegun
     #   furl
@@ -299,6 +306,7 @@ six==1.16.0
     #   jsonschema
     #   orderedmultidict
     #   python-dateutil
+    #   python-monkey-business
     #   requests-mock
     #   webtest
 sly==0.3
