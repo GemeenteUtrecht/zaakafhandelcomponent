@@ -138,11 +138,11 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * Set data for edit mode.
    */
   setContextEditMode(isUpdatedAuthProfile) {
-    // Set auth profile name
-    this.authProfileNameControl.patchValue(this.selectedAuthProfile?.name ? this.selectedAuthProfile.name : '');
-
     // Prefill controls if the auth profile has changed or the blueprint permissions are not filled
     if (isUpdatedAuthProfile || !this.roleControl(0).value) {
+      // Set auth profile name
+      this.authProfileNameControl.patchValue(this.selectedAuthProfile?.name ? this.selectedAuthProfile.name : '');
+
       this.selectedUsers = this.preselectedUsers;
 
       // Clear search results
