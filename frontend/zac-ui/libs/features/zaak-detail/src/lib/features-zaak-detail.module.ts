@@ -21,6 +21,7 @@ import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.comp
 import {ZaakMapComponent} from './zaak-map/zaak-map.component';
 import {UserPermissionsComponent} from './user-permissions/user-permissions.component';
 import {TaskHistoryComponent} from './task-history/task-history.component';
+import {ChecklistComponent} from './checklist/checklist.component';
 
 @NgModule({
   imports: [
@@ -45,6 +46,7 @@ import {TaskHistoryComponent} from './task-history/task-history.component';
     ActiviteitenComponent,
     AdviserenAccorderenComponent,
     BetrokkenenComponent,
+    ChecklistComponent,
     DetailModalComponent,
     FeaturesZaakDetailComponent,
     GerelateerdeObjectenComponent,

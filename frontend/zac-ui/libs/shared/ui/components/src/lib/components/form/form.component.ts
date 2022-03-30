@@ -156,13 +156,18 @@ export class FormComponent implements OnInit, OnChanges {
       .filter(this.formService.isFieldActive.bind(this, this.formGroup)) // Evaluate activeWhen.
   }
 
-  updateFields() {
+  /**
+   * Updates this.fields in place.
+   */
+  updateFields(): void {
     const fields = this.getFields();
 
     if (!this.fields) {
       this.fields = fields;
       return
     }
+
+    // Update fields.
     fields.forEach((field) => {
       const otherField = this.fields.find((f) => f.name === field.name)
 
@@ -172,6 +177,22 @@ export class FormComponent implements OnInit, OnChanges {
         Object.assign(otherField, field);
       }
     });
+
+    const previousFields = this.fields.map((field) => field.name)
+    const nextFields = fields.map((field) => field.name)
+    const removedFields = previousFields.filter((key) => nextFields.indexOf(key) === -1)
+
+    // Field is removed, remove from fields.
+    removedFields.forEach((name) => {
+      this.fields = this.fields.filter((field) => field.name !== name)
+    });
+
+    // Sort fields by original order.
+    this.fields = this.fields.sort((a, b) => {
+      const indexA = this.resolvedKeys.findIndex(key => key === this.formService.getKeyFromFieldConfiguration(a))
+      const indexB = this.resolvedKeys.findIndex(key => key === this.formService.getKeyFromFieldConfiguration(b))
+      return indexA - indexB;
+    })
   }
 
   /**

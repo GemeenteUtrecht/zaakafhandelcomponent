@@ -1,6 +1,11 @@
 // Activities
 export * from './activities/activity';
 
+// Checklists
+export * from './checklists/checklist';
+export * from './checklists/checklist_question';
+export * from './checklists/checklist_type';
+
 // Dashboard
 export * from './dashboard/dashboard';
 export * from './dashboard/board-item';

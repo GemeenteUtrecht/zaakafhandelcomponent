@@ -2,11 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
-import { UserGroupResult } from '../../../../models/user-group-search';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
-import {ReadWriteDocument, UserSearchResult} from "@gu/models";
+import {ReadWriteDocument, UserGroupDetail, UserSearchResult} from "@gu/models";
 import { ModalService, SnackbarService } from '@gu/components';
 
 /**
@@ -37,7 +36,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
   steps = 1;
   minDate = new Date();
   searchResultUsers: UserSearchResult[] = [];
-  searchResultUserGroups: UserGroupResult[] = [];
+  searchResultUserGroups: UserGroupDetail[] = [];
 
   assignUsersForm: FormGroup;
 

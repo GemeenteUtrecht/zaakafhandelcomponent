@@ -1,12 +1,8 @@
-export interface UserGroupResult {
-  id: number;
-  fullName: string;
-  name: string;
-}
+import {UserGroupDetail} from '@gu/models';
 
 export interface UserGroupList {
   count: number;
   next?: any;
   previous?: any;
-  results: UserGroupResult[];
+  results: UserGroupDetail[];
 }

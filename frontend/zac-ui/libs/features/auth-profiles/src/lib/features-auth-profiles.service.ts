@@ -10,7 +10,7 @@ import {
   UserSearch
 } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { UserGroupList, UserGroupResult } from '../../../zaak-detail/src/models/user-group-search';
+import { UserGroupList } from '../../../zaak-detail/src/models/user-group-search';
 import { catchError } from 'rxjs/operators';
 import { UserAuthProfiles } from '../../../../shared/data-access/models/accounts/user-auth-profile';
 
@@ -148,10 +148,10 @@ export class FeaturesAuthProfilesService {
 
   /**
    * Get details per user group
-   * @param {UserGroupResult[]} userGroups
+   * @param {UserGroupDetail[]} userGroups
    * @returns {Observable<any>}
    */
-  getUserGroupDetailsBatch(userGroups: UserGroupResult[]): Observable<any>{
+  getUserGroupDetailsBatch(userGroups: UserGroupDetail[]): Observable<any>{
     const observables = [];
     userGroups.forEach(group => {
       if (group.id) {

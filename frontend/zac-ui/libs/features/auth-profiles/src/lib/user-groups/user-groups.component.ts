@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
-import { UserGroupResult } from '../../../../zaak-detail/src/models/user-group-search';
 import { ModalService, SnackbarService } from '@gu/components';
 import { UserGroupDetail, UserSearchResult } from '@gu/models';
 
@@ -18,7 +17,7 @@ export class UserGroupsComponent implements OnInit {
   isDetailsLoading: boolean;
   errorMessage: string;
 
-  userGroupsList: UserGroupResult[];
+  userGroupsList: UserGroupDetail[];
   userGroupsDetails: UserGroupDetail[] = [];
 
   selectedEditModeGroup: UserGroupDetail;
@@ -135,9 +134,9 @@ export class UserGroupsComponent implements OnInit {
 
   /**
    * Retrieve details per user group.
-   * @param {UserGroupResult[]} groupList
+   * @param {UserGroupDetail[]} groupList
    */
-  fetchUserGroupDetails(groupList: UserGroupResult[]) {
+  fetchUserGroupDetails(groupList: UserGroupDetail[]) {
     this.userGroupsDetails = [];
     this.isDetailsLoading = true;
     this.fService.getUserGroupDetailsBatch(groupList).subscribe((userGroupDetail) => {
