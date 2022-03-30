@@ -108,6 +108,7 @@ export class AuthProfilesComponent implements OnInit {
    * Retrieve auth profiles.
    */
   getAuthProfiles() {
+    this.selectedAuthProfile = null;
     this.isLoading = true;
     this.fService.getAuthProfiles().subscribe(
       (data) => {

@@ -334,6 +334,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     if (this.nBlueprintPermissions >= 1 ) {
       this.nBlueprintPermissions--
       this.blueprintPermissionControl.removeAt(i);
+      this.cdRef.detectChanges();
     }
   }
 
