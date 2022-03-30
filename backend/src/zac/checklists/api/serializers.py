@@ -174,7 +174,7 @@ class ReadChecklistSerializer(BaseChecklistSerializer):
 
     class Meta(BaseChecklistSerializer.Meta):
         model = BaseChecklistSerializer.Meta.model
-        fields = BaseChecklistSerializer.Meta.fields + ["zaak", "checklist_type"]
+        fields = BaseChecklistSerializer.Meta.fields
 
 
 class ChecklistSerializer(BaseChecklistSerializer):
