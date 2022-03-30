@@ -245,8 +245,6 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": self.checklist_type.uuid,
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -265,8 +263,6 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": self.checklist_type.uuid,
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -294,8 +290,6 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": self.checklist_type.uuid,
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -323,8 +317,6 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(self.zaak["url"], json=self.zaak)
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": self.checklist_type.uuid,
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -410,8 +402,6 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaak["url"], json=self.zaak)
 
         data = {
-            "checklistType": self.checklist_type.uuid,
-            "zaak": self.zaak["url"],
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -432,8 +422,6 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaak["url"], json=self.zaak)
 
         data = {
-            "checklistType": self.checklist_type.uuid,
-            "zaak": self.zaak["url"],
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -463,8 +451,6 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaak["url"], json=self.zaak)
 
         data = {
-            "checklistType": self.checklist_type.uuid,
-            "zaak": self.zaak["url"],
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
@@ -494,8 +480,6 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaak["url"], json=self.zaak)
 
         data = {
-            "checklistType": self.checklist_type.uuid,
-            "zaak": self.zaak["url"],
             "answers": [
                 {"question": self.checklist_question.question, "answer": "some-answer"}
             ],
