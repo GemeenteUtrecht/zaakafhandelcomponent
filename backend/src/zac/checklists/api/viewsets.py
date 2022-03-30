@@ -7,6 +7,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 
 from zac.core.services import find_zaak
+from zgw.models.zrc import Zaak
 
 from ..models import Checklist, ChecklistAnswer, ChecklistQuestion, ChecklistType
 from .permissions import (
@@ -194,11 +195,20 @@ class ZaakChecklistViewSet(
         }
         return mapping[self.request.method]
 
-    def get_object(self) -> ChecklistType:
-        queryset = self.filter_queryset(self.get_queryset())
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["zaak"] = self.get_zaak()
+        return context
+
+    def get_zaak(self) -> Zaak:
         bronorganisatie = self.request.parser_context["kwargs"]["bronorganisatie"]
         identificatie = self.request.parser_context["kwargs"]["identificatie"]
         zaak = find_zaak(bronorganisatie, identificatie)
+        return zaak
+
+    def get_object(self) -> ChecklistType:
+        queryset = self.filter_queryset(self.get_queryset())
+        zaak = self.get_zaak()
         filter_kwargs = {
             "zaak": zaak.url,
         }

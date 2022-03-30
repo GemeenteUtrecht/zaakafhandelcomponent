@@ -83,21 +83,36 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
 
+    def test_retrieve_checklist_404(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, 404)
+
     def test_create_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": checklist_type.pk,
             "answers": [],
         }
 
@@ -111,26 +126,22 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Checklist.objects.count(), 1)
 
-    def test_create_checklist_fail_different_checklist_type(self, m):
+    def test_create_checklist_fail_no_checklist_type(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
-            zaaktype_catalogus=self.zaaktype["catalogus"],
-        )
-        checklist_type2 = ChecklistTypeFactory.create(
             zaaktype="https://some-other-zaaktype.com/",
             zaaktype_omschrijving="ZT2",
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": checklist_type2.pk,
             "answers": [],
         }
 
@@ -142,29 +153,26 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {
-                "nonFieldErrors": [
-                    "ZAAKTYPE of checklist_type is not related to the ZAAKTYPE of the ZAAK."
-                ]
-            },
+            {"nonFieldErrors": ["No checklist_type found for ZAAKTYPE of ZAAK."]},
         )
 
     def test_create_checklist_fail_two_assignees(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         group = GroupFactory.create()
         data = {
-            "zaak": self.zaak["url"],
-            "checklistType": checklist_type.pk,
             "userAssignee": self.user.username,
             "groupAssignee": group.name,
             "answers": [],
@@ -187,7 +195,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklist_type = ChecklistTypeFactory.create(
@@ -202,8 +213,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             question=question, name="Some answer", value="some-answer"
         )
         data = {
-            "zaak": self.zaak["url"],
-            "checklist_type": checklist_type.uuid,
             "answers": [
                 {"question": "some-question", "answer": "some-wrong-answer"},
             ],
@@ -224,7 +233,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        m.get(self.zaak["url"], json=self.zaak)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklist_type = ChecklistTypeFactory.create(
@@ -239,8 +251,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             question=question, name="Some answer", value="some-answer"
         )
         data = {
-            "zaak": self.zaak["url"],
-            "checklist_type": checklist_type.uuid,
             "answers": [
                 {
                     "question": "some-non-existent-question",
@@ -294,8 +304,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             answer="some-other-answer",
         )
         data = {
-            "zaak": self.zaak["url"],
-            "checklist_type": checklist_type.uuid,
             "userAssignee": self.user.username,
             "answers": [
                 {"question": "some-question", "answer": "some-answer"},
@@ -345,14 +353,11 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "some-updated-answer",
         )
 
-        self.maxDiff = None
         # Assert response data is as expected
         expected_data = {
             "created": "1999-12-31T23:59:59Z",
-            "checklistType": str(checklist_type.pk),
             "groupAssignee": None,
             "userAssignee": self.user.username,
-            "zaak": self.zaak["url"],
             "answers": [
                 {
                     "answer": "some-answer",
@@ -373,4 +378,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         }
         data = response.json()
-        self.assertEqual(expected_data, data)
+        self.assertEqual(expected_data["created"], data["created"])
+        self.assertEqual(expected_data["groupAssignee"], data["groupAssignee"])
+        self.assertEqual(expected_data["userAssignee"], data["userAssignee"])
+        self.assertTrue(expected_data["answers"][0] in data["answers"])
+        self.assertTrue(expected_data["answers"][1] in data["answers"])

@@ -9,8 +9,7 @@ from rest_framework import exceptions, serializers
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
-from zac.core.services import get_zaak, get_zaaktype
-from zac.utils.validators import ImmutableFieldValidator
+from zac.core.services import get_zaaktype
 
 from ..models import (
     Checklist,
@@ -155,14 +154,12 @@ class BaseChecklistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Checklist
-        fields = (
+        fields = [
             "created",
-            "checklist_type",
             "group_assignee",
             "user_assignee",
-            "zaak",
             "answers",
-        )
+        ]
 
 
 class ReadChecklistSerializer(BaseChecklistSerializer):
@@ -177,7 +174,7 @@ class ReadChecklistSerializer(BaseChecklistSerializer):
 
     class Meta(BaseChecklistSerializer.Meta):
         model = BaseChecklistSerializer.Meta.model
-        fields = BaseChecklistSerializer.Meta.fields
+        fields = BaseChecklistSerializer.Meta.fields + ["zaak", "checklist_type"]
 
 
 class ChecklistSerializer(BaseChecklistSerializer):
@@ -197,10 +194,6 @@ class ChecklistSerializer(BaseChecklistSerializer):
     class Meta(BaseChecklistSerializer.Meta):
         model = BaseChecklistSerializer.Meta.model
         fields = BaseChecklistSerializer.Meta.fields
-        extra_kwargs = {
-            "zaak": {"validators": (ImmutableFieldValidator(),)},
-            "checklist_type": {"validators": (ImmutableFieldValidator(),)},
-        }
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -208,18 +201,21 @@ class ChecklistSerializer(BaseChecklistSerializer):
             raise serializers.ValidationError(
                 "A checklist can not be assigned to both a user and a group."
             )
-        zaak = get_zaak(zaak_url=attrs["zaak"])
-        zaaktype = get_zaaktype(zaak.zaaktype)
-        checklist_type = attrs["checklist_type"]
-        if not (
-            checklist_type.zaaktype_omschrijving == zaaktype.omschrijving
-            and checklist_type.zaaktype_catalogus == zaaktype.catalogus
-        ):
-            raise serializers.ValidationError(
-                _(
-                    "ZAAKTYPE of checklist_type is not related to the ZAAKTYPE of the ZAAK."
+
+        if not self.instance:
+            zaak = self.context["zaak"]
+
+            try:
+                checklist_type = ChecklistType.objects.get(
+                    zaaktype_omschrijving=zaak.zaaktype.omschrijving,
+                    zaaktype_catalogus=zaak.zaaktype.catalogus,
                 )
-            )
+            except ChecklistType.DoesNotExist:
+                raise serializers.ValidationError(
+                    _("No checklist_type found for ZAAKTYPE of ZAAK.")
+                )
+            validated_data["zaak"] = zaak.url
+            validated_data["checklist_type"] = checklist_type
 
         return validated_data
 
