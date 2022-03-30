@@ -18,7 +18,7 @@
            *ngFor="let blueprintPermission of blueprintPermissionControl.controls; let i = index; let last = last;">
         <div class="bperm-title mb-2 d-flex justify-content-between">
           <span>{{i + 1}}.</span>
-          <gu-icon class="bperm-title__delete d-inline-block mr-4" (click)="deleteStep(i)">delete_outline</gu-icon>
+          <gu-icon class="bperm-title__delete d-inline-block mr-4" *ngIf="!(i === 0 && last)" (click)="deleteStep(i)">delete_outline</gu-icon>
         </div>
         <div class="row" [formGroupName]="i">
           <!-- Select role -->
