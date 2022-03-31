@@ -24,10 +24,12 @@ from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
+from ..user_tasks.api import cancel_activity_instance_of_task
 from ..user_tasks.history import get_camunda_history_for_zaak
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
+    CancelTaskSerializer,
     ErrorSerializer,
     HistoricUserTaskSerializer,
     MessageSerializer,
@@ -412,3 +414,30 @@ class UserTaskHistoryView(APIView):
         user_task_history.sort(key=lambda obj: obj.task.created, reverse=True)
         serializer = self.get_serializer(instance=user_task_history, many=True)
         return Response(serializer.data)
+
+
+class CancelTaskView(APIView):
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanPerformTasks,
+    )
+
+    def get_serializer(self, **kwargs):
+        return CancelTaskSerializer(**kwargs)
+
+    @extend_schema(
+        summary=_("Cancel a camunda user task of the ZAAK."),
+        description=_(
+            "Allows a user to cancel the camunda task after it has been (accidentally) created."
+        ),
+        responses={204: None},
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        task = serializer.validated_data["task"]
+        zaak_url = task.get_variable("zaakUrl")
+        zaak = get_zaak(zaak_url=zaak_url)
+        self.check_object_permissions(request, zaak)
+        cancel_activity_instance_of_task(task)
+        return Response(status=status.HTTP_204_NO_CONTENT)

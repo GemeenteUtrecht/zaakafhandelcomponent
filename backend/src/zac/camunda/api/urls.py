@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    CancelTaskView,
     GetBPMNView,
     ProcessInstanceFetchView,
     SendMessageView,
@@ -25,5 +26,10 @@ urlpatterns = [
     path("bpmn/<str:process_definition_id>", GetBPMNView.as_view(), name="bpmn"),
     path(
         "task-data/historical", UserTaskHistoryView.as_view(), name="user-task-history"
+    ),
+    path(
+        "cancel-task",
+        CancelTaskView.as_view(),
+        name="cancel-task",
     ),
 ]
