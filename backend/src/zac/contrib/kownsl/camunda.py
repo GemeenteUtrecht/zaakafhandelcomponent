@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 
+from furl import furl
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -19,7 +20,7 @@ from zac.camunda.user_tasks import Context, register, usertask_context_serialize
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.fields import SelectDocumentsField
-from zac.core.utils import build_absolute_url, get_ui_url
+from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
 from .api import create_review_request
@@ -280,13 +281,14 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             self, "review_request"
         ), "Must call on_task_submission before getting process variables."
 
-        kownsl_frontend_url = get_ui_url(
-            [
-                settings.UI_ROOT_URL,
-                "kownsl",
-                "review-request",
-                self.review_request.review_type,
-            ],
+        kownsl_frontend_url = furl(settings.UI_ROOT_URL)
+        kownsl_frontend_url.path.segments += [
+            "kownsl",
+            "review-request",
+            self.review_request.review_type,
+        ]
+        kownsl_frontend_url = build_absolute_url(
+            kownsl_frontend_url.url,
             params={"uuid": self.review_request.id},
         )
 
@@ -308,7 +310,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "kownslDocuments": self.validated_data["selected_documents"],
             "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
-            "kownslFrontendUrl": build_absolute_url(kownsl_frontend_url),
+            "kownslFrontendUrl": kownsl_frontend_url,
             "emailNotificationList": email_notification_list,
         }
 

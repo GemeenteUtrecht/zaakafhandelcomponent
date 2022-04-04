@@ -234,7 +234,6 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
                 zaak_url=atomic_permission.object_url,
                 result=AccessRequestResult.approve,
                 request=request,
-                ui=True,
             )
         )
         return user_atomic_permission
@@ -432,7 +431,6 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
                 zaak_url=access_request.zaak,
                 result=access_request.result,
                 request=request,
-                ui=True,
             )
         )
         return access_request
