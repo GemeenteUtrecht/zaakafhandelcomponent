@@ -1,8 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserGroupResult } from '../../../models/user-group-search';
 import { ModalService } from '@gu/components';
-import { Task, User, UserSearchResult } from '@gu/models';
+import {Task, User, UserGroupDetail, UserSearchResult} from '@gu/models';
 import { KetenProcessenService } from '../keten-processen.service';
 
 /**
@@ -27,7 +26,7 @@ export class AssignTaskComponent implements OnChanges {
   assignUserGroupForm: FormGroup;
 
   users: UserSearchResult[] = [];
-  userGroups: UserGroupResult[] = [];
+  userGroups: UserGroupDetail[] = [];
 
   isSubmitting: boolean;
   submitHasError: boolean;

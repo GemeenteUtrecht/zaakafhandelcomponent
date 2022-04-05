@@ -73,5 +73,9 @@
         <gu-task-history [mainZaakUrl]="mainZaakUrl"></gu-task-history>
       </div>
     </gu-tab>
+
+    <gu-tab label="Checklist">
+      <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" *ngIf="!isLoading"></gu-checklist>
+    </gu-tab>
   </gu-tab-group>
 </div>

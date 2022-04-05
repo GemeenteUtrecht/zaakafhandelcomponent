@@ -1,8 +1,15 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ActiviteitenService } from './activiteiten.service';
-import { Activity, Document, ReadWriteDocument, ShortDocument, User, UserSearchResult } from '@gu/models';
+import {
+  Activity,
+  Document,
+  ReadWriteDocument,
+  ShortDocument,
+  User,
+  UserGroupDetail,
+  UserSearchResult
+} from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserGroupResult } from '../../models/user-group-search';
 import { SnackbarService } from '@gu/components';
 
 /**
@@ -31,7 +38,7 @@ export class ActiviteitenComponent implements OnInit {
   assignUserForm: FormGroup;
 
   users: UserSearchResult[] = [];
-  userGroups: UserGroupResult[] = [];
+  userGroups: UserGroupDetail[] = [];
 
   ongoingData: Activity[] = [];
   finishedData: Activity[] = [];
