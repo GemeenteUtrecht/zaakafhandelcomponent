@@ -79,12 +79,11 @@ export class FeaturesSearchComponent implements OnInit{
   }
 
   /**
-   * Gets called when te rersult is loaded.
+   * Gets called when the result is loaded.
    * @param {Zaak[]} cases
    */
   onLoadResult(cases: Zaak[]): void {
     this.resultData = cases
-    this.mapGeometries = [...this.getZaakMapGeometries()];
     this.changeDetectorRef.detectChanges()
   }
 
