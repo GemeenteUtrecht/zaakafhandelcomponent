@@ -1,5 +1,9 @@
 @import './base/colors/colors';
 
+::ng-deep .nav-tabs .nav-link.active {
+  min-height: 44px;
+}
+
 .tab-content {
   padding: 1rem;
 }

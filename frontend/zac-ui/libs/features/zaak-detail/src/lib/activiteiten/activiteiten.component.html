@@ -332,5 +332,11 @@
         </ng-template>
       </div>
     </tab>
+
+    <tab heading="Checklist">
+      <div class="tab-content">
+        <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" *ngIf="!isLoading"></gu-checklist>
+      </div>
+    </tab>
   </tabset>
 </div>
