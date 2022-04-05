@@ -148,16 +148,10 @@ export class ChecklistComponent implements OnInit, OnChanges {
                 this.checklistForm = this.getChecklistForm();
                 this.isLoading = false;
               },
-              (e: HttpErrorResponse) => {
-                if (e.status === 404) {
-                  this.isLoading = false;
-                  return;
-                }
-                this.reportError(e)
-              }
+              this.handleError.bind(this)
             )
           },
-          this.reportError.bind(this),
+          this.handleError.bind(this)
         );
       },
       this.reportError.bind(this)
@@ -238,6 +232,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
   //
   // Error handling.
   //
+
+  /**
+   * Handles an HttpErrorResponse.
+   * @param {HttpErrorResponse} httpErrorResponse
+   */
+  handleError(httpErrorResponse: HttpErrorResponse) {
+    if (httpErrorResponse.status === 404) {
+      this.isLoading = false;
+      return;
+    }
+    this.reportError(httpErrorResponse)
+  }
 
   /**
    * Error callback.
