@@ -220,7 +220,7 @@
               </div>
             </div>
             <hr class="d-lg-none">
-            <!--  Afsluiten of verwijderen  -->
+            <!--  Voltooien of verwijderen  -->
             <div class="activity__buttons col-lg-2">
               <div *ngIf="showCloseActivityConfirmation === i">
                 <p class="mb-2">Weet je zeker dat je deze activiteit wilt sluiten?</p>
@@ -230,7 +230,7 @@
                           size="small"
                           class="mb-2"
                           (click)="closeActivity(activity.id)">
-                    Activiteit afsluiten
+                    Activiteit voltooien
                   </button>
                   <button gu-button buttonStyle="secondary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
                 </div>
@@ -240,7 +240,7 @@
                       size="small"
                       class="mb-2"
                       (click)="onCloseActivityConfirmation(i)">
-                Afsluiten
+                Voltooien
               </button>
               <button gu-button *ngIf="showDeleteActivityConfirmation !== i && showCloseActivityConfirmation !== i"
                       buttonStyle="tertiary"
@@ -269,7 +269,7 @@
       </div>
     </tab>
 
-    <tab heading="Afgesloten">
+    <tab heading="Voltooid">
       <div class="tab-content">
         <ng-template tabHeading>
           <gu-chip type="badge"
@@ -328,7 +328,7 @@
           </div>
         </ng-container>
         <ng-template #noFinishedActivities>
-          <p>Er zijn geen afgesloten activiteiten.</p>
+          <p>Er zijn geen voltooide activiteiten.</p>
         </ng-template>
       </div>
     </tab>
