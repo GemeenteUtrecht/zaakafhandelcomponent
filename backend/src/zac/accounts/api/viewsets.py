@@ -176,7 +176,6 @@ class AtomicPermissionViewSet(
                 zaak_url=zaak,
                 result=AccessRequestResult.reject,
                 request=self.request,
-                ui=True,
             )
         )
 

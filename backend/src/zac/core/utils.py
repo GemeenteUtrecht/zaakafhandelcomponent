@@ -1,10 +1,9 @@
-from typing import Dict, List, Optional
-from urllib.parse import urlencode, urljoin
+from typing import Dict, List, Optional, Union
 
 from django.conf import settings
 from django.http import HttpRequest
-from django.urls import get_script_prefix
 
+from furl import furl
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
@@ -16,28 +15,39 @@ AN_HOUR = 60 * 60
 A_DAY = AN_HOUR * 24
 
 
-def get_ui_url(paths: List[str], params: Optional[dict] = {}) -> str:
-    """"""
-    root = get_script_prefix()
-
-    url = urljoin(root, "/".join(paths))
-
-    if params:
-        params = "?" + urlencode(params)
-        url = urljoin(url, params)
-
-    return url
-
-
-def build_absolute_url(path: str, request: Optional[HttpRequest] = None) -> str:
-    from django.contrib.sites.models import Site
-
+def build_absolute_url(
+    path: Union[List[str], str],
+    request: Optional[HttpRequest] = None,
+    params: Optional[Dict[str, str]] = None,
+) -> str:
     if request is not None:
+        if type(path) == list:
+            path = furl(path=path)
+            path.path.isabsolute = True
+            path = path.url
         return request.build_absolute_uri(path)
 
+    from django.contrib.sites.models import Site
+
     domain = Site.objects.get_current().domain
-    protocol = "https" if settings.IS_HTTPS else "http"
-    return f"{protocol}://{domain}{path}"
+    if not domain.startswith("http"):
+        domain = f'{"https://" if settings.IS_HTTPS else "http://"}{domain}'
+
+    domain = furl(domain)
+    if type(path) == str:
+        path = furl(path)
+        domain.path.segments += path.path.segments
+        domain.args.update(path.args)
+
+    elif type(path) == list:
+        domain.path.segments += path
+
+    domain.path.normalize()
+
+    if params:
+        domain.args.update(params)
+
+    return domain.url
 
 
 @cache("objecttype:{url}", timeout=AN_HOUR)
