@@ -42,6 +42,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {boolean} Whether the API is loading. */
   isLoading = false;
 
+  /** @type {boolean} Whether the form is submitting to the API. */
+  isSubmitting = false;
+
   /** @type {ChecklistType} The checklist type. */
   checklistType: ChecklistType = null;
 
@@ -209,6 +212,8 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * @param {Object} data
    */
   submitForm(data): void {
+    this.isSubmitting = true;
+
     const {userAssignee, groupAssignee, ...answerData} = data;
     const answers: ChecklistAnswer[] = Object.entries(answerData).map(([question, answer]) => ({
       question: question,
@@ -216,15 +221,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
       created: new Date().toISOString()
     }));
 
+
     if (this.checklist) {
       this.checklistService.updateChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie, answers, userAssignee, groupAssignee).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
+        () => this.isSubmitting= false
       );
     } else {
       this.checklistService.createChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie, answers, userAssignee, groupAssignee).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
+        () => this.isSubmitting= false
       );
     }
   }

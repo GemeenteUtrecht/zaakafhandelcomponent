@@ -6,7 +6,7 @@
   <!-- End loading -->
 
   <div class='mb-4' *ngIf="!isLoading">
-      <gu-form [form]="checklistForm" (formSubmit)="submitForm($event)"></gu-form>
+      <gu-form [form]="checklistForm" [isLoading]="isSubmitting" (formSubmit)="submitForm($event)"></gu-form>
   </div>
 
   <ng-content></ng-content>
