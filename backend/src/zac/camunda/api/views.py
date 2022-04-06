@@ -24,7 +24,10 @@ from ..messages import get_messages
 from ..process_instances import get_process_instance
 from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
-from ..user_tasks.api import cancel_activity_instance_of_task
+from ..user_tasks.api import (
+    cancel_activity_instance_of_task,
+    get_killable_camunda_tasks,
+)
 from ..user_tasks.history import get_camunda_history_for_zaak
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
@@ -74,7 +77,11 @@ class ProcessInstanceFetchView(APIView):
             return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         process_instances = get_top_level_process_instances(zaak_url)
-        serializer = self.serializer_class(process_instances, many=True)
+        serializer = self.serializer_class(
+            process_instances,
+            many=True,
+            context={"killable_tasks": get_killable_camunda_tasks()},
+        )
 
         return Response(serializer.data)
 
