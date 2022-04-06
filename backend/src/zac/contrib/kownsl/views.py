@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.api import complete_task
+from django_camunda.api import complete_task, send_message
 from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -27,18 +27,39 @@ from .api import (
     get_client,
     get_review_request,
     get_review_requests,
+    lock_review_request,
     retrieve_advices,
     retrieve_approvals,
 )
-from .permissions import HasNotReviewed, IsReviewUser
+from .data import ReviewRequest
+from .permissions import (
+    CanReadOrLockReviews,
+    HasNotReviewed,
+    IsReviewUser,
+    ReviewIsUnlocked,
+)
 from .serializers import (
     KownslReviewRequestSerializer,
+    LockReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
     ZaakRevReqSummarySerializer,
 )
 from .utils import remote_kownsl_create_schema
 
 logger = logging.getLogger(__name__)
+
+
+def _get_review_request_for_notification(self, data: dict) -> dict:
+    resource_url = data["hoofd_object"]
+    client = Service.get_client(resource_url)
+    if client is None:
+        raise RuntimeError(
+            f"Could not build an appropriate client for the URL {resource_url}"
+        )
+
+    logger.debug("Retrieving review request %s", resource_url)
+    review_request = client.retrieve("reviewrequest", url=resource_url)
+    return review_request
 
 
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
@@ -50,17 +71,21 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         if data["actie"] == "reviewSubmitted":
             self._handle_review_submitted(data)
 
+        if data["actie"] == "reviewLocked":
+            self._handle_review_locked(data)
+
+    @staticmethod
+    def _handle_review_locked(data: dict):
+        review_request = _get_review_request_for_notification(data)
+        # End the current process instance gracefully
+        send_message(
+            "cancel-process",
+            [review_request["metadata"]["processInstanceId"]],
+        )
+
     @staticmethod
     def _handle_review_submitted(data: dict):
-        resource_url = data["hoofd_object"]
-        client = Service.get_client(resource_url)
-        if client is None:
-            raise RuntimeError(
-                f"Could not build an appropriate client for the URL {resource_url}"
-            )
-
-        logger.debug("Retrieving review request %s", resource_url)
-        review_request = client.retrieve("reviewrequest", url=resource_url)
+        review_request = _get_review_request_for_notification(data)
 
         # look up and complete the user task in Camunda
         if data["kenmerken"]["group"]:
@@ -103,8 +128,10 @@ class BaseRequestView(APIView):
     """
 
     permission_classes = (
-        IsAuthenticated & IsReviewUser,
+        IsAuthenticated,
+        IsReviewUser,
         HasNotReviewed,
+        ReviewIsUnlocked,
     )
     _operation_id = NotImplemented
     serializer_class = KownslReviewRequestSerializer
@@ -192,7 +219,10 @@ class ApprovalRequestView(BaseRequestView):
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
 
     def get_serializer(self, **kwargs):
         return ZaakRevReqSummarySerializer(many=True, **kwargs)
@@ -207,26 +237,26 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
 
 class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
-    serializer_class = ZaakRevReqDetailSerializer
+    permission_classes = (permissions.IsAuthenticated, CanReadOrLockReviews)
 
-    @extend_schema(
-        summary=_("Retrieve review request."),
-        responses={
-            "200": ZaakRevReqDetailSerializer,
-        },
-    )
-    def get(self, request, request_uuid, *args, **kwargs):
-        review_request = get_review_request(request_uuid)
+    def get_serializer_class(self):
+        mapping = {
+            "GET": ZaakRevReqDetailSerializer,
+            "PATCH": LockReviewRequestSerializer,
+        }
+        return mapping[self.request.method]
 
+    def get_object(self) -> ReviewRequest:
+        review_request = get_review_request(self.kwargs["request_uuid"])
         try:
             zaak = get_zaak(review_request.for_zaak)
-
         except ObjectDoesNotExist:
             raise Http404(f"No ZAAK is found for url: {review_request.for_zaak}.")
 
         self.check_object_permissions(self.request, zaak)
+        return review_request
 
+    def get_review_request_metadata(self, review_request: ReviewRequest):
         with parallel() as executor:
             review_request.advices = []
             if review_request.num_advices:
@@ -259,5 +289,32 @@ class ZaakReviewRequestDetailView(APIView):
             advices.append(advice)
 
         review_request.advices = advices
+        return review_request
+
+    @extend_schema(
+        summary=_("Retrieve review request."),
+        responses={
+            "200": ZaakRevReqDetailSerializer,
+        },
+    )
+    def get(self, request, request_uuid, *args, **kwargs):
+        review_request = self.get_object()
+        review_request = self.get_review_request_metadata(review_request)
         serializer = self.serializer_class(instance=review_request)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Lock review request."),
+        responses={
+            "200": ZaakRevReqDetailSerializer,
+        },
+    )
+    def patch(self, request, request_uuid, *args, **kwargs):
+        review_request = self.get_object()
+        self.check_object_permissions(self.request, review_request)
+        serializer = self.get_serializer_class(request.data)
+        serializer.is_valid(raise_exception=True)
+        review_request = lock_review_request(request_uuid, **serializer.validate_data)
+        review_request = self.get_review_request_metadata(review_request)
+        response_serializer = ZaakRevReqDetailSerializer(instance=review_request)
+        return Response(response_serializer.data)

@@ -30,6 +30,13 @@ class KownslReviewRequestSerializer(ProxySerializer):
     zaak = ZaakSerializer()
 
 
+class LockReviewRequestSerializer(APIModelSerializer):
+    class Meta:
+        model = ReviewRequest
+        fields = ("lock_reason",)
+        extra_kwargs = {"lock_reason": {"allow_blank": False, "required": True}}
+
+
 class ZaakRevReqSummarySerializer(APIModelSerializer):
     completed = serializers.SerializerMethodField(
         label=_("completed requests"), help_text=_("The number of completed requests.")

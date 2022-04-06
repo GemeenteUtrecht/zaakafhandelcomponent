@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import get_task as _get_task

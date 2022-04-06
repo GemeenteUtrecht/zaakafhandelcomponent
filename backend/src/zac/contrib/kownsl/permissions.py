@@ -1,15 +1,51 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import permissions
+from rest_framework.request import Request
+from rest_framework.views import APIView
 from zgw_consumers.api_models.base import factory
 
+from zac.api.permissions import DefinitionBasePermission
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.api.permissions import CanReadZaken
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_zaak
 
 from .api import retrieve_advices, retrieve_approvals
 from .constants import KownslTypes
 from .data import ReviewRequest
+
+
+class CanLockReview(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if isinstance(obj, ReviewRequest):
+            requester = obj.requester["fullName"] or obj.requester["username"]
+            self.message = _(
+                "Review request can only be locked by `{requester}`."
+            ).format(requester=requester)
+            return obj.requester["username"] == request.user.username
+        return True
+
+
+class CanReadOrLockReviews:
+    def get_permission(self, request) -> DefinitionBasePermission:
+        if request.method in permissions.SAFE_METHODS:
+            return CanReadZaken()
+        else:
+            return CanLockReview()
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_object_permission(request, view, obj)
+
+
+class ReviewIsUnlocked(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        requester = obj["requester"]["fullName"] or obj["requester"]["username"]
+        self.message = _("Review request is locked by `{requester}`.").format(
+            requester=requester
+        )
+        return not obj["locked"]
 
 
 class IsReviewUser(permissions.BasePermission):

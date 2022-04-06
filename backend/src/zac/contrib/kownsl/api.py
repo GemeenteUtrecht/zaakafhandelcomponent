@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 
 from zds_client.client import ClientError
 from zgw_consumers.api_models.base import factory
@@ -104,3 +105,21 @@ def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     for review_request in review_requests:
         review_request.for_zaak = zaak
     return review_requests
+
+
+@optional_service
+def lock_review_request(uuid: str, lock_reason: str) -> Optional[ReviewRequest]:
+    client = get_client()
+    try:
+        result = client.partial_update(
+            "review_requests",
+            uuid=uuid,
+            data={"locked": True, "lock_reason": lock_reason},
+        )
+    except ClientError:
+        raise Http404(
+            _("Review request with id {uuid} does not exist.").format(uuid=uuid)
+        )
+
+    review_request = factory(ReviewRequest, result)
+    return review_request
