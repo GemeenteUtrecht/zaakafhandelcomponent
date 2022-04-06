@@ -49,7 +49,7 @@ from .utils import remote_kownsl_create_schema
 logger = logging.getLogger(__name__)
 
 
-def _get_review_request_for_notification(self, data: dict) -> dict:
+def _get_review_request_for_notification(data: dict) -> dict:
     resource_url = data["hoofd_object"]
     client = Service.get_client(resource_url)
     if client is None:

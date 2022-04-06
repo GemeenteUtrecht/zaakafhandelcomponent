@@ -152,7 +152,11 @@ class UserTaskView(APIView):
         task_data = UserTaskData(task=task, context=get_context(task))
         serializer = self.get_serializer(
             instance=task_data,
-            context={"request": request, "view": self},
+            context={
+                "request": request,
+                "view": self,
+                "killable_tasks": get_killable_camunda_tasks(),
+            },
         )
         return Response(serializer.data)
 

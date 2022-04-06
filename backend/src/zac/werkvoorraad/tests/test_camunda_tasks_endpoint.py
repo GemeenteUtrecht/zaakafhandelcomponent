@@ -119,6 +119,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 return_value=[self.task],
             ):
                 response = self.client.get(self.user_endpoint)
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(
@@ -141,6 +142,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                         "created": TASK_DATA["created"],
                         "hasForm": False,
                         "id": TASK_DATA["id"],
+                        "canCancelTask": False,
                     },
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],
@@ -167,7 +169,6 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 return_value=[_get_task(**{"assignee": self.groups[0]})],
             ):
                 response = self.client.get(self.group_endpoint)
-        self.maxDiff = None
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -186,6 +187,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                         "created": TASK_DATA["created"],
                         "hasForm": False,
                         "id": TASK_DATA["id"],
+                        "canCancelTask": False,
                     },
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],
