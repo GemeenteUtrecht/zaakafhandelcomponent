@@ -239,12 +239,12 @@ class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated, CanReadOrLockReviews)
 
-    def get_serializer_class(self):
+    def get_serializer(self, **kwargs):
         mapping = {
             "GET": ZaakRevReqDetailSerializer,
             "PATCH": LockReviewRequestSerializer,
         }
-        return mapping[self.request.method]
+        return mapping[self.request.method](**kwargs)
 
     def get_object(self) -> ReviewRequest:
         review_request = get_review_request(self.kwargs["request_uuid"])
@@ -300,7 +300,7 @@ class ZaakReviewRequestDetailView(APIView):
     def get(self, request, request_uuid, *args, **kwargs):
         review_request = self.get_object()
         review_request = self.get_review_request_metadata(review_request)
-        serializer = self.serializer_class(instance=review_request)
+        serializer = self.get_serializer(instance=review_request)
         return Response(serializer.data)
 
     @extend_schema(
@@ -312,7 +312,7 @@ class ZaakReviewRequestDetailView(APIView):
     def patch(self, request, request_uuid, *args, **kwargs):
         review_request = self.get_object()
         self.check_object_permissions(self.request, review_request)
-        serializer = self.get_serializer_class(request.data)
+        serializer = self.get_serializer(request.data)
         serializer.is_valid(raise_exception=True)
         review_request = lock_review_request(request_uuid, **serializer.validate_data)
         review_request = self.get_review_request_metadata(review_request)

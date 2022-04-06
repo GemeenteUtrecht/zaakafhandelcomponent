@@ -143,6 +143,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "lastName": "",
                 "fullName": "",
             },
+            "locked": False,
+            "lockReason": "",
         }
         review_request = factory(ReviewRequest, review_request)
 

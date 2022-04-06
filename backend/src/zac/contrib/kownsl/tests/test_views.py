@@ -44,6 +44,8 @@ REVIEW_REQUEST = {
     "metadata": {},
     "zaakDocuments": [],
     "reviews": [],
+    "locked": False,
+    "lockReason": "",
 }
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 

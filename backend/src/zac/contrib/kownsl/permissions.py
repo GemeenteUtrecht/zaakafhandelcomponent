@@ -34,6 +34,10 @@ class CanReadOrLockReviews:
         else:
             return CanLockReview()
 
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_permission(request, view)
+
     def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
         permission = self.get_permission(request)
         return permission.has_object_permission(request, view, obj)
