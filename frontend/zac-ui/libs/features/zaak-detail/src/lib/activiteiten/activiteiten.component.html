@@ -41,10 +41,11 @@
       </div>
     </form>
   </div>
-  <tabset *ngIf="!isLoading && activityData && currentUser" [justified]="true">
-    <tab heading="Lopend">
+  <gu-tab-group *ngIf="!isLoading && activityData && currentUser">
+    <gu-tab label="Lopend">
       <div class="tab-content">
-        <ng-template tabHeading>
+        <ng-template mat-tab-label>
+          Lopend
           <gu-chip type="badge" [color]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
                    class="ml-1">
             {{ongoingData?.length > 0 ? ongoingData?.length : 0}}
@@ -267,11 +268,12 @@
           <p>Er zijn geen lopende activiteiten.</p>
         </ng-template>
       </div>
-    </tab>
+    </gu-tab>
 
-    <tab heading="Voltooid">
+    <gu-tab label="Voltooid">
       <div class="tab-content">
-        <ng-template tabHeading>
+        <ng-template mat-tab-label>
+          Voltooid
           <gu-chip type="badge"
                    color="tertiary"
                    class="ml-1">
@@ -331,12 +333,12 @@
           <p>Er zijn geen voltooide activiteiten.</p>
         </ng-template>
       </div>
-    </tab>
+    </gu-tab>
 
-    <tab heading="Checklist">
+    <gu-tab label="Checklist">
       <div class="tab-content">
         <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" *ngIf="!isLoading"></gu-checklist>
       </div>
-    </tab>
-  </tabset>
+    </gu-tab>
+  </gu-tab-group>
 </div>
