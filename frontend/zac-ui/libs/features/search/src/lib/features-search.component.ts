@@ -47,6 +47,14 @@ export class FeaturesSearchComponent implements OnInit{
   //
 
   /**
+   * Returns whether geo information is available.
+   * @return {boolean}
+   */
+  hasGeoInformation() {
+    return this.mapGeometries.filter(g=>g.geometry).length || this.mapMarkers.length;
+  }
+
+  /**
    * Gets the map geometreis to show on the map.
    * @return {MapGeometry[]}
    */
