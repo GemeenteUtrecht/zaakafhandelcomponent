@@ -104,7 +104,7 @@ export class ZaakObjectService {
     const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
     const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
 
-      title: ZaakObjectService._stringifyZaakObject(zaakObject),
+      contentProperties: Object.entries(zaakObject.record.data),
       coordinates: zaakObjectGeometry?.coordinates?.length > 1
         ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
         : [],

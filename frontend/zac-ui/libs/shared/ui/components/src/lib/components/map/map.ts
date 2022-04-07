@@ -5,6 +5,7 @@ export interface MapGeometry {
   actions?: MapAction[],
   editable?: boolean
   title?: string,
+  contentProperties?: [string, string][],
   onClick?: Function,
   onChange?: Function
 
@@ -21,6 +22,7 @@ export interface MapMarker {
   shadowUrl?: string,
   shadowSize?: number[],
   title?: string,
+  contentProperties?: [string, string][],
   onClick?: Function,
   onChange?: Function
 }

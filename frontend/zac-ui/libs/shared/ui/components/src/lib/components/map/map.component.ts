@@ -354,8 +354,29 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
     if (mapGeometryOrMapMarker.title) {
       const title = document.createElement('h4');
-      title.textContent = mapGeometryOrMapMarker.title;
+      title.innerHTML = mapGeometryOrMapMarker.title;
       popUpContent.appendChild(title)
+    }
+
+    if (mapGeometryOrMapMarker.contentProperties) {
+      const table = document.createElement('table');
+      mapGeometryOrMapMarker.contentProperties.forEach(([key, value]) => {
+        const formattedKey = this._propertyNameToTitle(key);
+
+        const tr = document.createElement('tr');
+
+        const th = document.createElement('th');
+        th.textContent = formattedKey;
+
+        const td = document.createElement('td');
+        td.textContent = value;
+
+        tr.appendChild(th);
+        tr.appendChild(td);
+        table.appendChild(tr);
+      });
+
+      popUpContent.appendChild(table);
     }
 
     if (mapGeometryOrMapMarker.actions) {
@@ -375,5 +396,31 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       popUp.setContent(popUpContent)
       layer.bindPopup(popUp)
     }
+  }
+
+  /**
+   * Attempts to format a property.
+   * @param {string} propertyName
+   * @return {string}
+   */
+  _propertyNameToTitle(propertyName: string): string {
+    return [...propertyName].reduce((acc, currentCharacter, index) => {
+      const previousIndex = index - 1;
+
+      if (index === 0) {
+        return currentCharacter.toUpperCase();
+      }
+
+      if (previousIndex > -1) {
+        const previousCharacter = propertyName[previousIndex];
+        const currentCharacterIsUpperCase = /[A-Z]/.test(currentCharacter);
+        const previousCharacterIsUpperCase = /[A-Z]/.test(previousCharacter);
+
+        if (currentCharacterIsUpperCase !== previousCharacterIsUpperCase) {
+          return `${acc} ${currentCharacter}`;
+        }
+      }
+      return acc + currentCharacter;
+    }, '');
   }
 }
