@@ -4,4 +4,4 @@
 </ng-container>
 <!-- End loading -->
 
-<gu-form *ngIf="!isLoading" [form]="checklistForm" [isLoading]="isSubmitting" (formSubmit)="submitForm($event)"></gu-form>
+<gu-form *ngIf="!isLoading && checklist" [form]="checklistForm" [isLoading]="isSubmitting" (formSubmit)="submitForm($event)"></gu-form>

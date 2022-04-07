@@ -118,7 +118,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
   fetchUsers(): void {
     this.ketenProcessenService.getAccounts('').subscribe((userSearch) => {
       this.users = userSearch.results;
-      this.checklistForm = this.getChecklistForm();
+      if (this.checklist && this.checklistType) {
+        this.checklistForm = this.getChecklistForm();
+      }
     });
   }
 
@@ -128,7 +130,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
   fetchGroups(): void {
     this.ketenProcessenService.getUserGroups('').subscribe((userGroupList) => {
       this.groups = userGroupList.results;
-      this.checklistForm = this.getChecklistForm();
+      if (this.checklist && this.checklistType) {
+        this.checklistForm = this.getChecklistForm();
+      }
     });
   }
 
