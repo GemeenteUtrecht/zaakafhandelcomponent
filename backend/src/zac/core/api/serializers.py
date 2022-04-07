@@ -370,6 +370,11 @@ class ZaakDetailSerializer(APIModelSerializer):
         required=False,
         help_text=_("GeoJSON which represents the coordinates of the ZAAK"),
     )
+    zaaktitel = serializers.CharField(
+        required=False,
+        help_text=_("`omschrijving` of the ZAAK."),
+        source="omschrijving",
+    )
 
     class Meta:
         model = Zaak
@@ -390,6 +395,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "deadline",
             "deadline_progress",
             "resultaat",
+            "zaaktitel",
         )
 
 

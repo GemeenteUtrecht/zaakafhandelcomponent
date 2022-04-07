@@ -21,6 +21,10 @@ class Zaak(_Zaak):
 
         return self.uiterlijke_einddatum_afdoening
 
+    @property
+    def zaaktitel(self) -> str:
+        return self.omschrijving
+
     def deadline_progress(self) -> float:
         today = timezone.now().date()
         total_duration = (self.deadline - self.startdatum).days

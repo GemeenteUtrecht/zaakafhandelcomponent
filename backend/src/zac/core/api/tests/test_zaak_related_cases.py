@@ -218,6 +218,7 @@ class RelatedCasesResponseTests(APITestCase):
                             "omschrijving": "geannuleerd",
                         },
                     },
+                    "zaaktitel": self.related_zaak.omschrijving,
                 },
             }
         ]
