@@ -1,12 +1,25 @@
-@import 'base/grid/mixins';
+::ng-deep gu-features-zaak-detail gu-collapse {
+  background-attachment: fixed;
+  box-sizing: border-box;
+  height: 100vh;
+  padding-top: 56px;
+  position: fixed;
+  right: 0;
+  top: 0;
 
-::ng-deep gu-features-zaak-detail .gu-features-zaak-detail__sidebar {
-  height: 500px;
+  .collapse {
+    width: 75vw;
+  }
 
-  @include media-breakpoint-up(xl) {
-    background-attachment: fixed;
-    height: 100%;
-    position: fixed;
-    right: 1em;
+  @media (min-width: 768px) {
+    padding-top: 0;
+    position: sticky;
+    right: unset;
+    top: 0;
+    width: unset;
+
+    .collapse {
+      width: 375px;
+    }
   }
 }

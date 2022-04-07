@@ -1,0 +1,50 @@
+.collapse {
+  display: block;
+  height: 100%;
+  position: relative;
+
+  &--collapsed {
+    width: 0;
+  }
+
+  &__toggle {
+    border-left: 2px solid #e5e5e5;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    z-index: 1000;
+  }
+
+  &__toggle &__button {
+    align-items: center;
+    appearance: none;
+    border: 2px solid #e5e5e5;
+    border-radius: 0;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    display: flex;
+    height: 3em;
+    padding: 0;
+    position: absolute;
+    top: 50%;
+    text-align: center;
+    transform: translateY(-50%);
+    right: 100%;
+  }
+
+  &__toggle &__button .material-icons {
+    font-size: inherit;
+    height: 1em;
+    width: 0.75em;
+  }
+
+  &__content {
+    height:100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  ::ng-deep &__content .ng-star-inserted {
+    height: 100%
+  }
+}
