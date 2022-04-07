@@ -41,10 +41,11 @@
       </div>
     </form>
   </div>
-  <tabset *ngIf="!isLoading && activityData && currentUser" [justified]="true">
-    <tab heading="Lopend">
+  <gu-tab-group *ngIf="!isLoading && activityData && currentUser">
+    <gu-tab label="Lopend">
       <div class="tab-content">
-        <ng-template tabHeading>
+        <ng-template mat-tab-label>
+          Lopend
           <gu-chip type="badge" [color]="ongoingData?.length > 0 ? 'primary' : 'tertiary'"
                    class="ml-1">
             {{ongoingData?.length > 0 ? ongoingData?.length : 0}}
@@ -220,7 +221,7 @@
               </div>
             </div>
             <hr class="d-lg-none">
-            <!--  Afsluiten of verwijderen  -->
+            <!--  Voltooien of verwijderen  -->
             <div class="activity__buttons col-lg-2">
               <div *ngIf="showCloseActivityConfirmation === i">
                 <p class="mb-2">Weet je zeker dat je deze activiteit wilt sluiten?</p>
@@ -230,7 +231,7 @@
                           size="small"
                           class="mb-2"
                           (click)="closeActivity(activity.id)">
-                    Activiteit afsluiten
+                    Activiteit voltooien
                   </button>
                   <button gu-button buttonStyle="secondary" size="small" class="mb-2" (click)="showCloseActivityConfirmation = null">Annuleren</button>
                 </div>
@@ -240,7 +241,7 @@
                       size="small"
                       class="mb-2"
                       (click)="onCloseActivityConfirmation(i)">
-                Afsluiten
+                Voltooien
               </button>
               <button gu-button *ngIf="showDeleteActivityConfirmation !== i && showCloseActivityConfirmation !== i"
                       buttonStyle="tertiary"
@@ -267,11 +268,12 @@
           <p>Er zijn geen lopende activiteiten.</p>
         </ng-template>
       </div>
-    </tab>
+    </gu-tab>
 
-    <tab heading="Afgesloten">
+    <gu-tab label="Voltooid">
       <div class="tab-content">
-        <ng-template tabHeading>
+        <ng-template mat-tab-label>
+          Voltooid
           <gu-chip type="badge"
                    color="tertiary"
                    class="ml-1">
@@ -328,9 +330,15 @@
           </div>
         </ng-container>
         <ng-template #noFinishedActivities>
-          <p>Er zijn geen afgesloten activiteiten.</p>
+          <p>Er zijn geen voltooide activiteiten.</p>
         </ng-template>
       </div>
-    </tab>
-  </tabset>
+    </gu-tab>
+
+    <gu-tab label="Checklist">
+      <div class="tab-content">
+        <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" *ngIf="!isLoading"></gu-checklist>
+      </div>
+    </gu-tab>
+  </gu-tab-group>
 </div>
