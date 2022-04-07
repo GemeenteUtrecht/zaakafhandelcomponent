@@ -15,22 +15,6 @@
           <section class="row">
             <header class="col-12 d-flex" *ngIf="zaakData">
               <h1>{{zaakData.zaaktype.omschrijving}}</h1>
-
-              <button gu-button
-                      buttonStyle="tertiary"
-                      size="extrasmall"
-                      class="ml-2 p-0"
-                      *ngIf="activeActivities"
-                      (click)="openModal('activities-modal')">
-
-                <span>
-                  <gu-chip icon="launch" [color]="'primary'" [ngPlural]="activeActivities?.length">
-                      <ng-template ngPluralCase="0">Activiteit toevoegen</ng-template>
-                      <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit actief</ng-template>
-                      <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten actief</ng-template>
-                  </gu-chip>
-                </span>
-              </button>
             </header>
           </section>
 

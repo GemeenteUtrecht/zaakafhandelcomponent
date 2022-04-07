@@ -363,6 +363,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     }, this.reportError.bind(this))
   }
 
+  /**
+   * Opens a modal.
+   * @param {string} id The id of the modal to open.
+   */
+  openModal(id: string): void {
+    this.modalService.open(id);
+  }
+
   //
   // Error handling.
   //
