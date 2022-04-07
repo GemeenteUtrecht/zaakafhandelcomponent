@@ -564,7 +564,28 @@
                 "output": "./assets/map"
               },
               "apps/zac-ui/src/favicon.ico",
-              "apps/zac-ui/src/assets"
+              "apps/zac-ui/src/assets",
+              "apps/zac-ui/src/assets/styles",
+              {
+                "glob": "pdf.worker.js",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/"
+              },
+              {
+                "glob": "pdf.worker.min.js",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/"
+              },
+              {
+                "glob": "app.config.json",
+                "input": "libs/features/contezza-document-search/src",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "libs/features/contezza-document-search/src/assets",
+                "output": "/assets"
+              }
             ],
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
