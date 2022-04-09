@@ -231,7 +231,9 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         review_requests = get_review_requests(zaak)
-        serializer = self.get_serializer(instance=review_requests)
+        serializer = self.get_serializer(
+            instance=review_requests, context={"request": request}
+        )
         return Response(serializer.data)
 
 
