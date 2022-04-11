@@ -99,6 +99,11 @@ def get_historic_activity_variables_from_task(
     historic_activity_details = get_historic_activity_details(
         task.activity_instance_id, client=client
     )
+    # If variable_name is not none, the information for now is deemed irrelevant.
+    historic_activity_details = [
+        detail for detail in historic_activity_details if detail.get("variable_name")
+    ]
+
     for detail in historic_activity_details:
         # func deserialize_variable requires the `type` key - not `variable_type`.
         detail["type"] = detail["variable_type"]
