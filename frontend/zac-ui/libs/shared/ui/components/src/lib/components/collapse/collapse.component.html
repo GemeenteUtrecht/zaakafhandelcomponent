@@ -1,0 +1,14 @@
+<div class="collapse" [class.collapse--collapsed]="collapsed">
+  <div class="collapse__toggle">
+    <button *ngIf="collapsed" class="collapse__button" (click)="onClick($event)" aria-label="Uitklappen">
+      <mat-icon aria-label="collapse">keyboard_arrow_left</mat-icon>
+    </button>
+    <button *ngIf="!collapsed" class="collapse__button" (click)="onClick($event)" aria-label="Inklappen">
+      <mat-icon aria-label="collapse">keyboard_arrow_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="collapse__content">
+    <ng-content></ng-content>
+  </div>
+</div>

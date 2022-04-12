@@ -166,6 +166,16 @@
   <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
     <p>Er zijn geen acties beschikbaar.</p>
   </ng-container>
+
+  <!-- Add activity button -->
+  <div class="d-flex justify-content-end">
+    <button gu-button
+            buttonStyle="tertiary"
+            icon="add"
+            (click)="openModal('activities-modal')">
+      Activiteit toevoegen
+    </button>
+  </div>
 </div>
 
 

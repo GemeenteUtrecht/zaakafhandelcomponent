@@ -138,6 +138,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   ngOnInit(): void {
     this.getContextData();
+    this.fetchObjects()
   }
 
   //
@@ -243,6 +244,31 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     }).filter(f => f);
   }
 
+  /**
+   * Search for objects in the Objects API
+   * @param {Geometry} geometry
+   * @param {string} objectType
+   * @param {string} [property] Object type property.
+   * @param {string} [query]
+   */
+  fetchObjects(geometry=null, objectType=null, property=null, query=null):void {
+    this.zaakObjectService.searchObjects(geometry, objectType, property, query).subscribe(
+      (zaakObjects: ZaakObject[]) => {
+        this.zaakObjects = zaakObjects;
+        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
+            onClick: (event) => this._selectZaakObject(event, zaakObject),
+          })
+        ).filter((mapMarker) => mapMarker);
+
+        this.mapMarkers.emit(activeMapMarkers);
+
+        this.isLoading = false;
+        this.cdRef.detectChanges();
+      },
+      this.reportError.bind(this),
+    );
+  }
+
   //
   // Events.
   //
@@ -268,21 +294,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.zaakObjects = [];
     this.showZaakObjecten = true;
 
-    this.zaakObjectService.searchObjects(geometry, data.objectType, data.property, data.query).subscribe(
-      (zaakObjects: ZaakObject[]) => {
-        this.zaakObjects = zaakObjects;
-        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
-            onClick: (event) => this._selectZaakObject(event, zaakObject),
-          })
-        ).filter((mapMarker) => mapMarker);
-
-        this.mapMarkers.emit(activeMapMarkers);
-
-        this.isLoading = false;
-        this.cdRef.detectChanges();
-      },
-      this.reportError.bind(this),
-    );
+    this.fetchObjects(geometry, data.objectType, data.property, data.query)
   }
 
   /**

@@ -108,9 +108,15 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       this.mapOptions = {
         center: (this.center?.length > 1) ? L.latLng(this.center[1], this.center[0]) : L.latLng([52.0907, 5.1214]),
         zoom: this.zoom,
-        crs: RD_CRS,
+        crs: RD_CRS
       };
-    this.map = L.map('mapid', this.mapOptions)
+
+    this.map = L.map('mapid', this.mapOptions).whenReady(() => {
+      setTimeout(() => {
+        this.onMapReady(this.map);
+        this.mapLoad.emit(this.map)
+      })
+    })
 
     // Tiles.
     const tileConfig = {
@@ -175,8 +181,6 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
 
-    this.map.on('load', this.mapLoad.emit(this.map));
-
     // Update.
     this.update();
   }
@@ -201,8 +205,10 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    */
   bindDomEvents(): void {
     try {
-      document.addEventListener('click', this.update.bind(this));
-      document.addEventListener('keyup', this.update.bind(this));
+      Array.from(document.querySelectorAll('.collapse__button'))
+        .forEach((node) => {
+          node.addEventListener('click', this.update.bind(this));
+        });
     } catch (e) {
     }
   }
@@ -354,8 +360,29 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
     if (mapGeometryOrMapMarker.title) {
       const title = document.createElement('h4');
-      title.textContent = mapGeometryOrMapMarker.title;
+      title.innerHTML = mapGeometryOrMapMarker.title;
       popUpContent.appendChild(title)
+    }
+
+    if (mapGeometryOrMapMarker.contentProperties) {
+      const table = document.createElement('table');
+      mapGeometryOrMapMarker.contentProperties.forEach(([key, value]) => {
+        const formattedKey = this._propertyNameToTitle(key);
+
+        const tr = document.createElement('tr');
+
+        const th = document.createElement('th');
+        th.textContent = formattedKey;
+
+        const td = document.createElement('td');
+        td.textContent = value;
+
+        tr.appendChild(th);
+        tr.appendChild(td);
+        table.appendChild(tr);
+      });
+
+      popUpContent.appendChild(table);
     }
 
     if (mapGeometryOrMapMarker.actions) {
@@ -375,5 +402,31 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       popUp.setContent(popUpContent)
       layer.bindPopup(popUp)
     }
+  }
+
+  /**
+   * Attempts to format a property.
+   * @param {string} propertyName
+   * @return {string}
+   */
+  _propertyNameToTitle(propertyName: string): string {
+    return [...propertyName].reduce((acc, currentCharacter, index) => {
+      const previousIndex = index - 1;
+
+      if (index === 0) {
+        return currentCharacter.toUpperCase();
+      }
+
+      if (previousIndex > -1) {
+        const previousCharacter = propertyName[previousIndex];
+        const currentCharacterIsUpperCase = /[A-Z]/.test(currentCharacter);
+        const previousCharacterIsUpperCase = /[A-Z]/.test(previousCharacter);
+
+        if (currentCharacterIsUpperCase !== previousCharacterIsUpperCase) {
+          return `${acc} ${currentCharacter}`;
+        }
+      }
+      return acc + currentCharacter;
+    }, '');
   }
 }

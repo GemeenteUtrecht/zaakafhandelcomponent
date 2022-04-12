@@ -170,7 +170,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * @return {FieldConfiguration[]}
    */
   getChecklistForm(): FieldConfiguration[] {
-    const fieldConfigurations = this.checklistType.questions.map((question: ChecklistQuestion) => {
+    const fieldConfigurations = this.checklistType?.questions.map((question: ChecklistQuestion) => {
       const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
 
       return ({
@@ -187,7 +187,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
     });
 
     return [
-      ...fieldConfigurations,
+      ...(fieldConfigurations || []),
       {
         activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue().groupAssignee,
         label: 'Toegewezen gebruiker',

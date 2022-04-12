@@ -51,9 +51,6 @@ export class FeaturesZaakDetailComponent implements OnInit {
   /** @type {Activity[]} The activities for this case (zaak). */
   activityData: Activity[];
 
-  /** @type {Activity[]} The active activities for this case (zaak). */
-  activeActivities: Activity[];
-
   /** @type {boolean} Whether the user is allowed to request access to this case (zaak). */
   canRequestAccess: boolean;
 
@@ -155,9 +152,6 @@ export class FeaturesZaakDetailComponent implements OnInit {
             return;
           }
           this.activityData = activities;
-          this.activeActivities = activities.filter(activity => {
-            return activity.status === 'on_going'
-          })
         },
         error: (error) => this.reportError(error.error),
         complete: () => this.isLoading = false

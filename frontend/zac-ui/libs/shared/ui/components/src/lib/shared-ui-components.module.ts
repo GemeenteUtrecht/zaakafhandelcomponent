@@ -32,6 +32,7 @@ import {TextareaComponent} from './elements/textarea/textarea.component';
 import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 // UI Components
+import {CollapseComponent} from './components/collapse/collapse.component';
 import {FileComponent} from './components/file/file.component';
 import {FileUploadComponent} from './components/file-upload/file-upload.component';
 import {FormComponent} from './components/form/form.component';
@@ -75,6 +76,7 @@ patchMatFormField();
   declarations: [
     ButtonComponent,
     ChipComponent,
+    CollapseComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,
@@ -101,6 +103,7 @@ patchMatFormField();
   exports: [
     ButtonComponent,
     ChipComponent,
+    CollapseComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,

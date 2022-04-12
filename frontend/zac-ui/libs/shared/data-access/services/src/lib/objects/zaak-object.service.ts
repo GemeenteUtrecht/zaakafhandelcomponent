@@ -88,7 +88,7 @@ export class ZaakObjectService {
   static _stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
     return Object.entries(zaakObject.record.data)
       .filter(([key,]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)  // Filter unwanted keys.
-      .filter(([, value]) => !value.match(/^http/))  // Filter URLs.
+      .filter(([, value]) => !(value?.match(/^http/)))  // Filter URLs.
       .map(([key, value]) => `${key[0].toUpperCase() + key.slice(1)}: ${value}`)  // Create key/value string.
       .sort()  // Sort items alphabetically (key).
       .filter((value, index) => maxEntries === null || index < maxEntries)  // Limit entries
@@ -104,7 +104,7 @@ export class ZaakObjectService {
     const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
     const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
 
-      title: ZaakObjectService._stringifyZaakObject(zaakObject),
+      contentProperties: Object.entries(zaakObject.record.data),
       coordinates: zaakObjectGeometry?.coordinates?.length > 1
         ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
         : [],

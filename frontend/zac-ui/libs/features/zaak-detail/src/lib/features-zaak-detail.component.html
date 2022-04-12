@@ -1,8 +1,8 @@
 <!--  Loading -->
 <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 
-<section *ngIf="!isLoading" class="row m-0">
-  <div class="col-xl-10 p-0">
+<section *ngIf="!isLoading" class="row m-0 flex-nowrap">
+  <div class="flex-fill p-0">
     <div class="feature-container">
       <div class="content-background mb-0" [ngClass]="(zaakData?.resultaat ? 'content-background--yellow' : '')">
         <article class="content">
@@ -15,22 +15,6 @@
           <section class="row">
             <header class="col-12 d-flex" *ngIf="zaakData">
               <h1>{{zaakData.zaaktype.omschrijving}}</h1>
-
-              <button gu-button
-                      buttonStyle="tertiary"
-                      size="extrasmall"
-                      class="ml-2 p-0"
-                      *ngIf="activeActivities"
-                      (click)="openModal('activities-modal')">
-
-                <span>
-                  <gu-chip icon="launch" [color]="'primary'" [ngPlural]="activeActivities?.length">
-                      <ng-template ngPluralCase="0">Activiteit toevoegen</ng-template>
-                      <ng-template ngPluralCase="1">{{activeActivities?.length}} activiteit actief</ng-template>
-                      <ng-template ngPluralCase="other">{{activeActivities?.length}} activiteiten actief</ng-template>
-                  </gu-chip>
-                </span>
-              </button>
             </header>
           </section>
 
@@ -62,7 +46,7 @@
           </section>
 
           <!-- Components -->
-          <section *ngIf="!isLoading && !hasError" class="row" >
+          <section *ngIf="!isLoading && !hasError" class="row">
 
             <!-- Left column -->
             <div *ngIf="zaakData" class="col-md-4">
@@ -182,7 +166,9 @@
   </div>
 
   <!-- Map -->
-  <aside *ngIf="!isLoading && !hasError" class="gu-features-zaak-detail__sidebar col-xl-2 p-0">
-    <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
-  </aside>
+  <gu-collapse [collapsed]="true">
+    <aside *ngIf="!isLoading && !hasError">
+      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
+    </aside>
+  </gu-collapse>
 </section>
