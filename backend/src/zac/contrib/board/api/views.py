@@ -10,6 +10,7 @@ from .filters import BoardItemFilter
 from .permissions import CanUseBoardItem
 from .serializer import BoardItemSerializer, BoardSerializer
 
+from zac.core.api.permissions import CanForceEditClosedZaak
 
 @extend_schema_view(
     list=extend_schema(summary=_("List boards.")),
@@ -33,7 +34,7 @@ class BoardViewSet(ReadOnlyModelViewSet):
 )
 class BoardItemViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanUseBoardItem]
+    permission_classes = [IsAuthenticated, CanUseBoardItem, CanForceEditClosedZaak]
     queryset = BoardItem.objects.select_related("column", "column__board").order_by(
         "-pk"
     )

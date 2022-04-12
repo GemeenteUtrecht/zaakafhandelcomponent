@@ -41,7 +41,7 @@ def _cast(value: Optional[Any], type_: type) -> Any:
 )
 class OpenDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
+    permission_classes = (permissions.IsAuthenticated, CanOpenDocuments,)
     document = None
     serializer_class = DowcResponseSerializer
 
@@ -69,7 +69,7 @@ class OpenDowcView(APIView):
 
 class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanOpenDocuments,)
+    permission_classes = (permissions.IsAuthenticated, CanOpenDocuments,)
     serializer_class = DowcSerializer
 
     @extend_schema(

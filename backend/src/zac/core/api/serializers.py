@@ -69,7 +69,7 @@ class InformatieObjectTypeSerializer(APIModelSerializer):
 
 class GetZaakDocumentSerializer(APIModelSerializer):
     read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
-    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write)
+    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write, allow_blank=True)
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display"
     )

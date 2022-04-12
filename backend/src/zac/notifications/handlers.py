@@ -1,3 +1,4 @@
+from zac.contrib.kownsl.api import get_review_requests
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status
@@ -80,8 +81,14 @@ class ZakenHandler:
     def _handle_zaak_update(self, zaak_url: str):
         # Invalidate cache
         zaak = self._retrieve_zaak(zaak_url)
+        was_closed = zaak.einddatum
         invalidate_zaak_cache(zaak)
-
+        is_closed = zaak.einddatum
+        
+        # lock all review requests related to zaak
+        if is_closed and not was_closed:
+            review_requests = get_review_requests(zaak)
+            
         # index in ES
         update_zaak_document(zaak)
 

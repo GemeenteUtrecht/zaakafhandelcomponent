@@ -10,9 +10,8 @@ from zds_client import ClientError
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
-from zac.core.permissions import Permission, zaken_geforceerd_bijwerken
+from zac.core.permissions import Permission
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
-from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
 
@@ -60,19 +59,6 @@ class DefinitionBasePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
-
-        
-        # if an object is a ZAAK, we would like to address the permissions
-        # for a closed zaak here
-        if isinstance(obj, Zaak):
-            # Check if zaak is closed or open.
-            # if it's closed - check for force edit permissions.
-            if obj.einddatum is not None:
-                if self.user_atomic_permissions_exists(
-                    request, zaken_geforceerd_bijwerken, obj_url=obj.url
-                ):
-                    return True
-                return False
 
         permission_name = self.get_permission(request).name
         # first check atomic permissions - this checks both atomic permissions directly attached to the user

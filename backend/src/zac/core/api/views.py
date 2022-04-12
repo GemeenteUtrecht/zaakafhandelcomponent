@@ -95,6 +95,12 @@ from .pagination import BffPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
+    CanAddReverseRelations,
+    CanForceAddRelations,
+    CanForceAddReverseRelations,
+    CanForceChangeZaakObjects,
+    CanForceCreateOrUpdateZaakEigenschap,
+    CanForceEditClosedZaak,
     CanHandleAccessRequests,
     CanOpenDocuments,
     CanReadOrUpdateZaken,
@@ -208,7 +214,11 @@ class GetZaakMixin:
 
 class ZaakDetailView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrUpdateZaken,
+        CanForceEditClosedZaak,
+    )
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
@@ -261,7 +271,11 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
 
 class ZaakStatusesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadOrUpdateZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrUpdateZaken,
+        CanForceEditClosedZaak,
+    )
     serializer_class = ZaakStatusSerializer
 
     @extend_schema(summary=_("List ZAAK STATUSsen."))
@@ -290,7 +304,10 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
 
 class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
     serializer_class = ZaakEigenschapSerializer
     schema_summary = _("List ZAAKEIGENSCHAPpen.")
 
@@ -301,7 +318,11 @@ class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
 
 class ZaakEigenschapDetailView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanUpdateZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanUpdateZaken,
+        CanForceCreateOrUpdateZaakEigenschap,
+    )
     serializer_class = ZaakEigenschapSerializer
     filterset_class = ZaakEigenschappenFilterSet
 
@@ -332,9 +353,8 @@ class ZaakEigenschapDetailView(views.APIView):
         serializer = CreateZaakEigenschapSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Check permissions
+        # Get zaak
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak_url"])
-        self.check_object_permissions(request, zaak)
 
         # Create zaakeigenschap
         zaak_eigenschap = create_zaak_eigenschap(
@@ -399,7 +419,10 @@ class ZaakEigenschapDetailView(views.APIView):
 
 class RelatedZakenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
     serializer_class = RelatedZaakSerializer
     schema_summary = _("List related ZAAKen.")
 
@@ -418,7 +441,13 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
 
 
 class CreateZaakRelationView(views.APIView):
-    permission_classes = (permissions.IsAuthenticated, CanAddRelations)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanAddRelations,
+        CanAddReverseRelations,
+        CanForceAddRelations,
+        CanForceAddReverseRelations,
+    )
 
     def get_serializer(self, *args, **kwargs):
         return AddZaakRelationSerializer(data=self.request.data)
@@ -431,11 +460,12 @@ class CreateZaakRelationView(views.APIView):
         serializer = self.get_serializer()
         serializer.is_valid(raise_exception=True)
 
-        # Retrieving the main zaak
+        # Retrieving the main and bijdrage zaak
         main_zaak_url = serializer.validated_data["main_zaak"]
         bijdrage_zaak_url = serializer.validated_data["relation_zaak"]
         client = Service.get_client(main_zaak_url)
         main_zaak = client.retrieve("zaak", url=main_zaak_url)
+        bijdrage_zaak = client.retrieve("zaak", url=bijdrage_zaak_url)
 
         # Create the relation (from to main to related)
         main_zaak["relevanteAndereZaken"].append(
@@ -449,9 +479,6 @@ class CreateZaakRelationView(views.APIView):
             {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
             url=main_zaak_url,
         )
-
-        # Retrieving the related zaak
-        bijdrage_zaak = client.retrieve("zaak", url=bijdrage_zaak_url)
 
         # Create the reverse relation
         bijdrage_zaak["relevanteAndereZaken"].append(
@@ -476,7 +503,10 @@ class CreateZaakRelationView(views.APIView):
 
 class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
     serializer_class = RolSerializer
     schema_summary = _("List ROLlen of ZAAK.")
 
@@ -489,7 +519,10 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
 class ZaakObjectsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
     serializer_class = ZaakObjectGroupSerializer
     schema_summary = _("List related OBJECTs of a ZAAK.")
 
@@ -523,7 +556,10 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
 )
 class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanHandleAccessRequests,
+    )
     serializer_class = UserAtomicPermissionSerializer
 
     def get_queryset(self):
@@ -555,7 +591,10 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 @extend_schema(summary=_("List ZAAK documents."))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
     serializer_class = GetZaakDocumentSerializer
 
     def _filter_for_permissions(self, obj):
@@ -600,6 +639,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
             context={
                 "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
                 "editing_history": editing_history,
+                "zaak_is_closed": True if zaak.einddatum else False
             },
         )
         return Response(serializer.data)
@@ -607,7 +647,10 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
 
 class ZaakDocumentView(views.APIView):
     permission_classes = (
-        permissions.IsAuthenticated & CanAddOrUpdateZaakDocuments & CanUpdateZaken,
+        permissions.IsAuthenticated,
+        CanAddOrUpdateZaakDocuments,
+        CanUpdateZaken,
+        CanForceEditClosedZaak,
     )
     parser_classes = (CamelCaseMultiPartParser,)
 
@@ -917,9 +960,9 @@ class EigenschappenView(ListAPIView):
         return Response(serializer.data)
 
 
-#
-# Objects endpoints
-#
+###############################
+#           Objects           #
+###############################
 
 
 @extend_schema(
@@ -974,7 +1017,11 @@ class ObjectSearchView(views.APIView):
 
 class ZaakObjectChangeView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, CanUpdateZaken)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanUpdateZaken,
+        CanForceChangeZaakObjects,
+    )
     serializer_class = ZaakObjectProxySerializer
     filterset_class = ZaakObjectFilterSet
 

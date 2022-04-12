@@ -15,6 +15,7 @@ from ..permissions import (
     zaken_add_documents,
     zaken_add_relations,
     zaken_download_documents,
+    zaken_geforceerd_bijwerken,
     zaken_handle_access,
     zaken_inzien,
     zaken_update_documents,
@@ -22,6 +23,110 @@ from ..permissions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class BaseConditionalPermission:
+    def get_permission(self, request: Request):
+        raise NotImplementedError("This method must be implemented by a subclass")
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_permission(request, view)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        permission = self.get_permission(request)
+        return permission.has_object_permission(request, view, obj)
+
+
+###############################
+#            Zaken            #
+###############################
+
+
+class CanForceEditClosedZaak(ZaakDefinitionPermission):
+    permission = zaken_geforceerd_bijwerken
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        serializer = view.get_serializer(data=request.data)
+        # if the serializer is not valid, we want to see validation errors -> permission is granted
+        if not serializer.is_valid():
+            return True
+
+        object_url = self.get_object_url(serializer)
+        obj = self.get_object(request, object_url)
+        if not obj:
+            return False
+        return self.has_object_permission(request, view, obj)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        if request.user.is_superuser:
+            return True
+
+        # Check if zaak is closed or open.
+        # if it's closed - check for force edit permissions.
+        if obj.einddatum is not None:
+            atomic_permission_for_obj = self.user_atomic_permissions_exists(
+                request, zaken_geforceerd_bijwerken, obj_url=obj.url
+            )
+            atomic_permission_for_obj_type = self.user_atomic_permissions_exists(
+                request, zaken_geforceerd_bijwerken
+            )
+            blueprint_permission = self.get_blueprint_permissions(
+                request, zaken_geforceerd_bijwerken
+            ).exists()
+            return (
+                atomic_permission_for_obj
+                or atomic_permission_for_obj_type
+                or blueprint_permission
+            )
+        return True
+
+
+class CanForceEditClosedZaken(DefinitionBasePermission):
+    permission = zaken_geforceerd_bijwerken
+
+    def has_permission(self, request, view):
+        # The initial request will be allowed. Object permissions must be checked.
+        return True
+
+
+class CanAddRelations(ZaakDefinitionPermission):
+    permission = zaken_add_relations
+    object_attr = "main_zaak"
+
+
+class CanAddReverseRelations(ZaakDefinitionPermission):
+    permission = zaken_add_relations
+    object_attr = "relation_zaak"
+
+
+class CanForceAddRelations(CanForceEditClosedZaak):
+    object_attr = "main_zaak"
+
+
+class CanForceAddReverseRelations(CanForceEditClosedZaak):
+    object_attr = "relation_zaak"
+
+
+class CanReadZaken(DefinitionBasePermission):
+    permission = zaken_inzien
+
+
+class CanUpdateZaken(DefinitionBasePermission):
+    permission = zaken_wijzigen
+
+
+class CanReadOrUpdateZaken(BaseConditionalPermission):
+    def get_permission(self, request) -> DefinitionBasePermission:
+        if request.method in permissions.SAFE_METHODS:
+            return CanReadZaken()
+        else:
+            return CanUpdateZaken()
+
+
+###############################
+#          Documents          #
+###############################
 
 
 class CanOpenDocuments(DefinitionBasePermission):
@@ -37,56 +142,48 @@ class CanUpdateDocuments(DocumentDefinitionPermission):
     permission = zaken_update_documents
 
 
-class CanAddOrUpdateZaakDocuments:
+class CanAddOrUpdateZaakDocuments(BaseConditionalPermission):
     def get_permission(self, request) -> DefinitionBasePermission:
         if request.method == "PATCH":
             return CanUpdateDocuments()
         elif request.method == "POST":
             return CanAddDocuments()
 
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_permission(request, view)
 
-    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_object_permission(request, view, obj)
+###############################
+#        Eigenschappen        #
+###############################
 
 
-class CanAddRelations(ZaakDefinitionPermission):
-    permission = zaken_add_relations
-    object_attr = "main_zaak"
-
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        if request.method != "POST":
-            return False
-
-        return super().has_permission(request, view)
+class CanForceCreateZaakEigenschap(CanForceEditClosedZaak):
+    object_attr = "zaak_url"
 
 
-class CanReadZaken(DefinitionBasePermission):
-    permission = zaken_inzien
+class CanForceCreateOrUpdateZaakEigenschap(BaseConditionalPermission):
+    def get_permission(self, request):
+        if request.method == "POST":
+            return CanForceCreateZaakEigenschap()
+        elif request.method == "PATCH":
+            return CanForceEditClosedZaken()
 
 
-class CanUpdateZaken(DefinitionBasePermission):
-    permission = zaken_wijzigen
-
-
-class CanReadOrUpdateZaken:
-    def get_permission(self, request) -> DefinitionBasePermission:
-        if request.method in permissions.SAFE_METHODS:
-            return CanReadZaken()
-        else:
-            return CanUpdateZaken()
-
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_permission(request, view)
-
-    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_object_permission(request, view, obj)
+###############################
+#       Access Requests       #
+###############################
 
 
 class CanHandleAccessRequests(DefinitionBasePermission):
     permission = zaken_handle_access
+
+
+###############################
+#           Objects           #
+###############################
+
+
+class CanForceChangeZaakObjects(BaseConditionalPermission):
+    def get_permission(self, request):
+        if request.method == "POST":
+            return CanForceEditClosedZaak()
+        elif request.method == "DELETE":
+            return CanForceEditClosedZaken()
