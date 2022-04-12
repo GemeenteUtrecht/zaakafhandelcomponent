@@ -1,4 +1,7 @@
 import logging
+from typing import Optional
+
+from django.db.models import QuerySet
 
 from rest_framework import permissions
 from rest_framework.request import Request
@@ -7,8 +10,9 @@ from zds_client import ClientError
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
-from zac.core.permissions import Permission
+from zac.core.permissions import Permission, zaken_geforceerd_bijwerken
 from zac.core.services import get_document, get_informatieobjecttype, get_zaak
+from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
 
@@ -25,34 +29,61 @@ class DefinitionBasePermission(permissions.BasePermission):
 
         return self.permission
 
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
-
-        permission_name = self.get_permission(request).name
-        # first check atomic permissions - this checks both atomic permissions directly attached to the user
-        # and atomic permissions defined to authorization profiles
-        if (
-            UserAtomicPermission.objects.select_related("atomic_permission")
-            .filter(
-                user=request.user,
-                atomic_permission__permission=permission_name,
-                atomic_permission__object_url=obj.url,
-            )
-            .actual()
-            .exists()
-        ):
-            return True
-
-        # then check blueprint permissions
-        for permission in (
+    def get_blueprint_permissions(self, request, permission_name) -> QuerySet:
+        return (
             BlueprintPermission.objects.for_user(request.user)
             .filter(
                 role__permissions__contains=[permission_name],
                 object_type=self.object_type,
             )
             .actual()
+        )
+
+    def user_atomic_permissions_exists(
+        self, request, permission_name, obj_url: Optional[str] = ""
+    ) -> bool:
+        filters = {
+            "user": request.user,
+            "atomic_permission__permission": permission_name,
+        }
+        if obj_url:
+            filters["atomic_permission__object_url"] = obj_url
+        else:
+            filters["atomic_permission__object_type"] = self.object_type
+        return (
+            UserAtomicPermission.objects.select_related("atomic_permission")
+            .filter(**filters)
+            .actual()
+            .exists()
+        )
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
+        
+        # if an object is a ZAAK, we would like to address the permissions
+        # for a closed zaak here
+        if isinstance(obj, Zaak):
+            # Check if zaak is closed or open.
+            # if it's closed - check for force edit permissions.
+            if obj.einddatum is not None:
+                if self.user_atomic_permissions_exists(
+                    request, zaken_geforceerd_bijwerken, obj_url=obj.url
+                ):
+                    return True
+                return False
+
+        permission_name = self.get_permission(request).name
+        # first check atomic permissions - this checks both atomic permissions directly attached to the user
+        # and atomic permissions defined to authorization profiles
+        if self.user_atomic_permissions_exists(
+            request, permission_name, obj_url=obj.url
         ):
+            return True
+
+        # then check blueprint permissions
+        for permission in self.get_blueprint_permissions():
             if permission.has_access(obj, request.user, permission_name):
                 return True
 
@@ -64,23 +95,8 @@ class DefinitionBasePermission(permissions.BasePermission):
 
         permission_name = self.get_permission(request).name
         # check if the user has permissions for any object
-        if (
-            not BlueprintPermission.objects.for_user(request.user)
-            .filter(
-                role__permissions__contains=[permission_name],
-                object_type=self.object_type,
-            )
-            .actual()
-            .exists()
-        ) and (
-            not UserAtomicPermission.objects.select_related("atomic_permission")
-            .filter(
-                user=request.user,
-                atomic_permission__permission=permission_name,
-                atomic_permission__object_type=self.object_type,
-            )
-            .actual()
-            .exists()
+        if (not self.get_blueprint_permissions(request, permission_name).exists()) and (
+            not self.user_atomic_permissions_exists(request, permission_name)
         ):
             return False
 
@@ -97,9 +113,6 @@ class ObjectDefinitionBasePermission(DefinitionBasePermission):
         return serializer.validated_data[self.object_attr]
 
     def has_permission(self, request: Request, view: APIView) -> bool:
-        if request.user.is_superuser:
-            return True
-
         serializer = view.get_serializer(data=request.data)
         # if the serializer is not valid, we want to see validation errors -> permission is granted
         if not serializer.is_valid():
@@ -125,7 +138,6 @@ class ZaakDefinitionPermission(ObjectDefinitionBasePermission):
         except ClientError:
             logger.info("Invalid Zaak specified", exc_info=True)
             return None
-
         return zaak
 
 
