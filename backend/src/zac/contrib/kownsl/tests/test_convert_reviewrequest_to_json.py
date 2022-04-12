@@ -30,6 +30,8 @@ class ConvertToJsonTests(TestCase):
                 "lastName": "",
                 "fullName": "",
             },
+            "locked": False,
+            "lock_reason": "",
         }
         advice_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -89,6 +91,8 @@ class ConvertToJsonTests(TestCase):
                         "last_name": "",
                         "full_name": "",
                     },
+                    "locked": False,
+                    "lock_reason": "",
                 }
             ],
         )
@@ -112,6 +116,8 @@ class ConvertToJsonTests(TestCase):
                 "lastName": "",
                 "fullName": "",
             },
+            "locked": False,
+            "lock_reason": "",
         }
         approval_data = {
             "created": "2020-06-17T10:21:16Z",
@@ -171,6 +177,8 @@ class ConvertToJsonTests(TestCase):
                         "last_name": "",
                         "full_name": "",
                     },
+                    "locked": False,
+                    "lock_reason": "",
                 }
             ],
         )

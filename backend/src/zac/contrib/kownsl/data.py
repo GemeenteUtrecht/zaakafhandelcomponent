@@ -30,6 +30,8 @@ class ReviewRequest(Model):
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
     user_deadlines: Dict = field(default_factory=dict)
+    locked: bool = False
+    lock_reason: str = ""
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]

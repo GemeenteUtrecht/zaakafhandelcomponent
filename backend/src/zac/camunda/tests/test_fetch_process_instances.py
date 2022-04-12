@@ -214,6 +214,7 @@ class ProcessInstanceTests(TransactionTestCase):
                                     "groups": [],
                                 },
                                 "assigneeType": "user",
+                                "canCancelTask": False,
                             },
                             {
                                 "id": self.task_data[1][1]["id"],
@@ -226,6 +227,7 @@ class ProcessInstanceTests(TransactionTestCase):
                                     "id": self.group.id,
                                 },
                                 "assigneeType": "group",
+                                "canCancelTask": False,
                             },
                             {
                                 "id": self.task_data[1][2]["id"],
@@ -234,6 +236,7 @@ class ProcessInstanceTests(TransactionTestCase):
                                 "hasForm": False,
                                 "assignee": "",
                                 "assigneeType": "",
+                                "canCancelTask": False,
                             },
                         ],
                         "subProcesses": [

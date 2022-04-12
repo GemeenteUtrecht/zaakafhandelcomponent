@@ -20,7 +20,7 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks.history import (
     get_completed_user_tasks_for_zaak,
     get_historic_activity_variables_from_task,
-    get_task_history_for_process_instance,
+    get_task_history,
 )
 from zac.core.permissions import zaken_inzien
 
@@ -76,27 +76,33 @@ class UserTaskHistoryTests(APITransactionTestCase):
         config.save()
         self.user = SuperUserFactory.create(username="some-user")
 
-    def test_success_get_task_history_for_process_instance(self, m):
+    def test_success_get_task_history(self, m):
         m.get(
             f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
             json=[COMPLETED_TASK_DATA],
         )
-        tasks = get_task_history_for_process_instance(
-            COMPLETED_TASK_DATA["processInstanceId"]
+        tasks = get_task_history(
+            {
+                "processInstanceId": COMPLETED_TASK_DATA["processInstanceId"],
+                "finished": "true",
+            }
         )
         self.assertEqual(
             tasks, {COMPLETED_TASK_DATA["id"]: underscoreize(COMPLETED_TASK_DATA)}
         )
 
-    def test_fail_500_on_get_task_history_for_process_instance(self, m):
+    def test_fail_500_on_get_task_history(self, m):
         m.get(
             f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
             json=[],
             status_code=500,
         )
         with self.assertRaises(HTTPError) as exc:
-            get_task_history_for_process_instance(
-                COMPLETED_TASK_DATA["processInstanceId"]
+            get_task_history(
+                {
+                    "processInstanceId": COMPLETED_TASK_DATA["processInstanceId"],
+                    "finished": "true",
+                }
             )
         self.assertEqual(exc.exception.response.status_code, 500)
 

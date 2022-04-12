@@ -12,7 +12,8 @@ from zac.api.polymorphism import PolymorphicSerializer
 
 from ..api.data import HistoricUserTask
 from ..constants import AssigneeTypeChoices
-from ..data import BPMN
+from ..data import BPMN, Task
+from ..user_tasks.api import get_killability_of_task, get_task
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
 from .validators import GroupValidator, OrValidator, UserValidator
@@ -57,6 +58,10 @@ class TaskSerializer(PolymorphicSerializer):
         choices=AssigneeTypeChoices.choices + ("", ""),
         help_text=_("The `assigneeType` of the user task."),
     )
+    can_cancel_task = serializers.SerializerMethodField()
+
+    def get_can_cancel_task(self, obj) -> bool:
+        return obj.name in self.context["killable_tasks"]
 
 
 class ProcessInstanceSerializer(serializers.Serializer):
@@ -265,3 +270,22 @@ class HistoricUserTaskSerializer(APIModelSerializer):
             "name",
             "history",
         )
+
+
+class CancelTaskSerializer(serializers.Serializer):
+    task = serializers.UUIDField(
+        help_text=_("The UUID of the task that is to be canceled.")
+    )
+
+    def validate_task(self, task_id: str) -> Task:
+        task = get_task(task_id)
+        if not task:
+            raise serializers.ValidationError(
+                _("No task found for id `{task_id}`".format(task_id=task_id))
+            )
+        killable = get_killability_of_task(task.name)
+        if not killable:
+            raise serializers.ValidationError(
+                _("Task `{name}` can not be canceled.").format(name=task.name)
+            )
+        return task

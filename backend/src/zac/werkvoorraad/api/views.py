@@ -1,20 +1,17 @@
 import logging
-from typing import List
+from typing import Dict, List
 
-from django.contrib.auth.models import Group
-from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
-from rest_framework.response import Response
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
+from zac.camunda.user_tasks.api import get_killable_camunda_tasks
 from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
@@ -102,6 +99,11 @@ class WorkStackUserTasksView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()
+
+    def get_serializer_context(self) -> Dict:
+        context = super().get_serializer_context()
+        context.update({"killable_tasks": get_killable_camunda_tasks()})
+        return context
 
     def get_camunda_tasks(self) -> List[Task]:
         return get_camunda_user_tasks(self.request.user)

@@ -143,6 +143,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "lastName": "",
                 "fullName": "",
             },
+            "locked": False,
+            "lockReason": "",
         }
         review_request = factory(ReviewRequest, review_request)
 
@@ -236,6 +238,26 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "reviewType": KownslTypes.advice,
                     "completed": 1,
                     "numAssignedUsers": 2,
+                    "canLock": False,
+                }
+            ],
+        )
+
+    def test_get_zaak_review_requests_can_lock(self, m):
+        some_other_user = SuperUserFactory(username="some-other-user")
+        self.client.force_authenticate(user=some_other_user)
+        response = self.client.get(self.endpoint_summary)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "id": str(self._uuid),
+                    "reviewType": KownslTypes.advice,
+                    "completed": 1,
+                    "numAssignedUsers": 2,
+                    "canLock": True,
                 }
             ],
         )

@@ -13,13 +13,13 @@ from zac.camunda.forms import extract_task_form_fields, extract_task_form_key
 from zac.camunda.processes import get_process_instances
 
 
-def get_task_history_for_process_instance(
-    pid: CamundaId, client: Optional[Camunda] = None
+def get_task_history(
+    query: Dict[str, str], client: Optional[Camunda] = None
 ) -> Dict[str, Dict]:
     if not client:
         client = get_client()
 
-    results = client.get("history/task", {"processInstanceId": pid, "finished": "true"})
+    results = client.get("history/task", query)
     tasks = {}
     for task in results:
         tasks[task["id"]] = task
@@ -47,7 +47,11 @@ def get_completed_user_tasks_for_zaak(
 
     def _get_historic_tasks(pid: CamundaId):
         nonlocal client, tasks
-        tasks.update(**get_task_history_for_process_instance(pid, client=client))
+        tasks.update(
+            **get_task_history(
+                {"processInstanceId": pid, "finished": "true"}, client=client
+            )
+        )
 
     with parallel() as executor:
         list(executor.map(_get_historic_tasks, all_process_instances.keys()))

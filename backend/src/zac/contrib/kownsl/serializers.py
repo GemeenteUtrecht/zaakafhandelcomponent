@@ -30,17 +30,34 @@ class KownslReviewRequestSerializer(ProxySerializer):
     zaak = ZaakSerializer()
 
 
+class LockReviewRequestSerializer(APIModelSerializer):
+    class Meta:
+        model = ReviewRequest
+        fields = ("lock_reason",)
+        extra_kwargs = {"lock_reason": {"allow_blank": False, "required": True}}
+
+
 class ZaakRevReqSummarySerializer(APIModelSerializer):
     completed = serializers.SerializerMethodField(
         label=_("completed requests"), help_text=_("The number of completed requests.")
     )
+    can_lock = serializers.SerializerMethodField(
+        label=_("can lock request"), help_text=_("User can lock the review request.")
+    )
 
     class Meta:
         model = ReviewRequest
-        fields = ("id", "review_type", "completed", "num_assigned_users")
+        fields = ("id", "review_type", "completed", "num_assigned_users", "can_lock")
 
     def get_completed(self, obj) -> int:
         return obj.num_advices + obj.num_approvals
+
+    def get_can_lock(self, obj) -> bool:
+        if (
+            request := self.context.get("request")
+        ) and request.user.username == obj.requester["username"]:
+            return True
+        return False
 
 
 class AuthorSerializer(APIModelSerializer):
