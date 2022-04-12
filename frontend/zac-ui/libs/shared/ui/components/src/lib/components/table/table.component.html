@@ -28,7 +28,7 @@
                             <button gu-button [buttonStyle]="dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
                                     size="extrasmall"
                                     noPadding
-                                    (click)="onButtonClick(column.name, dataRow[column.name].value)">
+                                    (click)="onButtonClick(column.name, dataRow[column.name].value); $event.stopPropagation()">
                                 {{ dataRow[column.name].label }}
                             </button>
                             <div

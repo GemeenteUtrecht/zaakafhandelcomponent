@@ -22,6 +22,7 @@ import {ZaakMapComponent} from './zaak-map/zaak-map.component';
 import {UserPermissionsComponent} from './user-permissions/user-permissions.component';
 import {TaskHistoryComponent} from './task-history/task-history.component';
 import {ChecklistComponent} from './checklist/checklist.component';
+import { CancelReviewComponent } from './adviseren-accorderen/cancel-review/cancel-review.component';
 
 @NgModule({
   imports: [
@@ -56,6 +57,7 @@ import {ChecklistComponent} from './checklist/checklist.component';
     ToegangVerlenenComponent,
     UserPermissionsComponent,
     ZaakMapComponent,
+    CancelReviewComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]

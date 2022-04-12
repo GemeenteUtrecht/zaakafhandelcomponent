@@ -55,11 +55,11 @@
         </ng-container>
       </div>
     </div>
-    <div class="d-flex justify-content-end">
-      <button gu-button size="large"
-                 (click)="submitForm()"
-                 [disabled]="!dynamicForm.valid || isSubmitting"
-                 [loading]="isSubmitting">
+    <div class="d-flex justify-content-start">
+      <button gu-button
+              (click)="submitForm()"
+              [disabled]="!dynamicForm.valid || isSubmitting"
+              [loading]="isSubmitting">
         Voltooien
       </button>
     </div>

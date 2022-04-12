@@ -225,6 +225,14 @@
           <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (successReload)="closeModal()"></gu-assign-task>
         </div>
       </gu-tab>
+
+      <!-- Cancel task -->
+      <gu-tab label="Annuleren" *ngIf="taskContextData.task.canCancelTask">
+        <div class="pt-4">
+          <gu-cancel-task [taskData]="taskContextData.task" (successReload)="closeModal();"></gu-cancel-task>
+        </div>
+      </gu-tab>
+
     </gu-tab-group>
   </ng-container>
 

@@ -132,8 +132,6 @@ export class AssignTaskComponent implements OnChanges {
       this.submitHasError = false;
       this.isSubmitting = false;
       this.successReload.emit(true)
-
-      this.modalService.close('ketenprocessenModal');
     }, error => {
       this.submitHasError = true;
       this.submitErrorMessage =

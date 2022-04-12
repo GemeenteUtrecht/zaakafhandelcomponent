@@ -70,11 +70,11 @@
       </div>
       <button gu-button buttonStyle="secondary" size="small" (click)="addStep()">Ondertekenaar toevoegen</button>
     </article>
-    <div class="d-flex justify-content-end">
-      <button gu-button size="large"
-                 (click)="submitForm()"
-                 [disabled]="!signDocumentForm.valid || isSubmitting"
-                 [loading]="isSubmitting">
+    <div class="d-flex justify-content-start">
+      <button gu-button
+              (click)="submitForm()"
+              [disabled]="!signDocumentForm.valid || isSubmitting"
+              [loading]="isSubmitting">
         Voltooien
       </button>
     </div>

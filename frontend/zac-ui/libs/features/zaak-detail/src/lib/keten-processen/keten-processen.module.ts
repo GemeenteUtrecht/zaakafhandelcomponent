@@ -13,6 +13,7 @@ import { RedirectComponent } from './configuration-components/redirect/redirect.
 import {MatTabsModule} from "@angular/material/tabs";
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { SharedUtilsModule } from '@gu/utils';
+import { CancelTaskComponent } from './cancel-task/cancel-task.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { SharedUtilsModule } from '@gu/utils';
     DynamicFormComponent,
     AssignTaskComponent,
     RedirectComponent,
+    CancelTaskComponent,
   ],
   imports: [
     CommonModule,

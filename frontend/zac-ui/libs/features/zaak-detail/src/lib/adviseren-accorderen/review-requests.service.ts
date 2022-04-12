@@ -186,4 +186,15 @@ export class ReviewRequestsService {
       });
     }));
   }
+
+
+  /**
+   * Cancel review.
+   * @param {string} requestUuid
+   * @param {object} formData
+   */
+  cancelReviewRequest(requestUuid: string, formData?) {
+    const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/detail`);
+    return this.http.Patch(endpoint, formData);
+  }
 }
