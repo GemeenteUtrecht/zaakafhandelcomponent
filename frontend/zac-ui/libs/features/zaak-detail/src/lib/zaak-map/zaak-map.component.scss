@@ -7,6 +7,11 @@ gu-input {
   width: 100%;
 }
 
+::ng-deep .collapse--collapsed gu-input {
+  display: none;
+}
+
 ::ng-deep .mat-form-field-outline {
   background-color: #FFF;
 }
+

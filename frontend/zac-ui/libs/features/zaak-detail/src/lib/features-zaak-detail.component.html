@@ -166,7 +166,7 @@
   </div>
 
   <!-- Map -->
-  <gu-collapse>
+  <gu-collapse [collapsed]="true">
     <aside *ngIf="!isLoading && !hasError">
       <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
     </aside>

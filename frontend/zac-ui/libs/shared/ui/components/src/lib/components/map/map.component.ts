@@ -108,9 +108,15 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       this.mapOptions = {
         center: (this.center?.length > 1) ? L.latLng(this.center[1], this.center[0]) : L.latLng([52.0907, 5.1214]),
         zoom: this.zoom,
-        crs: RD_CRS,
+        crs: RD_CRS
       };
-    this.map = L.map('mapid', this.mapOptions)
+
+    this.map = L.map('mapid', this.mapOptions).whenReady(() => {
+      setTimeout(() => {
+        this.onMapReady(this.map);
+        this.mapLoad.emit(this.map)
+      })
+    })
 
     // Tiles.
     const tileConfig = {
@@ -175,8 +181,6 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
 
-    this.map.on('load', this.mapLoad.emit(this.map));
-
     // Update.
     this.update();
   }
@@ -201,8 +205,10 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    */
   bindDomEvents(): void {
     try {
-      document.addEventListener('click', this.update.bind(this));
-      document.addEventListener('keyup', this.update.bind(this));
+      Array.from(document.querySelectorAll('.collapse__button'))
+        .forEach((node) => {
+          node.addEventListener('click', this.update.bind(this));
+        });
     } catch (e) {
     }
   }
