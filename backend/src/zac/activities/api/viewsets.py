@@ -8,7 +8,12 @@ from rest_framework.response import Response
 
 from ..models import Activity, Event
 from .filters import ActivityFilter
-from .permissions import CanReadOrWriteActivitiesPermission, CanWriteEventsPermission
+from .permissions import (
+    CanForceWriteActivitiesPermission,
+    CanForceWriteEventsPermission,
+    CanReadOrWriteActivitiesPermission,
+    CanWriteEventsPermission,
+)
 from .serializers import (
     CreateOrUpdateActivitySerializer,
     EventSerializer,
@@ -48,6 +53,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadOrWriteActivitiesPermission,
+        CanForceWriteActivitiesPermission,
     )
     filterset_class = ActivityFilter
     http_method_names = ["get", "post", "patch", "delete"]
@@ -70,7 +76,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             "PATCH": CreateOrUpdateActivitySerializer,
             "DELETE": CreateOrUpdateActivitySerializer,
         }
-        return mapping[self.request.method]
+        return mapping.get(self.request.method, ReadActivitySerializer)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -88,4 +94,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
 class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Event.objects.none()
     serializer_class = EventSerializer
-    permission_classes = (permissions.IsAuthenticated, CanWriteEventsPermission)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanWriteEventsPermission,
+        CanForceWriteEventsPermission,
+    )
