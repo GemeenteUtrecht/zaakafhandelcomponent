@@ -12,6 +12,7 @@ from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     UserFactory,
 )
+from zac.core.permissions import zaken_geforceerd_bijwerken
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..permissions import activiteiten_inzien, activiteiten_schrijven
@@ -533,6 +534,73 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @requests_mock.Mocker()
+    def test_create_event_logged_in_with_permissions_but_not_for_closed_zaak(self, m):
+        endpoint = reverse_lazy("event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        BlueprintPermissionFactory.create(
+            role__permissions=[activiteiten_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_create_event_logged_in_with_permissions_also_for_closed_zaak(self, m):
+        endpoint = reverse_lazy("event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[activiteiten_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
     def test_create_event_logged_in_with_atomic_permissions(self, m):
         endpoint = reverse_lazy("event-list")
         activity = ActivityFactory.create(zaak=self.zaak["url"])
@@ -546,6 +614,61 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
+    def test_create_event_logged_in_with_atomic_permissions_but_not_for_closed_zaak(
+        self, m
+    ):
+        endpoint = reverse_lazy("event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "activity": activity.id,
+            "notes": "Test notes",
+        }
+
+        response = self.client.post(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_create_event_logged_in_with_atomic_permissions_also_for_closed_zaak(
+        self, m
+    ):
+        endpoint = reverse_lazy("event-list")
+        activity = ActivityFactory.create(zaak=self.zaak["url"])
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=zaken_geforceerd_bijwerken.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "activity": activity.id,
             "notes": "Test notes",
@@ -663,6 +786,65 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_permissions_but_not_for_closed_zaak(
+        self, m
+    ):
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        BlueprintPermissionFactory.create(
+            role__permissions=[activiteiten_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_permissions_also_for_closed_zaak(self, m):
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[activiteiten_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
     def test_update_activity_logged_in_with_atomic_permissions(self, m):
         endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
         self.client.force_authenticate(user=self.user)
@@ -674,6 +856,51 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_atomic_permissions_not_for_closed_zaak(
+        self, m
+    ):
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {"name": "New name"}
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_update_activity_logged_in_with_atomic_permissions_also_for_closed_zaak(
+        self, m
+    ):
+        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        self.client.force_authenticate(user=self.user)
+        # set up user permissions
+        AtomicPermissionFactory.create(
+            permission=zaken_geforceerd_bijwerken.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        AtomicPermissionFactory.create(
+            permission=activiteiten_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {"name": "New name"}
 
         response = self.client.patch(endpoint, data)
