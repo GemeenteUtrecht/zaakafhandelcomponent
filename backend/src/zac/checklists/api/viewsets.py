@@ -6,6 +6,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.generics import get_object_or_404
 
+from zac.core.api.permissions import CanForceEditClosedZaken
 from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
 
@@ -179,6 +180,7 @@ class ZaakChecklistViewSet(
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadOrWriteChecklistsPermission,
+        CanForceEditClosedZaken,
     )
     http_method_names = [
         "get",
@@ -206,12 +208,18 @@ class ZaakChecklistViewSet(
         zaak = find_zaak(bronorganisatie, identificatie)
         return zaak
 
-    def get_object(self) -> ChecklistType:
+    def get_object(self) -> Checklist:
         queryset = self.filter_queryset(self.get_queryset())
         zaak = self.get_zaak()
         filter_kwargs = {
             "zaak": zaak.url,
         }
         checklist = get_object_or_404(queryset, **filter_kwargs)
-        self.check_object_permissions(self.request, checklist)
+        self.check_object_permissions(self.request, zaak)
         return checklist
+
+    def create(self, request, *args, **kwargs):
+        # check permissions
+        zaak = self.get_zaak()
+        self.check_object_permissions(request, zaak)
+        return super().create(request, *args, **kwargs)
