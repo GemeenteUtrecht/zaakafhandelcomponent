@@ -47,6 +47,9 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
     permission = zaken_geforceerd_bijwerken
 
     def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
         serializer = view.get_serializer(data=request.data)
         # if the serializer is not valid, we want to see validation errors -> permission is granted
         if not serializer.is_valid():
@@ -59,6 +62,9 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         return self.has_object_permission(request, view, obj)
 
     def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
         if request.user.is_superuser:
             return True
 
@@ -66,13 +72,13 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         # if it's closed - check for force edit permissions.
         if obj.einddatum is not None:
             atomic_permission_for_obj = self.user_atomic_permissions_exists(
-                request, zaken_geforceerd_bijwerken, obj_url=obj.url
+                request, zaken_geforceerd_bijwerken.name, obj_url=obj.url
             )
             atomic_permission_for_obj_type = self.user_atomic_permissions_exists(
-                request, zaken_geforceerd_bijwerken
+                request, zaken_geforceerd_bijwerken.name
             )
             blueprint_permission = self.get_blueprint_permissions(
-                request, zaken_geforceerd_bijwerken
+                request, zaken_geforceerd_bijwerken.name
             ).exists()
             return (
                 atomic_permission_for_obj
@@ -82,10 +88,8 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         return True
 
 
-class CanForceEditClosedZaken(DefinitionBasePermission):
-    permission = zaken_geforceerd_bijwerken
-
-    def has_permission(self, request, view):
+class CanForceEditClosedZaken(CanForceEditClosedZaak):
+    def has_permission(self, *args):
         # The initial request will be allowed. Object permissions must be checked.
         return True
 
@@ -174,16 +178,3 @@ class CanForceCreateOrUpdateZaakEigenschap(BaseConditionalPermission):
 
 class CanHandleAccessRequests(DefinitionBasePermission):
     permission = zaken_handle_access
-
-
-###############################
-#           Objects           #
-###############################
-
-
-class CanForceChangeZaakObjects(BaseConditionalPermission):
-    def get_permission(self, request):
-        if request.method == "POST":
-            return CanForceEditClosedZaak()
-        elif request.method == "DELETE":
-            return CanForceEditClosedZaken()
