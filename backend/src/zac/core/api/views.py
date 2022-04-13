@@ -98,9 +98,9 @@ from .permissions import (
     CanAddReverseRelations,
     CanForceAddRelations,
     CanForceAddReverseRelations,
-    CanForceChangeZaakObjects,
     CanForceCreateOrUpdateZaakEigenschap,
     CanForceEditClosedZaak,
+    CanForceEditClosedZaken,
     CanHandleAccessRequests,
     CanOpenDocuments,
     CanReadOrUpdateZaken,
@@ -217,12 +217,14 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadOrUpdateZaken,
-        CanForceEditClosedZaak,
+        CanForceEditClosedZaken,
     )
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
-        return mapping[self.request.method](**kwargs)
+        return mapping[self.request.method](
+            **kwargs, context={"zaak": self.get_object()}
+        )
 
     @extend_schema(
         summary=_("Retrieve ZAAK."),
@@ -251,7 +253,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         service = Service.get_service(zaak.url)
         client = service.build_client()
 
-        serializer = self.get_serializer(data=request.data, context={"zaak": zaak})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         # If no errors are raised - data is valid too.
@@ -274,23 +276,27 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadOrUpdateZaken,
-        CanForceEditClosedZaak,
+        CanForceEditClosedZaken,
     )
     serializer_class = ZaakStatusSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        zaak = self.get_object()
+        return self.serializer_class(
+            *args, **kwargs, context={"zaaktype": zaak.zaaktype}
+        )
 
     @extend_schema(summary=_("List ZAAK STATUSsen."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
-        serializer = self.serializer_class(instance=statussen, many=True)
+        serializer = self.get_serializer(instance=statussen, many=True)
         return Response(serializer.data)
 
     @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
-        serializer = self.serializer_class(
-            data=request.data, context={"zaaktype": zaak.zaaktype}
-        )
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         statustype = get_statustype(serializer.validated_data["statustype"]["url"])
         new_status = zet_status(
@@ -298,7 +304,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
             statustype,
             toelichting=serializer.validated_data["statustoelichting"],
         )
-        serializer = self.serializer_class(instance=new_status)
+        serializer = self.get_serializer(instance=new_status)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -639,7 +645,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
             context={
                 "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
                 "editing_history": editing_history,
-                "zaak_is_closed": True if zaak.einddatum else False
+                "zaak_is_closed": True if zaak.einddatum else False,
             },
         )
         return Response(serializer.data)
@@ -1020,10 +1026,13 @@ class ZaakObjectChangeView(views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanUpdateZaken,
-        CanForceChangeZaakObjects,
+        CanForceEditClosedZaken,
     )
     serializer_class = ZaakObjectProxySerializer
     filterset_class = ZaakObjectFilterSet
+
+    def get_serializer(self, *args, **kwargs):
+        return self.serializer_class(*args, **kwargs)
 
     @extend_schema(
         summary=_("Create ZAAKOBJECT."),
