@@ -7,6 +7,11 @@ from rest_framework.views import APIView
 from zds_client import ClientError
 
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
+from zac.core.api.permissions import (
+    BaseConditionalPermission,
+    CanForceEditClosedZaak,
+    CanForceEditClosedZaken,
+)
 from zac.core.permissions import zaken_handle_access, zaken_request_access
 from zac.core.services import get_zaak
 
@@ -15,9 +20,12 @@ from ..models import AccessRequest, UserAtomicPermission
 logger = logging.getLogger(__name__)
 
 
-class CanGrantAccess(ZaakDefinitionPermission):
-    permission = zaken_handle_access
+###############################
+#       Access Requests       #
+###############################
 
+
+class GrantAccessMixin:
     def get_object_url(self, serializer) -> str:
         return serializer.validated_data["atomic_permission"]["object_url"]
 
@@ -35,16 +43,28 @@ class CanGrantAccess(ZaakDefinitionPermission):
         return zaak
 
 
-class CanRequestAccess(ZaakDefinitionPermission):
-    permission = zaken_request_access
+class CanGrantAccess(GrantAccessMixin, ZaakDefinitionPermission):
+    permission = zaken_handle_access
 
+
+class CanForceGrantAccess(GrantAccessMixin, CanForceEditClosedZaak):
+    pass
+
+
+class RequestMixin:
     def get_object_url(self, serializer) -> str:
         return serializer.validated_data["zaak"].url
 
 
-class CanHandleAccessRequest(DefinitionBasePermission):
-    permission = zaken_handle_access
+class CanRequestAccess(RequestMixin, ZaakDefinitionPermission):
+    permission = zaken_request_access
 
+
+class CanForceRequestAccess(RequestMixin, CanForceEditClosedZaak):
+    pass
+
+
+class HandleAccessRequestMixin:
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, AccessRequest):
             obj = self.get_object(request, obj.zaak)
@@ -59,20 +79,33 @@ class CanHandleAccessRequest(DefinitionBasePermission):
         return zaak
 
 
-class CanCreateOrHandleAccessRequest:
+class CanHandleAccessRequest(HandleAccessRequestMixin, DefinitionBasePermission):
+    permission = zaken_handle_access
+
+
+class CanForceHandleAccessRequest(HandleAccessRequestMixin, CanForceEditClosedZaken):
+    pass
+
+
+class CanCreateOrHandleAccessRequest(BaseConditionalPermission):
     def get_permission(self, request) -> DefinitionBasePermission:
         if request.method == "POST":
             return CanRequestAccess()
         else:
             return CanHandleAccessRequest()
 
-    def has_permission(self, request: Request, view: APIView) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_permission(request, view)
 
-    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
-        permission = self.get_permission(request)
-        return permission.has_object_permission(request, view, obj)
+class CanForceCreateOrHandleAccessRequest(BaseConditionalPermission):
+    def get_permission(self, request) -> DefinitionBasePermission:
+        if request.method == "POST":
+            return CanForceRequestAccess()
+        else:
+            return CanForceHandleAccessRequest()
+
+
+###############################
+#           Groups            #
+###############################
 
 
 class GroupBasePermission:
