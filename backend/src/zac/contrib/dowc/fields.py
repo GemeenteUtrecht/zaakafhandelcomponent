@@ -23,6 +23,6 @@ class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
         assert isinstance(
             instance, Document
         ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document"
-        if self.context.get('zaak_is_closed'):
+        if self.context.get("zaak_is_closed"):
             return ""
         return get_dowc_url(instance, self.purpose)
