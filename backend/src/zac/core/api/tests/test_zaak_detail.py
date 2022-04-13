@@ -23,7 +23,12 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien, zaken_request_access, zaken_wijzigen
+from zac.core.permissions import (
+    zaken_geforceerd_bijwerken,
+    zaken_inzien,
+    zaken_request_access,
+    zaken_wijzigen,
+)
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -658,7 +663,6 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_has_perm_to_update(self, m):
-
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
@@ -688,6 +692,111 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "reden": "because",
             },
         )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_update_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
+            json=paginated_response([self._zaak]),
+        )
+        user = UserFactory.create()
+
+        # allows them to update details on the case
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=self.zaaktype.url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            einddatum="2020-01-01",
+        )
+        zaak = factory(Zaak, zaak)
+        m.patch(zaak.url, status_code=status.HTTP_200_OK)
+        with patch("zac.core.api.views.find_zaak", return_value=zaak):
+            response = self.client.patch(
+                self.detail_url,
+                {
+                    "einddatum": "2021-01-01",
+                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                    "reden": "because",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_update_and_for_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
+        user = UserFactory.create()
+
+        # allows them to update details on the case
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=self.zaaktype.url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            einddatum="2020-01-01",
+        )
+        zaak = factory(Zaak, zaak)
+        m.patch(zaak.url, status_code=status.HTTP_200_OK)
+        with patch("zac.core.api.views.find_zaak", return_value=zaak):
+            response = self.client.patch(
+                self.detail_url,
+                {
+                    "einddatum": "2021-01-01",
+                    "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                    "reden": "because",
+                },
+            )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     @requests_mock.Mocker()

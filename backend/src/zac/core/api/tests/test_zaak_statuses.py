@@ -19,9 +19,13 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import (
+    zaken_geforceerd_bijwerken,
+    zaken_inzien,
+    zaken_wijzigen,
+)
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -235,7 +239,165 @@ class ZaakStatusesResponseTests(ClearCachesMixin, APITestCase):
         )
 
 
-class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
+class ReadZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+        config = KownslConfig.get_solo()
+        config.service = kownsl
+        config.save()
+        catalogus_url = (
+            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=catalogus_url,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        cls.statustype_1 = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            zaaktype=cls.zaaktype["url"],
+            volgnummer=1,
+        )
+        cls.statustype_2 = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/486f83e6-f841-462c-aa3b-f3d0f4d72870",
+            zaaktype=cls.zaaktype["url"],
+            volgnummer=2,
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie="ZAAK-2020-0010",
+            bronorganisatie="123456782",
+            zaaktype=cls.zaaktype["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+        )
+        zaak = factory(Zaak, cls.zaak)
+        zaak.zaaktype = factory(ZaakType, cls.zaaktype)
+        cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+        cls.get_statuses_patcher = patch(
+            "zac.core.api.views.get_statussen", return_value=[]
+        )
+        cls.endpoint = reverse(
+            "zaak-statuses",
+            kwargs={
+                "bronorganisatie": "123456782",
+                "identificatie": "ZAAK-2020-0010",
+            },
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.find_zaak_patcher.start()
+        self.addCleanup(self.find_zaak_patcher.stop)
+        self.get_statuses_patcher.start()
+        self.addCleanup(self.get_statuses_patcher.stop)
+
+    def test_not_authenticated(self):
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_authenticated_no_permissions(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
+        # gives them access to the page, but no catalogus specified -> nothing visible
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_but_not_for_va(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+            json=[],
+        )
+        user = UserFactory.create()
+        # gives them access to the page and zaaktype, but insufficient VA
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class CreateZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -310,7 +472,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         self.addCleanup(self.get_statuses_patcher.stop)
 
     def test_not_authenticated(self):
-        response = self.client.get(self.endpoint)
+        response = self.client.post(self.endpoint, json={})
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -318,7 +480,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
+        response = self.client.post(self.endpoint, json={})
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -347,7 +509,7 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
+        response = self.client.post(self.endpoint, data={})
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -381,30 +543,195 @@ class ZaakStatusPermissiontests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
+        response = self.client.post(self.endpoint, data={})
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_has_perm(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={
+                "next": None,
+                "previous": None,
+                "count": 2,
+                "results": [
+                    self.statustype_1,
+                    self.statustype_2,
+                ],
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            json=self.statustype_1,
+        )
+        _status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            zaak=self.zaak["url"],
+            statustype=self.statustype_1["url"],
+            datumStatusGezet="2020-12-25T00:00:00Z",
+        )
+        m.post(
+            f"{ZAKEN_ROOT}statussen",
+            json=_status,
+            status_code=201,
+        )
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
+            role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
-                "zaaktype_omschrijving": "ZT1",
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
         )
         self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.endpoint,
+            data={
+                "statustype": {"url": self.statustype_1["url"]},
+                "statustoelichting": "Some-toelichting",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.get(self.endpoint)
+    @requests_mock.Mocker()
+    def test_has_perm_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={
+                "next": None,
+                "previous": None,
+                "count": 2,
+                "results": [
+                    self.statustype_1,
+                    self.statustype_2,
+                ],
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            json=self.statustype_1,
+        )
+        _status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            zaak=self.zaak["url"],
+            statustype=self.statustype_1["url"],
+            datumStatusGezet="2020-12-25T00:00:00Z",
+        )
+        m.post(
+            f"{ZAKEN_ROOT}statussen",
+            json=_status,
+            status_code=201,
+        )
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        zaak = {**self.zaak, "einddatum": "2020-01-01"}
+        with patch("zac.core.api.views.find_zaak", return_value=factory(Zaak, zaak)):
+            response = self.client.post(
+                self.endpoint,
+                data={
+                    "statustype": {"url": self.statustype_1["url"]},
+                    "statustoelichting": "Some-toelichting",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    @requests_mock.Mocker()
+    def test_has_perm_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen?zaaktype={self.zaaktype['url']}",
+            json={
+                "next": None,
+                "previous": None,
+                "count": 2,
+                "results": [
+                    self.statustype_1,
+                    self.statustype_2,
+                ],
+            },
+        )
+        m.get(
+            f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+            json=self.statustype_1,
+        )
+        _status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+            zaak=self.zaak["url"],
+            statustype=self.statustype_1["url"],
+            datumStatusGezet="2020-12-25T00:00:00Z",
+        )
+        m.post(
+            f"{ZAKEN_ROOT}statussen",
+            json=_status,
+            status_code=201,
+        )
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        zaak = {**self.zaak, "einddatum": "2020-01-01"}
+        with patch("zac.core.api.views.find_zaak", return_value=factory(Zaak, zaak)):
+            response = self.client.post(
+                self.endpoint,
+                data={
+                    "statustype": {"url": self.statustype_1["url"]},
+                    "statustoelichting": "Some-toelichting",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

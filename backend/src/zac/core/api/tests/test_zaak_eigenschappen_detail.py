@@ -14,7 +14,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.permissions import zaken_wijzigen
+from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -598,6 +598,67 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @requests_mock.Mocker()
+    def test_patch_has_perm_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.eigenschap)
+        mock_resource_get(m, self.zaak_eigenschap)
+        m.patch(ZAAK_EIGENSCHAP_URL, json=self.zaak_eigenschap)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.patch(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_patch_has_perm_also_for_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.eigenschap)
+        mock_resource_get(m, self.zaak_eigenschap)
+        m.patch(ZAAK_EIGENSCHAP_URL, json=self.zaak_eigenschap)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.patch(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
     def test_delete_other_permisison(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -633,6 +694,67 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         m.delete(ZAAK_EIGENSCHAP_URL, status_code=204)
 
         user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    @requests_mock.Mocker()
+    def test_delete_has_perm_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.eigenschap)
+        mock_resource_get(m, self.zaak_eigenschap)
+        m.delete(ZAAK_EIGENSCHAP_URL, status_code=204)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_delete_has_perm_but_zaak_is_closed(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.eigenschap)
+        mock_resource_get(m, self.zaak_eigenschap)
+        m.delete(ZAAK_EIGENSCHAP_URL, status_code=204)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
