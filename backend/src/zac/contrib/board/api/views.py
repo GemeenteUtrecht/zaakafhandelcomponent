@@ -5,11 +5,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from zac.core.api.permissions import CanForceEditClosedZaak
-
 from ..models import Board, BoardItem
 from .filters import BoardItemFilter
-from .permissions import CanUseBoardItem
+from .permissions import CanForceUseBoardItem, CanUseBoardItem
 from .serializer import BoardItemSerializer, BoardSerializer
 
 
@@ -35,7 +33,7 @@ class BoardViewSet(ReadOnlyModelViewSet):
 )
 class BoardItemViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanUseBoardItem, CanForceEditClosedZaak]
+    permission_classes = [IsAuthenticated, CanUseBoardItem, CanForceUseBoardItem]
     queryset = BoardItem.objects.select_related("column", "column__board").order_by(
         "-pk"
     )

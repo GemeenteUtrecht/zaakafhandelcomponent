@@ -18,9 +18,10 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from ..constants import BoardObjectTypes
@@ -191,6 +192,55 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_has_permission_but_zaak_is_closed(self, m):
+        self._setUpMock(m)
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        column = BoardColumnFactory.create()
+        url = reverse("boarditem-list")
+        data = {"object": ZAAK_URL, "column_uuid": str(column.uuid)}
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_has_permission_for_closed_zaak(self, m):
+        self._setUpMock(m)
+        mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        column = BoardColumnFactory.create()
+        url = reverse("boarditem-list")
+        data = {"object": ZAAK_URL, "column_uuid": str(column.uuid)}
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_OK)
+
     def test_update_other_permission(self, m):
         self._setUpMock(m)
 
@@ -272,10 +322,12 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class BoardItemAPITests(ESMixin, APITestCase):
+class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
         cls.user = SuperUserFactory.create()
         # data for ES documents
         cls.zaaktype = generate_oas_component(
@@ -467,7 +519,10 @@ class BoardItemAPITests(ESMixin, APITestCase):
             f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
         )
 
-    def test_retrieve_item(self):
+    @requests_mock.Mocker()
+    def test_retrieve_item(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
         board = BoardFactory.create()
         col1, col2 = BoardColumnFactory.create_batch(2, board=board)
         item = BoardItemFactory.create(object=ZAAK_URL, column=col1)
@@ -520,7 +575,10 @@ class BoardItemAPITests(ESMixin, APITestCase):
             },
         )
 
-    def test_create_item_success(self):
+    @requests_mock.Mocker()
+    def test_create_item_success(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
         url = reverse("boarditem-list")
         column = BoardColumnFactory.create()
         data = {"object": ZAAK_URL, "column_uuid": str(column.uuid)}
@@ -559,7 +617,10 @@ class BoardItemAPITests(ESMixin, APITestCase):
             response.json(), {"nonFieldErrors": ["Dit OBJECT staat al op het bord"]}
         )
 
-    def test_update_item_column_success(self):
+    @requests_mock.Mocker()
+    def test_update_item_column_success(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
         old_col = BoardColumnFactory.create()
         new_col = BoardColumnFactory.create(board=old_col.board)
         item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
@@ -573,7 +634,10 @@ class BoardItemAPITests(ESMixin, APITestCase):
 
         self.assertEqual(item.column, new_col)
 
-    def test_update_item_change_column_from_another_board(self):
+    @requests_mock.Mocker()
+    def test_update_item_change_column_from_another_board(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
         old_col, new_col = BoardColumnFactory.create_batch(2)
         item = BoardItemFactory.create(column=old_col, object=ZAAK_URL)
         url = reverse("boarditem-detail", args=[item.uuid])
@@ -586,19 +650,24 @@ class BoardItemAPITests(ESMixin, APITestCase):
             {"columnUuid": ["De bord van het item kan niet worden veranderd"]},
         )
 
-    def test_update_item_change_object(self):
-        item = BoardItemFactory.create()
+    @requests_mock.Mocker()
+    def test_update_item_change_object(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+        item = BoardItemFactory.create(object=self.zaak["url"])
         url = reverse("boarditem-detail", args=[item.uuid])
 
-        response = self.client.patch(url, {"object": ZAAK_URL})
-
+        response = self.client.patch(url, {"object": f"{ZAKEN_ROOT}/zaak/some-zaak"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(), {"object": ["Dit veld kan niet veranderd worden."]}
         )
 
-    def test_delete_item_success(self):
-        item = BoardItemFactory.create()
+    @requests_mock.Mocker()
+    def test_delete_item_success(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+        item = BoardItemFactory.create(object=self.zaak["url"])
         url = reverse("boarditem-detail", args=[item.uuid])
 
         response = self.client.delete(url)
