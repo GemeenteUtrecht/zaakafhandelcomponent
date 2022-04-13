@@ -1,12 +1,14 @@
-from zac.contrib.kownsl.api import get_review_requests
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status
+from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
+from zac.contrib.kownsl.api import get_review_requests, lock_review_request
+from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
@@ -21,12 +23,14 @@ from zac.elasticsearch.api import (
     create_zaak_document,
     create_zaaktype_document,
     delete_zaak_document,
+    get_zaak_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
     update_zaak_document,
     update_zaakobjecten_in_zaak_document,
 )
+from zac.elasticsearch.documents import ZaakDocument
 from zgw.models.zrc import Zaak
 
 
@@ -81,14 +85,20 @@ class ZakenHandler:
     def _handle_zaak_update(self, zaak_url: str):
         # Invalidate cache
         zaak = self._retrieve_zaak(zaak_url)
-        was_closed = zaak.einddatum
-        invalidate_zaak_cache(zaak)
         is_closed = zaak.einddatum
-        
+        zaak_document = get_zaak_document(zaak_url)
+        was_closed = zaak_document.einddatum
+        invalidate_zaak_cache(zaak)
+
+        def _lock_review_request(rr: ReviewRequest):
+            lock_review_request(str(rr.id), "Zaak is gesloten.")
+
         # lock all review requests related to zaak
         if is_closed and not was_closed:
             review_requests = get_review_requests(zaak)
-            
+            with parallel() as executor:
+                list(executor.map(_lock_review_request, review_requests))
+
         # index in ES
         update_zaak_document(zaak)
 
