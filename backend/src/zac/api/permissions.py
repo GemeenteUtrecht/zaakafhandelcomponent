@@ -49,6 +49,7 @@ class DefinitionBasePermission(permissions.BasePermission):
             filters["atomic_permission__object_url"] = obj_url
         else:
             filters["atomic_permission__object_type"] = self.object_type
+
         return (
             UserAtomicPermission.objects.select_related("atomic_permission")
             .filter(**filters)
@@ -69,7 +70,7 @@ class DefinitionBasePermission(permissions.BasePermission):
             return True
 
         # then check blueprint permissions
-        for permission in self.get_blueprint_permissions():
+        for permission in self.get_blueprint_permissions(request, permission_name):
             if permission.has_access(obj, request.user, permission_name):
                 return True
 
