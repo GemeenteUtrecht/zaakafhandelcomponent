@@ -321,11 +321,11 @@ def get_informatieobjecttypen_for_zaaktype(
     results = get_paginated_results(
         client, "zaakinformatieobjecttype", query_params={"zaaktype": zaaktype.url}
     )
+    urls = [
+        iot["informatieobjecttype"]
+        for iot in sorted(results, key=lambda iot: iot["volgnummer"])
+    ]
     with parallel() as executor:
-        urls = [
-            iot["informatieobjecttype"]
-            for iot in sorted(results, key=lambda iot: iot["volgnummer"])
-        ]
         results = executor.map(get_informatieobjecttype, urls)
     return list(results)
 
