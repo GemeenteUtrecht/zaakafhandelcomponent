@@ -5,12 +5,13 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from zac.core.api.permissions import CanForceEditClosedZaak
+
 from ..models import Board, BoardItem
 from .filters import BoardItemFilter
 from .permissions import CanUseBoardItem
 from .serializer import BoardItemSerializer, BoardSerializer
 
-from zac.core.api.permissions import CanForceEditClosedZaak
 
 @extend_schema_view(
     list=extend_schema(summary=_("List boards.")),
