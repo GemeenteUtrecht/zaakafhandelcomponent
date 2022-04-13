@@ -15,7 +15,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.permissions import zaken_handle_access, zaken_inzien
+from zac.core.permissions import (
+    zaken_geforceerd_bijwerken,
+    zaken_handle_access,
+    zaken_inzien,
+)
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
@@ -165,6 +169,91 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         m.get(ZAAK_URL, json=self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_handle_access.name],
+            for_user=self.handler,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.client.post(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
+    def test_zaak_has_permission_and_behandelaar_but_zaak_is_closed(self, m):
+        # mock ZTC and ZRC data
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.handler.username,
+            },
+        }
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
+        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_handle_access.name],
+            for_user=self.handler,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.client.post(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_zaak_has_permission_and_behandelaar_for_closed_zaak(self, m):
+        # mock ZTC and ZRC data
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.handler.username,
+            },
+        }
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
+        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.handler,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
