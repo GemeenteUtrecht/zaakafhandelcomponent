@@ -367,7 +367,8 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
     if (mapGeometryOrMapMarker.contentProperties) {
       const table = document.createElement('table');
       mapGeometryOrMapMarker.contentProperties.forEach(([key, value]) => {
-        const formattedKey = this._propertyNameToTitle(key);
+        const formattedKey = this.formatProperty(key);
+        const formattedvalue = this.formatValue(value);
 
         const tr = document.createElement('tr');
 
@@ -375,7 +376,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
         th.textContent = formattedKey;
 
         const td = document.createElement('td');
-        td.textContent = value;
+        td.innerHTML = formattedvalue;
 
         tr.appendChild(th);
         tr.appendChild(td);
@@ -409,24 +410,28 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    * @param {string} propertyName
    * @return {string}
    */
-  _propertyNameToTitle(propertyName: string): string {
-    return [...propertyName].reduce((acc, currentCharacter, index) => {
-      const previousIndex = index - 1;
+  formatProperty(propertyName: string): string {
+    return propertyName.replace(/[-_]/g, ' ');
+  }
 
-      if (index === 0) {
-        return currentCharacter.toUpperCase();
-      }
+  /**
+   * Attempts to format a value.
+   * @param {string} propertyValue
+   * @return {string}
+   */
+  formatValue(propertyValue: string): string {
+    const unsafeValue = propertyValue;
+    const safeValue = new DOMParser().parseFromString(unsafeValue, 'text/html').body.textContent;
 
-      if (previousIndex > -1) {
-        const previousCharacter = propertyName[previousIndex];
-        const currentCharacterIsUpperCase = /[A-Z]/.test(currentCharacter);
-        const previousCharacterIsUpperCase = /[A-Z]/.test(previousCharacter);
+    if (!safeValue.match(/^http/)) {
+      return safeValue;
+    }
 
-        if (currentCharacterIsUpperCase !== previousCharacterIsUpperCase) {
-          return `${acc} ${currentCharacter}`;
-        }
-      }
-      return acc + currentCharacter;
-    }, '');
+    const anchor = document.createElement('a');
+    anchor.href = safeValue;
+    anchor.target = '_blank';
+    anchor.textContent = safeValue;
+
+    return anchor.outerHTML;
   }
 }

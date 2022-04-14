@@ -133,13 +133,27 @@ export class ZaakMapComponent implements OnInit, AfterViewInit {
    * Fetches related object geometries.
    */
   getRelatedObjectGeometries(): void {
+    // List related objects.
     this.zaakService.listRelatedObjects(this.bronorganisatie, this.identificatie).subscribe(
       (zaakObjectGroups: ZaakObjectGroup[]) => {
-        this.mapMarkers = zaakObjectGroups
+        const zaakObjects = zaakObjectGroups
           .reduce((acc: ZaakObject[], zaakObjectGroup: ZaakObjectGroup) => {
             return [...acc, ...zaakObjectGroup.items]
           }, [])
-          .map(this.zaakObjectService.zaakObjectToMapMarker)
+
+        this.mapMarkers = [];
+
+        zaakObjects.forEach((zaakObject) => {
+          // Async zaakObjectToMapMarker
+          this.zaakObjectService.zaakObjectToMapMarker(zaakObject).subscribe((mapMarker) => {
+              // Push map marker.
+              this.mapMarkers.push(mapMarker);
+            },
+
+            // Report error.
+            this.reportError.bind(this)
+          );
+        })
       },
       this.reportError.bind(this),
     );
