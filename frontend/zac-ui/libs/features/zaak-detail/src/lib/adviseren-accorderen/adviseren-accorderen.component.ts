@@ -197,7 +197,6 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @param {event} event
    */
   tableButtonClick(event): void {
-    console.log(event);
     this.selectedReviewRequestSummary = event.cancel;
     this.modalService.open('cancel-review-modal')
   }
