@@ -126,7 +126,7 @@ export class ZaakObjectService {
 
       // Find pand if referenced.
       if (zaakObject.record.data['BAGNR_PAND']) {
-        this.kadasterService.retreivePandByPandId(zaakObject.record.data['BAGNR_PAND']).subscribe(
+        this.kadasterService.retrievePandByPandId(zaakObject.record.data['BAGNR_PAND']).subscribe(
           // Add resolved pand details to map MapMarker.
           (pand) => {
             Object.assign(
