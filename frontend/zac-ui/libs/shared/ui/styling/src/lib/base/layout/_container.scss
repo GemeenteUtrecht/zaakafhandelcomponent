@@ -2,6 +2,10 @@
 
 .feature-container {
   position: relative;
+  width: 100vw;
+  @include media-breakpoint-up(md) {
+    width: 100%
+  }
 }
 
 .container {
