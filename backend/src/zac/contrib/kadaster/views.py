@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
@@ -7,10 +8,20 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .api import get_address_suggestions, get_pand, get_verblijfsobject
+from zac.api.utils import remote_schema_ref
+
+from .api import (
+    find_pand,
+    get_address_suggestions,
+    get_nummeraanduiding,
+    get_pand,
+    get_verblijfsobject,
+)
 from .serializers import (
     AddressSearchResponseSerializer,
-    PandSerializer,
+    FindPandSerializer,
+    NummerAanduidingenSerializer,
+    PandenSerializer,
     VerblijfsobjectSerializer,
 )
 
@@ -49,12 +60,12 @@ class AdresSearchView(APIView):
         return Response(serializer.data)
 
 
-class PandFetchView(APIView):
+class FindPand(APIView):
     permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = PandSerializer
+    serializer_class = FindPandSerializer
 
     @extend_schema(
-        summary=_("Retrieve pand from BAG API."),
+        summary=_("Find pand in the BAG API."),
         parameters=[
             OpenApiParameter(
                 "id",
@@ -78,7 +89,113 @@ class PandFetchView(APIView):
         if not address_id:
             raise serializers.ValidationError(_("Missing query parameter 'id'"))
 
-        instance = get_pand(address_id)
+        instance = find_pand(address_id)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
+
+
+class PandView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = PandenSerializer
+
+    @extend_schema(
+        summary=_("Retrieve pand from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "pandidentificatie",
+                OpenApiTypes.STR,
+                OpenApiParameter.PATH,
+                description=_("The `pandidentificatie` of the pand object."),
+                required=True,
+            )
+        ],
+        responses={
+            (200, "application/json"): remote_schema_ref(
+                settings.BAG_API_SCHEMA,
+                ["components", "schemas", "Pand"],
+            ),
+        },
+    )
+    def get(self, request: Request, pandidentificatie: str):
+        """
+        This endpoint allows users to get a pand based on the `pandidentificatie`.
+
+        Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
+        """
+
+        instance = get_pand(pandidentificatie)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
+
+
+class NummerAanduidingView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = NummerAanduidingenSerializer
+
+    @extend_schema(
+        summary=_("Retrieve nummeraanduiding from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "nummeraanduidingidentificatie",
+                OpenApiTypes.STR,
+                OpenApiParameter.PATH,
+                description=_(
+                    "The `nummeraanduidingidentificatie` of the nummeraanduiding object."
+                ),
+                required=True,
+            )
+        ],
+        responses={
+            (200, "application/json"): remote_schema_ref(
+                settings.BAG_API_SCHEMA,
+                ["components", "schemas", "Nummeraanduiding"],
+            ),
+        },
+    )
+    def get(self, request: Request, nummeraanduidingidentificatie: str):
+        """
+        This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingidentificatie`.
+
+        Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
+        """
+
+        instance = get_nummeraanduiding(nummeraanduidingidentificatie)
+        serializer = self.serializer_class(instance=instance)
+        return Response(serializer.data)
+
+
+class VerblijfplaatsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = NummerAanduidingenSerializer
+
+    @extend_schema(
+        summary=_("Retrieve verblijfplaats from BAG API."),
+        parameters=[
+            OpenApiParameter(
+                "nummeraanduidingidentificatie",
+                OpenApiTypes.STR,
+                OpenApiParameter.PATH,
+                description=_(
+                    "The `nummeraanduidingidentificatie` of the nummeraanduiding object."
+                ),
+                required=True,
+            )
+        ],
+        responses={
+            (200, "application/json"): remote_schema_ref(
+                settings.BAG_API_SCHEMA,
+                ["components", "schemas", "Nummeraanduiding"],
+            ),
+        },
+    )
+    def get(self, request: Request, nummeraanduidingidentificatie: str):
+        """
+        This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingidentificatie`.
+
+        Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
+        """
+
+        instance = get_nummeraanduiding(nummeraanduidingidentificatie)
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data)
 
@@ -112,6 +229,6 @@ class VerblijfsobjectFetchView(APIView):
         if not address_id:
             raise serializers.ValidationError(_("Missing query parameter 'id'"))
 
-        instance = get_verblijfsobject(address_id)
+        instance = get_nummeraanduiding(address_id)
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data)

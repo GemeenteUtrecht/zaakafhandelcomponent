@@ -1271,6 +1271,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/BPMN'
           description: ''
+  /api/camunda/cancel-task:
+    post:
+      operationId: camunda_cancel_task_create
+      description: Allows a user to cancel the camunda task after it has been (accidentally)
+        created.
+      summary: Cancel a camunda user task of the ZAAK.
+      tags:
+      - camunda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelTask'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CancelTask'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CancelTask'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
   /api/camunda/claim-task:
     post:
       operationId: camunda_claim_task_create
@@ -1628,6 +1662,320 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HistoricUserTask'
+          description: ''
+  /api/checklists/checklisttypes:
+    get:
+      operationId: checklists_checklisttypes_list
+      summary: List checklisttype and related questions.
+      parameters:
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        description: URL-reference of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChecklistType'
+          description: ''
+    post:
+      operationId: checklists_checklisttypes_create
+      summary: Create checklisttype and related questions.
+      tags:
+      - checklists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistType'
+          description: ''
+  /api/checklists/checklisttypes/{uuid}:
+    get:
+      operationId: checklists_checklisttypes_retrieve
+      summary: Retrieve checklisttype and related questions.
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this checklist type.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistType'
+          description: ''
+    put:
+      operationId: checklists_checklisttypes_update
+      summary: Update checklisttype and related questions.
+      parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this checklist type.
+        required: true
+      tags:
+      - checklists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChecklistType'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistType'
+          description: ''
+  /api/checklists/zaak-checklists/{bronorganisatie}/{identificatie}:
+    get:
+      operationId: checklists_zaak_checklists_retrieve
+      summary: Retrieve checklist and related answers.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadChecklist'
+          description: ''
+    post:
+      operationId: checklists_zaak_checklists_create
+      summary: Create checklist and related answers.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      tags:
+      - checklists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checklist'
+          description: ''
+    put:
+      operationId: checklists_zaak_checklists_update
+      summary: Update checklist and related answers.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      tags:
+      - checklists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Checklist'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checklist'
+          description: ''
+  /api/checklists/zaak-checklisttypes/{bronorganisatie}/{identificatie}:
+    get:
+      operationId: checklists_zaak_checklisttypes_retrieve
+      summary: Retrieve checklisttype and related questions for ZAAK.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistType'
           description: ''
   /api/core/cases/{bronorganisatie}/{identificatie}:
     get:
@@ -2949,7 +3297,7 @@ paths:
 
         Once users have retrieved the `id` of an address from the PDOK locatieserver, they can use the `id` to fetch a pand from the BAG API.
         Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
-      summary: Een specifiek pand van de BAG API opvragen.
+      summary: Find pand in the BAG API.
       parameters:
       - in: query
         name: id
@@ -2976,7 +3324,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pand'
+                $ref: '#/components/schemas/FindPand'
           description: ''
   /api/kadaster/adres/verblijfsobject:
     get:
@@ -3053,6 +3401,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressSearchResponse'
+          description: ''
+  /api/kadaster/nummeraanduidingen/{nummeraanduiding_identificatie}:
+    get:
+      operationId: kadaster_nummeraanduidingen_retrieve
+      description: |-
+        This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingen_identificatie`.
+
+        Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
+      summary: Retrieve nummeraanduiding from BAG API.
+      parameters:
+      - in: path
+        name: nummeraanduiding_identificatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: nummeraanduidingidentificatie
+        schema:
+          type: string
+        description: The `nummeraanduidingidentificatie` of the nummeraanduiding object.
+        required: true
+      tags:
+      - kadaster
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Nummeraanduiding
+          description: ''
+  /api/kadaster/panden/{pandidentificatie}:
+    get:
+      operationId: kadaster_panden_retrieve
+      description: |-
+        This endpoint allows users to get a pand based on the `pandidentificatie`.
+
+        Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
+      summary: Een specifiek pand van de BAG API opvragen.
+      parameters:
+      - in: path
+        name: pandidentificatie
+        schema:
+          type: string
+        description: The `pandidentificatie` of the pand object.
+        required: true
+      tags:
+      - kadaster
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Pand
           description: ''
   /api/kownsl/review-requests/{request_uuid}/advice:
     get:
@@ -3279,6 +3702,46 @@ paths:
         required: true
       tags:
       - kownsl
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakRevReqDetail'
+          description: ''
+    patch:
+      operationId: kownsl_zaak_review_requests_detail_partial_update
+      summary: Lock review request.
+      parameters:
+      - in: path
+        name: request_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - kownsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLockReviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLockReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLockReviewRequest'
       security:
       - cookieAuth: []
       responses:
@@ -4443,6 +4906,16 @@ components:
       required:
       - value
       title: Boolean
+    CancelTask:
+      type: object
+      properties:
+        task:
+          type: string
+          format: uuid
+          description: The UUID of the task that is to be canceled.
+      required:
+      - task
+      title: CancelTask
     CharValue:
       type: object
       properties:
@@ -4452,6 +4925,128 @@ components:
       required:
       - value
       title: CharValue
+    Checklist:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        groupAssignee:
+          type: string
+          description: Naam van de groep.
+        userAssignee:
+          type: string
+          description: '`username` van de gebruiker.'
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistAnswer'
+      required:
+      - answers
+      - created
+      title: Checklist
+    ChecklistAnswer:
+      type: object
+      properties:
+        question:
+          type: string
+          title: Related question
+          maxLength: 1000
+        answer:
+          type: string
+          title: Answer to the question
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+        remarks:
+          type: string
+          title: Opmerkingen
+        document:
+          type: string
+          format: uri
+          title: Document-URL
+          description: Document in de Documenten API.
+          maxLength: 1000
+      required:
+      - created
+      - modified
+      - question
+      title: ChecklistAnswer
+    ChecklistQuestion:
+      type: object
+      properties:
+        question:
+          type: string
+          title: Text of the question
+          maxLength: 1000
+        order:
+          type: integer
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionChoice'
+        isMultipleChoice:
+          type: boolean
+          readOnly: true
+      required:
+      - isMultipleChoice
+      - order
+      - question
+      title: ChecklistQuestion
+    ChecklistType:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistQuestion'
+        zaaktype:
+          type: string
+          format: uri
+          title: ZAAKTYPE-URL
+          description: URL-referentie naar het ZAAKTYPE.
+          maxLength: 1000
+        zaaktypeCatalogus:
+          type: string
+          format: uri
+          readOnly: true
+          title: CATALOGUS of ZAAKTYPE
+          description: URL-referentie naar de CATALOGUS van het ZAAKTYPE.
+        zaaktypeOmschrijving:
+          type: string
+          readOnly: true
+          title: Omschrijving
+          description: Omschrijving van het ZAAKTYPE.
+      required:
+      - created
+      - modified
+      - questions
+      - uuid
+      - zaaktype
+      - zaaktypeCatalogus
+      - zaaktypeOmschrijving
+      title: ChecklistType
     ConfigureReviewRequest:
       type: object
       description: |-
@@ -4899,6 +5494,21 @@ components:
       - zaakgeometrie
       type: string
       title: FieldsEnum
+    FindPand:
+      type: object
+      properties:
+        adres:
+          allOf:
+          - $ref: '#/components/schemas/Address'
+          description: Adres van pand.
+        bagObject:
+          allOf:
+          - $ref: '#/components/schemas/PandBagData'
+          description: Metadata van BAG object.
+      required:
+      - adres
+      - bagObject
+      title: FindPand
     Form:
       type: object
       properties:
@@ -4930,11 +5540,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldString'
-      - $ref: '#/components/schemas/FormFieldDatetime'
-      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldBoolean'
+      - $ref: '#/components/schemas/FormFieldDatetime'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5551,21 +6161,6 @@ components:
           items:
             $ref: '#/components/schemas/ZaakTypeAggregate'
       title: PaginatedZaakTypeAggregateList
-    Pand:
-      type: object
-      properties:
-        adres:
-          allOf:
-          - $ref: '#/components/schemas/Address'
-          description: Adres van pand.
-        bagObject:
-          allOf:
-          - $ref: '#/components/schemas/PandBagData'
-          description: Metadata van BAG object.
-      required:
-      - adres
-      - bagObject
-      title: Pand
     PandBagData:
       type: object
       properties:
@@ -5711,6 +6306,12 @@ components:
           format: date
           description: Einddatum van de toegang
       title: PatchedHandleAccessRequest
+    PatchedLockReviewRequest:
+      type: object
+      properties:
+        lockReason:
+          type: string
+      title: PatchedLockReviewRequest
     PatchedSearchReport:
       type: object
       properties:
@@ -5802,10 +6403,10 @@ components:
       title: PatchedUserAuthorizationProfile
     PatchedZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -5861,6 +6462,10 @@ components:
       - zaken:nieuwe-relaties-toevoegen
       - activiteiten:schrijven
       - activiteiten:inzien
+      - checklist:schrijven
+      - checklist:inzien
+      - checklisttypes:schrijven
+      - checklisttypes:inzien
       type: string
       title: PermissionsEnum
     PoliciesInformatieObjectTypeBlueprint:
@@ -5913,6 +6518,21 @@ components:
       - tasks
       - title
       title: ProcessInstance
+    QuestionChoice:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Human readable name of choice
+          maxLength: 100
+        value:
+          type: string
+          title: Value of choice
+          maxLength: 100
+      required:
+      - name
+      - value
+      title: QuestionChoice
     ReadActivity:
       type: object
       properties:
@@ -5970,6 +6590,30 @@ components:
       - url
       - zaak
       title: ReadActivity
+    ReadChecklist:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        groupAssignee:
+          allOf:
+          - $ref: '#/components/schemas/Group'
+          description: Group assigned to checklist.
+        userAssignee:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          description: User assigned to checklist.
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistAnswer'
+      required:
+      - answers
+      - created
+      title: ReadChecklist
     ReadUserAuthorizationProfile:
       type: object
       properties:
@@ -6004,6 +6648,7 @@ components:
       - activiteit
       - adviseur
       - accordeur
+      - checklist
       type: string
       title: ReasonEnum
     RedirectContext:
@@ -6529,10 +7174,10 @@ components:
       title: String
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       discriminator:
         propertyName: form
         mapping:
@@ -6700,8 +7345,12 @@ components:
           oneOf:
           - $ref: '#/components/schemas/AssigneeTypeEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        canCancelTask:
+          type: boolean
+          readOnly: true
       required:
       - assigneeType
+      - canCancelTask
       - created
       - hasForm
       - id
@@ -6810,11 +7459,11 @@ components:
       title: UserAuthorizationProfile
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
       - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
-      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -7204,10 +7853,10 @@ components:
       title: ZaakDocument
     ZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -7309,8 +7958,8 @@ components:
       title: ZaakObjectProxyExtras
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       discriminator:
         propertyName: reviewType
         mapping:
@@ -7357,7 +8006,13 @@ components:
           description: Het aantal voltooide verzoeken.
         numAssignedUsers:
           type: integer
+        canLock:
+          type: boolean
+          readOnly: true
+          title: can lock request
+          description: User can lock the review request.
       required:
+      - canLock
       - completed
       - id
       - numAssignedUsers

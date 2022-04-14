@@ -468,10 +468,13 @@ SPECTACULAR_SETTINGS = {
 }
 
 # URLs from which DRF spectacular retrieves API schemas
+BAG_API_SCHEMA = config(
+    "BAG_API_SCHEMA",
+    "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
+)
 DOWC_API_SCHEMA = config(
     "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
 )
-
 KOWNSL_API_SCHEMA = config(
     "KOWNSL_API_SCHEMA",
     "https://kownsl.cg-intern.ont.utrecht.nl/api/v1",
