@@ -256,7 +256,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       (zaakObjects: ZaakObject[]) => {
         this.zaakObjects = zaakObjects;
 
-        const activeMapMarkers = []
+        let activeMapMarkers = []
 
         // Fetch zaak objects.
         this.zaakObjects.forEach((zaakObject: ZaakObject) => {
@@ -269,7 +269,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             // Add map marker.
             (mapMarker: MapMarker) => {
               if (mapMarker) {
-                activeMapMarkers.push(mapMarker)
+                activeMapMarkers = [...activeMapMarkers, mapMarker];
               }
             },
 
