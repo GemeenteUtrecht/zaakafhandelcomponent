@@ -36,6 +36,7 @@ export class CancelReviewComponent implements OnInit {
    */
   submitForm(formData) {
     if (this.reviewRequestSummary.canLock) {
+      this.isSubmitting = true;
       this.reviewRequestsService.cancelReviewRequest(this.reviewRequestSummary.id, formData).subscribe(() => {
         this.snackbarService.openSnackBar('De aanvraag is geannuleerd.', 'Sluiten', 'primary');
         this.isSubmitting = false;
