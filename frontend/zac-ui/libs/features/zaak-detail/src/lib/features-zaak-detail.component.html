@@ -83,7 +83,7 @@
               <gu-tab label="Acties">
                 <div class="pt-4 pb-4 pl-2 pr-2">
                   <div class="row">
-                    <div class="col-lg-7 mb-lg-4">
+                    <div class="col-lg-7 mb-4">
                       <!-- Processes -->
                         <gu-keten-processen *ngIf="currentUser"
                                             [mainZaakUrl]="mainZaakUrl"
@@ -142,9 +142,9 @@
                     </div>
                   </div>
                   <div>
-                    <aside *ngIf="!isLoading && !hasError">
+                    <div *ngIf="!isLoading && !hasError">
                       <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
-                    </aside>
+                    </div>
                   </div>
                 </div>
               </gu-tab>
@@ -170,7 +170,7 @@
     </div>
   </div>
 
-<!--  &lt;!&ndash; Map &ndash;&gt;-->
+  <!-- Map -->
 <!--  <gu-collapse [collapsed]="true">-->
 <!--    <aside *ngIf="!isLoading && !hasError">-->
 <!--      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>-->
