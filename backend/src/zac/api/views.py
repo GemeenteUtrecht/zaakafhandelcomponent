@@ -16,8 +16,9 @@ def remote_schema_view(request):
     schema_url = request.GET["schema"]
     # TODO: cache
     response = requests.get(schema_url)
+    content = response.content
 
-    django_response = HttpResponse(content=response.content)
+    django_response = HttpResponse(content=content)
     for header, value in response.headers.items():
         if header.lower() not in HEADERS_TO_KEEP:
             continue

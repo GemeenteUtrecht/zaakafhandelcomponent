@@ -1,7 +1,10 @@
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
+
+from zac.api.proxy import ProxySerializer
 
 from .data import (
     Address,
@@ -183,7 +186,7 @@ class VerblijfsobjectDataSerializer(BaseBagDataSerializer):
         }
 
 
-class PandSerializer(APIModelSerializer):
+class FindPandSerializer(APIModelSerializer):
     adres = AddressSerializer(help_text=_("Address of pand."))
     bag_object = PandBagDataSerializer(help_text=_("Meta data of BAG object."))
 
@@ -205,3 +208,31 @@ class VerblijfsobjectSerializer(APIModelSerializer):
             "adres",
             "bag_object",
         )
+
+
+class PandenSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.BAG_API_SCHEMA
+    PROXY_SCHEMA_PATH = [
+        "paths",
+        "/panden/{pandidentificatie}",
+        "get",
+        "responses",
+        200,
+        "content",
+        "application/json",
+        "schema",
+    ]
+
+
+class NummerAanduidingenSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.BAG_API_SCHEMA
+    PROXY_SCHEMA_PATH = [
+        "paths",
+        "/nummeraanduidingen/{nummeraanduidingidentificatie}",
+        "get",
+        "responses",
+        200,
+        "content",
+        "application/json",
+        "schema",
+    ]

@@ -54,7 +54,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 403)
 
-    def test_user_not_logged_in_get_pand(self, m):
+    def test_user_not_logged_in_find_pand(self, m):
         self.client.logout()
         address_id = "adr-09asnd9as0ndas09dnas09ndsa"
         url = furl(reverse("kadaster:adres-pand"))
@@ -204,7 +204,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    def test_get_pand(self, m):
+    def test_find_pand(self, m):
         # Mock locatie server lookup response
         address_id = "adr-09asnd9as0ndas09dnas09ndsa"
         adresseerbaarobject_id = "9999999999999991"
@@ -303,7 +303,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-    def test_fail_get_pand(self, m):
+    def test_fail_find_pand(self, m):
         # Mock locatie server lookup response
         address_id = "adr-09asnd9as0ndas09dnas09ndsa"
         adresseerbaarobject_id = "9999999999999991"
