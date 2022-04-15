@@ -3,6 +3,11 @@ import { ReviewRequestSummary } from '@gu/kownsl';
 import { ReviewRequestsService } from '../review-requests.service';
 import { FieldConfiguration, SnackbarService } from '@gu/components';
 
+/**
+ * Allows user to cancel a kownsl review request.
+ *
+ * <gu-cancel-review [reviewRequestSummary]="reviewRequestSummary" (successReload)="update()"></gu-cancel-review>
+ */
 @Component({
   selector: 'gu-cancel-review',
   templateUrl: './cancel-review.component.html',
@@ -19,6 +24,15 @@ export class CancelReviewComponent implements OnInit {
     private reviewRequestsService: ReviewRequestsService,
     private snackbarService: SnackbarService,
   ) { }
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
 
   ngOnInit(): void {
     this.form = [

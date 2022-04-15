@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ModalService } from '@gu/components';
+import { SnackbarService } from '@gu/components';
 import {Task, User, UserGroupDetail, UserSearchResult} from '@gu/models';
 import { KetenProcessenService } from '../keten-processen.service';
 
@@ -29,14 +29,13 @@ export class AssignTaskComponent implements OnChanges {
   userGroups: UserGroupDetail[] = [];
 
   isSubmitting: boolean;
-  submitHasError: boolean;
-  submitErrorMessage: string;
+  errorMessage: string;
   submitSuccess: boolean;
 
   constructor(
     private kService: KetenProcessenService,
     private fb: FormBuilder,
-    private modalService: ModalService
+    private snackbarService: SnackbarService
   ) { }
 
   //
@@ -60,7 +59,6 @@ export class AssignTaskComponent implements OnChanges {
    */
   ngOnChanges(): void {
     this.submitSuccess = false;
-    this.submitHasError = false;
     this.isSubmitting = false;
 
     if (this.taskData) {
@@ -129,16 +127,28 @@ export class AssignTaskComponent implements OnChanges {
 
     this.kService.postAssignTask(formData).subscribe(() => {
       this.submitSuccess = true;
-      this.submitHasError = false;
       this.isSubmitting = false;
       this.successReload.emit(true)
     }, error => {
-      this.submitHasError = true;
-      this.submitErrorMessage =
-        error?.error?.detail ? error.error.detail
-          : error?.error?.nonFieldErrors ? error.error?.nonFieldErrors[0]
-          : 'Er is een fout opgetreden'
+      this.reportError(error)
       this.isSubmitting = false;
     })
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.errorMessage =
+      error?.error?.detail ? error.error.detail
+        : error?.error?.nonFieldErrors ? error.error?.nonFieldErrors[0]
+        : 'Er is een fout opgetreden'
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    console.error(error);
   }
 }

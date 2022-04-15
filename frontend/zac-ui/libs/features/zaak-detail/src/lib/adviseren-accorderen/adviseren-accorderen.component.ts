@@ -157,7 +157,7 @@ export class AdviserenAccorderenComponent implements OnInit {
             date: String(date),
           } as ExtensiveCell,
 
-          'cancel': reviewRequestSummary.canLock ? {
+          'cancel': reviewRequestSummary.canLock && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers) ? {
             type: 'button',
             label: 'Annuleren',
             value: reviewRequestSummary
