@@ -188,6 +188,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "completed": 1,
                     "numAssignedUsers": 1,
                     "canLock": False,
+                    "locked": False,
+                    "lockReason": "",
                 }
             ],
         )
@@ -209,6 +211,35 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "completed": 1,
                     "numAssignedUsers": 1,
                     "canLock": True,
+                    "locked": False,
+                    "lockReason": "",
+                }
+            ],
+        )
+
+    def test_get_zaak_review_requests_is_locked(self, m):
+        rr = factory(
+            ReviewRequest,
+            {**REVIEW_REQUEST, "locked": True, "lockReason": "just a reason"},
+        )
+        with patch(
+            "zac.contrib.kownsl.views.get_review_requests",
+            return_value=[rr],
+        ):
+            response = self.client.get(self.endpoint_summary)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "id": REVIEW_REQUEST["id"],
+                    "reviewType": KownslTypes.advice,
+                    "completed": 1,
+                    "numAssignedUsers": 1,
+                    "canLock": False,
+                    "locked": True,
+                    "lockReason": "just a reason",
                 }
             ],
         )
