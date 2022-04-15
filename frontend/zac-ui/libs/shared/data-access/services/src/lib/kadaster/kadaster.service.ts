@@ -20,6 +20,14 @@ export class KadasterService {
   }
 
   /**
+   * Retrieve pand from BAG API.
+   * @param {string} pandidentificatie The pandidentificatie of the BAG object
+   */
+  retrievePandByPandId(pandidentificatie) {
+    return this.http.Get(`/api/kadaster/panden/${pandidentificatie}`, );
+  }
+
+  /**
    * Retrieve verblijfsobject from BAG API.
    * @param {string} id The ID of the BAG object. Can be found using the BAG address suggestions.
    */

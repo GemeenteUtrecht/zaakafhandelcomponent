@@ -1,8 +1,8 @@
 import {HttpParams} from "@angular/common/http";
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
-import {Geometry, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
-import {ApplicationHttpClient} from '@gu/services';
+import {Observable, Subscriber} from 'rxjs';
+import {Geometry, User, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
+import {ApplicationHttpClient, KadasterService} from '@gu/services';
 import {MapMarker} from "../../../../../ui/components/src/lib/components/map/map";
 import {ClearCacheOnMethodCall} from "@gu/utils";
 
@@ -10,7 +10,7 @@ import {ClearCacheOnMethodCall} from "@gu/utils";
   providedIn: 'root'
 })
 export class ZaakObjectService {
-  constructor(private http: ApplicationHttpClient) {
+  constructor(private http: ApplicationHttpClient, private kadasterService: KadasterService) {
   }
 
   /**
@@ -97,25 +97,57 @@ export class ZaakObjectService {
 
   /**
    * Converts a ZaakObject to a MapMarker, ready to draw on the map.
+   * If a pand is referenced in zaakObject, it's details are fetched and inlcuded on the MapMarker.
+   * This operation is therefore asynchronous.
    * @param zaakObject
    * @param options
+   * @return {Observable}
    */
-  zaakObjectToMapMarker(zaakObject: ZaakObject, options: Object = {}): MapMarker {
-    const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
-    const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
+  zaakObjectToMapMarker(zaakObject: ZaakObject, options: Object = {}): Observable<MapMarker> {
+    // Return observable, this operation is async.
+    return new Observable((subscriber: Subscriber<MapMarker>) => {
+      const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
+      const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
+        contentProperties: Object.entries(zaakObject.record.data),
+        coordinates: zaakObjectGeometry?.coordinates?.length > 1
+          ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
+          : [],
+        iconUrl: 'assets/vendor/leaflet/marker-icon-red.png',
+      } as MapMarker : null;
 
-      contentProperties: Object.entries(zaakObject.record.data),
-      coordinates: zaakObjectGeometry?.coordinates?.length > 1
-        ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
-        : [],
-      iconUrl: 'assets/vendor/leaflet/marker-icon-red.png',
+      // Couldn't create a mapmarker (lacking coordinates?)
+      if (!mapMarker) {
+        subscriber.next(null);
+        subscriber.complete();
+      }
 
-    } as MapMarker : null;
-
-    if (mapMarker) {
+      // Assign options to created marker.
       Object.assign(mapMarker, options);
-    }
-    return mapMarker;
+
+      // Find pand if referenced.
+      if (zaakObject.record.data['BAGNR_PAND']) {
+        this.kadasterService.retrievePandByPandId(zaakObject.record.data['BAGNR_PAND']).subscribe(
+          // Add resolved pand details to map MapMarker.
+          (pand) => {
+            Object.assign(
+              mapMarker.contentProperties,
+              Object
+                .entries(pand)
+                .filter(([key, value]) => Object(value) !== value)  // Only keep primitive values.
+                .reduce((acc, [key, value]) => ({...acc, key: value}), {})  // Convert back to object.
+            );
+
+            // Complete with pand.
+            subscriber.next(mapMarker);
+            subscriber.complete();
+          }
+        );
+      } else {
+        // Complete without pand.
+        subscriber.next(mapMarker);
+        subscriber.complete();
+      }
+    });
   }
 
   /**

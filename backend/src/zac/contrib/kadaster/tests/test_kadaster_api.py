@@ -1,24 +1,15 @@
-import uuid
-from unittest.mock import patch
-
 from django.urls import reverse
 
-import jwt
 import requests_mock
 from furl import furl
-from rest_framework import status
 from rest_framework.test import APITransactionTestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import SuperUserFactory, UserFactory
+from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..api import get_bag_client
 from ..models import KadasterConfig
 
 KADASTER_API_ROOT = "https://some-kadaster.nl/esd/huidigebevragingen/v1/"
@@ -302,6 +293,92 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
                 },
             },
         )
+
+    def test_find_pand_hit_cache(self, m):
+        # Mock locatie server lookup response
+        address_id = "adr-09asnd9as0ndas09dnas09ndsa"
+        adresseerbaarobject_id = "9999999999999991"
+        lookup_response = {
+            "response": {
+                "numFound": 1,
+                "start": 0,
+                "maxScore": 99,
+                "docs": [
+                    {
+                        "bron": "BAG",
+                        "woonplaatscode": "9999",
+                        "type": "adres",
+                        "woonplaatsnaam": "Some-city",
+                        "wijkcode": "WK999999",
+                        "huis_nlt": "9999",
+                        "openbareruimtetype": "Weg",
+                        "buurtnaam": "Some-neighborhood",
+                        "gemeentecode": "9999",
+                        "rdf_seealso": "http://some-bag.nl/bag/id/nummeraanduiding/9999999999999992",
+                        "weergavenaam": "Some-street 99, 9999XX Some-city",
+                        "straatnaam_verkort": "Some-street",
+                        "id": address_id,
+                        "gekoppeld_perceel": ["SMC-C-9998", "SMC-C-9999"],
+                        "gemeentenaam": "Some-municipality",
+                        "buurtcode": "BU99999999",
+                        "wijknaam": "Some-wijk 99 Some-city",
+                        "identificatie": "9999999999999991-9999999999999992",
+                        "openbareruimte_id": "9999999999999993",
+                        "waterschapsnaam": "Some-waterschap",
+                        "provinciecode": "PV99",
+                        "postcode": "9999XX",
+                        "provincienaam": "Some-province",
+                        "centroide_ll": "POINT(9 9)",
+                        "nummeraanduiding_id": "9999999999999992",
+                        "waterschapscode": "99",
+                        "adresseerbaarobject_id": adresseerbaarobject_id,
+                        "huisnummer": 99,
+                        "provincieafkorting": "SP",
+                        "centroide_rd": "POINT(0 0)",
+                        "straatnaam": "Some-street",
+                    }
+                ],
+            }
+        }
+        m.get(f"{LOCATION_SERVER_ROOT}lookup?id={address_id}", json=lookup_response)
+
+        # mock kadaster api service
+        mock_service_oas_get(m, KADASTER_API_ROOT, "kadaster")
+
+        # mock adresseerbaar object from kadaster
+        pand_id = "9999999999999994"
+        adresseerbaarobject = generate_oas_component(
+            "kadaster",
+            "schemas/AdresseerbaarObject",
+            adresseerbaarobject_id=adresseerbaarobject_id,
+            type="verblijfsobject",
+            pandIdentificaties=[pand_id],
+        )
+        m.get(
+            f"{KADASTER_API_ROOT}adresseerbareobjecten/{adresseerbaarobject_id}",
+            json=adresseerbaarobject,
+        )
+
+        # mock pand from kadaster
+        pand = generate_oas_component(
+            "kadaster",
+            "schemas/Pand",
+            identificatie=pand_id,
+            _links={"self": {"href": f"{KADASTER_API_ROOT}panden/{pand_id}"}},
+        )
+        m.get(f"{KADASTER_API_ROOT}panden/{pand_id}", json=pand)
+
+        url = furl(reverse("kadaster:adres-pand"))
+        url.args["id"] = address_id
+
+        response = self.client.get(url.url)
+        hits = len(m.request_history)
+        self.assertEqual(hits, 4)
+
+        # Make sure cache gets hit afterwards instead of kadaster
+        response = self.client.get(url.url)
+        new_hits = len(m.request_history)
+        self.assertEqual(hits, new_hits)
 
     def test_fail_find_pand(self, m):
         # Mock locatie server lookup response

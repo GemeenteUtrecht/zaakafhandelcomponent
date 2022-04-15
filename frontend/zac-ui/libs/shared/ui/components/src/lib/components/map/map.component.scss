@@ -14,4 +14,31 @@ gu-map {
     top: 0;
     width: 100%;
   }
+
+  .leaflet-popup-content table {
+
+  }
+
+  .leaflet-popup-content table tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .leaflet-popup-content table tr:last-child {
+    border-bottom: none;
+  }
+
+  .leaflet-popup-content table tr th,
+  .leaflet-popup-content table tr td {
+    box-sizing: border-box;
+    font-size: 10px;
+    width: 50%;
+    white-space: nowrap;
+  }
+
+  .leaflet-popup-content table tr td a {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 50%;
+    display: block;
+  }
 }

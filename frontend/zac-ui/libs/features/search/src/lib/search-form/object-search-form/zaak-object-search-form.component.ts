@@ -251,19 +251,38 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {string} [property] Object type property.
    * @param {string} [query]
    */
-  fetchObjects(geometry=null, objectType=null, property=null, query=null):void {
+  fetchObjects(geometry = null, objectType = null, property = null, query = null): void {
     this.zaakObjectService.searchObjects(geometry, objectType, property, query).subscribe(
       (zaakObjects: ZaakObject[]) => {
         this.zaakObjects = zaakObjects;
-        const activeMapMarkers = this.zaakObjects.map((zaakObject) => this.zaakObjectService.zaakObjectToMapMarker(zaakObject, {
+
+        let activeMapMarkers = []
+
+        // Fetch zaak objects.
+        this.zaakObjects.forEach((zaakObject: ZaakObject) => {
+          const mapMarkerOptions = {
             onClick: (event) => this._selectZaakObject(event, zaakObject),
-          })
-        ).filter((mapMarker) => mapMarker);
+          }
 
-        this.mapMarkers.emit(activeMapMarkers);
+          // Async zaakObjectToMapMarker
+          this.zaakObjectService.zaakObjectToMapMarker(zaakObject, mapMarkerOptions).subscribe(
+            // Add map marker.
+            (mapMarker: MapMarker) => {
+              if (mapMarker) {
+                activeMapMarkers = [...activeMapMarkers, mapMarker];
+              }
+            },
 
-        this.isLoading = false;
-        this.cdRef.detectChanges();
+            // Report error.
+            this.reportError.bind(this),
+
+            // All map markers loaded.
+            () => {
+              this.mapMarkers.emit(activeMapMarkers);
+              this.isLoading = false;
+              this.cdRef.detectChanges();
+            })
+        });
       },
       this.reportError.bind(this),
     );
