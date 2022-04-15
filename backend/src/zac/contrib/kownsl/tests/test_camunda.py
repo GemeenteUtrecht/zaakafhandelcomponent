@@ -30,9 +30,7 @@ from ..camunda import (
     SelectUsersRevReqSerializer,
     ZaakInformatieTaskSerializer,
 )
-
-DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
-ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+from .utils import DOCUMENT_URL, DOCUMENTS_ROOT, REVIEW_REQUEST, ZAAK_URL, ZAKEN_ROOT
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -72,8 +70,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
 
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
+            "drc", "schemas/EnkelvoudigInformatieObject", url=DOCUMENT_URL
         )
         cls.document = factory(Document, document)
 
@@ -89,7 +86,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
             zaaktype=zaaktype["url"],
         )
 
@@ -156,7 +153,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                     {
                         "beschrijving": self.document.beschrijving,
                         "bestandsnaam": self.document.bestandsnaam,
-                        "url": self.document.url,
+                        "url": DOCUMENT_URL,
                         "read_url": get_dowc_url(
                             self.document, purpose=DocFileTypes.read
                         ),
@@ -194,7 +191,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                     {
                         "beschrijving": self.document.beschrijving,
                         "bestandsnaam": self.document.bestandsnaam,
-                        "url": self.document.url,
+                        "url": DOCUMENT_URL,
                         "read_url": get_dowc_url(
                             self.document, purpose=DocFileTypes.read
                         ),
@@ -217,70 +214,40 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.users_1 = UserFactory.create_batch(3)
         cls.group = GroupFactory.create()
         cls.users_2 = UserFactory.create_batch(3)
-
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
+            "drc", "schemas/EnkelvoudigInformatieObject", url=DOCUMENT_URL
         )
         cls.document = factory(Document, document)
-
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
         )
-
         cls.zaak = factory(Zaak, zaak)
-
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             documents=[
                 cls.document,
             ],
         )
-
         cls.patch_get_zaak_context = patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
             return_value=cls.zaak_context,
         )
-
         cls.patch_get_zaak_context_doc_ser = patch(
             "zac.core.camunda.select_documents.serializers.get_zaak_context",
             return_value=cls.zaak_context,
         )
-
         cls.patch_get_documenten = patch(
             "zac.core.api.validators.get_documenten",
             return_value=([cls.document], []),
         )
-
-        review_request_data = {
-            "id": uuid.uuid4(),
-            "created": "2020-01-01T15:15:22Z",
-            "forZaak": cls.zaak.url,
-            "reviewType": KownslTypes.advice,
-            "documents": [cls.document],
-            "frontendUrl": "http://some.kownsl.com/frontendurl/",
-            "numAdvices": 0,
-            "numApprovals": 1,
-            "numAssignedUsers": 1,
-            "toelichting": "some-toelichting",
-            "userDeadlines": {},
-            "requester": {
-                "username": "some-henkie",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-        }
-        cls.review_request = factory(ReviewRequest, review_request_data)
-
+        cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
         cls.patch_create_review_request = patch(
             "zac.contrib.kownsl.camunda.create_review_request",
             return_value=cls.review_request,
         )
-
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )

@@ -19,7 +19,7 @@ from .data import ReviewRequest
 class CanLockReview(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, ReviewRequest):
-            requester = obj.requester["fullName"] or obj.requester["username"]
+            requester = obj.requester["full_name"] or obj.requester["username"]
             self.message = _(
                 "Review request can only be locked by `{requester}`."
             ).format(requester=requester)
@@ -45,11 +45,11 @@ class CanReadOrLockReviews:
 
 class ReviewIsUnlocked(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        requester = obj["requester"]["fullName"] or obj["requester"]["username"]
+        requester = obj.requester["full_name"] or obj.requester["username"]
         self.message = _("Review request is locked by `{requester}`.").format(
             requester=requester
         )
-        return not obj["locked"]
+        return not obj.locked
 
 
 class IsReviewUser(permissions.BasePermission):
@@ -59,7 +59,7 @@ class IsReviewUser(permissions.BasePermission):
             for group in request.user.groups.all()
         ]
         assignees.append(f"{AssigneeTypeChoices.user}:{request.user.username}")
-        return any([assignee in obj["userDeadlines"] for assignee in assignees])
+        return any([assignee in obj.user_deadlines for assignee in assignees])
 
 
 class HasNotReviewed(permissions.BasePermission):
@@ -69,13 +69,11 @@ class HasNotReviewed(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         assignee = resolve_assignee(request.query_params.get("assignee"))
-        rr = factory(ReviewRequest, obj)
-        zaak = get_zaak(zaak_url=rr.for_zaak)
-        if rr.review_type == KownslTypes.advice:
-            reviews = retrieve_advices(rr)
+        zaak = get_zaak(zaak_url=obj.for_zaak)
+        if obj.review_type == KownslTypes.advice:
+            reviews = retrieve_advices(obj)
         else:
-            reviews = retrieve_approvals(rr)
-
+            reviews = retrieve_approvals(obj)
         for review in reviews:
             if review.group:
                 if assignee.name == review.group:
