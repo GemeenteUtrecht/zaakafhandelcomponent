@@ -192,6 +192,15 @@ export class KetenProcessenService {
   }
 
   /**
+   * Cancel task.
+   * @param formData
+   */
+  cancelTask(formData) {
+    const endpoint = encodeURI('/api/camunda/cancel-task');
+    return this.http.Post(endpoint, formData);
+  }
+
+  /**
    * Open document.
    * @param endpoint
    * @returns {Observable<ReadWriteDocument>}

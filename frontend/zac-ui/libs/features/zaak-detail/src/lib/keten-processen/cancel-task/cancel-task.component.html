@@ -1,0 +1,9 @@
+<p>Weet je zeker dat je deze taak wilt annuleren?</p>
+
+<button gu-button
+        [disabled]="isSubmitting"
+        [loading]="isSubmitting"
+        buttonStyle="primary"
+        (click)="cancelTask()">
+  Annuleren
+</button>

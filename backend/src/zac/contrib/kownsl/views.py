@@ -13,6 +13,7 @@ from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
@@ -141,7 +142,9 @@ class BaseRequestView(APIView):
         review_request = client.retrieve(
             "review_requests", uuid=self.kwargs["request_uuid"]
         )
-        self.check_object_permissions(self.request, review_request)
+        self.check_object_permissions(
+            self.request, factory(ReviewRequest, review_request)
+        )
         return review_request
 
     def get(self, request, request_uuid):
@@ -150,11 +153,9 @@ class BaseRequestView(APIView):
 
         review_request = self.get_object()
         zaak_url = review_request["forZaak"]
+        review_request["zaak"] = get_zaak(zaak_url=zaak_url)
         serializer = self.serializer_class(
-            instance={
-                **review_request,
-                "zaak": get_zaak(zaak_url=zaak_url),
-            },
+            instance=review_request,
             context={"request": request, "view": self},
         )
         return Response(serializer.data)
@@ -314,9 +315,9 @@ class ZaakReviewRequestDetailView(APIView):
     def patch(self, request, request_uuid, *args, **kwargs):
         review_request = self.get_object()
         self.check_object_permissions(self.request, review_request)
-        serializer = self.get_serializer(request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        review_request = lock_review_request(request_uuid, **serializer.validate_data)
+        review_request = lock_review_request(request_uuid, **serializer.validated_data)
         review_request = self.get_review_request_metadata(review_request)
         response_serializer = ZaakRevReqDetailSerializer(instance=review_request)
         return Response(response_serializer.data)

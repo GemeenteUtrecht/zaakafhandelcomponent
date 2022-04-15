@@ -40,6 +40,7 @@ export interface ReviewRequestSummary {
   reviewType: 'advice' | 'approval',
   completed: number,
   numAssignedUsers: number,
+  canLock: boolean;
 }
 
 export interface ReviewRequestDetails {

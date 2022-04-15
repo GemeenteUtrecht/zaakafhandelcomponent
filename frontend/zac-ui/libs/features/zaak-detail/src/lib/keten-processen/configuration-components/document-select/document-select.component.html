@@ -44,11 +44,11 @@
         </div>
       </div>
     </article>
-    <div class="d-flex justify-content-end">
-      <button gu-button size="large"
-                 (click)="submitForm()"
-                 [disabled]="!selectDocumentsForm.valid || isSubmitting"
-                 [loading]="isSubmitting">
+    <div class="d-flex justify-content-start">
+      <button gu-button
+              (click)="submitForm()"
+              [disabled]="!selectDocumentsForm.valid || isSubmitting"
+              [loading]="isSubmitting">
         Voltooien
       </button>
     </div>

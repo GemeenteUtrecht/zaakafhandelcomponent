@@ -9,14 +9,26 @@
       *ngIf="(reviewRequestSummaries.length > 0) && tableData"
       [sortable]="true"
       [table]="tableData"
+      (buttonOutput)="tableButtonClick($event)"
       (tableOutput)="tableClick($event)">
     </gu-table>
     <p *ngIf="(reviewRequestSummaries.length === 0)">Er is niets gevonden.</p>
   </ng-container>
 </div>
+
+<!-- Review details -->
 <gu-modal
   id="adviseren-accorderen-detail-modal"
   [closeIcon]="true"
 >
   <gu-detail-modal [reviewRequestDetails]="selectedReviewRequestDetails"></gu-detail-modal>
+</gu-modal>
+
+<!-- Cancel review -->
+<gu-modal
+  id="cancel-review-modal"
+  size='small'
+  [closeIcon]="true"
+>
+  <gu-cancel-review [reviewRequestSummary]="selectedReviewRequestSummary" (successReload)="update(); closeModal('cancel-review-modal')"></gu-cancel-review>
 </gu-modal>

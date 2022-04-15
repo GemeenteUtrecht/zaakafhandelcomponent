@@ -1,5 +1,3 @@
-import uuid
-
 from django.test import TestCase
 
 import jwt
@@ -11,6 +9,14 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
+from zac.contrib.kownsl.constants import KownslTypes
+from zac.contrib.kownsl.tests.utils import (
+    ADVICE,
+    APPROVAL,
+    KOWNSL_ROOT,
+    REVIEW_REQUEST,
+    ZAAK_URL,
+)
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
@@ -18,6 +24,7 @@ from ..api import (
     create_review_request,
     get_client,
     get_review_requests,
+    lock_review_request,
     retrieve_advices,
     retrieve_approvals,
 )
@@ -30,29 +37,25 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
         cls.service = Service.objects.create(
-            label="Kownsl",
+            label="kownsl",
             api_type=APITypes.orc,
-            api_root="https://kownsl.nl",
+            api_root=KOWNSL_ROOT,
             auth_type=AuthTypes.zgw,
             client_id="zac",
             secret="supersecret",
-            oas="https://kownsl.nl/api/v1",
             user_id="zac",
         )
 
         config = KownslConfig.get_solo()
         config.service = cls.service
         config.save()
+        zaak_json = generate_oas_component("zrc", "schemas/Zaak", url=ZAAK_URL)
+        cls.zaak = factory(Zaak, zaak_json)
 
     def test_client(self, m):
-        mock_service_oas_get(
-            m, self.service.api_root, "kownsl", oas_url=self.service.oas
-        )
-
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         client = get_client()
-
         self.assertIsInstance(client.schema, dict)
         # we're using the ZGW Auth mechanism to pass currently logged-in user information
         self.assertIsNotNone(client.auth)
@@ -66,191 +69,88 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(claims["user_id"], "zac")
 
         self.assertEqual(len(m.request_history), 1)
-        self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
+        self.assertEqual(m.last_request.url, f"{KOWNSL_ROOT}schema/openapi.yaml?v=3")
 
     def test_create_review_request(self, m):
-        mock_service_oas_get(
-            m, self.service.api_root, "kownsl", oas_url=self.service.oas
-        )
-
-        _uuid = uuid.uuid4()
-        response = {
-            "id": str(_uuid),
-            "created": "2020-12-16T14:15:22Z",
-            "forZaak": "https://zaken.nl/api/v1/zaak/123",
-            "reviewType": "advice",
-            "documents": ["https://doc.nl/123"],
-            "frontendUrl": "",
-            "numAdvices": 0,
-            "numApprovals": 0,
-            "numAssignedUsers": 0,
-            "toelichting": "",
-            "requester": {
-                "username": "Henkie",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-        }
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.post(
-            "https://kownsl.nl/api/v1/review-requests", json=response, status_code=201
+            f"{KOWNSL_ROOT}api/v1/review-requests",
+            json=REVIEW_REQUEST,
+            status_code=201,
         )
-        user = UserFactory.create(username="Henkie")
+        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
         review_request = create_review_request(
-            "https://zaken.nl/api/v1/zaak/123",
+            ZAAK_URL,
             user,
             documents=["https://doc.nl/123"],
         )
 
-        self.assertEqual(review_request.id, _uuid)
-        self.assertEqual(review_request.for_zaak, "https://zaken.nl/api/v1/zaak/123")
+        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(review_request.for_zaak, ZAAK_URL)
         self.assertTrue(m.last_request.headers["Authorization"].startswith("Bearer "))
 
     def test_retrieve_advices(self, m):
-        # can't use generate_oas_component because Kownsl API schema doesn't have components
-        _review_request = {
-            "id": "45638aa6-e177-46cc-b580-43339795d5b5",
-            "created": "2020-12-16T14:15:22Z",
-            "forZaak": "https://zaken.nl/api/v1/zaak/123",
-            "reviewType": "advice",
-            "documents": [],
-            "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
-            "numAdvices": 1,
-            "numApprovals": 0,
-            "numAssignedUsers": 1,
-            "toelichting": "Longing for the past but dreading the future",
-            "requester": {
-                "username": "Henkie",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-        }
-        review_request = factory(ReviewRequest, _review_request)
-        response = [
-            {
-                "created": "2020-06-17T10:21:16Z",
-                "author": {
-                    "username": "foo",
-                    "firstName": "",
-                    "lastName": "",
-                    "fullName": "",
-                },
-                "group": "",
-                "advice": "dummy",
-                "documents": [],
-            }
-        ]
-        mock_service_oas_get(
-            m, self.service.api_root, "kownsl", oas_url=self.service.oas
-        )
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        review_request = factory(ReviewRequest, REVIEW_REQUEST)
         m.get(
-            f"https://kownsl.nl/api/v1/review-requests/{review_request.id}/advices",
-            json=response,
+            f"{KOWNSL_ROOT}api/v1/review-requests/{review_request.id}/advices",
+            json=[ADVICE],
         )
-
         advices = retrieve_advices(review_request)
-
         self.assertEqual(len(advices), 1)
-
         advice = advices[0]
-
-        self.assertEqual(advice.advice, "dummy")
+        self.assertEqual(advice.advice, ADVICE["advice"])
         self.assertEqual(User.objects.count(), 0)
-
         # side effect: user created
         advice.author.user
         self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, "foo")
+        self.assertEqual(User.objects.get().username, "some-author")
 
     def test_retrieve_approvals(self, m):
-        _review_request = {
-            "id": "45638aa6-e177-46cc-b580-43339795d5b5",
-            "created": "2020-12-16T14:15:22Z",
-            "forZaak": "https://zaken.nl/api/v1/zaak/123",
-            "reviewType": "approval",
-            "documents": [],
-            "frontendUrl": f"https://kownsl.nl/45638aa6-e177-46cc-b580-43339795d5b5",
-            "numAdvices": 0,
-            "numApprovals": 1,
-            "numAssignedUsers": 1,
-            "toelichting": "Are a thousand tears worth a single smile?",
-            "requester": {
-                "username": "Henkie",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-        }
-        review_request = factory(ReviewRequest, _review_request)
-        response = [
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        review_request = factory(
+            ReviewRequest,
             {
-                "created": "2020-06-17T10:21:16Z",
-                "author": {
-                    "username": "foo",
-                    "firstName": "",
-                    "lastName": "",
-                    "fullName": "",
-                },
-                "group": "",
-                "approved": True,
-                "toelichting": "When you give an inch, will they take a mile?",
-            }
-        ]
-        mock_service_oas_get(
-            m, self.service.api_root, "kownsl", oas_url=self.service.oas
+                **REVIEW_REQUEST,
+                "reviewType": KownslTypes.approval,
+                "numAdvices": 0,
+                "numApprovals": 1,
+            },
         )
         m.get(
-            f"https://kownsl.nl/api/v1/review-requests/{review_request.id}/approvals",
-            json=response,
+            f"{KOWNSL_ROOT}api/v1/review-requests/{review_request.id}/approvals",
+            json=[APPROVAL],
         )
-
         approvals = retrieve_approvals(review_request)
-
         self.assertEqual(len(approvals), 1)
-
         approval = approvals[0]
-
         self.assertEqual(approval.approved, True)
         self.assertEqual(User.objects.count(), 0)
-        self.assertEqual(
-            approval.toelichting, "When you give an inch, will they take a mile?"
-        )
-
+        self.assertEqual(approval.toelichting, APPROVAL["toelichting"])
         # side effect: user created
         approval.author.user
         self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, "foo")
+        self.assertEqual(User.objects.get().username, "some-author")
 
     def test_get_review_requests(self, m):
-        mock_service_oas_get(
-            m, self.service.api_root, "kownsl", oas_url=self.service.oas
-        )
-        _zaak = generate_oas_component(
-            "zrc", "schemas/Zaak", url="https://zaken.nl/api/v1/zaken/123"
-        )
-        zaak = factory(Zaak, _zaak)
-        _uuid = uuid.uuid4()
-        response = {
-            "id": str(_uuid),
-            "created": "2020-12-16T14:15:22Z",
-            "forZaak": "https://zaken.nl/api/v1/zaak/123",
-            "reviewType": "advice",
-            "documents": [],
-            "frontendUrl": "",
-            "numAdvices": 0,
-            "numApprovals": 0,
-            "numAssignedUsers": 0,
-            "toelichting": "",
-            "userDeadlines": {},
-        }
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
-            f"https://kownsl.nl/api/v1/review-requests?for_zaak={zaak.url}",
-            json=[response],
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={ZAAK_URL}",
+            json=[REVIEW_REQUEST],
         )
-
-        review_requests = get_review_requests(zaak)
-
+        review_requests = get_review_requests(self.zaak)
         request = review_requests[0]
-        self.assertEqual(request.id, _uuid)
-        self.assertEqual(m.last_request.qs["for_zaak"], [zaak.url])
+        self.assertEqual(str(request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(m.last_request.qs["for_zaak"], [ZAAK_URL])
+
+    def test_lock_review_request(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.patch(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=REVIEW_REQUEST,
+        )
+        review_request = lock_review_request(REVIEW_REQUEST["id"], "some-reason")
+        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(
+            m.last_request.json(), {"locked": True, "lock_reason": "some-reason"}
+        )

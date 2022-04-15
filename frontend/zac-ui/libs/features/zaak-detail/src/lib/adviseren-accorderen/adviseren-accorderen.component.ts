@@ -36,8 +36,11 @@ export class AdviserenAccorderenComponent implements OnInit {
   /** @type {Object<string, ReviewRequestDetails>} The review request details by id. */
   reviewRequestDetails: { [id: string]: ReviewRequestDetails } = {};
 
-  /** @type {ReviewRequestDetails} The id of the selected review request. */
+  /** @type {ReviewRequestDetails} The details of the selected review request. */
   selectedReviewRequestDetails: ReviewRequestDetails;
+
+  /** @type {ReviewRequestSummary} The selected review request. */
+  selectedReviewRequestSummary: ReviewRequestSummary;
 
   tableData: Table;
 
@@ -127,7 +130,7 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @return {Table}
    */
   reviewRequestSummaryAsTable(reviewRequestSummaries: ReviewRequestSummary[]): Table {
-    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update'], []);
+    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update', ''], []);
 
     table.bodyData = reviewRequestSummaries.map((reviewRequestSummary): RowData => {
       const reviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
@@ -152,7 +155,13 @@ export class AdviserenAccorderenComponent implements OnInit {
           'last_update': {
             type: date === null ? 'text' : 'date',
             date: String(date),
-          } as ExtensiveCell
+          } as ExtensiveCell,
+
+          'cancel': reviewRequestSummary.canLock && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers) ? {
+            type: 'button',
+            label: 'Annuleren',
+            value: reviewRequestSummary
+          } : '',
         },
 
         clickOutput: reviewRequestSummary.completed > 0 ? reviewRequestSummary : null
@@ -174,6 +183,23 @@ export class AdviserenAccorderenComponent implements OnInit {
   //
   // Events.
   //
+
+  /**
+   * Close modal
+   * @param modalId
+   */
+  closeModal(modalId: string): void {
+    this.modalService.open(modalId);
+  }
+
+  /**
+   * Gets called when a table button is clicked.
+   * @param {event} event
+   */
+  tableButtonClick(event): void {
+    this.selectedReviewRequestSummary = event.cancel;
+    this.modalService.open('cancel-review-modal')
+  }
 
   /**
    * Gets called when a table row is clicked.

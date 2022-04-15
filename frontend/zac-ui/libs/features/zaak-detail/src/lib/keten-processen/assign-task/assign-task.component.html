@@ -24,7 +24,6 @@
                   (click)="submitForm('user')">
             Collega toewijzen
           </button>
-          <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
         </form>
       </div>
     </gu-tab>
@@ -52,7 +51,6 @@
                   (click)="submitForm('userGroup')">
             Groep toewijzen
           </button>
-          <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
         </form>
       </div>
     </gu-tab>

@@ -94,11 +94,11 @@
       <p *ngIf="reviewType === 'approval'">Wat wil je aan je collega's vertellen over deze accorderingsvraag?</p>
       <gu-textarea [control]="toelichting" class="mb-0" id="textarea_advice"></gu-textarea>
     </article>
-    <div class="d-flex justify-content-end">
-      <button gu-button size="large"
-                 (click)="submitForm()"
-                 [disabled]="!assignUsersForm.valid || isSubmitting"
-                 [loading]="isSubmitting">
+    <div class="d-flex justify-content-start">
+      <button gu-button
+              (click)="submitForm()"
+              [disabled]="!assignUsersForm.valid || isSubmitting"
+              [loading]="isSubmitting">
         {{reviewType === 'advice' ? 'Advies vragen' : reviewType === 'approval' ? 'Akkoord vragen' : ''}}
       </button>
     </div>
