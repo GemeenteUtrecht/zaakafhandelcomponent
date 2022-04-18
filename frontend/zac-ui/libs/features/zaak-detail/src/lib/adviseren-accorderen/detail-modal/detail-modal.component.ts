@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Author, ReviewRequestDetails} from "@gu/kownsl";
+import {Author, ReviewRequestDetails, ReviewRequestSummary} from '@gu/kownsl';
 import {ExtensiveCell, ReadWriteDocument, RowData, Table} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {Review, ReviewDocument} from './detail-modal.interface';
@@ -20,6 +20,7 @@ import {Review, ReviewDocument} from './detail-modal.interface';
 })
 export class DetailModalComponent  {
   @Input() reviewRequestDetails: ReviewRequestDetails;
+  @Input() reviewRequestSummary: ReviewRequestSummary;
 
 
   constructor(private http: ApplicationHttpClient) {
