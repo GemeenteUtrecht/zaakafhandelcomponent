@@ -206,6 +206,7 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @param {ReviewRequestSummary} reviewRequestSummary
    */
   tableClick(reviewRequestSummary: ReviewRequestSummary): void {
+    this.selectedReviewRequestSummary = reviewRequestSummary;
     this.selectedReviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
     this.modalService.open('adviseren-accorderen-detail-modal')
   }

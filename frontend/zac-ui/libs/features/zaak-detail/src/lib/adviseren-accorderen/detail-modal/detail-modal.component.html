@@ -1,5 +1,8 @@
 <h1 *ngIf="title">{{title}}</h1>
 <div class="gu-adviseren-accorderen-detail">
+  <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
+    <b>Reden annulering: </b>{{reviewRequestSummary.lockReason}}
+  </p>
 
   <gu-table [table]="table"
             [expandable]="true"

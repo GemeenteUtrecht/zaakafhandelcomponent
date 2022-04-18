@@ -13,21 +13,21 @@ export interface ReviewRequestStatus {
 
 export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } = {
   APPROVED: {
-    icon: 'done',
+    icon: 'check_circle',
     iconColor: 'green',
     label: 'Akkoord',
     value: 'Akkoord',  // As in API response.
   },
 
   NOT_APPROVED: {
-    icon: 'close',
+    icon: 'cancel',
     iconColor: 'red',
     label: 'Niet akkoord',
     value: 'Niet akkoord',  // As in API response.
   },
 
   ADVICE_COMPLETE: {
-    icon: 'done',
+    icon: 'check_circle',
     iconColor: 'green',
     label: 'Afgehandeld',
     value: 'Afgehandeld',
@@ -38,6 +38,13 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     iconColor: 'orange',
     label: 'In afwachting',
     value: 'pending',
+  },
+
+  LOCKED: {
+    icon: 'lock',
+    iconColor: 'red',
+    label: 'Geannuleerd',
+    value: 'locked',
   },
 
   LOADING: {  // API loading.
@@ -107,6 +114,11 @@ export class ReviewRequestsService {
     // All advices given.
     if (reviewRequestSummary.reviewType === 'advice' && this.isReviewRequestCompleted(reviewRequestSummary)) {
       return REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE;
+    }
+
+    // Locked request
+    if (reviewRequestSummary.locked) {
+      return REVIEW_REQUEST_STATUSES.LOCKED;
     }
 
     // Whether all approved.

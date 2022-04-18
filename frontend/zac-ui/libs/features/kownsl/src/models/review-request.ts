@@ -41,6 +41,8 @@ export interface ReviewRequestSummary {
   completed: number,
   numAssignedUsers: number,
   canLock: boolean;
+  locked: boolean;
+  lockReason: string;
 }
 
 export interface ReviewRequestDetails {
