@@ -1,0 +1,9 @@
+::ng-deep gu-zaak-object-search-form {
+}
+
+::ng-deep gu-modal gu-zaak-object-search-form {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 40px);
+  max-height: 100%;
+}

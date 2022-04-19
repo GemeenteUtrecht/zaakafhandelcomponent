@@ -54,6 +54,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
  */
 @Component({
   selector: 'gu-zaak-object-search-form',
+  styleUrls: ['./zaak-object-search-form.component.scss'],
   templateUrl: './zaak-object-search-form.component.html',
 })
 export class ZaakObjectSearchFormComponent implements OnInit {

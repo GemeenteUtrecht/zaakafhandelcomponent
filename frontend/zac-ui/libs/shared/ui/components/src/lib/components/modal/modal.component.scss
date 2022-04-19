@@ -43,6 +43,14 @@ gu-modal {
         transition: transform 0.3s;
       }
     }
+
+    &--expand-vertical .gu-modal-body {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 80px);
+      overflow: hidden;
+    }
+
     .gu-modal-header {
       display: flex;
       justify-content: flex-end;
@@ -86,6 +94,10 @@ gu-modal {
     margin-right: 0;
     position: relative;
     width: calc(100% + 15px);
+  }
+
+  .mat-list {
+    overflow-y: auto;
   }
 }
 

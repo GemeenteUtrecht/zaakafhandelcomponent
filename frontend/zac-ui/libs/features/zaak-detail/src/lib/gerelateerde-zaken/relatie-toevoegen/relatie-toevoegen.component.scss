@@ -1,3 +1,24 @@
-.relatie-toevoegen {
-  position: relative;
+::ng-deep gu-relatie-toevoegen {
+  height: calc(100% - 80px);
+
+  .relatie-toevoegen {
+    height: 100%;
+    position: relative;
+  }
+
+  mat-tab-group {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .mat-tab-body-content > .p-4 {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  gu-search-results {
+    overflow-y: auto;
+  }
 }
