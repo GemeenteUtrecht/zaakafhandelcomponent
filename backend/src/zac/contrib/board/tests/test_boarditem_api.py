@@ -239,7 +239,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_201_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_other_permission(self, m):
         self._setUpMock(m)
