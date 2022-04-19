@@ -17,10 +17,7 @@ from zac.core.cache import (
     invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import (
-    _client_from_url,
-    update_medewerker_identificatie_rol,
-)
+from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
 from zac.elasticsearch.api import (
     create_status_document,
     create_zaak_document,
