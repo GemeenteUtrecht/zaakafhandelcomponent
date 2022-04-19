@@ -98,7 +98,6 @@ from .permissions import (
     CanAddReverseRelations,
     CanForceAddRelations,
     CanForceAddReverseRelations,
-    CanForceCreateOrUpdateZaakEigenschap,
     CanForceEditClosedZaak,
     CanForceEditClosedZaken,
     CanHandleAccessRequests,
@@ -327,7 +326,7 @@ class ZaakEigenschapDetailView(views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanUpdateZaken,
-        CanForceCreateOrUpdateZaakEigenschap,
+        CanForceEditClosedZaken,
     )
     serializer_class = ZaakEigenschapSerializer
     filterset_class = ZaakEigenschappenFilterSet
@@ -456,14 +455,14 @@ class CreateZaakRelationView(views.APIView):
     )
 
     def get_serializer(self, *args, **kwargs):
-        return AddZaakRelationSerializer(data=self.request.data)
+        return AddZaakRelationSerializer(*args, **kwargs)
 
     @extend_schema(
         summary=_("Add related ZAAK."),
         description=_("Relate a ZAAK to another ZAAK and create the reverse relation."),
     )
     def post(self, request: Request) -> Response:
-        serializer = self.get_serializer()
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         # Retrieving the main and bijdrage zaak

@@ -57,7 +57,7 @@ class DefinitionBasePermission(permissions.BasePermission):
             .exists()
         )
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view: APIView, obj):
         if request.user.is_superuser:
             return True
 

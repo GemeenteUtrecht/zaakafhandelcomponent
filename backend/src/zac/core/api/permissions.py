@@ -155,23 +155,6 @@ class CanAddOrUpdateZaakDocuments(BaseConditionalPermission):
 
 
 ###############################
-#        Eigenschappen        #
-###############################
-
-
-class CanForceCreateZaakEigenschap(CanForceEditClosedZaak):
-    object_attr = "zaak_url"
-
-
-class CanForceCreateOrUpdateZaakEigenschap(BaseConditionalPermission):
-    def get_permission(self, request):
-        if request.method == "POST":
-            return CanForceCreateZaakEigenschap()
-        elif request.method == "PATCH":
-            return CanForceEditClosedZaken()
-
-
-###############################
 #       Access Requests       #
 ###############################
 
