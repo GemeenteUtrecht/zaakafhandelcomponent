@@ -148,6 +148,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         this.checklistService.retrieveChecklistTypeAndRelatedQuestions(this.bronorganisatie, this.identificatie).subscribe(
           (checklistType: ChecklistType) => {
             this.checklistType = checklistType;
+            this.checklistForm = this.getChecklistForm();
 
             this.checklistService.retrieveChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie).subscribe(
               (checklist: Checklist) => {
