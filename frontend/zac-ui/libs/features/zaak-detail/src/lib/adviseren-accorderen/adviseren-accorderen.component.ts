@@ -137,6 +137,7 @@ export class AdviserenAccorderenComponent implements OnInit {
       const [icon, iconColor] = this.reviewRequestsService.getReviewRequestIcon(reviewRequestSummary, reviewRequestDetails);
       const status = this.reviewRequestsService.getReviewRequestStatus(reviewRequestSummary, reviewRequestDetails);
       const date = reviewRequestDetails ? this.reviewRequestsService.getReviewRequestLastUpdate(reviewRequestDetails) : null;
+      const showCancelButton = reviewRequestSummary.canLock && !reviewRequestSummary.locked && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers)
 
       return {
         cellData: {
@@ -157,7 +158,7 @@ export class AdviserenAccorderenComponent implements OnInit {
             date: String(date),
           } as ExtensiveCell,
 
-          'cancel': reviewRequestSummary.canLock && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers) ? {
+          'cancel': showCancelButton ? {
             type: 'button',
             label: 'Annuleren',
             value: reviewRequestSummary

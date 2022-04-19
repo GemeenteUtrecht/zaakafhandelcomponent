@@ -101,6 +101,12 @@ export class ReviewRequestsService {
    */
   getReviewRequestStatus(reviewRequestSummary: ReviewRequestSummary, reviewRequestDetails: ReviewRequestDetails): ReviewRequestStatus {
     const responses = reviewRequestDetails?.approvals || reviewRequestDetails?.advices;
+    
+    // Locked request
+    if (reviewRequestSummary.locked) {
+      return REVIEW_REQUEST_STATUSES.LOCKED;
+    }
+
     // No responses.
     if (this.isReviewRequestPristine(reviewRequestSummary)) {
       return REVIEW_REQUEST_STATUSES.PENDING;
@@ -114,11 +120,6 @@ export class ReviewRequestsService {
     // All advices given.
     if (reviewRequestSummary.reviewType === 'advice' && this.isReviewRequestCompleted(reviewRequestSummary)) {
       return REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE;
-    }
-
-    // Locked request
-    if (reviewRequestSummary.locked) {
-      return REVIEW_REQUEST_STATUSES.LOCKED;
     }
 
     // Whether all approved.
