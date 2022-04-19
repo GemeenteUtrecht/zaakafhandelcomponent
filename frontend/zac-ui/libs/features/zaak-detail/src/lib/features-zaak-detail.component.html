@@ -46,105 +46,110 @@
           </section>
 
           <!-- Components -->
-          <section *ngIf="!isLoading && !hasError" class="row">
+          <section *ngIf="!isLoading && !hasError">
+            <gu-tab-group>
 
-            <!-- Left column -->
-            <div *ngIf="zaakData" class="col-md-4">
+              <!-- Case details -->
+              <gu-tab label="Overzicht">
+                <div class="pt-4 pb-4 pl-2 pr-2">
+                  <div class="row">
+                    <div class="col-lg-7 mb-lg-4">
+                      <!-- Information -->
+                      <gu-informatie class="d-block mb-4"
+                                     *ngIf="zaakData"
+                                     [mainZaakUrl]="mainZaakUrl"
+                                     [bronorganisatie]="bronorganisatie"
+                                     [identificatie]="identificatie"
+                                     [zaaktypeOmschrijving]="zaakData.zaaktype?.omschrijving">
+                      </gu-informatie>
 
+                      <!-- Related cases -->
+                      <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie"
+                                             [identificatie]="identificatie"></gu-gerelateerde-zaken>
+                    </div>
+                    <div class="col-lg-5">
+                      <!-- Involved persons -->
+                      <gu-betrokkenen class="d-block mb-4" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
 
-              <!-- Show result of a case if it's finished -->
-              <div *ngIf="zaakData?.resultaat" class="card card--accent mb-4">
-                <p class="p--marginsmall">Resultaat: </p>
-                <h4 [ngClass]="{
-                  'mb-0': !zaakData.resultaat.toelichting
-                }">
-                  {{zaakData.resultaat.resultaattype.omschrijving}}</h4>
-                <p class="p--marginsmall"
-                   *ngIf="zaakData.resultaat.toelichting">{{zaakData.resultaat.toelichting}}</p>
-              </div>
+                      <!-- User permissions -->
+                      <gu-user-permissions [bronorganisatie]="bronorganisatie"
+                                           [identificatie]="identificatie"></gu-user-permissions>
+                    </div>
+                  </div>
+                </div>
+              </gu-tab>
 
+              <!-- Acties -->
+              <gu-tab label="Acties">
+                <div class="pt-4 pb-4 pl-2 pr-2">
+                  <div class="row">
+                    <div class="col-lg-7 mb-4">
+                      <!-- Processes -->
+                        <gu-keten-processen *ngIf="currentUser"
+                                            [mainZaakUrl]="mainZaakUrl"
+                                            [currentUser]="currentUser"
+                                            [bronorganisatie]="bronorganisatie"
+                                            [identificatie]="identificatie"
+                                            [zaak]="zaakData"
+                                            (update)="ketenProcessenUpdate($event)"
+                                            class="zaak-detail__section">
+                        </gu-keten-processen>
+                    </div>
 
-              <!-- Details -->
-              <aside class="mb-4">
-                <gu-informatie *ngIf="zaakData"
-                               [mainZaakUrl]="mainZaakUrl"
-                               [bronorganisatie]="bronorganisatie"
-                               [identificatie]="identificatie"
-                               [zaaktypeOmschrijving]="zaakData.zaaktype?.omschrijving">
-                  <gu-betrokkenen [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
-                </gu-informatie>
-              </aside>
+                    <div class="col-lg-5">
+                      <gu-status class="d-block mb-4"
+                                 [mainZaakUrl]="mainZaakUrl"
+                                 [bronorganisatie]="bronorganisatie"
+                                 [identificatie]="identificatie"
+                                 [progress]="zaakData.deadlineProgress"
+                                 [deadline]="zaakData.deadline"
+                                 [finished]="!!zaakData.resultaat">
+                      </gu-status>
 
+                      <!-- Approval -->
+                      <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
+                                               [identificatie]="identificatie">
+                      </gu-adviseren-accorderen>
+                    </div>
+                  </div>
+                </div>
+              </gu-tab>
 
-              <!-- Related cases -->
-              <aside class="mb-4">
-                <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie"
-                                       [identificatie]="identificatie"></gu-gerelateerde-zaken>
-              </aside>
+              <!-- Documenten -->
+              <gu-tab label="Documenten">
+                <div class="pt-4 pb-4 pl-2 pr-2">
+                  <div class="row">
+                    <div class="col-lg-8 mb-lg-4">
+                      <gu-documenten [mainZaakUrl]="mainZaakUrl"
+                                     [zaaktypeurl]="zaakData.zaaktype.url"
+                                     [bronorganisatie]="bronorganisatie"
+                                     [identificatie]="identificatie"
+                                     class="zaak-detail__section">
+                      </gu-documenten>
+                    </div>
+                  </div>
+                </div>
+              </gu-tab>
 
-
-              <!-- User permissions -->
-              <aside class="mb-4">
-                <gu-user-permissions [bronorganisatie]="bronorganisatie"
-                                     [identificatie]="identificatie"></gu-user-permissions>
-              </aside>
-            </div>
-
-
-            <!-- Right column -->
-            <div *ngIf="zaakData" class="col-md-8">
-
-              <!-- Status -->
-              <aside class="mb-4">
-                <gu-status [mainZaakUrl]="mainZaakUrl"
-                           [bronorganisatie]="bronorganisatie"
-                           [identificatie]="identificatie"
-                           [progress]="zaakData.deadlineProgress"
-                           [deadline]="zaakData.deadline"
-                           [finished]="!!zaakData.resultaat"></gu-status>
-              </aside>
-
-
-              <!-- Processes -->
-              <aside class="mb-4">
-                <gu-keten-processen *ngIf="currentUser"
-                                    [mainZaakUrl]="mainZaakUrl"
-                                    [currentUser]="currentUser"
-                                    [bronorganisatie]="bronorganisatie"
-                                    [identificatie]="identificatie"
-                                    [zaak]="zaakData"
-                                    (update)="ketenProcessenUpdate($event)"
-                                    class="zaak-detail__section">
-                </gu-keten-processen>
-              </aside>
-
-
-              <!-- Approval -->
-              <aside class="mb-4">
-                <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
-                                         [identificatie]="identificatie"></gu-adviseren-accorderen>
-              </aside>
-
-
-              <!-- Related objects -->
-              <aside class="mb-4">
-                <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
-                                          [identificatie]="identificatie"></gu-gerelateerde-objecten>
-              </aside>
-
-
-              <aside *ngIf="zaakData" class="">
-                <gu-documenten [mainZaakUrl]="mainZaakUrl"
-                               [zaaktypeurl]="zaakData.zaaktype.url"
-                               [bronorganisatie]="bronorganisatie"
-                               [identificatie]="identificatie"
-                               class="zaak-detail__section">
-                </gu-documenten>
-              </aside>
-            </div>
+              <!-- Objecten -->
+              <gu-tab label="Objecten">
+                <div class="pt-4 pb-4 pl-2 pr-2">
+                  <div class="row">
+                    <div class="col-lg-8 mb-4">
+                      <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
+                                                [identificatie]="identificatie">
+                      </gu-gerelateerde-objecten>
+                    </div>
+                  </div>
+                  <div>
+                    <div *ngIf="!isLoading && !hasError">
+                      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
+                    </div>
+                  </div>
+                </div>
+              </gu-tab>
+            </gu-tab-group>
           </section>
-
-
         </article>
 
         <!-- Modals -->
@@ -166,9 +171,9 @@
   </div>
 
   <!-- Map -->
-  <gu-collapse [collapsed]="true">
-    <aside *ngIf="!isLoading && !hasError">
-      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>
-    </aside>
-  </gu-collapse>
+<!--  <gu-collapse [collapsed]="true">-->
+<!--    <aside *ngIf="!isLoading && !hasError">-->
+<!--      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>-->
+<!--    </aside>-->
+<!--  </gu-collapse>-->
 </section>

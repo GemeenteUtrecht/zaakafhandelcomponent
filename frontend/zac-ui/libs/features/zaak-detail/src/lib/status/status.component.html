@@ -38,7 +38,7 @@
           <div class="timeline__row row no-gutters"
                *ngFor="let status of data; let last = last; let first = first; let i = index"
                [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
-               [hidden]="!isExpanded && i >= 3"
+               [hidden]="!isExpanded && i >= 2"
           >
             <div class="col-1">
               <div class="timeline-item__dot"></div>

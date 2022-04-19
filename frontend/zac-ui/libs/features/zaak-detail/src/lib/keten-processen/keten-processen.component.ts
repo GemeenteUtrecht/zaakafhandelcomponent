@@ -246,6 +246,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     }
     this.ketenProcessenService.sendMessage(formData).subscribe((result) => {
       this.fetchProcesses(true);
+      const sendMessageConfirmation = 'De taak wordt aangemaakt, een moment geduld.'
+      this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
       this.isLoading = false;
       this.errorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
