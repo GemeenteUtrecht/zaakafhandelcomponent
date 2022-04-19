@@ -12,13 +12,13 @@ from zac.core.services import get_informatieobjecttypen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-CATALOGUS = "https://some.ztc.nl/api/v1/catalogi/661ff970-6af0-46cf-a228-2c35639ad77e"
+from .utils import CATALOGI_ROOT, CATALOGUS
 
 NOTIFICATION = {
     "kanaal": "informatieobjecttypen",
-    "hoofdObject": "https://some.ztc.nl/api/v1/informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "hoofdObject": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "resource": "informatieobjecttype",
-    "resourceUrl": "https://some.ztc.nl/api/v1/informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {"catalogus": CATALOGUS},
@@ -34,9 +34,7 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
 
     def setUp(self):
         super().setUp()
@@ -44,9 +42,9 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_informatieobjecttype_created_invalidate_list_cache(self, m):
-        mock_service_oas_get(m, "https://some.ztc.nl/api/v1/", "ztc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
-            f"https://some.ztc.nl/api/v1/informatieobjecttypen?catalogus={CATALOGUS}",
+            f"{CATALOGI_ROOT}informatieobjecttypen?catalogus={CATALOGUS}",
             json=paginated_response([]),
         )
 

@@ -8,27 +8,25 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     IDENTIFICATIE,
-    STATUS,
     STATUS_RESPONSE,
-    STATUSTYPE,
     STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
-    mock_service_oas_get,
+    ZAKEN_ROOT,
 )
-
-ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -54,12 +52,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        cls.zrc = Service.objects.create(
-            api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc
-        )
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()
@@ -70,12 +64,12 @@ class StatusCreatedTests(ESMixin, APITestCase):
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_find_zaak_status_created(self, rm, *mocks):
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
         path = reverse("notifications:callback")
 
         with patch(
@@ -93,12 +87,12 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_get_zaak_status_created(self, rm, *mocks):
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         path = reverse("notifications:callback")
 

@@ -794,13 +794,12 @@ def update_rol(rol_url: str, new_rol: Dict) -> Rol:
 
 
 def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
-    # Get latest list of rollen that belong to the zaak
     rol = fetch_rol(rol_url)
 
     if rol.betrokkene_type != RolTypes.medewerker or rol.betrokkene:
         return
 
-    # if there is some name - do nothing.
+    # if there is some part of a name - do nothing.
     # Can't use rol.get_name() cause it can return betrokkene_identificatie["identificatie"]
     if (
         rol.betrokkene_identificatie["voorletters"]
@@ -823,11 +822,6 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     from .api.serializers import UpdateRolSerializer
 
     new_rol_data = UpdateRolSerializer(instance=rol, context={"user": user}).data
-    new_rol = factory(Rol, new_rol_data)
-    # check if the name would be changed
-    if rol.get_name() == new_rol.get_name():
-        return
-
     return update_rol(rol_url, new_rol_data)
 
 
