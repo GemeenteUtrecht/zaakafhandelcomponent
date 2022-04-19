@@ -142,9 +142,10 @@ class BaseRequestView(APIView):
         review_request = client.retrieve(
             "review_requests", uuid=self.kwargs["request_uuid"]
         )
-        self.check_object_permissions(
-            self.request, factory(ReviewRequest, review_request)
-        )
+        rr = factory(ReviewRequest, review_request)
+        # underscorize in factory is messing with the format of the keys in the user_deadlines dictionary
+        rr.user_deadlines = review_request["userDeadlines"]
+        self.check_object_permissions(self.request, rr)
         return review_request
 
     def get(self, request, request_uuid):
