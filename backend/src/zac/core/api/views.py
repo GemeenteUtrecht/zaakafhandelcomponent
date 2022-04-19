@@ -126,6 +126,7 @@ from .serializers import (
     StatusTypeSerializer,
     UpdateZaakDetailSerializer,
     UpdateZaakDocumentSerializer,
+    UpdateZaakEigenschapWaardeSerializer,
     UserAtomicPermissionSerializer,
     VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
@@ -390,17 +391,21 @@ class ZaakEigenschapDetailView(views.APIView):
                 location=OpenApiParameter.QUERY,
             )
         ],
+        request=UpdateZaakEigenschapWaardeSerializer,
     )
     def patch(self, request, *args, **kwargs):
         zaak_eigenschap = self.get_object()
-
         serializer = self.serializer_class(
             instance=zaak_eigenschap, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        data = {"waarde": str(serializer.initial_data["value"])}
-
-        updated_zaak_eigenschap = update_zaak_eigenschap(zaak_eigenschap.url, data)
+        updated_zaak_eigenschap = update_zaak_eigenschap(
+            zaak_eigenschap, request.data, user=request.user
+        )
+        # Resolve relation
+        updated_zaak_eigenschap.eigenschap = get_eigenschap(
+            updated_zaak_eigenschap.eigenschap
+        )
         serializer = self.serializer_class(instance=updated_zaak_eigenschap)
         return Response(serializer.data)
 
@@ -415,6 +420,7 @@ class ZaakEigenschapDetailView(views.APIView):
                 location=OpenApiParameter.QUERY,
             )
         ],
+        request=None,
     )
     def delete(self, request, *args, **kwargs):
         zaak_eigenschap = self.get_object()

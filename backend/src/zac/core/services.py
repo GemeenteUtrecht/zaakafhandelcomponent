@@ -621,7 +621,7 @@ def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
 
 
 def create_zaak_eigenschap(
-    user: Optional[User] = None, zaak_url: str = "", naam: str = "", value: str = ""
+    user: Optional[User] = None, zaak_url: str = "", naam: str = "", waarde: str = ""
 ) -> Optional[ZaakEigenschap]:
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = get_zaaktype(zaak.zaaktype, user=user)
@@ -648,21 +648,24 @@ def create_zaak_eigenschap(
         {
             "zaak": zaak_url,
             "eigenschap": eigenschap_url,
-            "waarde": value,
+            "waarde": waarde,
         },
         zaak_uuid=zaak_url.split("/")[-1],
     )
     return factory(ZaakEigenschap, zaak_eigenschap)
 
 
-def update_zaak_eigenschap(zaak_eigenschap_url: str, data: dict) -> ZaakEigenschap:
-    client = _client_from_url(zaak_eigenschap_url)
-    zaak_eigenschap = client.partial_update(
-        "zaakeigenschap", data=data, url=zaak_eigenschap_url
+def update_zaak_eigenschap(
+    zaak_eigenschap: ZaakEigenschap, data: dict, user: Optional[User] = None
+) -> ZaakEigenschap:
+    zei = create_zaak_eigenschap(
+        user=user,
+        zaak_url=zaak_eigenschap.zaak,
+        naam=zaak_eigenschap.naam,
+        waarde=data["waarde"],
     )
-    zaak_eigenschap = factory(ZaakEigenschap, zaak_eigenschap)
-    zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
-    return zaak_eigenschap
+    delete_zaak_eigenschap(zaak_eigenschap.url)
+    return zei
 
 
 def delete_zaak_eigenschap(zaak_eigenschap_url: str):
