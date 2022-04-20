@@ -162,6 +162,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
+            "kanGeforceerdBijwerken": True,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -200,6 +201,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "deadline": "2021-01-04",
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
+            "kanGeforceerdBijwerken": True,
         }
         self.assertEqual(response.json(), expected_response)
 

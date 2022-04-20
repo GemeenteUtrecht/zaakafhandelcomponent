@@ -222,7 +222,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
         return mapping[self.request.method](
-            **kwargs, context={"zaak": self.get_object()}
+            **kwargs, context={"zaak": self.get_object(), "request": self.request}
         )
 
     @extend_schema(
@@ -441,7 +441,9 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
             for aard_relatie, zaak in get_related_zaken(zaak)
         ]
 
-        serializer = self.serializer_class(instance=related_zaken, many=True)
+        serializer = self.serializer_class(
+            instance=related_zaken, many=True, context={"request": self.request}
+        )
         return Response(serializer.data)
 
 

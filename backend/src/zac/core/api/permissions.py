@@ -46,6 +46,25 @@ class BaseConditionalPermission:
 class CanForceEditClosedZaak(ZaakDefinitionPermission):
     permission = zaken_geforceerd_bijwerken
 
+    def check_for_any_permission(self, request, obj) -> bool:
+        if request.user.is_superuser:
+            return True
+
+        atomic_permission_for_obj = self.user_atomic_permissions_exists(
+            request, zaken_geforceerd_bijwerken.name, obj_url=obj.url
+        )
+        atomic_permission_for_obj_type = self.user_atomic_permissions_exists(
+            request, zaken_geforceerd_bijwerken.name
+        )
+        blueprint_permission = self.get_blueprint_permissions(
+            request, zaken_geforceerd_bijwerken.name
+        ).exists()
+        return (
+            atomic_permission_for_obj
+            or atomic_permission_for_obj_type
+            or blueprint_permission
+        )
+
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -65,26 +84,10 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if request.user.is_superuser:
-            return True
-
         # Check if zaak is closed or open.
         # if it's closed - check for force edit permissions.
         if obj.einddatum is not None:
-            atomic_permission_for_obj = self.user_atomic_permissions_exists(
-                request, zaken_geforceerd_bijwerken.name, obj_url=obj.url
-            )
-            atomic_permission_for_obj_type = self.user_atomic_permissions_exists(
-                request, zaken_geforceerd_bijwerken.name
-            )
-            blueprint_permission = self.get_blueprint_permissions(
-                request, zaken_geforceerd_bijwerken.name
-            ).exists()
-            return (
-                atomic_permission_for_obj
-                or atomic_permission_for_obj_type
-                or blueprint_permission
-            )
+            return self.check_for_any_permission(request, obj)
         return True
 
 
