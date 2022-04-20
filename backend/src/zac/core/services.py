@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 import requests
 from furl import furl
 from requests.models import Response
+from zds_client import ClientError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
@@ -664,7 +665,15 @@ def update_zaak_eigenschap(
         naam=zaak_eigenschap.naam,
         waarde=data["waarde"],
     )
-    delete_zaak_eigenschap(zaak_eigenschap.url)
+    try:
+        delete_zaak_eigenschap(zaak_eigenschap.url)
+    except ClientError as exc:
+        logger.info(
+            "Could not delete zaakeigenschap {zaakeigenschap}.".format(
+                zaakeigenschap=zaak_eigenschap.url
+            ),
+            exc_info=True,
+        )
     return zei
 
 
