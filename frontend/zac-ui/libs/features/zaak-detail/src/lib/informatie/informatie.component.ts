@@ -326,7 +326,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       this.zaakService.updateCaseProperty(property).subscribe(
         () => {},
         this.reportError.bind(this),
-        () => this.isPropertyAPILoading--,
+        () => this.isPropertyAPILoading = 0,
       );
 
       return acc + 1;

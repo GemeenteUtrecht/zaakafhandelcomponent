@@ -95,14 +95,9 @@ export class ZaakService {
     const endpoint = encodeURI(`/api/core/cases/properties`);
     const params = new HttpParams().set('url', property.url)
     const waarde = property.waarde;
-    if (!waarde) {
-      return this.http.Delete(endpoint, {
-        params: params
-      })
-    }
 
     return this.http.Patch(endpoint, {
-      waarde: waarde,
+      waarde: waarde ? waarde : '-',
     }, {
       params: params,
     })
