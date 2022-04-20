@@ -9,12 +9,12 @@ export interface EigenschapWaarde {
   eigenschap: Eigenschap;
   formaat: string;
   url: string;
-  value: string;
+  waarde: string;
 }
 
 export interface NieuweEigenschap {
   naam: string;
-  value: string;
+  waarde: string;
   zaakUrl: string;
 }
 
