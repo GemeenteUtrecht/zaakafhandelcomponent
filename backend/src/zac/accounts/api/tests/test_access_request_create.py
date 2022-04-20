@@ -15,7 +15,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.permissions import zaken_inzien, zaken_request_access
+from zac.core.permissions import (
+    zaken_geforceerd_bijwerken,
+    zaken_inzien,
+    zaken_request_access,
+)
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
@@ -115,6 +119,58 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
         m.get(ZAAK_URL, json=self.zaak)
 
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_request_access.name],
+            for_user=self.requester,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.client.post(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
+    def test_zaak_has_permission_but_is_closed(self, m):
+        # mock ZTC and ZRC data
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_request_access.name],
+            for_user=self.requester,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.client.post(self.endpoint, self.data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_zaak_has_permission_for_closed_zaak(self, m):
+        # mock ZTC and ZRC data
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.requester,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_request_access.name],
             for_user=self.requester,

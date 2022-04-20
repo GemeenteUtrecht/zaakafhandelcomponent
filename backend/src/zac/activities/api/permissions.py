@@ -4,6 +4,7 @@ from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
 
 from zac.api.permissions import ZaakDefinitionPermission
+from zac.core.api.permissions import CanForceEditClosedZaak, CanForceEditClosedZaken
 
 from ..models import Activity
 from ..permissions import activiteiten_inzien, activiteiten_schrijven
@@ -40,6 +41,12 @@ class CanReadOrWriteActivitiesPermission(ZaakDefinitionPermission):
         return super().has_object_permission(request, view, zaak)
 
 
+class CanForceWriteActivitiesPermission(CanForceEditClosedZaken):
+    def has_object_permission(self, request: Request, view: ModelViewSet, obj):
+        zaak = self.get_object(request, obj.zaak) if isinstance(obj, Activity) else obj
+        return super().has_object_permission(request, view, zaak)
+
+
 class CanWriteEventsPermission(ZaakDefinitionPermission):
     object_attr = "activity"
     permission = activiteiten_schrijven
@@ -55,6 +62,14 @@ class CanWriteEventsPermission(ZaakDefinitionPermission):
             return False
 
         return super().has_object_permission(request, view, obj)
+
+    def get_object_url(self, serializer):
+        activity = super().get_object_url(serializer)
+        return activity.zaak
+
+
+class CanForceWriteEventsPermission(CanForceEditClosedZaak):
+    object_attr = "activity"
 
     def get_object_url(self, serializer):
         activity = super().get_object_url(serializer)

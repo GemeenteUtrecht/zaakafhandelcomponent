@@ -8,26 +8,29 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     IDENTIFICATIE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
-    mock_service_oas_get,
+    ZAKEN_ROOT,
 )
 
 NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
     "resource": "resultaat",
-    "resourceUrl": "https://some.zrc.nl/api/v1/resultaten/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": f"{ZAKEN_ROOT}resultaten/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -47,12 +50,8 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        cls.zrc = Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()
@@ -62,10 +61,10 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
     def test_find_zaak_resultaat_created(self, rm, mock_zaaktype):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
 
         path = reverse("notifications:callback")
 
@@ -83,10 +82,10 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
             self.assertEqual(m.call_count, 2)
 
     def test_get_zaak_resultaat_created(self, rm):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
 
         path = reverse("notifications:callback")
 

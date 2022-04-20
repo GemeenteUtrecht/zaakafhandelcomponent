@@ -1,11 +1,14 @@
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status
+from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
+from zac.contrib.kownsl.api import get_review_requests, lock_review_request
+from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
@@ -20,6 +23,7 @@ from zac.elasticsearch.api import (
     create_zaak_document,
     create_zaaktype_document,
     delete_zaak_document,
+    get_zaak_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
@@ -82,6 +86,20 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
+        # Determine if einddatum is updated.
+        if is_closed := zaak.einddatum:
+            zaak_document = get_zaak_document(zaak_url)
+            was_closed = None if not zaak_document else zaak_document.einddatum
+
+            def _lock_review_request(rr: ReviewRequest):
+                lock_review_request(str(rr.id), "Zaak is gesloten.")
+
+            # lock all review requests related to zaak
+            if is_closed and is_closed != was_closed:
+                review_requests = get_review_requests(zaak)
+                with parallel() as executor:
+                    list(executor.map(_lock_review_request, review_requests))
+
         # index in ES
         update_zaak_document(zaak)
 
@@ -119,11 +137,8 @@ class ZakenHandler:
     def _handle_rol_creation(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_rollen_cache(zaak, rol_urls=[rol_url])
-
-        add_permission_for_behandelaar(rol=rol_url)
         update_medewerker_identificatie_rol(rol_url)
-
-        # index in ES
+        add_permission_for_behandelaar(rol_url)
         update_rollen_in_zaak_document(zaak)
 
     def _handle_rol_destroy(self, zaak_url: str):

@@ -23,7 +23,13 @@ from ..models import (
     UserAuthorizationProfile,
 )
 from .filters import UserFilter
-from .permissions import CanCreateOrHandleAccessRequest, CanGrantAccess, ManageGroup
+from .permissions import (
+    CanCreateOrHandleAccessRequest,
+    CanForceCreateOrHandleAccessRequest,
+    CanForceGrantAccess,
+    CanGrantAccess,
+    ManageGroup,
+)
 from .serializers import (
     AccessRequestDetailSerializer,
     AtomicPermissionSerializer,
@@ -113,7 +119,11 @@ class AccessRequestViewSet(
     """
 
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanCreateOrHandleAccessRequest]
+    permission_classes = [
+        IsAuthenticated,
+        CanCreateOrHandleAccessRequest,
+        CanForceCreateOrHandleAccessRequest,
+    ]
     queryset = AccessRequest.objects.all()
 
     def get_serializer_class(self):
@@ -145,7 +155,7 @@ class AtomicPermissionViewSet(
     """
 
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated, CanGrantAccess]
+    permission_classes = [IsAuthenticated, CanGrantAccess, CanForceGrantAccess]
     queryset = UserAtomicPermission.objects.select_related("user", "atomic_permission")
     serializer_class = AtomicPermissionSerializer
 

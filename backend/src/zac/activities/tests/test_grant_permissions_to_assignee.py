@@ -19,6 +19,7 @@ ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 
 
+@requests_mock.Mocker()
 class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -43,7 +44,9 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
 
         self.client.force_login(self.user)
 
-    def test_create_activity_without_assignee(self):
+    def test_create_activity_without_assignee(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json=self.zaak)
         endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
@@ -55,7 +58,9 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AtomicPermission.objects.count(), 0)
 
-    def test_create_activity_with_assignee(self):
+    def test_create_activity_with_assignee(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json=self.zaak)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activity-list")
@@ -82,7 +87,9 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             user_atomic_permission = permission.useratomicpermission_set.get()
             self.assertEqual(user_atomic_permission.reason, PermissionReason.activiteit)
 
-    def test_create_activity_with_group_assignement(self):
+    def test_create_activity_with_group_assignement(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaak["url"], json=self.zaak)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activity-list")
@@ -109,11 +116,9 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
             user_atomic_permission = permission.useratomicpermission_set.get()
             self.assertEqual(user_atomic_permission.reason, PermissionReason.activiteit)
 
-    @requests_mock.Mocker()
     def test_update_activity_change_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(self.zaak["url"], json=self.zaak)
-
         activity = ActivityFactory.create(zaak=ZAAK_URL)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 

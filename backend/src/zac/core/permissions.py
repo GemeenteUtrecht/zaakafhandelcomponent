@@ -65,3 +65,8 @@ zaken_add_relations = Permission(
     name="zaken:nieuwe-relaties-toevoegen",
     description="Relateer andere zaken aan de (hoofd)zaak.",
 )
+
+zaken_geforceerd_bijwerken = Permission(
+    name="zaken:geforceerd-bijwerken",
+    description="Kan een zaak bijwerken zelfs als deze afgesloten is.",
+)

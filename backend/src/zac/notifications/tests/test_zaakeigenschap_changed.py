@@ -9,18 +9,19 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.models import APITypes, Service
-from zgw_consumers.test import generate_oas_component
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_zaak_document, create_zaaktype_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     STATUS,
     STATUS_RESPONSE,
     STATUSTYPE,
@@ -29,12 +30,10 @@ from .utils import (
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
-    mock_service_oas_get,
+    ZAKEN_ROOT,
 )
 
-EIGENSCHAP = (
-    "https://some.ztc.nl/api/v1/eigenschappen/69e98129-1f0d-497f-bbfb-84b88137edbc"
-)
+EIGENSCHAP = f"{CATALOGI_ROOT}eigenschappen/69e98129-1f0d-497f-bbfb-84b88137edbc"
 ZAAKEIGENSCHAP = f"{ZAAK}/zaakeigenschappen/69e98129-1f0d-497f-bbfb-84b88137edbc"
 ZAAK_RESPONSE["eigenschappen"] = [ZAAKEIGENSCHAP]
 NOTIFICATION_CREATE = {
@@ -69,18 +68,14 @@ NOTIFICATION_DESTROY = {
 class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaakeigenschap_created_indexed_in_es(self, rm, *mocks):
-        Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
-        Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
         eigenschap = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
@@ -104,7 +99,7 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
             waarde="propvalue",
         )
         rm.get(
-            f"https://some.ztc.nl/api/v1/eigenschappen?zaaktype={ZAAKTYPE}",
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={ZAAKTYPE}",
             json=paginated_response([eigenschap]),
         )
         rm.get(f"{ZAAK}/zaakeigenschappen", json=[zaakeigenschap])
@@ -134,20 +129,16 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaakeigenschap_destroyed_indexed_in_es(self, rm, *mocks):
-        Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
-        Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
         rm.get(
-            f"https://some.ztc.nl/api/v1/eigenschappen?zaaktype={ZAAKTYPE}",
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={ZAAKTYPE}",
             json=paginated_response([]),
         )
         rm.get(f"{ZAAK}/zaakeigenschappen", json=[])

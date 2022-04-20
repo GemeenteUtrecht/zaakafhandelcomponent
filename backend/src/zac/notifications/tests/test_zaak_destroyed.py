@@ -20,24 +20,26 @@ from zac.contrib.board.tests.factories import BoardItemFactory
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
-    STATUS,
+    CATALOGI_ROOT,
     STATUS_RESPONSE,
-    STATUSTYPE,
     STATUSTYPE_RESPONSE,
+    ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
+    ZAKEN_ROOT,
 )
 
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "hoofdObject": ZAAK,
     "resource": "zaak",
-    "resourceUrl": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": ZAAK,
     "actie": "destroy",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -56,12 +58,8 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory.create(username="notifs")
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        cls.zrc = Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()
@@ -72,7 +70,7 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         path = reverse("notifications:callback")
 
         activity = ActivityFactory.create(
-            zaak="https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
+            zaak=f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
         )
         EventFactory.create(activity=activity)
 
@@ -85,11 +83,11 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
     @requests_mock.Mocker()
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_remove_es_document(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         path = reverse("notifications:callback")
 
@@ -114,9 +112,7 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
 
     def test_board_item_deleted(self):
         path = reverse("notifications:callback")
-        BoardItemFactory(
-            object="https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
-        )
+        BoardItemFactory(object=ZAAK)
 
         response = self.client.post(path, NOTIFICATION)
 
@@ -125,9 +121,7 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
 
     def test_access_request_deleted(self):
         path = reverse("notifications:callback")
-        AccessRequestFactory(
-            zaak="https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
-        )
+        AccessRequestFactory(zaak=ZAAK)
 
         response = self.client.post(path, NOTIFICATION)
 

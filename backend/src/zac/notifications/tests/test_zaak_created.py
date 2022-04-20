@@ -14,25 +14,26 @@ from zac.accounts.models import User
 from zac.core.services import _find_zaken
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     IDENTIFICATIE,
-    STATUS,
     STATUS_RESPONSE,
-    STATUSTYPE,
     STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
+    ZAKEN_ROOT,
 )
 
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "hoofdObject": ZAAK,
     "resource": "zaak",
-    "resourceUrl": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": ZAAK,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -52,12 +53,8 @@ class ZaakCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
-        cls.zrc = Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()
@@ -67,12 +64,12 @@ class ZaakCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_created_invalidate_list_cache(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         zrc_client = self.zrc.build_client()
 
@@ -110,12 +107,12 @@ class ZaakCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_max_va_cache_key(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         zrc_client = self.zrc.build_client()
 
@@ -143,12 +140,12 @@ class ZaakCreatedTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_created_indexed_in_es(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         path = reverse("notifications:callback")
 

@@ -26,7 +26,12 @@ from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
 
 from ...models import CoreConfig
-from ...permissions import zaken_add_documents, zaken_update_documents, zaken_wijzigen
+from ...permissions import (
+    zaken_add_documents,
+    zaken_geforceerd_bijwerken,
+    zaken_update_documents,
+    zaken_wijzigen,
+)
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 DOCUMENTS_ROOT = "https://open-zaak.nl/documenten/api/v1/"
@@ -341,6 +346,175 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         self._setupMocks(m)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_update_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.informatieobjecttype["catalogus"],
+                "iotype_omschrijving": "IOT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}123",
+            informatieobjecttype=self.informatieobjecttype["url"],
+        )
+        m.get(document["url"], json=document)
+        post_data = {
+            "reden": "Zomaar",
+            "url": document["url"],
+            "vertrouwelijkheidaanduiding": "geheim",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            with patch(
+                "zac.core.api.views.update_document",
+                return_value=factory(Document, document),
+            ):
+                with patch(
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[
+                        DowcResponse(
+                            drc_url=document["url"],
+                            magic_url="",
+                            purpose="write",
+                            uuid=uuid4(),
+                            unversioned_url="",
+                        )
+                    ],
+                ):
+                    with patch(
+                        "zac.core.api.views.fetch_document_audit_trail",
+                        return_value=[audit_trail],
+                    ):
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_edit_document_but_zaak_is_closed(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        self._setupMocks(m)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_update_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.informatieobjecttype["catalogus"],
+                "iotype_omschrijving": "IOT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}123",
+            informatieobjecttype=self.informatieobjecttype["url"],
+        )
+        m.get(document["url"], json=document)
+        post_data = {
+            "reden": "Zomaar",
+            "url": document["url"],
+            "vertrouwelijkheidaanduiding": "geheim",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:21.157+01:00",
+                    "author": "ONBEKEND",
+                    "versionLabel": "0.2",
+                },
+                "nieuw": {
+                    "content": "",
+                    "modified": "2022-03-04T12:11:39.293+01:00",
+                    "author": "John Doe",
+                    "versionLabel": "0.3",
+                },
+            },
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_edit_document(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        self._setupMocks(m)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_wijzigen.name],
             for_user=user,

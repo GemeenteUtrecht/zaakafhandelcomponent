@@ -12,6 +12,7 @@ from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     UserFactory,
 )
+from zac.core.permissions import zaken_geforceerd_bijwerken
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
@@ -66,6 +67,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
+            einddatum="2020-01-01",
         )
         cls.user = UserFactory.create()
 
@@ -73,20 +75,6 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_read_logged_in_not_found(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-
-        m.get(
-            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
-            json=paginated_response([self.zaak]),
-        )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-
-        self.client.force_authenticate(self.user)
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, 404)
 
     def test_read_logged_in_zaak_no_permission(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -105,7 +93,28 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_read_logged_in_permissions_for_other_zaak(self, m):
+    def test_read_logged_in_not_found(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        BlueprintPermissionFactory.create(
+            role__permissions=[checklists_inzien.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(self.user)
+        response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, 404)
+
+    def test_read_logged_in_permissions_for_other_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -130,32 +139,6 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_read_logged_in_zaak_permission(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-
-        m.get(
-            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
-            json=paginated_response([self.zaak]),
-        )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-
-        ChecklistFactory.create(zaak=self.zaak["url"])
-
-        BlueprintPermissionFactory.create(
-            role__permissions=[checklists_inzien.name],
-            for_user=self.user,
-            policy={
-                "catalogus": self.catalogus,
-                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-        self.client.force_authenticate(self.user)
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_read_logged_in_zaak_permission_atomic(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -218,6 +201,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
+            einddatum=None,
         )
         cls.checklist_type = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
@@ -325,6 +309,124 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             permission=checklists_schrijven.name,
             for_user=self.user,
             object_url=self.zaak["url"],
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_checklist_logged_in_with_atomic_permissions_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        AtomicPermissionFactory.create(
+            permission=checklists_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_checklist_logged_in_with_both_atomic_permissions_closed_zaak(
+        self, m
+    ):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        AtomicPermissionFactory.create(
+            permission=checklists_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        AtomicPermissionFactory.create(
+            permission=zaken_geforceerd_bijwerken.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_checklist_logged_in_with_blueprint_permission_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        BlueprintPermissionFactory.create(
+            role__permissions=[checklists_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_checklist_logged_in_with_both_blueprint_permissions_closed_zaak(
+        self, m
+    ):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[checklists_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": self.zaaktype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.endpoint, data)
@@ -468,7 +570,101 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_update_checklist_logged_in_with_atomic_permissions(self, m):
+    def test_update_checklist_logged_in_with_no_force_permission_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        BlueprintPermissionFactory.create(
+            role__permissions=[checklists_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_checklist_logged_in_with_no_force_permission_closed_zaak(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        BlueprintPermissionFactory.create(
+            role__permissions=[checklists_schrijven.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_geforceerd_bijwerken.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_checklist_logged_in_with_insufficient_atomic_permission_closed_zaak(
+        self, m
+    ):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
+        )
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
+
+        data = {
+            "answers": [
+                {"question": self.checklist_question.question, "answer": "some-answer"}
+            ],
+        }
+        AtomicPermissionFactory.create(
+            permission=checklists_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_checklist_logged_in_with_both_atomic_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -486,6 +682,11 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         }
         AtomicPermissionFactory.create(
             permission=checklists_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        AtomicPermissionFactory.create(
+            permission=zaken_geforceerd_bijwerken.name,
             for_user=self.user,
             object_url=self.zaak["url"],
         )

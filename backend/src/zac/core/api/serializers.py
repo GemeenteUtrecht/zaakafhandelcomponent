@@ -8,7 +8,6 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
-from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from zds_client.client import ClientError
@@ -50,6 +49,7 @@ from zgw.models.zrc import Zaak
 from ..zaakobjecten import ZaakObjectGroup
 from .data import VertrouwelijkheidsAanduidingData
 from .fields import NullableJsonField
+from .permissions import CanForceEditClosedZaak
 from .utils import (
     CSMultipleChoiceField,
     TypeChoices,
@@ -69,7 +69,7 @@ class InformatieObjectTypeSerializer(APIModelSerializer):
 
 class GetZaakDocumentSerializer(APIModelSerializer):
     read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
-    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write)
+    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write, allow_blank=True)
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display"
     )
@@ -370,6 +370,9 @@ class ZaakDetailSerializer(APIModelSerializer):
         required=False,
         help_text=_("GeoJSON which represents the coordinates of the ZAAK"),
     )
+    kan_geforceerd_bijwerken = serializers.SerializerMethodField(
+        help_text=_("A boolean flag whether a user can force edit the ZAAK or not."),
+    )
 
     class Meta:
         model = Zaak
@@ -390,6 +393,12 @@ class ZaakDetailSerializer(APIModelSerializer):
             "deadline",
             "deadline_progress",
             "resultaat",
+            "kan_geforceerd_bijwerken",
+        )
+
+    def get_kan_geforceerd_bijwerken(self, obj) -> bool:
+        return CanForceEditClosedZaak().check_for_any_permission(
+            self.context["request"], obj
         )
 
 

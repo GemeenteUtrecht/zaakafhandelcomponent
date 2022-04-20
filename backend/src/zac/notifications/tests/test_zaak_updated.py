@@ -18,10 +18,12 @@ from zac.core.services import get_zaak
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import RolDocument, ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     STATUS,
     STATUS_RESPONSE,
     STATUSTYPE,
@@ -30,13 +32,14 @@ from .utils import (
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
+    ZAKEN_ROOT,
 )
 
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "hoofdObject": ZAAK,
     "resource": "zaak",
-    "resourceUrl": "https://some.zrc.nl/api/v1/zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": ZAAK,
     "actie": "update",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -56,12 +59,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.zrc = Service.objects.create(
-            api_root="https://some.zrc.nl/api/v1/", api_type=APITypes.zrc
-        )
-        cls.ztc = Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
+        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
 
     def setUp(self):
         super().setUp()
@@ -70,12 +69,13 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_zaak_updated(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
 
         matrix = [
@@ -83,6 +83,13 @@ class ZaakUpdateTests(ESMixin, APITestCase):
             {"zaak_url": ZAAK},
             {"zaak_uuid": "f3ff2713-2f53-42ff-a154-16842309ad60", "zaak_url": ZAAK},
         ]
+
+        #  create zaak_document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+        self.refresh_index()
 
         for kwargs in matrix:
             with self.subTest(**kwargs):
@@ -105,14 +112,17 @@ class ZaakUpdateTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_updated_indexed_in_es(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
+
         path = reverse("notifications:callback")
+
         #  create zaak_document in ES
-        old_response = ZAAK_RESPONSE.copy()
-        rm.get(STATUS, json=STATUS_RESPONSE)
-        rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
-        zaak = factory(Zaak, old_response)
+        zaak = factory(Zaak, ZAAK_RESPONSE)
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         zaak_document.save()
@@ -122,16 +132,14 @@ class ZaakUpdateTests(ESMixin, APITestCase):
             zaak_document.vertrouwelijkheidaanduiding,
             VertrouwelijkheidsAanduidingen.geheim,
         )
-
         self.assertEqual(zaak_document.meta.version, 1)
 
         # set up mock
-        new_response = old_response.copy()
-        new_response[
-            "vertrouwelijkheidaanduiding"
-        ] = VertrouwelijkheidsAanduidingen.confidentieel
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
-        rm.get(ZAAK, json=new_response)
+        new_response = {
+            **ZAAK_RESPONSE,
+            "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.confidentieel,
+        }
+        mock_resource_get(rm, new_response)
 
         response = self.client.post(path, NOTIFICATION)
 
@@ -147,7 +155,8 @@ class ZaakUpdateTests(ESMixin, APITestCase):
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_with_rollen_updated_indexed_in_es(self, rm, *mocks):
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         rm.get(STATUS, json=STATUS_RESPONSE)
         rm.get(STATUSTYPE, json=STATUSTYPE_RESPONSE)
         rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
@@ -185,7 +194,7 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         new_response[
             "vertrouwelijkheidaanduiding"
         ] = VertrouwelijkheidsAanduidingen.confidentieel
-        mock_service_oas_get(rm, "https://some.zrc.nl/api/v1/", "zrc")
+        mock_service_oas_get(rm, "https://some.zrc.nl/", "zrc")
         rm.get(ZAAK, json=new_response)
 
         response = self.client.post(path, NOTIFICATION)

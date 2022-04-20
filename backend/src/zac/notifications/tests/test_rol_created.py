@@ -8,7 +8,9 @@ from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionObjectTypeChoices, PermissionReason
 from zac.accounts.models import AtomicPermission
@@ -18,20 +20,41 @@ from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
+    CATALOGI_ROOT,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
     ZAAKTYPE_RESPONSE,
-    mock_service_oas_get,
+    ZAKEN_ROOT,
 )
 
-ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
-
 ROL = f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc"
+ROL_RESPONSE = generate_oas_component(
+    "zrc",
+    "schemas/Rol",
+    url=ROL,
+    zaak=ZAAK,
+    betrokkene="",
+    betrokkeneType="medewerker",
+    roltype=f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+    omschrijving="zaak behandelaar",
+    omschrijvingGeneriek="behandelaar",
+    roltoelichting="some description",
+    registratiedatum="2020-09-01T00:00:00Z",
+    indicatieMachtiging="",
+    betrokkeneIdentificatie={
+        "identificatie": "123456",
+        "voorletters": "M.Y.",
+        "achternaam": "Surname",
+        "voorvoegsel_achternaam": "",
+    },
+)
+
 NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
@@ -58,10 +81,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_root=f"{ZAKEN_ROOT}", api_type=APITypes.zrc)
-        Service.objects.create(
-            api_root="https://some.ztc.nl/api/v1/", api_type=APITypes.ztc
-        )
+        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
 
         self.user = UserFactory.create(
             username="notifs", first_name="Mona Yoko", last_name="Surname"
@@ -77,38 +98,19 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.refresh_index()
 
     def test_rol_created_indexed_in_es(self, rm):
-        mock_service_oas_get(rm, ZAKEN_ROOT, "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
 
-        self.assertEqual(self.zaak_document.rollen, [])
-
-        # set up mocks
-        rol = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "organisatorische_eenheid",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
-            "betrokkeneIdentificatie": {
-                "identificatie": "123456",
-                "voorletters": "M.Y.",
-                "achternaam": "Surname",
-                "voorvoegsel_achternaam": "",
-            },
-        }
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        rol = {**ROL_RESPONSE, "betrokkeneType": "organisatorische_eenheid"}
+        mock_resource_get(rm, rol)
         rm.get(
             f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(ROL, json=rol)
 
+        self.assertEqual(self.zaak_document.rollen, [])
         response = self.client.post(self.path, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -118,22 +120,13 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(zaak_document.rollen[0]["url"], ROL)
 
     def test_rol_created_add_permission_for_behandelaar(self, rm):
-        # Setup mocks
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         rol = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
+            **ROL_RESPONSE,
             "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
                 "identificatie": self.user.username,
                 "voorletters": "M.Y.",
@@ -145,7 +138,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
-        rm.get(ROL, json=rol)
+        mock_resource_get(rm, rol)
 
         response = self.client.post(self.path, NOTIFICATION)
 
@@ -164,42 +157,23 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(user_atomic_permission.reason, PermissionReason.betrokkene)
 
     def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(self, rm):
-        # set up mocks
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
 
         # Some more mocks
         rol_old = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+            **ROL_RESPONSE,
             "betrokkeneIdentificatie": {
-                "identificatie": f"user:{self.user.username}",
+                "identificatie": self.user.username,
                 "voorletters": "",
                 "achternaam": "",
                 "voorvoegsel_achternaam": "",
             },
         }
-        rol_new = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+        rol_new_response = {
+            **ROL_RESPONSE,
             "betrokkeneIdentificatie": {
                 "identificatie": self.user.username,
                 "voorletters": "M.Y.",
@@ -207,16 +181,16 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
+        mock_resource_get(rm, rol_old)
         rm.get(ROL, json=rol_old)
-        rol_2 = factory(Rol, rol_new)
-
+        rol_new = factory(Rol, rol_new_response)
         self.assertEqual(self.zaak_document.rollen, [])
 
         with patch(
-            "zac.core.services.update_rol", return_value=rol_2
+            "zac.core.services.update_rol", return_value=rol_new
         ) as mock_update_rol:
             with patch(
-                "zac.elasticsearch.api.get_rollen", return_value=[rol_2]
+                "zac.elasticsearch.api.get_rollen", return_value=[rol_new]
             ) as mock_es_get_rollen:
                 response = self.client.post(self.path, NOTIFICATION)
 
@@ -224,11 +198,11 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_update_rol.assert_called_once_with(
             ROL,
             {
-                "betrokkene": None,
+                "betrokkene": "",
                 "betrokkene_identificatie": {
                     "voorletters": "M.Y.",
                     "achternaam": "Surname",
-                    "identificatie": "user:notifs",
+                    "identificatie": "notifs",
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",
@@ -237,9 +211,9 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "omschrijving_generiek": "behandelaar",
                 "registratiedatum": "2020-09-01T00:00:00Z",
                 "roltoelichting": "some description",
-                "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-                "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
-                "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+                "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+                "url": ROL,
+                "zaak": ZAAK,
             },
         )
         mock_es_get_rollen.assert_called_once_with(self.zaak)
@@ -259,37 +233,25 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_rol_created_name_not_empty(self, rm):
         """check that rol is not updated if it already has name attributes"""
-        # Setup mocks
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, ROL_RESPONSE)
 
-        rol = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
-            "betrokkeneIdentificatie": {
-                "identificatie": self.user.username,
-                "voorletters": "",
-                "achternaam": "Surname",
-                "voorvoegsel_achternaam": "",
-            },
-        }
         rm.get(
             f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
-            json={"count": 1, "previous": None, "next": None, "results": [rol]},
+            json={
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [ROL_RESPONSE],
+            },
         )
-        rm.get(ROL, json=rol)
 
-        with patch("zac.core.services.update_rol", return_value=rol) as mock_update_rol:
+        with patch(
+            "zac.core.services.update_rol", return_value=ROL_RESPONSE
+        ) as mock_update_rol:
             response = self.client.post(self.path, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -301,8 +263,8 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(
             zaak_document.rollen[0]["betrokkene_identificatie"],
             {
-                "identificatie": "notifs",
-                "voorletters": "",
+                "identificatie": "123456",
+                "voorletters": "M.Y.",
                 "achternaam": "Surname",
                 "voorvoegsel_achternaam": "",
             },
@@ -310,25 +272,16 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_rol_created_username_empty(self, rm):
         """check that rol is not updated if user doesn't have first and last name"""
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+
         empty_user = UserFactory.create(username="empty", first_name="", last_name="")
-        # set up mocks
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
 
         # Some more mocks
         rol = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+            **ROL_RESPONSE,
             "betrokkeneIdentificatie": {
                 "identificatie": empty_user.username,
                 "voorletters": "",
@@ -340,7 +293,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
             json={"count": 1, "previous": None, "next": None, "results": [rol]},
         )
-        rm.get(ROL, json=rol)
+        mock_resource_get(rm, rol)
 
         with patch("zac.core.services.update_rol", return_value=rol) as mock_update_rol:
             response = self.client.post(self.path, NOTIFICATION)
@@ -364,23 +317,14 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_rol_created_other_app_updated(self, rm):
         """check there are no race conditions if several ZAC instances update rollen"""
         # set up mocks
-        mock_service_oas_get(rm, f"{ZAKEN_ROOT}", "zaken")
-        mock_service_oas_get(rm, "https://some.ztc.nl/api/v1/", "ztc")
-        rm.get(ZAAK, json=ZAAK_RESPONSE)
-        rm.get(ZAAKTYPE, json=ZAAKTYPE_RESPONSE)
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
 
         # Some more mocks
         rol = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+            **ROL_RESPONSE,
             "betrokkeneIdentificatie": {
                 "identificatie": self.user.username,
                 "voorletters": "",
@@ -388,18 +332,11 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         }
-        rm.get(ROL, json=rol)
+
+        mock_resource_get(rm, rol)
         rol_self_updated = {
-            "url": ROL,
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+            **ROL_RESPONSE,
+            "url": f"{ZAKEN_ROOT}rollen/some-uuid",
             "betrokkeneIdentificatie": {
                 "identificatie": self.user.username,
                 "voorletters": "M.Y.",
@@ -408,25 +345,18 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         rol_self_updated = factory(Rol, rol_self_updated)
+
         rol_other_updated = {
-            "url": f"{ZAKEN_ROOT}rollen/f3ff2713-2f53-42ff-a154-16842309ad60",
-            "zaak": ZAAK,
-            "betrokkene": None,
-            "betrokkeneType": "medewerker",
-            "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-            "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
-            "roltoelichting": "some description",
-            "registratiedatum": "2020-09-01T00:00:00Z",
-            "indicatieMachtiging": "",
+            **ROL_RESPONSE,
+            "url": f"{ZAKEN_ROOT}rollen/some-other-uuid",
             "betrokkeneIdentificatie": {
                 "identificatie": self.user.username,
                 "voorletters": "M.",
-                "achternaam": "Surname",
+                "achternaam": "Other Surname",
                 "voorvoegsel_achternaam": "",
             },
         }
-        rm.get(rol_other_updated["url"], json=rol_other_updated)
+        mock_resource_get(rm, rol_other_updated)
         rol_other_updated = factory(Rol, rol_other_updated)
 
         self.assertEqual(self.zaak_document.rollen, [])
@@ -445,7 +375,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_update_rol.assert_called_once_with(
             ROL,
             {
-                "betrokkene": None,
+                "betrokkene": "",
                 "betrokkene_identificatie": {
                     "voorletters": "M.Y.",
                     "achternaam": "Surname",
@@ -458,7 +388,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "omschrijving_generiek": "behandelaar",
                 "registratiedatum": "2020-09-01T00:00:00Z",
                 "roltoelichting": "some description",
-                "roltype": "https://some.ztc.nl/api/v1/roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+                "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
                 "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
                 "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
             },
@@ -483,7 +413,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "kenmerken": {
                         "bronorganisatie": BRONORGANISATIE,
                         "zaaktype": ZAAKTYPE,
-                        "vertrouwelijkheidaanduiding": "geheim",
+                        "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.geheim,
                     },
                 }
                 response = self.client.post(self.path, other_notification)
@@ -501,7 +431,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "identificatie": "notifs",
                 "voorletters": "M.",
-                "achternaam": "Surname",
+                "achternaam": "Other Surname",
                 "voorvoegsel_achternaam": "",
             },
         )
