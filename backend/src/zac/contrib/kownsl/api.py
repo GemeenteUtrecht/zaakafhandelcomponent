@@ -51,7 +51,12 @@ def create_review_request(
         "user_deadlines": user_deadlines,
     }
     resp = client.create("review_requests", data=data)
-    return factory(ReviewRequest, resp)
+    rr = factory(ReviewRequest, resp)
+
+    # underscoreize in zgw_consumers.api_models.base.factory is messing
+    # with the format of the keys in the user_deadlines dictionary
+    rr.user_deadlines = user_deadlines
+    return rr
 
 
 @optional_service
@@ -92,18 +97,23 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
         raise Http404(f"Review request with id {uuid} does not exist.")
 
     review_request = factory(ReviewRequest, result)
+
+    # underscoreize in zgw_consumers.api_models.base.factory is messing
+    # with the format of the keys in the user_deadlines dictionary
+    review_request.user_deadlines = result["userDeadlines"]
     return review_request
 
 
 @optional_service
 def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
     client = get_client()
-    result = client.list("review_requests", query_params={"for_zaak": zaak.url})
-    review_requests = factory(ReviewRequest, result)
+    results = client.list("review_requests", query_params={"for_zaak": zaak.url})
+    review_requests = factory(ReviewRequest, results)
 
     # fix relation reference
-    for review_request in review_requests:
+    for result, review_request in zip(results, review_requests):
         review_request.for_zaak = zaak
+        review_request.user_deadlines = result["userDeadlines"]
     return review_requests
 
 
@@ -122,4 +132,5 @@ def lock_review_request(uuid: str, lock_reason: str) -> Optional[ReviewRequest]:
         )
 
     review_request = factory(ReviewRequest, result)
+    review_request.user_deadlines = result["userDeadlines"]
     return review_request
