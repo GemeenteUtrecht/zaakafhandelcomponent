@@ -688,7 +688,6 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
-        m.patch(ZAAK_EIGENSCHAP_URL, json=self.zaak_eigenschap)
 
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
@@ -714,7 +713,15 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
-        m.patch(ZAAK_EIGENSCHAP_URL, json=self.zaak_eigenschap)
+        eigenschappen_url = furl(CATALOGI_ROOT)
+        eigenschappen_url.path.segments += ["eigenschappen"]
+        eigenschappen_url.path.normalize()
+        eigenschappen_url.query = {"zaaktype": self.zaaktype["url"]}
+        m.get(eigenschappen_url.url, json=paginated_response([self.eigenschap]))
+        m.delete(ZAAK_EIGENSCHAP_URL, status_code=204)
+        m.post(
+            f"{ZAAK_URL}/zaakeigenschappen", json=self.zaak_eigenschap, status_code=201
+        )
 
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
