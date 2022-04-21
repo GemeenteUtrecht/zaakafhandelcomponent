@@ -62,6 +62,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
   @Output() mapMarkers: EventEmitter<any> = new EventEmitter<{ coordinates: Position[] }>();
+  @Output() isLoadingResult: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.';
 
@@ -86,6 +87,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {SearchService} searchService
    * @param {ZaakObjectService} zaakObjectService
    * @param {SnackbarService} snackbarService
+   * @param {ChangeDetectorRef} cdRef
    */
   constructor(
     private objectsService: ObjectsService,
@@ -148,12 +150,14 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
   getContextData(): void {
     this.isLoading = true;
+    this.isLoadingResult.emit(true);
 
     this.objectsService.listObjectTypes().subscribe(
       this.getObjectTypesContext.bind(this),
       (error) => {
         this.reportError(error)
         this.isLoading = false;
+        this.isLoadingResult.emit(false);
       }
     )
   }
@@ -164,6 +168,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   getObjectTypesContext(objectTypes: ObjectType[]): void {
     this.isLoading = true;
+    this.isLoadingResult.emit(true);
     const objectTypeVersions = [];
     let loadingLength = objectTypes.length;
 
@@ -181,6 +186,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             this.objectTypes = objectTypes;
             this.objectTypeVersions = objectTypeVersions;
             this.isLoading = false;
+            this.isLoadingResult.emit(false);
             this.cdRef.detectChanges();
           }
         }
@@ -281,6 +287,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             () => {
               this.mapMarkers.emit(activeMapMarkers);
               this.isLoading = false;
+              this.isLoadingResult.emit(false);
               this.cdRef.detectChanges();
             })
         });
@@ -309,6 +316,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   submitForm(data): void {
     this.searchObjects.emit();
     this.isLoading = true;
+    this.isLoadingResult.emit(true);
     const geometry: Geometry = (data.geometry) ? JSON.parse(data.geometry) : null;
 
     this.zaakObjects = [];
@@ -337,6 +345,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   reportError(error: any): void {
     this.isLoading = false;
+    this.isLoadingResult.emit(false);
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }
