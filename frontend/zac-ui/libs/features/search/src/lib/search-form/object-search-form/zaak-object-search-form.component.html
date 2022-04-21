@@ -1,9 +1,4 @@
-<ng-container *ngIf="isLoading">
-  <gu-loading-indicator></gu-loading-indicator>
-</ng-container>
-
-
-<gu-form *ngIf="!isLoading" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)"
+<gu-form class="mb-4" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading"
          (formSubmit)="submitForm($event)"></gu-form>
 
 <mat-action-list *ngIf="showZaakObjecten" dense>

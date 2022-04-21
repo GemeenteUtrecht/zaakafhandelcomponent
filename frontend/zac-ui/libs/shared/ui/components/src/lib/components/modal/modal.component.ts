@@ -20,6 +20,7 @@ import { ModalService } from "./modal.service";
 export class ModalComponent implements OnInit, OnDestroy {
   @Input() id: string;
   @Input() closeIcon: boolean;
+  @Input() expandVertical = false
   @Input() title: string;
   @Input() size: 'small' | 'medium' | 'huge' = 'medium';
   @Input() type: 'center' | 'right' = 'center';
