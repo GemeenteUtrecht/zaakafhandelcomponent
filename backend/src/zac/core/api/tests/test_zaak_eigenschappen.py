@@ -130,7 +130,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
             {
                 "url": eigenschap["url"],
                 "formaat": "tekst",
-                "value": "bar",
+                "waarde": "bar",
                 "eigenschap": {
                     "url": self.eigenschap["url"],
                     "naam": "some-property",

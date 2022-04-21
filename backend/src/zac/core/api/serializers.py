@@ -550,19 +550,19 @@ class EigenschapSerializer(APIModelSerializer):
 
 
 class CharValueSerializer(APIModelSerializer):
-    value = serializers.CharField(
+    waarde = serializers.CharField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
     class Meta:
         model = ZaakEigenschap
-        fields = ("value",)
+        fields = ("waarde",)
 
 
 class NumberValueSerializer(APIModelSerializer):
     # TODO: Ideally this should be dynamic based on eigenschapsspecificatie
-    value = serializers.DecimalField(
+    waarde = serializers.DecimalField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
         max_digits=100,
@@ -572,29 +572,29 @@ class NumberValueSerializer(APIModelSerializer):
 
     class Meta:
         model = ZaakEigenschap
-        fields = ("value",)
+        fields = ("waarde",)
 
 
 class DateValueSerializer(APIModelSerializer):
-    value = serializers.DateField(
+    waarde = serializers.DateField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
     class Meta:
         model = ZaakEigenschap
-        fields = ("value",)
+        fields = ("waarde",)
 
 
 class DateTimeValueSerializer(APIModelSerializer):
-    value = serializers.DateTimeField(
+    waarde = serializers.DateTimeField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
     )
 
     class Meta:
         model = ZaakEigenschap
-        fields = ("value",)
+        fields = ("waarde",)
 
 
 class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
@@ -634,12 +634,20 @@ class CreateZaakEigenschapSerializer(serializers.Serializer):
             "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in CATALOGI API."
         )
     )
-    value = serializers.CharField(
+    waarde = serializers.CharField(
         help_text=_(
             "Value of ZAAKEIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
         )
     )
     zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
+
+
+class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
+    waarde = serializers.CharField(
+        help_text=_(
+            "Value of ZAAKEIGENSCHAP. Must be formatted as defined by the EIGENSCHAP spec."
+        )
+    )
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):

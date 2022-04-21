@@ -94,15 +94,10 @@ export class ZaakService {
   updateCaseProperty(property: EigenschapWaarde):Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/properties`);
     const params = new HttpParams().set('url', property.url)
-    const value = property.value;
-    if (!value) {
-      return this.http.Delete(endpoint, {
-        params: params
-      })
-    }
+    const waarde = property.waarde;
 
     return this.http.Patch(endpoint, {
-      value: value,
+      waarde: waarde ? waarde : '-',
     }, {
       params: params,
     })

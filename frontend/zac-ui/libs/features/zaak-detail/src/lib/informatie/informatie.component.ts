@@ -139,7 +139,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   get propertyFieldConfigurations(): FieldConfiguration[] {
     return this.zaaktypeEigenschappen.map((zaaktypeEigenschap: ZaaktypeEigenschap): FieldConfiguration => {
       const property = this.properties.find((p: EigenschapWaarde) => p.eigenschap.naam === zaaktypeEigenschap.name)
-      const value = (property?.value) ? String(property.value) : null;
+      const value = (property?.waarde) ? String(property.waarde) : null;
       const type = (zaaktypeEigenschap.spec.format === 'date') ? 'date' : null;
 
       return {
@@ -298,11 +298,11 @@ export class InformatieComponent implements OnInit, OnChanges {
     this.isCreatePropertyAPILoading = Object.entries(data).reduce((acc, [key, value], index) => {
       const newProperty: NieuweEigenschap = {
         naam: key,
-        value: value,
+        waarde: value,
         zaakUrl: this.mainZaakUrl
       }
 
-      if (newProperty.value) {
+      if (newProperty.waarde) {
         this.zaakService.createCaseProperty(newProperty).subscribe(
           () => {},
           this.reportError.bind(this),
@@ -321,12 +321,12 @@ export class InformatieComponent implements OnInit, OnChanges {
   updateProperties(data: Object): void {
     this.isPropertyAPILoading = Object.entries(data).reduce((acc, [key, value], index) => {
       const property = this.properties.find((propertyValue: EigenschapWaarde) => propertyValue.eigenschap.naam === key)
-      property.value = value;
+      property.waarde = value;
 
       this.zaakService.updateCaseProperty(property).subscribe(
         () => {},
         this.reportError.bind(this),
-        () => this.isPropertyAPILoading--,
+        () => this.isPropertyAPILoading = 0,
       );
 
       return acc + 1;
@@ -357,7 +357,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = error.error.value[0] || this.errorMessage;
+    const message = error.error?.value ? error.error?.value[0] : this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isCaseAPILoading = false;
     this.isPropertyAPILoading = 0;

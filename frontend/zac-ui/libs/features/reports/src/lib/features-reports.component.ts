@@ -50,7 +50,7 @@ export class FeaturesReportsComponent implements OnInit {
   formatReportTable(data: ReportCase[]) {
     return data.map((element) => {
       const url = `/ui/zaken/${element.bronorganisatie}/${element.identificatie}`;
-      const eigenschappen = element.eigenschappen?.map(e => `${e.eigenschap.naam}: ${e.value}`).join('\n')
+      const eigenschappen = element.eigenschappen?.map(e => `${e.eigenschap.naam}: ${e.waarde}`).join('\n')
       const cellData: RowData = {
         cellData: {
           zaaknummer: {
