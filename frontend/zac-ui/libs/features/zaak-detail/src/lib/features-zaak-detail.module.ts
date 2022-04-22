@@ -6,23 +6,23 @@ import {FormGroupDirective, FormsModule, ReactiveFormsModule} from '@angular/for
 import {TabsModule} from 'ngx-bootstrap/tabs';
 import {MultiselectModule, SharedUiComponentsModule} from '@gu/components';
 import {FeaturesSearchModule} from '@gu/search';
-import {ActiviteitenComponent} from './activiteiten/activiteiten.component';
-import {AdviserenAccorderenComponent} from './adviseren-accorderen/adviseren-accorderen.component';
-import {DetailModalComponent} from './adviseren-accorderen/detail-modal/detail-modal.component';
-import {BetrokkenenComponent} from './betrokkenen/betrokkenen.component';
+import {ActiviteitenComponent} from './actions/activiteiten/activiteiten.component';
+import {AdviserenAccorderenComponent} from './actions/adviseren-accorderen/adviseren-accorderen.component';
+import {DetailModalComponent} from './actions/adviseren-accorderen/detail-modal/detail-modal.component';
+import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenModule} from './documenten/documenten.module';
 import {FeaturesZaakDetailComponent} from './features-zaak-detail.component';
 import {GerelateerdeObjectenComponent} from './gerelateerde-objecten/gerelateerde-objecten.component';
-import {GerelateerdeZakenModule} from './gerelateerde-zaken/gerelateerde-zaken.module';
-import {InformatieComponent} from './informatie/informatie.component';
-import {KetenProcessenModule} from './keten-processen/keten-processen.module';
-import {StatusComponent} from './status/status.component';
-import {ToegangVerlenenComponent} from './toegang-verlenen/toegang-verlenen.component';
-import {ZaakMapComponent} from './zaak-map/zaak-map.component';
-import {UserPermissionsComponent} from './user-permissions/user-permissions.component';
-import {TaskHistoryComponent} from './task-history/task-history.component';
-import {ChecklistComponent} from './checklist/checklist.component';
-import { CancelReviewComponent } from './adviseren-accorderen/cancel-review/cancel-review.component';
+import {GerelateerdeZakenModule} from './overview/gerelateerde-zaken/gerelateerde-zaken.module';
+import {InformatieComponent} from './overview/informatie/informatie.component';
+import {KetenProcessenModule} from './actions/keten-processen/keten-processen.module';
+import {StatusComponent} from './actions/status/status.component';
+import {ToegangVerlenenComponent} from './overview/toegang-verlenen/toegang-verlenen.component';
+import {ZaakMapComponent} from './gerelateerde-objecten/zaak-map/zaak-map.component';
+import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
+import {TaskHistoryComponent} from './actions/task-history/task-history.component';
+import {ChecklistComponent} from './actions/checklist/checklist.component';
+import {CancelReviewComponent} from './actions/adviseren-accorderen/cancel-review/cancel-review.component';
 
 @NgModule({
   imports: [

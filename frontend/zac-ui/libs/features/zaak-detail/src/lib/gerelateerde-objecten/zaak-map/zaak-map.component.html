@@ -1,11 +1,11 @@
 <gu-map *ngIf="zaak"
-        [center]="center"
         [editable]="true"
         [mapGeometries]="mapGeometries"
         [mapMarkers]="mapMarkers"
         (shapeChange)="onMapShapeChange($event)"
         (shapeChangeComplete)="onMapShapeComplete($event)"
         (mapLoad)="onMapLoad($event)"
+        [height]="height"
         [zoom]="7"
 ></gu-map>
 <gu-input #inputRef autocomplete="off" [datalist]="getDatalist()" placeholder="Zoek BAG" value="" (input)="onInputInput($event)" (change)="onInputChange($event)"></gu-input>

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { forkJoin, Observable, of } from 'rxjs';
 import { Activity, ReadWriteDocument, UserSearch } from "@gu/models";
-import { UserGroupList } from '../../models/user-group-search';
+import { UserGroupList } from '../../../models/user-group-search';
 
 @Injectable({
   providedIn: 'root'

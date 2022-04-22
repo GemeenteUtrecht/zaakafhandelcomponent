@@ -67,7 +67,7 @@ export class FeaturesWorkstackComponent implements OnInit {
      */
     getTableRows(zaken: WorkstackCase[]): RowData[] {
         return zaken.map((element) => {
-            const zaakUrl = `/ui/zaken/${element.bronorganisatie}/${element.identificatie}`;
+            const zaakUrl = `/ui/zaken/${element.bronorganisatie}/${element.identificatie}/acties`;
 
             const cellData: RowData = {
                 cellData: {

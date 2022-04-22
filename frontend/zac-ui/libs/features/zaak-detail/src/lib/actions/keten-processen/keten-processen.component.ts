@@ -10,9 +10,9 @@ import {
 } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
-import {TaskContextData} from '../../models/task-context';
+import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
-import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
+import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService} from '@gu/services';
 import BpmnJS from 'bpmn-js';
@@ -49,6 +49,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   @Input() zaak: Zaak;
 
   @Output() update = new EventEmitter<any>();
+  @Output() nTaskDataEvent = new EventEmitter<number>();
 
   data: KetenProcessen[];
   allTaskData: Task[];
@@ -263,9 +264,15 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     // Update data.
     this.data = data;
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
+
+    // Process instance ID for API calls
     this.processInstanceId = data.length > 0 ? data[0].id : null;
 
+    // Trigger update in parent
     this.update.emit(data);
+
+    // Emit number of tasks
+    this.nTaskDataEvent.emit(this.allTaskData.length);
   }
 
   /**

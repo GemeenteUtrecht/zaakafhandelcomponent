@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { TaskContextData } from '../../../../models/task-context';
+import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
 import { FormBuilder } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';

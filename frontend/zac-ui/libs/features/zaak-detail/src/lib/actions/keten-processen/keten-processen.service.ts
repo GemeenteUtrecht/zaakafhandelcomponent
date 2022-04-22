@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ApplicationHttpClient } from '@gu/services';
 import { Observable } from 'rxjs';
-import { TaskContextData } from '../../models/task-context';
+import { TaskContextData } from '../../../models/task-context';
 import { ReadWriteDocument, Task, User, UserSearch } from '@gu/models';
-import {BpmnXml, KetenProcessen} from '../../models/keten-processen';
-import { UserGroupList } from '../../models/user-group-search';
+import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
+import { UserGroupList } from '../../../models/user-group-search';
 
 
 export interface SendMessageForm {
