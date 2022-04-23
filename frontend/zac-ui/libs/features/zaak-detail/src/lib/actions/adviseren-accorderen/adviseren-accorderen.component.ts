@@ -54,8 +54,8 @@ export class AdviserenAccorderenComponent implements OnInit {
   /**
    * Updates the component using a public interface.
    */
-  public update() {
-    this.getContextData();
+  public update(isTriggeredByCancelReview?) {
+    this.getContextData(isTriggeredByCancelReview);
   }
 
   //
@@ -77,11 +77,18 @@ export class AdviserenAccorderenComponent implements OnInit {
   /**
    * Fetches the review requests summaries/details.
    */
-  getContextData(): void {
+  getContextData(isTriggeredByCancelReview?): void {
     this.isSummariesLoading = true;
 
     this.reviewRequestsService.listReviewRequestSummariesForCase(this.bronorganisatie, this.identificatie).subscribe(
       (reviewRequestSummaries) => {
+        const isChangedAfterUpdate = JSON.stringify(this.reviewRequestSummaries) !== JSON.stringify(reviewRequestSummaries);
+
+        // After cancelling a review it is expected that there is a change in data. If not yet, then refetch.
+        if (isTriggeredByCancelReview && !isChangedAfterUpdate) {
+          this.getContextData(true);
+        }
+
         this.reviewRequestSummaries = reviewRequestSummaries;
         this.fetchReviewRequestDetails(reviewRequestSummaries);
       },
@@ -190,7 +197,7 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @param modalId
    */
   closeModal(modalId: string): void {
-    this.modalService.open(modalId);
+    this.modalService.close(modalId);
   }
 
   /**

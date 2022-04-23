@@ -14,6 +14,7 @@
     </gu-table>
     <p *ngIf="(reviewRequestSummaries.length === 0)">Er is niets gevonden.</p>
   </ng-container>
+  {{isSummariesLoading}}
 </div>
 
 <!-- Review details -->
@@ -31,5 +32,5 @@
   size='small'
   [closeIcon]="true"
 >
-  <gu-cancel-review [reviewRequestSummary]="selectedReviewRequestSummary" (successReload)="update(); closeModal('cancel-review-modal')"></gu-cancel-review>
+  <gu-cancel-review [reviewRequestSummary]="selectedReviewRequestSummary" (successReload)="closeModal('cancel-review-modal'); update(true)"></gu-cancel-review>
 </gu-modal>

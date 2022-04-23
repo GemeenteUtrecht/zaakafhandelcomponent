@@ -62,6 +62,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isLoading = true;
   isPolling = false;
   nPollingFails = 0;
+  pollingInterval = 5000;
 
   errorMessage: string;
 
@@ -97,7 +98,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
       this.fetchCurrentUser();
 
-      if (!this.zaak.resultaat) {
+      if (!this.zaak.resultaat && !this.isPolling) {
         this.fetchProcesses();
       }
     });
@@ -152,7 +153,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         // Poll every 5s
         setTimeout(() => {
           this.fetchPollProcesses();
-        }, 5000)
+        }, this.pollingInterval)
 
         // Reset fail counter
         this.nPollingFails = 0;
@@ -162,16 +163,13 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
         // Poll again after 5s if it fails
         setTimeout(errorRes => {
-          this.errorMessage = errorRes.error.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
-          this.reportError(errorRes);
-
           if (this.nPollingFails < 5) {
             this.fetchPollProcesses();
           } else {
             this.isPolling = false;
             this.nPollingFails = 0;
           }
-        }, 5000)
+        }, this.pollingInterval)
       });
     }
   }
@@ -200,35 +198,41 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    */
   fetchProcesses(openTask: boolean = false): void {
-    // Known tasks after initialization.
-    const currentTaskIds = openTask && this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
+    if (!this.isPolling) {
+      // Known tasks after initialization.
+      const currentTaskIds = openTask && this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
 
-    this.isLoading = true;
+      this.isLoading = true;
 
-    // Fetch processes.
-    this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
-      // Update data.
-      this.updateProcessData(data);
+      // Fetch processes.
+      this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
+        // Update data.
+        this.updateProcessData(data);
 
-      // Execute newly created task.
-      if (openTask && currentTaskIds && data && data.length) {
-        // Find first task if with id not in taskIds.
-        const newTask = this.ketenProcessenService.findNewTask(data, currentTaskIds);
-        this.setNewestTask(data, currentTaskIds)
+        // Execute newly created task.
+        if (openTask && currentTaskIds && data && data.length) {
+          // Find first task if with id not in taskIds.
+          const newTask = this.ketenProcessenService.findNewTask(data, currentTaskIds);
+          this.setNewestTask(data, currentTaskIds)
 
-        if (newTask) {
-          this.executeTask(newTask.id);
+          if (newTask) {
+            this.executeTask(newTask.id);
+          }
         }
-      }
 
-      this.isLoading = false;
+        this.isLoading = false;
 
-      this.pollProcesses();
-    }, errorRes => {
-      this.isLoading = false;
-      this.errorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
-      this.reportError(errorRes);
-    })
+        // Start polling
+        setTimeout(() => {
+          this.pollProcesses();
+        }, this.pollingInterval)
+      }, errorRes => {
+        this.isLoading = false;
+        this.errorMessage = errorRes?.error?.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
+        this.reportError(errorRes);
+        this.fetchProcesses(openTask);
+      })
+    }
   }
 
   /**
@@ -251,7 +255,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
       this.isLoading = false;
-      this.errorMessage = errorRes.error.detail || 'Er is een fout opgetreden.';
+      this.errorMessage = errorRes?.error?.detail || 'Het openen van de taak is niet gelukt. Probeer het nog eens.';
       this.reportError(errorRes);
     })
   }

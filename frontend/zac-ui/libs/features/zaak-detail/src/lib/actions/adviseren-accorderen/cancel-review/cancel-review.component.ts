@@ -13,37 +13,25 @@ import { FieldConfiguration, SnackbarService } from '@gu/components';
   templateUrl: './cancel-review.component.html',
   styleUrls: ['./cancel-review.component.scss']
 })
-export class CancelReviewComponent implements OnInit {
+export class CancelReviewComponent {
   @Input() reviewRequestSummary: ReviewRequestSummary;
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  form: FieldConfiguration[];
+  form: FieldConfiguration[] = [
+    {
+      label: 'Reden annulering',
+      placeholder: ' ',
+      name: 'lockReason',
+      required: true,
+    },
+  ]
+
   isSubmitting: boolean;
 
   constructor(
     private reviewRequestsService: ReviewRequestsService,
     private snackbarService: SnackbarService,
   ) { }
-
-  //
-  // Angular lifecycle.
-  //
-
-  /**
-   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
-   * ngOnInit() method to handle any additional initialization tasks.
-   */
-
-  ngOnInit(): void {
-    this.form = [
-      {
-        label: 'Reden annulering',
-        placeholder: ' ',
-        name: 'lockReason',
-        required: false,
-      },
-    ]
-  }
 
   /**
    * Cancel review.
@@ -67,7 +55,8 @@ export class CancelReviewComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.snackbarService.openSnackBar('Annuleren van de taak is niet gelukt', 'Sluiten', 'warn');
+    const errorMessage = error.detail || 'Annuleren van de taak is niet gelukt';
+    this.snackbarService.openSnackBar(errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }
 

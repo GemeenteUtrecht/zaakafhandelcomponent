@@ -121,8 +121,6 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
-
-      this.modalService.close('ketenprocessenModal');
     }, error => {
       this.isSubmitting = false;
       this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
