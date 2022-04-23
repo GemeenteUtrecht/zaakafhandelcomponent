@@ -15,7 +15,7 @@
       <span class="logo" [ngStyle]="{'background-image': 'url(' + mobileLogoUrl + ')'}"></span>
     </div>
     <div class="navbar-right">
-      <p class="p--nomargin d-none d-sm-block">{{currentUser}}</p>
+      <p class="p--nomargin d-none d-sm-block">{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</p>
     </div>
   </header>
   <nav class="vertical-nav"
@@ -29,7 +29,7 @@
     <div class="logo mb-4">
       <img [src]="logoUrl"/>
     </div>
-    <div class="menu-container" *ngIf="menuItems">
+    <div class="menu-container" *ngIf="menuItems && currentUser">
       <div class="top-navigation">
         <div class="searchbox mb-4">
           <ng-content select="gu-zaak-select"></ng-content>
@@ -50,7 +50,7 @@
       </div>
       <div class="bottom-navigation">
         <ng-container *ngFor="let bottomItem of bottomMenuItems">
-          <a *ngIf="bottomItem.external"
+          <a *ngIf="bottomItem.external && isAuthorised(bottomItem.adminOnly)"
              (click)="toggle()"
              href="{{bottomItem.to}}"
              [target]="bottomItem.external ? '_blank' : null"
@@ -63,7 +63,7 @@
             <gu-icon>{{bottomItem.icon}}</gu-icon>
             <span class="menu-item__label">{{bottomItem.label}}</span>
           </a>
-          <a *ngIf="!bottomItem.external"
+          <a *ngIf="!bottomItem.external && isAuthorised(bottomItem.adminOnly)"
              (click)="toggle()"
              [routerLink]="!bottomItem.external ? [bottomItem.to] : null"
              class="menu-item menu-link"

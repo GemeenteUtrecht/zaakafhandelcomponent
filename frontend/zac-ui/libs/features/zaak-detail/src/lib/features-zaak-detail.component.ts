@@ -7,8 +7,8 @@ import {ModalService, SnackbarService} from '@gu/components';
 import {catchError, switchMap, tap} from 'rxjs/operators';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/adviseren-accorderen.component";
-import { StatusComponent } from './actions/status/status.component';
-import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
+import {StatusComponent} from './actions/status/status.component';
+import {ActivatedRoute} from '@angular/router';
 
 
 /**

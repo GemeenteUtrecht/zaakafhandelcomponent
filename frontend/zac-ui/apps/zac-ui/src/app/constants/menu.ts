@@ -37,23 +37,24 @@ const bottomMenuItems: MenuItem[] = [
   //   external: true
   // },
   {
-    icon: 'link',
+    icon: 'open_in_new',
     label: 'Alfresco',
     to: isTestEnvironment() ? 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/' : 'https://alfresco-tezza.cg-intern.acc.utrecht.nl/',
     external: true,
+    adminOnly: false,
   },
   {
     icon: 'manage_accounts',
     label: 'Autorisaties',
     to: '/autorisaties',
-    // roles: [UserRole.Admin],
+    adminOnly: true,
   },
   {
     icon: 'admin_panel_settings',
     label: 'Admin',
     to: '/admin',
     external: true,
-    // roles: [UserRole.Admin],
+    adminOnly: true,
   },
 ];
 export { MenuItem, menuItems, bottomMenuItems };

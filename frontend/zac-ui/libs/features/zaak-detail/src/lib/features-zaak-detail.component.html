@@ -142,19 +142,16 @@
               <!-- Objects tab -->
 
               <div class="row" [hidden]="activeLink !== 'objecten'">
-                <div class="col-lg-12 mb-4">
+                <div class="col-lg-7 mb-4">
                   <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
                                             [identificatie]="identificatie">
                   </gu-gerelateerde-objecten>
                 </div>
 
-                <div class="position-relative">
-                  <div *ngIf="!isLoading && !hasError">
-                    <gu-zaak-map [bronorganisatie]="bronorganisatie"
-                                 [identificatie]="identificatie"
-                                 height="500px"
-                    ></gu-zaak-map>
-                  </div>
+                <div class="col-lg-5 zaak-map" *ngIf="!isLoading && !hasError">
+                  <gu-zaak-map [bronorganisatie]="bronorganisatie"
+                               [identificatie]="identificatie"
+                  ></gu-zaak-map>
                 </div>
               </div>
             </div>
@@ -180,10 +177,4 @@
     </div>
   </div>
 
-  <!-- Map -->
-<!--  <gu-collapse [collapsed]="true">-->
-<!--    <aside *ngIf="!isLoading && !hasError">-->
-<!--      <gu-zaak-map [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-zaak-map>-->
-<!--    </aside>-->
-<!--  </gu-collapse>-->
 </section>
