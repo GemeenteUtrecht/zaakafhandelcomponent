@@ -3,7 +3,6 @@ import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {EigenschapWaarde, NieuweEigenschap, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
 import {SearchService} from '../../../../search/src/lib/search.service';
-import { isTestEnvironment } from '@gu/utils';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>

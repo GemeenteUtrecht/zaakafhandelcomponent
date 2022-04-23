@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
-import { Document } from '@gu/models';
+import { Document, InformatieObjectType } from '@gu/models';
 import { DocumentenService } from '../documenten.service';
 
 import {CachedObservableMethod} from '@gu/utils';
@@ -47,7 +47,7 @@ export class DocumentToevoegenComponent implements OnInit {
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van documenten.';
 
-  documentTypes: any;
+  documentTypes: InformatieObjectType[];
   addDocumentForm: FormGroup;
   isLoading: boolean;
   isSubmitting: boolean;
@@ -90,7 +90,8 @@ export class DocumentToevoegenComponent implements OnInit {
     this.isLoading = true;
     if (this.mainZaakUrl) {
       this.documentService.getDocumentTypes(this.mainZaakUrl).subscribe( res => {
-        this.documentTypes = res;
+        // Sort and set values
+        this.documentTypes = res.sort((a,b) => (a.omschrijving > b.omschrijving) ? 1 : ((b.omschrijving > a.omschrijving) ? -1 : 0));
       })
     }
   }
