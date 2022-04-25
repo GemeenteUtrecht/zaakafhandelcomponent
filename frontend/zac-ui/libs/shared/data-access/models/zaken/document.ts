@@ -37,7 +37,7 @@ export interface ShortDocument {
   vertrouwelijkheidaanduiding: string;
 }
 
-interface InformatieObjectType {
+export interface InformatieObjectType {
   omschrijving: string;
   url: string;
 }

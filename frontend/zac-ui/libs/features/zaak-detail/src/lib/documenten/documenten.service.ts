@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Document, ExtensiveCell, ReadWriteDocument, RowData, Table } from '@gu/models';
+import { Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import {CachedObservableMethod} from '@gu/utils';
-import {HttpParams, HttpResponse} from '@angular/common/http';
-import {doc} from 'prettier';
 
 @Injectable({
   providedIn: 'root'
@@ -51,9 +48,9 @@ export class DocumentenService {
     return this.http.Patch<any>(encodeURI(`/api/core/cases/document`), formData);
   }
 
-  getDocumentTypes(mainZaakUrl): Observable<HttpResponse<any>> {
+  getDocumentTypes(mainZaakUrl): Observable<InformatieObjectType[]> {
     const endpoint = encodeURI(`/api/core/document-types?zaak=${mainZaakUrl}`);
-    return this.http.Get<any>(endpoint);
+    return this.http.Get<InformatieObjectType[]>(endpoint);
   }
 
   /**

@@ -3,7 +3,6 @@ import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {EigenschapWaarde, NieuweEigenschap, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
 import {SearchService} from '../../../../search/src/lib/search.service';
-import { isTestEnvironment } from '@gu/utils';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>
@@ -55,9 +54,9 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   readonly zaaktypenWithTezzaLink = [
     "Aanvraag HARVO behandelen",
-    "Huisvestingsbehoefte behandelen en uitvoeren",
+    "Huisvestingsbehoefte behandelen",
     "Eigendomsdossier",
-    "Routingformulier VGU behandelen",
+    "Routingsproces",
     "Vastgoedobject beheren",
     "Vastgoedobject behandelen"
   ]
