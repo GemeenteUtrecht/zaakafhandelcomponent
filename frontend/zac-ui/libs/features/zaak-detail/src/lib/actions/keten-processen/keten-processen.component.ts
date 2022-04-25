@@ -230,7 +230,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.isLoading = false;
         this.errorMessage = errorRes?.error?.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
         this.reportError(errorRes);
-        this.fetchProcesses(openTask);
       })
     }
   }
