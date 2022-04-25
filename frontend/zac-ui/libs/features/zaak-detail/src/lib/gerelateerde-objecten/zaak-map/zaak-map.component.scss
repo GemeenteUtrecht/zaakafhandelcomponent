@@ -1,7 +1,13 @@
+.zaak-map {
+  position: relative;
+  height: 75vh;
+  width: 100%;
+}
+
 gu-input {
   box-sizing: border-box;
   position: absolute;
-  top: 5px;
+  top: 21px;
   z-index: 400;
   padding: 0 50px;
   width: 100%;
