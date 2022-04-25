@@ -10,6 +10,10 @@ const routes: Routes = [
   },
   {
     path: ':bronorganisatie/:identificatie',
+    redirectTo: ':bronorganisatie/:identificatie/overzicht'
+  },
+  {
+    path: ':bronorganisatie/:identificatie/:tabId',
     component: ZaakDetailComponent
   }
 ];

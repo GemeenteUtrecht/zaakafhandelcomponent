@@ -1,12 +1,14 @@
 import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Location} from '@angular/common';
 import {ActivitiesService, UserService, ZaakService} from '@gu/services';
 import {Observable, of} from 'rxjs';
 import {Activity, User, Zaak} from '@gu/models';
 import {ModalService, SnackbarService} from '@gu/components';
 import {catchError, switchMap, tap} from 'rxjs/operators';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
-import {AdviserenAccorderenComponent} from "./adviseren-accorderen/adviseren-accorderen.component";
-import { StatusComponent } from './status/status.component';
+import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/adviseren-accorderen.component";
+import {StatusComponent} from './actions/status/status.component';
+import {ActivatedRoute} from '@angular/router';
 
 
 /**
@@ -72,6 +74,31 @@ export class FeaturesZaakDetailComponent implements OnInit {
   /** @type {Zaak} The case (zaak). */
   zaakData: Zaak;
 
+  /** Active tab */
+  activeLink: string;
+
+  /** Tabs */
+  tabs: object[] = [
+    {
+      link: 'overzicht',
+      title: 'Overzicht'
+    },
+    {
+      link: 'acties',
+      title: 'Acties'
+    },
+    {
+      link: 'documenten',
+      title: 'Documenten'
+    },
+    {
+      link: 'objecten',
+      title: 'Objecten'
+    },
+  ]
+
+  nTasks: number = null;
+
 
   /**
    *
@@ -81,6 +108,8 @@ export class FeaturesZaakDetailComponent implements OnInit {
    * @param {SnackbarService} snackbarService
    * @param {UserService} userService
    * @param {ZaakService} zaakService
+   * @param {Location} location
+   * @param {ActivatedRoute} route
    */
   constructor(
     private activitiesService: ActivitiesService,
@@ -89,10 +118,16 @@ export class FeaturesZaakDetailComponent implements OnInit {
     private snackbarService: SnackbarService,
     private userService: UserService,
     private zaakService: ZaakService,
+    private location: Location,
+    private route: ActivatedRoute,
   ) {
     this.zaakAccessRequestForm = this.formBuilder.group({
       comment: this.formBuilder.control(""),
-    })
+    });
+
+    this.route.params.subscribe(params => {
+      this.activeLink = params['tabId'];
+    });
   }
 
   //
@@ -195,6 +230,14 @@ export class FeaturesZaakDetailComponent implements OnInit {
     this.modalService.open(id);
   }
 
+  getTabLink(tab) {
+    return `/zaken/${this.bronorganisatie}/${this.identificatie}/${tab}`;
+  }
+
+  setUrl(tab) {
+    this.location.go(this.getTabLink(tab))
+  }
+
   //
   // Events.
   //
@@ -220,6 +263,10 @@ export class FeaturesZaakDetailComponent implements OnInit {
     }, this.reportError.bind(this))
   }
 
+  /**
+   * Updates child components
+   * @param event
+   */
   ketenProcessenUpdate(event) {
     this.adviserenAccorderenComponent.update();
     this.statusComponent.update();

@@ -1,25 +1,5 @@
-::ng-deep gu-features-zaak-detail gu-collapse {
-  background-attachment: fixed;
-  box-sizing: border-box;
-  height: 100vh;
-  padding-top: 56px;
-  position: fixed;
-  right: 0;
-  top: 0;
-
-  .collapse {
-    width: 75vw;
-  }
-
-  @media (min-width: 768px) {
-    padding-top: 0;
-    position: sticky;
-    right: unset;
-    top: 0;
-    width: unset;
-
-    .collapse {
-      width: 375px;
-    }
-  }
+.zaak-map {
+  position: relative;
+  height: 75vh;
+  width: 100%;
 }

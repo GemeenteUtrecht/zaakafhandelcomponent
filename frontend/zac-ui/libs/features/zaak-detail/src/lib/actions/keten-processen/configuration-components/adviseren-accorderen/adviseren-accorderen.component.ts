@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { TaskContextData } from '../../../../models/task-context';
+import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
@@ -121,8 +121,6 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
-
-      this.modalService.close('ketenprocessenModal');
     }, error => {
       this.isSubmitting = false;
       this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";

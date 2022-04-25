@@ -6,4 +6,5 @@ export interface MenuItem {
   external?: boolean;
   subs?: MenuItem[];
   marginBottom?: boolean;
+  adminOnly?: boolean;
 }

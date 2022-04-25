@@ -2,7 +2,7 @@ import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {EigenschapWaarde, NieuweEigenschap, Zaak, ZaaktypeEigenschap} from '@gu/models';
 import {MetaService, ZaakService} from '@gu/services';
-import {SearchService} from '../../../../search/src/lib/search.service';
+import {SearchService} from '../../../../../search/src/lib/search.service';
 
 /**
  * <gu-informatie [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-informatie>

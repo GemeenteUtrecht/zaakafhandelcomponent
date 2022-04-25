@@ -4,6 +4,7 @@ import {filter} from 'rxjs/operators';
 import {SnackbarService} from '@gu/components';
 import {UserService, ZaakService} from '@gu/services';
 import {menuItems, bottomMenuItems, MenuItem} from './constants/menu';
+import { User } from '@gu/models';
 
 
 /**
@@ -27,7 +28,7 @@ export class AppComponent implements OnInit {
   mobileLogoUrl = 'assets/images/schild.png';
 
   /** @type {string} The string representation of the current user. */
-  currentUser: string;
+  currentUser: User;
 
   /** @type {MenuItem[]} The menu items to show in the center of the menu. */
   menuItems: MenuItem[] = menuItems;
@@ -82,10 +83,10 @@ export class AppComponent implements OnInit {
   getContextData(): void {
     this.userService.getCurrentUser()
       .subscribe(([user, isHijacked]) => {
-        this.currentUser = this.userService.stringifyUser(user);
+        this.currentUser = user;
 
         if (isHijacked) {
-          this.snackbarService.openSnackBar(`Je werkt nu namens ${this.currentUser}`, 'Stoppen', 'accent', 0)
+          this.snackbarService.openSnackBar(`Je werkt nu namens ${this.userService.stringifyUser(this.currentUser)}`, 'Stoppen', 'accent', 0)
             .afterDismissed()
             .subscribe((matSnackBarDismiss) => {
               if(matSnackBarDismiss.dismissedByAction) {
@@ -106,7 +107,10 @@ export class AppComponent implements OnInit {
    */
   hijackSnackBarDismissed(): void {
     this.userService.releaseHijack().subscribe(
-      () => this.router.navigate([''])
+      () => {
+        this.getContextData();
+        this.router.navigate([''])
+      }
     );
   }
 

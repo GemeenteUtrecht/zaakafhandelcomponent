@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { MenuItem } from '@gu/models';
+import { MenuItem, User } from '@gu/models';
 
 @Component({
   selector: 'gu-sidenav',
@@ -12,7 +12,7 @@ export class SidenavComponent {
   @Input() selectedParentMenu: string;
   @Input() logoUrl: string;
   @Input() mobileLogoUrl: string;
-  @Input() currentUser: string;
+  @Input() currentUser: User;
 
   expanded = false;
 
@@ -24,5 +24,9 @@ export class SidenavComponent {
 
   subtractParentRoute(route) {
     return route.split('/')[1];
+  }
+
+  isAuthorised(adminOnly) {
+    return !adminOnly ? true : this.currentUser.isStaff;
   }
 }
