@@ -16,7 +16,6 @@ import {KadasterService, ZaakObjectService, ZaakService} from '@gu/services';
 export class ZaakMapComponent implements OnInit, AfterViewInit {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
-  @Input() height: string;
 
   /** @type {Zaak} The case (zaak) to show geographical information for. */
   zaak: Zaak = null;
