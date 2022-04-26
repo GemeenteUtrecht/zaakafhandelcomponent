@@ -205,7 +205,7 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    */
   bindDomEvents(): void {
     try {
-      Array.from(document.querySelectorAll('.collapse__button'))
+      Array.from(document.querySelectorAll('.collapse__button, .mat-tab-link'))
         .forEach((node) => {
           node.addEventListener('click', this.update.bind(this));
         });
