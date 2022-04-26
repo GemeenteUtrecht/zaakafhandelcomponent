@@ -15,7 +15,10 @@
           <section class="row">
             <header class="col-12" *ngIf="zaakData">
               <h1 class="mb-2">{{zaakData.zaaktype.omschrijving}}</h1>
-              <gu-chip color="tertiary" class="d-block mb-2">{{zaakData.identificatie}}</gu-chip>
+              <div class="mb-4">
+                <gu-chip color="tertiary" class="mr-2">{{zaakData.identificatie}}</gu-chip>
+                <p class="p d-inline-block mb-0">{{zaakData.omschrijving}}</p>
+              </div>
             </header>
           </section>
 
