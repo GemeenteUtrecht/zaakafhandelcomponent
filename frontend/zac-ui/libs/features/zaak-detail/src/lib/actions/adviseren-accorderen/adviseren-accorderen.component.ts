@@ -86,11 +86,15 @@ export class AdviserenAccorderenComponent implements OnInit {
 
         // After cancelling a review it is expected that there is a change in data. If not yet, then refetch.
         if (isTriggeredByCancelReview && !isChangedAfterUpdate) {
-          this.getContextData(true);
+          this.isSummariesLoading = true;
+          setTimeout(() => {
+            this.getContextData(true);
+          }, 2000);
         }
 
         this.reviewRequestSummaries = reviewRequestSummaries;
         this.fetchReviewRequestDetails(reviewRequestSummaries);
+        this.isSummariesLoading = false;
       },
       this.reportError.bind(this),
       () => this.isSummariesLoading = false,
