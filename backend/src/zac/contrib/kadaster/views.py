@@ -111,7 +111,7 @@ class PandView(APIView):
         ],
         responses={
             (200, "application/json"): remote_schema_ref(
-                settings.BAG_API_SCHEMA,
+                settings.EXTERNAL_API_SCHEMAS["BAG_API_SCHEMA"],
                 ["components", "schemas", "Pand"],
             ),
         },
@@ -147,7 +147,7 @@ class NummerAanduidingView(APIView):
         ],
         responses={
             (200, "application/json"): remote_schema_ref(
-                settings.BAG_API_SCHEMA,
+                settings.EXTERNAL_API_SCHEMAS["BAG_API_SCHEMA"],
                 ["components", "schemas", "Nummeraanduiding"],
             ),
         },

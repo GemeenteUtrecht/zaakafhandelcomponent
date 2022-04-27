@@ -28,11 +28,13 @@ def remote_kownsl_create_schema(
     response_schema = [*method_path, "responses", "201", *schema_path]
     return extend_schema(
         request={
-            media_type: remote_schema_ref(settings.KOWNSL_API_SCHEMA, request_schema),
+            media_type: remote_schema_ref(
+                settings.EXTERNAL_API_SCHEMAS["KOWNSL_API_SCHEMA"], request_schema
+            ),
         },
         responses={
             (status_code, media_type): remote_schema_ref(
-                settings.KOWNSL_API_SCHEMA, response_schema
+                settings.EXTERNAL_API_SCHEMAS["KOWNSL_API_SCHEMA"], response_schema
             ),
         },
         **kwargs,

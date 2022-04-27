@@ -211,7 +211,7 @@ class VerblijfsobjectSerializer(APIModelSerializer):
 
 
 class PandenSerializer(ProxySerializer):
-    PROXY_SCHEMA_BASE = settings.BAG_API_SCHEMA
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["BAG_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "paths",
         "/panden/{pandidentificatie}",
@@ -225,7 +225,7 @@ class PandenSerializer(ProxySerializer):
 
 
 class NummerAanduidingenSerializer(ProxySerializer):
-    PROXY_SCHEMA_BASE = settings.BAG_API_SCHEMA
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["BAG_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "paths",
         "/nummeraanduidingen/{nummeraanduidingidentificatie}",

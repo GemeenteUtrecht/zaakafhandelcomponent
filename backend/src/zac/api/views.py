@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 
 import requests
@@ -11,10 +12,14 @@ HEADERS_TO_KEEP = (
     "x-oas-version",
 )
 
+from django.conf import settings
+
 
 def remote_schema_view(request):
     schema_url = request.GET["schema"]
     # TODO: cache
+    if schema_url not in settings.EXTERNAL_API_SCHEMAS.values():
+        raise PermissionDenied
     response = requests.get(schema_url)
     content = response.content
 
