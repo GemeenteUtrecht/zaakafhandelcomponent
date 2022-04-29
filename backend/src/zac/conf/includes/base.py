@@ -468,29 +468,32 @@ SPECTACULAR_SETTINGS = {
 }
 
 # URLs from which DRF spectacular retrieves API schemas
-BAG_API_SCHEMA = config(
-    "BAG_API_SCHEMA",
-    "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
-)
-DOWC_API_SCHEMA = config(
-    "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
-)
-KOWNSL_API_SCHEMA = config(
-    "KOWNSL_API_SCHEMA",
-    "https://kownsl.cg-intern.ont.utrecht.nl/api/v1",
-)
-OBJECTS_API_SCHEMA = config(
-    "OBJECTS_API_SCHEMA",
-    "https://objects.cg-intern.ont.utrecht.nl/api/v1",
-)
-OBJECTTYPES_API_SCHEMA = config(
-    "OBJECTTYPES_API_SCHEMA",
-    "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1",
-)
-ZRC_API_SCHEMA = config(
-    "ZRC_API_SCHEMA",
-    "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/schema/openapi.json",
-)
+
+EXTERNAL_API_SCHEMAS = {
+    "BAG_API_SCHEMA": config(
+        "BAG_API_SCHEMA",
+        "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
+    ),
+    "DOWC_API_SCHEMA": config(
+        "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
+    ),
+    "KOWNSL_API_SCHEMA": config(
+        "KOWNSL_API_SCHEMA",
+        "https://kownsl.cg-intern.ont.utrecht.nl/api/v1",
+    ),
+    "OBJECTS_API_SCHEMA": config(
+        "OBJECTS_API_SCHEMA",
+        "https://objects.cg-intern.ont.utrecht.nl/api/v1",
+    ),
+    "OBJECTTYPES_API_SCHEMA": config(
+        "OBJECTTYPES_API_SCHEMA",
+        "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1",
+    ),
+    "ZRC_API_SCHEMA": config(
+        "ZRC_API_SCHEMA",
+        "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/schema/openapi.json",
+    ),
+}
 
 #
 # SENTRY - error monitoring

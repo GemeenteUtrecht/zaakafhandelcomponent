@@ -16,7 +16,7 @@ from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
-    PROXY_SCHEMA_BASE = settings.KOWNSL_API_SCHEMA
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["KOWNSL_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "paths",
         "/api/v1/review-requests/{uuid}",

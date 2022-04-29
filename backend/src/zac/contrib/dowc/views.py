@@ -82,7 +82,7 @@ class DeleteDowcView(APIView):
         summary=_("Update and delete a document."),
         responses={
             (200, "application/json"): remote_schema_ref(
-                settings.DOWC_API_SCHEMA,
+                settings.EXTERNAL_API_SCHEMAS["DOWC_API_SCHEMA"],
                 ["components", "schemas", "UnlockedDocument"],
             ),
         },
