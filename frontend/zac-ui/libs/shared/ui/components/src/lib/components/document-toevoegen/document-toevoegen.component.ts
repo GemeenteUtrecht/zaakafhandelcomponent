@@ -1,13 +1,12 @@
+import {HttpResponse} from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
 import { Document, InformatieObjectType } from '@gu/models';
-import { DocumentenService } from '../documenten.service';
-
+import {ApplicationHttpClient, DocumentenService} from "@gu/services";
 import {CachedObservableMethod} from '@gu/utils';
-import { Observable } from 'rxjs';
-import {HttpResponse} from "@angular/common/http";
-import {ApplicationHttpClient} from "@gu/services";
+
 
 /**
  * This component allows users to add or override documents.
@@ -34,9 +33,14 @@ export class DocumentToevoegenComponent implements OnInit {
   @Input() zaaktypeurl: string;
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
+
   @Input() activity: string;
   @Input() documentUrl?: string;
   @Input() updateDocument: boolean;
+
+  @Input() title = 'Documenttype';
+  @Input() description = 'Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen';
+  @Input() submitLabel = 'Opslaan';
 
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();

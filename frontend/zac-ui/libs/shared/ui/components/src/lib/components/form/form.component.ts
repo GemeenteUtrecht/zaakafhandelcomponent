@@ -2,6 +2,8 @@ import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges
 import {FormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration} from './field';
 import {FormService} from './form.service';
+import {Document, ReadWriteDocument} from '@gu/models';
+import {DocumentenService} from '@gu/services';
 
 
 /**
@@ -36,8 +38,18 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() showEditOnHover: boolean;
   @Input() isLoading = false;
 
+  @Input() mainZaakUrl: string;
+  @Input() zaaktypeurl: string;
+  @Input() bronorganisatie: string;
+  @Input() identificatie: string;
+
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
+
+  /**
+   * @type {Object} Documents mapping.
+   */
+  documents: {[index: string]: Document} = {}
 
   /**
    * @type {boolean} Whether the form is in edit mode.
@@ -66,7 +78,7 @@ export class FormComponent implements OnInit, OnChanges {
    * Constructor method.
    * @param {FormService} formService
    */
-  constructor(private formService: FormService) {
+  constructor(private documentenService: DocumentenService, private formService: FormService) {
   }
 
   //
@@ -206,24 +218,54 @@ export class FormComponent implements OnInit, OnChanges {
         return false;
 
       case 'string':
-          // Check if properly set to toggle.
-          if(this.editable!=='toggle') {
-            throw new Error('Invalid value for editable input in form');
-          }
+        // Check if properly set to toggle.
+        if (this.editable !== 'toggle') {
+          throw new Error('Invalid value for editable input in form');
+        }
 
-          // Always show toggle for form.
-          if(!this.showEditOnHover) {
-            return true;
-          }
+        // Always show toggle for form.
+        if (!this.showEditOnHover) {
+          return true;
+        }
 
-          // Show toggle based on hover.
-          return this.isHovered;
+        // Show toggle based on hover.
+        return this.isHovered;
     }
   }
 
   //
   // Events.
   //
+
+  /**
+   * Retrieve read link for document.
+   * @param {string} url
+   */
+  onDocumentClick(url) {
+    this.documentenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
+      window.open(res.magicUrl, "_self");
+    })
+  }
+
+  /**
+   * Gets called when a document is uploaded.
+   * @param {Field} field
+   * @param {Document} document
+   */
+  onUploadedDocument(field: Field, document: Document) {
+    this.documents[field.name] = document;
+    field.edit = false;
+  }
+
+  /**
+   * Unlinks a document from the form.
+   * The document will not be deleted.
+   * @param {Field} field
+   */
+  removeDocument(field: Field) {
+    delete this.documents[field.name]
+    field.edit = false;
+  }
 
   /**
    * Gets called when toggle is clicked, performs toggle.
@@ -266,13 +308,13 @@ export class FormComponent implements OnInit, OnChanges {
     field.control.markAsTouched();
     this.updateFields();
     this.formChange.emit(this.formGroup.getRawValue())
-    if(field.onChange) {
+    if (field.onChange) {
       field.onChange(choice, field)
     }
   }
 
   selectSearch(term: string, field: Field): void {
-    if(field.onSearch) {
+    if (field.onSearch) {
       field.onSearch(term, field);
     }
   }
@@ -283,7 +325,7 @@ export class FormComponent implements OnInit, OnChanges {
    * Gets called when form is submitted.
    */
   _formSubmit(): void {
-    const data = this.formService.serializeForm(this.formGroup, this.form, this.resolvedKeys);
+    const data = this.formService.serializeForm(this.formGroup, this.form, this.resolvedKeys, this.documents);
     this.formSubmit.emit(data)
 
     if (this.resetAfterSubmit) {

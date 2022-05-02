@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FieldConfiguration, SnackbarService } from '@gu/components';
 import { Document } from '@gu/models';
-import { DocumentenService } from '../documenten.service';
+import {DocumentenService} from '@gu/services';
 
 /**
  * Component that changes the document name

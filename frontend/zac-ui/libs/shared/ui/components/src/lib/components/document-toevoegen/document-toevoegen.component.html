@@ -1,8 +1,8 @@
 <div class="document-toevoegen">
   <form [formGroup]="addDocumentForm">
     <div class="form-group" *ngIf="!updateDocument">
-      <label class="h4 d-inline-block mr-2">Documenttype</label>
-      <p>Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen.</p>
+      <label *ngIf="title" class="h4 d-inline-block mr-2">{{ title }}</label>
+      <p *ngIf="description">{{ description }}</p>
       <gu-multiselect
         [multiple]="false"
         [items]="documentTypes"
@@ -40,7 +40,7 @@
               buttonStyle="primary"
               [size]="activity ? 'small' : 'large'"
               (click)="submitForm()">
-        Opslaan
+        {{submitLabel}}
       </button>
     </div>
   </form>

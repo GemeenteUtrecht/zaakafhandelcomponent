@@ -83,6 +83,7 @@ export class Field {
   autocomplete?: 'on' | 'off';
   choices: Array<Object>;
   control: AbstractControl;
+  edit: false;
   key?: string;
   label: string;
   name?: string;
@@ -119,6 +120,10 @@ export class Field {
    * @return {string}
    */
   getWidgetType(fieldConfiguration: FieldConfiguration) {
+    if (fieldConfiguration.type === 'document') {
+      return 'document'
+    }
+
     if (fieldConfiguration.readonly) {
       return 'readonly';
     }

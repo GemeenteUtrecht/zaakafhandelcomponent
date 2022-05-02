@@ -1,7 +1,6 @@
 import { Component, HostListener, Input, OnChanges } from '@angular/core';
 import {Document, ReadWriteDocument, Table } from '@gu/models';
-import { ZaakService} from '@gu/services';
-import { DocumentenService } from './documenten.service';
+import {DocumentenService, ZaakService} from '@gu/services';
 import { ModalService, SnackbarService } from '@gu/components';
 import { catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';

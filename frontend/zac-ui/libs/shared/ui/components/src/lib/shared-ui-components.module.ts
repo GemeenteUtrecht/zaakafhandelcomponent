@@ -33,6 +33,7 @@ import {MultiselectModule} from "./elements/multiselect/multiselect.module";
 
 // UI Components
 import {CollapseComponent} from './components/collapse/collapse.component';
+import {DocumentToevoegenComponent} from './components/document-toevoegen/document-toevoegen.component';
 import {FileComponent} from './components/file/file.component';
 import {FileUploadComponent} from './components/file-upload/file-upload.component';
 import {FormComponent} from './components/form/form.component';
@@ -77,6 +78,7 @@ patchMatFormField();
     ButtonComponent,
     ChipComponent,
     CollapseComponent,
+    DocumentToevoegenComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,
@@ -104,6 +106,7 @@ patchMatFormField();
     ButtonComponent,
     ChipComponent,
     CollapseComponent,
+    DocumentToevoegenComponent,
     FileComponent,
     FileUploadComponent,
     FormComponent,

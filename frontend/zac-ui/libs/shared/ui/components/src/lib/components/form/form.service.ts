@@ -1,6 +1,8 @@
 import {Injectable} from '@angular/core';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {Field, FieldConfiguration} from './field';
+import {Document} from '@gu/models';
+
 
 @Injectable()
 export class FormService {
@@ -62,7 +64,7 @@ export class FormService {
     const key = this.getKeyFromFieldConfiguration(field);
     const _field = formGroup.get(key);
 
-    if(!_field) {
+    if (!_field) {
       return;
     }
 
@@ -133,15 +135,16 @@ export class FormService {
    * @param {FormGroup} formGroup
    * @param {FieldConfiguration[]} form
    * @param {string[]} [resolvedKeys]
+   * @param {Object} documents
    * @return {Object}
    */
-  serializeForm(formGroup, form, resolvedKeys = this.getKeysFromForm(form)) {
+  serializeForm(formGroup, form, resolvedKeys = this.getKeysFromForm(form), documents: { [index: string]: Document } = {}) {
 
     // Initial serialized data.
     const rawData = formGroup.getRawValue();
 
     // Update rawData with support for activeWhen, and use name instead of key key in resulting object.
-    return Object.entries(rawData).reduce(
+    const data = Object.entries(rawData).reduce(
       (acc, [key, value]) => {
         // Find active field by key.
         const field = this.formGroupToFields(formGroup, form, resolvedKeys)
@@ -161,5 +164,8 @@ export class FormService {
         return acc;
       }, {}
     );
+
+    // Update data with documents.
+    return Object.assign(data, documents)
   }
 }
