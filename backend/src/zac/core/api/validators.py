@@ -8,6 +8,8 @@ from rest_framework import exceptions
 from zac.core.services import get_documenten
 from zgw.models.zrc import Zaak
 
+from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG
+
 
 def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
     documents, _gone = get_documenten(zaak)
@@ -45,3 +47,18 @@ class ZaakDocumentsValidator:
             )
         zaak = serializer.get_zaak_from_context()
         validate_zaak_documents(value, zaak)
+
+
+class ZaakFileValidator:
+    def __call__(self, value):
+        if not RE_PROG.search(value.name):
+            raise exceptions.ValidationError(
+                "Only alphanumerical characters, whitespaces, -_() and 1 file extension are allowed."
+            )
+
+        print(value.content_type)
+        if value.content_type.lower() not in ACCEPTABLE_CONTENT_TYPES.values():
+            raise exceptions.ValidationError(
+                f"File format not allowed. Please use one of the following file formats: {', '.join(ACCEPTABLE_CONTENT_TYPES)}."
+            )
+        return value

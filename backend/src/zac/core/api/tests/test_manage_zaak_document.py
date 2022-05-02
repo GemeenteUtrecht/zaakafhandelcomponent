@@ -141,11 +141,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         self._setupMocks(m)
-
+        file = BytesIO(b"foobar")
+        file.name = "some-file.txt"
         post_data = {
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "file": BytesIO(b"foobar"),
+            "file": file,
         }
         response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -184,10 +185,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             status_code=201,
         )
 
+        file = BytesIO(b"foobar")
+        file.name = "some-file.txt"
         post_data = {
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "file": BytesIO(b"foobar"),
+            "file": file,
         }
 
         audit_trail = generate_oas_component(
@@ -717,10 +720,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             status_code=201,
         )
 
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
         post_data = {
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "file": BytesIO(b"foobar"),
+            "file": file,
         }
 
         audit_trail = generate_oas_component(
@@ -791,10 +796,11 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     def test_add_document_with_file_without_iotype(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
-
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
         post_data = {
             "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "file": BytesIO(b"foobar"),
+            "file": file,
         }
 
         response = self.client.post(self.endpoint, post_data, format="multipart")
@@ -915,10 +921,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user)
         self._setupMocks(m)
 
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
         post_data = {
             "informatieobjecttype": self.informatieobjecttype["url"],
             "zaak": f"{ZAKEN_ROOT}zaken/456",
-            "file": BytesIO(b"foobar"),
+            "file": file,
             "url": DOCUMENT_URL,
         }
 
@@ -1151,3 +1159,151 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(data, expected_data)
+
+    def test_add_document_with_unallowed_file_extension(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+        )
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=document,
+            status_code=201,
+        )
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
+
+        file = BytesIO(b"foobar")
+        file.name = "some-unallowed-extension.ext"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
+
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.views.get_open_documenten",
+            return_value=[
+                DowcResponse(
+                    drc_url=document["url"],
+                    unversioned_url="",
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                )
+            ],
+        ):
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=[audit_trail],
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "file": [
+                    "File format not allowed. Please use one of the following file formats: CSV, DOC, DOCX, EML, JPEG, MBOX, MSG, ODP, ODS, ODT, PDF, PNG, PPT, PPTX, TXT, TIFF, XLS, XLSX."
+                ]
+            },
+        )
+
+    def test_add_document_with_unallowed_filename(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+        )
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=document,
+            status_code=201,
+        )
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
+
+        file = BytesIO(b"foobar")
+        file.name = "some.illegal.file.name"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
+
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+
+        with patch(
+            "zac.core.api.views.get_open_documenten",
+            return_value=[
+                DowcResponse(
+                    drc_url=document["url"],
+                    unversioned_url="",
+                    magic_url="",
+                    purpose="write",
+                    uuid=uuid4(),
+                )
+            ],
+        ):
+            with patch(
+                "zac.core.api.views.fetch_document_audit_trail",
+                return_value=[audit_trail],
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "file": [
+                    "Only alphanumerical characters, whitespaces, -_() and 1 file extension are allowed."
+                ]
+            },
+        )

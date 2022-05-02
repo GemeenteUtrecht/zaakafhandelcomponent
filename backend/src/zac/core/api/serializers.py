@@ -56,6 +56,7 @@ from .utils import (
     ValidExpandChoices,
     ValidFieldChoices,
 )
+from .validators import ZaakFileValidator
 
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
@@ -124,6 +125,7 @@ class AddZaakDocumentSerializer(serializers.Serializer):
         required=False,
         use_url=False,
         help_text=_("Content of the DOCUMENT. Mutually exclusive with `url` attribute"),
+        validators=(ZaakFileValidator(),),
     )
     informatieobjecttype = serializers.URLField(
         required=False,
@@ -186,7 +188,9 @@ class AddZaakDocumentSerializer(serializers.Serializer):
 
 class UpdateZaakDocumentSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(required=False)
-    file = serializers.FileField(required=False, use_url=False)
+    file = serializers.FileField(
+        required=False, use_url=False, validators=(ZaakFileValidator(),)
+    )
     reden = serializers.CharField(
         help_text=_("Reason for the edit, used in audit trail."),
         required=True,
