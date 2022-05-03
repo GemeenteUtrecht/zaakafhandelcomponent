@@ -1,10 +1,12 @@
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.utils.translation import ugettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
-from rest_framework import views
+from rest_framework import status, views
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from zac.core.api.mixins import ListMixin
 from zac.core.services import get_informatieobjecttypen
@@ -55,3 +57,16 @@ class PermissionView(ListMixin, views.APIView):
 
     def get_objects(self):
         return list(registry.values())
+
+
+@extend_schema(
+    summary=_("Logout user."),
+    description=_("Logs the current user out."),
+)
+class LogoutView(views.APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)

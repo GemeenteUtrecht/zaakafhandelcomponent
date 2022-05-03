@@ -1,3 +1,6 @@
+from django.test import TestCase
+from django.urls import reverse
+
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -77,3 +80,20 @@ class InformatieobjecttypeViewTest(APITestCase):
         self.assertIn("catalogus", data["emptyFormData"][0])
         self.assertIn("omschrijving", data["emptyFormData"][0])
         self.assertIn("selected", data["emptyFormData"][0])
+
+
+class LogoutViewTests(TestCase):
+    def test_login_required(self):
+        endpoint = reverse("logout")
+        response = self.client.post(endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_logout_succesful(self):
+        user = UserFactory.create(password="some-secret")
+        self.client.force_login(user)
+        endpoint = reverse("logout")
+        response = self.client.post(endpoint, user=user)
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.post(endpoint, user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
