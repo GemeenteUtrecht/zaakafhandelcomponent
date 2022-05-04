@@ -567,3 +567,6 @@ SCIM_SERVICE_PROVIDER = {
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
+CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
+    "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
+)
