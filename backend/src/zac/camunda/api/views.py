@@ -8,13 +8,16 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError
 from rest_framework import exceptions, permissions, status
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
 from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.core.api.permissions import CanReadZaken
+from zac.core.api.permissions import CanCreateZaken, CanReadZaken
+from zac.core.api.serializers import ZaakSerializer
 from zac.core.camunda import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
@@ -44,7 +47,8 @@ from .serializers import (
 from .utils import get_bptl_app_id_variable
 
 
-class ProcessInstanceFetchView(APIView):
+class ProcessInstanceFetchViewSet(ViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ProcessInstanceSerializer
 
     @extend_schema(
@@ -62,7 +66,7 @@ class ProcessInstanceFetchView(APIView):
             400: ErrorSerializer,
         },
     )
-    def get(self, request: Request, *args, **kwargs):
+    def list(self, request: Request, *args, **kwargs):
         """
         Get the Camunda process instances for a given ZAAK.
 
@@ -83,6 +87,26 @@ class ProcessInstanceFetchView(APIView):
             context={"killable_tasks": get_killable_camunda_tasks()},
         )
 
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Retrieve ZAAK URL for process instance."),
+        parameters=[
+            OpenApiParameter(
+                name="process_instance_id",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH,
+                required=True,
+            ),
+        ],
+        responses={"200": ZaakSerializer},
+    )
+    @action(detail=True, methods=["get"], permission_classes=(CanCreateZaken,))
+    def zaak(self, request: Request, process_instance_id: uuid.UUID):
+        process_instance = get_process_instance(process_instance_id)
+        zaak_url = process_instance.get_variable("zaakUrl")
+        zaak = get_zaak(zaak_url=zaak_url)
+        serializer = ZaakSerializer(instance=zaak)
         return Response(serializer.data)
 
 

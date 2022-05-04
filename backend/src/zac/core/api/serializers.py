@@ -8,6 +8,7 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
+from django_camunda.utils import serialize_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from zds_client.client import ClientError
@@ -43,6 +44,7 @@ from zac.core.services import (
     get_informatieobjecttypen_for_zaak,
     get_statustypen,
     get_zaak,
+    get_zaaktypen,
 )
 from zgw.models.zrc import Zaak
 
@@ -325,6 +327,60 @@ class AddZaakRelationSerializer(serializers.Serializer):
             )
 
         return data
+
+
+class CreateZaakSerializer(serializers.Serializer):
+    organisatie_rsin = serializers.CharField(
+        help_text=_(
+            "The RSIN of the organization that created the ZAAK. This has to be a valid `RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/Burgerservicenummer#11-proef."
+        ),
+        allow_blank=False,
+        required=True,
+        max_length=9,
+        validators=[
+            RegexValidator(
+                regex="^[0-9]{9}$",
+                message="A RSIN has 9 digits.",
+                code="invalid",
+            )
+        ],
+    )
+    zaaktype = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference to the ZAAKTYPE (in the Catalogi API)."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("A short summary of the ZAAK.")
+    )
+    toelichting = serializers.CharField(
+        required=False, help_text=_("A comment on the ZAAK.")
+    )
+
+    def validate_zaaktype(self, zaaktype):
+        allowed_zts = [
+            zt.url for zt in get_zaaktypen(user=self.context["request"].user)
+        ]
+
+        if zaaktype in allowed_zts:
+            return zaaktype
+
+        all_zts = [zt.url for zt in get_zaaktypen()]
+
+        if zaaktype in all_zts:
+            raise serializers.ValidationError(
+                _("User does not have permission for ZAAKTYPE.")
+            )
+        raise serializers.ValidationError(_("ZAAKTYPE not found."))
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        serialized_data = {}
+        for key, value in data.items():
+            serialized_data[key] = serialize_variable(value)
+
+        organisatie_rsin = serialized_data.pop("organisatie_rsin")
+        serialized_data["organisatieRSIN"] = organisatie_rsin
+        return serialized_data
 
 
 class ZaakSerializer(serializers.Serializer):

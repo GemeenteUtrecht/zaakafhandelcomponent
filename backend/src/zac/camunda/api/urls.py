@@ -1,21 +1,26 @@
 from django.urls import path
 
+from rest_framework.routers import DefaultRouter
+
 from .views import (
     CancelTaskView,
     GetBPMNView,
-    ProcessInstanceFetchView,
+    ProcessInstanceFetchViewSet,
     SendMessageView,
     SetTaskAssigneeView,
     UserTaskHistoryView,
     UserTaskView,
 )
 
-urlpatterns = [
-    path(
-        "fetch-process-instances",
-        ProcessInstanceFetchView.as_view(),
-        name="fetch-process-instances",
-    ),
+router = DefaultRouter(trailing_slash=False)
+router.register(
+    "fetch-process-instances",
+    ProcessInstanceFetchViewSet,
+    basename="fetch-process-instances",
+)
+
+
+urlpatterns = router.urls + [
     path(
         "task-data/<uuid:task_id>",
         UserTaskView.as_view(),

@@ -1,5 +1,10 @@
 from zac.accounts.permissions import Permission
 
+zaken_aanmaken = Permission(
+    name="zaken:aanmaken",
+    description="Laa toe om zaken aan te maken.",
+)
+
 zaken_inzien = Permission(
     name="zaken:inzien",
     description="Laat toe om zaken/zaakdossiers in te zien.",
@@ -19,7 +24,6 @@ zaakproces_send_message = Permission(
     name="zaakproces:send-bpmn-message",
     description="BPMN messages versturen in het proces.",
 )
-
 
 zaken_close = Permission(
     name="zaken:afsluiten",
