@@ -15,7 +15,7 @@ import { Observable, of } from 'rxjs';
 import {SnackbarService} from "@gu/components";
 import { forkJoin } from 'rxjs';
 import {catchError, take} from "rxjs/operators";
-import {DocumentenService} from "../../../zaak-detail/src/lib/documenten/documenten.service";
+import {DocumentenService} from '@gu/services';
 
 @Component({
   selector: 'gu-features-contezza-document-search',

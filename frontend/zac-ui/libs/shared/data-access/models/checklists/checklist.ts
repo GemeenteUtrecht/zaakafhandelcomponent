@@ -5,6 +5,7 @@ export interface ChecklistAnswer {
   question: string,
   answer: string,
   created: string,
+  document?: string
 }
 
 export interface Checklist {

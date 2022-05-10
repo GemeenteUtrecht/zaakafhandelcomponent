@@ -1,5 +1,7 @@
-<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup" (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
-  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit" (click)="toggleClick($event)" *ngIf="isToggleable()">
+<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup"
+      (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
+  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit"
+          (click)="toggleClick($event)" *ngIf="isToggleable()">
     {{edit ? 'Annuleren' : 'Bewerken' }}
   </button>
 
@@ -8,6 +10,64 @@
   <fieldset class="form__body">
     <div *ngFor="let field of fields; let i = index">
       <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
+        <!-- Document -->
+        <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
+          <!-- Has document -->
+          <div *ngIf="field.value" class="row">
+            <div class="col-12">
+              <p class="p--bold d-inline">Document:&nbsp;</p>
+              <a class="anchor" (click)="onDocumentClick(field.value.readUrl)">{{field.value.titel}}</a>
+            </div>
+          </div>
+
+          <!-- Selected document -->
+          <div *ngIf="documents[field.name]" class="row">
+            <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
+            <p class="col-4 mb-4">
+              <button gu-button
+                      buttonStyle="tertiary"
+                      icon="remove"
+                      size="extrasmall"
+                      type="button"
+                      (click)="removeDocument(field)">
+                Documentkoppeling verwijderen
+              </button>
+            </p>
+
+          </div>
+
+          <!-- Allow select -->
+          <div *ngIf="!documents[field.name]" class="row">
+            <div class="col-12 mb-4">
+              <button *ngIf="field.widgetType == 'document'"
+                      gu-button
+                      buttonStyle="tertiary"
+                      icon="upload_file"
+                      size="extrasmall"
+                      type="button"
+                      (click)="field.edit = !field.edit">
+                {{field.value
+                ? 'Wijzigen'
+                : field.edit
+                  ? 'Annuleren'
+                  : field.label
+                }}
+              </button>
+
+              <gu-document-toevoegen *ngIf="field.edit"
+                                     [mainZaakUrl]="mainZaakUrl"
+                                     [zaaktypeurl]="zaaktypeurl"
+                                     [bronorganisatie]="bronorganisatie"
+                                     [identificatie]="identificatie"
+                                     (uploadedDocument)="onUploadedDocument(field, $event)"
+                                     title=""
+                                     description=""
+                                     submitLabel="Toevoegen">
+              </gu-document-toevoegen>
+            </div>
+          </div>
+        </div>
+
         <!-- Read-only field. -->
         <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
           <div class="col-12">
@@ -77,7 +137,8 @@
   </div>
 
   <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block" [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
+    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
+            [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
       {{buttonLabel}}
     </button>
   </footer>

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table } from '@gu/models';
+import {Observable} from 'rxjs';
+import {Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table} from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 
 @Injectable({
@@ -8,8 +8,22 @@ import { ApplicationHttpClient } from '@gu/services';
 })
 export class DocumentenService {
 
-  constructor(private http: ApplicationHttpClient) { }
+  constructor(private http: ApplicationHttpClient) {}
 
+  /**
+   * Get documents for an activity.
+   * @param {string} documentUrl
+   * @returns {Observable<Document>}
+   */
+  getDocument(documentUrl: string): Observable<Document> {
+    const endpoint = encodeURI(`/core/api/documents/info?document=${documentUrl}`);
+    return this.http.Get<Document>(endpoint);
+  }
+
+  /**
+   * Reads a document.
+   * @param readUrl
+   */
   readDocument(readUrl: string): Observable<ReadWriteDocument> {
     const endpoint = encodeURI(readUrl);
     return this.http.Post<ReadWriteDocument>(endpoint);
