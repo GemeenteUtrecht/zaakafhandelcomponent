@@ -11,7 +11,7 @@
     <div *ngFor="let field of fields; let i = index">
       <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
         <!-- Document -->
-        <ng-container *ngIf="field.widgetType == 'document'">
+        <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
           <!-- Has document -->
           <div *ngIf="field.value" class="row">
             <div class="col-12">
@@ -66,7 +66,7 @@
               </gu-document-toevoegen>
             </div>
           </div>
-        </ng-container>
+        </div>
 
         <!-- Read-only field. -->
         <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
