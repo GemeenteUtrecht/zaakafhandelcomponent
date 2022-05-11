@@ -27,15 +27,6 @@ const menuItems: MenuItem[] = [
     label: 'Rapportages',
     to: '/rapportages',
   },
-];
-
-const bottomMenuItems: MenuItem[] = [
-  // {
-  //   icon: 'login',
-  //   label: 'Inloggen',
-  //   to: '/accounts/login/?next=/ui/',
-  //   external: true
-  // },
   {
     icon: 'open_in_new',
     label: 'Alfresco',
@@ -57,4 +48,4 @@ const bottomMenuItems: MenuItem[] = [
     adminOnly: true,
   },
 ];
-export { MenuItem, menuItems, bottomMenuItems };
+export { MenuItem, menuItems };

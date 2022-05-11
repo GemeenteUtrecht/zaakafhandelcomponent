@@ -23,17 +23,32 @@
         overflow-y: auto;
       }
     }
-    .vertical-nav .logo {
-      opacity: 0;
-      img {
-        display: none;
+    .vertical-nav {
+      .logo {
+        opacity: 0;
+        img {
+          display: none;
+        }
+      }
+      .logged-in-user {
+        opacity: 0;
+        white-space: nowrap;
+        padding: 5px 2px;
+      }
+      .logout-button {
+        display: flex;
+        align-self: flex-end;
+        opacity: 0;
       }
     }
-    &:hover .vertical-nav .logo {
-      transition: opacity 0.3s linear;
-      opacity: 1;
-      img {
-        display: inline-block;
+    &:hover .vertical-nav {
+      .logo, .logged-in-user, .logout-button {
+        transition: opacity 0.3s linear;
+        opacity: 1;
+        display: block;
+        img {
+          display: inline-block;
+        }
       }
     }
     .searchbox {
@@ -117,7 +132,7 @@
       }
     }
     .logo {
-      padding: 2rem 2rem 1.2rem;
+      padding: 1.5rem;
       height: 100px;
       text-align: center;
       img {
@@ -131,9 +146,9 @@
       overflow-x: hidden;
       flex-direction: column;
       justify-content: flex-start;
-      height: calc(100vh - 125px);
+      height: calc(100vh - 185px);
       @include media-breakpoint-down(md) {
-        height: calc(100vh - calc(100px + 5.2rem));
+        height: calc(100vh - calc(150px + 5.2rem));
       }
       &::-webkit-scrollbar {
         width: 0;
@@ -208,5 +223,12 @@
         z-index: 1;
       }
     }
+  }
+  .logged-in-user {
+    padding: 5px 2px;
+  }
+  .logout-button {
+    display: flex;
+    margin-left: auto;
   }
 }

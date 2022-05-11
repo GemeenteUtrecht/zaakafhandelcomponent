@@ -1,10 +1,10 @@
 <div class="gu-dashboard">
   <gu-sidenav [menuItems]="menuItems"
-              [bottomMenuItems]="bottomMenuItems"
               [selectedParentMenu]="selectedMenu"
               [logoUrl]="logoUrl"
               [mobileLogoUrl]="mobileLogoUrl"
               [currentUser]="currentUser"
+              (logOut)="logOutUser()"
   >
     <gu-zaak-select
       label='Direct naar zaak'
