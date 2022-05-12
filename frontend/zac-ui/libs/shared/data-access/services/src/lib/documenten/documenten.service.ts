@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {Observable} from 'rxjs';
-import {Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table} from '@gu/models';
+import { Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table, Zaak } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 
 @Injectable({
@@ -71,19 +71,25 @@ export class DocumentenService {
    * Format the layout of the table.
    * @param data
    * @param tableHead
+   * @param zaak
    * @returns {Table}
    */
-  formatTableData(data, tableHead): Table {
+  formatTableData(data, tableHead, zaak: Zaak): Table {
     const tableData: Table = new Table(tableHead, []);
 
     tableData.bodyData = data.map( (element: Document) => {
       // The "locked" and "currentUserIsEditing" states decide if certain buttons should be shown in the table or not.
+      // If a case is closed (has no "zaak.resultaat" and the user is not allowed to force edit ("zaak.kanGeforceerdBijwerken),
+      // the buttons will also be hidden.
       const icon = (element.locked && !element.currentUserIsEditing) ? 'lock' : 'lock_open'
       const iconColor = (element.locked && !element.currentUserIsEditing) ? 'orange' : 'green'
       const iconInfo = (element.locked && !element.currentUserIsEditing) ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
       const editLabel = element.currentUserIsEditing ? 'Bewerkingen opslaan' : 'Bewerken';
       const editButtonStyle = element.currentUserIsEditing  ? 'primary' : 'tertiary';
-      const showEditCell = !element.locked || element.currentUserIsEditing;
+
+      const showEditCell = (!element.locked || element.currentUserIsEditing) && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
+      const showOverwriteCell = !element.locked && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
+
       const editCell: ExtensiveCell = {
         type: 'button',
         label: editLabel,
@@ -118,7 +124,7 @@ export class DocumentenService {
             value: element.readUrl
           },
           bewerken: showEditCell ? editCell : '',
-          overschrijven: element.locked ? '' : overwriteCell,
+          overschrijven: showOverwriteCell ? overwriteCell : '',
           auteur: element.auteur,
           type: element.informatieobjecttype['omschrijving'],
         }

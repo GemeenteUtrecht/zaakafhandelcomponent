@@ -148,9 +148,7 @@
                       Document toevoegen
                     </button>
                     <gu-document-toevoegen *ngIf="openDocumentUploadForm === i"
-                                           [mainZaakUrl]="mainZaakUrl"
-                                           [bronorganisatie]="bronorganisatie"
-                                           [identificatie]="identificatie"
+                                           [zaak]="zaak"
                                            [activity]="activity.name"
                                            (closeForm)="openDocumentUploadForm = null"
                                            (uploadedDocument)="patchActivityDocument(activity.id, $event)"
@@ -337,7 +335,7 @@
 
     <gu-tab label="Checklist">
       <div class="tab-content">
-        <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie" *ngIf="!isLoading"></gu-checklist>
+        <gu-checklist [bronorganisatie]="zaak.bronorganisatie" [identificatie]="zaak.identificatie" *ngIf="!isLoading"></gu-checklist>
       </div>
     </gu-tab>
   </gu-tab-group>

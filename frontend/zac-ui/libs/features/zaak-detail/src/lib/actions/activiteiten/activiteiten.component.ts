@@ -7,7 +7,7 @@ import {
   ShortDocument,
   User,
   UserGroupDetail,
-  UserSearchResult
+  UserSearchResult, Zaak
 } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
@@ -27,9 +27,7 @@ import { SnackbarService } from '@gu/components';
   styleUrls: ['./activiteiten.component.scss']
 })
 export class ActiviteitenComponent implements OnInit {
-  @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
   @Input() currentUser: User;
   @Input() activityData: Activity[];
 
@@ -215,8 +213,8 @@ export class ActiviteitenComponent implements OnInit {
    * Fetch all activities.
    */
   fetchActivities() {
-    if (this.mainZaakUrl) {
-      this.actvititeitenService.getActivities(this.mainZaakUrl)
+    if (this.zaak.url) {
+      this.actvititeitenService.getActivities(this.zaak.url)
         .subscribe(res => {
           this.activityData = res;
           this.createForm();
@@ -275,7 +273,7 @@ export class ActiviteitenComponent implements OnInit {
   createNewActivity() {
     this.isSubmitting = true;
     const formData = {
-      zaak: this.mainZaakUrl,
+      zaak: this.zaak.url,
       name: this.addActivityName.value,
       remarks: this.addActivityRemarks.value
     }

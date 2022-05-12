@@ -9,7 +9,7 @@ import {HistoricalUserTaskData, HistoricalUserTaskDataItem} from './historical-u
   templateUrl: './task-history.component.html',
 })
 export class TaskHistoryComponent implements OnInit {
-  @Input() mainZaakUrl: string;
+  @Input() zaak: Zaak;
 
   /** @type {boolean} Whether the API is loading. */
   isLoading = false;
@@ -49,7 +49,7 @@ export class TaskHistoryComponent implements OnInit {
    */
   getContextData(): void {
     this.isLoading = true;
-    this.taskHistoryService.retrieveHistoricalUserTaskDataOfZaak(this.mainZaakUrl).subscribe({
+    this.taskHistoryService.retrieveHistoricalUserTaskDataOfZaak(this.zaak.url).subscribe({
       next: (historicalUserTasksData: HistoricalUserTaskData[]) => this.table = this.getTable(historicalUserTasksData),
       error: this.reportError.bind(this),
       complete: () => this.isLoading = false,

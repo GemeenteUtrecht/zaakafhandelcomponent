@@ -3,6 +3,7 @@
 .content-background {
   background: $background-white;
   margin-bottom: 1.25rem;
+  min-height: 100vh;
   .content {
     padding: 0.825rem;
     @include media-breakpoint-up(md) {

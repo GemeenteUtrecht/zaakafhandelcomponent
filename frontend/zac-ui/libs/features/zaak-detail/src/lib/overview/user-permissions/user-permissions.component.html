@@ -12,7 +12,8 @@
     <gu-table [expandable]="true" [table]="table" (buttonOutput)="buttonClick($event)" class="mb-4"></gu-table>
   </ng-container>
 
-  <div class="d-flex justify-content-end">
+  <!-- Grant access - hide button if case is closed and the user is not allowed to force edit -->
+  <div *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken" class="d-flex justify-content-end">
     <button gu-button
             buttonStyle="tertiary"
             icon="person_add"
@@ -23,6 +24,6 @@
 
   <!-- Modals -->
   <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
-    <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie"></gu-toegang-verlenen>
+    <gu-toegang-verlenen [zaak]=""></gu-toegang-verlenen>
   </gu-modal>
 </div>

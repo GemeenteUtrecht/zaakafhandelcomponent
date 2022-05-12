@@ -16,7 +16,8 @@
     <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>
   </ng-container>
 
-  <div class="d-flex justify-content-end">
+  <!-- Add related case button - hide button if case is closed and the user is not allowed to force edit -->
+  <div class="d-flex justify-content-end" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
     <button gu-button
             buttonStyle="tertiary"
             icon="add"
@@ -30,7 +31,7 @@
           title="Relatie toevoegen"
           size="medium"
           expandVertical="true">
-  <gu-relatie-toevoegen [mainZaakUrl]="mainZaakUrl"
+  <gu-relatie-toevoegen [mainZaakUrl]="zaak.url"
                         (reload)="fetchRelatedCases()">
   </gu-relatie-toevoegen>
 </gu-modal>

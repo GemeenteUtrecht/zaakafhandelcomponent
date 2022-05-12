@@ -19,7 +19,8 @@
   </ng-container>
   <!-- End table -->
 
-  <footer class="card__actions">
+  <!-- Add related object button - hide button if case is closed and the user is not allowed to force edit -->
+  <footer class="card__actions" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
     <button (click)="addClick($event)"
             gu-button
             icon="add"

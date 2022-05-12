@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
-import {ObjectType, ObjectTypeVersion, RowData, Table, ZaakObject, ZaakObjectGroup} from '@gu/models';
+import { ObjectType, ObjectTypeVersion, RowData, Table, Zaak, ZaakObject, ZaakObjectGroup } from '@gu/models';
 import {ZaakObjectService, ZaakService} from '@gu/services';
 
 /**
@@ -17,8 +17,7 @@ import {ZaakObjectService, ZaakService} from '@gu/services';
   styleUrls: ['./gerelateerde-objecten.component.scss']
 })
 export class GerelateerdeObjectenComponent implements OnInit {
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   /** @type {string} Possible error message. */
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar gerelateerde objecten.'
@@ -95,7 +94,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
   getContextData(): void {
     this.isLoading = true;
 
-    this.zaakService.listRelatedObjects(this.bronorganisatie, this.identificatie).subscribe(
+    this.zaakService.listRelatedObjects(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (data) => {
         this.relatedObjects = data;
         this.tables = this.getTables();
@@ -128,12 +127,13 @@ export class GerelateerdeObjectenComponent implements OnInit {
           return acc;
         }, {});
 
-        cellData['acties'] = {
+        // Hide button if case is closed and the user is not allowed to force edit
+        cellData['acties'] = !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken ? {
           label: 'Verwijderen',
           name: 'delete',
           type: 'button',
           value: relatedObject,
-        }
+        } : ''
 
         const nestedCellData = Object.entries(relatedObject.record)
           .filter(([, value]) => value !== null)
@@ -216,7 +216,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
    */
   formSubmit(data): void {
     this.isLoading = true;
-    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
+    this.zaakService.retrieveCaseDetails(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (zaak) => this.zaakObjectService
         .createZaakObjectRelation(zaak, this.activeZaakObject, String(data.objectTypeDescription).toLowerCase())
         .subscribe(

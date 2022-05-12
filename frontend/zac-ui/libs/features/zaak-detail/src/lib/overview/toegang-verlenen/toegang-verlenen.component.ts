@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { UserSearchResult, UserSearch } from '@gu/models';
+import { UserSearchResult, UserSearch, Zaak } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 
 @Component({
@@ -10,8 +10,7 @@ import { ApplicationHttpClient } from '@gu/services';
   styleUrls: ['./toegang-verlenen.component.scss']
 })
 export class ToegangVerlenenComponent implements OnInit, OnChanges {
-  @Input() mainZaakUrl: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   users: UserSearchResult[] = [];
   requesterUser: UserSearchResult;
@@ -59,7 +58,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     })
     const formData = {
       requester: this.requester.value,
-      zaak: this.mainZaakUrl
+      zaak: this.zaak.url
     }
     this.postAccess(formData).subscribe( res => {
       this.submitResult = {

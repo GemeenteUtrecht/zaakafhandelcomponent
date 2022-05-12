@@ -5,7 +5,9 @@
       <h4>Dashboard status:</h4>
     </div>
     <div class="col-md-6">
-      <gu-multiselect (change)="onDashboardStatusSelect($event)"
+      <!-- Hide if case is closed and the user is not allowed to force edit -->
+      <gu-multiselect *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken"
+        (change)="onDashboardStatusSelect($event)"
                       [searchable]="false"
                       [items]="dashboardColumns"
                       [multiple]="false"
@@ -16,6 +18,9 @@
                       [label]="currentDashboard.name"
                       class="mb-2">
       </gu-multiselect>
+
+      <!-- Show board value if case is closed and the user is not allowed to force edit -->
+      <p *ngIf="zaak.resultaat && !zaak.kanGeforceerdBijwerken">{{currentDashboardItem.column.slug}}</p>
     </div>
   </div>
 
@@ -70,7 +75,7 @@
 
     <gu-tab label="Taakgeschiedenis">
       <div class="p-4">
-        <gu-task-history [mainZaakUrl]="mainZaakUrl"></gu-task-history>
+        <gu-task-history [zaak]="zaak"></gu-task-history>
       </div>
     </gu-tab>
   </gu-tab-group>

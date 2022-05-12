@@ -1,7 +1,7 @@
 import {Component, Input, OnChanges} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
-import {RelatedCase, Table} from '@gu/models';
+import { RelatedCase, Table, Zaak } from '@gu/models';
 import {ZaakService} from '@gu/services';
 
 @Component({
@@ -10,9 +10,7 @@ import {ZaakService} from '@gu/services';
   styleUrls: ['./gerelateerde-zaken.component.scss']
 })
 export class GerelateerdeZakenComponent implements OnChanges {
-  @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
@@ -35,7 +33,7 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   fetchRelatedCases() {
     this.isLoading = true;
-    this.zaakService.listRelatedCases(this.bronorganisatie, this.identificatie).subscribe(data => {
+    this.zaakService.listRelatedCases(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.tableData.bodyData = this.formatTableData(data);
       this.data = data;
       this.isLoading = false;

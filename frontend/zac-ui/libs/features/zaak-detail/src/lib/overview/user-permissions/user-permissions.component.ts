@@ -1,9 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {ZaakPermission, UserPermission, Table} from '@gu/models';
+import { ZaakPermission, UserPermission, Table, Zaak } from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {PermissionsService} from './permissions.service';
 import { ModalService, TableButtonClickEvent } from '@gu/components';
-
 
 /**
  * <gu-user-permissions [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-user-permissions>
@@ -20,9 +19,7 @@ import { ModalService, TableButtonClickEvent } from '@gu/components';
     templateUrl: './user-permissions.component.html',
 })
 export class UserPermissionsComponent implements OnInit {
-    @Input() bronorganisatie: string;
-    @Input() identificatie: string;
-    @Input() mainZaakUrl: string;
+    @Input() zaak: Zaak;
 
     /** @type {boolean} Whether this component is loading. */
     isLoading = false;
@@ -64,7 +61,7 @@ export class UserPermissionsComponent implements OnInit {
      * Fetches the user permissions.
      */
     getContextData(): void {
-        this.zaakService.listCaseUsers(this.bronorganisatie, this.identificatie).subscribe(
+        this.zaakService.listCaseUsers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
             (userPermissions: UserPermission[]): void => {
                 this.table = this.userPermissionsAsTable(userPermissions);
                 this.isLoading = false;
@@ -93,11 +90,12 @@ export class UserPermissionsComponent implements OnInit {
                         type: 'chip',
                         label: permission.permission
                     },
-                    delete: {
+                    // Hide button if case is closed and the user is not allowed to force edit
+                    delete: !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken ? {
                         type: 'button',
                         label: 'Verwijderen',
                         value: permission,
-                    }
+                    } : ''
                 },
                 nestedTableData: new Table(['Reden', 'Commentaar'], [{
                     cellData: {
@@ -123,12 +121,12 @@ export class UserPermissionsComponent implements OnInit {
     // Events.
     //
 
-  /**
-   * Opens modal.
-   * @param {string} id
-   */
-  openModal(id: string) {
-      this.modalService.open(id);
+    /**
+     * Opens modal.
+     * @param {string} id
+     */
+    openModal(id: string) {
+        this.modalService.open(id);
     }
 
     /**

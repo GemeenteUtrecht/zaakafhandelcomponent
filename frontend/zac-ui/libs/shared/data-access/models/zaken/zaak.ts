@@ -59,6 +59,7 @@ export interface Zaak {
   resultaat: Resultaat;
   status: Status;
   zaakgeometrie: Geometry;
+  kanGeforceerdBijwerken: boolean;
 }
 
 export interface WorkstackCase {

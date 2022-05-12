@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angu
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
-import { Document, InformatieObjectType } from '@gu/models';
+import { Document, InformatieObjectType, Zaak } from '@gu/models';
 import {ApplicationHttpClient, DocumentenService} from "@gu/services";
 import {CachedObservableMethod} from '@gu/utils';
 
@@ -29,10 +29,7 @@ import {CachedObservableMethod} from '@gu/utils';
   styleUrls: ['./document-toevoegen.component.scss']
 })
 export class DocumentToevoegenComponent implements OnInit {
-  @Input() mainZaakUrl: string;
-  @Input() zaaktypeurl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   @Input() activity: string;
   @Input() documentUrl?: string;
@@ -92,8 +89,8 @@ export class DocumentToevoegenComponent implements OnInit {
 
   fetchDocumentTypes() {
     this.isLoading = true;
-    if (this.mainZaakUrl) {
-      this.documentService.getDocumentTypes(this.mainZaakUrl).subscribe( res => {
+    if (this.zaak.url) {
+      this.documentService.getDocumentTypes(this.zaak.url).subscribe( res => {
         // Sort and set values
         this.documentTypes = res.sort((a,b) => (a.omschrijving > b.omschrijving) ? 1 : ((b.omschrijving > a.omschrijving) ? -1 : 0));
       })
@@ -102,7 +99,7 @@ export class DocumentToevoegenComponent implements OnInit {
 
   @CachedObservableMethod('DocumentToevoegenComponent.getDocumentTypes')
   getDocumentTypes(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/core/document-types?zaak=${this.mainZaakUrl}`);
+    const endpoint = encodeURI(`/api/core/document-types?zaak=${this.zaak.url}`);
     return this.http.Get<any>(endpoint);
   }
 
@@ -110,7 +107,7 @@ export class DocumentToevoegenComponent implements OnInit {
     const formData = new FormData();
 
     formData.append("file", this.addDocumentForm.controls['documentFile'].value);
-    formData.append("zaak", this.mainZaakUrl);
+    formData.append("zaak", this.zaak.url);
 
     if (!this.updateDocument) {
       formData.append("informatieobjecttype", this.addDocumentForm.controls['documentType'].value);
