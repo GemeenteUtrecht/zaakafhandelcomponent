@@ -37,6 +37,13 @@ export class UserPermissionsComponent implements OnInit {
     ) {
     }
 
+  /**
+   * Updates the component using a public interface.
+   */
+  public update() {
+    this.getContextData();
+  }
+
     //
     // Getters / setters.
     //

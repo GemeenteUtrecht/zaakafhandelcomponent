@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { UserSearchResult, UserSearch, Zaak } from '@gu/models';
@@ -11,6 +11,7 @@ import { ApplicationHttpClient } from '@gu/services';
 })
 export class ToegangVerlenenComponent implements OnInit, OnChanges {
   @Input() zaak: Zaak;
+  @Output() reload: EventEmitter<any> = new EventEmitter<any>();
 
   users: UserSearchResult[] = [];
   requesterUser: UserSearchResult;
@@ -69,9 +70,10 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       this.grantAccessForm.reset();
       this.submitHasError = false;
       this.isSubmitting = false;
+      this.reload.emit();
     }, error => {
       this.submitHasError = true;
-      console.log(error);
+      console.error(error);
       this.submitErrorMessage =
         error?.error?.detail ? error.error.detail
           : error?.error?.nonFieldErrors ? error.error?.nonFieldErrors[0]

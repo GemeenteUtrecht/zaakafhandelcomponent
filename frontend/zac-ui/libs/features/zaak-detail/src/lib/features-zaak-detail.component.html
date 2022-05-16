@@ -30,7 +30,7 @@
 
 
           <!-- Error and 403 access request -->
-          <section *ngIf="hasError && errorMessage" class="row">
+          <section *ngIf="showErrorBlock && errorMessage" class="row">
             <div class="col-lg-6">
               <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!isAccessRequestSuccess ? 'warn' : 'success'"
                           [message]="!isAccessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
@@ -57,7 +57,7 @@
           </section>
 
           <!-- Components -->
-          <section *ngIf="!isLoading && !hasError && zaakData">
+          <section *ngIf="!isLoading && !showErrorBlock && zaakData">
             <nav mat-tab-nav-bar>
               <a mat-tab-link *ngFor="let tab of tabs; index as i"
                  [href]="getTabLink(tab.link)"
@@ -142,7 +142,7 @@
                   <gu-gerelateerde-objecten [zaak]="zaakData"></gu-gerelateerde-objecten>
                 </div>
 
-                <div class="col-lg-5" *ngIf="!isLoading && !hasError">
+                <div class="col-lg-5">
                   <gu-zaak-map [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"
                   ></gu-zaak-map>
@@ -155,7 +155,7 @@
 
         <!-- Modals -->
         <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
-          <gu-toegang-verlenen [zaak]="zaakData"></gu-toegang-verlenen>
+          <gu-toegang-verlenen [zaak]="zaakData" (reload)="permissionsUpdate()"></gu-toegang-verlenen>
         </gu-modal>
 
         <!-- Hide if case is closed and the user is not allowed to force edit -->
