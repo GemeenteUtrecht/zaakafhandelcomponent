@@ -44,6 +44,15 @@ export class UserService {
   }
 
   /**
+   * Logs user out.
+   * @returns {Observable}
+   */
+  logOutUser(): Observable<any> {
+    const endpoint = encodeURI(`/api/accounts/logout`);
+    return this.http.Post<any>(endpoint);
+  }
+
+  /**
    * Returns the string representation for a user.
    * @param {User} user
    * @return {string}

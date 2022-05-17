@@ -15,7 +15,6 @@
       <span class="logo" [ngStyle]="{'background-image': 'url(' + mobileLogoUrl + ')'}"></span>
     </div>
     <div class="navbar-right">
-      <p class="p--nomargin d-none d-sm-block">{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</p>
     </div>
   </header>
   <nav class="vertical-nav"
@@ -26,7 +25,7 @@
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug
     </a>
-    <div class="logo mb-4">
+    <div class="logo mb-2">
       <img [src]="logoUrl"/>
     </div>
     <div class="menu-container" *ngIf="menuItems && currentUser">
@@ -34,49 +33,38 @@
         <div class="searchbox mb-4">
           <ng-content select="gu-zaak-select"></ng-content>
         </div>
-        <a *ngFor="let item of menuItems"
-           (click)="toggle()"
-           [routerLink]="!item.external ? [item.to] : null"
-           [href]="item.external ? item.to : null"
-           [target]="item.external ? '_blank' : null"
-           class="menu-item menu-link"
-           [ngClass]="{
-         'selected': !item.external && selectedParentMenu === subtractParentRoute(item.to),
-         'mb-3': item.marginBottom === true
-         }">
-          <gu-icon>{{item.icon}}</gu-icon>
-          <span class="menu-item__label">{{item.label}}</span>
-        </a>
-      </div>
-      <div class="bottom-navigation">
-        <ng-container *ngFor="let bottomItem of bottomMenuItems">
-          <a *ngIf="bottomItem.external && isAuthorised(bottomItem.adminOnly)"
+        <ng-container *ngFor="let item of menuItems">
+          <a *ngIf="item.external && isAuthorised(item.adminOnly)"
              (click)="toggle()"
-             href="{{bottomItem.to}}"
-             [target]="bottomItem.external ? '_blank' : null"
+             href="{{item.to}}"
+             [target]="item.external ? '_blank' : null"
              class="menu-item menu-link"
              [ngClass]="{
-             'selected': !bottomItem.external && selectedParentMenu === subtractParentRoute(bottomItem.to),
-             'mb-3': bottomItem.marginBottom === true
+             'selected': !item.external && selectedParentMenu === subtractParentRoute(item.to),
+             'mb-3': item.marginBottom === true
              }"
           >
-            <gu-icon>{{bottomItem.icon}}</gu-icon>
-            <span class="menu-item__label">{{bottomItem.label}}</span>
+            <gu-icon>{{item.icon}}</gu-icon>
+            <span class="menu-item__label">{{item.label}}</span>
           </a>
-          <a *ngIf="!bottomItem.external && isAuthorised(bottomItem.adminOnly)"
+          <a *ngIf="!item.external && isAuthorised(item.adminOnly)"
              (click)="toggle()"
-             [routerLink]="!bottomItem.external ? [bottomItem.to] : null"
+             [routerLink]="!item.external ? [item.to] : null"
              class="menu-item menu-link"
              [ngClass]="{
-             'selected': !bottomItem.external && selectedParentMenu === subtractParentRoute(bottomItem.to),
-             'mb-3': bottomItem.marginBottom === true
+             'selected': !item.external && selectedParentMenu === subtractParentRoute(item.to),
+             'mb-3': item.marginBottom === true
              }"
           >
-            <gu-icon>{{bottomItem.icon}}</gu-icon>
-            <span class="menu-item__label">{{bottomItem.label}}</span>
+            <gu-icon>{{item.icon}}</gu-icon>
+            <span class="menu-item__label">{{item.label}}</span>
           </a>
         </ng-container>
       </div>
     </div>
+    <p class="logged-in-user ml-2 mb-0">Ingelogd als: <strong>{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</strong></p>
+    <button gu-button class="logout-button" buttonStyle="tertiary" size="small" (click)="logOutEvent()">
+      Uitloggen
+    </button>
   </nav>
 </div>
