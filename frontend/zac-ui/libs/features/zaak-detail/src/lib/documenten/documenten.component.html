@@ -25,7 +25,8 @@
     <p *ngIf="(documentsData.length === 0)">Er zijn geen documenten.</p>
   </ng-container>
 
-  <div class="d-flex justify-content-end">
+  <!-- Add document button - hide button if case is closed and the user is not allowed to force edit -->
+  <div class="d-flex justify-content-end" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
     <button gu-button
             buttonStyle="tertiary"
             icon="add"
@@ -40,10 +41,7 @@
           [closeIcon]="true"
           title="Document toevoegen"
           size="big">
-  <gu-document-toevoegen-contezza [mainZaakUrl]="mainZaakUrl"
-                                  [zaaktypeurl]="zaaktypeurl"
-                                  [bronorganisatie]="bronorganisatie"
-                                  [identificatie]="identificatie"
+  <gu-document-toevoegen-contezza [zaak]="zaak"
                                   (closeModal)="closeModal('document-toevoegen-modal')"
                                   (reload)="fetchDocuments()">
   </gu-document-toevoegen-contezza>
@@ -53,10 +51,10 @@
 <gu-modal id="bestandseigenschappen-wijzigen-modal"
           [closeIcon]="true"
           size="small">
-  <gu-document-wijzigen [mainZaakUrl]="mainZaakUrl"
-                                     [selectedDocument]="selectedDocument"
-                                     (closeModal)="closeModal('bestandseigenschappen-wijzigen-modal')"
-                                     (reload)="fetchDocuments()">
+  <gu-document-wijzigen [zaak]="zaak"
+                        [selectedDocument]="selectedDocument"
+                        (closeModal)="closeModal('bestandseigenschappen-wijzigen-modal')"
+                        (reload)="fetchDocuments()">
   </gu-document-wijzigen>
 </gu-modal>
 
@@ -65,10 +63,7 @@
           [closeIcon]="true"
           title="Document overschrijven"
           size="big">
-  <gu-document-toevoegen [mainZaakUrl]="mainZaakUrl"
-                         [zaaktypeurl]="zaaktypeurl"
-                         [bronorganisatie]="bronorganisatie"
-                         [identificatie]="identificatie"
+  <gu-document-toevoegen [zaak]="zaak"
                          [updateDocument]="true"
                          [documentUrl]="selectedDocumentUrl"
                          (reload)="fetchDocuments()">

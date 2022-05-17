@@ -2,7 +2,7 @@ import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges
 import {FormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration} from './field';
 import {FormService} from './form.service';
-import {Document, ReadWriteDocument} from '@gu/models';
+import { Document, ReadWriteDocument, Zaak } from '@gu/models';
 import {DocumentenService} from '@gu/services';
 
 
@@ -38,10 +38,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() showEditOnHover: boolean;
   @Input() isLoading = false;
 
-  @Input() mainZaakUrl: string;
-  @Input() zaaktypeurl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();

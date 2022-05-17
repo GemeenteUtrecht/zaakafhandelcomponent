@@ -18,10 +18,8 @@ import {SearchService} from '../../../../../search/src/lib/search.service';
   styleUrls: ['./informatie.component.scss']
 })
 export class InformatieComponent implements OnInit, OnChanges {
-  @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
-  @Input() zaaktypeOmschrijving: string;
+  /** @type {Zaak} The zaak object. */
+  @Input() zaak: Zaak;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van zaakinformatie.'
 
@@ -39,9 +37,6 @@ export class InformatieComponent implements OnInit, OnChanges {
 
   /** @type {Object[]} The properties to display as part of the form. */
   properties: EigenschapWaarde[];
-
-  /** @type {Zaak} The zaak object. */
-  zaak: Zaak = null;
 
   /** @type {ZaaktypeEigenschap[]} The zaaktype eigenschappen for the zaak. */
   zaaktypeEigenschappen: ZaaktypeEigenschap[] = []
@@ -105,7 +100,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       {
         label: 'Identificatie',
         name: 'identificatie',
-        value: this.identificatie,
+        value: this.zaak.identificatie,
         readonly: true,
       },
       {
@@ -176,7 +171,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    * to handle the changes.
    */
   ngOnChanges(): void {
-    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaaktypeOmschrijving);
+    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaak.zaaktype?.omschrijving);
     this.getContextData();
   };
 
@@ -190,7 +185,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   getContextData() {
     this.fetchZaak();
     this.isCaseAPILoading = true;
-    this.zaakService.listCaseProperties(this.bronorganisatie, this.identificatie).subscribe(
+    this.zaakService.listCaseProperties(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (data) => {
         this.properties = data;
         this.isCaseAPILoading = false;
@@ -216,7 +211,7 @@ export class InformatieComponent implements OnInit, OnChanges {
    */
   fetchZaak() {
     this.isCaseAPILoading = true;
-    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
+    this.zaakService.retrieveCaseDetails(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (zaak: Zaak) => {
         this.tezzaLink = this.zaakService.createTezzaUrl(zaak);
         this.zaak = zaak;
@@ -298,7 +293,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       const newProperty: NieuweEigenschap = {
         naam: key,
         waarde: value,
-        zaakUrl: this.mainZaakUrl
+        zaakUrl: this.zaak.url
       }
 
       if (newProperty.waarde) {
@@ -339,7 +334,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   updateZaak(zaakData: Object): void {
     this.isCaseAPILoading = true;
 
-    this.zaakService.updateCaseDetails(this.bronorganisatie, this.identificatie, zaakData).subscribe(
+    this.zaakService.updateCaseDetails(this.zaak.bronorganisatie, this.zaak.identificatie, zaakData).subscribe(
       () => {
         this.getContextData();
       },

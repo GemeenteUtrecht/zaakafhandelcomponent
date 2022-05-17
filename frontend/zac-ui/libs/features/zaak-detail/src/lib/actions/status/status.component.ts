@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { StatusService } from './status.service';
 import { SnackbarService } from '@gu/components';
-import { BoardItem, Dashboard, DashboardColumn } from '@gu/models';
+import { BoardItem, Dashboard, DashboardColumn, Zaak } from '@gu/models';
 
 @Component({
   selector: 'gu-status',
@@ -9,9 +9,7 @@ import { BoardItem, Dashboard, DashboardColumn } from '@gu/models';
   styleUrls: ['./status.component.scss']
 })
 export class StatusComponent implements OnInit {
-  @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
   @Input() progress: number;
   @Input() deadline: string;
   @Input() finished: boolean;
@@ -67,7 +65,7 @@ export class StatusComponent implements OnInit {
    * Fetches the case statuses.
    */
   getZaakStatus() {
-    this.statusService.getZaakStatuses(this.bronorganisatie, this.identificatie).subscribe(data => {
+    this.statusService.getZaakStatuses(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.data = data;
       this.isLoading = false;
     }, error => {
@@ -80,7 +78,7 @@ export class StatusComponent implements OnInit {
    * Fetches the dashboard statuses.
    */
   getDashboardStatus() {
-    this.statusService.getDashboardStatus(this.mainZaakUrl).subscribe(data => {
+    this.statusService.getDashboardStatus(this.zaak.url).subscribe(data => {
       if (data[0]) {
         this.currentDashboard = data[0].board;
         this.dashboardColumns = data[0].board.columns;
@@ -96,7 +94,7 @@ export class StatusComponent implements OnInit {
    * @param data
    */
   findCurrentDashboardItem(data) {
-    this.currentDashboardItem = data.find(item => item.zaak.url === this.mainZaakUrl);
+    this.currentDashboardItem = data.find(item => item.zaak.url === this.zaak.url);
   }
 
   /**
@@ -105,7 +103,7 @@ export class StatusComponent implements OnInit {
    */
   onDashboardStatusSelect(column: DashboardColumn): void {
     const formData = {
-      object: this.mainZaakUrl,
+      object: this.zaak.url,
       columnUuid: column.uuid
     }
     this.statusService.updateBoardItem(this.currentDashboardItem.uuid, formData)

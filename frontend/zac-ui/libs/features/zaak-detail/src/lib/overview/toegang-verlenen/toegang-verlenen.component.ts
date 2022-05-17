@@ -1,7 +1,7 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { UserSearchResult, UserSearch } from '@gu/models';
+import { UserSearchResult, UserSearch, Zaak } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
 
 @Component({
@@ -10,8 +10,8 @@ import { ApplicationHttpClient } from '@gu/services';
   styleUrls: ['./toegang-verlenen.component.scss']
 })
 export class ToegangVerlenenComponent implements OnInit, OnChanges {
-  @Input() mainZaakUrl: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
+  @Output() reload: EventEmitter<any> = new EventEmitter<any>();
 
   users: UserSearchResult[] = [];
   requesterUser: UserSearchResult;
@@ -59,7 +59,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     })
     const formData = {
       requester: this.requester.value,
-      zaak: this.mainZaakUrl
+      zaak: this.zaak.url
     }
     this.postAccess(formData).subscribe( res => {
       this.submitResult = {
@@ -70,9 +70,10 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       this.grantAccessForm.reset();
       this.submitHasError = false;
       this.isSubmitting = false;
+      this.reload.emit();
     }, error => {
       this.submitHasError = true;
-      console.log(error);
+      console.error(error);
       this.submitErrorMessage =
         error?.error?.detail ? error.error.detail
           : error?.error?.nonFieldErrors ? error.error?.nonFieldErrors[0]

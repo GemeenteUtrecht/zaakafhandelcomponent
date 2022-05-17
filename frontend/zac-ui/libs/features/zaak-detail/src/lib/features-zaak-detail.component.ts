@@ -1,14 +1,14 @@
 import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {Location} from '@angular/common';
 import {ActivitiesService, UserService, ZaakService} from '@gu/services';
-import {Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {Activity, User, Zaak} from '@gu/models';
 import {ModalService, SnackbarService} from '@gu/components';
-import {catchError, switchMap, tap} from 'rxjs/operators';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/adviseren-accorderen.component";
 import {StatusComponent} from './actions/status/status.component';
 import {ActivatedRoute} from '@angular/router';
+import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
 
 
 /**
@@ -36,6 +36,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
 
   @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
   @ViewChild(StatusComponent) statusComponent: StatusComponent;
+  @ViewChild(UserPermissionsComponent) UserPermissionsComponent: UserPermissionsComponent;
 
   /** @type {string} Message to show when access request is successfully submitted. */
   readonly accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
@@ -45,7 +46,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   isLoading: boolean;
 
   /** @type {boolean} Whether an error occured. */
-  hasError: boolean;
+  showErrorBlock: boolean;
 
   /** @type {string} The error message. */
   errorMessage: string;
@@ -167,29 +168,13 @@ export class FeaturesZaakDetailComponent implements OnInit {
     this.isLoading = true;
 
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
-      .pipe(
-        tap(res => {
-          this.zaakData = res;
-          this.mainZaakUrl = res.url ? res.url : null;
-        }),
-        catchError((res) => {
-          this.reportError(res.error)
-          return of(null)
-        }),
-        switchMap(res => {
-          const url = res?.url;
-          return url ? this.fetchActivities(url) : of(null);
-        })
-      )
-      .subscribe({
-        next: (activities) => {
-          if (!activities) {
-            return;
-          }
-          this.activityData = activities;
-        },
-        error: (error) => this.reportError(error.error),
-        complete: () => this.isLoading = false
+      .subscribe( res => {
+        this.zaakData = res;
+        this.mainZaakUrl = res.url ? res.url : null;
+        this.fetchActivities(this.zaakData.url);
+      }, err => {
+        this.showErrorBlock = true;
+        this.reportError(err.error);
       })
   }
 
@@ -198,19 +183,18 @@ export class FeaturesZaakDetailComponent implements OnInit {
    * @param {string} zaakUrl
    * @return {Observable}
    */
-  fetchActivities(zaakUrl): Observable<Activity[]> {
-    return this.activitiesService.getActivities(zaakUrl)
-      .pipe(
-        switchMap(res => {
-          if (this.activity) {
-            setTimeout( () => {
-              this.openModal('activities-modal')
-            }, 1000)
-          }
-          return of(res);
-        }),
-        catchError(this.reportError.bind(this))
-      )
+  fetchActivities(zaakUrl): void {
+    this.activitiesService.getActivities(zaakUrl).subscribe( res => {
+      this.activityData = res;
+      if (this.activity) {
+        setTimeout( () => {
+          this.openModal('activities-modal')
+        }, 1000)
+      }
+      this.isLoading = false;
+    }, err => {
+      this.isLoading = false;
+    })
   }
 
   /**
@@ -272,6 +256,13 @@ export class FeaturesZaakDetailComponent implements OnInit {
     this.statusComponent.update();
   }
 
+  /**
+   * Updates user permission component
+   */
+  permissionsUpdate() {
+    this.UserPermissionsComponent.update();
+  }
+
   //
   // Error handling.
   //
@@ -281,6 +272,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
+    this.isLoading = false;
     this.canRequestAccess = error.canRequestAccess;
     this.errorMessage = error.detail ?
       error.detail :
@@ -288,10 +280,9 @@ export class FeaturesZaakDetailComponent implements OnInit {
         error.reason :
         error.canRequestAccess ?
           "Je hebt geen toegang tot deze zaak" :
-          "Er is een fout opgetreden";
-
+          "Er is een fout opgetreden2";
     console.error(error);
-    this.hasError = true;
+
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
   }
 }

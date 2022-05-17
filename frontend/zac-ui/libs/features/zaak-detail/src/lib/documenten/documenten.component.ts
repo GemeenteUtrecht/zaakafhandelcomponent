@@ -1,5 +1,5 @@
 import { Component, HostListener, Input, OnChanges } from '@angular/core';
-import {Document, ReadWriteDocument, Table } from '@gu/models';
+import { Document, ReadWriteDocument, Table, Zaak } from '@gu/models';
 import {DocumentenService, ZaakService} from '@gu/services';
 import { ModalService, SnackbarService } from '@gu/components';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -22,10 +22,7 @@ import { of } from 'rxjs';
 })
 
 export class DocumentenComponent implements OnChanges {
-  @Input() mainZaakUrl: string;
-  @Input() zaaktypeurl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   readonly alertText = "U heeft uw documenten niet opgeslagen. Klik op 'Bewerkingen opslaan' in de documenten sectie om uw wijzigingen op te slaan."
   readonly errorMessage = "Er is een fout opgetreden bij het laden van de documenten.";
@@ -83,8 +80,8 @@ export class DocumentenComponent implements OnChanges {
   fetchDocuments() {
     this.isLoading = true;
 
-    this.zaakService.listCaseDocuments(this.bronorganisatie, this.identificatie).subscribe( data => {
-      this.tableData = this.documentenService.formatTableData(data, this.tableHead);
+    this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe( data => {
+      this.tableData = this.documentenService.formatTableData(data, this.tableHead, this.zaak);
       this.documentsData = data;
 
       this.isLoading = false;

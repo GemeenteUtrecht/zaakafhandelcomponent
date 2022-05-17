@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, Output, ViewEncapsulation} from '@angular/core';
+import { Zaak } from '@gu/models';
 
 /**
  * Wrapper component that contains the document upload of this application
@@ -19,10 +20,7 @@ import {Component, EventEmitter, Input, Output, ViewEncapsulation} from '@angula
   encapsulation: ViewEncapsulation.None
 })
 export class DocumentToevoegenContezzaComponent {
-  @Input() mainZaakUrl: string;
-  @Input() zaaktypeurl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   @Output() reload = new EventEmitter<boolean>();
   @Output() closeModal = new EventEmitter<boolean>();

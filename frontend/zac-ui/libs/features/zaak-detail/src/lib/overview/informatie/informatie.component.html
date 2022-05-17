@@ -7,10 +7,11 @@
 
   <a class="anchor d-inline-block mb-4" target="_blank" *ngIf="isVisibleTezzaLink && tezzaLink" href="{{tezzaLink}}">Zaak in Tezza</a>
 
+  <!-- Disable edit possibility if case is closed and the user is not allowed to force edit -->
   <div class='mb-4' *ngIf="zaak && properties && !isLoading">
     <gu-form [title]="'Zaak informatie'"
              [form]="form"
-             [editable]="'toggle'"
+             [editable]="!zaak.resultaat || zaak.kanGeforceerdBijwerken ? 'toggle' : false"
              [buttonSize]="'small'"
              [showLess]="true"
              (formSubmit)="submitForm($event)">

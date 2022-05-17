@@ -16,6 +16,7 @@ import {SnackbarService} from "@gu/components";
 import { forkJoin } from 'rxjs';
 import {catchError, take} from "rxjs/operators";
 import {DocumentenService} from '@gu/services';
+import { Zaak } from '@gu/models';
 
 @Component({
   selector: 'gu-features-contezza-document-search',
@@ -23,12 +24,9 @@ import {DocumentenService} from '@gu/services';
   styleUrls: ['./features-contezza-document-search.component.scss'],
 })
 export class FeaturesContezzaDocumentSearchComponent implements OnInit, AfterViewInit {
-  @Input() mainZaakUrl: string;
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
   @Input() mode: string;
   @Input() rootfolder: string;
-  @Input() zaaktypeurl;
 
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -72,9 +70,9 @@ export class FeaturesContezzaDocumentSearchComponent implements OnInit, AfterVie
      }
 
       const cdl = this.renderer2.createElement('contezza-zac-doclib');
-      cdl.setAttribute('bronorganisatie', this.bronorganisatie);
+      cdl.setAttribute('bronorganisatie', this.zaak.bronorganisatie);
       cdl.setAttribute('mode', 'search');
-      cdl.setAttribute('zaaktypeurl', this.zaaktypeurl);
+      cdl.setAttribute('zaaktypeurl', this.zaak.zaaktype.url);
 
       this.renderer2.appendChild(this.wrapper.nativeElement, cdl);
 
@@ -91,7 +89,7 @@ export class FeaturesContezzaDocumentSearchComponent implements OnInit, AfterVie
           urls.forEach((url) => {
             const formData = new FormData();
 
-            formData.append("zaak", this.mainZaakUrl);
+            formData.append("zaak", this.zaak.url);
             formData.append("url", url);
 
             batch.push(this.documentService.postDocument(formData)

@@ -55,10 +55,7 @@
               </button>
 
               <gu-document-toevoegen *ngIf="field.edit"
-                                     [mainZaakUrl]="mainZaakUrl"
-                                     [zaaktypeurl]="zaaktypeurl"
-                                     [bronorganisatie]="bronorganisatie"
-                                     [identificatie]="identificatie"
+                                     [zaak]="zaak"
                                      (uploadedDocument)="onUploadedDocument(field, $event)"
                                      title=""
                                      description=""

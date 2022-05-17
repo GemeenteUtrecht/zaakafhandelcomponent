@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FieldConfiguration, SnackbarService } from '@gu/components';
-import { Document } from '@gu/models';
+import { Document, Zaak } from '@gu/models';
 import {DocumentenService} from '@gu/services';
 
 /**
@@ -14,7 +14,7 @@ import {DocumentenService} from '@gu/services';
   styleUrls: ['./document-wijzigen.component.scss']
 })
 export class DocumentWijzigenComponent {
-  @Input() mainZaakUrl: string;
+  @Input() zaak: Zaak;
   @Input() selectedDocument: Document;
 
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -30,6 +30,7 @@ export class DocumentWijzigenComponent {
   ) { }
 
   get form(): FieldConfiguration[] {
+    // Disable edit if case is closed and the user is not allowed to force edit
     return [
       {
         label: 'Bestandsnaam',
@@ -38,6 +39,7 @@ export class DocumentWijzigenComponent {
         required: true,
         autocomplete: 'off',
         value: this.selectedDocument.titel.split('.').slice(0, -1).join('.'),
+        readonly: !(!this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken),
       },
       {
         label: 'Beschrijving',
@@ -46,6 +48,7 @@ export class DocumentWijzigenComponent {
         autocomplete: 'off',
         required: true,
         value: this.selectedDocument.beschrijving,
+        readonly: !(!this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken),
       },
       {
         label: 'Reden wijziging',
@@ -53,6 +56,7 @@ export class DocumentWijzigenComponent {
         value: '',
         required: true,
         writeonly: true,
+        readonly: !(!this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken),
       },
       {
         label: 'Auteur',
@@ -94,7 +98,7 @@ export class DocumentWijzigenComponent {
   formSubmit(formData) {
     const data = new FormData();
     data.append('url', this.selectedDocument.url);
-    data.append('zaak', this.mainZaakUrl);
+    data.append('zaak', this.zaak.url);
     if (formData.bestandsnaam) {
       data.append('bestandsnaam', formData.bestandsnaam)
     }

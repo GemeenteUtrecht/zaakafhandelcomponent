@@ -19,18 +19,25 @@
                 <gu-chip color="tertiary" class="mr-2">{{zaakData.identificatie}}</gu-chip>
                 <p class="p d-inline-block mb-0">{{zaakData.omschrijving}}</p>
               </div>
+
+              <gu-message *ngIf="zaakData.resultaat" class="d-block mb-2" type="primary">
+                <p class="mb-2">Deze zaak is afgesloten.</p>
+                <p class="mb-2">Resultaat: <strong>{{zaakData.resultaat.resultaattype.omschrijving}}</strong></p>
+                <p *ngIf="zaakData.resultaat.toelichting" class="mb-2">Toelichting: {{zaakData.resultaat.toelichting}}</p>
+              </gu-message>
             </header>
           </section>
 
 
           <!-- Error and 403 access request -->
-          <section *ngIf="hasError && errorMessage" class="row">
+          <section *ngIf="showErrorBlock && errorMessage" class="row">
             <div class="col-lg-6">
               <gu-message *ngIf="!isSubmittingAccessRequest" [type]="!isAccessRequestSuccess ? 'warn' : 'success'"
                           [message]="!isAccessRequestSuccess ? errorMessage : accessRequestSuccessMessage"
                           class="d-block mb-4"></gu-message>
 
-              <div *ngIf="canRequestAccess && !isAccessRequestSuccess">
+              <!-- Hide if case is closed and the user is not allowed to force edit -->
+              <div *ngIf="canRequestAccess && !isAccessRequestSuccess && (!zaakData.resultaat || zaakData.kanGeforceerdBijwerken)">
                 <h2>Toegang vragen tot deze zaak</h2>
 
                 <gu-input [control]="commentControl"
@@ -50,7 +57,7 @@
           </section>
 
           <!-- Components -->
-          <section *ngIf="!isLoading && !hasError">
+          <section *ngIf="!isLoading && !showErrorBlock && zaakData">
             <nav mat-tab-nav-bar>
               <a mat-tab-link *ngFor="let tab of tabs; index as i"
                  [href]="getTabLink(tab.link)"
@@ -73,25 +80,18 @@
               <div class="row" [hidden]="activeLink !== 'overzicht'">
                 <div class="col-lg-7 mb-lg-4">
                   <!-- Information -->
-                  <gu-informatie class="d-block mb-4"
-                                 *ngIf="zaakData"
-                                 [mainZaakUrl]="mainZaakUrl"
-                                 [bronorganisatie]="bronorganisatie"
-                                 [identificatie]="identificatie"
-                                 [zaaktypeOmschrijving]="zaakData.zaaktype?.omschrijving">
+                  <gu-informatie class="d-block mb-4" [zaak]="zaakData">
                   </gu-informatie>
 
                   <!-- Related cases -->
-                  <gu-gerelateerde-zaken [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie"
-                                         [identificatie]="identificatie"></gu-gerelateerde-zaken>
+                  <gu-gerelateerde-zaken [zaak]="zaakData"></gu-gerelateerde-zaken>
                 </div>
                 <div class="col-lg-5">
                   <!-- Involved persons -->
                   <gu-betrokkenen class="d-block mb-4" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
 
                   <!-- User permissions -->
-                  <gu-user-permissions [bronorganisatie]="bronorganisatie"
-                                       [identificatie]="identificatie"></gu-user-permissions>
+                  <gu-user-permissions [zaak]="zaakData"></gu-user-permissions>
                 </div>
               </div>
 
@@ -114,9 +114,7 @@
 
                 <div class="col-lg-5">
                   <gu-status class="d-block mb-4"
-                             [mainZaakUrl]="mainZaakUrl"
-                             [bronorganisatie]="bronorganisatie"
-                             [identificatie]="identificatie"
+                             [zaak]="zaakData"
                              [progress]="zaakData.deadlineProgress"
                              [deadline]="zaakData.deadline"
                              [finished]="!!zaakData.resultaat">
@@ -133,12 +131,7 @@
 
               <div class="row" [hidden]="activeLink !== 'documenten'">
                 <div class="col-lg-12 mb-lg-4">
-                  <gu-documenten [mainZaakUrl]="mainZaakUrl"
-                                 [zaaktypeurl]="zaakData.zaaktype.url"
-                                 [bronorganisatie]="bronorganisatie"
-                                 [identificatie]="identificatie"
-                                 class="zaak-detail__section">
-                  </gu-documenten>
+                  <gu-documenten [zaak]="zaakData" class="zaak-detail__section"></gu-documenten>
                 </div>
               </div>
 
@@ -146,12 +139,10 @@
 
               <div class="row" [hidden]="activeLink !== 'objecten'">
                 <div class="col-lg-7 mb-4">
-                  <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie"
-                                            [identificatie]="identificatie">
-                  </gu-gerelateerde-objecten>
+                  <gu-gerelateerde-objecten [zaak]="zaakData"></gu-gerelateerde-objecten>
                 </div>
 
-                <div class="col-lg-5" *ngIf="!isLoading && !hasError">
+                <div class="col-lg-5">
                   <gu-zaak-map [bronorganisatie]="bronorganisatie"
                                [identificatie]="identificatie"
                   ></gu-zaak-map>
@@ -164,14 +155,13 @@
 
         <!-- Modals -->
         <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
-          <gu-toegang-verlenen [mainZaakUrl]="mainZaakUrl" [identificatie]="identificatie"></gu-toegang-verlenen>
+          <gu-toegang-verlenen [zaak]="zaakData" (reload)="permissionsUpdate()"></gu-toegang-verlenen>
         </gu-modal>
 
-        <gu-modal *ngIf="mainZaakUrl" [closeIcon]="true" id="activities-modal">
+        <!-- Hide if case is closed and the user is not allowed to force edit -->
+        <gu-modal *ngIf="mainZaakUrl && (!zaakData.resultaat || zaakData.kanGeforceerdBijwerken)" [closeIcon]="true" id="activities-modal">
           <gu-activiteiten *ngIf="currentUser && activityData"
-                           [mainZaakUrl]="mainZaakUrl"
-                           [bronorganisatie]="bronorganisatie"
-                           [identificatie]="identificatie"
+                           [zaak]="zaakData"
                            [currentUser]="currentUser"
                            [activityData]="activityData">
           </gu-activiteiten>
