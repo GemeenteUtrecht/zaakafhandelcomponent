@@ -27,6 +27,7 @@ export class InputComponent implements OnChanges {
   @Input() datalist: string[] = [];
   @Input() type: string;
   @Input() label: string;
+  @Input() maxlength: string;
   @Input() required: boolean;
   @Input() disabled: boolean;
   @Input() pattern: string = null;

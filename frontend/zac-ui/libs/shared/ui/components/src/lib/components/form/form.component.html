@@ -90,6 +90,7 @@
           *ngIf="field.widgetType == 'input' && edit"
           [control]="field.control"
           [label]="field.label"
+          [maxlength]="field.maxlength"
           [pattern]="field.pattern || null"
           [placeholder]="field.placeholder"
           [type]="field.type"
