@@ -202,6 +202,11 @@ export class ChecklistComponent implements OnInit, OnChanges {
           }))
           : null,
       }, {
+        label: `Voeg opmerking toe bij: ${question.question}`,
+        name: `__remarks_${question.question}`,
+        required: false,
+        value: answer?.remarks,
+      }, {
         label: `Voeg document toe bij: ${question.question}`,
         name: `__document_${question.question}`,
         required: false,
@@ -250,11 +255,15 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const document = answerData[documentKey];
         const documentUrl = document?.url;
 
+        const remarksKey = `__remarks_${question}`;
+        const remarks = answerData[remarksKey];
+
         return ({
+          answer: answer as string,
+          created: new Date().toISOString(),
           document: documentUrl,
           question: question,
-          answer: answer as string,
-          created: new Date().toISOString()
+          remarks: remarks,
         });
       });
 
