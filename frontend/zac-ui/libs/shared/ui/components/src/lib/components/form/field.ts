@@ -39,6 +39,9 @@ export interface FieldConfiguration {
   /** @type {string} The label to render for the field. */
   label?: string;
 
+  /** @type {number} The maximum length of the value. */
+  maxlength?: number;
+
   /** @type {string} The name attribute for the field, this is also used as key in the serialized form. */
   name?: string;
 
@@ -86,6 +89,7 @@ export class Field {
   edit: false;
   key?: string;
   label: string;
+  maxlength?: string;
   name?: string;
   pattern?: string;
   placeholder: string;

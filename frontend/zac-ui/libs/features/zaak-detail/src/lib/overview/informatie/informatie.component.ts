@@ -113,6 +113,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       {
         activeWhen: (formGroup) => formGroup.getRawValue().vertrouwelijkheidaanduiding !== this.zaak.vertrouwelijkheidaanduiding,
         label: 'reden',
+        maxlength: 80,
         placeholder: 'Reden',
         value: '',
         required: true,
@@ -120,6 +121,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       },
       {
         label: 'Omschrijving',
+        maxlength: 80,
         name: 'omschrijving',
         placeholder: 'Geen omschrijving',
         required: true,
@@ -139,6 +141,7 @@ export class InformatieComponent implements OnInit, OnChanges {
 
       return {
         label: zaaktypeEigenschap.name,
+        maxlength: 80,
         placeholder: '-',
         readonly: false,
         required: false,
