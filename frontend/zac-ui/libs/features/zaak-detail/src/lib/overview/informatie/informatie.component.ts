@@ -53,7 +53,8 @@ export class InformatieComponent implements OnInit, OnChanges {
     "Eigendomsdossier",
     "Routingsproces",
     "Vastgoedobject beheren",
-    "Vastgoedobject behandelen"
+    "Vastgoedproject uitvoeren",
+    "VGU Vastgoedproject uitvoeren",
   ]
 
   /**
