@@ -34,7 +34,7 @@ export class ChecklistService {
    * Create checklist and related answers.
    * FIXME: Zaak should not be necessary?
    */
-  createChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = null, groupAssignee: string = null): Observable<Checklist> {
+  createChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = '', groupAssignee: string = ''): Observable<Checklist> {
     const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}`);
 
     const params = {
@@ -43,7 +43,7 @@ export class ChecklistService {
 
     if (userAssignee) {
       params['userAssignee'] = userAssignee;
-    } else {
+    } else if (groupAssignee) {
       params['groupAssignee'] = groupAssignee;
     }
 
@@ -54,7 +54,7 @@ export class ChecklistService {
    * Update checklist and related answers.
    * FIXME: Zaak should not be necessary?
    */
-  updateChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = null, groupAssignee: string = null): Observable<Checklist> {
+  updateChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = '', groupAssignee: string = ''): Observable<Checklist> {
     const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}`);
 
     const params = {
@@ -63,7 +63,7 @@ export class ChecklistService {
 
     if (userAssignee) {
       params['userAssignee'] = userAssignee;
-    } else {
+    } else if (groupAssignee) {
       params['groupAssignee'] = groupAssignee;
     }
 

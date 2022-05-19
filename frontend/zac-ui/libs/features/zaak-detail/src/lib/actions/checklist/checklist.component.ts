@@ -194,6 +194,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
       return [...acc, {
         label: question.question,
         name: question.question,
+        required: false,
         value: answer?.answer,
         choices: (question.isMultipleChoice)
           ? question.choices.map((questionChoice: QuestionChoice) => ({
@@ -259,11 +260,11 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const remarks = answerData[remarksKey];
 
         return ({
-          answer: answer as string,
+          answer: answer as string || '',
           created: new Date().toISOString(),
           document: documentUrl,
           question: question,
-          remarks: remarks,
+          remarks: remarks || '',
         });
       });
 
