@@ -25,6 +25,18 @@ class QuestionChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionChoice
         fields = ("name", "value")
+        extra_kwargs = {
+            "name": {
+                "required": True,
+                "min_length": 1,
+                "help_text": _("Name of choice."),
+            },
+            "value": {
+                "required": True,
+                "min_length": 1,
+                "help_text": _("Value of choice."),
+            },
+        }
 
 
 class ChecklistQuestionSerializer(serializers.ModelSerializer):
@@ -39,6 +51,17 @@ class ChecklistQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistQuestion
         fields = ("question", "order", "choices", "is_multiple_choice")
+        extra_kwargs = {
+            "question": {
+                "required": True,
+                "min_length": 1,
+                "help_text": _("Question for user to answer."),
+            },
+            "order": {
+                "required": True,
+                "help_text": _("Order of question in checklist."),
+            },
+        }
 
 
 class ChecklistTypeSerializer(serializers.ModelSerializer):
@@ -61,6 +84,7 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
             "uuid": {"read_only": True},
             "created": {"read_only": True},
             "modified": {"read_only": True},
+            "zaaktype": {"required": True, "min_length": 1},
             "zaaktype_catalogus": {"read_only": True},
             "zaaktype_omschrijving": {"read_only": True},
         }
@@ -137,7 +161,28 @@ class ChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
         fields = ("question", "answer", "created", "modified", "remarks", "document")
-        extra_kwargs = {"remarks": {"required": False}, "document": {"required": False}}
+        extra_kwargs = {
+            "question": {
+                "required": True,
+                "min_length": 1,
+                "help_text": _("The question related to the answer."),
+            },
+            "remarks": {
+                "required": False,
+                "min_length": 0,
+                "help_text": _("Remarks in addition to the answer."),
+            },
+            "document": {
+                "required": False,
+                "min_length": 1,
+                "help_text": _("URL-reference to document related to answer."),
+            },
+            "answer": {
+                "required": True,
+                "min_length": 0,
+                "help_text": _("Answer to the question."),
+            },
+        }
 
 
 class BaseChecklistSerializer(serializers.ModelSerializer):
@@ -154,12 +199,12 @@ class BaseChecklistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Checklist
-        fields = [
+        fields = (
             "created",
             "group_assignee",
             "user_assignee",
             "answers",
-        ]
+        )
 
 
 class ReadChecklistSerializer(BaseChecklistSerializer):
@@ -183,12 +228,14 @@ class ChecklistSerializer(BaseChecklistSerializer):
         queryset=Group.objects.prefetch_related("user_set").all(),
         required=False,
         help_text=_("Name of the group."),
+        allow_null=True,
     )
     user_assignee = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=False,
         help_text=_("`username` of the user."),
+        allow_null=True,
     )
 
     class Meta(BaseChecklistSerializer.Meta):
