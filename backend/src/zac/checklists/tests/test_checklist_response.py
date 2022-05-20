@@ -304,6 +304,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             answer="some-other-answer",
         )
         data = {
+            "groupAssignee": None,
             "userAssignee": self.user.username,
             "answers": [
                 {"question": "some-question", "answer": "some-answer"},
