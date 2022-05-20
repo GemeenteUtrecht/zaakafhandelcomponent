@@ -280,7 +280,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
         error.reason :
         error.canRequestAccess ?
           "Je hebt geen toegang tot deze zaak" :
-          "Er is een fout opgetreden2";
+          "Er is een fout opgetreden";
     console.error(error);
 
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');

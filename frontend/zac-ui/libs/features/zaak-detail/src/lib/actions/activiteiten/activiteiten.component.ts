@@ -15,9 +15,7 @@ import { SnackbarService } from '@gu/components';
 /**
  * This component allows the user to set and edit activities.
  *
- * Requires mainZaakUrl: string input to identify the url of the case (zaak).
- * Requires bronorganisatie: string input to identify the organisation.
- * Requires identificatie: string input to identify the case (zaak).
+ * Requires zaak: object with the case data.
  * Requires currentUser: User input to identify the current user.
  * Requires activityData: All activity data.
  */
@@ -87,6 +85,10 @@ export class ActiviteitenComponent implements OnInit {
   get assignUserGroupControl(): FormArray {
     return this.assignUserForm.get('group') as FormArray;
   };
+
+  get canForceEdit(): boolean {
+    return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
+  }
 
   //
   // Angular lifecycle.

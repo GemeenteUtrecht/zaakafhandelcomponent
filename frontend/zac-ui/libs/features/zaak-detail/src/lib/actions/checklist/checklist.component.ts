@@ -32,10 +32,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 })
 export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {string} Input to identify the organisation. */
-  @Input() bronorganisatie: string;
-
-  /** @type {string} Input to identify the case (zaak). */
-  @Input() identificatie: string;
+  @Input() zaak: Zaak = null;
 
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van de checklist.'
 
@@ -63,9 +60,6 @@ export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {Group[]} */
   groups: UserGroupDetail[] = []
 
-  /** @type {Zaak} The zaak object. */
-  zaak: Zaak = null;
-
   /**
    * Constructor method.
    * @param {ChecklistService} checklistService
@@ -83,6 +77,14 @@ export class ChecklistComponent implements OnInit, OnChanges {
     private userService: UserService,
     private zaakService: ZaakService,
   ) {
+  }
+
+  /**
+   * Whether user can force edit a closed case.
+   * @returns {boolean}
+   */
+  get canForceEdit(): boolean {
+    return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
   }
 
   //
@@ -148,38 +150,31 @@ export class ChecklistComponent implements OnInit, OnChanges {
   fetchChecklistData(): void {
     this.isLoading = true;
 
-    const result = this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie).subscribe(
-      (zaak) => {
-        this.zaak = zaak;
+    this.checklistService.retrieveChecklistTypeAndRelatedQuestions(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
+      (checklistType: ChecklistType) => {
+        this.checklistType = checklistType;
+        this.checklistForm = this.getChecklistForm();
 
-        this.checklistService.retrieveChecklistTypeAndRelatedQuestions(this.bronorganisatie, this.identificatie).subscribe(
-          (checklistType: ChecklistType) => {
-            this.checklistType = checklistType;
+        this.checklistService.retrieveChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
+          (checklist: Checklist) => {
+            checklist.answers.filter((checklistAnswer: ChecklistAnswer) => checklistAnswer.document)
+              .forEach((checklistAnswer: ChecklistAnswer) => {
+                this.documentenService.getDocument(checklistAnswer.document).subscribe(
+                  (document: Document) => {
+                    this.documents[checklistAnswer.question] = document
+                    this.isLoading = false;
+                    this.checklistForm = this.getChecklistForm();
+                  }, this.reportError.bind(this)
+                );
+              })
+            this.checklist = checklist;
             this.checklistForm = this.getChecklistForm();
-
-            this.checklistService.retrieveChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie).subscribe(
-              (checklist: Checklist) => {
-                checklist.answers.filter((checklistAnswer: ChecklistAnswer) => checklistAnswer.document)
-                  .forEach((checklistAnswer: ChecklistAnswer) => {
-                    this.documentenService.getDocument(checklistAnswer.document).subscribe(
-                      (document: Document) => {
-                        this.documents[checklistAnswer.question] = document
-                        this.isLoading = false;
-                        this.checklistForm = this.getChecklistForm();
-                      }, this.reportError.bind(this)
-                    );
-                  })
-                this.checklist = checklist;
-                this.checklistForm = this.getChecklistForm();
-                this.isLoading = false;
-              },
-              this.handleError.bind(this)
-            )
+            this.isLoading = false;
           },
           this.handleError.bind(this)
-        );
+        )
       },
-      this.reportError.bind(this)
+      this.handleError.bind(this)
     );
   }
 
@@ -202,17 +197,20 @@ export class ChecklistComponent implements OnInit, OnChanges {
             value: questionChoice.value,
           }))
           : null,
+        readonly: !this.canForceEdit
       }, {
         label: `Voeg opmerking toe bij: ${question.question}`,
         name: `__remarks_${question.question}`,
         required: false,
         value: answer?.remarks,
+        readonly: !this.canForceEdit
       }, {
         label: `Voeg document toe bij: ${question.question}`,
         name: `__document_${question.question}`,
         required: false,
         type: 'document',
-        value: this.documents[question.question]
+        value: this.documents[question.question],
+        readonly: !this.canForceEdit
       }];
     }, []);
 
@@ -225,6 +223,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         required: false,
         choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
         value: this.checklist?.userAssignee?.username,
+        readonly: !this.canForceEdit
       },
       {
         activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue().userAssignee,
@@ -233,6 +232,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         required: false,
         choices: this.groups.map((group: UserGroupDetail) => ({label: group.name, value: group.name})),
         value: this.checklist?.groupAssignee?.name,
+        readonly: !this.canForceEdit
       }
     ];
   }
@@ -270,13 +270,13 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
 
     if (this.checklist) {
-      this.checklistService.updateChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie, answers, userAssignee, groupAssignee).subscribe(
+      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers, userAssignee, groupAssignee).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
         () => this.isSubmitting = false
       );
     } else {
-      this.checklistService.createChecklistAndRelatedAnswers(this.bronorganisatie, this.identificatie, answers, userAssignee, groupAssignee).subscribe(
+      this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers, userAssignee, groupAssignee).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
         () => this.isSubmitting = false
@@ -294,6 +294,10 @@ export class ChecklistComponent implements OnInit, OnChanges {
    */
   handleError(httpErrorResponse: HttpErrorResponse) {
     if (httpErrorResponse.status === 404) {
+      this.isLoading = false;
+      return;
+    }
+    else if (httpErrorResponse.status === 403) {
       this.isLoading = false;
       return;
     }

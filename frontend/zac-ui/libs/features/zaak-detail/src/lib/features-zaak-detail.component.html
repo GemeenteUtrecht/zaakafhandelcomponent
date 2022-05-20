@@ -84,7 +84,7 @@
                   </gu-informatie>
 
                   <!-- Related cases -->
-                  <gu-gerelateerde-zaken [zaak]="zaakData"></gu-gerelateerde-zaken>
+                  <gu-gerelateerde-zaken class="d-block mb-4" [zaak]="zaakData"></gu-gerelateerde-zaken>
                 </div>
                 <div class="col-lg-5">
                   <!-- Involved persons -->
@@ -99,6 +99,14 @@
 
               <div class="row" [hidden]="activeLink !== 'acties'">
                 <div class="col-lg-7 mb-4">
+                  <div class="mb-4" *ngIf="activityData">
+                    <button gu-button
+                            buttonStyle="primary"
+                            icon="playlist_add_check"
+                            (click)="openModal('activities-modal')">
+                      Activiteiten en checklist
+                    </button>
+                  </div>
                   <!-- Processes -->
                   <gu-keten-processen *ngIf="currentUser"
                                       [mainZaakUrl]="mainZaakUrl"
@@ -159,7 +167,7 @@
         </gu-modal>
 
         <!-- Hide if case is closed and the user is not allowed to force edit -->
-        <gu-modal *ngIf="mainZaakUrl && (!zaakData.resultaat || zaakData.kanGeforceerdBijwerken)" [closeIcon]="true" id="activities-modal">
+        <gu-modal *ngIf="mainZaakUrl && activityData" [closeIcon]="true" id="activities-modal">
           <gu-activiteiten *ngIf="currentUser && activityData"
                            [zaak]="zaakData"
                            [currentUser]="currentUser"

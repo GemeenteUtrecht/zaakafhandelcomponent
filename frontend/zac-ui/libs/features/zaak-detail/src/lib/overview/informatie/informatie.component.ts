@@ -158,6 +158,14 @@ export class InformatieComponent implements OnInit, OnChanges {
     return this.isCaseAPILoading || Boolean(this.isPropertyAPILoading);
   }
 
+  /**
+   * Whether user can force edit a closed case.
+   * @returns {boolean}
+   */
+  get canForceEdit(): boolean {
+    return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
+  }
+
   //
   // Angular lifecycle.
   //

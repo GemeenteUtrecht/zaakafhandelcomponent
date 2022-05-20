@@ -6,7 +6,7 @@
     </button>
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-  <div *ngIf="showAddActivityButton" class="create-activity">
+  <div *ngIf="showAddActivityButton && (!zaak.resultaat || zaak.kanGeforceerdBijwerken)" class="create-activity">
     <form [formGroup]="addActivityForm">
       <div class="form-group">
         <div class="row">
@@ -61,21 +61,23 @@
               <div class="activity__detail mb-4">
                 <!--  Gebruiker toewijzen  -->
                 <gu-chip *ngIf="activity.groupAssignee || activity.userAssignee"
-                         (click)="openAssigneeEditField = i; openNoteEditField = null"
+                         (click)="canForceEdit ? (openAssigneeEditField = i) && (openNoteEditField = null) : null"
                          [color]="currentUser.username === (activity.groupAssignee?.name || activity.userAssignee.username) ? 'primary' : 'tertiary'"
-                         icon="edit"
+                         [icon]="canForceEdit ? 'edit' : null"
                          class="d-inline-block mb-1"
                 >
                   {{activity.groupAssignee?.name || activity.userAssignee.fullName}}
                 </gu-chip>
-                <button gu-button *ngIf="!activity.groupAssignee && !activity.userAssignee && openAssigneeEditField !== i"
-                        (click)="openAssigneeEditField = i; openDocumentUploadForm = null; openNoteEditField = null"
-                        class="d-block"
-                        buttonStyle="tertiary"
-                        size="extrasmall"
-                        icon="person_add">
-                  Gebruiker of groep toewijzen
-                </button>
+                <ng-container *ngIf="canForceEdit">
+                  <button gu-button *ngIf="!activity.groupAssignee && !activity.userAssignee && openAssigneeEditField !== i"
+                          (click)="openAssigneeEditField = i; openDocumentUploadForm = null; openNoteEditField = null"
+                          class="d-block"
+                          buttonStyle="tertiary"
+                          size="extrasmall"
+                          icon="person_add">
+                    Gebruiker of groep toewijzen
+                  </button>
+                </ng-container>
                 <gu-tab-group [selectedIndex]="0" *ngIf="openAssigneeEditField === i">
 
                   <!-- Assign collega -->
@@ -137,8 +139,12 @@
               <div class="activity__detail mb-4">
                 <gu-loading-indicator *ngIf="isFetchingDocuments"></gu-loading-indicator>
                 <ng-container *ngIf="ongoingActivityDocs.length > 0">
-                  <p class="p--bold d-inline">{{ ongoingActivityDocs[i] ? 'Document: ' : ''}}</p><a class="anchor" *ngIf="ongoingActivityDocs[i] !== null" (click)="readDocument(ongoingActivityDocs[i].readUrl)">{{ongoingActivityDocs[i].titel}}</a>
-                  <ng-container *ngIf="ongoingActivityDocs[i] === null">
+                  <p class="p--bold d-inline">{{ ongoingActivityDocs[i] ? 'Document: ' : ''}}</p>
+                  <a class="anchor" *ngIf="ongoingActivityDocs[i] !== null"
+                     (click)="readDocument(ongoingActivityDocs[i].readUrl)">
+                    {{ongoingActivityDocs[i].titel}}
+                  </a>
+                  <ng-container *ngIf="canForceEdit && ongoingActivityDocs[i] === null">
                     <button gu-button *ngIf="openDocumentUploadForm !== i"
                             (click)="openDocumentUploadForm = i; openAssigneeEditField = null; openNoteEditField = null"
                             class="d-block"
@@ -187,7 +193,7 @@
               <!--  Notitie toevoegen  -->
               <div class="activity__detail">
                 <form *ngIf="activityForm" [formGroup]="activityForm">
-                  <button gu-button *ngIf="openNoteEditField !== i"
+                  <button gu-button *ngIf="canForceEdit && openNoteEditField !== i"
                              (click)="openNoteEditField = i; openAssigneeEditField = null; openDocumentUploadForm = null"
                              class="d-block"
                              buttonStyle="tertiary"
@@ -220,7 +226,7 @@
             </div>
             <hr class="d-lg-none">
             <!--  Voltooien of verwijderen  -->
-            <div class="activity__buttons col-lg-2">
+            <div class="activity__buttons col-lg-2" *ngIf="canForceEdit">
               <div *ngIf="showCloseActivityConfirmation === i">
                 <p class="mb-2">Weet je zeker dat je deze activiteit wilt sluiten?</p>
                 <div class="">
@@ -335,7 +341,7 @@
 
     <gu-tab label="Checklist">
       <div class="tab-content">
-        <gu-checklist [bronorganisatie]="zaak.bronorganisatie" [identificatie]="zaak.identificatie" *ngIf="!isLoading"></gu-checklist>
+        <gu-checklist [zaak]="zaak" *ngIf="!isLoading"></gu-checklist>
       </div>
     </gu-tab>
   </gu-tab-group>
