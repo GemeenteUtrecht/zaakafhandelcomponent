@@ -156,16 +156,6 @@
   <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
     <p>Er zijn geen acties beschikbaar.</p>
   </ng-container>
-
-  <!-- Add activity button - hide button if case is closed and the user is not allowed to force edit-->
-  <div class="d-flex justify-content-end" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
-    <button gu-button
-            buttonStyle="tertiary"
-            icon="add"
-            (click)="openModal('activities-modal')">
-      Activiteit toevoegen
-    </button>
-  </div>
 </div>
 
 

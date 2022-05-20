@@ -11,7 +11,7 @@
   <div class='mb-4' *ngIf="zaak && properties && !isLoading">
     <gu-form [title]="'Zaak informatie'"
              [form]="form"
-             [editable]="!zaak.resultaat || zaak.kanGeforceerdBijwerken ? 'toggle' : false"
+             [editable]="canForceEdit ? 'toggle' : false"
              [buttonSize]="'small'"
              [showLess]="true"
              (formSubmit)="submitForm($event)">
