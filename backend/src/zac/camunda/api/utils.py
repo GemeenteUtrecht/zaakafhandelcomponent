@@ -49,7 +49,7 @@ def start_process(
         "withVariablesInReturn": False,
         "variables": _variables,
     }
-    print(body)
+
     response = client.post(endpoint, json=body)
 
     self_rel = next((link for link in response["links"] if link["rel"] == "self"))

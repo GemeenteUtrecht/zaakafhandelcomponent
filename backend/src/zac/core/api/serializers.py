@@ -34,6 +34,8 @@ from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
+from zac.camunda.api.utils import get_bptl_app_id_variable
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
@@ -350,7 +352,7 @@ class CreateZaakSerializer(serializers.Serializer):
         help_text=_("URL-reference to the ZAAKTYPE (in the Catalogi API)."),
     )
     omschrijving = serializers.CharField(
-        required=False, help_text=_("A short summary of the ZAAK.")
+        required=True, help_text=_("A short summary of the ZAAK.")
     )
     toelichting = serializers.CharField(
         required=False, help_text=_("A comment on the ZAAK.")
@@ -373,9 +375,11 @@ class CreateZaakSerializer(serializers.Serializer):
         raise serializers.ValidationError(_("ZAAKTYPE not found."))
 
     def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        serialized_data = {}
-        for key, value in data.items():
+        serialized_data = {
+            **super().to_internal_value(data),
+            **get_bptl_app_id_variable(),
+        }
+        for key, value in serialized_data.items():
             serialized_data[key] = serialize_variable(value)
 
         organisatie_rsin = serialized_data.pop("organisatie_rsin")
