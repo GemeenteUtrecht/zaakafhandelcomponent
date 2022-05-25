@@ -156,7 +156,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {"nonFieldErrors": ["No checklist_type found for ZAAKTYPE of ZAAK."]},
         )
 
-    def test_create_checklist_fail_two_assignees(self, m):
+    def test_create_checklist_fail_two_assignees_to_answer(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -166,16 +166,24 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        ChecklistTypeFactory.create(
+        checklist_type = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
+        ChecklistQuestionFactory.create(
+            checklist_type=checklist_type, question="some-question"
+        )
         group = GroupFactory.create()
         data = {
-            "userAssignee": self.user.username,
-            "groupAssignee": group.name,
-            "answers": [],
+            "answers": [
+                {
+                    "question": "some-question",
+                    "userAssignee": self.user.username,
+                    "groupAssignee": group.name,
+                    "answer": "some-answer",
+                }
+            ],
         }
 
         # Create checklist
@@ -184,11 +192,9 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {
-                "nonFieldErrors": [
-                    "A checklist can not be assigned to both a user and a group."
-                ]
-            },
+            [
+                "An answer to a checklist question can not be assigned to both a user and a group."
+            ],
         )
 
     def test_create_checklist_answer_not_found_in_mc(self, m):
@@ -304,8 +310,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             answer="some-other-answer",
         )
         data = {
-            "groupAssignee": None,
-            "userAssignee": self.user.username,
             "answers": [
                 {"question": "some-question", "answer": "some-answer"},
                 {
@@ -313,6 +317,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     "answer": "some-updated-answer",
                     "document": "https://some-document-url.com/",
                     "remarks": "some-remarks",
+                    "groupAssignee": None,
+                    "userAssignee": self.user.username,
                 },
             ],
         }
@@ -357,8 +363,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         # Assert response data is as expected
         expected_data = {
             "created": "1999-12-31T23:59:59Z",
-            "groupAssignee": None,
-            "userAssignee": self.user.username,
             "answers": [
                 {
                     "answer": "some-answer",
@@ -367,6 +371,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     "modified": "1999-12-31T23:59:59Z",
                     "question": "some-question",
                     "remarks": "",
+                    "groupAssignee": None,
+                    "userAssignee": None,
                 },
                 {
                     "answer": "some-updated-answer",
@@ -375,12 +381,16 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     "modified": "1999-12-31T23:59:59Z",
                     "question": "some-other-question",
                     "remarks": "some-remarks",
+                    "groupAssignee": None,
+                    "userAssignee": self.user.username,
                 },
             ],
         }
         data = response.json()
         self.assertEqual(expected_data["created"], data["created"])
-        self.assertEqual(expected_data["groupAssignee"], data["groupAssignee"])
-        self.assertEqual(expected_data["userAssignee"], data["userAssignee"])
+        self.assertEqual(expected_data["answers"][1]["groupAssignee"], None)
+        self.assertEqual(
+            expected_data["answers"][1]["userAssignee"], self.user.username
+        )
         self.assertTrue(expected_data["answers"][0] in data["answers"])
         self.assertTrue(expected_data["answers"][1] in data["answers"])

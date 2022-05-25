@@ -16,9 +16,9 @@ from .permissions import (
     CanReadZaakChecklistTypePermission,
 )
 from .serializers import (
-    ChecklistSerializer,
     ChecklistTypeSerializer,
     ReadChecklistSerializer,
+    WriteChecklistSerializer,
 )
 
 
@@ -169,11 +169,16 @@ class ZaakChecklistViewSet(
 ):
     queryset = (
         Checklist.objects.select_related("checklist_type")
-        .select_related("user_assignee")
-        .select_related("group_assignee")
         .select_related("checklist_type")
         .prefetch_related(
-            Prefetch("checklistanswer_set", queryset=ChecklistAnswer.objects.all())
+            Prefetch(
+                "checklistanswer_set",
+                queryset=(
+                    ChecklistAnswer.objects.select_related("user_assignee")
+                    .select_related("group_assignee")
+                    .all()
+                ),
+            )
         )
         .all()
     )
@@ -187,13 +192,13 @@ class ZaakChecklistViewSet(
         "post",
         "put",
     ]
-    serializer_class = ChecklistSerializer
+    serializer_class = WriteChecklistSerializer
 
     def get_serializer_class(self):
         mapping = {
             "GET": ReadChecklistSerializer,
-            "POST": ChecklistSerializer,
-            "PUT": ChecklistSerializer,
+            "POST": WriteChecklistSerializer,
+            "PUT": WriteChecklistSerializer,
         }
         return mapping[self.request.method]
 
