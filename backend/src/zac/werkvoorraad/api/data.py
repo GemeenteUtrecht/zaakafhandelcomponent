@@ -5,6 +5,7 @@ from django_camunda.camunda_models import Task
 
 from zac.accounts.models import AccessRequest
 from zac.activities.models import Activity
+from zac.checklists.models import ChecklistAnswer
 from zgw.models import Zaak
 
 
@@ -26,3 +27,10 @@ class AccessRequestGroup:
 class TaskAndCase:
     task: Task
     zaak: Zaak
+
+
+@dataclass
+class ChecklistAnswerGroup:
+    checklist_answers: List[ChecklistAnswer]
+    zaak: Zaak
+    zaak_url: str

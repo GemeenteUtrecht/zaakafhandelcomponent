@@ -12,6 +12,7 @@ from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import get_killable_camunda_tasks
+from zac.checklists.models import ChecklistAnswer
 from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
@@ -24,6 +25,7 @@ from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
+    WorkStackChecklistAnswerSerializer,
     WorkStackTaskSerializer,
 )
 from .utils import (
@@ -31,6 +33,7 @@ from .utils import (
     get_activity_groups,
     get_camunda_group_tasks,
     get_camunda_user_tasks,
+    get_checklist_answers_groups,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,7 +58,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     serializer_class = WorkStackAdhocActivitiesSerializer
     filter_backends = ()
 
-    def get_activities(self) -> List[dict]:
+    def get_activities(self) -> List[Dict]:
         return Activity.objects.as_werkvoorraad(user=self.request.user)
 
     def get_queryset(self):
@@ -68,7 +71,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     summary=_("List activities for groups of logged in user."),
 )
 class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
-    def get_activities(self) -> List[dict]:
+    def get_activities(self) -> List[Dict]:
         return Activity.objects.as_werkvoorraad(groups=self.request.user.groups.all())
 
 
@@ -145,3 +148,31 @@ class WorkStackUserTasksView(ListAPIView):
 class WorkStackGroupTasksView(WorkStackUserTasksView):
     def get_camunda_tasks(self) -> List[Task]:
         return get_camunda_group_tasks(self.request.user)
+
+
+@extend_schema(summary=_("List checklist questions for logged in user."))
+class WorkStackChecklistQuestionsView(ListAPIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = WorkStackChecklistAnswerSerializer
+    filter_backends = ()
+
+    def get_assigned_checklist_answers(self) -> List[Dict]:
+        return ChecklistAnswer.objects.as_werkvoorraad(user=self.request.user)
+
+    def get_queryset(self):
+        grouped_checklist_answers = self.get_assigned_checklist_answers()
+        checklist_answers = get_checklist_answers_groups(
+            self.request.user, grouped_checklist_answers
+        )
+        return checklist_answers
+
+
+@extend_schema(
+    summary=_("List checklist questions for groups of logged in user."),
+)
+class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
+    def get_assigned_checklist_answers(self) -> List[Dict]:
+        return ChecklistAnswer.objects.as_werkvoorraad(
+            groups=self.request.user.groups.all()
+        )

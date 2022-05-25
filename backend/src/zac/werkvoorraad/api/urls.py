@@ -4,7 +4,9 @@ from .views import (
     WorkStackAccessRequestsView,
     WorkStackAdhocActivitiesView,
     WorkStackAssigneeCasesView,
+    WorkStackChecklistQuestionsView,
     WorkStackGroupAdhocActivitiesView,
+    WorkStackGroupChecklistQuestionsView,
     WorkStackGroupTasksView,
     WorkStackUserTasksView,
 )
@@ -25,5 +27,11 @@ urlpatterns = [
         "access-requests",
         WorkStackAccessRequestsView.as_view(),
         name="access-requests",
+    ),
+    path("checklists", WorkStackChecklistQuestionsView.as_view(), name="checklists"),
+    path(
+        "group-checklists",
+        WorkStackGroupChecklistQuestionsView.as_view(),
+        name="group-checklists",
     ),
 ]

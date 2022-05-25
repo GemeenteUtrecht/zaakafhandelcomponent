@@ -6,9 +6,10 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.camunda.api.serializers import TaskSerializer
+from zac.checklists.models import ChecklistAnswer
 from zac.elasticsearch.drf_api.serializers import StatusDocumentSerializer
 
-from .data import AccessRequestGroup, ActivityGroup, TaskAndCase
+from .data import AccessRequestGroup, ActivityGroup, ChecklistAnswerGroup, TaskAndCase
 
 
 class SummaryZaakDocumentSerializer(serializers.Serializer):
@@ -96,5 +97,40 @@ class WorkStackTaskSerializer(APIModelSerializer):
         model = TaskAndCase
         fields = (
             "task",
+            "zaak",
+        )
+
+
+class SummaryChecklistAnswerSerializer(serializers.ModelSerializer):
+    group_assignee = serializers.SlugRelatedField(
+        slug_field="name",
+        help_text=_("Name of the group assignee."),
+        read_only=True,
+    )
+    user_assignee = serializers.SlugRelatedField(
+        slug_field="username",
+        help_text=_("Username of the user assignee."),
+        read_only=True,
+    )
+
+    class Meta:
+        model = ChecklistAnswer
+        fields = ("question", "group_assignee", "user_assignee")
+
+
+class WorkStackChecklistAnswerSerializer(APIModelSerializer):
+    checklist_questions = SummaryChecklistAnswerSerializer(
+        many=True,
+        help_text=_("Questions to be answered by assignee."),
+        source="checklist_answers",
+    )
+    zaak = SummaryZaakDocumentSerializer(
+        help_text=_("ZAAK that checklist questions belongs to.")
+    )
+
+    class Meta:
+        model = ChecklistAnswerGroup
+        fields = (
+            "checklist_questions",
             "zaak",
         )

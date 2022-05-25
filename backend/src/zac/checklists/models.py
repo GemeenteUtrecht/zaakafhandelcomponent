@@ -1,5 +1,4 @@
 import uuid
-from tabnanny import verbose
 from typing import Optional
 
 from django.conf import settings
@@ -8,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+
+from .query import ChecklistAnswerQuerySet
 
 
 class ChecklistMeta(models.Model):
@@ -56,6 +57,8 @@ class ChecklistAnswer(ChecklistMeta):
         help_text=_("Group assigned to answer."),
         on_delete=models.SET_NULL,
     )
+
+    objects = ChecklistAnswerQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("checklist answer")
