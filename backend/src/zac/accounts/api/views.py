@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from zac.core.api.mixins import ListMixin
 from zac.core.services import get_informatieobjecttypen
 
-from ..permissions import registry
+from ..utils import permissions_related_to_user
 from .serializers import CatalogusURLSerializer, PermissionSerializer
 
 
@@ -48,7 +48,9 @@ class InformatieobjecttypenJSONView(views.APIView):
 
 @extend_schema(
     summary=_("List permissions."),
-    description=_("Returns all available permissions and their description."),
+    description=_(
+        "Returns all available permissions for the user and their description."
+    ),
 )
 class PermissionView(ListMixin, views.APIView):
     authentication_classes = [SessionAuthentication]
@@ -56,7 +58,12 @@ class PermissionView(ListMixin, views.APIView):
     serializer_class = PermissionSerializer
 
     def get_objects(self):
-        return list(registry.values())
+        """
+        Only returns permissions the user has.
+
+        """
+        perms = permissions_related_to_user(self.request.user)
+        return perms
 
 
 @extend_schema(

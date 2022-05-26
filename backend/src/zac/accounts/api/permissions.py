@@ -16,6 +16,7 @@ from zac.core.permissions import zaken_handle_access, zaken_request_access
 from zac.core.services import get_zaak
 
 from ..models import AccessRequest, UserAtomicPermission
+from ..utils import permissions_related_to_user
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,12 @@ class GrantAccessMixin:
 
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, UserAtomicPermission):
+            allowed_perms = permissions_related_to_user(request.user)
+            if obj.atomic_permission.permission not in [
+                perm.name for perm in allowed_perms
+            ]:
+                return False
+
             obj = self.get_object(request, obj.atomic_permission.object_url)
         return super().has_object_permission(request, view, obj)
 

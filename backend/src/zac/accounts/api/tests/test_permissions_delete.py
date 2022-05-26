@@ -11,12 +11,13 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.permissions import zaken_handle_access
+from zac.core.permissions import zaakproces_send_message, zaken_handle_access
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ...models import AtomicPermission, UserAtomicPermission
 from ...tests.factories import (
+    AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserAtomicPermissionFactory,
@@ -57,9 +58,12 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
             zaaktype=self.zaaktype["url"],
         )
-
+        atomic_permission = AtomicPermissionFactory.create(
+            permission=zaakproces_send_message.name, object_url=ZAAK_URL
+        )
         user_atomic_permission = UserAtomicPermissionFactory.create(
-            user=self.user, atomic_permission__object_url=ZAAK_URL
+            user=self.user,
+            atomic_permission=atomic_permission,
         )
         self.endpoint = reverse("accesses-detail", args=[user_atomic_permission.id])
 
@@ -128,10 +132,46 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         )
 
         response = self.client.delete(self.endpoint)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_zaak_has_permission_and_behandelaar(self, m):
+        # mock ZTC and ZRC data
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "behandelaar",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.handler.username,
+            },
+        }
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(self.zaaktype["url"], json=self.zaaktype)
+        m.get(ZAAK_URL, json=self.zaak)
+        m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_handle_access.name, zaakproces_send_message.name],
+            for_user=self.handler,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.client.delete(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_zaak_has_different_permission_and_behandelaar(self, m):
         # mock ZTC and ZRC data
         rol = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -166,7 +206,7 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
 
         response = self.client.delete(self.endpoint)
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class DeleteAccessAPITests(APITransactionTestCase):
@@ -196,8 +236,11 @@ class DeleteAccessAPITests(APITransactionTestCase):
     def test_delete_access_success(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
+        atomic_permission = AtomicPermissionFactory.create(
+            object_url=self.zaak["url"], permission=zaakproces_send_message.name
+        )
         user_atomic_permission = UserAtomicPermissionFactory.create(
-            user=self.user, atomic_permission__object_url=self.zaak["url"]
+            user=self.user, atomic_permission=atomic_permission
         )
         endpoint = reverse("accesses-detail", args=[user_atomic_permission.id])
 
