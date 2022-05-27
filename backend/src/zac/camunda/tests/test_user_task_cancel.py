@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 
 import requests_mock
 from django_camunda.models import CamundaConfig
-from django_camunda.utils import deserialize_variable, serialize_variable
+from django_camunda.utils import serialize_variable
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes

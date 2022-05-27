@@ -93,17 +93,18 @@ class ProcessInstanceFetchViewSet(ViewSet):
         summary=_("Retrieve ZAAK URL for process instance."),
         parameters=[
             OpenApiParameter(
-                name="process_instance_id",
+                name="pk",
                 type=OpenApiTypes.UUID,
                 location=OpenApiParameter.PATH,
                 required=True,
+                description="UUID of process instance",
             ),
         ],
         responses={"200": ZaakSerializer},
     )
     @action(detail=True, methods=["get"], permission_classes=(CanCreateZaken,))
-    def zaak(self, request: Request, process_instance_id: uuid.UUID):
-        process_instance = get_process_instance(process_instance_id)
+    def zaak(self, request: Request, pk: uuid.UUID):
+        process_instance = get_process_instance(pk)
         zaak_url = process_instance.get_variable("zaakUrl")
         zaak = get_zaak(zaak_url=zaak_url)
         serializer = ZaakSerializer(instance=zaak)
