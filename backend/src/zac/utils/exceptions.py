@@ -45,14 +45,11 @@ def handle_zaak_permission_denied(response, context):
     request = context.get("request")
 
     zaak = find_zaak(**context.get("kwargs", {}))
-    has_perm_to_request_access = request.user.has_perm_to_request_access(zaak)
     has_pending_access_request = request.user.has_pending_access_request(zaak)
 
-    can_request_access = has_perm_to_request_access and not has_pending_access_request
+    can_request_access = not has_pending_access_request
     reason = (
-        _("User doesn't have permissions to request the access")
-        if not has_perm_to_request_access
-        else _("User has pending access request for this ZAAK")
+        _("User has pending access request for this ZAAK")
         if has_pending_access_request
         else ""
     )

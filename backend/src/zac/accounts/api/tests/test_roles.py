@@ -3,7 +3,7 @@ from django.urls import reverse, reverse_lazy
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from zac.core.permissions import zaken_inzien, zaken_request_access
+from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 
 from ...models import Role
 from ...tests.factories import (
@@ -51,7 +51,7 @@ class RoleAPITests(APITestCase):
 
     def test_list_roles(self):
         role1 = RoleFactory.create(permissions=[zaken_inzien.name])
-        role2 = RoleFactory.create(permissions=[zaken_request_access.name])
+        role2 = RoleFactory.create(permissions=[zaakproces_usertasks.name])
         url = reverse("role-list")
 
         response = self.client.get(url)
@@ -68,7 +68,7 @@ class RoleAPITests(APITestCase):
                 {
                     "id": role2.id,
                     "name": role2.name,
-                    "permissions": [zaken_request_access.name],
+                    "permissions": [zaakproces_usertasks.name],
                 },
             ],
         )
@@ -114,7 +114,7 @@ class RoleAPITests(APITestCase):
     def test_update_role(self):
         role = RoleFactory.create(name="old name", permissions=[zaken_inzien.name])
         url = reverse("role-detail", args=[role.id])
-        data = {"name": "new name", "permissions": [zaken_request_access.name]}
+        data = {"name": "new name", "permissions": [zaakproces_usertasks.name]}
 
         response = self.client.put(url, data)
 
@@ -123,7 +123,7 @@ class RoleAPITests(APITestCase):
         role.refresh_from_db()
 
         self.assertEqual(role.name, "new name")
-        self.assertEqual(role.permissions, [zaken_request_access.name])
+        self.assertEqual(role.permissions, [zaakproces_usertasks.name])
 
     def test_update_role_incorrect_permission_name(self):
         role = RoleFactory.create(name="old name", permissions=[zaken_inzien.name])

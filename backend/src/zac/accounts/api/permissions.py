@@ -7,12 +7,8 @@ from rest_framework.views import APIView
 from zds_client import ClientError
 
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
-from zac.core.api.permissions import (
-    BaseConditionalPermission,
-    CanForceEditClosedZaak,
-    CanForceEditClosedZaken,
-)
-from zac.core.permissions import zaken_handle_access, zaken_request_access
+from zac.core.api.permissions import CanForceEditClosedZaak, CanForceEditClosedZaken
+from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_zaak
 
 from ..models import AccessRequest, UserAtomicPermission
@@ -56,14 +52,6 @@ class RequestMixin:
         return serializer.validated_data["zaak"].url
 
 
-class CanRequestAccess(RequestMixin, ZaakDefinitionPermission):
-    permission = zaken_request_access
-
-
-class CanForceRequestAccess(RequestMixin, CanForceEditClosedZaak):
-    pass
-
-
 class HandleAccessRequestMixin:
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, AccessRequest):
@@ -79,28 +67,34 @@ class HandleAccessRequestMixin:
         return zaak
 
 
-class CanHandleAccessRequest(HandleAccessRequestMixin, DefinitionBasePermission):
+class CanCreateOrHandleAccessRequest(
+    HandleAccessRequestMixin, DefinitionBasePermission
+):
     permission = zaken_handle_access
 
-
-class CanForceHandleAccessRequest(HandleAccessRequestMixin, CanForceEditClosedZaken):
-    pass
-
-
-class CanCreateOrHandleAccessRequest(BaseConditionalPermission):
-    def get_permission(self, request) -> DefinitionBasePermission:
+    def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method == "POST":
-            return CanRequestAccess()
-        else:
-            return CanHandleAccessRequest()
+            return True
+        return super().has_permission(request, view)
 
-
-class CanForceCreateOrHandleAccessRequest(BaseConditionalPermission):
-    def get_permission(self, request) -> DefinitionBasePermission:
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
         if request.method == "POST":
-            return CanForceRequestAccess()
-        else:
-            return CanForceHandleAccessRequest()
+            return True
+        return super().has_object_permission(request, view, obj)
+
+
+class CanForceCreateOrHandleAccessRequest(
+    HandleAccessRequestMixin, CanForceEditClosedZaken
+):
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.method == "POST":
+            return True
+        return super().has_permission(request, view)
+
+    def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
+        if request.method == "POST":
+            return True
+        return super().has_object_permission(request, view, obj)
 
 
 ###############################

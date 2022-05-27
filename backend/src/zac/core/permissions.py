@@ -20,7 +20,6 @@ zaakproces_send_message = Permission(
     description="BPMN messages versturen in het proces.",
 )
 
-
 zaken_close = Permission(
     name="zaken:afsluiten",
     description="Zaken afsluiten (=eindstatus zetten), als er een resultaat gezet is.",
@@ -54,11 +53,6 @@ zaken_add_documents = Permission(
 zaken_handle_access = Permission(
     name="zaken:toegang-verlenen",
     description="Beheer toegangsverzoeken voor zaken",
-)
-
-zaken_request_access = Permission(
-    name="zaken:toegang-aanvragen",
-    description="Toegang aanvragen voor zaken",
 )
 
 zaken_add_relations = Permission(
