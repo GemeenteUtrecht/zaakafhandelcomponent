@@ -6,7 +6,12 @@ from django.urls import reverse_lazy
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ...tests.factories import SuperUserFactory
+from ...tests.factories import (
+    AtomicPermissionFactory,
+    SuperUserFactory,
+    UserAtomicPermissionFactory,
+    UserFactory,
+)
 
 # create a test permission in the separate registry
 test_registry = {}
@@ -31,14 +36,13 @@ class PermissionsAPITests(APITestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.user = SuperUserFactory.create()
-        self.client.force_authenticate(self.user)
-
-        patcher_registry = patch("zac.accounts.api.views.registry", new=test_registry)
+        patcher_registry = patch("zac.accounts.utils.registry", new=test_registry)
         self.mocked_registry = patcher_registry.start()
         self.addCleanup(patcher_registry.stop)
 
-    def test_get_available_permissions(self):
+    def test_get_available_permissions_superuser(self):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -47,5 +51,34 @@ class PermissionsAPITests(APITestCase):
             [
                 {"name": "permission 1", "description": "some description 1"},
                 {"name": "permission 2", "description": "some description 2"},
+            ],
+        )
+
+    def test_get_no_permissions_user(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [],
+        )
+
+    def test_get_available_permissions_user(self):
+        user = UserFactory.create()
+        atomic_permission = AtomicPermissionFactory.create(permission="permission 1")
+        user_atomic_permission = UserAtomicPermissionFactory.create(
+            user=user, atomic_permission=atomic_permission
+        )
+
+        self.client.force_authenticate(user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {"name": "permission 1", "description": "some description 1"},
             ],
         )
