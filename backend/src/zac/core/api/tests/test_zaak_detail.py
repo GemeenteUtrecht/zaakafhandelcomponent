@@ -26,7 +26,6 @@ from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
-    zaken_request_access,
     zaken_wijzigen,
 )
 from zac.core.tests.utils import ClearCachesMixin
@@ -507,8 +506,8 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "canRequestAccess": False,
-                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
+                "canRequestAccess": True,
+                "reason": "",
             },
         )
 
@@ -540,8 +539,8 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "canRequestAccess": False,
-                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
+                "canRequestAccess": True,
+                "reason": "",
             },
         )
 
@@ -573,13 +572,13 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "canRequestAccess": False,
-                "reason": "De gebruiker heeft geen rechten om toegang te vragen",
+                "canRequestAccess": True,
+                "reason": "",
             },
         )
 
     @requests_mock.Mocker()
-    def test_has_no_perm_can_request(self, m):
+    def test_has_already_requested(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self._zaaktype)
@@ -588,43 +587,6 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             json=paginated_response([self._zaak]),
         )
         user = UserFactory.create()
-        # gives them access to the page and zaaktype, but insufficient VA
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_request_access.name],
-            for_user=user,
-            policy={
-                "catalogus": self.zaaktype.catalogus,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-        self.client.force_authenticate(user=user)
-
-        response = self.client.get(self.detail_url)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()["canRequestAccess"], True)
-
-    @requests_mock.Mocker()
-    def test_has_no_perm_already_requested(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self._zaaktype)
-        m.get(
-            f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
-            json=paginated_response([self._zaak]),
-        )
-        user = UserFactory.create()
-        # gives them access to the page and zaaktype, but insufficient VA
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_request_access.name],
-            for_user=user,
-            policy={
-                "catalogus": self.zaaktype.catalogus,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
         AccessRequestFactory.create(requester=user, zaak=self.zaak.url)
         self.client.force_authenticate(user=user)
 

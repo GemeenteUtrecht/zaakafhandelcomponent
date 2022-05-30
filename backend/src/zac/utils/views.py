@@ -3,7 +3,6 @@ from django.template import TemplateDoesNotExist, loader
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.defaults import ERROR_403_TEMPLATE_NAME, ERROR_500_TEMPLATE_NAME
 
-from zac.core.permissions import zaken_request_access
 from zac.core.services import find_zaak
 
 
@@ -53,14 +52,13 @@ def permission_denied(request, exception, template_name=ERROR_403_TEMPLATE_NAME)
     ):
         kwargs = request.resolver_match.kwargs
         zaak = find_zaak(**kwargs)
-        can_request_access = request.user.has_perm(zaken_request_access.name, zaak)
         has_requested_access = request.user.initiated_requests.filter(
             zaak=zaak.url
         ).exists()
 
         context.update(
             {
-                "can_request_access": can_request_access and not has_requested_access,
+                "can_request_access": not has_requested_access,
                 "has_requested_access": has_requested_access,
                 "zaak_kwargs": kwargs,
             }

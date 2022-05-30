@@ -5,18 +5,17 @@
 
 {% block content %}
 
- <h1>Sorry, you don't have access to this page (403)</h1>
+ <h1>Sorry, you don't have access to this page (403)</h1>    
 
-{% if can_request_access %}
+{% if has_requested_access %}
+    <p>
+        {% trans "You have already requested access to this page." %}
+    </p>
+{% else %}
     {% url 'core:access-request-create' bronorganisatie=zaak_kwargs.bronorganisatie identificatie=zaak_kwargs.identificatie as request_url %}
     {% blocktrans trimmed %}
         <p>You can <a href="{{ request_url }}">request access</a> for this page</p>
     {% endblocktrans %}
-
-{% elif has_requested_access %}
-    <p>
-        {% trans "You have already requested access to this page." %}
-    </p>
 {% endif %}
 
 {% endblock content %}

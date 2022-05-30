@@ -18,7 +18,6 @@ from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_handle_access,
     zaken_inzien,
-    zaken_request_access,
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -93,28 +92,6 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
 
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_handle_access.name],
-            for_user=self.handler,
-            policy={
-                "catalogus": CATALOGUS_URL,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-
-        response = self.client.patch(self.endpoint, self.data)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @requests_mock.Mocker()
-    def test_has_request_permission(self, m):
-        # mock ZTC and ZRC data
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
-
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_request_access.name],
             for_user=self.handler,
             policy={
                 "catalogus": CATALOGUS_URL,

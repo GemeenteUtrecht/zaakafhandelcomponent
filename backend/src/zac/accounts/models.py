@@ -12,7 +12,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Query
 
-from zac.core.permissions import zaken_request_access
 from zac.utils.exceptions import get_error_list
 
 from .constants import (
@@ -21,7 +20,7 @@ from .constants import (
     PermissionReason,
 )
 from .managers import UserManager
-from .permissions import object_type_registry, registry
+from .permissions import object_type_registry
 from .query import (
     AccessRequestQuerySet,
     AtomicPermissionQuerySet,
@@ -110,29 +109,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
-
-    def has_perm_to_request_access(self, zaak) -> bool:
-        if self.is_superuser:
-            return True
-
-        user_atomic_permissions = UserAtomicPermission.objects.filter(
-            user=self,
-            atomic_permission__permission=zaken_request_access.name,
-            atomic_permission__object_url=zaak.url,
-        ).actual()
-        if user_atomic_permissions.exists():
-            return True
-
-        blueprint_permissions = (
-            BlueprintPermission.objects.for_user(self)
-            .actual()
-            .filter(role__permissions__contains=[zaken_request_access.name])
-        )
-        for permission in blueprint_permissions:
-            if permission.has_access(zaak, self):
-                return True
-
-        return False
 
     def has_pending_access_request(self, zaak) -> bool:
         return self.initiated_requests.actual().filter(zaak=zaak.url, result="")
