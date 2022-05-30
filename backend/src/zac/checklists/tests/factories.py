@@ -12,7 +12,7 @@ class ChecklistTypeFactory(factory.django.DjangoModelFactory):
 
 class ChecklistQuestionFactory(factory.django.DjangoModelFactory):
     checklist_type = factory.SubFactory(ChecklistTypeFactory)
-    order = factory.Faker("int")
+    order = factory.Faker("pyint", min_value=0)
 
     class Meta:
         model = "checklists.ChecklistQuestion"

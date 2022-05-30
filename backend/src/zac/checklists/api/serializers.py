@@ -157,10 +157,19 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
         return checklist_type
 
 
-class ChecklistAnswerSerializer(serializers.ModelSerializer):
+class BaseChecklistAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "answer", "created", "modified", "remarks", "document")
+        fields = (
+            "question",
+            "answer",
+            "created",
+            "modified",
+            "remarks",
+            "document",
+            "group_assignee",
+            "user_assignee",
+        )
         extra_kwargs = {
             "question": {
                 "required": True,
@@ -185,36 +194,53 @@ class ChecklistAnswerSerializer(serializers.ModelSerializer):
         }
 
 
-class BaseChecklistSerializer(serializers.ModelSerializer):
-    answers = ChecklistAnswerSerializer(
-        many=True,
-        source="checklistanswer_set",
+class ReadChecklistAnswerSerializer(BaseChecklistAnswerSerializer):
+    group_assignee = GroupSerializer(
+        help_text=_("Group assigned to answer."),
     )
-    checklist_type = serializers.SlugRelatedField(
-        slug_field="uuid",
-        queryset=ChecklistType.objects.all(),
-        required=True,
-        help_text=_("`uuid` of the checklist_type."),
+    user_assignee = UserSerializer(
+        help_text=_("User assigned to answer."),
     )
 
+    class Meta(BaseChecklistAnswerSerializer.Meta):
+        model = BaseChecklistAnswerSerializer.Meta.model
+        fields = BaseChecklistAnswerSerializer.Meta.fields
+
+
+class WriteChecklistAnswerSerializer(BaseChecklistAnswerSerializer):
+    group_assignee = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.prefetch_related("user_set").all(),
+        required=False,
+        help_text=_("`name` of the group assigned to answer."),
+        allow_null=True,
+    )
+    user_assignee = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        required=False,
+        help_text=_("`username` of the user assigned to answer."),
+        allow_null=True,
+    )
+
+    class Meta(BaseChecklistAnswerSerializer.Meta):
+        model = BaseChecklistAnswerSerializer.Meta.model
+        fields = BaseChecklistAnswerSerializer.Meta.fields
+
+
+class BaseChecklistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Checklist
         fields = (
             "created",
-            "group_assignee",
-            "user_assignee",
             "answers",
         )
 
 
 class ReadChecklistSerializer(BaseChecklistSerializer):
-    group_assignee = GroupSerializer(
-        required=False,
-        help_text=_("Group assigned to checklist."),
-    )
-    user_assignee = UserSerializer(
-        required=False,
-        help_text=_("User assigned to checklist."),
+    answers = ReadChecklistAnswerSerializer(
+        many=True,
+        source="checklistanswer_set",
     )
 
     class Meta(BaseChecklistSerializer.Meta):
@@ -222,20 +248,10 @@ class ReadChecklistSerializer(BaseChecklistSerializer):
         fields = BaseChecklistSerializer.Meta.fields
 
 
-class ChecklistSerializer(BaseChecklistSerializer):
-    group_assignee = serializers.SlugRelatedField(
-        slug_field="name",
-        queryset=Group.objects.prefetch_related("user_set").all(),
-        required=False,
-        help_text=_("Name of the group."),
-        allow_null=True,
-    )
-    user_assignee = serializers.SlugRelatedField(
-        slug_field="username",
-        queryset=User.objects.all(),
-        required=False,
-        help_text=_("`username` of the user."),
-        allow_null=True,
+class WriteChecklistSerializer(BaseChecklistSerializer):
+    answers = WriteChecklistAnswerSerializer(
+        many=True,
+        source="checklistanswer_set",
     )
 
     class Meta(BaseChecklistSerializer.Meta):
@@ -244,10 +260,6 @@ class ChecklistSerializer(BaseChecklistSerializer):
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
-        if attrs.get("user_assignee") and attrs.get("group_assignee"):
-            raise serializers.ValidationError(
-                "A checklist can not be assigned to both a user and a group."
-            )
 
         if not self.instance:
             zaak = self.context["zaak"]
@@ -265,14 +277,6 @@ class ChecklistSerializer(BaseChecklistSerializer):
             validated_data["checklist_type"] = checklist_type
 
         return validated_data
-
-    def _add_permissions_for_checklist_assignee(self, checklist):
-        if checklist.user_assignee:
-            add_permissions_for_checklist_assignee(checklist, checklist.user_assignee)
-        if checklist.group_assignee:
-            users = checklist.group_assignee.user_set.all()
-            for user in users:
-                add_permissions_for_checklist_assignee(checklist, user)
 
     def bulk_validate_answers(self, checklist: Checklist, answers: Dict):
         # Validate answers to multiple choice questions and
@@ -300,14 +304,34 @@ class ChecklistSerializer(BaseChecklistSerializer):
                             f"Answer `{answer['answer']}` was not found in the options: {list(valid_choices)}."
                         )
                     )
+            if answer.get("user_assignee") and answer.get("group_assignee"):
+                raise serializers.ValidationError(
+                    "An answer to a checklist question can not be assigned to both a user and a group."
+                )
 
-    def bulk_create_answers(self, checklist: Checklist, answers: List):
+        return answers
 
-        ChecklistAnswer.objects.bulk_create(
-            [ChecklistAnswer(checklist=checklist, **answer) for answer in answers]
-        )
+    def _add_permissions_for_checklist_assignee(
+        self, checklist, answers: List[ChecklistAnswer]
+    ):
+        for answer in answers:
+            if answer.user_assignee:
+                add_permissions_for_checklist_assignee(checklist, answer.user_assignee)
+            if answer.group_assignee:
+                users = answer.group_assignee.user_set.all()
+                for user in users:
+                    add_permissions_for_checklist_assignee(checklist, user)
 
     @transaction.atomic
+    def bulk_create_answers(
+        self, checklist: Checklist, answers: List[Dict]
+    ) -> List[ChecklistAnswer]:
+        created_answers = ChecklistAnswer.objects.bulk_create(
+            [ChecklistAnswer(checklist=checklist, **answer) for answer in answers]
+        )
+        self._add_permissions_for_checklist_assignee(checklist, created_answers)
+        return created_answers
+
     def create(self, validated_data):
         answers = validated_data.pop("checklistanswer_set", False)
         checklist = super().create(validated_data)
@@ -315,13 +339,14 @@ class ChecklistSerializer(BaseChecklistSerializer):
             self.bulk_validate_answers(checklist, answers)
             self.bulk_create_answers(checklist, answers)
 
-        self._add_permissions_for_checklist_assignee(checklist)
         return checklist
 
-    def bulk_update_answers(self, checklist: Checklist, answers: List) -> List:
+    @transaction.atomic
+    def bulk_update_answers(
+        self, checklist: Checklist, answers: List[Dict]
+    ) -> List[ChecklistAnswer]:
         questions_answers = {answer["question"]: answer for answer in answers}
         answers_to_update = []
-        updated_answers = []
         for answer in checklist.checklistanswer_set.all():
             if (
                 new_answer := questions_answers.get(answer.question)
@@ -329,30 +354,15 @@ class ChecklistSerializer(BaseChecklistSerializer):
                 for attribute, value in new_answer.items():
                     setattr(answer, attribute, value)
                 answers_to_update.append(answer)
-                updated_answers.append(answer.question)
+
         ChecklistAnswer.objects.bulk_update(
-            answers_to_update, ["answer", "remarks", "document"]
+            answers_to_update,
+            ["answer", "remarks", "document", "user_assignee", "group_assignee"],
         )
+        self._add_permissions_for_checklist_assignee(checklist, answers_to_update)
+        return answers_to_update
 
-        return updated_answers
-
-    @transaction.atomic
     def update(self, instance, validated_data):
-        user_assignee = validated_data.get("user_assignee")
-        group_assignee = validated_data.get("group_assignee")
-        grant_permissions = (
-            user_assignee
-            or group_assignee
-            and (
-                user_assignee != instance.user_assignee
-                or group_assignee != instance.group_assignee
-            )
-        )
-        if user_assignee:
-            validated_data["group_assignee"] = None
-        if group_assignee:
-            validated_data["user_assignee"] = None
-
         answers = validated_data.pop("checklistanswer_set", False)
         checklist = super().update(instance, validated_data)
         if answers:
@@ -361,11 +371,8 @@ class ChecklistSerializer(BaseChecklistSerializer):
             create_answers = [
                 answer
                 for answer in answers
-                if answer["question"] not in updated_answers
+                if answer["question"] not in [ans.question for ans in updated_answers]
             ]
             self.bulk_create_answers(checklist, create_answers)
 
-        # add permissions to assignee
-        if grant_permissions:
-            self._add_permissions_for_checklist_assignee(checklist)
         return checklist

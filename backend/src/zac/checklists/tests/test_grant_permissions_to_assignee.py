@@ -15,7 +15,7 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import paginated_response
 
 from ..permissions import checklists_inzien, checklists_schrijven
-from .factories import ChecklistFactory, ChecklistTypeFactory
+from .factories import ChecklistFactory, ChecklistQuestionFactory, ChecklistTypeFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
@@ -66,6 +66,9 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             zaaktype_omschrijving=cls.zaaktype["omschrijving"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
+        cls.checklist_question = ChecklistQuestionFactory.create(
+            question="some-question", checklist_type=cls.checklist_type, order="1"
+        )
 
     def setUp(self):
         super().setUp()
@@ -115,9 +118,13 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         data = {
             "zaak": ZAAK_URL,
-            "checklistType": self.checklist_type.pk,
-            "userAssignee": self.assignee.username,
-            "answers": [],
+            "answers": [
+                {
+                    "question": self.checklist_question.question,
+                    "answer": "some-answer",
+                    "userAssignee": self.assignee.username,
+                }
+            ],
         }
 
         response = self.client.post(endpoint, data)
@@ -155,9 +162,13 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         data = {
             "zaak": ZAAK_URL,
-            "checklistType": self.checklist_type.pk,
-            "groupAssignee": self.group.name,
-            "answers": [],
+            "answers": [
+                {
+                    "question": self.checklist_question.question,
+                    "answer": "some-answer",
+                    "groupAssignee": self.group.name,
+                }
+            ],
         }
 
         response = self.client.post(endpoint, data)
@@ -200,8 +211,13 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         data = {
             "zaak": ZAAK_URL,
             "checklistType": str(self.checklist_type.pk),
-            "userAssignee": self.assignee.username,
-            "answers": [],
+            "answers": [
+                {
+                    "question": self.checklist_question.question,
+                    "answer": "some-answer",
+                    "userAssignee": self.assignee.username,
+                }
+            ],
         }
 
         response = self.client.put(endpoint, data)

@@ -1,5 +1,4 @@
 import uuid
-from tabnanny import verbose
 from typing import Optional
 
 from django.conf import settings
@@ -8,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+
+from .query import ChecklistAnswerQuerySet
 
 
 class ChecklistMeta(models.Model):
@@ -40,6 +41,24 @@ class ChecklistAnswer(ChecklistMeta):
         blank=True,
         help_text=_("Document in the Documents API."),
     )
+    user_assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        verbose_name=_("user assignee"),
+        help_text=_("Person assigned to answer."),
+        on_delete=models.SET_NULL,
+    )
+    group_assignee = models.ForeignKey(
+        Group,
+        null=True,
+        blank=True,
+        verbose_name=_("group assignee"),
+        help_text=_("Group assigned to answer."),
+        on_delete=models.SET_NULL,
+    )
+
+    objects = ChecklistAnswerQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("checklist answer")
@@ -61,6 +80,13 @@ class ChecklistAnswer(ChecklistMeta):
             ):
                 if self.answer not in choices:
                     raise ValidationError(f"{self.answer} is not found in {choices}.")
+
+    def save(self, *args, **kwargs):
+        if self.user_assignee and self.group_assignee:
+            raise ValidationError(
+                "A checklist can not be assigned to both a user and a group."
+            )
+        return super().save(*args, **kwargs)
 
 
 class QuestionChoice(ChecklistMeta):
@@ -160,30 +186,7 @@ class Checklist(ChecklistMeta):
     checklist_type = models.ForeignKey(
         "ChecklistType", on_delete=models.PROTECT, help_text=_("Type of the checklist.")
     )
-    user_assignee = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        verbose_name=_("user assignee"),
-        help_text=_("Person responsible for managing this checklist."),
-        on_delete=models.SET_NULL,
-    )
-    group_assignee = models.ForeignKey(
-        Group,
-        null=True,
-        blank=True,
-        verbose_name=_("group assignee"),
-        help_text=_("Group responsible for managing this checklist."),
-        on_delete=models.SET_NULL,
-    )
 
     class Meta:
         verbose_name = _("checklist")
         verbose_name_plural = _("checklists")
-
-    def save(self, *args, **kwargs):
-        if self.user_assignee and self.group_assignee:
-            raise ValidationError(
-                "A checklist can not be assigned to both a user and a group."
-            )
-        return super().save(*args, **kwargs)
