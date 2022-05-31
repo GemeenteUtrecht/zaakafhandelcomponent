@@ -211,30 +211,27 @@ export class ChecklistComponent implements OnInit, OnChanges {
         type: 'document',
         value: this.documents[question.question],
         readonly: !this.canForceEdit
-      }];
-    }, []);
-
-    return [
-      ...(fieldConfigurations || []),
-      {
-        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue().groupAssignee,
-        label: 'Toegewezen gebruiker',
-        name: 'userAssignee',
+      }, {
+        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
+        label: `Toegewezen gebruiker voor: ${question.question}`,
+        name: `__userAssignee_${question.question}`,
         required: false,
         choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
-        value: this.checklist?.userAssignee?.username,
+        value: answer?.userAssignee?.username,
         readonly: !this.canForceEdit
       },
       {
-        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue().userAssignee,
-        label: 'Toegewezen groep',
-        name: 'groupAssignee',
+        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
+        label: `Toegewezen groep voor: ${question.question}`,
+        name: `__groupAssignee_${question.question}`,
         required: false,
         choices: this.groups.map((group: UserGroupDetail) => ({label: group.name, value: group.name})),
-        value: this.checklist?.groupAssignee?.name,
+        value: answer?.groupAssignee?.name,
         readonly: !this.canForceEdit
-      }
-    ];
+      }];
+    }, []);
+
+    return fieldConfigurations;
   }
 
   //
@@ -243,12 +240,11 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
   /**
    * Gets called when a checklist form is submitted.
-   * @param {Object} data
+   * @param {Object} answerData
    */
-  onSubmitForm(data): void {
+  onSubmitForm(answerData): void {
     this.isSubmitting = true;
 
-    const {userAssignee, groupAssignee, ...answerData} = data;
     const answers: ChecklistAnswer[] = Object.entries(answerData)
       .filter(([key, value]) => !key.match(/^__/))
       .map(([question, answer]) => {
@@ -259,24 +255,31 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const remarksKey = `__remarks_${question}`;
         const remarks = answerData[remarksKey];
 
+        const userAssigneeKey = `__userAssignee_${question}`;
+        const userAssignee = answerData[userAssigneeKey];
+
+        const groupAssigneeKey = `__groupAssignee_${question}`;
+        const groupAssignee = answerData[groupAssigneeKey];
+
         return ({
           answer: answer as string || '',
           created: new Date().toISOString(),
           document: documentUrl,
           question: question,
           remarks: remarks || '',
+          userAssignee: userAssignee,
+          groupAssignee: groupAssignee,
         });
       });
 
-
     if (this.checklist) {
-      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers, userAssignee, groupAssignee).subscribe(
+      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
         () => this.isSubmitting = false
       );
     } else {
-      this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers, userAssignee, groupAssignee).subscribe(
+      this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(
         this.fetchChecklistData.bind(this),
         this.reportError.bind(this),
         () => this.isSubmitting = false
@@ -296,8 +299,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
     if (httpErrorResponse.status === 404) {
       this.isLoading = false;
       return;
-    }
-    else if (httpErrorResponse.status === 403) {
+    } else if (httpErrorResponse.status === 403) {
       this.isLoading = false;
       return;
     }

@@ -34,17 +34,11 @@ export class ChecklistService {
    * Create checklist and related answers.
    * FIXME: Zaak should not be necessary?
    */
-  createChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = '', groupAssignee: string = ''): Observable<Checklist> {
+  createChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[]): Observable<Checklist> {
     const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}`);
 
     const params = {
       answers: checklistAnswers,
-    }
-
-    if (userAssignee) {
-      params['userAssignee'] = userAssignee;
-    } else if (groupAssignee) {
-      params['groupAssignee'] = groupAssignee;
     }
 
     return this.http.Post<Checklist>(endpoint, params);
@@ -54,17 +48,11 @@ export class ChecklistService {
    * Update checklist and related answers.
    * FIXME: Zaak should not be necessary?
    */
-  updateChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[], userAssignee: string = '', groupAssignee: string = ''): Observable<Checklist> {
+  updateChecklistAndRelatedAnswers(bronorganisatie: string, identificatie: string, checklistAnswers: ChecklistAnswer[]): Observable<Checklist> {
     const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}`);
 
     const params = {
       answers: checklistAnswers,
-    }
-
-    if (userAssignee) {
-      params['userAssignee'] = userAssignee;
-    } else if (groupAssignee) {
-      params['groupAssignee'] = groupAssignee;
     }
 
     return this.http.Put<Checklist>(endpoint, params);

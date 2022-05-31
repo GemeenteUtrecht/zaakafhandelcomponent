@@ -7,12 +7,12 @@ export interface ChecklistAnswer {
   answer: string,
   created: string,
   document?: string
+  groupAssignee?: UserGroupDetail,
+  userAssignee?: User,
 }
 
 export interface Checklist {
   answers: ChecklistAnswer[],
-  groupAssignee?: UserGroupDetail,
-  userAssignee?: User,
   url?: string,
   created?: string,
 }
