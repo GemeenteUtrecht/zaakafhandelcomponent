@@ -21,7 +21,10 @@ export class UrlizePipe implements PipeTransform {
   transform(unsafeValue: string, target='_self'): SafeHtml {
     const safeValue = new DOMParser().parseFromString(unsafeValue, 'text/html').body.textContent;
     const regExp = new RegExp("(?:(?:https?://)|(?:www))[^\s]+", "gi")
-    const html = safeValue.replace(regExp, (match) => `<a href="${match}" target="${target}">${match}</a>`);
+    const html = safeValue.replace(regExp, (match) => {
+      const href = (match.match('http')) ? match : `http://${match}`;
+      return `<a href="${href}" target="${target}">${match}</a>`;
+    });
     return this.domSanitizer.bypassSecurityTrustHtml(html);
   }
 }
