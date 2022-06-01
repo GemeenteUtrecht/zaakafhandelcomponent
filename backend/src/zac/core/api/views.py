@@ -288,7 +288,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
-        serializer = self.get_serializer(
+        serializer = self.serializer_class(
             instance=statussen, many=True, context={"zaaktype": zaak.zaaktype}
         )
         return Response(serializer.data)
@@ -296,7 +296,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
-        serializer = self.get_serializer(
+        serializer = self.serializer_class(
             data=request.data, context={"zaaktype": zaak.zaaktype}
         )
         serializer.is_valid(raise_exception=True)
@@ -306,7 +306,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
             statustype,
             toelichting=serializer.validated_data["statustoelichting"],
         )
-        serializer = self.get_serializer(
+        serializer = self.serializer_class(
             instance=new_status, context={"zaaktype": zaak.zaaktype}
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
