@@ -11,11 +11,12 @@ paths:
   /api/_health/:
     get:
       operationId: _health_retrieve
+      description: Returns the health check status.
+      summary: Retrieve health check.
       tags:
       - _health
-      security:
-      - cookieAuth: []
-      - tokenAuth: []
+      requestBody:
+        content: {}
       responses:
         '200':
           headers:
@@ -26,7 +27,11 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
   /api/accounts/access-requests:
     post:
       operationId: accounts_access_requests_create
@@ -530,10 +535,32 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/accounts/logout:
+    post:
+      operationId: accounts_logout_create
+      description: Logs the current user out.
+      summary: Logout user.
+      tags:
+      - accounts
+      requestBody:
+        content: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
   /api/accounts/permissions:
     get:
       operationId: accounts_permissions_list
-      description: Geeft alle beschikbare rechten en hun beschrijving terug.
+      description: Returns all available permissions for the user and their description.
       summary: Alle rechten opvragen.
       tags:
       - accounts
@@ -1866,13 +1893,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
         required: true
       security:
       - cookieAuth: []
@@ -1890,7 +1917,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Checklist'
+                $ref: '#/components/schemas/WriteChecklist'
           description: ''
     put:
       operationId: checklists_zaak_checklists_update
@@ -1914,13 +1941,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Checklist'
+              $ref: '#/components/schemas/WriteChecklist'
         required: true
       security:
       - cookieAuth: []
@@ -1938,7 +1965,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Checklist'
+                $ref: '#/components/schemas/WriteChecklist'
           description: ''
   /api/checklists/zaak-checklisttypes/{bronorganisatie}/{identificatie}:
     get:
@@ -2478,13 +2505,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedZaakEigenschap'
+              $ref: '#/components/schemas/PatchedUpdateZaakEigenschapWaarde'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedZaakEigenschap'
+              $ref: '#/components/schemas/PatchedUpdateZaakEigenschapWaarde'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedZaakEigenschap'
+              $ref: '#/components/schemas/PatchedUpdateZaakEigenschapWaarde'
       security:
       - cookieAuth: []
       responses:
@@ -3402,20 +3429,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/AddressSearchResponse'
           description: ''
-  /api/kadaster/nummeraanduidingen/{nummeraanduiding_identificatie}:
+  /api/kadaster/nummeraanduidingen/{nummeraanduidingidentificatie}:
     get:
       operationId: kadaster_nummeraanduidingen_retrieve
       description: |-
-        This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingen_identificatie`.
+        This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingidentificatie`.
 
         Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
       summary: Retrieve nummeraanduiding from BAG API.
       parameters:
-      - in: path
-        name: nummeraanduiding_identificatie
-        schema:
-          type: string
-        required: true
       - in: path
         name: nummeraanduidingidentificatie
         schema:
@@ -4232,6 +4254,31 @@ paths:
                 items:
                   $ref: '#/components/schemas/ZaakDocument'
           description: ''
+  /api/workstack/checklists:
+    get:
+      operationId: workstack_checklists_list
+      summary: List checklist questions for logged in user.
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkStackChecklistAnswer'
+          description: ''
   /api/workstack/group-activities:
     get:
       operationId: workstack_group_activities_list
@@ -4256,6 +4303,31 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/WorkStackAdhocActivities'
+          description: ''
+  /api/workstack/group-checklists:
+    get:
+      operationId: workstack_group_checklists_list
+      summary: List checklist questions for groups of logged in user.
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkStackChecklistAnswer'
           description: ''
   /api/workstack/group-tasks:
     get:
@@ -4919,74 +4991,21 @@ components:
     CharValue:
       type: object
       properties:
-        value:
+        waarde:
           type: string
           title: waarde van eigenschap
       required:
-      - value
+      - waarde
       title: CharValue
-    Checklist:
-      type: object
-      properties:
-        created:
-          type: string
-          format: date-time
-          readOnly: true
-          title: Aangemaakt
-        groupAssignee:
-          type: string
-          description: Naam van de groep.
-        userAssignee:
-          type: string
-          description: '`username` van de gebruiker.'
-        answers:
-          type: array
-          items:
-            $ref: '#/components/schemas/ChecklistAnswer'
-      required:
-      - answers
-      - created
-      title: Checklist
-    ChecklistAnswer:
-      type: object
-      properties:
-        question:
-          type: string
-          title: Related question
-          maxLength: 1000
-        answer:
-          type: string
-          title: Answer to the question
-        created:
-          type: string
-          format: date-time
-          readOnly: true
-          title: Aangemaakt
-        modified:
-          type: string
-          format: date-time
-          readOnly: true
-        remarks:
-          type: string
-          title: Opmerkingen
-        document:
-          type: string
-          format: uri
-          title: Document-URL
-          description: Document in de Documenten API.
-          maxLength: 1000
-      required:
-      - created
-      - modified
-      - question
-      title: ChecklistAnswer
     ChecklistQuestion:
       type: object
       properties:
         question:
           type: string
           title: Text of the question
+          description: Question for user to answer.
           maxLength: 1000
+          minLength: 1
         order:
           type: integer
         choices:
@@ -5027,6 +5046,7 @@ components:
           title: ZAAKTYPE-URL
           description: URL-referentie naar het ZAAKTYPE.
           maxLength: 1000
+          minLength: 1
         zaaktypeCatalogus:
           type: string
           format: uri
@@ -5161,7 +5181,7 @@ components:
           type: string
           description: Naam van de EIGENSCHAP. Moet overeenkomen met EIGENSCHAPnaam
             zoals gedefinieerd in de CATALOGI API.
-        value:
+        waarde:
           type: string
           description: Waarde van ZAAKEIGENSCHAP. Moet in staat zijn te worden geformatteerd
             zoals gedefinieerd in de EIGENSCHAP spec.
@@ -5171,28 +5191,28 @@ components:
           description: URL-referentie naar de ZAAK.
       required:
       - naam
-      - value
+      - waarde
       - zaakUrl
       title: CreateZaakEigenschap
     DateTimeValue:
       type: object
       properties:
-        value:
+        waarde:
           type: string
           format: date-time
           title: waarde van eigenschap
       required:
-      - value
+      - waarde
       title: DateTimeValue
     DateValue:
       type: object
       properties:
-        value:
+        waarde:
           type: string
           format: date
           title: waarde van eigenschap
       required:
-      - value
+      - waarde
       title: DateValue
     Datetime:
       type: object
@@ -5542,9 +5562,9 @@ components:
       oneOf:
       - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldEnum'
-      - $ref: '#/components/schemas/FormFieldString'
       - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldString'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5746,8 +5766,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -5821,6 +5841,13 @@ components:
       - requester
       - url
       title: HandleAccessRequest
+    HealthCheck:
+      type: object
+      properties:
+        healthy:
+          type: boolean
+          default: true
+      title: HealthCheck
     HistoricActivityInstanceDetail:
       type: object
       properties:
@@ -5986,13 +6013,13 @@ components:
     NumberValue:
       type: object
       properties:
-        value:
+        waarde:
           type: string
           format: decimal
           pattern: ^\d{0,98}(?:\.\d{0,2})?$
           title: waarde van eigenschap
       required:
-      - value
+      - waarde
       title: NumberValue
     ObjectFilterProxy:
       allOf:
@@ -6382,6 +6409,14 @@ components:
           type: string
           description: Filename without extension.
       title: PatchedUpdateZaakDocument
+    PatchedUpdateZaakEigenschapWaarde:
+      type: object
+      properties:
+        waarde:
+          type: string
+          description: Value of ZAAKEIGENSCHAP. Must be formatted as defined by the
+            EIGENSCHAP spec.
+      title: PatchedUpdateZaakEigenschapWaarde
     PatchedUserAuthorizationProfile:
       type: object
       properties:
@@ -6401,20 +6436,6 @@ components:
           nullable: true
           title: Einde
       title: PatchedUserAuthorizationProfile
-    PatchedZaakEigenschap:
-      oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
-      discriminator:
-        propertyName: formaat
-        mapping:
-          tekst: '#/components/schemas/ZaakEigenschapCharValue'
-          getal: '#/components/schemas/ZaakEigenschapNumberValue'
-          datum: '#/components/schemas/ZaakEigenschapDateValue'
-          datum_tijd: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      title: PatchedZaakEigenschap
     Permission:
       type: object
       properties:
@@ -6458,8 +6479,8 @@ components:
       - zaken:update-documents
       - zaken:add-documents
       - zaken:toegang-verlenen
-      - zaken:toegang-aanvragen
       - zaken:nieuwe-relaties-toevoegen
+      - zaken:geforceerd-bijwerken
       - activiteiten:schrijven
       - activiteiten:inzien
       - checklist:schrijven
@@ -6524,11 +6545,15 @@ components:
         name:
           type: string
           title: Human readable name of choice
+          description: Name of choice.
           maxLength: 100
+          minLength: 1
         value:
           type: string
           title: Value of choice
+          description: Value of choice.
           maxLength: 100
+          minLength: 1
       required:
       - name
       - value
@@ -6598,22 +6623,65 @@ components:
           format: date-time
           readOnly: true
           title: Aangemaakt
-        groupAssignee:
-          allOf:
-          - $ref: '#/components/schemas/Group'
-          description: Group assigned to checklist.
-        userAssignee:
-          allOf:
-          - $ref: '#/components/schemas/User'
-          description: User assigned to checklist.
         answers:
           type: array
           items:
-            $ref: '#/components/schemas/ChecklistAnswer'
+            $ref: '#/components/schemas/ReadChecklistAnswer'
       required:
       - answers
       - created
       title: ReadChecklist
+    ReadChecklistAnswer:
+      type: object
+      properties:
+        question:
+          type: string
+          title: Related question
+          description: The question related to the answer.
+          maxLength: 1000
+          minLength: 1
+        answer:
+          type: string
+          title: Answer to the question
+          description: Answer to the question.
+          minLength: 0
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+        remarks:
+          type: string
+          title: Opmerkingen
+          description: Remarks in addition to the answer.
+          minLength: 0
+        document:
+          type: string
+          format: uri
+          title: Document-URL
+          description: URL-reference to document related to answer.
+          maxLength: 1000
+          minLength: 1
+        groupAssignee:
+          allOf:
+          - $ref: '#/components/schemas/Group'
+          description: Group assigned to answer.
+        userAssignee:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          description: User assigned to answer.
+      required:
+      - answer
+      - created
+      - groupAssignee
+      - modified
+      - question
+      - userAssignee
+      title: ReadChecklistAnswer
     ReadUserAuthorizationProfile:
       type: object
       properties:
@@ -6736,6 +6804,10 @@ components:
             dat de deadline is bereikt of overschreden.
         resultaat:
           $ref: '#/components/schemas/Resultaat'
+        kanGeforceerdBijwerken:
+          type: boolean
+          readOnly: true
+          description: A boolean flag whether a user can force edit the ZAAK or not.
         status:
           $ref: '#/components/schemas/ZaakStatus'
       required:
@@ -6745,6 +6817,7 @@ components:
       - einddatum
       - einddatumGepland
       - identificatie
+      - kanGeforceerdBijwerken
       - omschrijving
       - registratiedatum
       - resultaat
@@ -7174,9 +7247,9 @@ components:
       title: String
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       discriminator:
         propertyName: form
@@ -7267,6 +7340,26 @@ components:
       - name
       - userAssignee
       title: SummaryActivity
+    SummaryChecklistAnswer:
+      type: object
+      properties:
+        question:
+          type: string
+          title: Related question
+          maxLength: 1000
+        groupAssignee:
+          type: string
+          readOnly: true
+          description: Naam van de aangewezen groep.
+        userAssignee:
+          type: string
+          readOnly: true
+          description: Username van de aangewezen gebruiker.
+      required:
+      - groupAssignee
+      - question
+      - userAssignee
+      title: SummaryChecklistAnswer
     SummaryZaakDocument:
       type: object
       properties:
@@ -7292,9 +7385,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
-      - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -7459,11 +7552,11 @@ components:
       title: UserAuthorizationProfile
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
-      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
+      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -7682,6 +7775,22 @@ components:
       - activities
       - zaak
       title: WorkStackAdhocActivities
+    WorkStackChecklistAnswer:
+      type: object
+      properties:
+        checklistQuestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummaryChecklistAnswer'
+          description: Questions to be answered by assignee.
+        zaak:
+          allOf:
+          - $ref: '#/components/schemas/SummaryZaakDocument'
+          description: ZAAK that checklist questions belongs to.
+      required:
+      - checklistQuestions
+      - zaak
+      title: WorkStackChecklistAnswer
     WorkStackTask:
       type: object
       properties:
@@ -7697,6 +7806,71 @@ components:
       - task
       - zaak
       title: WorkStackTask
+    WriteChecklist:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WriteChecklistAnswer'
+      required:
+      - answers
+      - created
+      title: WriteChecklist
+    WriteChecklistAnswer:
+      type: object
+      properties:
+        question:
+          type: string
+          title: Related question
+          description: The question related to the answer.
+          maxLength: 1000
+          minLength: 1
+        answer:
+          type: string
+          title: Answer to the question
+          description: Answer to the question.
+          minLength: 0
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Aangemaakt
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+        remarks:
+          type: string
+          title: Opmerkingen
+          description: Remarks in addition to the answer.
+          minLength: 0
+        document:
+          type: string
+          format: uri
+          title: Document-URL
+          description: URL-reference to document related to answer.
+          maxLength: 1000
+          minLength: 1
+        groupAssignee:
+          type: string
+          nullable: true
+          description: '`name` of the group assigned to answer.'
+        userAssignee:
+          type: string
+          nullable: true
+          description: '`username` of the user assigned to answer.'
+      required:
+      - answer
+      - created
+      - modified
+      - question
+      title: WriteChecklistAnswer
     Zaak:
       type: object
       properties:
@@ -7761,6 +7935,10 @@ components:
             dat de deadline is bereikt of overschreden.
         resultaat:
           $ref: '#/components/schemas/Resultaat'
+        kanGeforceerdBijwerken:
+          type: boolean
+          readOnly: true
+          description: A boolean flag whether a user can force edit the ZAAK or not.
       required:
       - bronorganisatie
       - deadline
@@ -7768,6 +7946,7 @@ components:
       - einddatum
       - einddatumGepland
       - identificatie
+      - kanGeforceerdBijwerken
       - omschrijving
       - registratiedatum
       - resultaat
@@ -7853,10 +8032,10 @@ components:
       title: ZaakDocument
     ZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -7902,6 +8081,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/Eigenschap'
           readOnly: true
+      required:
+      - eigenschap
+      - formaat
+      - url
       title: ZaakEigenschapShared
     ZaakInformatieTask:
       type: object
@@ -7958,8 +8141,8 @@ components:
       title: ZaakObjectProxyExtras
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
       discriminator:
         propertyName: reviewType
         mapping:
@@ -8011,10 +8194,16 @@ components:
           readOnly: true
           title: can lock request
           description: User can lock the review request.
+        locked:
+          type: boolean
+        lockReason:
+          type: string
       required:
       - canLock
       - completed
       - id
+      - lockReason
+      - locked
       - numAssignedUsers
       - reviewType
       title: ZaakRevReqSummary

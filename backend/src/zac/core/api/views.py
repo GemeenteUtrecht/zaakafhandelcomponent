@@ -222,9 +222,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
 
     def get_serializer(self, **kwargs):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
-        return mapping[self.request.method](
-            **kwargs, context={"zaak": self.get_object(), "request": self.request}
-        )
+        return mapping[self.request.method](**kwargs)
 
     @extend_schema(
         summary=_("Retrieve ZAAK."),
@@ -238,11 +236,14 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
     ) -> Response:
         zaak = self.get_object()
         zaak.resultaat = get_resultaat(zaak)
-        serializer = self.get_serializer(instance=zaak)
+        serializer = self.get_serializer(
+            instance=zaak, context={"zaak": self.get_object(), "request": self.request}
+        )
         return Response(serializer.data)
 
     @extend_schema(
         summary=_("Partially update ZAAK."),
+        request=UpdateZaakDetailSerializer,
         responses={
             204: None,
             403: PermissionDeniedSerializer,
@@ -253,7 +254,10 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         service = Service.get_service(zaak.url)
         client = service.build_client()
 
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data,
+            context={"zaak": self.get_object(), "request": self.request},
+        )
         serializer.is_valid(raise_exception=True)
 
         # If no errors are raised - data is valid too.
@@ -280,23 +284,21 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
     )
     serializer_class = ZaakStatusSerializer
 
-    def get_serializer(self, *args, **kwargs):
-        zaak = self.get_object()
-        return self.serializer_class(
-            *args, **kwargs, context={"zaaktype": zaak.zaaktype}
-        )
-
     @extend_schema(summary=_("List ZAAK STATUSsen."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         statussen = get_statussen(zaak)
-        serializer = self.get_serializer(instance=statussen, many=True)
+        serializer = self.get_serializer(
+            instance=statussen, many=True, context={"zaaktype": zaak.zaaktype}
+        )
         return Response(serializer.data)
 
     @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data, context={"zaaktype": zaak.zaaktype}
+        )
         serializer.is_valid(raise_exception=True)
         statustype = get_statustype(serializer.validated_data["statustype"]["url"])
         new_status = zet_status(
@@ -304,7 +306,9 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
             statustype,
             toelichting=serializer.validated_data["statustoelichting"],
         )
-        serializer = self.get_serializer(instance=new_status)
+        serializer = self.get_serializer(
+            instance=new_status, context={"zaaktype": zaak.zaaktype}
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -564,22 +568,22 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
-@extend_schema(
-    summary=_("List ZAAK users and atomic permissions."),
-)
+@extend_schema(summary=_("List ZAAK users and atomic permissions."))
 class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
         CanHandleAccessRequests,
     )
-    serializer_class = UserAtomicPermissionSerializer
+    queryset = User.objects.all()
 
-    def get_queryset(self):
+    def get_serializer_class(self):
+        return UserAtomicPermissionSerializer
+
+    def filter_queryset(self, queryset):
         zaak = self.get_object()
-
-        queryset = (
-            User.objects.filter(atomic_permissions__object_url=zaak.url)
+        return (
+            queryset.filter(atomic_permissions__object_url=zaak.url)
             .prefetch_related(
                 models.Prefetch(
                     "useratomicpermission_set",
@@ -593,7 +597,6 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
             )
             .distinct()
         )
-        return queryset
 
 
 ###############################
