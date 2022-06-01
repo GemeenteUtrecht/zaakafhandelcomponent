@@ -69,10 +69,17 @@ class PermissionView(ListMixin, views.APIView):
 @extend_schema(
     summary=_("Logout user."),
     description=_("Logs the current user out."),
+    responses={
+        "204": None,
+    },
 )
 class LogoutView(views.APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_serializer(self, *args, **kwargs):
+        # Shut up drf-spectacular - return empty serializer
+        return {}
 
     def post(self, request):
         logout(request)

@@ -1,10 +1,13 @@
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
+from django.utils.translation import ugettext_lazy as _
 
 import requests
-from rest_framework.decorators import api_view, permission_classes
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 HEADERS_TO_KEEP = (
     "api-version",
@@ -31,7 +34,23 @@ def remote_schema_view(request):
     return django_response
 
 
-@api_view()
-@permission_classes(())
-def health_check(request: Request):
-    return Response({"healty": True})
+class HealthCheckView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    @extend_schema(
+        summary=_("Retrieve health check."),
+        description=_("Returns the health check status."),
+        responses={
+            "200": inline_serializer(
+                "HealthCheckSerializer",
+                fields={"healthy": serializers.BooleanField(default=True)},
+            )
+        },
+    )
+    def get(self, request: Request, *args, **kwargs):
+        return Response({"healty": True})
+
+    def get_serializer(self, *args, **kwargs):
+        # shut up drf-spectacular
+        return {}
