@@ -56,7 +56,6 @@ class ZaakFileValidator:
                 "Only alphanumerical characters, whitespaces, -_() and 1 file extension are allowed."
             )
 
-        print(value.content_type)
         if value.content_type.lower() not in ACCEPTABLE_CONTENT_TYPES.values():
             raise exceptions.ValidationError(
                 f"File format not allowed. Please use one of the following file formats: {', '.join(ACCEPTABLE_CONTENT_TYPES)}."
