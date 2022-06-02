@@ -4,6 +4,7 @@ from datetime import date, datetime
 from itertools import groupby
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
@@ -220,7 +221,7 @@ class GetZaakMixin:
 
 
 class CreateZaakView(views.APIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
         CanCreateZaken,
@@ -249,7 +250,8 @@ class CreateZaakView(views.APIView):
         )
         serializer.is_valid(raise_exception=True)
         details = start_process(
-            process_key="spike_zaak_via_zac", variables=serializer.validated_data
+            process_key=settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY,
+            variables=serializer.validated_data,
         )
         return Response(details)
 

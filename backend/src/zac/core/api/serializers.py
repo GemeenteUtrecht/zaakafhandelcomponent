@@ -1,5 +1,5 @@
 import pathlib
-from datetime import datetime
+from datetime import date, datetime
 from decimal import ROUND_05UP
 from typing import Optional
 
@@ -336,8 +336,7 @@ class CreateZaakSerializer(serializers.Serializer):
         help_text=_(
             "The RSIN of the organization that created the ZAAK. This has to be a valid `RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/Burgerservicenummer#11-proef."
         ),
-        allow_blank=False,
-        required=True,
+        default="002220647",
         max_length=9,
         validators=[
             RegexValidator(
@@ -355,7 +354,10 @@ class CreateZaakSerializer(serializers.Serializer):
         required=True, help_text=_("A short summary of the ZAAK.")
     )
     toelichting = serializers.CharField(
-        required=False, help_text=_("A comment on the ZAAK.")
+        help_text=_("A comment on the ZAAK."), default=""
+    )
+    startdatum = serializers.DateField(
+        default=date.today(), help_text=_("The date the ZAAK begins.")
     )
 
     def validate_zaaktype(self, zaaktype):

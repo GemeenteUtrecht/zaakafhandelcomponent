@@ -121,7 +121,7 @@ INSTALLED_APPS = [
     "sniplates",
     "zgw_consumers",
     "django_camunda",
-    "django_extensions",
+    # "django_extensions",
     "import_export",
     "django_auth_adfs",
     "django_auth_adfs_db",
@@ -568,3 +568,6 @@ SCIM_SERVICE_PROVIDER = {
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
+CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
+    "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
+)
