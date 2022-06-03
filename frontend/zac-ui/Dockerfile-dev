@@ -6,6 +6,13 @@ WORKDIR /app
 
 EXPOSE 4200
 
+ENV ALFRESCO_AUTH_URL=https://alfresco-auth.cg-intern.ont.utrecht.nl/auth/realms/alfresco
+ENV ALFRESCO_PREVIEW_URL=https://alfresco-tezza.cg-intern.ont.utrecht.nl/
+ENV ALFRESCO_DOCUMENTS_URL=https://alfresco-tezza.aks.utrechtproeftuin.nl
+ENV FORMS_URL=https://formulieren.cg-intern.ont.utrecht.nl
+
+RUN apt-get update && apt-get -y install gettext
+
 COPY ./bin/docker_dev_start.sh /start.sh
 CMD ["/start.sh"]
 
