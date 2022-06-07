@@ -5,7 +5,7 @@ from django_camunda.utils import serialize_variable
 
 from zac.camunda.data import ProcessInstance
 
-from ..camunda import get_process_zaak_url
+from ..camunda.utils import get_process_zaak_url
 
 PI_URL = "https://camunda.example.com/engine-rest/process-instance"
 

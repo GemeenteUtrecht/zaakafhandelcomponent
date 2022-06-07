@@ -12,7 +12,6 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
-from django_camunda.interface import Variable
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
@@ -228,6 +227,9 @@ class CreateZaakView(views.APIView):
     )
     serializer_class = CreateZaakSerializer
 
+    def get_serializer(self, **kwargs):
+        return self.serializer_class(**kwargs)
+
     @extend_schema(
         summary=_("Let users create a ZAAK."),
         responses={
@@ -253,7 +255,8 @@ class CreateZaakView(views.APIView):
             process_key=settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY,
             variables=serializer.validated_data,
         )
-        return Response(details)
+
+        return Response(details, status=status.HTTP_201_CREATED)
 
 
 class ZaakDetailView(GetZaakMixin, views.APIView):

@@ -970,7 +970,14 @@ def resolve_documenten_informatieobjecttypen(
 ) -> List[Document]:
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
     # figure out relevant ztcs
-    informatieobjecttypen = {document.informatieobjecttype for document in documents}
+    informatieobjecttypen = {
+        document.informatieobjecttype
+        for document in documents
+        if type(document.informatieobjecttype) == str
+    }
+    if not informatieobjecttypen:
+        return documents
+
     _iot = list(informatieobjecttypen)
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
     relevant_ztcs = []

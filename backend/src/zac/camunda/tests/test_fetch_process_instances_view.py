@@ -22,7 +22,7 @@ CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 
 
-@patch("zac.core.camunda.extract_task_form", return_value=None)
+@patch("zac.camunda.forms.extract_task_form", return_value=None)
 @patch(
     "zac.camunda.processes.get_messages",
     return_value=["Annuleer behandeling", "Advies vragen"],
