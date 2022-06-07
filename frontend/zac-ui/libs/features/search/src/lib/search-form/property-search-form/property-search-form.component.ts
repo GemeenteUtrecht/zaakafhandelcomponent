@@ -169,7 +169,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     let zaaktype;
     if (this.zaaktype.value) {
       this.zaaktypenData.forEach( zaaktypeElement => {
-        if (zaaktypeElement.identificatie === this.zaaktype.value)
+        if (zaaktypeElement.omschrijving === this.zaaktype.value)
           zaaktype = {
             omschrijving: zaaktypeElement.omschrijving,
             catalogus: zaaktypeElement.catalogus
