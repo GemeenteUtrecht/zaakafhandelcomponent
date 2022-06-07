@@ -18,6 +18,7 @@ from zgw_consumers.api_models.catalogi import (
     EigenschapSpecificatie,
     InformatieObjectType,
     ResultaatType,
+    RolType,
     StatusType,
     ZaakType,
 )
@@ -726,6 +727,12 @@ class RelatedZaakDetailSerializer(ZaakDetailSerializer):
 class RelatedZaakSerializer(serializers.Serializer):
     aard_relatie = serializers.CharField()
     zaak = RelatedZaakDetailSerializer()
+
+
+class RolTypeSerializer(APIModelSerializer):
+    class Meta:
+        models = RolType
+        fields = ("url", "omschrijving", "omschrijving_generiek")
 
 
 class RolSerializer(APIModelSerializer):

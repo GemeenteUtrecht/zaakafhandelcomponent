@@ -571,3 +571,6 @@ UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
 CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
     "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
 )
+START_CAMUNDA_PROCESS_DEFINITION_KEY = config(
+    "START_CAMUNDA_PROCESS_DEFINITION_KEY", default="start_camunda_process"
+)

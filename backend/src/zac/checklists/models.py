@@ -1,5 +1,4 @@
 import uuid
-from tabnanny import verbose
 from typing import Optional
 
 from django.conf import settings
