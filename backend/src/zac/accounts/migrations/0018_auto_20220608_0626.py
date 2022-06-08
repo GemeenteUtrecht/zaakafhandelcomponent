@@ -8,8 +8,9 @@ def migrate_access_request_to_user_atomic_permission_foreign_key(apps, _):
 
     for ar in AccessRequest.objects.all():
         user_atomic_permission = ar.user_atomic_permission
-        user_atomic_permission.access_request = ar
-        user_atomic_permission.save()
+        if user_atomic_permission:
+            user_atomic_permission.access_request = ar
+            user_atomic_permission.save()
 
 
 class Migration(migrations.Migration):
