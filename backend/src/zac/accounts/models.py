@@ -215,13 +215,6 @@ class AccessRequest(models.Model):
         null=True,
         help_text=_("Date when the access request was handled"),
     )
-    user_atomic_permission = models.OneToOneField(
-        "UserAtomicPermission",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        help_text=_("Permission created if the access request is approved"),
-    )
 
     objects = AccessRequestQuerySet.as_manager()
 
@@ -268,6 +261,13 @@ class AtomicPermission(models.Model):
 class UserAtomicPermission(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
+    access_request = models.ForeignKey(
+        "AccessRequest",
+        on_delete=models.SET_NULL,
+        null=True,
+        default=None,
+        help_text=_("Access request that created this permission."),
+    )
     reason = models.CharField(
         _("reason"),
         choices=PermissionReason.choices,
