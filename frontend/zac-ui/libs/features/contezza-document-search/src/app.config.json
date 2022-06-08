@@ -6,7 +6,7 @@
   "providers": "ECM",
   "authType": "OAUTH",
   "oauth2": {
-    "host": "https://alfresco-auth.cg-intern.acc.utrecht.nl/auth/realms/alfresco",
+    "host": "https://alfresco-auth.cg-intern.ont.utrecht.nl/auth/realms/alfresco",
     "clientId": "alfresco",
     "scope": "openid",
     "secret": "",
@@ -24,5 +24,5 @@
   },
   "SEARCH_QUERY": "TYPE:'cm:content'",
   "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
-  "ALFRESCO_PREVIEW_URL": "https://alfresco-tezza.cg-intern.acc.utrecht.nl/"
+  "ALFRESCO_PREVIEW_URL": "https://alfresco-tezza.cg-intern.ont.utrecht.nl/"
 }
