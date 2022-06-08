@@ -73,15 +73,17 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         )
 
         self.endpoint = reverse("accesses-list")
-        self.data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+        self.data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": zaken_handle_access.name,
+            }
+        ]
 
     def test_no_permissions(self):
         response = self.client.post(self.endpoint, self.data)
-
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -304,14 +306,16 @@ class GrantAccessAPITests(APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(ZAAK_URL, json=self.zaak)
 
-        data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+        data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:inzien",
+            }
+        ]
 
         response = self.client.post(self.endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
 
@@ -334,16 +338,18 @@ class GrantAccessAPITests(APITransactionTestCase):
 
         self.assertEqual(
             data,
-            {
-                "id": user_atomic_permission.id,
-                "permission": "zaken:inzien",
-                "requester": self.requester.username,
-                "zaak": ZAAK_URL,
-                "startDate": "2020-01-01T00:00:00Z",
-                "endDate": None,
-                "reason": PermissionReason.toegang_verlenen,
-                "comment": "some comment",
-            },
+            [
+                {
+                    "id": user_atomic_permission.id,
+                    "permission": "zaken:inzien",
+                    "requester": self.requester.username,
+                    "zaak": ZAAK_URL,
+                    "startDate": "2020-01-01T00:00:00Z",
+                    "endDate": None,
+                    "reason": PermissionReason.toegang_verlenen,
+                    "comment": "some comment",
+                }
+            ],
         )
 
         # test email
@@ -357,17 +363,21 @@ class GrantAccessAPITests(APITransactionTestCase):
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
 
-    def test_grant_access_no_user(self):
-        data = {
-            "requester": "some user",
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+    @requests_mock.Mocker()
+    def test_grant_access_no_user(self, m):
+        data = [
+            {
+                "requester": "some user",
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:inzien",
+            }
+        ]
 
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("requester" in response.json())
+        self.assertTrue("requester" in response.json()[0])
 
     def test_grant_access_with_existing_permission(self):
         AtomicPermissionFactory.create(
@@ -376,19 +386,23 @@ class GrantAccessAPITests(APITransactionTestCase):
             permission=zaken_inzien.name,
             for_user=self.requester,
         )
-        data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
+        data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:inzien",
+            }
+        ]
 
         response = self.client.post(self.endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
+            response.json()[0]["nonFieldErrors"],
             [
-                f"Gebruiker {self.requester.username} heeft al toegang tot ZAAK {ZAAK_URL}"
+                "`{user}` already has permission `zaken:inzien.".format(
+                    user=self.requester.username
+                )
             ],
         )
 
@@ -405,12 +419,14 @@ class GrantAccessAPITests(APITransactionTestCase):
             user=self.requester,
             end_date=timezone.make_aware(datetime(2019, 12, 31)),
         )
-        data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-        }
-
+        data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:inzien",
+            }
+        ]
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -449,26 +465,29 @@ class GrantAccessAPITests(APITransactionTestCase):
         pending_request = AccessRequestFactory.create(
             requester=self.requester, result="", zaak=ZAAK_URL
         )
-        data = {
-            "requester": self.requester.username,
-            "zaak": ZAAK_URL,
-            "comment": "some comment",
-            "end_date": "2021-01-01T00:00:00Z",
-        }
+        data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:inzien",
+                "end_date": "2021-01-01T00:00:00Z",
+            }
+        ]
 
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        pending_request.refresh_from_db()
-
         user_atomic_permission = UserAtomicPermission.objects.filter(
             user=self.requester
         ).get()
         atomic_permission = user_atomic_permission.atomic_permission
 
+        pending_request.refresh_from_db()
         self.assertEqual(pending_request.result, AccessRequestResult.approve)
-        self.assertEqual(pending_request.user_atomic_permission, user_atomic_permission)
+        self.assertEqual(
+            pending_request.useratomicpermission_set.all()[0], user_atomic_permission
+        )
 
         self.assertEqual(atomic_permission.object_url, ZAAK_URL)
         self.assertEqual(

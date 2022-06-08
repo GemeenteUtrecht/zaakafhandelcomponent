@@ -74,7 +74,10 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         )
 
         self.endpoint = reverse("accessrequest-detail", args=[access_request.id])
-        self.data = {"result": AccessRequestResult.approve}
+        self.data = {
+            "result": AccessRequestResult.approve,
+            "permissions": [zaken_handle_access.name],
+        }
 
     def test_no_permissions(self):
         response = self.client.patch(self.endpoint, self.data)
@@ -268,10 +271,10 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             "handler_comment": "some comment",
             "start_date": "2020-01-02",
             "end_date": "2021-01-01",
+            "permissions": [zaken_inzien.name],
         }
 
         response = self.client.patch(endpoint, data)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
 
@@ -281,7 +284,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.result, AccessRequestResult.approve)
         self.assertEqual(access_request.handled_date, date(2020, 1, 1))
 
-        user_atomic_permission = access_request.user_atomic_permission
+        user_atomic_permission = access_request.useratomicpermission_set.all()[0]
 
         self.assertEqual(user_atomic_permission.comment, "some comment")
         self.assertEqual(user_atomic_permission.user, self.requester)
@@ -311,6 +314,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
                 "handlerComment": "some comment",
                 "startDate": "2020-01-02",
                 "endDate": "2021-01-01",
+                "permissions": ["zaken:inzien"],
             },
         )
 
@@ -341,6 +345,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             "handler_comment": "some comment",
             "start_date": "2020-01-02",
             "end_date": "2021-01-01",
+            "permissions": [zaken_inzien.name],
         }
 
         response = self.client.patch(endpoint, data)
@@ -353,7 +358,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.handler, self.handler)
         self.assertEqual(access_request.result, AccessRequestResult.reject)
         self.assertEqual(access_request.handled_date, date(2020, 1, 1))
-        self.assertIsNone(access_request.user_atomic_permission)
+        self.assertEqual(access_request.useratomicpermission_set.count(), 0)
 
         data = response.json()
 
@@ -367,6 +372,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
                 "handlerComment": "some comment",
                 "startDate": "2020-01-02",
                 "endDate": "2021-01-01",
+                "permissions": [zaken_inzien.name],
             },
         )
 
@@ -397,6 +403,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             "handler_comment": "some comment",
             "start_date": "2020-01-02",
             "end_date": "2021-01-01",
+            "permissions": [zaken_inzien.name],
         }
 
         response = self.client.patch(endpoint, data)
@@ -422,6 +429,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             "handler_comment": "some comment",
             "start_date": "2020-01-02",
             "end_date": "2021-01-01",
+            "permissions": [zaken_inzien.name],
         }
 
         response = self.client.patch(endpoint, data)
@@ -431,5 +439,33 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             response.json()["nonFieldErrors"],
             [
                 "'result'-veld moet gedefinieerd zijn wanneer een toegangsverzoek in behandeling wordt genomen"
+            ],
+        )
+
+    @requests_mock.Mocker()
+    def test_handle_access_request_empty_permissions(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(ZAAK_URL, json=self.zaak)
+
+        access_request = AccessRequestFactory.create(
+            requester=self.requester, zaak=ZAAK_URL
+        )
+        endpoint = reverse("accessrequest-detail", args=[access_request.id])
+
+        data = {
+            "result": AccessRequestResult.approve,
+            "handler_comment": "some comment",
+            "start_date": "2020-01-02",
+            "end_date": "2021-01-01",
+        }
+
+        response = self.client.patch(endpoint, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            [
+                "'permissions' field should be defined when the access request is handled"
             ],
         )
