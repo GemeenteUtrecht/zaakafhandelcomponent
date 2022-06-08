@@ -43,7 +43,6 @@
           <div class="timeline__row row no-gutters"
                *ngFor="let status of data; let last = last; let first = first; let i = index"
                [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
-               [hidden]="!isExpanded && i >= 2"
           >
             <div class="col-1">
               <div class="timeline-item__dot"></div>
@@ -60,15 +59,6 @@
               <p class="p--nomargin">{{status.statustoelichting}}</p>
             </div>
           </div>
-        </div>
-        <div class="d-flex justify-content-end">
-          <button gu-button *ngIf="data?.length > 3"
-                  buttonStyle="tertiary"
-                  size="extrasmall"
-                  [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-                  (click)="isExpanded = !isExpanded">
-            {{isExpanded ? 'Toon minder' : 'Toon meer'}}
-          </button>
         </div>
       </div>
     </gu-tab>

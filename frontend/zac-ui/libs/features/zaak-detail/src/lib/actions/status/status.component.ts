@@ -21,8 +21,6 @@ export class StatusComponent implements OnInit {
   isLoading: boolean;
   errorMessage: string;
 
-  isExpanded = false;
-
   constructor(
     private statusService: StatusService,
     private snackbarService: SnackbarService,

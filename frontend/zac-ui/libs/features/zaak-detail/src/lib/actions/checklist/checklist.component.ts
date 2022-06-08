@@ -1,4 +1,4 @@
-import {Component, Input, OnChanges, OnInit} from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {
   Checklist,
@@ -33,6 +33,8 @@ import {HttpErrorResponse} from '@angular/common/http';
 export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {string} Input to identify the organisation. */
   @Input() zaak: Zaak = null;
+
+  @Output() checklistIsAvailable: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van de checklist.'
 
@@ -152,6 +154,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
     this.checklistService.retrieveChecklistTypeAndRelatedQuestions(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (checklistType: ChecklistType) => {
+        this.checklistIsAvailable.emit(true);
         this.checklistType = checklistType;
         this.checklistForm = this.getChecklistForm();
 
