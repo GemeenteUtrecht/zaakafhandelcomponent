@@ -12,6 +12,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.utils import permissions_related_to_user
 from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
 from zac.core.services import (
@@ -177,10 +178,8 @@ class AtomicPermissionSerializer(serializers.ModelSerializer):
 class GrantPermissionSerializer(AtomicPermissionSerializer):
     def validate(self, data):
         valid_data = super().validate(data)
-
         user = valid_data["user"]
         atomic_permission = valid_data["atomic_permission"]
-
         if (
             UserAtomicPermission.objects.select_related("atomic_permission")
             .filter(
@@ -192,17 +191,13 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
             .exists()
         ):
             raise serializers.ValidationError(
-                _("User {requester} already has access to ZAAK {zaak}.").format(
-                    requester=user.username, zaak=atomic_permission["object_url"]
+                _("`{requester}` already has permission `{permission}.").format(
+                    requester=user.username, permission=atomic_permission["permission"]
                 )
             )
-
         return valid_data
 
-    @transaction.atomic
     def create(self, validated_data):
-        request = self.context["request"]
-
         atomic_permission_data = validated_data.pop("atomic_permission")
         atomic_permission_data.update({"object_type": PermissionObjectTypeChoices.zaak})
         atomic_permission, created = AtomicPermission.objects.get_or_create(
@@ -222,20 +217,12 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
             zaak=atomic_permission.object_url, result=""
         ).actual()
         if pending_requests.exists():
+            user_atomic_permission.access_request = pending_requests[0]
+            user_atomic_permission.save()
             pending_requests.update(
                 result=AccessRequestResult.approve,
-                user_atomic_permission=user_atomic_permission,
             )
 
-        # send email
-        transaction.on_commit(
-            lambda: send_email_to_requester(
-                user_atomic_permission.user,
-                zaak_url=atomic_permission.object_url,
-                result=AccessRequestResult.approve,
-                request=request,
-            )
-        )
         return user_atomic_permission
 
 
@@ -357,6 +344,14 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     end_date = serializers.DateField(
         required=False, help_text=_("End date of the access")
     )
+    permissions = serializers.ListField(
+        child=serializers.CharField(
+            max_length=255,
+            help_text=_("Name of the permission"),
+        ),
+        help_text=_("List of permissions to be granted to user for ZAAK."),
+        required=True,
+    )
 
     class Meta:
         model = AccessRequest
@@ -368,8 +363,25 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             "handler_comment",
             "start_date",
             "end_date",
+            "permissions",
         )
         extra_kwargs = {"url": {"read_only": True}, "result": {"allow_blank": False}}
+
+    def validate_permissions(self, permissions):
+        user = self.context["request"].user
+        if user.is_superuser:
+            return permissions
+
+        allowed_permissions = [perm.name for perm in permissions_related_to_user(user)]
+        for perm in permissions:
+            if perm not in allowed_permissions:
+                raise serializers.ValidationError(
+                    _(
+                        "`%s` cannot grant permission `%s` because they do not have the permission."
+                    )
+                    % (user, perm)
+                )
+        return permissions
 
     def validate(self, data):
         valid_data = super().validate(data)
@@ -378,6 +390,13 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError(
                 _(
                     "'result' field should be defined when the access request is handled`"
+                )
+            )
+
+        if not valid_data.get("permissions"):
+            raise serializers.ValidationError(
+                _(
+                    "'permissions' field should be defined when the access request is handled"
                 )
             )
 
@@ -398,30 +417,39 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         handler_comment = validated_data.get("handler_comment", "")
         start_date = validated_data.get("start_date", date.today())
         end_date = validated_data.get("end_date")
+        permissions = validated_data["permissions"]
 
         access_request = super().update(instance, validated_data)
 
         if access_request.result == AccessRequestResult.approve:
             # add permission definition
-            atomic_permission, created = AtomicPermission.objects.get_or_create(
-                object_url=access_request.zaak,
-                object_type=PermissionObjectTypeChoices.zaak,
-                permission=zaken_inzien.name,
-            )
-            user_atomic_permission = UserAtomicPermission.objects.create(
-                atomic_permission=atomic_permission,
-                user=access_request.requester,
-                comment=handler_comment,
-                reason=PermissionReason.toegang_verlenen,
-                start_date=make_aware(
-                    datetime.combine(start_date, datetime.min.time())
-                ),
-                end_date=make_aware(datetime.combine(end_date, datetime.min.time()))
-                if end_date
-                else None,
-            )
-            access_request.user_atomic_permission = user_atomic_permission
-            access_request.save()
+            for perm in permissions:
+                atomic_permission, created = AtomicPermission.objects.get_or_create(
+                    object_url=access_request.zaak,
+                    object_type=PermissionObjectTypeChoices.zaak,
+                    permission=perm,
+                )
+
+            user_atomic_permissions = []
+            for perm in permissions:
+                user_atomic_permissions.append(
+                    UserAtomicPermission(
+                        atomic_permission=atomic_permission,
+                        user=access_request.requester,
+                        access_request=access_request,
+                        comment=handler_comment,
+                        reason=PermissionReason.toegang_verlenen,
+                        start_date=make_aware(
+                            datetime.combine(start_date, datetime.min.time())
+                        ),
+                        end_date=make_aware(
+                            datetime.combine(end_date, datetime.min.time())
+                        )
+                        if end_date
+                        else None,
+                    )
+                )
+            UserAtomicPermission.objects.bulk_create(user_atomic_permissions)
 
         # send email
         request = self.context.get("request")

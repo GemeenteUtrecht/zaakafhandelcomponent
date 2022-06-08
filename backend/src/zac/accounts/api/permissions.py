@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.models import Group
 
+from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from zds_client import ClientError
@@ -24,6 +25,15 @@ logger = logging.getLogger(__name__)
 
 class GrantAccessMixin:
     def get_object_url(self, serializer) -> str:
+        if isinstance(serializer, serializers.ListSerializer):
+            # Do not allow different object_urls at this point.
+            objects = {
+                child_serializer["atomic_permission"]["object_url"]
+                for child_serializer in serializer.validated_data
+            }
+            if len(objects) > 1:
+                return False
+            return serializer.validated_data[0]["atomic_permission"]["object_url"]
         return serializer.validated_data["atomic_permission"]["object_url"]
 
     def has_object_permission(self, request, view, obj):
