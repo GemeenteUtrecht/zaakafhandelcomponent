@@ -1,6 +1,5 @@
 import uuid
 
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, send_message
@@ -15,29 +14,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
-from backend.src.zac.core.api.views import GetZaakMixin
 from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanCreateZaken, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.camunda import get_process_zaak_url
-from zac.core.services import (
-    _client_from_url,
-    fetch_zaaktype,
-    find_zaak,
-    get_roltypen,
-    get_zaak,
-)
+from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 
 from ..data import Task
 from ..messages import get_messages
-from ..process_instances import delete_process_instance, get_process_instance
-from ..processes import (
-    get_process_definitions,
-    get_process_instances,
-    get_top_level_process_instances,
-)
+from ..process_instances import get_process_instance
+from ..processes import get_top_level_process_instances
 from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
 from ..user_tasks.api import (
     cancel_activity_instance_of_task,
@@ -56,7 +44,7 @@ from .serializers import (
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
-from .utils import get_bptl_app_id_variable, start_process
+from .utils import get_bptl_app_id_variable
 
 
 class ProcessInstanceFetchViewSet(ViewSet):
@@ -121,58 +109,6 @@ class ProcessInstanceFetchViewSet(ViewSet):
         zaak = get_zaak(zaak_url=zaak_url)
         serializer = ZaakSerializer(instance=zaak)
         return Response(serializer.data)
-
-
-class StartCamundaProcessView(GetZaakMixin, APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = StartCamundaProcessSerializer
-
-    def get_serializer(self, request, *args, **kwargs):
-        return self.serializer_class(*args, **kwargs)
-
-    def post(
-        self, request: Request, bronorganisatie: str, identificatie: str
-    ) -> Response:
-        zaak = self.get_object()
-
-        # First check if there is still a CREATE_ZAAK_PROCESS_DEFINITION_KEY process that needs to be cleaned up.
-        process_instances = get_process_instances(zaak.url)
-        if process_instances:
-            pdefinition_to_pinstance_map = {
-                pi.definition_id: pid
-                for pid, pi in process_instances.items()
-                if pi.definition_id
-            }
-            process_definitions = get_process_definitions(
-                pdefinition_to_pinstance_map.keys()
-            )
-
-            p_def_id_to_key_map = {}
-            for pdef in process_definitions:
-                if pdef.key in p_def_id_to_key_map:
-                    p_def_id_to_key_map[pdef.key].append(pdef.id)
-                else:
-                    p_def_id_to_key_map[pdef.key] = [pdef.id]
-
-            if (
-                settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
-                in p_def_id_to_key_map.keys()
-            ):
-                pdef_id = p_def_id_to_key_map[
-                    settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
-                ]
-                if pdef_id in pdefinition_to_pinstance_map.keys():
-                    delete_pid = pdefinition_to_pinstance_map[pdef_id]
-                    delete_process_instance(delete_pid)
-
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
-        serializer.is_valid(raise_exception=True)
-        details = start_process(
-            process_key=settings.START_CAMUNDA_PROCESS_DEFINITION_KEY,
-            variables=serializer.validated_data,
-        )
 
 
 class UserTaskView(APIView):
