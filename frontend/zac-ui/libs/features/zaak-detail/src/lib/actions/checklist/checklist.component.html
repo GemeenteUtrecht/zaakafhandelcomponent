@@ -1,12 +1,16 @@
-<!-- Loading -->
-<ng-container *ngIf="isLoading">
-  <gu-loading-indicator></gu-loading-indicator>
-</ng-container>
-<!-- End loading -->
+<div class="activities card">
+  <h2>Checklist</h2>
+  <!-- Loading -->
+  <ng-container *ngIf="isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
+  <!-- End loading -->
 
-<gu-form *ngIf="!isLoading && checklistForm"
-         [zaak]="zaak"
-         [form]="checklistForm"
-         [isLoading]="isSubmitting"
-         (formSubmit)="onSubmitForm($event)">
-</gu-form>
+  <gu-form *ngIf="!isLoading && checklistForm"
+           [zaak]="zaak"
+           [form]="checklistForm"
+           [isLoading]="isSubmitting"
+           [buttonSize]="'small'"
+           (formSubmit)="onSubmitForm($event)">
+  </gu-form>
+</div>

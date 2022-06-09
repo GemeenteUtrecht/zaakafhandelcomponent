@@ -24,11 +24,17 @@ export class UserPermissionsComponent implements OnInit {
     /** @type {boolean} Whether this component is loading. */
     isLoading = false;
 
-    /** @type {Table|null} The Table to render. */
-    table = null;
+    /** @type {Table} The Table to render. */
+    table: Table = null;
+
+    /** @type {Table} The short version of Table to render. */
+    shortTable: Table = null;
 
     /** @type {UserPermission[]} The user permissions. */
     userPermissions: UserPermission[] = [];
+
+    /** @type {boolean} Wether table rows are all shown */
+    isExpanded = false;
 
     constructor(
       private permissionsService: PermissionsService,
@@ -71,6 +77,10 @@ export class UserPermissionsComponent implements OnInit {
         this.zaakService.listCaseUsers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
             (userPermissions: UserPermission[]): void => {
                 this.table = this.userPermissionsAsTable(userPermissions);
+
+                this.shortTable = {...this.table};
+                this.shortTable.bodyData = this.shortTable.bodyData.slice(0, 3);
+
                 this.isLoading = false;
             },
             (error: any): void => {
@@ -135,6 +145,13 @@ export class UserPermissionsComponent implements OnInit {
     openModal(id: string) {
         this.modalService.open(id);
     }
+
+    /**
+     * Expand table rows.
+     */
+    expand() {
+        this.isExpanded = !this.isExpanded;
+      }
 
     /**
      * Gets called when delete button is clicked, remover user permission.

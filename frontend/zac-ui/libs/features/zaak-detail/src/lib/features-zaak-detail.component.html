@@ -78,15 +78,22 @@
               <!-- Overview tab -->
 
               <div class="row" [hidden]="activeLink !== 'overzicht'">
-                <div class="col-lg-7 mb-lg-4">
+                <div class="col-lg-5 mb-4">
                   <!-- Information -->
                   <gu-informatie class="d-block mb-4" [zaak]="zaakData">
                   </gu-informatie>
 
                   <!-- Related cases -->
-                  <gu-gerelateerde-zaken class="d-block mb-4" [zaak]="zaakData"></gu-gerelateerde-zaken>
+                  <gu-gerelateerde-zaken [zaak]="zaakData"></gu-gerelateerde-zaken>
                 </div>
-                <div class="col-lg-5">
+                <div class="col-lg-4 mb-4">
+                  <gu-status [zaak]="zaakData"
+                             [progress]="zaakData.deadlineProgress"
+                             [deadline]="zaakData.deadline"
+                             [finished]="!!zaakData.resultaat">
+                  </gu-status>
+                </div>
+                <div class="col-lg-3">
                   <!-- Involved persons -->
                   <gu-betrokkenen class="d-block mb-4" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-betrokkenen>
 
@@ -99,14 +106,17 @@
 
               <div class="row" [hidden]="activeLink !== 'acties'">
                 <div class="col-lg-7 mb-4">
+
+                  <!-- Open activities button -->
                   <div class="mb-4" *ngIf="activityData">
                     <button gu-button
                             buttonStyle="primary"
                             icon="playlist_add_check"
                             (click)="openModal('activities-modal')">
-                      Activiteiten en checklist
+                      Activiteiten
                     </button>
                   </div>
+
                   <!-- Processes -->
                   <gu-keten-processen *ngIf="currentUser"
                                       [mainZaakUrl]="mainZaakUrl"
@@ -116,22 +126,25 @@
                                       [zaak]="zaakData"
                                       (update)="ketenProcessenUpdate($event)"
                                       (nTaskDataEvent)="nTasks = $event"
-                                      class="zaak-detail__section">
+                                      class="zaak-detail__section d-block mb-4">
                   </gu-keten-processen>
-                </div>
-
-                <div class="col-lg-5">
-                  <gu-status class="d-block mb-4"
-                             [zaak]="zaakData"
-                             [progress]="zaakData.deadlineProgress"
-                             [deadline]="zaakData.deadline"
-                             [finished]="!!zaakData.resultaat">
-                  </gu-status>
 
                   <!-- Approval -->
                   <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie"
                                            [identificatie]="identificatie">
                   </gu-adviseren-accorderen>
+                </div>
+
+                <div class="col-lg-5">
+
+                  <!-- Checklist -->
+                  <gu-checklist class="mb-4"
+                                [ngClass]="{'d-block': isChecklistAvailable}"
+                                [hidden]="!isChecklistAvailable"
+                                [zaak]="zaakData"
+                                (isChecklistAvailable)="isChecklistAvailable = $event">
+                  </gu-checklist>
+
                 </div>
               </div>
 
