@@ -8,7 +8,7 @@ from zgw_consumers.api_models.documenten import Document
 from zac.camunda.data import Task
 from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context
-from zac.core.camunda import get_process_zaak_url
+from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_documenten, get_zaak
 from zgw.models.zrc import Zaak
 
