@@ -139,10 +139,10 @@
 
                   <!-- Checklist -->
                   <gu-checklist class="mb-4"
-                                [ngClass]="{'d-block': checklistIsAvailable}"
-                                [hidden]="!checklistIsAvailable"
+                                [ngClass]="{'d-block': isChecklistAvailable}"
+                                [hidden]="!isChecklistAvailable"
                                 [zaak]="zaakData"
-                                (checklistIsAvailable)="checklistIsAvailable = $event">
+                                (isChecklistAvailable)="isChecklistAvailable = $event">
                   </gu-checklist>
 
                 </div>

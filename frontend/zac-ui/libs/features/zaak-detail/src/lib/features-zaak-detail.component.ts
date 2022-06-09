@@ -102,7 +102,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
   nTasks: number = null;
 
   /** Checklist availability */
-  checklistIsAvailable = false;
+  isChecklistAvailable = false;
 
 
   /**
