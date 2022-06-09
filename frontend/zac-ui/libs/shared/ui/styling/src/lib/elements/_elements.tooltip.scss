@@ -9,10 +9,12 @@
 .tooltip {
   position: relative;
   cursor: default;
+
   &--inline {
     display: inline-block;
     vertical-align: top;
   }
+
   &__content {
     background: $color-blue;
     color: white;
@@ -22,13 +24,21 @@
     transition: 0.2s ease;
     opacity: 0.9;
     min-width: 200px;
-    bottom: 26px;
     left: 16px;
     position: absolute;
     font-size: 0.75rem;
     visibility: hidden;
     z-index: 3;
   }
+
+  &--top &__content {
+    bottom: 26px;
+  }
+
+  &--bottom &__content {
+    top: 26px;
+  }
+
   &--primary {
     .tooltip__content {
       background-color: $color-blue;

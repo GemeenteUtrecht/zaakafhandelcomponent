@@ -1,6 +1,8 @@
 <div
   class="tooltip"
   [ngClass]="{
+    'tooltip--top': position === 'top',
+    'tooltip--bottom': position === 'bottom',
     'tooltip--primary': type === 'primary',
     'tooltip--accent': type === 'accent',
     'tooltip--warn': type === 'warn',
