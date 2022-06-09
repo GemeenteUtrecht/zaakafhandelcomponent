@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django_camunda.utils import serialize_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
+from zds_client import ClientError
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
@@ -36,7 +37,6 @@ from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
-from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
@@ -47,7 +47,6 @@ from zac.core.services import (
     get_informatieobjecttypen_for_zaak,
     get_statustypen,
     get_zaak,
-    get_zaaktypen,
 )
 from zgw.models.zrc import Zaak
 
@@ -362,20 +361,15 @@ class CreateZaakSerializer(serializers.Serializer):
     )
 
     def validate_zaaktype(self, zaaktype):
-        allowed_zts = [
-            zt.url for zt in get_zaaktypen(user=self.context["request"].user)
-        ]
-
-        if zaaktype in allowed_zts:
-            return zaaktype
-
-        all_zts = [zt.url for zt in get_zaaktypen()]
-
-        if zaaktype in all_zts:
+        try:
+            fetch_zaaktype(zaaktype)
+        except ClientError:
             raise serializers.ValidationError(
-                _("User does not have permission for ZAAKTYPE.")
+                _("ZAAKTYPE can not be found for URL {zaaktype}.").format(
+                    zaaktype=zaaktype
+                )
             )
-        raise serializers.ValidationError(_("ZAAKTYPE not found."))
+        return zaaktype
 
     def to_internal_value(self, data):
         serialized_data = {
