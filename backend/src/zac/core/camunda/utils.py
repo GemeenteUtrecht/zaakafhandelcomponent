@@ -1,6 +1,5 @@
 import logging
-import warnings
-from typing import List, Optional, Union
+from typing import List, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -61,16 +60,6 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
 
         task.form = extract_task_form(task, FORM_KEYS)
     return tasks
-
-
-def get_task(*args, **kwargs) -> Optional[Task]:
-    from zac.camunda.user_tasks import get_task
-
-    warnings.warn(
-        "'zac.core.camunda.get_task' is deprecated, use 'zac.camunda.user_tasks.get_task' instead",
-        DeprecationWarning,
-    )
-    return get_task(*args, **kwargs)
 
 
 def get_process_zaak_url(

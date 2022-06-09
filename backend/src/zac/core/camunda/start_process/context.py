@@ -12,7 +12,7 @@ from .serializers import (
     get_required_process_informatie_objecten,
 )
 from .utils import (
-    get_camunda_start_process_form_from_zaakcontext,
+    get_camunda_start_process_from_zaakcontext,
     get_required_rollen,
     get_required_zaakeigenschappen,
 )
@@ -25,15 +25,13 @@ from .utils import (
 )
 def get_zaak_start_process_form_context(task: Task) -> Dict:
     zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
-    camunda_start_process_form = get_camunda_start_process_form_from_zaakcontext(
-        zaak_context
-    )
+    camunda_start_process = get_camunda_start_process_from_zaakcontext(zaak_context)
     informatieobjecten = get_required_process_informatie_objecten(
-        zaak_context, camunda_start_process_form
+        zaak_context, camunda_start_process
     )
-    rollen = get_required_rollen(zaak_context, camunda_start_process_form)
+    rollen = get_required_rollen(zaak_context, camunda_start_process)
     zaakeigenschappen = get_required_zaakeigenschappen(
-        zaak_context, camunda_start_process_form
+        zaak_context, camunda_start_process
     )
     return {
         "zaakeigenschappen": zaakeigenschappen,

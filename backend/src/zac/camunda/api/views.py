@@ -9,16 +9,20 @@ from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
 from zac.accounts.models import User
+from zac.camunda.api.utils import get_bptl_app_id_variable, start_process
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.core.api.permissions import CanCreateZaken, CanReadZaken
+from zac.core.api.permissions import CanReadZaken, CanStartCamundaProcess
 from zac.core.api.serializers import ZaakSerializer
-from zac.core.camunda import get_process_zaak_url
+from zac.core.api.views import GetZaakMixin
+from zac.core.camunda.start_process.models import CamundaStartProcess
+from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 
@@ -44,7 +48,7 @@ from .serializers import (
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
-from .utils import get_bptl_app_id_variable
+from .utils import delete_zaak_creation_process, get_bptl_app_id_variable
 
 
 class ProcessInstanceFetchViewSet(ViewSet):
@@ -102,7 +106,7 @@ class ProcessInstanceFetchViewSet(ViewSet):
         ],
         responses={"200": ZaakSerializer},
     )
-    @action(detail=True, methods=["get"], permission_classes=(CanCreateZaken,))
+    @action(detail=True, methods=["get"], permission_classes=(CanReadZaken,))
     def zaak(self, request: Request, pk: uuid.UUID):
         process_instance = get_process_instance(pk)
         zaak_url = process_instance.get_variable("zaakUrl")
@@ -476,4 +480,38 @@ class CancelTaskView(APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(request, zaak)
         cancel_activity_instance_of_task(task)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class StartCamundaProcessView(GetZaakMixin, APIView):
+    permission_classes = (permissions.IsAuthenticated, CanStartCamundaProcess)
+
+    def post(
+        self, request: Request, bronorganisatie: str, identificatie: str
+    ) -> Response:
+        zaak = self.get_object()
+
+        # First check to see if there is a zaak creation
+        # process still running and delete it if so.
+        delete_zaak_creation_process(zaak)
+
+        # See if there is a configured camunda_start_process object
+        camunda_start_process = get_object_or_404(
+            CamundaStartProcess,
+            {
+                "zaaktype_catalogus": zaak.zaaktype.catalogus,
+                "zaaktype_identificatie": zaak.zaaktype.identificatie,
+            },
+        )
+        start_process(
+            process_key=camunda_start_process.process_definition_key,
+            variables={
+                "zaakUrl": zaak.url,
+                "zaakIdentificatie": zaak.identificatie,
+                "zaakDetails": {
+                    "omschrijving": zaak.omschrijving,
+                    "zaaktypeOmschrijving": zaak.zaaktype.omschrijving,
+                },
+            },
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)

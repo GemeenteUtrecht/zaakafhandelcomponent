@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from zgw_consumers.api_models.constants import RolTypes
 
 
-class CamundaStartProcessForm(models.Model):
+class CamundaStartProcess(models.Model):
     """
     Configuration needed to start a process for a ZAAK of ZAAKTYPE.
 
@@ -41,11 +41,13 @@ class CamundaStartProcessForm(models.Model):
         verbose_name_plural = _("camunda start process forms")
         unique_together = (("zaaktype_catalogus", "zaaktype_identificatie"),)
 
+    def __str__(self):
+        return self.process_definition_key
 
-class CamundaStartProcessFormMixin(models.Model):
-    camunda_start_process_form = models.ForeignKey(
-        CamundaStartProcessForm,
-        help_text=_("Related camunda start process form."),
+
+class CamundaStartProcessMixin(models.Model):
+    camunda_start_process = models.ForeignKey(
+        CamundaStartProcess,
         on_delete=models.CASCADE,
     )
 
@@ -67,7 +69,7 @@ class FieldMixin(models.Model):
         abstract = True
 
 
-class ProcessEigenschap(CamundaStartProcessFormMixin, FieldMixin):
+class ProcessEigenschap(CamundaStartProcessMixin, FieldMixin):
     eigenschapnaam = models.CharField(
         _("eigenschapnaam"),
         max_length=20,
@@ -110,26 +112,23 @@ class ProcessEigenschap(CamundaStartProcessFormMixin, FieldMixin):
 class ProcessEigenschapChoice(FieldMixin):
     process_eigenschap = models.ForeignKey(
         ProcessEigenschap,
-        help_text=_("Choices that can be selected."),
         on_delete=models.CASCADE,
     )
 
     class Meta:
-        verbose_name = _("Choice")
-        verbose_name_plural = _("Choices")
+        verbose_name = _("Process eigenschap choice")
+        verbose_name_plural = _("Process eigenschap choices")
 
 
-class ProcessInformatieObject(CamundaStartProcessFormMixin, FieldMixin):
+class ProcessInformatieObject(CamundaStartProcessMixin, FieldMixin):
     informatieobjecttype_omschrijving = models.CharField(
         _("INFORMATIEOBJECTTYPE description"), max_length=100
     )
     allow_multiple = models.BooleanField(
-        _(
-            "Allow multiple documents",
-            help_text=_(
-                "A boolean flag to indicate whether a user is allowed to add more than 1 document."
-            ),
-        )
+        _("Allow multiple documents"),
+        help_text=_(
+            "A boolean flag to indicate whether a user is allowed to add more than 1 document."
+        ),
     )
 
     class Meta:
@@ -137,7 +136,7 @@ class ProcessInformatieObject(CamundaStartProcessFormMixin, FieldMixin):
         verbose_name_plural = _("Process INFORMATIEOBJECTen")
 
 
-class ProcessRol(CamundaStartProcessFormMixin, FieldMixin):
+class ProcessRol(CamundaStartProcessMixin, FieldMixin):
     roltype_omschrijving = models.CharField(
         _("ROLTYPE omschrijving"),
         help_text=_("Description of ROLTYPE associated to ROL."),

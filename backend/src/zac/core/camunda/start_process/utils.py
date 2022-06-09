@@ -8,14 +8,50 @@ from zac.core.services import (
     get_rollen,
     get_roltypen,
     get_zaak_eigenschappen,
+    resolve_documenten_informatieobjecttypen,
 )
 
-from .models import CamundaStartProcessForm, ProcessEigenschap
-from .serializers import ProcessRolSerializer
+from .models import CamundaStartProcess, ProcessEigenschap
+from .serializers import ProcessInformatieObjectSerializer, ProcessRolSerializer
+
+
+def get_required_process_informatie_objecten(
+    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
+) -> List[ProcessInformatieObjectSerializer]:
+    # Get all documents that are already uploaded and add them to
+    # already_uploaded_informatieobjecten if their
+    # informatieobjecttype.omschrijving matches.
+    zaak_context.documents = resolve_documenten_informatieobjecttypen(
+        zaak_context.documents
+    )
+    ziot_omschrijvingen_to_doc_url_map = {}
+    for doc in zaak_context.documents:
+        if (
+            omschrijving := doc.informatieobjecttype.omschrijving
+            not in ziot_omschrijvingen_to_doc_url_map
+        ):
+            ziot_omschrijvingen_to_doc_url_map[omschrijving] = [doc.url]
+        else:
+            ziot_omschrijvingen_to_doc_url_map[omschrijving].append(doc.url)
+
+    # Get all required process informatie objecten from CamundaStartProcess
+    pi_objecten = camunda_start_process.processinformatieobject_set.all()
+    required_process_informatie_objecten = []
+    for piobject in pi_objecten:
+        if (
+            omschrijving := piobject.informatieobjecttype_omschrijving
+            in ziot_omschrijvingen_to_doc_url_map.keys()
+        ):
+            piobject.already_uploaded_informatieobjecten = (
+                ziot_omschrijvingen_to_doc_url_map[omschrijving]
+            )
+
+        required_process_informatie_objecten.append(piobject)
+    return required_process_informatie_objecten
 
 
 def get_required_rollen(
-    zaak_context: ZaakContext, camunda_start_process_form: CamundaStartProcessForm
+    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
 ) -> List[ProcessRolSerializer]:
     # Get all rollen that are already created and check if any of them
     # match the required rollen. Drop those that are already created.
@@ -27,8 +63,8 @@ def get_required_rollen(
         rol.roltype = roltypen[rol.roltype]
         already_set_roltype.append(rol.roltype.omschrijving)
 
-    # Get all required rollen from CamundaStartProcessForm
-    process_rollen = camunda_start_process_form.processrol_set.all()
+    # Get all required rollen from CamundaStartProcess
+    process_rollen = camunda_start_process.processrol_set.all()
     required_process_rollen = []
     omschrijving_to_roltypen_map = {
         roltype.omschrijving: roltype for url, roltype in roltypen.items()
@@ -44,7 +80,7 @@ def get_required_rollen(
 
 
 def get_required_zaakeigenschappen(
-    zaak_context: ZaakContext, camunda_start_process_form: CamundaStartProcessForm
+    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
 ) -> List[ProcessEigenschap]:
     # Get all zaakeigenschappen and check if any of them match the
     # required zaakeigenschappen. Drop those that are already created.
@@ -55,7 +91,7 @@ def get_required_zaakeigenschappen(
     eigenschappen = {
         ei.eigenschaapnaam: ei for ei in get_eigenschappen(zaak_context.zaaktype)
     }
-    required_eigenschappen = camunda_start_process_form.processeigenschap_set.all()
+    required_eigenschappen = camunda_start_process.processeigenschap_set.all()
     required_process_eigenschappen = []
     for ei in required_eigenschappen:
         if ei.eigenschapnaam in zaakeigenschappen.keys():
@@ -67,20 +103,20 @@ def get_required_zaakeigenschappen(
     return required_process_eigenschappen
 
 
-def get_camunda_start_process_form_from_zaakcontext(
+def get_camunda_start_process_from_zaakcontext(
     zaak_context: ZaakContext,
-) -> CamundaStartProcessForm:
-    # Get related CamundaStartProcessForm
-    camunda_start_process_form = CamundaStartProcessForm.objects.filter(
+) -> CamundaStartProcess:
+    # Get related CamundaStartProcess
+    camunda_start_process = CamundaStartProcess.objects.filter(
         zaaktype_catalogus=zaak_context.zaaktype.catalogus,
         zaaktype_identificatie=zaak_context.zaaktype.identificatie,
     )
 
     # Make sure it exists
-    if not camunda_start_process_form.exists():
+    if not camunda_start_process.exists():
         raise RuntimeError(
             "Please create a camunda start process form for this zaaktype first."
         )
     else:
-        camunda_start_process_form = camunda_start_process_form[0]
-    return camunda_start_process_form
+        camunda_start_process = camunda_start_process[0]
+    return camunda_start_process

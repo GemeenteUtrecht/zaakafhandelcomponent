@@ -15,6 +15,11 @@ zaken_wijzigen = Permission(
     description="Laat het wijzigen toe van zaakattributen.",
 )
 
+zaakprocess_starten = Permission(
+    name="zaakproces:starten",
+    description="Het zaakproces in camunda starten.",
+)
+
 zaakproces_usertasks = Permission(
     name="zaakproces:usertasks-uitvoeren",
     description="Usertasks claimen en/of uitvoeren als onderdeel van het zaakproces.",

@@ -153,6 +153,7 @@ INSTALLED_APPS = [
     "zac.activities",
     "zac.contrib.dowc",
     "zac.checklists",
+    "zac.core.camunda.start_process",
 ]
 
 MIDDLEWARE = [

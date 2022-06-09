@@ -6,8 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from zgw_consumers.api_models.constants import RolTypes
 
-from zac.api.context import ZaakContext, get_zaak_context
-from zac.camunda.data import Task
+from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import usertask_context_serializer
 from zac.core.api.serializers import (
     EigenschapSerializer,
@@ -24,7 +23,7 @@ from zac.core.services import (
 )
 
 from .models import (
-    CamundaStartProcessForm,
+    CamundaStartProcess,
     ProcessEigenschap,
     ProcessEigenschapChoice,
     ProcessInformatieObject,
@@ -122,41 +121,6 @@ class CamundaZaakProcessContextSerializer(serializers.Serializer):
     )
 
 
-def get_required_process_informatie_objecten(
-    zaak_context: ZaakContext, camunda_start_process_form: CamundaStartProcessForm
-) -> List[ProcessInformatieObjectSerializer]:
-    # Get all documents that are already uploaded and add them to
-    # already_uploaded_informatieobjecten if their
-    # informatieobjecttype.omschrijving matches.
-    zaak_context.documents = resolve_documenten_informatieobjecttypen(
-        zaak_context.documents
-    )
-    ziot_omschrijvingen_to_doc_url_map = {}
-    for doc in zaak_context.documents:
-        if (
-            omschrijving := doc.informatieobjecttype.omschrijving
-            not in ziot_omschrijvingen_to_doc_url_map
-        ):
-            ziot_omschrijvingen_to_doc_url_map[omschrijving] = [doc.url]
-        else:
-            ziot_omschrijvingen_to_doc_url_map[omschrijving].append(doc.url)
-
-    # Get all required process informatie objecten from CamundaStartProcessForm
-    pi_objecten = camunda_start_process_form.processinformatieobject_set.all()
-    required_process_informatie_objecten = []
-    for piobject in pi_objecten:
-        if (
-            omschrijving := piobject.informatieobjecttype_omschrijving
-            in ziot_omschrijvingen_to_doc_url_map.keys()
-        ):
-            piobject.already_uploaded_informatieobjecten = (
-                ziot_omschrijvingen_to_doc_url_map[omschrijving]
-            )
-
-        required_process_informatie_objecten.append(piobject)
-    return required_process_informatie_objecten
-
-
 class ZaakProcessEigenschapSerializer(serializers.Serializer):
     naam = serializers.CharField(
         help_text=_(
@@ -184,10 +148,10 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         return self._zaakcontext
 
     @property
-    def camunda_start_process_form(self):
-        if not hasattr(self, "_camunda_start_process_form"):
+    def camunda_start_process(self):
+        if not hasattr(self, "_camunda_start_process"):
             try:
-                camunda_start_process_form = CamundaStartProcessForm.objects.get(
+                camunda_start_process = CamundaStartProcess.objects.get(
                     zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
                     zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
                 ).prefetch_related(
@@ -204,8 +168,8 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                         zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
                     )
                 )
-            self._camunda_start_process_form = camunda_start_process_form
-        return self._camunda_start_process_form
+            self._camunda_start_process = camunda_start_process
+        return self._camunda_start_process
 
     def validate_bijlagen(self, bijlagen):
         # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
@@ -215,7 +179,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
         required_informatieobjecttype_omschrijvingen = [
             iot.informatieobjecttype_omschrijving
-            for iot in self.camunda_start_process_form.processinformatieobject_set.all()
+            for iot in self.camunda_start_process.processinformatieobject_set.all()
         ]
         for iot_omschrijving in required_informatieobjecttype_omschrijvingen:
             if iot_omschrijving not in iots:
@@ -231,7 +195,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
         required_zaakeigenschapnamen = [
             ei.eigenschapnaam
-            for ei in self.camunda_start_process_form.processeigenschap_set.all()
+            for ei in self.camunda_start_process.processeigenschap_set.all()
         ]
         found_zaakeigenschapnamen = [zei["naam"] for zei in zaakeigenschappen]
         for required_zei in required_zaakeigenschapnamen:
@@ -247,7 +211,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         rollen = get_rollen(zaak=self.zaakcontext.zaak)
         # Validate that rollen in zaak match required rollen
         required_rt_omsch_betr_type = {}
-        for rt in self.camunda_start_process_form.processrol_set.all():
+        for rt in self.camunda_start_process.processrol_set.all():
             if rt.roltype_omschrijving not in required_rt_omsch_betr_type:
                 required_rt_omsch_betr_type[rt.roltype_omschrijving] = [
                     rt.betrokkene_type
