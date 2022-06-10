@@ -59,13 +59,14 @@ class ProcessEigenschapSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessEigenschap
-        fields = ("choices", "eigenschap", "label", "value", "default")
+        fields = ("choices", "eigenschap", "label", "default")
 
 
 class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
     informatieobjecttype = InformatieObjectTypeSerializer(
         required=True,
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT."),
+        allow_null=True,
     )
     already_uploaded_informatieobjecten = serializers.ListField(
         child=serializers.URLField(),
@@ -77,9 +78,9 @@ class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
         model = ProcessInformatieObject
         fields = (
             "informatieobjecttype",
+            "already_uploaded_informatieobjecten",
             "allow_multiple",
             "label",
-            "value",
         )
 
 
@@ -90,7 +91,7 @@ class ProcessRolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessRol
-        fields = ("roltype", "label", "value", "betrokkene_type", "default")
+        fields = ("roltype", "label", "betrokkene_type", "default")
 
 
 class ZaakProcessEigenschapSerializer(serializers.Serializer):
@@ -260,24 +261,24 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
 @dataclass
 class StartProcessFormContext(Context):
-    bijlagen: List[ProcessInformatieObject]
-    rollen: List[ProcessRol]
-    zaakeigenschappen: List[ProcessEigenschap]
+    benodigde_bijlagen: List[ProcessInformatieObject]
+    benodigde_rollen: List[ProcessRol]
+    benodigde_zaakeigenschappen: List[ProcessEigenschap]
 
 
 @usertask_context_serializer
 class CamundaZaakProcessContextSerializer(APIModelSerializer):
-    bijlagen = ProcessInformatieObjectSerializer(
+    benodigde_bijlagen = ProcessInformatieObjectSerializer(
         many=True,
         required=False,
         help_text=_("These INFORMATIEOBJECTen need to be set to start the process."),
     )
-    rollen = ProcessRolSerializer(
+    benodigde_rollen = ProcessRolSerializer(
         many=True,
         required=False,
         help_text=_("These ROLlen need to be set to start the process."),
     )
-    zaakeigenschappen = ProcessEigenschapSerializer(
+    benodigde_zaakeigenschappen = ProcessEigenschapSerializer(
         many=True,
         required=False,
         help_text=_("These ZAAKEIGENSCHAPpen need to be set to start the process."),
@@ -286,9 +287,9 @@ class CamundaZaakProcessContextSerializer(APIModelSerializer):
     class Meta:
         model = StartProcessFormContext
         fields = (
-            "bijlagen",
-            "rollen",
-            "zaakeigenschappen",
+            "benodigde_bijlagen",
+            "benodigde_rollen",
+            "benodigde_zaakeigenschappen",
         )
 
 
@@ -312,7 +313,7 @@ def get_zaak_start_process_form_context(task: Task) -> StartProcessFormContext:
         zaak_context, camunda_start_process
     )
     return StartProcessFormContext(
-        zaakeigenschappen=zaakeigenschappen,
-        bijlagen=bijlagen,
-        rollen=rollen,
+        benodigde_bijlagen=bijlagen,
+        benodigde_rollen=rollen,
+        benodigde_zaakeigenschappen=zaakeigenschappen,
     )

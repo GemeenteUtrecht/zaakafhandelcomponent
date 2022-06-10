@@ -725,7 +725,7 @@ class RelatedZaakSerializer(serializers.Serializer):
 
 class RolTypeSerializer(APIModelSerializer):
     class Meta:
-        models = RolType
+        model = RolType
         fields = ("url", "omschrijving", "omschrijving_generiek")
 
 

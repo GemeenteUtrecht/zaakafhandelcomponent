@@ -55,21 +55,16 @@ class CamundaStartProcessMixin(models.Model):
         abstract = True
 
 
-class FieldMixin(models.Model):
+class FieldLabelMixin(models.Model):
     label = models.CharField(
         _("label"), max_length=100, help_text=_("The label that will be shown.")
-    )
-    value = models.CharField(
-        _("value"),
-        max_length=100,
-        help_text=_("The value that will be used internally."),
     )
 
     class Meta:
         abstract = True
 
 
-class ProcessEigenschap(CamundaStartProcessMixin, FieldMixin):
+class ProcessEigenschap(CamundaStartProcessMixin, FieldLabelMixin):
     eigenschapnaam = models.CharField(
         _("eigenschapnaam"),
         max_length=20,
@@ -109,10 +104,15 @@ class ProcessEigenschap(CamundaStartProcessMixin, FieldMixin):
         verbose_name_plural = _("Process EIGENSCHAPpen")
 
 
-class ProcessEigenschapChoice(FieldMixin):
+class ProcessEigenschapChoice(FieldLabelMixin):
     process_eigenschap = models.ForeignKey(
         ProcessEigenschap,
         on_delete=models.CASCADE,
+    )
+    value = models.CharField(
+        _("value"),
+        max_length=100,
+        help_text=_("The value that will be used internally."),
     )
 
     class Meta:
@@ -120,7 +120,7 @@ class ProcessEigenschapChoice(FieldMixin):
         verbose_name_plural = _("Process eigenschap choices")
 
 
-class ProcessInformatieObject(CamundaStartProcessMixin, FieldMixin):
+class ProcessInformatieObject(CamundaStartProcessMixin, FieldLabelMixin):
     informatieobjecttype_omschrijving = models.CharField(
         _("INFORMATIEOBJECTTYPE description"), max_length=100
     )
@@ -137,7 +137,7 @@ class ProcessInformatieObject(CamundaStartProcessMixin, FieldMixin):
         verbose_name_plural = _("Process INFORMATIEOBJECTen")
 
 
-class ProcessRol(CamundaStartProcessMixin, FieldMixin):
+class ProcessRol(CamundaStartProcessMixin, FieldLabelMixin):
     roltype_omschrijving = models.CharField(
         _("ROLTYPE omschrijving"),
         help_text=_("Description of ROLTYPE associated to ROL."),
