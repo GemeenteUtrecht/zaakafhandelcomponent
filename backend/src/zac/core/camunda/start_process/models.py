@@ -129,6 +129,7 @@ class ProcessInformatieObject(CamundaStartProcessMixin, FieldMixin):
         help_text=_(
             "A boolean flag to indicate whether a user is allowed to add more than 1 document."
         ),
+        default=True,
     )
 
     class Meta:
