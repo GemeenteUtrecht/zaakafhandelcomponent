@@ -6,10 +6,4 @@ class StartProcessConfig(AppConfig):
     name = "zac.core.camunda.start_process"
 
     def ready(self):
-        from zac.core.camunda.utils import FORM_KEYS
-
-        FORM_KEYS.update(
-            {
-                "zac:StartProcessForm": True,
-            }
-        )
+        from .serializers import get_zaak_start_process_form_context

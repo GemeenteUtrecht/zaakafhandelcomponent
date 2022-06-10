@@ -11,13 +11,17 @@ from zac.core.services import (
     resolve_documenten_informatieobjecttypen,
 )
 
-from .models import CamundaStartProcess, ProcessEigenschap
-from .serializers import ProcessInformatieObjectSerializer, ProcessRolSerializer
+from .models import (
+    CamundaStartProcess,
+    ProcessEigenschap,
+    ProcessInformatieObject,
+    ProcessRol,
+)
 
 
 def get_required_process_informatie_objecten(
     zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
-) -> List[ProcessInformatieObjectSerializer]:
+) -> List[ProcessInformatieObject]:
     # Get all documents that are already uploaded and add them to
     # already_uploaded_informatieobjecten if their
     # informatieobjecttype.omschrijving matches.
@@ -52,7 +56,7 @@ def get_required_process_informatie_objecten(
 
 def get_required_rollen(
     zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
-) -> List[ProcessRolSerializer]:
+) -> List[ProcessRol]:
     # Get all rollen that are already created and check if any of them
     # match the required rollen. Drop those that are already created.
     rollen = get_rollen(zaak_context.zaak)
@@ -101,22 +105,3 @@ def get_required_zaakeigenschappen(
         required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen
-
-
-def get_camunda_start_process_from_zaakcontext(
-    zaak_context: ZaakContext,
-) -> CamundaStartProcess:
-    # Get related CamundaStartProcess
-    camunda_start_process = CamundaStartProcess.objects.filter(
-        zaaktype_catalogus=zaak_context.zaaktype.catalogus,
-        zaaktype_identificatie=zaak_context.zaaktype.identificatie,
-    )
-
-    # Make sure it exists
-    if not camunda_start_process.exists():
-        raise RuntimeError(
-            "Please create a camunda start process form for this zaaktype first."
-        )
-    else:
-        camunda_start_process = camunda_start_process[0]
-    return camunda_start_process

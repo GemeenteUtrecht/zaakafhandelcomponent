@@ -22,6 +22,7 @@ FORM_KEYS = {
     "zac:gebruikerSelectie": True,
     "zac:configureAdviceRequest": True,
     "zac:configureApprovalRequest": True,
+    "zac:startProcessForm": True,
 }
 
 

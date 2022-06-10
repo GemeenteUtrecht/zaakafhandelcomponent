@@ -1,13 +1,17 @@
+from dataclasses import dataclass
 from typing import Dict, List, Union
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 from zgw_consumers.api_models.constants import RolTypes
+from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
-from zac.camunda.user_tasks import usertask_context_serializer
+from zac.camunda.data import Task
+from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.core.api.serializers import (
     EigenschapSerializer,
     InformatieObjectTypeSerializer,
@@ -29,6 +33,11 @@ from .models import (
     ProcessInformatieObject,
     ProcessRol,
 )
+from .utils import (
+    get_required_process_informatie_objecten,
+    get_required_rollen,
+    get_required_zaakeigenschappen,
+)
 
 
 class ProcessEigenschapChoiceSerializer(serializers.ModelSerializer):
@@ -47,12 +56,6 @@ class ProcessEigenschapSerializer(serializers.ModelSerializer):
     eigenschap = EigenschapSerializer(
         required=True, help_text=_("The EIGENSCHAP related to the ZAAKEIGENSCHAP.")
     )
-    default = serializers.CharField(
-        _("default"),
-        required=False,
-        allow_blank=True,
-        help_text=_("Default value of the ZAAKEIGENSCHAP."),
-    )
 
     class Meta:
         model = ProcessEigenschap
@@ -65,9 +68,9 @@ class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT."),
     )
     already_uploaded_informatieobjecten = serializers.ListField(
-        child=serializers.URLField,
+        child=serializers.URLField(),
         required=False,
-        help_text=_("The URLs of already uploaded "),
+        help_text=_("URL-references of already uploaded documents."),
     )
 
     class Meta:
@@ -84,41 +87,10 @@ class ProcessRolSerializer(serializers.ModelSerializer):
     roltype = RolTypeSerializer(
         _("roltype"), required=True, help_text=_("The ROLTYPE related to the ROL.")
     )
-    betrokkene_type = serializers.CharField(
-        _("betrokkene type"),
-        required=True,
-        choices=RolTypes,
-        help_text=_("Betrokkene type of the ROL."),
-    )
-    default = serializers.CharField(
-        _("default"),
-        required=False,
-        allow_blank=True,
-        help_text=_("Default value given to the ROL betrokkene."),
-    )
 
     class Meta:
         model = ProcessRol
         fields = ("roltype", "label", "value", "betrokkene_type", "default")
-
-
-@usertask_context_serializer
-class CamundaZaakProcessContextSerializer(serializers.Serializer):
-    zaakeigenschappen = ProcessEigenschapSerializer(
-        many=True,
-        required=False,
-        help_text=_("These ZAAKEIGENSCHAPpen need to be set to start the process."),
-    )
-    informatieobjecten = ProcessInformatieObjectSerializer(
-        many=True,
-        required=False,
-        help_text=_("These INFORMATIEOBJECTen need to be set to start the process."),
-    )
-    rollen = ProcessRolSerializer(
-        many=True,
-        required=False,
-        help_text=_("These ROLlen need to be set to start the process."),
-    )
 
 
 class ZaakProcessEigenschapSerializer(serializers.Serializer):
@@ -135,9 +107,9 @@ class ZaakProcessEigenschapSerializer(serializers.Serializer):
 
 
 class ConfigureZaakProcessSerializer(serializers.Serializer):
-    bijlagen = serializers.ListField(child=serializers.URLField())
-    zaakeigenschappen = ZaakProcessEigenschapSerializer(many=True)
-    rollen = RolSerializer(many=True)
+    bijlagen = serializers.HiddenField(default=[])
+    rollen = serializers.HiddenField(default=[])
+    zaakeigenschappen = serializers.HiddenField(default=[])
 
     @property
     def zaakcontext(self):
@@ -189,23 +161,6 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                     ).format(omschrijving=iot_omschrijving)
                 )
         return documenten
-
-    def validate_zaakeigenschappen(self, zaakeigenschappen):
-        # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
-        zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
-        required_zaakeigenschapnamen = [
-            ei.eigenschapnaam
-            for ei in self.camunda_start_process.processeigenschap_set.all()
-        ]
-        found_zaakeigenschapnamen = [zei["naam"] for zei in zaakeigenschappen]
-        for required_zei in required_zaakeigenschapnamen:
-            if required_zei not in found_zaakeigenschapnamen:
-                raise serializers.ValidationError(
-                    _(
-                        "A ZAAKEIGENCHAP with eigenschapnaam `{eigenschapnaam}` is required."
-                    ).format(eigenschapnaam=required_zei)
-                )
-        return zaakeigenschappen
 
     def validate_rollen(self, rollen):
         rollen = get_rollen(zaak=self.zaakcontext.zaak)
@@ -261,6 +216,23 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 )
         return rollen
 
+    def validate_zaakeigenschappen(self, zaakeigenschappen):
+        # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
+        zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
+        required_zaakeigenschapnamen = [
+            ei.eigenschapnaam
+            for ei in self.camunda_start_process.processeigenschap_set.all()
+        ]
+        found_zaakeigenschapnamen = [zei["naam"] for zei in zaakeigenschappen]
+        for required_zei in required_zaakeigenschapnamen:
+            if required_zei not in found_zaakeigenschapnamen:
+                raise serializers.ValidationError(
+                    _(
+                        "A ZAAKEIGENCHAP with eigenschapnaam `{eigenschapnaam}` is required."
+                    ).format(eigenschapnaam=required_zei)
+                )
+        return zaakeigenschappen
+
     def on_task_submission(self) -> None:
         """
         On task submission do nothing but assert that serializer is valid.
@@ -284,3 +256,63 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             },
             **{rol.roltype.omschrijving: rol for rol in self.validated_data["rollen"]},
         }
+
+
+@dataclass
+class StartProcessFormContext(Context):
+    bijlagen: List[ProcessInformatieObject]
+    rollen: List[ProcessRol]
+    zaakeigenschappen: List[ProcessEigenschap]
+
+
+@usertask_context_serializer
+class CamundaZaakProcessContextSerializer(APIModelSerializer):
+    bijlagen = ProcessInformatieObjectSerializer(
+        many=True,
+        required=False,
+        help_text=_("These INFORMATIEOBJECTen need to be set to start the process."),
+    )
+    rollen = ProcessRolSerializer(
+        many=True,
+        required=False,
+        help_text=_("These ROLlen need to be set to start the process."),
+    )
+    zaakeigenschappen = ProcessEigenschapSerializer(
+        many=True,
+        required=False,
+        help_text=_("These ZAAKEIGENSCHAPpen need to be set to start the process."),
+    )
+
+    class Meta:
+        model = StartProcessFormContext
+        fields = (
+            "bijlagen",
+            "rollen",
+            "zaakeigenschappen",
+        )
+
+
+@register(
+    "zac:startProcessForm",
+    CamundaZaakProcessContextSerializer,
+    ConfigureZaakProcessSerializer,
+)
+def get_zaak_start_process_form_context(task: Task) -> StartProcessFormContext:
+    zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
+    camunda_start_process = get_object_or_404(
+        CamundaStartProcess,
+        zaaktype_catalogus=zaak_context.zaaktype.catalogus,
+        zaaktype_identificatie=zaak_context.zaaktype.identificatie,
+    )
+    bijlagen = get_required_process_informatie_objecten(
+        zaak_context, camunda_start_process
+    )
+    rollen = get_required_rollen(zaak_context, camunda_start_process)
+    zaakeigenschappen = get_required_zaakeigenschappen(
+        zaak_context, camunda_start_process
+    )
+    return StartProcessFormContext(
+        zaakeigenschappen=zaakeigenschappen,
+        bijlagen=bijlagen,
+        rollen=rollen,
+    )
