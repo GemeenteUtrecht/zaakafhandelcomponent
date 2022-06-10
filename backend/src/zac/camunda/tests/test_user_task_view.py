@@ -1,6 +1,6 @@
 import uuid
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -18,7 +18,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.api.context import ZaakContext
-from zac.camunda.data import ProcessInstance, Task
+from zac.camunda.data import Task
 from zac.contrib.kownsl.constants import KownslTypes
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.models import CoreConfig
@@ -350,6 +350,55 @@ class GetUserTaskContextViewTests(APITestCase):
             ),
         )
 
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_object_or_404",
+        return_value=None,
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_required_process_informatie_objecten",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_required_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_required_zaakeigenschappen",
+        return_value=[],
+    )
+    def test_get_start_camunda_process_form_context(self, m, *mocks):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaakproces_usertasks.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        with patch(
+            "zac.core.camunda.start_process.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.get(self.task_endpoint)
+
+        data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
+        self.assertIn("bijlagen", data["context"].keys())
+        self.assertIn("rollen", data["context"].keys())
+        self.assertIn("zaakeigenschappen", data["context"].keys())
+
 
 @requests_mock.Mocker()
 class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
@@ -676,4 +725,36 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "resultaat": "Vastgesteld",
         }
         response = self.client.put(self.task_endpoint, payload)
+        self.assertEqual(response.status_code, 204)
+
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
+    )
+    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=["some-bijlage"],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
+        return_value=[],
+    )
+    def test_put_configure_zaak_process_user_task(self, m, *mocks):
+        self._mock_permissions(m)
+        payload = {}
+
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            status_code=201,
+        )
+        with patch(
+            "zac.core.camunda.start_process.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
