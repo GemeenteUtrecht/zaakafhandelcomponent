@@ -395,9 +395,9 @@ class GetUserTaskContextViewTests(APITestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
-        self.assertIn("bijlagen", data["context"].keys())
-        self.assertIn("rollen", data["context"].keys())
-        self.assertIn("zaakeigenschappen", data["context"].keys())
+        self.assertIn("benodigdeBijlagen", data["context"].keys())
+        self.assertIn("benodigdeRollen", data["context"].keys())
+        self.assertIn("benodigdeZaakeigenschappen", data["context"].keys())
 
 
 @requests_mock.Mocker()
