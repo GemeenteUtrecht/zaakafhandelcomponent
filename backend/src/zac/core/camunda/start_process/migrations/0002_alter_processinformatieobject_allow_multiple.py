@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('start_process', '0001_initial'),
+        ("start_process", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='processinformatieobject',
-            name='allow_multiple',
-            field=models.BooleanField(default=True, help_text='A boolean flag to indicate whether a user is allowed to add more than 1 document.', verbose_name='Allow multiple documents'),
+            model_name="processinformatieobject",
+            name="allow_multiple",
+            field=models.BooleanField(
+                default=True,
+                help_text="A boolean flag to indicate whether a user is allowed to add more than 1 document.",
+                verbose_name="Allow multiple documents",
+            ),
         ),
     ]
