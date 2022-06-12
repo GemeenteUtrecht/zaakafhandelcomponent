@@ -74,7 +74,6 @@ def get_required_rollen(
     rollen = get_rollen(zaak_context.zaak)
     roltypen = {roltype.url: roltype for roltype in get_roltypen(zaak_context.zaaktype)}
 
-    print(roltypen)
     # resolve roltypen to rollen
     already_set_roltype = []
     for rol in rollen:

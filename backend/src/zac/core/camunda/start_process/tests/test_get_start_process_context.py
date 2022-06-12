@@ -3,35 +3,22 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
-from django_camunda.utils import serialize_variable, underscoreize
-from rest_framework import exceptions
+from django_camunda.utils import underscoreize
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
-from zgw_consumers.api_models.constants import (
-    RolOmschrijving,
-    RolTypes,
-    VertrouwelijkheidsAanduidingen,
-)
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import SuperUserFactory, UserFactory
+from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
-from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
-from zac.core.camunda.start_process.serializers import (
-    CamundaZaakProcessContextSerializer,
-)
-from zac.core.models import CoreConfig
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
-from ..serializers import StartProcessFormContext
 from .factories import (
     CamundaStartProcessFactory,
     ProcessEigenschapChoiceFactory,
@@ -205,6 +192,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(APITestCase):
         )
 
     def setUp(self):
+        super().setUp()
         self.client.force_authenticate(self.user)
 
     @patch(

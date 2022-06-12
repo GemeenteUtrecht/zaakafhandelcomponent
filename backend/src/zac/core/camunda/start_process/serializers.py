@@ -2,11 +2,13 @@ from dataclasses import dataclass
 from typing import Dict, List, Union
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from zgw_consumers.api_models.constants import RolTypes
+from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import Rol, ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
@@ -17,9 +19,9 @@ from zac.core.api.serializers import (
     InformatieObjectTypeSerializer,
     RolSerializer,
     RolTypeSerializer,
+    ZaakEigenschapSerializer,
 )
 from zac.core.services import (
-    get_documenten,
     get_rollen,
     get_roltypen,
     get_zaak_eigenschappen,
@@ -124,13 +126,18 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     def camunda_start_process(self):
         if not hasattr(self, "_camunda_start_process"):
             try:
-                camunda_start_process = CamundaStartProcess.objects.get(
-                    zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
-                    zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
-                ).prefetch_related(
-                    "processeigenschap_set",
+                camunda_start_process = CamundaStartProcess.objects.prefetch_related(
                     "processinformatieobject_set",
                     "processrol_set",
+                    Prefetch(
+                        "processeigenschap_set",
+                        queryset=ProcessEigenschap.objects.prefetch_related(
+                            "processeigenschapchoice_set"
+                        ).all(),
+                    ),
+                ).get(
+                    zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
+                    zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
                 )
             except ObjectDoesNotExist:
                 raise serializers.ValidationError(
@@ -144,10 +151,11 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             self._camunda_start_process = camunda_start_process
         return self._camunda_start_process
 
-    def validate_bijlagen(self, bijlagen):
-        # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
-        documenten, gone = get_documenten(self.zaakcontext.zaak)
-        documenten = resolve_documenten_informatieobjecttypen(documenten)
+    def validate_bijlagen(self, bijlagen) -> List[Document]:
+        # Validate that bijlagen related to zaak match required document(types).
+        documenten = resolve_documenten_informatieobjecttypen(
+            self.zaakcontext.documents
+        )
         iots = [doc.informatieobjecttype.omschrijving for doc in documenten]
 
         required_informatieobjecttype_omschrijvingen = [
@@ -163,99 +171,135 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 )
         return documenten
 
-    def validate_rollen(self, rollen):
-        rollen = get_rollen(zaak=self.zaakcontext.zaak)
+    def validate_rollen(self, rollen) -> List[Rol]:
         # Validate that rollen in zaak match required rollen
+        rollen = get_rollen(zaak=self.zaakcontext.zaak)
+
+        # Get required rollen, map their omschrijving to their
+        # betrokkene_type to validate that both are set appropriately.
         required_rt_omsch_betr_type = {}
-        for rt in self.camunda_start_process.processrol_set.all():
-            if rt.roltype_omschrijving not in required_rt_omsch_betr_type:
-                required_rt_omsch_betr_type[rt.roltype_omschrijving] = [
-                    rt.betrokkene_type
+        for process_rol in self.camunda_start_process.processrol_set.all():
+            if process_rol.roltype_omschrijving not in required_rt_omsch_betr_type:
+                required_rt_omsch_betr_type[process_rol.roltype_omschrijving] = [
+                    process_rol.betrokkene_type
                 ]
             else:
-                required_rt_omsch_betr_type[rt.roltype_omschrijving].append(
-                    rt.betrokkene_type
+                required_rt_omsch_betr_type[process_rol.roltype_omschrijving].append(
+                    process_rol.betrokkene_type
                 )
 
+        # Get all roltypen and map their URL to themselves.
         all_roltypen_urls = {
             rt.url: rt for rt in get_roltypen(self.zaakcontext.zaaktype)
         }
-        # resolve roltype of rollen
-        roltypen_omschrijvingen = {}
-        for rol in rollen:
-            rol.roltype = all_roltypen_urls[rol.roltype]
-            if rol.roltype.omschrijving not in roltypen_omschrijvingen:
-                roltypen_omschrijvingen[rol.roltype.omschrijving] = [rol]
-
+        # Resolve the roltype of rollen and map roltype omschrijving to rol betrokkene type(n).
         found_rt_omsch_betr_type = {}
         for rol in rollen:
-            if rol.roltype.omschrijving not in roltypen_omschrijvingen:
-                found_rt_omsch_betr_type[rol.roltype.omschrijving] = [
-                    rol.betrokkene_type
-                ]
+            rol.roltype = all_roltypen_urls[rol.roltype]
+            if (
+                omschrijving := rol.roltype.omschrijving
+            ) not in found_rt_omsch_betr_type:
+                found_rt_omsch_betr_type[omschrijving] = [rol.betrokkene_type]
             else:
-                found_rt_omsch_betr_type[rol.roltype.omschrijving].append(
-                    rol.betrokkene_type
-                )
+                found_rt_omsch_betr_type[omschrijving].append(rol.betrokkene_type)
 
         # First check if roltype omschrijving of rol matches required roltype omschrijving
-        # AND then check if betrokkene type of rol matches the required roltype.
+        # of process_rol. Then check if betrokkene_type of rol matches the
+        # betrokkene_type of the required process_rol with that roltype omschrijving.
         for omschrijving, betrokkene_typen in required_rt_omsch_betr_type.items():
             if found_betrokkene_typen := found_rt_omsch_betr_type.get(omschrijving):
                 for betrokkene_type in betrokkene_typen:
                     if betrokkene_type not in found_betrokkene_typen:
                         raise serializers.ValidationError(
                             _(
-                                "Betrokkene type of ROL with ROLTYPE omschrijving `{omschrijving}` does not match required betrokkene type `{bt}`"
+                                "`betrokkene_type` of ROL with ROLTYPE omschrijving `{omschrijving}` does not match required betrokkene_type `{bt}`"
                             ).format(omschrijving=omschrijving, bt=betrokkene_type)
                         )
             else:
                 raise serializers.ValidationError(
                     _(
-                        "Required ROLTYPE omschrijving `{omschrijving}` not found in ROLlen related to ZAAK.."
+                        "Required ROLTYPE omschrijving `{omschrijving}` not found in ROLlen related to ZAAK."
                     ).format(omschrijving=omschrijving)
                 )
         return rollen
 
-    def validate_zaakeigenschappen(self, zaakeigenschappen):
+    def validate_zaakeigenschappen(self, zaakeigenschappen) -> List[ZaakEigenschap]:
         # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
-        zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
-        required_zaakeigenschapnamen = [
-            ei.eigenschapnaam
+        required_zaakeigenschappen = {
+            ei.eigenschapnaam: {
+                pec.label: pec.value for pec in ei.processeigenschapchoice_set.all()
+            }
             for ei in self.camunda_start_process.processeigenschap_set.all()
-        ]
-        found_zaakeigenschapnamen = [zei["naam"] for zei in zaakeigenschappen]
-        for required_zei in required_zaakeigenschapnamen:
-            if required_zei not in found_zaakeigenschapnamen:
+        }
+        found_zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
+        found_zaakeigenschapnaamwaarden = {
+            zei.naam: zei.waarde for zei in found_zaakeigenschappen
+        }
+        for required_zei in required_zaakeigenschappen.keys():
+            if required_zei not in found_zaakeigenschapnaamwaarden:
                 raise serializers.ValidationError(
                     _(
-                        "A ZAAKEIGENCHAP with eigenschapnaam `{eigenschapnaam}` is required."
+                        "A ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}` is required."
                     ).format(eigenschapnaam=required_zei)
                 )
-        return zaakeigenschappen
+            else:
+                if (
+                    found_zaakeigenschapnaamwaarden[required_zei]
+                    not in required_zaakeigenschappen[required_zei].values()
+                ):
+                    raise serializers.ValidationError(
+                        _(
+                            "ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}`, needs to have a `waarde` chosen from: {choices}."
+                        ).format(
+                            eigenschapnaam=required_zei,
+                            choices=sorted(
+                                list(required_zaakeigenschappen[required_zei].keys())
+                            ),
+                        )
+                    )
+        return found_zaakeigenschappen
 
     def on_task_submission(self) -> None:
         """
-        On task submission do nothing but assert that serializer is valid.
+        On task submission assert serializer is valid
+        and serialize fields for camunda.
 
         """
         assert self.is_valid(), "Serializer must be valid"
+
+        self.validated_data["bijlagen"] = [
+            doc.url for doc in self.validated_data["bijlagen"]
+        ]
+        self.validated_data["zaakeigenschappen"] = [
+            {**data}
+            for data in ZaakEigenschapSerializer(
+                self.validated_data["zaakeigenschappen"], many=True
+            ).data
+        ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
+        self.validated_data["rollen"] = [
+            {**data}
+            for data in RolSerializer(self.validated_data["rollen"], many=True).data
+        ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
 
     def get_process_variables(self) -> Dict[str, Union[List, str]]:
         """
         Get the required BPMN process variables for the BPMN.
 
         """
+
         return {
-            "eigenschappen": self.validated_data["zaakeigenschappen"],
             "bijlagen": self.validated_data["bijlagen"],
+            "eigenschappen": self.validated_data["zaakeigenschappen"],
             "rollen": self.validated_data["rollen"],
-            **{ei.naam: ei.waarde for ei in self.validated_data["zaakeigenschappen"]},
+            **{
+                ei["eigenschap"]["naam"]: ei["waarde"]
+                for ei in self.validated_data["zaakeigenschappen"]
+            },
             **{
                 f"bijlage{i+1}": bijlage
                 for i, bijlage in enumerate(self.validated_data["bijlagen"])
             },
-            **{rol.roltype.omschrijving: rol for rol in self.validated_data["rollen"]},
+            **{rol["roltoelichting"]: rol for rol in self.validated_data["rollen"]},
         }
 
 
