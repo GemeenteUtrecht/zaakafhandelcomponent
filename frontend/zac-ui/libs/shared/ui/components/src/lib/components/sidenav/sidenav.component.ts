@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {Component, EventEmitter, HostBinding, Input, Output} from '@angular/core';
 import { MenuItem, User } from '@gu/models';
 
 /**
@@ -17,6 +17,10 @@ import { MenuItem, User } from '@gu/models';
   styleUrls: ['./sidenav.component.scss']
 })
 export class SidenavComponent {
+  @HostBinding('class') get class() {
+    return this.expanded ? 'expanded' : '';
+  }
+
   @Input() menuItems: MenuItem[];
   @Input() selectedParentMenu: string;
   @Input() logoUrl: string;

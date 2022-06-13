@@ -1,10 +1,5 @@
 <div class="gu-sidenav">
-  <div class="backdrop"
-       [ngClass]="{
-         'expanded': expanded === true
-         }"
-       (click)="expanded = !expanded"
-  ></div>
+  <div class="backdrop" [ngClass]="{'expanded': expanded === true}" (click)="expanded = !expanded"></div>
   <header class="navigation-header d-lg-none">
     <div class="navbar-left">
       <button class="hamburger" aria-label="Menuknop" (click)="expanded = !expanded">
@@ -17,10 +12,7 @@
     <div class="navbar-right">
     </div>
   </header>
-  <nav class="vertical-nav"
-       [ngClass]="{
-         'expanded': expanded === true
-         }">
+  <nav class="vertical-nav" [ngClass]="{'expanded': expanded === true}" (click)="expanded = !expanded">
     <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="expanded = !expanded">
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug

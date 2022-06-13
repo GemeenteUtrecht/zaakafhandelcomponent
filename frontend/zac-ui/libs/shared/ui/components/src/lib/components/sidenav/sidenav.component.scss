@@ -1,21 +1,38 @@
 @import 'base/colors/colors';
 @import 'base/grid/mixins';
 
+::ng-deep .expanded + .main-content-outer-wrapper {
+  margin-left: 0!important;
+}
+
 .gu-sidenav {
   @include media-breakpoint-up(lg) {
     .menu-item__label {
       opacity: 0;
       white-space: nowrap;
     }
+
+    .expanded .menu-item__label {
+      opacity: 1;
+    }
+
     &:hover .menu-item__label {
       transition: opacity 0.3s linear;
       opacity: 1;
     }
+
     .vertical-nav {
+      cursor: pointer;
       width: 50px;
       pointer-events: all;
       transition: width 0.3s;
     }
+
+    .vertical-nav.expanded {
+      position: static;
+      width: auto;
+    }
+
     &:hover .vertical-nav {
       width: 250px;
       transform: translateX(0);
@@ -23,6 +40,7 @@
         overflow-y: auto;
       }
     }
+
     .vertical-nav {
       .logo {
         opacity: 0;
@@ -41,6 +59,17 @@
         opacity: 0;
       }
     }
+
+    .vertical-nav.expanded .logo,
+    .vertical-nav.expanded .logged-in-user,
+    .vertical-nav.expanded .logout-button {
+      opacity: 1;
+    }
+
+    .vertical-nav.expanded img {
+      display: inline-block!important;
+    }
+
     &:hover .vertical-nav {
       .logo, .logged-in-user, .logout-button {
         transition: opacity 0.3s linear;
@@ -51,9 +80,15 @@
         }
       }
     }
+
     .searchbox {
       opacity: 0;
     }
+
+    .vertical-nav.expanded .searchbox {
+      opacity: 1;
+    }
+
     &:hover .searchbox {
       transition: opacity 0.3s linear;
       opacity: 1;
@@ -127,6 +162,7 @@
       pointer-events: all;
       background: $background-white;
       transition: transform 0.3s;
+
       &.expanded {
         transform: translateX(0);
       }
