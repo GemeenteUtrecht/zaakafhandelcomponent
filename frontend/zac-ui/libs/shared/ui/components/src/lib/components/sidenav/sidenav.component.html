@@ -27,7 +27,7 @@
         </div>
         <ng-container *ngFor="let item of menuItems">
           <a *ngIf="item.external && isAuthorised(item.adminOnly)"
-             (click)="collapse()"
+             (click)="onItemClick($event)"
              href="{{item.to}}"
              [target]="item.external ? '_blank' : null"
              class="menu-item menu-link"
@@ -40,7 +40,7 @@
             <span class="menu-item__label">{{item.label}}</span>
           </a>
           <a *ngIf="!item.external && isAuthorised(item.adminOnly)"
-             (click)="collapse()"
+             (click)="onItemClick($event)"
              [routerLink]="!item.external ? [item.to] : null"
              class="menu-item menu-link"
              [ngClass]="{

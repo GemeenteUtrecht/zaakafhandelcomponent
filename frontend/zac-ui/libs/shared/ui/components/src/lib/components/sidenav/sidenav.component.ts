@@ -72,8 +72,8 @@ export class SidenavComponent {
   /**
    * Collapse expanded navigation bar.
    */
-  collapse() {
-    this.expanded = false;
+  onItemClick(e: Event) {
+    e.stopPropagation();
   }
 
   /**
