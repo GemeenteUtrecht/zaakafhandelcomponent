@@ -4,10 +4,11 @@ from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from zac.core.api.pagination import BffPagination
 from zac.utils.mixins import PatchModelMixin, UpdateModelMixin
@@ -139,8 +140,8 @@ class AccessRequestViewSet(
     retrieve=extend_schema(summary=_("Retrieve atomic permission.")),
     create=extend_schema(
         summary=_("Grant atomic permission to ZAAK."),
-        request=GrantPermissionSerializer,
-        responses={201: GrantPermissionSerializer},
+        request=GrantPermissionSerializer(many=True),
+        responses={201: GrantPermissionSerializer(many=True)},
     ),
     destroy=extend_schema(summary=_("Delete atomic permission.")),
 )
@@ -159,13 +160,36 @@ class AtomicPermissionViewSet(
     queryset = UserAtomicPermission.objects.select_related("user", "atomic_permission")
     serializer_class = AtomicPermissionSerializer
 
-    def get_serializer_class(self):
+    def get_serializer(self, **kwargs):
         mapping = {
             "GET": AtomicPermissionSerializer,
             "POST": GrantPermissionSerializer,
             "DELETE": AtomicPermissionSerializer,
         }
-        return mapping[self.request.method]
+        if self.request.method == "POST":
+            kwargs.update({"many": True})
+        return mapping[self.request.method](**kwargs)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        user_atomic_permission = serializer.instance[0]
+        headers = self.get_success_headers(serializer.data)
+
+        # send email
+        transaction.on_commit(
+            lambda: send_email_to_requester(
+                user_atomic_permission.user,
+                zaak_url=user_atomic_permission.atomic_permission.object_url,
+                result=AccessRequestResult.approve,
+                request=request,
+            )
+        )
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     @transaction.atomic
     def perform_destroy(self, instance):

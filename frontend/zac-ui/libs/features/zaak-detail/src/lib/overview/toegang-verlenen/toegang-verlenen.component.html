@@ -2,19 +2,44 @@
   <form [formGroup]="grantAccessForm" *ngIf="!submitSuccess">
     <div class="form-group">
       <p>Selecteer een gebruiker die u toegang wilt verlenen tot deze zaak.</p>
+
+      <!-- Search user -->
       <gu-multiselect (search)="onSearch($event)"
                       [items]="users"
                       [multiple]="false"
-                      [control]="requester"
+                      [control]="requesterControl"
                       bindLabel="fullName"
                       bindValue="username"
                       required
-                      placeholder="Zoek een gebruiker">
+                      placeholder="Zoek een gebruiker"
+                      class="mb-3"
+      >
       </gu-multiselect>
+
+      <!-- Permissions -->
+      <gu-multiselect *ngIf="permissions"
+                      (change)="updateSelectedPermissions($event)"
+                      [items]="permissions"
+                      [selectedValue]="selectedPermissions"
+                      [multiple]="true"
+                      [required]="true"
+                      bindLabel="name"
+                      bindValue="name"
+                      appendTo="body"
+                      class="mb-3"
+                      required>
+      </gu-multiselect>
+
+      <!-- End date -->
+      <gu-datepicker
+        label='Verloopdatum toegang'
+        [control]="endDateControl"
+        class='d-block mb-4'
+      ></gu-datepicker>
     </div>
     <div class="d-flex justify-content-end">
       <button gu-button
-        [disabled]="!grantAccessForm.valid || isSubmitting"
+        [disabled]="!grantAccessForm.valid || isSubmitting || !this.selectedPermissions"
         [loading]="isSubmitting"
         buttonStyle="primary"
         size="large"

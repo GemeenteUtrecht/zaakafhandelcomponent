@@ -43,16 +43,24 @@ export class UserPermissionsComponent implements OnInit {
     ) {
     }
 
-  /**
-   * Updates the component using a public interface.
-   */
-  public update() {
-    this.getContextData();
-  }
+    /**
+     * Updates the component using a public interface.
+     */
+    public update() {
+      this.getContextData();
+    }
 
     //
     // Getters / setters.
     //
+
+    /**
+     * Whether user can force edit a closed case.
+     * @returns {boolean}
+     */
+    get canForceEdit(): boolean {
+      return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
+    }
 
     //
     // Angular lifecycle.
@@ -89,6 +97,7 @@ export class UserPermissionsComponent implements OnInit {
             },
         );
     }
+
 
     /**
      * Returns user permissions as table.

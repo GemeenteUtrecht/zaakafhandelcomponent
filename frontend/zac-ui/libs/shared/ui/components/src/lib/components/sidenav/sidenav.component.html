@@ -54,7 +54,10 @@
         </ng-container>
       </div>
     </div>
-    <p class="logged-in-user ml-2 mb-0">Ingelogd als: <strong>{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</strong></p>
+    <p class="logged-in-user ml-2 mb-0">Ingelogd als:
+      <br>
+      <strong>{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</strong>
+    </p>
     <button gu-button class="logout-button" buttonStyle="tertiary" size="small" (click)="logOutEvent()">
       Uitloggen
     </button>

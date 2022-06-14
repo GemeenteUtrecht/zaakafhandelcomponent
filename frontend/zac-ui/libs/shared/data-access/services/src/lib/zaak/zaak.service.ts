@@ -199,4 +199,13 @@ export class ZaakService {
     return `${tezzaHost}/#/details/cases/${zaakUuid}`;
   }
 
+  /**
+   * Create link for zaak.
+   * @param zaak
+   * @returns {string}
+   */
+  createCaseUrl(zaak: Zaak) {
+    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}`;
+  }
+
 }

@@ -10,6 +10,11 @@ import {Tab} from './constants/tabs';
 export class FeaturesWorkstackService {
   constructor(private http: ApplicationHttpClient) {}
 
+  /**
+   * Receive all workstack tabs.
+   * @param {Tab[]} tabs
+   * @returns {Observable<any>}
+   */
   getWorkstack(tabs: Tab[]): Observable<any> {
     const observables = [];
     tabs.forEach((tab) => {
@@ -19,6 +24,12 @@ export class FeaturesWorkstackService {
     return forkJoin(observables);
   }
 
+  /**
+   * Get sorted work stack cases.
+   * @param sortValue
+   * @param sortOrder
+   * @returns {Observable<any>}
+   */
   getWorkstackZaken(sortValue, sortOrder): Observable<any> {
     const order = sortOrder === 'desc' ? '-' : '';
     let endpoint = '/api/workstack/cases';
@@ -29,11 +40,6 @@ export class FeaturesWorkstackService {
       );
     }
     return this.http.Get<any>(endpoint);
-  }
-
-  patchAccessRequest(requestId, formData): Observable<any> {
-    const endpoint = encodeURI(`/api/accounts/access-requests/${requestId}`);
-    return this.http.Patch<any>(endpoint, formData);
   }
 
 }

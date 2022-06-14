@@ -182,9 +182,9 @@
       overflow-x: hidden;
       flex-direction: column;
       justify-content: flex-start;
-      height: calc(100vh - 185px);
+      height: calc(100vh - 195px);
       @include media-breakpoint-down(md) {
-        height: calc(100vh - calc(150px + 5.2rem));
+        height: calc(100vh - calc(175px + 5.2rem));
       }
       &::-webkit-scrollbar {
         width: 0;
