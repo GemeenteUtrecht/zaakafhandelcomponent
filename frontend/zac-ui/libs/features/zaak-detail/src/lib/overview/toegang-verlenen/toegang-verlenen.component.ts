@@ -111,12 +111,12 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     const endDate = this.endDateControl.value ?
       this.datePipe.transform(this.endDateControl.value, "yyyy-MM-dd") :
       undefined;
-    const formData = {
+    const formData = [{
       requester: this.requesterControl.value,
       permissions: this.selectedPermissions,
       endDate: endDate,
       zaak: this.zaak.url
-    }
+    }];
     this.accountsService.postAccessForCase(formData).subscribe( res => {
       this.submitResult = {
         username: res.requester,
@@ -130,7 +130,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     }, error => {
       this.submitErrorMessage =
         error?.error?.detail ? error.error.detail
-          : error?.error?.nonFieldErrors ? error.error?.nonFieldErrors[0]
+          : error?.error[0] ? error.error[0].nonFieldErrors[0]
           : 'Er is een fout opgetreden';
       this.reportError(error);
     })
