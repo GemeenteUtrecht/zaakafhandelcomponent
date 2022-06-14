@@ -58,12 +58,30 @@ class PerformSearchMixin:
     def perform_search(self, search_query):
         if search_query.get("zaaktype"):
             zaaktype_data = search_query.pop("zaaktype")
+
+            # First get zaaktypen based on omschrijving...
             zaaktypen = get_zaaktypen(
                 self.request.user,
                 catalogus=zaaktype_data["catalogus"],
                 omschrijving=zaaktype_data["omschrijving"],
             )
-            search_query["zaaktypen"] = [zaaktype.url for zaaktype in zaaktypen]
+
+            # ...because omschrijving can change, we will then also
+            # fetch all the zaaktypen with the same identificatie(s) as the
+            # zaaktypen which matched the omschrijving.
+            urls = []
+            identificaties = {zt.identificatie for zt in zaaktypen}
+            for identificatie in identificaties:
+                urls += [
+                    zt.url
+                    for zt in get_zaaktypen(
+                        self.request.user,
+                        catalogus=zaaktype_data["catalogus"],
+                        identificatie=identificatie,
+                    )
+                ]
+
+            search_query["zaaktypen"] = [url for url in set(urls)]
         results = search(user=self.request.user, **search_query)
         return results
 

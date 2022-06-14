@@ -899,7 +899,6 @@ class ZaakTypenView(ListAPIView):
         zaaktypen_data = [
             {
                 "catalogus": zaaktype.catalogus,
-                "identificatie": zaaktype.identificatie,
                 "omschrijving": zaaktype.omschrijving,
             }
             for zaaktype in zaaktypen

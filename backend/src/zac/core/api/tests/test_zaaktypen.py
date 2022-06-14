@@ -118,7 +118,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
         data = response.json()["results"]
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["identificatie"], "ZT1")
+        self.assertEqual(data[0]["omschrijving"], "ZT1")
 
     def test_is_superuser(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -223,12 +223,10 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                 "results": [
                     {
                         "omschrijving": "some zaaktype 1",
-                        "identificatie": "ZT1",
                         "catalogus": CATALOGUS_URL,
                     },
                     {
                         "omschrijving": "some zaaktype 2",
-                        "identificatie": "ZT2",
                         "catalogus": CATALOGUS_URL,
                     },
                 ],
@@ -273,7 +271,6 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                 "results": [
                     {
                         "omschrijving": "some zaaktype",
-                        "identificatie": "ZT",
                         "catalogus": CATALOGUS_URL,
                     },
                 ],
@@ -309,4 +306,4 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
 
         data = response.json()["results"]
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["identificatie"], "ZT1")
+        self.assertEqual(data[0]["omschrijving"], "some zaaktype 1")

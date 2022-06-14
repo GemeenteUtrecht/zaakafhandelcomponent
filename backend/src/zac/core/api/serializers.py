@@ -816,11 +816,6 @@ class ZaakTypeAggregateSerializer(serializers.Serializer):
             "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
         )
     )
-    identificatie = serializers.CharField(
-        help_text=_(
-            "Identifier of ZAAKTYPE, different ZAAKTYPE versions can share the same identifier"
-        )
-    )
     catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
 
 

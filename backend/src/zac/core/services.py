@@ -124,12 +124,19 @@ def get_zaaktypen(
     user: Optional[User] = None,
     catalogus: str = "",
     omschrijving: str = "",
+    identificatie: str = "",
 ) -> List[ZaakType]:
     zaaktypen = _get_zaaktypen(catalogus=catalogus)
-
     if omschrijving:
         zaaktypen = [
             zaaktype for zaaktype in zaaktypen if zaaktype.omschrijving == omschrijving
+        ]
+
+    if identificatie:
+        zaaktypen = [
+            zaaktype
+            for zaaktype in zaaktypen
+            if zaaktype.identificatie == identificatie
         ]
 
     if user is None or user.is_superuser:
