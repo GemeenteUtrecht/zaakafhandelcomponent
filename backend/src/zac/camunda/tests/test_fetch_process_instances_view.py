@@ -1,16 +1,22 @@
 from unittest.mock import patch
 
-from django.test.testcases import TransactionTestCase
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 import requests_mock
 from django_camunda.models import CamundaConfig
+from django_camunda.utils import serialize_variable
 from rest_framework import status
+from rest_framework.test import APITransactionTestCase
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
+from zac.tests.utils import mock_resource_get
 
-ZAAK_URL = "https://some.zrc.nl/api/v1/zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
+ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
+ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
@@ -22,7 +28,7 @@ CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
     return_value=["Annuleer behandeling", "Advies vragen"],
 )
 @requests_mock.Mocker()
-class ProcessInstanceTests(TransactionTestCase):
+class ProcessInstanceTests(APITransactionTestCase):
     def setUp(self) -> None:
         super().setUp()
         config = CamundaConfig.get_solo()
@@ -32,10 +38,11 @@ class ProcessInstanceTests(TransactionTestCase):
 
         self.user = UserFactory.create()
         self.group = GroupFactory.create()
+
         self.client.force_login(self.user)
 
-    def _setUpMock(self, m):
-        self.process_definition_data = [
+    def test_fetch_process_instances(self, m_messages, m_task_from, m_request):
+        process_definition_data = [
             {
                 "id": f"{key}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
                 "key": key,
@@ -54,10 +61,10 @@ class ProcessInstanceTests(TransactionTestCase):
             }
             for key in ["Aanvraag_behandelen", "accorderen", "Bezwaar_indienen"]
         ]
-        self.process_instance_data = [
+        process_instance_data = [
             {
                 "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
-                "definitionId": self.process_definition_data[0]["id"],
+                "definitionId": process_definition_data[0]["id"],
                 "businessKey": "",
                 "caseInstanceId": "",
                 "suspended": False,
@@ -65,7 +72,7 @@ class ProcessInstanceTests(TransactionTestCase):
             },
             {
                 "id": "905abd5f-d26f-11ea-86dc-e22fafe5f405",
-                "definitionId": self.process_definition_data[1]["id"],
+                "definitionId": process_definition_data[1]["id"],
                 "businessKey": "",
                 "caseInstanceId": "",
                 "suspended": False,
@@ -73,14 +80,14 @@ class ProcessInstanceTests(TransactionTestCase):
             },
             {
                 "id": "010fe90d-c122-11ea-a817-b6551116eb32",
-                "definitionId": self.process_definition_data[2]["id"],
+                "definitionId": process_definition_data[2]["id"],
                 "businessKey": "",
                 "caseInstanceId": "",
                 "suspended": False,
                 "tenantId": "",
             },
         ]
-        self.task_data = [
+        task_data = [
             [],
             [
                 {
@@ -155,51 +162,45 @@ class ProcessInstanceTests(TransactionTestCase):
             ],
             [],
         ]
-
-        m.get(
+        m_request.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[self.process_instance_data[0]],
+            json=[process_instance_data[0]],
         )
-        m.get(
-            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={','.join([d['id'] for d in self.process_definition_data])}",
-            json=self.process_definition_data,
+        m_request.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={','.join([d['id'] for d in process_definition_data])}",
+            json=process_definition_data,
         )
-        for i, process in enumerate(self.process_instance_data):
-            m.get(
+        for i, process in enumerate(process_instance_data):
+            m_request.get(
                 f"{CAMUNDA_URL}process-instance?superProcessInstance={process['id']}",
-                json=[self.process_instance_data[i + 1]] if i < 2 else [],
+                json=[process_instance_data[i + 1]] if i < 2 else [],
             )
-            m.get(
+            m_request.get(
                 f"{CAMUNDA_URL}task?processInstanceId={process['id']}",
-                json=self.task_data[i],
+                json=task_data[i],
             )
 
-    def test_fetch_process_instances(self, m_messages, m_task_from, m_request):
-        self._setUpMock(m_request)
-
-        url = reverse("fetch-process-instances")
-
+        url = reverse("fetch-process-instances-list")
         response = self.client.get(url, {"zaak_url": ZAAK_URL})
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.maxDiff = None
+
         data = response.json()
         expected_data = [
             {
-                "id": self.process_instance_data[0]["id"],
-                "definitionId": self.process_instance_data[0]["definitionId"],
-                "title": self.process_definition_data[0]["key"],
+                "id": process_instance_data[0]["id"],
+                "definitionId": process_instance_data[0]["definitionId"],
+                "title": process_definition_data[0]["key"],
                 "messages": ["Annuleer behandeling", "Advies vragen"],
                 "tasks": [],
                 "subProcesses": [
                     {
-                        "id": self.process_instance_data[1]["id"],
-                        "definitionId": self.process_instance_data[1]["definitionId"],
-                        "title": self.process_definition_data[1]["key"],
+                        "id": process_instance_data[1]["id"],
+                        "definitionId": process_instance_data[1]["definitionId"],
+                        "title": process_definition_data[1]["key"],
                         "messages": [],
                         "tasks": [
                             {
-                                "id": self.task_data[1][0]["id"],
+                                "id": task_data[1][0]["id"],
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
                                 "hasForm": False,
@@ -217,7 +218,7 @@ class ProcessInstanceTests(TransactionTestCase):
                                 "canCancelTask": False,
                             },
                             {
-                                "id": self.task_data[1][1]["id"],
+                                "id": task_data[1][1]["id"],
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
                                 "hasForm": False,
@@ -230,7 +231,7 @@ class ProcessInstanceTests(TransactionTestCase):
                                 "canCancelTask": False,
                             },
                             {
-                                "id": self.task_data[1][2]["id"],
+                                "id": task_data[1][2]["id"],
                                 "name": "Accorderen",
                                 "created": "2020-07-30T14:19:06Z",
                                 "hasForm": False,
@@ -241,11 +242,11 @@ class ProcessInstanceTests(TransactionTestCase):
                         ],
                         "subProcesses": [
                             {
-                                "id": self.process_instance_data[2]["id"],
-                                "definitionId": self.process_instance_data[2][
+                                "id": process_instance_data[2]["id"],
+                                "definitionId": process_instance_data[2][
                                     "definitionId"
                                 ],
-                                "title": self.process_definition_data[2]["key"],
+                                "title": process_definition_data[2]["key"],
                                 "messages": [],
                                 "tasks": [],
                                 "subProcesses": [],
@@ -261,9 +262,53 @@ class ProcessInstanceTests(TransactionTestCase):
     def test_fail_fetch_process_instances_no_zaak_url(
         self, m_messages, m_task_from, m_request
     ):
-        self._setUpMock(m_request)
-
-        url = reverse("fetch-process-instances")
+        url = reverse("fetch-process-instances-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"detail": "missing zaak_url"})
+
+    def test_fetch_zaak_url_from_process_instance(
+        self, m_messages, m_task_from, m_request
+    ):
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        mock_service_oas_get(m_request, ZAKEN_ROOT, "zrc")
+
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=ZAAK_URL,
+        )
+        mock_resource_get(m_request, zaak)
+
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405",
+            json={
+                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                "definitionId": "Aanvraag_behandelen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/zaakUrl?deserializeValue=false",
+            json=serialize_variable(ZAAK_URL),
+        )
+        url = reverse(
+            "fetch-process-instances-zaak",
+            kwargs={"id": "205eae6b-d26f-11ea-86dc-e22fafe5f405"},
+        )
+        superuser = SuperUserFactory.create()
+        self.client.force_login(superuser)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "bronorganisatie": zaak["bronorganisatie"],
+                "identificatie": zaak["identificatie"],
+                "url": ZAAK_URL,
+            },
+        )

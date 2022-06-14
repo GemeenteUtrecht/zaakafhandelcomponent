@@ -1,5 +1,10 @@
 from zac.accounts.permissions import Permission
 
+zaken_aanmaken = Permission(
+    name="zaken:aanmaken",
+    description="Laat toe om zaken aan te maken.",
+)
+
 zaken_inzien = Permission(
     name="zaken:inzien",
     description="Laat toe om zaken/zaakdossiers in te zien.",

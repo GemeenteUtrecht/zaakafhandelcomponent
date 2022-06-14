@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CreateZaakRelationView,
+    CreateZaakView,
     EigenschappenView,
     InformatieObjectTypeListView,
     ListZaakDocumentsView,
@@ -25,6 +26,7 @@ from .views import (
 
 urlpatterns = [
     # core zgw
+    path("cases", CreateZaakView.as_view(), name="zaak-create"),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>",
         ZaakDetailView.as_view(),

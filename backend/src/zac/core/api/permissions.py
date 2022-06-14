@@ -12,6 +12,7 @@ from zac.api.permissions import (
 )
 
 from ..permissions import (
+    zaken_aanmaken,
     zaken_add_documents,
     zaken_add_relations,
     zaken_download_documents,
@@ -129,6 +130,10 @@ class CanReadOrUpdateZaken(BaseConditionalPermission):
             return CanReadZaken()
         else:
             return CanUpdateZaken()
+
+
+class CanCreateZaken(DefinitionBasePermission):
+    permission = zaken_aanmaken
 
 
 ###############################

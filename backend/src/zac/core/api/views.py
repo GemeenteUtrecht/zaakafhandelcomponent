@@ -4,6 +4,7 @@ from datetime import date, datetime
 from itertools import groupby
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.http import Http404
@@ -11,14 +12,16 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
+from django_camunda.interface import Variable
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import (
     authentication,
     exceptions,
     generics,
     permissions,
+    serializers,
     status,
     views,
 )
@@ -34,6 +37,7 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.accounts.models import User, UserAtomicPermission
+from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.dowc.data import DowcResponse
@@ -96,6 +100,7 @@ from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
     CanAddReverseRelations,
+    CanCreateZaken,
     CanForceAddRelations,
     CanForceAddReverseRelations,
     CanForceEditClosedZaak,
@@ -110,6 +115,7 @@ from .serializers import (
     AddZaakDocumentSerializer,
     AddZaakRelationSerializer,
     CreateZaakEigenschapSerializer,
+    CreateZaakSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
@@ -204,12 +210,50 @@ class PostExtraInfoSubjectView(views.APIView):
 
 class GetZaakMixin:
     def get_object(self):
+        if not self.kwargs:  # shut up drf-spectular
+            return None
         try:
             zaak = find_zaak(**self.kwargs)
         except ObjectDoesNotExist:
             raise Http404("No ZAAK matches the given query.")
         self.check_object_permissions(self.request, zaak)
         return zaak
+
+
+class CreateZaakView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanCreateZaken,
+    )
+    serializer_class = CreateZaakSerializer
+
+    @extend_schema(
+        summary=_("Let users create a ZAAK."),
+        responses={
+            "200": inline_serializer(
+                "CreatedProcessInstanceSerializer",
+                fields={
+                    "instance_id": serializers.UUIDField(
+                        help_text=_("The UUID of the process instance."), required=True
+                    ),
+                    "instance_url": serializers.URLField(
+                        help_text=_("The URL of the process instance."), required=True
+                    ),
+                },
+            )
+        },
+    )
+    def post(self, request):
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        details = start_process(
+            process_key=settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY,
+            variables=serializer.validated_data,
+        )
+        return Response(details)
 
 
 class ZaakDetailView(GetZaakMixin, views.APIView):
