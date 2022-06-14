@@ -3,9 +3,9 @@ import { AccessRequests, Request } from '../models/access-request';
 import { Permission } from '@gu/models';
 import { FeaturesWorkstackService } from '../features-workstack.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { AccountsService } from '@gu/services';
+import { AccountsService, ZaakService } from '@gu/services';
 
 /**
  * This components displays a list of open access requests and
@@ -39,6 +39,7 @@ export class AccessRequestComponent implements OnInit {
     private accountsService: AccountsService,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
+    private zaakService: ZaakService,
     private datePipe: DatePipe) {
     this.accessRequestForm = this.fb.group({
       handlerComment: this.fb.control(""),
@@ -95,7 +96,7 @@ export class AccessRequestComponent implements OnInit {
    * @returns {string}
    */
   getZaakLink(zaak) {
-    return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}`;
+    return this.zaakService.createCaseUrl(zaak);
   }
 
   /**

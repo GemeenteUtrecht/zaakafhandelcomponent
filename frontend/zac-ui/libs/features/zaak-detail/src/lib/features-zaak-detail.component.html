@@ -37,7 +37,7 @@
                           class="d-block mb-4"></gu-message>
 
               <!-- Hide if case is closed and the user is not allowed to force edit -->
-              <div *ngIf="canRequestAccess && !isAccessRequestSuccess && (!zaakData?.resultaat || zaakData?.kanGeforceerdBijwerken)">
+              <div *ngIf="showAccessRequest">
                 <h2>Toegang vragen tot deze zaak</h2>
 
                 <gu-input [control]="commentControl"

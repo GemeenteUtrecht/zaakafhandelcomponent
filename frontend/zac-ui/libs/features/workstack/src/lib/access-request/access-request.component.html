@@ -23,7 +23,7 @@
   (onClose)='reload.emit(true)'
 >
   <gu-loading-indicator *ngIf='isSubmitting'></gu-loading-indicator>
-  <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess && permissions && accessRequestForm">
+  <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess && permissions">
     <h2>Toegangsverzoek behandelen</h2>
     <p *ngIf='openedAccessRequest'>
       <strong>{{openedRequest.requester}}</strong> vraagt toegang tot

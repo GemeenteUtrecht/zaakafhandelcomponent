@@ -95,7 +95,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   onSearch(searchInput) {
     this.accountsService.getAccounts(searchInput).subscribe(res => {
       this.users = res.results;
-    })
+    }, error => this.reportError(error)
+    );
   }
 
   /**

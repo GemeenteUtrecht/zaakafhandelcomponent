@@ -147,6 +147,19 @@ export class FeaturesZaakDetailComponent implements OnInit {
     return this.zaakAccessRequestForm.get('comment') as FormControl;
   };
 
+
+  /**
+   * Whether user can force edit a closed case.
+   * @returns {boolean}
+   */
+  get canForceEdit(): boolean {
+    return !this.zaakData?.resultaat || this.zaakData?.kanGeforceerdBijwerken;
+  }
+
+  get showAccessRequest(): boolean {
+    return this.canRequestAccess && !this.isAccessRequestSuccess && this.canForceEdit;
+  }
+
   //
   // Angular lifecycle.
   //
