@@ -14,7 +14,7 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
-  tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving'], []);
+  tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Aard relatie'], []);
 
   data: any;
   isLoading = true;
@@ -45,7 +45,6 @@ export class GerelateerdeZakenComponent implements OnChanges {
       const eigenschappenArray = [
         `Resultaat: ${element.zaak.resultaat ? element.zaak.resultaat : '-'}`,
         `Status: ${element.zaak.status ? element.zaak.status.statustype.omschrijving : '-'}`,
-        `Aard relatie: ${element.aardRelatie ? element.aardRelatie : '-'}`
       ]
       const eigenschappen = eigenschappenArray.join('\n')
       return {
@@ -57,6 +56,7 @@ export class GerelateerdeZakenComponent implements OnChanges {
           },
           zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-',
           omschrijving: element.zaak.omschrijving,
+          aardRelatie: element.aardRelatie,
         },
         expandData: eigenschappen
       }
