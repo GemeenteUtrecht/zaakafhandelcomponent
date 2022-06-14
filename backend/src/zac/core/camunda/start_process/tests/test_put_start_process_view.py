@@ -17,6 +17,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
@@ -65,7 +66,7 @@ def _get_task(**overrides):
 
 
 @requests_mock.Mocker()
-class PutCamundaZaakProcessUserTaskViewTests(APITestCase):
+class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
