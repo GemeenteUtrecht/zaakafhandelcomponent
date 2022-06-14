@@ -11,10 +11,12 @@ RUN ./node_modules/.bin/ng build --configuration production --base-href="$ui_pre
 # Stage 2 -- serve static build with nginx
 FROM nginxinc/nginx-unprivileged:1.20
 
-ENV ALFRESCO_AUTH_URL=https://alfresco-auth.cg-intern.acc.utrecht.nl/auth/realms/alfresco
-ENV ALFRESCO_PREVIEW_URL=https://alfresco-tezza.cg-intern.acc.utrecht.nl/
-ENV ALFRESCO_DOCUMENTS_URL=https://alfresco-tezza.aks.utrechtproeftuin.nl
-ENV FORMS_URL=https://formulieren.cg-intern.acc.utrecht.nl
+ENV ALFRESCO_AUTH_URL=https://alfresco-auth.cg-intern.ont.utrecht.nl/auth/realms/alfresco
+ENV ALFRESCO_PREVIEW_URL=https://alfresco-tezza.cg-intern.ont.utrecht.nl/
+ENV FORMS_URL=https://formulieren.cg-intern.ont.utrecht.nl
+
+# Probably unused.
+ENV ALFRESCO_DOCUMENTS_URL=https://example.com
 
 WORKDIR /apps
 
