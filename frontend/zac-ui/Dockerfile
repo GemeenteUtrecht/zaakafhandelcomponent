@@ -24,5 +24,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/apps/ .
 
 COPY ./bin/docker_start.sh /start.sh
-RUN chmod +x /start.sh
 CMD ["/start.sh"]
