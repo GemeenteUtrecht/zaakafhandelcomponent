@@ -55,6 +55,7 @@ from zgw.models.zrc import Zaak
 from ..cache import invalidate_zaak_cache, invalidate_zaakobjecten_cache
 from ..services import (
     create_document,
+    create_rol,
     create_zaak_eigenschap,
     delete_zaak_eigenschap,
     delete_zaak_object,
@@ -73,6 +74,7 @@ from ..services import (
     get_related_zaken,
     get_resultaat,
     get_rollen,
+    get_roltypen,
     get_statussen,
     get_statustype,
     get_statustypen,
@@ -125,8 +127,10 @@ from .serializers import (
     ObjectProxySerializer,
     ObjecttypeProxySerializer,
     ObjecttypeVersionProxySerializer,
+    ReadRolSerializer,
     RelatedZaakSerializer,
     RolSerializer,
+    RolTypeSerializer,
     SearchEigenschapSerializer,
     StatusTypeSerializer,
     UpdateZaakDetailSerializer,
@@ -565,16 +569,44 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
-        CanReadZaken,
+        CanReadOrUpdateZaken,
+        CanForceEditClosedZaken,
     )
     serializer_class = RolSerializer
-    schema_summary = _("List ROLlen of ZAAK.")
 
+    def get_serializer_class(self):
+        mapping = {
+            "GET": ReadRolSerializer,
+            "POST": RolSerializer,
+        }
+        return mapping[self.request.method]
+
+    def get_serializer(self, **kwargs):
+        serializer = self.get_serializer_class()
+        if self.request.method == "GET":
+            kwargs.update({"many": True})
+        return serializer(**kwargs)
+
+    @extend_schema(
+        summary=_("List ROLlen of ZAAK."),
+        responses={"200": ReadRolSerializer(many=True)},
+    )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         rollen = get_rollen(zaak)
-        serializer = self.serializer_class(instance=rollen, many=True)
+        serializer = self.get_serializer(instance=rollen, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Add ROL to ZAAK."),
+    )
+    def post(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        data = {**request.data, "zaak": zaak.url}
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        create_rol(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ZaakObjectsView(GetZaakMixin, views.APIView):
@@ -854,7 +886,7 @@ class ZaakDocumentView(views.APIView):
         )
     ],
 )
-class InformatieObjectTypeListView(generics.ListAPIView):
+class InformatieObjectTypeListView(ListAPIView):
     """
     List the available document types for a given zaak.
 
@@ -1017,6 +1049,40 @@ class EigenschappenView(ListAPIView):
         ]
 
         serializer = self.get_serializer(eigenschappen_data, many=True)
+        return Response(serializer.data)
+
+
+@extend_schema(
+    summary=_("List ROLTYPEs for a ZAAK."),
+    tags=["meta"],
+    parameters=[
+        OpenApiParameter(
+            name="zaak",
+            required=True,
+            type=OpenApiTypes.URI,
+            description=_("ZAAK to list available ROLTYPEs for."),
+            location=OpenApiParameter.QUERY,
+        )
+    ],
+)
+class RolTypenView(views.APIView):
+    """
+    List the available ROLTYPEs for the zaak.
+
+    """
+
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = RolTypeSerializer
+
+    def get(self, request):
+        zaak_url = request.query_params.get("zaak")
+        if not zaak_url:
+            raise exceptions.ValidationError(_("'zaak' query parameter is required."))
+        zaak = get_zaak(zaak_url=zaak_url)
+        zaaktype = fetch_zaaktype(zaak.zaaktype)
+        roltypen = get_roltypen(zaaktype)
+        serializer = self.serializer_class(roltypen, many=True)
         return Response(serializer.data)
 
 

@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django_camunda.utils import serialize_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
+from rest_framework.utils import formatting
 from zds_client import ClientError
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
@@ -34,7 +35,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
-from zac.api.polymorphism import PolymorphicSerializer
+from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.contrib.dowc.constants import DocFileTypes
@@ -45,6 +46,8 @@ from zac.core.services import (
     get_document,
     get_documenten,
     get_informatieobjecttypen_for_zaak,
+    get_roltype,
+    get_roltypen,
     get_statustypen,
     get_zaak,
 )
@@ -729,7 +732,7 @@ class RolTypeSerializer(APIModelSerializer):
         fields = ("url", "omschrijving", "omschrijving_generiek")
 
 
-class RolSerializer(APIModelSerializer):
+class ReadRolSerializer(APIModelSerializer):
     name = serializers.CharField(source="get_name")
     identificatie = serializers.CharField(source="get_identificatie")
     betrokkene_type = serializers.ChoiceField(choices=RolTypes)
@@ -752,46 +755,180 @@ class RolSerializer(APIModelSerializer):
         )
 
 
-class MedewerkerIdentificatieSerializer(serializers.Serializer):
-    voorletters = serializers.SerializerMethodField()
-    achternaam = serializers.SerializerMethodField()
-    identificatie = serializers.CharField()
-    voorvoegsel_achternaam = serializers.CharField()
+def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> SerializerCls:
+    """
+    Ensure that the betrokkene_identificatie serializer is wrapped in a serializer.
 
-    def get_voorletters(self, attrs):
-        user = self.context.get("user")
-        if user:
-            voorletters = "".join(
-                [part[0].upper() + "." for part in user.first_name.split()]
-            ).strip()
-            return voorletters or attrs["voorletters"]
-        return attrs["voorletters"]
+    The decorator enforces the same label/help_text and meta-information for the API
+    schema documentation.
+    """
 
-    def get_achternaam(self, attrs):
-        user = self.context.get("user")
-        if user:
-            return user.last_name.capitalize() or attrs["achternaam"]
-        return attrs["achternaam"]
+    name = serializer_cls.__name__
+    name = name = formatting.remove_trailing_string(name, "Serializer")
 
-
-class UpdateRolSerializer(APIModelSerializer):
-    betrokkene_identificatie = MedewerkerIdentificatieSerializer()
-
-    class Meta:
-        model = Rol
-        fields = (
-            "betrokkene",
-            "betrokkene_identificatie",
-            "betrokkene_type",
-            "indicatie_machtiging",
-            "omschrijving",
-            "omschrijving_generiek",
-            "registratiedatum",
-            "roltoelichting",
-            "roltype",
-            "url",
-            "zaak",
+    class IdentificatieSerializer(serializers.Serializer):
+        betrokkene_identificatie = serializer_cls(
+            label=_("Betrokkene identificatie"),
+            help_text=_(
+                "The `betrokkene_identificatie` of the ROL."
+                "The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL."
+                "Mutually exclusive with `betrokkene`."
+            ),
         )
+
+    name = f"{name}TaskDataSerializer"
+    return type(name, (IdentificatieSerializer,), {})
+
+
+@betrokkene_identificatie_serializer
+class RolNatuurlijkPersoonSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = [
+        "components",
+        "schemas",
+        "RolNatuurlijkPersoon",
+    ]
+
+
+@betrokkene_identificatie_serializer
+class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = [
+        "components",
+        "schemas",
+        "RolNietNatuurlijkPersoon",
+    ]
+
+
+@betrokkene_identificatie_serializer
+class RolVestigingSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = [
+        "components",
+        "schemas",
+        "RolVestiging",
+    ]
+
+
+@betrokkene_identificatie_serializer
+class RolOrganisatorischeEenheidSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = [
+        "components",
+        "schemas",
+        "RolOrganisatorischeEenheid",
+    ]
+
+
+@betrokkene_identificatie_serializer
+class RolMedewerkerSerializer(serializers.Serializer):
+    voorletters = serializers.SerializerMethodField(
+        help_text=_("Initials of medewerker.")
+    )
+    achternaam = serializers.SerializerMethodField(
+        help_text=_("`last_name` of medewerker.")
+    )
+    identificatie = serializers.CharField(
+        required=True,
+        help_text=_("`username` of medewerker."),
+    )
+    voorvoegsel_achternaam = serializers.CharField(
+        default="", help_text=_("Last name prefix of medewerker.")
+    )
+
+    def get_voorletters(self, attrs) -> str:
+        user = self.context.get("user")
+        voorletters = attrs.get("voorletters", "")
+        if user:
+            return (
+                "".join(
+                    [part[0].upper() + "." for part in user.first_name.split()]
+                ).strip()
+                or voorletters
+            )
+        return voorletters
+
+    def get_achternaam(self, attrs) -> str:
+        user = self.context.get("user")
+        achternaam = attrs.get("achternaam", "")
+        if user:
+            return user.last_name.capitalize() or achternaam
+        return achternaam
+
+
+EmptySerializer = betrokkene_identificatie_serializer(serializers.JSONField)
+
+
+class RolSerializer(PolymorphicSerializer):
+    serializer_mapping = {
+        RolTypes.natuurlijk_persoon: RolNatuurlijkPersoonSerializer,
+        RolTypes.niet_natuurlijk_persoon: RolNietNatuurlijkPersoonSerializer,
+        RolTypes.vestiging: RolVestigingSerializer,
+        RolTypes.organisatorische_eenheid: RolOrganisatorischeEenheidSerializer,
+        RolTypes.medewerker: RolMedewerkerSerializer,
+        "": EmptySerializer,
+    }
+    discriminator_field = "betrokkene_type"
+    betrokkene = serializers.URLField(
+        help_text=_(
+            "URL-reference to betrokkene of ROL. Mutually exclusive with `betrokkene_type`."
+        ),
+        default="",
+    )
+    betrokkene_type = serializers.ChoiceField(
+        choices=RolTypes.choices,
+        help_text=_("Betrokkene type of ROL. Mutually exclusive with `betrokkene`."),
+        allow_blank=True,
+    )
+    indicatie_machtiging = serializers.ChoiceField(
+        choices=["gemachtigde", "machtiginggever"],
+        allow_blank=True,
+    )
+    roltoelichting = serializers.SerializerMethodField(
+        help_text=_(
+            "Comment related to the ROL. Usually it is the `omschrijving` of ROLTYPE of ROL."
+        )
+    )
+    roltype = serializers.URLField(
+        required=True, help_text=_("URL-reference to ROLTYPE of ROL.")
+    )
+    url = serializers.URLField(
+        read_only=True, help_text=_("URL-reference to ROL itself.")
+    )
+    zaak = serializers.URLField(
+        help_text=_("URL-reference to ZAAK of ROL."),
+    )
+
+    def get_roltoelichting(self, obj) -> str:
+        rt = obj.roltype if isinstance(obj, Rol) else obj["roltype"]
+        try:
+            roltype = get_roltype(rt)
+        except ClientError:
+            raise serializers.ValidationError(
+                _("Can not find ROLTYPE {rt}.").format(rt=rt)
+            )
+        return roltype.omschrijving
+
+    def validate(self, data):
+        data = super().validate(data)
+        zaak = get_zaak(zaak_url=data["zaak"])
+        zaaktype = fetch_zaaktype(zaak.zaaktype)
+        roltypen = {rt.url: rt for rt in get_roltypen(zaaktype)}
+        if not (rt := roltypen.get(data["roltype"])):
+            raise serializers.ValidationError(
+                _("ROLTYPE {rt} is not part of ROLTYPEs for ZAAKTYPE {zt}.").format(
+                    rt=data["roltype"], zt=zaaktype.url
+                )
+            )
+        if data["betrokkene"] and data["betrokkene_type"]:
+            raise serializers.ValidationError(
+                _("`betrokkene` and `betrokkene_type` are mutually exclusive.")
+            )
+        if data["betrokkene"] and data["betrokkene_identificatie"]:
+            raise serializers.ValidationError(
+                _("`betrokkene` and `betrokkene_identificatie` are mutually exclusive.")
+            )
+        return data
 
 
 class ZaakObjectGroupSerializer(APIModelSerializer):
