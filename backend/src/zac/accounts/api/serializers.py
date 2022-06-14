@@ -421,6 +421,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 
         access_request = super().update(instance, validated_data)
 
+        atomic_permissions = {}
         if access_request.result == AccessRequestResult.approve:
             # add permission definition
             for perm in permissions:
@@ -429,12 +430,13 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
                     object_type=PermissionObjectTypeChoices.zaak,
                     permission=perm,
                 )
+                atomic_permissions[perm] = atomic_permission
 
             user_atomic_permissions = []
             for perm in permissions:
                 user_atomic_permissions.append(
                     UserAtomicPermission(
-                        atomic_permission=atomic_permission,
+                        atomic_permission=atomic_permissions[perm],
                         user=access_request.requester,
                         access_request=access_request,
                         comment=handler_comment,

@@ -312,36 +312,51 @@ class GrantAccessAPITests(APITransactionTestCase):
                 "zaak": ZAAK_URL,
                 "comment": "some comment",
                 "permission": "zaken:inzien",
-            }
+            },
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:toegang-verlenen",
+            },
         ]
 
         response = self.client.post(self.endpoint, data)
+        results = response.json()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
-
-        atomic_permission = AtomicPermission.objects.for_user(self.requester).get()
-
-        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(
-            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 2)
+        self.assertTrue(
+            AtomicPermission.objects.for_user(self.requester)
+            .filter(permission=zaken_inzien.name)
+            .exists()
         )
-        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
-
-        user_atomic_permission = atomic_permission.useratomicpermission_set.get()
-        self.assertEqual(
-            user_atomic_permission.reason, PermissionReason.toegang_verlenen
+        self.assertTrue(
+            AtomicPermission.objects.for_user(self.requester)
+            .filter(permission=zaken_handle_access.name)
+            .exists()
         )
-        self.assertEqual(user_atomic_permission.start_date.date(), date(2020, 1, 1))
-        self.assertIsNone(user_atomic_permission.end_date)
 
-        data = response.json()
+        for perm in ["zaken:inzien", "zaken:toegang-verlenen"]:
+            atomic_permission = AtomicPermission.objects.for_user(self.requester).get(
+                permission=perm
+            )
 
-        self.assertEqual(
-            data,
-            [
+            self.assertEqual(atomic_permission.object_url, ZAAK_URL)
+            self.assertEqual(
+                atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+            )
+            self.assertEqual(atomic_permission.permission, perm)
+
+            user_atomic_permission = atomic_permission.useratomicpermission_set.get()
+            self.assertEqual(
+                user_atomic_permission.reason, PermissionReason.toegang_verlenen
+            )
+            self.assertEqual(user_atomic_permission.start_date.date(), date(2020, 1, 1))
+            self.assertIsNone(user_atomic_permission.end_date)
+            self.assertTrue(
                 {
                     "id": user_atomic_permission.id,
-                    "permission": "zaken:inzien",
+                    "permission": perm,
                     "requester": self.requester.username,
                     "zaak": ZAAK_URL,
                     "startDate": "2020-01-01T00:00:00Z",
@@ -349,8 +364,8 @@ class GrantAccessAPITests(APITransactionTestCase):
                     "reason": PermissionReason.toegang_verlenen,
                     "comment": "some comment",
                 }
-            ],
-        )
+                in results
+            )
 
         # test email
         self.assertEqual(len(mail.outbox), 1)

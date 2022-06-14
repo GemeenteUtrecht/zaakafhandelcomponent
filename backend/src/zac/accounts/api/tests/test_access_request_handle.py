@@ -271,12 +271,22 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
             "handler_comment": "some comment",
             "start_date": "2020-01-02",
             "end_date": "2021-01-01",
-            "permissions": [zaken_inzien.name],
+            "permissions": [zaken_inzien.name, zaken_handle_access.name],
         }
 
         response = self.client.patch(endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 2)
+        self.assertTrue(
+            AtomicPermission.objects.for_user(self.requester)
+            .filter(permission=zaken_inzien.name)
+            .exists()
+        )
+        self.assertTrue(
+            AtomicPermission.objects.for_user(self.requester)
+            .filter(permission=zaken_handle_access.name)
+            .exists()
+        )
 
         access_request.refresh_from_db()
 
@@ -314,7 +324,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
                 "handlerComment": "some comment",
                 "startDate": "2020-01-02",
                 "endDate": "2021-01-01",
-                "permissions": ["zaken:inzien"],
+                "permissions": ["zaken:inzien", "zaken:toegang-verlenen"],
             },
         )
 
