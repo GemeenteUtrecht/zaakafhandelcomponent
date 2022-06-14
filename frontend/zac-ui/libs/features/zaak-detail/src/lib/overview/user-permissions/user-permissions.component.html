@@ -1,9 +1,10 @@
-<div class="user-permissions card">
+<div class="user-permissions card" *ngIf="this.table">
   <!-- Grant access - hide button if case is closed and the user is not allowed to force edit -->
   <div *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken" class="d-flex justify-content-between">
     <!-- Title -->
     <h2>Gebruikersrechten</h2>
     <button gu-button
+            *ngIf="canForceEdit"
             buttonStyle="tertiary"
             icon="person_add"
             (click)="openModal('add-person-modal')">
