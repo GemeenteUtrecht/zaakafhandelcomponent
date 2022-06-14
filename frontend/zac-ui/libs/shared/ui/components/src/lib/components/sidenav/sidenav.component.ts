@@ -1,13 +1,13 @@
 import {Component, EventEmitter, HostBinding, Input, Output} from '@angular/core';
-import { MenuItem, User } from '@gu/models';
+import {MenuItem, User} from '@gu/models';
 
 /**
  * <gu-sidenav [menuItems]="menuItems"
-               [selectedParentMenu]="selectedMenu"
-               [logoUrl]="logoUrl"
-               [mobileLogoUrl]="mobileLogoUrl"
-               [currentUser]="currentUser"
-               (logOut)="logOutUser()">
+ [selectedParentMenu]="selectedMenu"
+ [logoUrl]="logoUrl"
+ [mobileLogoUrl]="mobileLogoUrl"
+ [currentUser]="currentUser"
+ (logOut)="logOutUser()">
  *
  * Side navigation bar for the application.
  */
@@ -29,14 +29,50 @@ export class SidenavComponent {
 
   @Output() logOut = new EventEmitter<any>();
 
-  expanded = false;
+  expanded = this.getExpandedCache();
 
-  constructor() { }
+  //
+  // Getters / setters.
+  //
 
   /**
-   * Toggle visibility of expanded navigation bar.
+   * Gets the value for expanded from localStorage.
+   */
+  getExpandedCache(): boolean {
+    try {
+      return localStorage.getItem('sidenav.expanded') === 'true';
+    } catch (e) {
+      console.warn(e);
+      return false;
+    }
+  }
+
+  /**
+   * Sets the value for expanded in localstorage.
+   * @param {boolean} newValue
+   */
+  setExpandedCache(newValue: boolean) {
+    try {
+      return localStorage.setItem('sidenav.expanded', String(newValue));
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  /**
+   * Toggle navigation bar.
    */
   toggle() {
+    const newValue = !this.expanded;
+    this.expanded = newValue;
+    this.setExpandedCache(newValue);
+  }
+
+
+  /**
+   * Collapse expanded navigation bar.
+   */
+  collapse() {
     this.expanded = false;
   }
 
