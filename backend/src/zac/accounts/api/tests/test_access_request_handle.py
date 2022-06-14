@@ -294,23 +294,20 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(access_request.result, AccessRequestResult.approve)
         self.assertEqual(access_request.handled_date, date(2020, 1, 1))
 
-        user_atomic_permission = access_request.useratomicpermission_set.all()[0]
-
-        self.assertEqual(user_atomic_permission.comment, "some comment")
-        self.assertEqual(user_atomic_permission.user, self.requester)
-        self.assertEqual(
-            user_atomic_permission.reason, PermissionReason.toegang_verlenen
-        )
-        self.assertEqual(user_atomic_permission.start_date.date(), date(2020, 1, 2))
-        self.assertEqual(user_atomic_permission.end_date.date(), date(2021, 1, 1))
-
-        atomic_permission = user_atomic_permission.atomic_permission
-
-        self.assertEqual(atomic_permission.object_url, ZAAK_URL)
-        self.assertEqual(
-            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
-        )
-        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        for perm in [zaken_inzien.name, zaken_handle_access.name]:
+            uap = access_request.useratomicpermission_set.get(
+                atomic_permission__permission=perm
+            )
+            self.assertEqual(uap.comment, "some comment")
+            self.assertEqual(uap.user, self.requester)
+            self.assertEqual(uap.reason, PermissionReason.toegang_verlenen)
+            self.assertEqual(uap.start_date.date(), date(2020, 1, 2))
+            self.assertEqual(uap.end_date.date(), date(2021, 1, 1))
+            atomic_permission = uap.atomic_permission
+            self.assertEqual(atomic_permission.object_url, ZAAK_URL)
+            self.assertEqual(
+                atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+            )
 
         data = response.json()
 
