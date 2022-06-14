@@ -42,6 +42,16 @@ from .utils import (
 )
 
 
+class CreatedProcessInstanceSerializer(serializers.Serializer):
+    instance_id = serializers.UUIDField(
+        help_text=_("The UUID of the process instance."),
+        read_only=True,
+    )
+    instance_url = serializers.URLField(
+        help_text=_("The URL of the process instance."), read_only=True
+    )
+
+
 class ProcessEigenschapChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProcessEigenschapChoice

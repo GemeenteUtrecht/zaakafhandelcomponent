@@ -14,13 +14,12 @@ from django.views.decorators.csrf import csrf_protect
 
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import (
     authentication,
     exceptions,
     generics,
     permissions,
-    serializers,
     status,
     views,
 )
@@ -40,6 +39,7 @@ from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.dowc.data import DowcResponse
+from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
@@ -232,19 +232,7 @@ class CreateZaakView(views.APIView):
 
     @extend_schema(
         summary=_("Let users create a ZAAK."),
-        responses={
-            "200": inline_serializer(
-                "CreatedProcessInstanceSerializer",
-                fields={
-                    "instance_id": serializers.UUIDField(
-                        help_text=_("The UUID of the process instance."), required=True
-                    ),
-                    "instance_url": serializers.URLField(
-                        help_text=_("The URL of the process instance."), required=True
-                    ),
-                },
-            )
-        },
+        responses={"200": CreatedProcessInstanceSerializer},
     )
     def post(self, request):
         serializer = self.serializer_class(

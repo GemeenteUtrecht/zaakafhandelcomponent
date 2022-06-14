@@ -467,11 +467,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.api.validators.get_documenten",
             return_value=([cls.document], []),
         )
-        cls.patch_resolve_document_informatieobjecttypen = patch(
-            "zac.core.api.validators.get_documenten",
-            return_value=([cls.document], []),
-        )
-
         cls.patch_fetch_zaaktype = patch(
             "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype_obj,
@@ -733,10 +728,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
     @patch(
-        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-        return_value=["some-bijlage"],
-    )
-    @patch(
         "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
         return_value=[],
     )
@@ -756,5 +747,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.put(self.task_endpoint, payload)
+            with patch(
+                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+                return_value=[self.document],
+            ):
+                response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)

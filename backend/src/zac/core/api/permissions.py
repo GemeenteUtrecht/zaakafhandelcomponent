@@ -12,7 +12,6 @@ from zac.api.permissions import (
 )
 
 from ..permissions import (
-    zaakprocess_starten,
     zaken_aanmaken,
     zaken_add_documents,
     zaken_add_relations,
@@ -135,10 +134,6 @@ class CanReadOrUpdateZaken(BaseConditionalPermission):
 
 class CanCreateZaken(DefinitionBasePermission):
     permission = zaken_aanmaken
-
-
-class CanStartCamundaProcess(ZaakDefinitionPermission):
-    permission = zaakprocess_starten
 
 
 ###############################

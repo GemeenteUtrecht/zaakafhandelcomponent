@@ -1,3 +1,4 @@
+from itertools import groupby
 from typing import List, Tuple
 
 from django import forms
@@ -12,20 +13,30 @@ from .models import CamundaStartProcess
 
 def get_zaaktypen_choices() -> Tuple[Tuple[str, str]]:
     zaaktypen = get_zaaktypen()
+
     zaaktypen = sorted(
         sorted(zaaktypen, key=lambda _zt: _zt.versiedatum, reverse=True),
-        key=lambda zt: (zt.omschrijving,),
+        key=lambda zt: (zt.omschrijving, zt.identificatie),
     )
+    zten = []
+    for key, group in groupby(zaaktypen, lambda zt: zt.identificatie):
+        group = list(group)
+        max_date = max([zt.versiedatum for zt in group])
+        zten += [zt for zt in group if zt.versiedatum == max_date]
+
     return (
-        (zt.url, f"{zt.omschrijving} {zt.versiedatum} {zt.catalogus}")
-        for zt in zaaktypen
+        (
+            zt.url,
+            f"{zt.omschrijving} Identificatie: {zt.identificatie} Versiedatum: {zt.versiedatum}",
+        )
+        for zt in zten
     )
 
 
 def get_process_definition_keys() -> List[str]:
     camunda_client = get_client()
-    process_definitions = camunda_client.get("process-definition")
-    return [pdef["id"] for pdef in process_definitions]
+    process_definitions = camunda_client.get("process-definition?latestVersion=true")
+    return ((pdef["name"], pdef["key"]) for pdef in process_definitions)
 
 
 class CamundaStartProcessForm(forms.ModelForm):
