@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FeaturesWorkstackComponent } from './features-workstack.component';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
-import { SharedUiComponentsModule } from '@gu/components';
+import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { AccessRequestComponent } from './access-request/access-request.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
       headerName: 'X-CSRFToken',
     }),
     FormsModule,
+    MultiselectModule,
     ReactiveFormsModule,
     SharedUiComponentsModule,
     TabsModule.forRoot()

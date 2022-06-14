@@ -14,6 +14,8 @@
   <p>Er zijn geen toegangsverzoeken.</p>
 </ng-template>
 
+<!-- Modal for handling access request -->
+
 <gu-modal
   id="access-request-modal"
   size='small'
@@ -21,7 +23,7 @@
   (onClose)='reload.emit(true)'
 >
   <gu-loading-indicator *ngIf='isSubmitting'></gu-loading-indicator>
-  <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess">
+  <form [formGroup]="accessRequestForm" *ngIf="!submitSuccess && permissions && accessRequestForm">
     <h2>Toegangsverzoek behandelen</h2>
     <p *ngIf='openedAccessRequest'>
       <strong>{{openedRequest.requester}}</strong> vraagt toegang tot
@@ -29,13 +31,31 @@
     </p>
 
     <fieldset class="form__body">
+
+      <!-- Comment -->
       <gu-input
         [control]="handlerCommentControl"
         label="Opmerking"
         type="text"
-        class="mb-3"
       ></gu-input>
 
+      <!-- Permissions -->
+      <gu-multiselect
+        (change)="updateSelectedPermissions($event)"
+        [items]="permissions"
+        [selectedValue]="selectedPermissions"
+        label="Permissies"
+        [multiple]="true"
+        [required]="true"
+        bindLabel="name"
+        bindValue="name"
+        appendTo="body"
+        class="mb-3"
+      >
+      </gu-multiselect>
+
+
+      <!-- End date -->
       <gu-datepicker
         label='Verloopdatum toegang'
         [control]="endDateControl"
@@ -48,11 +68,17 @@
               buttonStyle="primary"
               size="small"
               class="d-inline-block mr-2"
+              [disabled]="selectedPermissions?.length < 1"
               [loading]='isSubmitting'
               (click)="submitForm('approve', openedRequest)">
         Goedkeuren
       </button>
-      <button gu-button buttonStyle="secondary" size="small" class="d-inline-block" (click)="submitForm('reject', openedRequest)">
+      <button gu-button
+              buttonStyle="secondary"
+              size="small"
+              class="d-inline-block"
+              [disabled]="!accessRequestForm.valid"
+              (click)="submitForm('reject', openedRequest)">
         Afwijzen
       </button>
     </footer>
