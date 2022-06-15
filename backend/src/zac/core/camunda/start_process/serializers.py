@@ -18,7 +18,7 @@ from zac.camunda.user_tasks import Context, register, usertask_context_serialize
 from zac.core.api.serializers import (
     EigenschapSerializer,
     InformatieObjectTypeSerializer,
-    RolSerializer,
+    ReadRolSerializer,
     RolTypeSerializer,
     ZaakEigenschapSerializer,
 )
@@ -304,7 +304,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
         self.validated_data["rollen"] = [
             {**data}
-            for data in RolSerializer(self.validated_data["rollen"], many=True).data
+            for data in ReadRolSerializer(self.validated_data["rollen"], many=True).data
         ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
 
     def get_process_variables(self) -> Dict[str, Union[List, str]]:

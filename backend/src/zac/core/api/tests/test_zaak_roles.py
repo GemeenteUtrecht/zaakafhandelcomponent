@@ -19,10 +19,10 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -32,7 +32,7 @@ KOWNSL_ROOT = "https://kownsl.nl/"
 
 class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
     """
-    Test the API response body for zaak-detail endpoint.
+    Test the API response body for Roles endpoint.
     """
 
     @classmethod
@@ -56,6 +56,11 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
+        cls.roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -70,9 +75,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
 
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-
         cls.endpoint = reverse(
             "zaak-roles",
             kwargs={
@@ -134,17 +137,245 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         ]
         self.assertEqual(response_data, expected)
 
-    def test_no_roles(self):
+    def test_get_rollen_no_roles(self):
         with patch("zac.core.api.views.get_rollen", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
-    def test_not_found(self):
+    def test_zaak_not_found(self):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @requests_mock.Mocker()
+    def test_create_rol(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            betrokkene_identificatie={"identificatie": self.user.username},
+            betrokkene_type="medewerker",
+            roltype=self.roltype["url"],
+        )
+        m.post(f"{ZAKEN_ROOT}rollen", json=rol, status_code=201)
+        response = self.client.post(
+            self.endpoint,
+            {
+                "betrokkene_type": "medewerker",
+                "betrokkene_identificatie": {"identificatie": self.user.username},
+                "roltype": self.roltype["url"],
+                "indicatie_machtiging": "",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.json(),
+            {
+                "betrokkene": "",
+                "betrokkeneIdentificatie": {
+                    "voorletters": "",
+                    "achternaam": "",
+                    "identificatie": self.user.username,
+                    "voorvoegselAchternaam": "",
+                },
+                "betrokkeneType": "medewerker",
+                "indicatieMachtiging": "",
+                "roltoelichting": self.roltype["omschrijving"],
+                "roltype": self.roltype["url"],
+                "zaak": self.zaak["url"],
+            },
+        )
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "betrokkene": "",
+                "betrokkene_identificatie": {
+                    "voorletters": "",
+                    "achternaam": "",
+                    "identificatie": self.user.username,
+                    "voorvoegsel_achternaam": "",
+                },
+                "betrokkene_type": "medewerker",
+                "indicatie_machtiging": "",
+                "roltoelichting": self.roltype["omschrijving"],
+                "roltype": self.roltype["url"],
+                "zaak": self.zaak["url"],
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_create_rol_cant_find_roltype(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+        m.get(self.roltype["url"], status_code=404, json={})
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene_type": "medewerker",
+                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            ["Can not find ROLTYPE {rt}.".format(rt=self.roltype["url"])],
+        )
+
+    @requests_mock.Mocker()
+    def test_create_rol_cant_find_roltype_for_zaaktype(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([]),
+        )
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene_type": "medewerker",
+                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "ROLTYPE {rt} is not part of ROLTYPEs for ZAAKTYPE {zt}.".format(
+                        rt=self.roltype["url"], zt=self.zaaktype["url"]
+                    )
+                ]
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_create_rol_mutually_exclusive_fields(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene": "http://some-betrokkene.com/",
+                    "betrokkene_type": "medewerker",
+                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "`betrokkene` and `betrokkene_type` are mutually exclusive."
+                ]
+            },
+        )
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene": "http://some-url.com",
+                    "betrokkene_type": "",
+                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "`betrokkene` and `betrokkene_identificatie` are mutually exclusive."
+                ]
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_create_rol_dependent_fields(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene_type": "medewerker",
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {"betrokkeneIdentificatie": ["Dit veld is vereist."]},
+        )
 
 
 class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
@@ -171,6 +402,11 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
+        )
+        cls.roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -217,7 +453,9 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -244,9 +482,19 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         self.client.force_authenticate(user=user)
-
         response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": "",
+                "zaaktype_omschrijving": "",
+                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            },
+        )
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
@@ -280,11 +528,22 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.endpoint)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_has_perm(self, m):
+    def test_has_perm_to_list(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -302,7 +561,46 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         self.client.force_authenticate(user=user)
-
         response = self.client.get(self.endpoint)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_has_perm_to_create(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        with patch("zac.core.api.views.create_rol", return_value=[]):
+            response = self.client.post(
+                self.endpoint,
+                {
+                    "betrokkene_type": "medewerker",
+                    "betrokkene_identificatie": {"identificatie": user.username},
+                    "roltype": self.roltype["url"],
+                    "indicatie_machtiging": "",
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

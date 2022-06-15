@@ -1,5 +1,6 @@
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.plumbing import ResolvedComponent, build_object_type
+from rest_framework.utils import formatting
 
 from ..polymorphism import PolymorphicSerializer
 
@@ -35,11 +36,13 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
 
             sub_serializer = serializer._discriminator_serializer(discriminator_value)
             resolved = auto_schema.resolve_serializer(sub_serializer, direction)
-
             if not resolved.name:
                 # serializer didn't have any declared properties
+                name = formatting.remove_trailing_string(
+                    type(sub_serializer).__name__, "Serializer"
+                )  # Get ref name from serializer name
                 generic = ResolvedComponent(
-                    name="GenericObject",
+                    name=name if name else "GenericObject",
                     type=ResolvedComponent.SCHEMA,
                     object=sub_serializer,
                 )

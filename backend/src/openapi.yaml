@@ -298,13 +298,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GrantPermission'
+              type: array
+              items:
+                $ref: '#/components/schemas/GrantPermission'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/GrantPermission'
+              type: array
+              items:
+                $ref: '#/components/schemas/GrantPermission'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/GrantPermission'
+              type: array
+              items:
+                $ref: '#/components/schemas/GrantPermission'
         required: true
       security:
       - cookieAuth: []
@@ -321,7 +327,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GrantPermission'
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrantPermission'
           description: ''
   /api/accounts/cases/access/{id}:
     get:
@@ -1418,6 +1426,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: ''
+  /api/camunda/fetch-process-instances/{id}/zaak:
+    get:
+      operationId: camunda_fetch_process_instances_zaak_retrieve
+      summary: Retrieve ZAAK URL for process instance.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: UUID of process instance
+        required: true
+      tags:
+      - camunda
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zaak'
+          description: ''
   /api/camunda/send-message:
     post:
       operationId: camunda_send_message_create
@@ -2004,6 +2044,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChecklistType'
           description: ''
+  /api/core/cases:
+    post:
+      operationId: core_cases_create
+      summary: Let users create a ZAAK.
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateZaak'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateZaak'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateZaak'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProcessInstance'
+          description: ''
   /api/core/cases/{bronorganisatie}/{identificatie}:
     get:
       operationId: core_cases_retrieve
@@ -2282,7 +2357,7 @@ paths:
           description: ''
   /api/core/cases/{bronorganisatie}/{identificatie}/roles:
     get:
-      operationId: core_cases_roles_retrieve
+      operationId: core_cases_roles_list
       summary: Alle ROLlen van een ZAAK opvragen.
       parameters:
       - in: path
@@ -2312,7 +2387,98 @@ paths:
           content:
             application/json:
               schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReadRol'
+          description: ''
+    post:
+      operationId: core_cases_roles_create
+      summary: Add ROL to ZAAK.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rol'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Rol'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Rol'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/Rol'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/start-process:
+    post:
+      operationId: core_cases_start_process_create
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatedProcessInstance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreatedProcessInstance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreatedProcessInstance'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedProcessInstance'
           description: ''
   /api/core/cases/{bronorganisatie}/{identificatie}/statuses:
     get:
@@ -2777,6 +2943,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ObjecttypeVersionProxy'
+          description: ''
+  /api/core/roltypes:
+    get:
+      operationId: core_roltypes_retrieve
+      description: List the available ROLTYPEs for the zaak.
+      summary: List ROLTYPEs for a ZAAK.
+      parameters:
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        description: ZAAK to list available ROLTYPEs for.
+        required: true
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolType'
           description: ''
   /api/core/statustypes:
     get:
@@ -3289,7 +3487,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fdowc.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/UnlockedDocument
+                $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fdowc.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/UnlockedDocument
           description: ''
   /api/forms/:
     get:
@@ -3462,7 +3660,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Nummeraanduiding
+                $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Nummeraanduiding
           description: ''
   /api/kadaster/panden/{pandidentificatie}:
     get:
@@ -3497,7 +3695,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Pand
+                $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Pand
           description: ''
   /api/kownsl/review-requests/{request_uuid}/advice:
     get:
@@ -3568,7 +3766,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/requestBody/content/application%2Fjson/schema
+              $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/requestBody/content/application%2Fjson/schema
       security:
       - cookieAuth: []
       - tokenAuth: []
@@ -3585,7 +3783,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/responses/201/content/application%2Fjson/schema
+                $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/responses/201/content/application%2Fjson/schema
           description: ''
   /api/kownsl/review-requests/{request_uuid}/approval:
     get:
@@ -3656,7 +3854,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/requestBody/content/application%2Fjson/schema
+              $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/requestBody/content/application%2Fjson/schema
       security:
       - cookieAuth: []
       - tokenAuth: []
@@ -3673,7 +3871,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/responses/201/content/application%2Fjson/schema
+                $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/responses/201/content/application%2Fjson/schema
           description: ''
   /api/kownsl/zaak-review-requests/{bronorganisatie}/{identificatie}/summary:
     get:
@@ -4978,6 +5176,39 @@ components:
       required:
       - value
       title: Boolean
+    CamundaZaakProcessContext:
+      type: object
+      properties:
+        benodigdeBijlagen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessInformatieObject'
+          description: These INFORMATIEOBJECTen need to be set to start the process.
+        benodigdeRollen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessRol'
+          description: These ROLlen need to be set to start the process.
+        benodigdeZaakeigenschappen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessEigenschap'
+          description: These ZAAKEIGENSCHAPpen need to be set to start the process.
+      title: CamundaZaakProcessContext
+    CamundaZaakProcessTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/CamundaZaakProcessContext'
+          nullable: true
+          title: Gebruikerstaak context
+          description: De vorm van de taakcontext hangt af van het `form` eigenschap.
+            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
+            kent.
+      required:
+      - context
+      title: CamundaZaakProcessTaskData
     CancelTask:
       type: object
       properties:
@@ -5094,6 +5325,11 @@ components:
       - selectedDocuments
       - toelichting
       title: ConfigureReviewRequest
+    ConfigureZaakProcess:
+      type: object
+      description: Generic object
+      additionalProperties: true
+      title: ConfigureZaakProcess
     CreateAccessRequest:
       type: object
       properties:
@@ -5174,6 +5410,36 @@ components:
       - url
       - zaak
       title: CreateOrUpdateActivity
+    CreateZaak:
+      type: object
+      properties:
+        organisatieRsin:
+          type: string
+          default: '002220647'
+          description: The RSIN of the organization that created the ZAAK. This has
+            to be a valid `RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/Burgerservicenummer#11-proef.
+          pattern: ^[0-9]{9}$
+          maxLength: 9
+        zaaktype:
+          type: string
+          format: uri
+          description: URL-reference to the ZAAKTYPE (in the Catalogi API).
+        omschrijving:
+          type: string
+          description: A short summary of the ZAAK.
+        toelichting:
+          type: string
+          default: ''
+          description: A comment on the ZAAK.
+        startdatum:
+          type: string
+          format: date
+          default: '2022-06-15'
+          description: The date the ZAAK begins.
+      required:
+      - omschrijving
+      - zaaktype
+      title: CreateZaak
     CreateZaakEigenschap:
       type: object
       properties:
@@ -5194,6 +5460,23 @@ components:
       - waarde
       - zaakUrl
       title: CreateZaakEigenschap
+    CreatedProcessInstance:
+      type: object
+      properties:
+        instanceId:
+          type: string
+          format: uuid
+          readOnly: true
+          description: The UUID of the process instance.
+        instanceUrl:
+          type: string
+          format: uri
+          readOnly: true
+          description: The URL of the process instance.
+      required:
+      - instanceId
+      - instanceUrl
+      title: CreatedProcessInstance
     DateTimeValue:
       type: object
       properties:
@@ -5373,6 +5656,11 @@ components:
       required:
       - context
       title: DynamicFormTaskData
+    DynamicFormWrite:
+      type: object
+      description: Generic object
+      additionalProperties: true
+      title: DynamicFormWrite
     Eigenschap:
       type: object
       properties:
@@ -5556,15 +5844,16 @@ components:
       - zac:configureAdviceRequest
       - zac:configureApprovalRequest
       - zac:validSign:configurePackage
+      - zac:startProcessForm
       type: string
       title: FormEnum
     FormField:
       oneOf:
       - $ref: '#/components/schemas/FormFieldInt'
-      - $ref: '#/components/schemas/FormFieldEnum'
       - $ref: '#/components/schemas/FormFieldBoolean'
-      - $ref: '#/components/schemas/FormFieldDatetime'
       - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldDatetime'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5627,11 +5916,6 @@ components:
       - datum_tijd
       type: string
       title: FormaatEnum
-    GenericObject:
-      type: object
-      description: Generic object
-      additionalProperties: true
-      title: GenericObject
     GetZaakDocument:
       type: object
       properties:
@@ -5836,8 +6120,16 @@ components:
           type: string
           format: date
           description: Einddatum van de toegang
+        permissions:
+          type: array
+          items:
+            type: string
+            description: Naam van het recht
+            maxLength: 255
+          description: List of permissions to be granted to user for ZAAK.
       required:
       - handler
+      - permissions
       - requester
       - url
       title: HandleAccessRequest
@@ -5894,6 +6186,12 @@ components:
       - history
       - name
       title: HistoricUserTask
+    IndicatieMachtigingEnum:
+      enum:
+      - gemachtigde
+      - machtiginggever
+      type: string
+      title: IndicatieMachtigingEnum
     InformatieObjectType:
       type: object
       properties:
@@ -5947,9 +6245,21 @@ components:
       required:
       - value
       title: Int
+    JSONFieldTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          type: object
+          additionalProperties: {}
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: JSONFieldTaskData
     KownslReviewRequest:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Buuid%7D/get/responses/200/content/application%2Fjson/schema
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Buuid%7D/get/responses/200/content/application%2Fjson/schema
       - $ref: '#/components/schemas/KownslReviewRequestExtras'
       title: KownslReviewRequest
     KownslReviewRequestExtras:
@@ -6023,7 +6333,7 @@ components:
       title: NumberValue
     ObjectFilterProxy:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fobjects%2Fsearch/post/requestBody/content/application%2Fjson/schema
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fobjects%2Fsearch/post/requestBody/content/application%2Fjson/schema
       - $ref: '#/components/schemas/ObjectFilterProxyExtras'
       title: ObjectFilterProxy
     ObjectFilterProxyExtras:
@@ -6031,7 +6341,7 @@ components:
       title: ObjectFilterProxyExtras
     ObjectProxy:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/Object
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fobjects.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/Object
       - $ref: '#/components/schemas/ObjectProxyExtras'
       title: ObjectProxy
     ObjectProxyExtras:
@@ -6039,7 +6349,7 @@ components:
       title: ObjectProxyExtras
     ObjecttypeProxy:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectType
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectType
       - $ref: '#/components/schemas/ObjecttypeProxyExtras'
       title: ObjecttypeProxy
     ObjecttypeProxyExtras:
@@ -6047,7 +6357,7 @@ components:
       title: ObjecttypeProxyExtras
     ObjecttypeVersionProxy:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectVersion
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectVersion
       - $ref: '#/components/schemas/ObjecttypeVersionProxyExtras'
       title: ObjecttypeVersionProxy
     ObjecttypeVersionProxyExtras:
@@ -6332,6 +6642,13 @@ components:
           type: string
           format: date
           description: Einddatum van de toegang
+        permissions:
+          type: array
+          items:
+            type: string
+            description: Naam van het recht
+            maxLength: 255
+          description: List of permissions to be granted to user for ZAAK.
       title: PatchedHandleAccessRequest
     PatchedLockReviewRequest:
       type: object
@@ -6468,8 +6785,10 @@ components:
       title: PermissionDenied
     PermissionsEnum:
       enum:
+      - zaken:aanmaken
       - zaken:inzien
       - zaken:wijzigen
+      - zaakproces:starten
       - zaakproces:usertasks-uitvoeren
       - zaakproces:send-bpmn-message
       - zaken:afsluiten
@@ -6511,6 +6830,72 @@ components:
       required:
       - policies
       title: PoliciesZaakTypeBlueprint
+    ProcessEigenschap:
+      type: object
+      properties:
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessEigenschapChoice'
+          description: Possible choices related to the EIGENSCHAP.
+        eigenschap:
+          allOf:
+          - $ref: '#/components/schemas/Eigenschap'
+          description: The EIGENSCHAP related to the ZAAKEIGENSCHAP.
+        label:
+          type: string
+          description: The label that will be shown.
+          maxLength: 100
+        default:
+          type: string
+          description: The default value of the ZAAKEIGENSCHAP.
+          maxLength: 255
+      required:
+      - eigenschap
+      - label
+      title: ProcessEigenschap
+    ProcessEigenschapChoice:
+      type: object
+      properties:
+        label:
+          type: string
+          description: The label that will be shown.
+          maxLength: 100
+        value:
+          type: string
+          description: The value that will be used internally.
+          maxLength: 100
+      required:
+      - label
+      - value
+      title: ProcessEigenschapChoice
+    ProcessInformatieObject:
+      type: object
+      properties:
+        informatieobjecttype:
+          allOf:
+          - $ref: '#/components/schemas/InformatieObjectType'
+          nullable: true
+          description: The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.
+        alreadyUploadedInformatieobjecten:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: URL-references of already uploaded documents.
+        allowMultiple:
+          type: boolean
+          title: Allow multiple documents
+          description: A boolean flag to indicate whether a user is allowed to add
+            more than 1 document.
+        label:
+          type: string
+          description: The label that will be shown.
+          maxLength: 100
+      required:
+      - informatieobjecttype
+      - label
+      title: ProcessInformatieObject
     ProcessInstance:
       type: object
       properties:
@@ -6539,6 +6924,30 @@ components:
       - tasks
       - title
       title: ProcessInstance
+    ProcessRol:
+      type: object
+      properties:
+        roltype:
+          allOf:
+          - $ref: '#/components/schemas/RolType'
+          description: The ROLTYPE related to the ROL.
+        label:
+          type: string
+          description: The label that will be shown.
+          maxLength: 100
+        betrokkeneType:
+          allOf:
+          - $ref: '#/components/schemas/BetrokkeneTypeEnum'
+          description: Betrokkene type of ROL.
+        default:
+          type: string
+          description: A default value of the ROL betrokkene.
+          maxLength: 255
+      required:
+      - betrokkeneType
+      - label
+      - roltype
+      title: ProcessRol
     QuestionChoice:
       type: object
       properties:
@@ -6682,6 +7091,39 @@ components:
       - question
       - userAssignee
       title: ReadChecklistAnswer
+    ReadRol:
+      type: object
+      properties:
+        url:
+          type: string
+        betrokkeneType:
+          $ref: '#/components/schemas/BetrokkeneTypeEnum'
+        betrokkeneTypeDisplay:
+          type: string
+        omschrijving:
+          type: string
+        omschrijvingGeneriek:
+          type: string
+        roltoelichting:
+          type: string
+        registratiedatum:
+          type: string
+          format: date-time
+        name:
+          type: string
+        identificatie:
+          type: string
+      required:
+      - betrokkeneType
+      - betrokkeneTypeDisplay
+      - identificatie
+      - name
+      - omschrijving
+      - omschrijvingGeneriek
+      - registratiedatum
+      - roltoelichting
+      - url
+      title: ReadRol
     ReadUserAuthorizationProfile:
       type: object
       properties:
@@ -6867,37 +7309,23 @@ components:
       type: string
       title: ReviewTypeEnum
     Rol:
-      type: object
-      properties:
-        url:
-          type: string
-        betrokkeneType:
-          $ref: '#/components/schemas/BetrokkeneTypeEnum'
-        betrokkeneTypeDisplay:
-          type: string
-        omschrijving:
-          type: string
-        omschrijvingGeneriek:
-          type: string
-        roltoelichting:
-          type: string
-        registratiedatum:
-          type: string
-          format: date-time
-        name:
-          type: string
-        identificatie:
-          type: string
-      required:
-      - betrokkeneType
-      - betrokkeneTypeDisplay
-      - identificatie
-      - name
-      - omschrijving
-      - omschrijvingGeneriek
-      - registratiedatum
-      - roltoelichting
-      - url
+      oneOf:
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolVestigingTaskData'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
+      - $ref: '#/components/schemas/RolJSONFieldTaskData'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
+      discriminator:
+        propertyName: betrokkeneType
+        mapping:
+          natuurlijk_persoon: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
+          niet_natuurlijk_persoon: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+          vestiging: '#/components/schemas/RolRolVestigingTaskData'
+          organisatorische_eenheid: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
+          medewerker: '#/components/schemas/RolRolMedewerkerTaskData'
+          ? ''
+          : '#/components/schemas/RolJSONFieldTaskData'
       title: Rol
     RolDocument:
       type: object
@@ -6920,6 +7348,209 @@ components:
       - betrokkeneType
       - omschrijvingGeneriek
       title: RolDocument
+    RolJSONFieldTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/JSONFieldTaskData'
+      title: RolJSONFieldTaskData
+    RolMedewerker:
+      type: object
+      properties:
+        voorletters:
+          type: string
+          readOnly: true
+          description: Initials of medewerker.
+        achternaam:
+          type: string
+          readOnly: true
+          description: '`last_name` of medewerker.'
+        identificatie:
+          type: string
+          description: '`username` of medewerker.'
+        voorvoegselAchternaam:
+          type: string
+          default: ''
+          description: Last name prefix of medewerker.
+      required:
+      - achternaam
+      - identificatie
+      - voorletters
+      title: RolMedewerker
+    RolMedewerkerTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          allOf:
+          - $ref: '#/components/schemas/RolMedewerker'
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: RolMedewerkerTaskData
+    RolNatuurlijkPersoon:
+      allOf:
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/RolNatuurlijkPersoon
+      - $ref: '#/components/schemas/RolNatuurlijkPersoonExtras'
+      title: RolNatuurlijkPersoon
+    RolNatuurlijkPersoonExtras:
+      type: object
+      title: RolNatuurlijkPersoonExtras
+    RolNatuurlijkPersoonTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          allOf:
+          - $ref: '#/components/schemas/RolNatuurlijkPersoon'
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: RolNatuurlijkPersoonTaskData
+    RolNietNatuurlijkPersoon:
+      allOf:
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/RolNietNatuurlijkPersoon
+      - $ref: '#/components/schemas/RolNietNatuurlijkPersoonExtras'
+      title: RolNietNatuurlijkPersoon
+    RolNietNatuurlijkPersoonExtras:
+      type: object
+      title: RolNietNatuurlijkPersoonExtras
+    RolNietNatuurlijkPersoonTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          allOf:
+          - $ref: '#/components/schemas/RolNietNatuurlijkPersoon'
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: RolNietNatuurlijkPersoonTaskData
+    RolOrganisatorischeEenheid:
+      allOf:
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/RolOrganisatorischeEenheid
+      - $ref: '#/components/schemas/RolOrganisatorischeEenheidExtras'
+      title: RolOrganisatorischeEenheid
+    RolOrganisatorischeEenheidExtras:
+      type: object
+      title: RolOrganisatorischeEenheidExtras
+    RolOrganisatorischeEenheidTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          allOf:
+          - $ref: '#/components/schemas/RolOrganisatorischeEenheid'
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: RolOrganisatorischeEenheidTaskData
+    RolRolMedewerkerTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/RolMedewerkerTaskData'
+      title: RolRolMedewerkerTaskData
+    RolRolNatuurlijkPersoonTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/RolNatuurlijkPersoonTaskData'
+      title: RolRolNatuurlijkPersoonTaskData
+    RolRolNietNatuurlijkPersoonTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/RolNietNatuurlijkPersoonTaskData'
+      title: RolRolNietNatuurlijkPersoonTaskData
+    RolRolOrganisatorischeEenheidTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/RolOrganisatorischeEenheidTaskData'
+      title: RolRolOrganisatorischeEenheidTaskData
+    RolRolVestigingTaskData:
+      allOf:
+      - $ref: '#/components/schemas/RolShared'
+      - $ref: '#/components/schemas/RolVestigingTaskData'
+      title: RolRolVestigingTaskData
+    RolShared:
+      type: object
+      properties:
+        betrokkene:
+          type: string
+          format: uri
+          default: ''
+          description: URL-reference to betrokkene of ROL. Mutually exclusive with
+            `betrokkene_type`.
+        betrokkeneType:
+          description: Betrokkene type of ROL. Mutually exclusive with `betrokkene`.
+          oneOf:
+          - $ref: '#/components/schemas/BetrokkeneTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        indicatieMachtiging:
+          oneOf:
+          - $ref: '#/components/schemas/IndicatieMachtigingEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        roltoelichting:
+          type: string
+          readOnly: true
+          description: Comment related to the ROL. Usually it is the `omschrijving`
+            of ROLTYPE of ROL.
+        roltype:
+          type: string
+          format: uri
+          description: URL-reference to ROLTYPE of ROL.
+        url:
+          type: string
+          format: uri
+          readOnly: true
+          description: URL-reference to ROL itself.
+        zaak:
+          type: string
+          format: uri
+          description: URL-reference to ZAAK of ROL.
+      required:
+      - betrokkeneType
+      - indicatieMachtiging
+      - roltoelichting
+      - roltype
+      - url
+      - zaak
+      title: RolShared
+    RolType:
+      type: object
+      properties:
+        url:
+          type: string
+        omschrijving:
+          type: string
+        omschrijvingGeneriek:
+          type: string
+      required:
+      - omschrijving
+      - omschrijvingGeneriek
+      - url
+      title: RolType
+    RolVestiging:
+      allOf:
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/RolVestiging
+      - $ref: '#/components/schemas/RolVestigingExtras'
+      title: RolVestiging
+    RolVestigingExtras:
+      type: object
+      title: RolVestigingExtras
+    RolVestigingTaskData:
+      type: object
+      properties:
+        betrokkeneIdentificatie:
+          allOf:
+          - $ref: '#/components/schemas/RolVestiging'
+          description: The `betrokkene_identificatie` of the ROL.The shape of the
+            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
+            exclusive with `betrokkene`.
+      required:
+      - betrokkeneIdentificatie
+      title: RolVestigingTaskData
     Role:
       type: object
       properties:
@@ -7247,35 +7878,42 @@ components:
       title: String
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskGenericObject'
+      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
       discriminator:
         propertyName: form
         mapping:
           ? ''
-          : '#/components/schemas/SubmitUserTaskGenericObject'
+          : '#/components/schemas/SubmitUserTaskDynamicFormWrite'
           zac:documentSelectie: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
           zac:configureAdviceRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:configureApprovalRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:validSign:configurePackage: '#/components/schemas/SubmitUserTaskValidSignTask'
+          zac:startProcessForm: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       title: SubmitUserTask
     SubmitUserTaskConfigureReviewRequest:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/ConfigureReviewRequest'
       title: SubmitUserTaskConfigureReviewRequest
+    SubmitUserTaskConfigureZaakProcess:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/ConfigureZaakProcess'
+      title: SubmitUserTaskConfigureZaakProcess
     SubmitUserTaskDocumentSelectTask:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/DocumentSelectTask'
       title: SubmitUserTaskDocumentSelectTask
-    SubmitUserTaskGenericObject:
+    SubmitUserTaskDynamicFormWrite:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
-      - $ref: '#/components/schemas/GenericObject'
-      title: SubmitUserTaskGenericObject
+      - $ref: '#/components/schemas/DynamicFormWrite'
+      title: SubmitUserTaskDynamicFormWrite
     SubmitUserTaskShared:
       type: object
       properties:
@@ -7385,9 +8023,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -7552,11 +8190,12 @@ components:
       title: UserAuthorizationProfile
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -7567,12 +8206,18 @@ components:
           zac:configureAdviceRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:configureApprovalRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:validSign:configurePackage: '#/components/schemas/UserTaskContextValidSignTaskData'
+          zac:startProcessForm: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
       title: UserTaskContext
     UserTaskContextAdviceApprovalTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/AdviceApprovalTaskData'
       title: UserTaskContextAdviceApprovalTaskData
+    UserTaskContextCamundaZaakProcessTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/CamundaZaakProcessTaskData'
+      title: UserTaskContextCamundaZaakProcessTaskData
     UserTaskContextDocumentSelectTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextShared'
@@ -8032,10 +8677,10 @@ components:
       title: ZaakDocument
     ZaakEigenschap:
       oneOf:
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -8133,7 +8778,7 @@ components:
       title: ZaakObjectGroup
     ZaakObjectProxy:
       allOf:
-      - $ref: https://zac.cg-intern.ont.utrecht.nl/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/ZaakObject
+      - $ref: http://localhost:8000/api/_get-remote-schema/?schema=https%3A%2F%2Fopen-zaak.cg-intern.ont.utrecht.nl%2Fzaken%2Fapi%2Fv1%2Fschema%2Fopenapi.json#/components/schemas/ZaakObject
       - $ref: '#/components/schemas/ZaakObjectProxyExtras'
       title: ZaakObjectProxy
     ZaakObjectProxyExtras:
@@ -8267,17 +8912,12 @@ components:
           type: string
           description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
             voor de verschillende versies van ZAAKTYPE
-        identificatie:
-          type: string
-          description: Identificatie van ZAAKTYPE, verschillende ZAAKTYPE versies
-            kunnen dezelfde identificatie hebben
         catalogus:
           type: string
           format: uri
           description: Url reference of related CATALOGUS
       required:
       - catalogus
-      - identificatie
       - omschrijving
       title: ZaakTypeAggregate
     ZaakTypeBlueprint:

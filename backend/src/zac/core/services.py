@@ -800,16 +800,27 @@ def fetch_rol(rol_url: str) -> Rol:
     return rol
 
 
-def update_rol(rol_url: str, new_rol: Dict) -> Rol:
-    # Get zrc_client from the zaak url of the rol
-    zrc_client = _client_from_url(new_rol["zaak"])
+def create_rol(rol: Dict) -> Rol:
+    zrc_client = _client_from_url(rol["zaak"])
+    rol = zrc_client.create("rol", rol)
+    return factory(Rol, rol)
 
-    # Destroy old rol
+
+def delete_rol(rol_url: str):
+    zrc_client = _client_from_url(rol_url)
     zrc_client.delete("rol", url=rol_url)
 
+
+def update_rol(rol_url: str, new_rol: Dict) -> Rol:
+    """
+    Open zaak 1.6.0 (CURRENT) does not allow patching/putting ROLlen.
+
+    """
+    # Destroy old rol
+    delete_rol(rol_url)
+
     # Create new rol
-    rol = zrc_client.create("rol", new_rol)
-    return factory(Rol, rol)
+    return create_rol(new_rol)
 
 
 def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
@@ -838,9 +849,9 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     if not user.get_full_name():
         return
 
-    from .api.serializers import UpdateRolSerializer
+    from .api.serializers import RolSerializer
 
-    new_rol_data = UpdateRolSerializer(instance=rol, context={"user": user}).data
+    new_rol_data = RolSerializer(instance=rol, context={"user": user}).data
     return update_rol(rol_url, new_rol_data)
 
 
