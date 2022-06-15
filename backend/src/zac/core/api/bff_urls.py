@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from .views import (
     CreateZaakRelationView,
@@ -79,6 +79,10 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/atomic-permissions",
         ZaakAtomicPermissionsView.as_view(),
         name="zaak-atomic-permissions",
+    ),
+    path(
+        "cases/<str:bronorganisatie>/<str:identificatie>",
+        include("zac.core.camunda.start_process.urls"),
     ),
     # meta
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),

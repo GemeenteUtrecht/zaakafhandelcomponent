@@ -7,7 +7,7 @@ from zgw_consumers.concurrent import parallel
 
 from zac.camunda.data import ProcessInstance
 from zac.camunda.messages import get_messages
-from zac.core.camunda import get_process_tasks
+from zac.core.camunda.utils import get_process_tasks
 
 
 def get_process_definitions(definition_ids: list) -> List[ProcessDefinition]:

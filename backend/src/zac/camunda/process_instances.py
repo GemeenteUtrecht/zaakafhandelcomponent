@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 import requests
 from django_camunda.camunda_models import factory
@@ -34,3 +34,11 @@ def get_process_instance(instance_id: CamundaId) -> Optional[ProcessInstance]:
             }
         )
     return factory(ProcessInstance, data)
+
+
+def delete_process_instance(instance_id: CamundaId, query_params: Dict = dict):
+    client = get_client()
+    query_params = {
+        "skipIoMappings": "true",
+    }
+    client.delete(f"process-instance/{instance_id}", query_params)

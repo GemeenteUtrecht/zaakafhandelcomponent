@@ -15,10 +15,11 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
 from zac.accounts.models import User
+from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanCreateZaken, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
-from zac.core.camunda import get_process_zaak_url
+from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 

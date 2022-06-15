@@ -5,7 +5,7 @@ class ValidSignConfig(AppConfig):
     name = "zac.contrib.validsign"
 
     def ready(self):
-        from zac.core.camunda import FORM_KEYS
+        from zac.core.camunda.utils import FORM_KEYS
 
         from . import camunda  # noqa
 

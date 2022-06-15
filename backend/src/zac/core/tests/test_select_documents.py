@@ -1,5 +1,4 @@
-import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import requests_mock
 from django_camunda.utils import serialize_variable, underscoreize
@@ -14,7 +13,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.api.context import ZaakContext
-from zac.camunda.data import ProcessInstance, Task
+from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
