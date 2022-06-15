@@ -297,7 +297,23 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    def test_put_start_process_user_task_missing_bijlage(self, m, gt):
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_missing_bijlage(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -319,15 +335,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=zaakcontext,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
-                return_value=[],
-            ):
-                with patch(
-                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
-                    return_value=[],
-                ):
-                    response = self.client.put(self.task_endpoint)
+            response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -343,7 +351,23 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    def test_put_start_process_user_task_missing_rol(self, m, gt):
+    @patch(
+        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_missing_rol(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -360,15 +384,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-                return_value=[],
-            ):
-                with patch(
-                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
-                    return_value=[],
-                ):
-                    response = self.client.put(self.task_endpoint)
+            response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -384,7 +400,23 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    def test_put_start_process_user_task_mismatch_rol_betrokkene_type(self, m, gt):
+    @patch(
+        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_mismatch_rol_betrokkene_type(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -403,15 +435,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-                return_value=[],
-            ):
-                with patch(
-                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_zaakeigenschappen",
-                    return_value=[],
-                ):
-                    response = self.client.put(self.task_endpoint)
+            response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -427,7 +451,23 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    def test_put_start_process_user_task_missing_eigenschap(self, m, gt):
+    @patch(
+        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_missing_eigenschap(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -444,15 +484,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-                return_value=[],
-            ):
-                with patch(
-                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
-                    return_value=[],
-                ):
-                    response = self.client.put(self.task_endpoint)
+            response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -468,7 +500,23 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    def test_put_start_process_user_task_wrong_eigenschap_choice(self, m, gt):
+    @patch(
+        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_wrong_eigenschap_choice(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -485,15 +533,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-                return_value=[],
-            ):
-                with patch(
-                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
-                    return_value=[],
-                ):
-                    response = self.client.put(self.task_endpoint)
+            response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(

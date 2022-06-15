@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import partial
 from typing import Dict, List, Union
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -119,16 +120,36 @@ class ZaakProcessEigenschapSerializer(serializers.Serializer):
     )
 
 
+class GetCurrentZaakInformation:
+    def set_context(self, serializer_field):
+        zaakcontext = get_zaak_context(
+            serializer_field.context["task"],
+            require_zaaktype=False,
+            require_documents=True,
+        )
+        self.field_name = serializer_field.field_name
+        self.mapping = {
+            "bijlagen": partial(
+                resolve_documenten_informatieobjecttypen, zaakcontext.documents
+            ),
+            "rollen": partial(get_rollen, zaakcontext.zaak),
+            "zaakeigenschappen": partial(get_zaak_eigenschappen, zaakcontext.zaak),
+        }
+
+    def __call__(self):
+        return self.mapping[self.field_name]()
+
+
 class ConfigureZaakProcessSerializer(serializers.Serializer):
-    bijlagen = serializers.HiddenField(default=[])
-    rollen = serializers.HiddenField(default=[])
-    zaakeigenschappen = serializers.HiddenField(default=[])
+    bijlagen = serializers.HiddenField(default=GetCurrentZaakInformation())
+    rollen = serializers.HiddenField(default=GetCurrentZaakInformation())
+    zaakeigenschappen = serializers.HiddenField(default=GetCurrentZaakInformation())
 
     @property
     def zaakcontext(self):
         if not hasattr(self, "_zaakcontext"):
             self._zaakcontext = get_zaak_context(
-                self.context["task"], require_zaaktype=True, require_documents=True
+                self.context["task"], require_zaaktype=False, require_documents=True
             )
         return self._zaakcontext
 
@@ -136,18 +157,20 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     def camunda_start_process(self):
         if not hasattr(self, "_camunda_start_process"):
             try:
-                camunda_start_process = CamundaStartProcess.objects.prefetch_related(
-                    "processinformatieobject_set",
-                    "processrol_set",
-                    Prefetch(
-                        "processeigenschap_set",
-                        queryset=ProcessEigenschap.objects.prefetch_related(
-                            "processeigenschapchoice_set"
-                        ).all(),
-                    ),
-                ).get(
-                    zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
-                    zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
+                self._camunda_start_process = (
+                    CamundaStartProcess.objects.prefetch_related(
+                        "processinformatieobject_set",
+                        "processrol_set",
+                        Prefetch(
+                            "processeigenschap_set",
+                            queryset=ProcessEigenschap.objects.prefetch_related(
+                                "processeigenschapchoice_set"
+                            ).all(),
+                        ),
+                    ).get(
+                        zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
+                        zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
+                    )
                 )
             except ObjectDoesNotExist:
                 raise serializers.ValidationError(
@@ -158,15 +181,11 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                         zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
                     )
                 )
-            self._camunda_start_process = camunda_start_process
         return self._camunda_start_process
 
     def validate_bijlagen(self, bijlagen) -> List[Document]:
         # Validate that bijlagen related to zaak match required document(types).
-        documenten = resolve_documenten_informatieobjecttypen(
-            self.zaakcontext.documents
-        )
-        iots = [doc.informatieobjecttype.omschrijving for doc in documenten]
+        iots = [doc.informatieobjecttype.omschrijving for doc in bijlagen]
 
         required_informatieobjecttype_omschrijvingen = [
             iot.informatieobjecttype_omschrijving
@@ -179,12 +198,10 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                         "A INFORMATIEOBJECT with INFORMATIEOBJECTTYPE description `{omschrijving}` is required."
                     ).format(omschrijving=iot_omschrijving)
                 )
-        return documenten
+        return bijlagen
 
     def validate_rollen(self, rollen) -> List[Rol]:
         # Validate that rollen in zaak match required rollen
-        rollen = get_rollen(zaak=self.zaakcontext.zaak)
-
         # Get required rollen, map their omschrijving to their
         # betrokkene_type to validate that both are set appropriately.
         required_rt_omsch_betr_type = {}
@@ -241,9 +258,8 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             }
             for ei in self.camunda_start_process.processeigenschap_set.all()
         }
-        found_zaakeigenschappen = get_zaak_eigenschappen(self.zaakcontext.zaak)
         found_zaakeigenschapnaamwaarden = {
-            zei.naam: zei.waarde for zei in found_zaakeigenschappen
+            zei.naam: zei.waarde for zei in zaakeigenschappen
         }
         for required_zei in required_zaakeigenschappen.keys():
             if required_zei not in found_zaakeigenschapnaamwaarden:
@@ -267,7 +283,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                             ),
                         )
                     )
-        return found_zaakeigenschappen
+        return zaakeigenschappen
 
     def on_task_submission(self) -> None:
         """

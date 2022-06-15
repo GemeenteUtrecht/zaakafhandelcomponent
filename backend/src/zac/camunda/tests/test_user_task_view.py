@@ -728,6 +728,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     )
     @patch("zac.camunda.api.views.complete_task", return_value=None)
     @patch(
+        "zac.core.camunda.start_process.serializers.get_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        return_value=[],
+    )
+    @patch(
         "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
         return_value=[],
     )
@@ -748,8 +756,12 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             return_value=self.zaak_context,
         ):
             with patch(
-                "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+                "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
                 return_value=[self.document],
             ):
-                response = self.client.put(self.task_endpoint, payload)
+                with patch(
+                    "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+                    return_value=[self.document],
+                ):
+                    response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
