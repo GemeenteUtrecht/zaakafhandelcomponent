@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
@@ -7,7 +8,7 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import RolType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -33,6 +34,15 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+ROLTYPE = f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac"
+ROLTYPE_RESPONSE = generate_oas_component(
+    "ztc",
+    "schemas/RolType",
+    url=ROLTYPE,
+    zaaktype=ZAAKTYPE,
+    omschrijving="zaak behandelaar",
+    omschrijvingGeneriek="behandelaar",
+)
 ROL = f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc"
 ROL_RESPONSE = generate_oas_component(
     "zrc",
@@ -41,10 +51,10 @@ ROL_RESPONSE = generate_oas_component(
     zaak=ZAAK,
     betrokkene="",
     betrokkeneType="medewerker",
-    roltype=f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
-    omschrijving="zaak behandelaar",
-    omschrijvingGeneriek="behandelaar",
-    roltoelichting="some description",
+    roltype=ROLTYPE,
+    omschrijving=ROLTYPE_RESPONSE["omschrijving"],
+    omschrijvingGeneriek=ROLTYPE_RESPONSE["omschrijvingGeneriek"],
+    roltoelichting=ROLTYPE_RESPONSE["omschrijving"],
     registratiedatum="2020-09-01T00:00:00Z",
     indicatieMachtiging="",
     betrokkeneIdentificatie={
@@ -54,6 +64,7 @@ ROL_RESPONSE = generate_oas_component(
         "voorvoegsel_achternaam": "",
     },
 )
+
 
 NOTIFICATION = {
     "kanaal": "zaken",
@@ -96,6 +107,13 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.zaak_document.save()
 
         self.refresh_index()
+
+        get_roltype_patcher = patch(
+            "zac.core.api.serializers.get_roltype",
+            return_value=factory(RolType, ROLTYPE_RESPONSE),
+        )
+        get_roltype_patcher.start()
+        self.addCleanup(get_roltype_patcher.stop)
 
     def test_rol_created_indexed_in_es(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
@@ -207,10 +225,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 },
                 "betrokkene_type": "medewerker",
                 "indicatie_machtiging": "",
-                "omschrijving": "zaak behandelaar",
-                "omschrijving_generiek": "behandelaar",
-                "registratiedatum": "2020-09-01T00:00:00Z",
-                "roltoelichting": "some description",
+                "roltoelichting": ROLTYPE_RESPONSE["omschrijving"],
                 "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
                 "url": ROL,
                 "zaak": ZAAK,
@@ -384,10 +399,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 },
                 "betrokkene_type": "medewerker",
                 "indicatie_machtiging": "",
-                "omschrijving": "zaak behandelaar",
-                "omschrijving_generiek": "behandelaar",
-                "registratiedatum": "2020-09-01T00:00:00Z",
-                "roltoelichting": "some description",
+                "roltoelichting": ROLTYPE_RESPONSE["omschrijving"],
                 "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
                 "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
                 "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
