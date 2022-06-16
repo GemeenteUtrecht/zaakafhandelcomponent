@@ -38,7 +38,7 @@ class LockReviewRequestSerializer(APIModelSerializer):
 
 
 class ZaakRevReqSummarySerializer(APIModelSerializer):
-    completed = serializers.SerializerMethodField(
+    completed = serializers.IntegerField(
         label=_("completed requests"), help_text=_("The number of completed requests.")
     )
     can_lock = serializers.SerializerMethodField(
@@ -56,9 +56,6 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
             "locked",
             "lock_reason",
         )
-
-    def get_completed(self, obj) -> int:
-        return obj.num_advices + obj.num_approvals
 
     def get_can_lock(self, obj) -> bool:
         if (
