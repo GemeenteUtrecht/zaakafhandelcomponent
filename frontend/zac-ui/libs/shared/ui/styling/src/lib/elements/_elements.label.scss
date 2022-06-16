@@ -11,21 +11,23 @@
   margin: .5rem 0;
   padding: 0 .25rem;
   text-decoration: none;
+
   &--optional {
-    color: $color-dimgray;
+    color: $color-muted;
   }
+
   &--small {
-    color: $color-text--gray;
+    color: $color-muted;
     font-size: 0.75rem;
     font-weight: normal;
     margin: 0;
     padding: 0;
   }
   &--accent {
-    color: $color-orange;
+    color: $color-warning;
   }
   &--hint {
-    color: $color-dimgray;
+    color: $color-muted;
     display: block;
     font-style: italic;
     font-size: 0.875rem;

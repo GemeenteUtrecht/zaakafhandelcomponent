@@ -13,7 +13,7 @@
     margin: 0 4px;
     min-width: 280px;
     max-width: 280px;
-    background-color: $background-lightgrey;
+    background-color: $color-background-lightgrey;
     padding: 10px;
     border-radius: 5px;
     &__body {
@@ -27,7 +27,7 @@
       right: 5px;
       top: 5px;
       ::ng-deep .mat-icon {
-        color: $color-text--gray;
+        color: $color-muted;
       }
     }
     &:hover .dashboard-item__delete-button {

@@ -6,13 +6,13 @@
 }
 
 .form-control {
-  border-color: $border-input;
+  border-color: $color-secondary;
   border-radius: 4px;
   font-size: 0.875rem;
   color: $color-text;
   &:focus {
-    background-color: $background-white;
-    border-color: $color-blue;
+    background-color: $color-background-white;
+    border-color: $color-info;
     outline: 0;
     box-shadow: none;
   }
@@ -23,7 +23,7 @@
 
 .form-control-error {
   font-size: 75%;
-  color: $color-warn;
+  color: $color-warning;
   margin: 0.1rem 0 0 0.75rem;
 }
 
@@ -48,7 +48,7 @@
       content: " ";
       display: block;
       position: absolute;
-      background: $background-white;
+      background: $color-background-white;
       height: 2px;
       top: 50%;
       left: -.2em;

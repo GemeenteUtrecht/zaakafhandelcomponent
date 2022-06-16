@@ -1,7 +1,7 @@
 @import '../base/colors/colors';
 
 .content-background {
-  background: $background-white;
+  background: $color-background-white;
   margin-bottom: 1.25rem;
   min-height: 100vh;
   .content {
@@ -11,6 +11,6 @@
     }
   }
   &--yellow {
-    background-color: $background-lightyellow;
+    background-color: $color-warning;
   }
 }

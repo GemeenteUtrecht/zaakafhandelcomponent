@@ -9,8 +9,8 @@
   &-label {
     line-height: 1.625rem;
     margin-bottom: 1.25rem;
-    background-color: $background-lightgrey;
-    border: 0.0625rem solid $background-lightgrey;
+    background-color: $color-background-lightgrey;
+    border: 0.0625rem solid $color-border;
     cursor: pointer;
     display: inline-block;
     min-height: 3rem;
@@ -33,10 +33,10 @@
   }
   &:checked + label {
     background-color: transparent;
-    border: 0.0625rem solid $color-blue;
+    border: 0.0625rem solid $color-secondary;
   }
   &:checked+.radio-label:before {
-    background-color: $color-blue;
+    background-color: $color-secondary;
   }
   &:checked+.radio-label:after {
     background-color: #fff;

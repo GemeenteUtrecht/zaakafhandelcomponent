@@ -22,7 +22,7 @@ h1, .h1 {
 h2, .h2 {
   @include heading;
   font-size: $h2-font;
-  color: $color-blue;
+  color: $color-secondary;
 }
 
 h3, .h3 {

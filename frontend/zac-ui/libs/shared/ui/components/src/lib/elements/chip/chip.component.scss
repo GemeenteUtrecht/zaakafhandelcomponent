@@ -24,35 +24,36 @@
     top: -10px;
   }
   &--primary {
-    background-color: $color-blue;
+    background-color: $color-primary;
     .chip-icon {
       ::ng-deep .mat-icon {
-        color: $color-white;
+        color: $color-background-white;
       }
     }
   }
   &--secondary {
-    background-color: $color-orange;
+    background-color: $color-secondary;
   }
+
   &--tertiary {
-    background-color: $background-grey;
+    background-color: $color-tertiary;
     color: $color-text;
     .chip-icon {
       ::ng-deep .mat-icon {
-        color: $color-blue;
+        color: $color-secondary;
       }
     }
   }
   &--warn {
-    background-color: $color-warn;
+    background-color: $color-warning;
   }
   &--hoverable {
     cursor: pointer;
     &--primary {
-      background-color: $color-blue;
+      background-color: $color-secondary;
 
       &:hover {
-        background-color: $color-blue--hover;
+        background-color: darken($color-secondary, 20%);
       }
     }
     .chip-icon {
