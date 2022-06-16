@@ -17,6 +17,7 @@ html {
 h1, .h1 {
   @include heading;
   font-size: $h1-font;
+  color: $color-primary;
 }
 
 h2, .h2 {
