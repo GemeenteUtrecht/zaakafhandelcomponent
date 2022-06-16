@@ -1,5 +1,5 @@
 import { MenuItem } from '@gu/models';
-import {getEnv} from '@gu/utils';
+import {isTestEnvironment} from "@gu/utils";
 
 const menuItems: MenuItem[] = [
   {
@@ -30,7 +30,7 @@ const menuItems: MenuItem[] = [
   {
     icon: 'open_in_new',
     label: 'Alfresco',
-    to: getEnv('ALFRESCO_PREVIEW_URL', 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/'),
+    to: isTestEnvironment() ? 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/' : 'https://alfresco-tezza.cg-intern.acc.utrecht.nl/',
     external: true,
     adminOnly: false,
   },

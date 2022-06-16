@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak, NieuweEigenschap} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
-import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
+import {CachedObservableMethod, ClearCacheOnMethodCall, isTestEnvironment} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
 
 
@@ -195,7 +195,7 @@ export class ZaakService {
    */
   createTezzaUrl(zaak: Zaak): string {
     const zaakUuid = zaak.url.split('/api/v1/zaken/')[1]; // Extract case uuid from open zaak url
-    const tezzaHost = getEnv('ALFRESCO_PREVIEW_URL', 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/');
+    const tezzaHost = isTestEnvironment() ? 'https://alfresco-tezza.cg-intern.ont.utrecht.nl' : 'https://alfresco-tezza.cg-intern.acc.utrecht.nl';
     return `${tezzaHost}/#/details/cases/${zaakUuid}`;
   }
 
