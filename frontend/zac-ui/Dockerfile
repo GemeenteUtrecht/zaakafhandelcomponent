@@ -1,5 +1,5 @@
 # Stage 1 -- install dev tools and build bundle
-FROM node:16-buster-slim AS build
+FROM node:16-buster AS build
 
 WORKDIR /app
 
@@ -22,6 +22,12 @@ WORKDIR /apps
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/apps/ .
+
+# Tmp switch to root-user so we can chown a few files.
+# This is required as we need to do an envsubst in some files.
+USER root
+RUN chown -R nginx:nginx ./zac-ui/assets/
+USER nginx
 
 COPY ./bin/docker_start.sh /start.sh
 CMD ["/start.sh"]
