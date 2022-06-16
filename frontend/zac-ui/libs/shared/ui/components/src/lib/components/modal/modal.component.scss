@@ -64,7 +64,7 @@ gu-modal {
         display: flex;
         padding: 4px;
         &:hover {
-          background-color: $background-grey;
+          background-color: $color-background-lightgrey;
           border-radius: 50%;
           cursor: pointer;
         }

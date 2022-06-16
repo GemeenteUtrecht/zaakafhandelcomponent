@@ -17,12 +17,13 @@ html {
 h1, .h1 {
   @include heading;
   font-size: $h1-font;
+  color: $color-primary;
 }
 
 h2, .h2 {
   @include heading;
   font-size: $h2-font;
-  color: $color-blue;
+  color: $color-secondary;
 }
 
 h3, .h3 {

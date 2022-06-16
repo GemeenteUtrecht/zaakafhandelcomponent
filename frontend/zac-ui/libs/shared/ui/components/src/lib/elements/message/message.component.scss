@@ -6,16 +6,16 @@
   padding: 0.825rem 1rem 0.825rem 0.825rem ;
   border-radius: 4px;
   &--primary {
-    border-color: $color-blue;
-    background-color: $background-blue;
+    border-color: darken($color-info, 20%);
+    background-color: $color-info;
   }
   &--warn {
-    border-color: $color-warn;
-    background-color: $background-red;
+    border-color: darken($color-warning, 20%);
+    background-color: $color-warning;
   }
   &--success {
-    border-color: $color-success;
-    background-color: $background-green;
+    border-color: darken($color-success, 20%);
+    background-color: $color-success;
   }
   p {
     word-break: break-word;
@@ -25,10 +25,10 @@
     right: 3px;
     top: 3px;
     &--primary {
-      color: $color-blue;
+      color: $color-secondary;
     }
     &--warn {
-      color: $color-warn;
+      color: $color-warning;
     }
     &--success {
       color: $color-success;

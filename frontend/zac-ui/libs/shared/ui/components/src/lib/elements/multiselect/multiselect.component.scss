@@ -8,21 +8,21 @@
   .ng-select {
     font-size: 0.875rem;
     .ng-select-container {
-      border-color: $border-input;
+      border-color: $color-secondary;
       border-radius: 5px;
       &:hover {
         transition: border-color 0.3s ease-out;
         box-sizing: border-box;
-        border-color: $border-input-hover;
+        border-color: darken($color-secondary, 20%);
         box-shadow: inset 0 0 0 1px
       }
     }
     &.ng-select-opened>.ng-select-container, &.ng-select-opened>.ng-select-container:hover {
-      border-color: $color-blue;
-      box-shadow: inset 0 0 0 1px $color-blue;
+      border-color: $color-secondary;
+      box-shadow: inset 0 0 0 1px $color-secondary;
       border-bottom: none;
       + .has-float-label > span {
-        color: $color-blue;
+        color: $color-secondary;
       }
     }
     .ng-placeholder {
@@ -33,16 +33,16 @@
     }
     &.ng-select-focused {
       box-shadow: none;
-      caret-color: $color-blue;
+      caret-color: $color-secondary;
       &:not(.ng-select-opened) > .ng-select-container {
-        border-color: $color-blue !important;
-        box-shadow: inset 0 0 0 1px $color-blue;
+        border-color: $color-secondary !important;
+        box-shadow: inset 0 0 0 1px $color-secondary;
       }
     }
     .ng-clear-wrapper {
       color: $color-text;
       &:hover .ng-clear {
-        color: $color-blue;
+        color: $color-secondary;
       }
     }
     .ng-value {
@@ -55,12 +55,12 @@
 }
 
 .ng-select-opened + span, .ng-select-focused + span {
-  color: $color-blue;
+  color: $color-secondary;
 }
 
 body .ng-dropdown-panel.ng-select-bottom {
-  border-color: $color-blue;
-  box-shadow: inset 0 0 0 1px $color-blue;
+  border-color: $color-secondary;
+  box-shadow: inset 0 0 0 1px $color-secondary;
   border-width: 2px;
-  border-top: 1px solid $border-input;
+  border-top: 1px solid $color-secondary;
 }

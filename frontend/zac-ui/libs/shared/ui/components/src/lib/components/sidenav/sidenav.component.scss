@@ -104,7 +104,7 @@
     align-items: center;
     justify-content: space-between;
     border: 1px solid $border-color;
-    background-color: $color-white;
+    background-color: $color-background-white;
     @include media-breakpoint-down(sm) {
       height: 56px;
     }
@@ -152,7 +152,7 @@
     top: 0;
     height: 100vh;
     max-width: 100%;
-    background: $background-lightgrey;
+    background: $color-background-lightgrey;
     color: $color-text;
     z-index: 2;
     @include media-breakpoint-down(md) {
@@ -160,7 +160,7 @@
       display: block;
       transform: translateX(-100%);
       pointer-events: all;
-      background: $background-white;
+      background: $color-background-white;
       transition: transform 0.3s;
 
       &.expanded {
@@ -208,7 +208,8 @@
       word-break: break-word;
       &:hover {
         outline: none;
-        background: $background-grey;
+        background: $color-primary;
+        color: $color-text-contrast;
       }
       gu-icon {
         display: flex;
@@ -233,8 +234,8 @@
       height: 58px;
       padding: 0 12px;
       &.selected {
-        background-color: $color-lightblue;
-        color: $color-blue;
+        background-color: $color-background-white;
+        color: $color-primary;
       }
     }
     .mobile-menu-back {
