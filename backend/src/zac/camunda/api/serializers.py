@@ -61,7 +61,7 @@ class TaskSerializer(PolymorphicSerializer):
     can_cancel_task = serializers.SerializerMethodField()
 
     def get_can_cancel_task(self, obj) -> bool:
-        return obj.name in self.context["killable_tasks"]
+        return obj.name in self.context.get("killable_tasks", [])
 
 
 class ProcessInstanceSerializer(serializers.Serializer):

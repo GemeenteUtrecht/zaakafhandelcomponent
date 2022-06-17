@@ -23,7 +23,7 @@ FORM_KEYS = {
     "zac:configureAdviceRequest": True,
     "zac:configureApprovalRequest": True,
     "zac:startProcessForm": True,
-    "zac:resultaatZetten": True,
+    "zac:zetResultaat": True,
 }
 
 

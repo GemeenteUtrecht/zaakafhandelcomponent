@@ -22,16 +22,16 @@ from zac.core.services import get_resultaattypen
 
 
 @dataclass
-class ResultaatZettenContext(Context):
+class ZetResultaatContext(Context):
     activities: List[Optional[Activity]]
     checklist_questions: List[Optional[ChecklistQuestion]]
     review_requests: List[Optional[ReviewRequest]]
     tasks: List[Optional[Task]]
-    result_types = List[Optional[ResultaatType]]
+    result_types: List[Optional[ResultaatType]]
 
 
 @usertask_context_serializer
-class ResultaatZettenContextSerializer(APIModelSerializer):
+class ZetResultaatContextSerializer(APIModelSerializer):
     activiteiten = ReadActivitySerializer(
         source="activities",
         many=True,
@@ -61,7 +61,7 @@ class ResultaatZettenContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ResultaatZettenContext
+        model = ZetResultaatContext
         fields = (
             "activiteiten",
             "checklist_vragen",
@@ -76,7 +76,7 @@ class ResultaatZettenContextSerializer(APIModelSerializer):
 #
 
 
-class ResultaatZettenTaskSerializer(serializers.Serializer):
+class ZetResultaatTaskSerializer(serializers.Serializer):
     """
     Serializes the `resultaat` for the user task.
 
@@ -91,28 +91,21 @@ class ResultaatZettenTaskSerializer(serializers.Serializer):
     )
 
     def validate_resultaat(self, resultaat) -> str:
-        result_types = get_resultaattypen(self.zaakcontext.zaaktype)
+        zaakcontext = get_zaak_context(self.context["task"], require_zaaktype=True)
+        result_types = get_resultaattypen(zaakcontext.zaaktype)
         if resultaat not in [rt.omschrijving for rt in result_types]:
             raise serializers.ValidationError(
                 _(
                     "RESULTAAT {resultaat} not found in RESULTAATTYPEN for ZAAKTYPE {zt}."
-                ).format(resultaat=resultaat, zt=self.zaakcontext.zaaktype.omschrijving)
+                ).format(resultaat=resultaat, zt=zaakcontext.zaaktype.omschrijving)
             )
         return resultaat
-
-    @property
-    def get_zaak_from_context(self) -> ZaakContext:
-        if not hasattr(self, "_zaakcontext"):
-            self._zaakcontext = get_zaak_context(
-                self.context["task"], require_zaaktype=True
-            )
-        return self._zaakcontext
 
     def get_process_variables(self) -> Dict:
         """
         Sets `resultaat` variable in process.
         """
-        return {"resultaat": [doc.url for doc in self._documents]}
+        return {"resultaat": self.validated_data["resultaat"]}
 
     def on_task_submission(self) -> None:
         """
