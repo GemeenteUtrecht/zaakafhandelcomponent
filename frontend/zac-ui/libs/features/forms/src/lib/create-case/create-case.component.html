@@ -1,0 +1,14 @@
+<div class="create-case" *ngIf="form">
+  <gu-loading-indicator *ngIf="isSubmitting"></gu-loading-indicator>
+  <div class="row">
+    <gu-form [form]="form"
+             [buttonSize]="'small'"
+             buttonLabel='Versturen'
+             (formSubmit)="submitForm($event)"
+             [resetAfterSubmit]="true"
+             [isLoading]="isSubmitting"
+             class="col-md-8 col-lg-6"
+    >
+    </gu-form>
+  </div>
+</div>

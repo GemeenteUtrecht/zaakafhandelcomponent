@@ -1,6 +1,5 @@
-export interface Result {
+export interface MetaZaaktypeResult {
   omschrijving: string;
-  identificatie: string;
   catalogus: string;
 }
 
@@ -8,6 +7,6 @@ export interface MetaZaaktype {
   count: number;
   next: string;
   previous: string;
-  results: Result[];
+  results: MetaZaaktypeResult[];
 }
 

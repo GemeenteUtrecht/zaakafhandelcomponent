@@ -2,7 +2,15 @@ import {HttpParams, HttpResponse} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {Document, RelatedCase, EigenschapWaarde, UserPermission, Zaak, NieuweEigenschap} from '@gu/models';
+import {
+  Document,
+  RelatedCase,
+  EigenschapWaarde,
+  UserPermission,
+  Zaak,
+  NieuweEigenschap,
+  CreateCase, ProcessInstance
+} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
@@ -24,6 +32,16 @@ export class ZaakService {
    */
   navigateToCase(zaak: { bronorganisatie: string, identificatie: string }) {
     this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie]);
+  }
+
+  /**
+   * Create a new case.
+   * @param {CreateCase} formData
+   * @returns {Observable<ProcessInstance>}
+   */
+  createCase(formData: CreateCase): Observable<ProcessInstance> {
+    const endpoint = encodeURI(`/api/core/cases`);
+    return this.http.Post<ProcessInstance>(endpoint, formData);
   }
 
   /**

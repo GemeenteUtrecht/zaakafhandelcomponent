@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ZaaktypeEigenschap } from '@gu/models';
 import { ApplicationHttpClient } from '@gu/services';
-import { Zaaktype } from '../models/zaaktype';
 import { Search } from '../models/search';
 import { ReportQuery } from '../models/report';
 
@@ -13,11 +12,6 @@ import { ReportQuery } from '../models/report';
 export class SearchService {
 
   constructor(private http: ApplicationHttpClient) { }
-
-  getZaaktypen(): Observable<Zaaktype> {
-    const endpoint = encodeURI("/api/core/zaaktypen");
-    return this.http.Get<Zaaktype>(endpoint);
-  }
 
   getZaaktypeEigenschappen(zaaktypeUrl): Observable<ZaaktypeEigenschap[]> {
     const endpoint = encodeURI(`/api/core/eigenschappen?zaaktype=${zaaktypeUrl}`);

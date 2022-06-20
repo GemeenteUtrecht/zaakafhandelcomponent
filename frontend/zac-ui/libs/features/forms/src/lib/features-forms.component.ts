@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {RowData, Table} from '@gu/models';
 import {FeaturesFormsService} from "./features-forms.service";
 import {Form} from "./features-forms.model";
+import { ZaakService } from '@gu/services';
 
 @Component({
   providers: [FeaturesFormsService],
@@ -20,8 +21,10 @@ export class FeaturesFormsComponent implements OnInit {
    * Constructor method.
    * @param featuresFormsService
    */
-  constructor(private featuresFormsService: FeaturesFormsService) {
-  }
+  constructor(
+    private featuresFormsService: FeaturesFormsService,
+    private zaakService: ZaakService,
+  ) { }
 
   //
   // Angular lifecycle.
