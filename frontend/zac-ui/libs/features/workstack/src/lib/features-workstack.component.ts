@@ -6,7 +6,7 @@ import {tableHead} from './constants/zaken-tablehead';
 import {AccessRequests} from './models/access-request';
 import {AdHocActivities} from './models/activities';
 import {SnackbarService} from '@gu/components';
-
+import { WorkstackChecklist } from './models/checklist';
 
 /**
  * <gu-features-workstack></gu-features-workstack>
@@ -29,6 +29,8 @@ export class FeaturesWorkstackComponent implements OnInit {
     activitiesData: AdHocActivities[];
     groupActivitiesData: AdHocActivities[];
     accessRequestData: AccessRequests[];
+    checkListData: WorkstackChecklist[];
+    groupCheckListData: WorkstackChecklist[];
 
     zakenTableData: Table = new Table(tableHead, []);
 
@@ -43,6 +45,19 @@ export class FeaturesWorkstackComponent implements OnInit {
      */
     constructor(private workstackService: FeaturesWorkstackService, private snackbarService: SnackbarService) {
     }
+
+
+    //
+    // Getters / setters.
+    //
+
+    get nActivities(): number {
+      return this.activitiesData?.length + this.checkListData?.length
+    };
+
+    get nGroupActivities(): number {
+      return this.groupActivitiesData?.length + this.groupCheckListData?.length
+    };
 
     //
     // Angular lifecycle.
@@ -121,6 +136,8 @@ export class FeaturesWorkstackComponent implements OnInit {
                 this.activitiesData = res[3];
                 this.groupActivitiesData = res[4];
                 this.accessRequestData = res[5];
+                this.checkListData = res[6];
+                this.groupCheckListData = res[7];
                 this.zakenTableData.bodyData = this.getTableRows(
                     this.zakenData
                 );

@@ -35,6 +35,16 @@ const tabs: Tab[] = [
     label: 'Toegangsverzoeken',
     endpoint: '/api/workstack/access-requests'
   },
+  {
+    component: 'checklist',
+    label: 'Checklist',
+    endpoint: '/api/workstack/checklists'
+  },
+  {
+    component: 'group-checklist',
+    label: 'Groepschecklist',
+    endpoint: '/api/workstack/group-checklists'
+  },
 ];
 
 export { tabs }
