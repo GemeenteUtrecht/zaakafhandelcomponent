@@ -11,6 +11,7 @@ class CoreConfig(AppConfig):
     def ready(self):
         from . import blueprints  # noqa
         from .camunda.select_documents import context  # noqa
+        from .camunda.zet_resultaat import context  # noqa
 
         request_finished.connect(clear_request_cache)
 
