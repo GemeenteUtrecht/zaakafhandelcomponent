@@ -366,7 +366,7 @@ class CreateZaakSerializer(serializers.Serializer):
         required=True, help_text=_("A short summary of the ZAAK.")
     )
     toelichting = serializers.CharField(
-        help_text=_("A comment on the ZAAK."), default=""
+        help_text=_("A comment on the ZAAK."), default="", allow_blank=True
     )
     startdatum = serializers.DateField(
         default=date.today(), help_text=_("The date the ZAAK begins.")
@@ -385,7 +385,7 @@ class CreateZaakSerializer(serializers.Serializer):
             )
         max_date = max([zt.versiedatum for zt in zaaktypen])
         zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
-        validated_data["zaaktype"] = zaaktype.url
+        validated_data["zaaktype"] = serialize_variable(zaaktype.url)
         return validated_data
 
     def to_internal_value(self, data):
