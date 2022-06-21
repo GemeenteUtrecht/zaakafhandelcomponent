@@ -6,12 +6,12 @@
   padding: 0.825rem 1rem 0.825rem 0.825rem ;
   border-radius: 4px;
   &--primary {
-    border-color: darken($color-info, 20%);
-    background-color: $color-info;
+    border-color: darken($color-tertiary, 20%);
+    background-color: $color-tertiary;
   }
   &--warn {
-    border-color: darken($color-warning, 20%);
-    background-color: $color-warning;
+    border-color: darken($color-background-lightyellow, 20%);
+    background-color: $color-background-lightyellow;
   }
   &--success {
     border-color: darken($color-success, 20%);

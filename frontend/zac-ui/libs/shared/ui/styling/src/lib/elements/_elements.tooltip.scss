@@ -16,8 +16,8 @@
   }
 
   &__content {
-    background: $color-info;
-    color: white;
+    background: $color-tertiary;
+    color: $color-secondary;
     padding: 10px 15px;
     border-radius: 5px;
     margin: 2px 0;
@@ -46,10 +46,10 @@
 
   &--primary {
     .tooltip__content {
-      background-color: $color-info;
+      background-color: $color-tertiary;
     }
     .mat-icon {
-      color: $color-info;
+      color: $color-primary;
       font-size: 1.25rem;
     }
   }
