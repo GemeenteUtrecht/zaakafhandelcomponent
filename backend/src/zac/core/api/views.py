@@ -219,7 +219,7 @@ class GetZaakMixin:
 
 
 class CreateZaakView(views.APIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
         CanCreateZaken,
