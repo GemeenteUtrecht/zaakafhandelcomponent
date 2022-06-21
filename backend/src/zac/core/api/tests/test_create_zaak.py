@@ -22,7 +22,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_aanmaken, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -57,7 +57,8 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
             "zaak-create",
         )
         cls.data = {
-            "zaaktype": cls.zaaktype.url,
+            "zaaktype_omschrijving": cls.zaaktype.omschrijving,
+            "zaaktype_catalogus": cls.zaaktype.catalogus,
             "omschrijving": "some-omschrijving",
             "toelichting": "some-toelichting",
         }
@@ -69,7 +70,10 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_authenticated_no_permissions(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
 
         self.client.force_authenticate(user=self.user)
 
@@ -78,7 +82,10 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_has_other_perm(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self._zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
@@ -89,8 +96,10 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_has_perm_to_create(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self._zaaktype)
-        user = UserFactory.create()
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
+            json=paginated_response([self._zaaktype]),
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_aanmaken.name],
             for_user=self.user,
@@ -101,7 +110,6 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
             return_value={"instance_id": "some-uuid", "instance_url": "some-url"},
         ):
             response = self.client.post(self.create_zaak_url, self.data)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -134,7 +142,8 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         cls.user = SuperUserFactory.create()
 
         cls.data = {
-            "zaaktype": cls.zaaktype["url"],
+            "zaaktype_omschrijving": cls.zaaktype["omschrijving"],
+            "zaaktype_catalogus": cls.zaaktype["catalogus"],
             "omschrijving": "some-omschrijving",
             "toelichting": "some-toelichting",
         }
@@ -145,7 +154,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
 
     def test_create_zaak_wrong_organisatie_rsin(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
         response = self.client.post(
             self.url, {**self.data, "organisatie_rsin": "1234567890"}
         )
@@ -162,14 +174,17 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
 
     def test_create_zaak_zaaktype_not_found(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], status_code=404, json={})
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([]),
+        )
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
-                "zaaktype": [
-                    "ZAAKTYPE can not be found for URL %s." % self.zaaktype["url"]
+                "nonFieldErrors": [
+                    f'ZAAKTYPE {self.zaaktype["omschrijving"]} can not be found in {self.zaaktype["catalogus"]}.'
                 ]
             },
         )
@@ -179,7 +194,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
     )
     def test_create_zaak_process_definition_not_found(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
 
         config = CamundaConfig.get_solo()
         config.root_url = "https://camunda.example.com/"
@@ -199,7 +217,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model")
     def test_create_zaak(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
 
         config = CamundaConfig.get_solo()
         config.root_url = "https://camunda.example.com/"

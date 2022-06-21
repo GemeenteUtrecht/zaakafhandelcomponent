@@ -8,7 +8,7 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
-from django_camunda.utils import serialize_variable
+from django_camunda.utils import deserialize_variable, serialize_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
@@ -51,6 +51,7 @@ from zac.core.services import (
     get_roltypen,
     get_statustypen,
     get_zaak,
+    get_zaaktypen,
 )
 from zgw.models.zrc import Zaak
 
@@ -350,10 +351,17 @@ class CreateZaakSerializer(serializers.Serializer):
             )
         ],
     )
-    zaaktype = serializers.URLField(
+    zaaktype_omschrijving = serializers.CharField(
         required=True,
-        help_text=_("URL-reference to the ZAAKTYPE (in the Catalogi API)."),
+        help_text=_("`omschrijving` of ZAAKTYPE (in the Catalogi API)."),
     )
+    zaaktype_catalogus = serializers.URLField(
+        required=True,
+        help_text=_(
+            "URL-reference to the CATALOGUS of ZAAKTYPE (in the Catalogi API)."
+        ),
+    )
+    zaaktype = serializers.HiddenField(default="")
     omschrijving = serializers.CharField(
         required=True, help_text=_("A short summary of the ZAAK.")
     )
@@ -364,16 +372,21 @@ class CreateZaakSerializer(serializers.Serializer):
         default=date.today(), help_text=_("The date the ZAAK begins.")
     )
 
-    def validate_zaaktype(self, zaaktype):
-        try:
-            fetch_zaaktype(zaaktype)
-        except ClientError:
+    def validate(self, data):
+        validated_data = super().validate(data)
+        zt_omschrijving = deserialize_variable(validated_data["zaaktype_omschrijving"])
+        zt_catalogus = deserialize_variable(validated_data["zaaktype_catalogus"])
+        zaaktypen = get_zaaktypen(catalogus=zt_catalogus, omschrijving=zt_omschrijving)
+        if not zaaktypen:
             raise serializers.ValidationError(
-                _("ZAAKTYPE can not be found for URL {zaaktype}.").format(
-                    zaaktype=zaaktype
-                )
+                _(
+                    "ZAAKTYPE {zt_omschrijving} can not be found in {zt_catalogus}."
+                ).format(zt_omschrijving=zt_omschrijving, zt_catalogus=zt_catalogus)
             )
-        return zaaktype
+        max_date = max([zt.versiedatum for zt in zaaktypen])
+        zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
+        validated_data["zaaktype"] = zaaktype.url
+        return validated_data
 
     def to_internal_value(self, data):
         serialized_data = {
