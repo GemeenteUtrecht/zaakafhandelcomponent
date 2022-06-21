@@ -1,5 +1,6 @@
 export interface CreateCase {
-  zaaktype: string,
+  zaaktypeOmschrijving: string,
+  zaaktypeCatalogus: string,
   omschrijving: string,
   toelichting?: string
 }

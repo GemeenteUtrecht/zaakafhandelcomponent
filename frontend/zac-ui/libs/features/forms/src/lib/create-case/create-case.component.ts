@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CamundaService, MetaService, ZaakService } from '@gu/services';
-import { CreateCase, MetaZaaktypeResult, ProcessInstanceCase, Zaak } from '@gu/models';
+import { CreateCase, MetaZaaktypeResult, Zaak } from '@gu/models';
 import { Choice, FieldConfiguration, SnackbarService } from '@gu/components';
 import { CreateCaseService } from './create-case.service';
 
@@ -45,7 +45,7 @@ export class CreateCaseComponent implements OnInit {
         this.caseTypeChoices = this.caseTypes.map( type => {
           return {
             label: type.omschrijving,
-            value: type.catalogus,
+            value: type.omschrijving,
           }
         })
         this.form = this.getForm();
@@ -61,7 +61,7 @@ export class CreateCaseComponent implements OnInit {
     return [
       {
         label: 'Zaaktype',
-        name: 'zaaktype',
+        name: 'zaaktypeOmschrijving',
         required: true,
         choices: this.caseTypeChoices
       },
@@ -82,10 +82,16 @@ export class CreateCaseComponent implements OnInit {
 
   /**
    * Create a new case.
-   * @param {CreateCase} formData
+   * @param formData
    */
-  createCase(formData: CreateCase) {
-    this.zaakService.createCase(formData)
+  createCase(formData) {
+    const createCaseData = {
+      zaaktypeOmschrijving: formData.zaaktypeOmschrijving,
+      zaaktypeCatalogus: this.caseTypes.find(type => type.omschrijving === formData.zaaktypeOmschrijving).catalogus,
+      omschrijving: formData.omschrijving,
+      toelichting: formData.toelichting
+    }
+    this.zaakService.createCase(createCaseData)
       .subscribe(processInstance => {
         this.getCaseUrlForProcessInstance(processInstance.instanceId);
       }, error => {
