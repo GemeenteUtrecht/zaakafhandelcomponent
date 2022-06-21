@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from nested_admin import NestedModelAdmin, NestedStackedInline, NestedTabularInline
+from nested_admin import NestedModelAdmin, NestedTabularInline
 
 from .forms import CamundaStartProcessForm
 from .models import (
@@ -9,10 +9,11 @@ from .models import (
     ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
+    ProcessRolChoice,
 )
 
 
-class ProcessInformatieObjectAdmin(NestedStackedInline):
+class ProcessInformatieObjectInlineAdmin(NestedTabularInline):
     list_display = (
         "camunda_start_process",
         "informatieobjecttype_omschrijving",
@@ -28,7 +29,15 @@ class ProcessInformatieObjectAdmin(NestedStackedInline):
     ]
 
 
-class ProcessRolAdmin(NestedStackedInline):
+class ProcessRolChoiceInlineAdmin(NestedTabularInline):
+    list_display = ("process_rol", "label", "value")
+    autocomplete_fields = ("process_rol",)
+    model = ProcessRolChoice
+    extra = 0
+    ordering = ["process_rol", "label"]
+
+
+class ProcessRolInlineAdmin(NestedTabularInline):
     list_display = (
         "camunda_start_process",
         "roltype_omschrijving",
@@ -37,6 +46,7 @@ class ProcessRolAdmin(NestedStackedInline):
     list_filter = ("camunda_start_process",)
     search_fields = ("roltype_omschrijving",)
     autocomplete_fields = ("camunda_start_process",)
+    inlines = [ProcessRolChoiceInlineAdmin]
     model = ProcessRol
     extra = 0
     ordering = [
@@ -46,7 +56,7 @@ class ProcessRolAdmin(NestedStackedInline):
     ]
 
 
-class ProcessEigenschapChoiceAdmin(NestedTabularInline):
+class ProcessEigenschapChoiceInlineAdmin(NestedTabularInline):
     list_display = ("process_eigenschap", "label", "value")
     autocomplete_fields = ("process_eigenschap",)
     model = ProcessEigenschapChoice
@@ -54,12 +64,12 @@ class ProcessEigenschapChoiceAdmin(NestedTabularInline):
     ordering = ["process_eigenschap", "label"]
 
 
-class ProcessEigenschapAdmin(NestedStackedInline):
+class ProcessEigenschapInlineAdmin(NestedTabularInline):
     list_display = ("camunda_start_process", "eigenschapnaam")
     list_filter = ("camunda_start_process",)
     search_fields = ("eigenschapnaam",)
     autocomplete_fields = ("camunda_start_process",)
-    inlines = [ProcessEigenschapChoiceAdmin]
+    inlines = [ProcessEigenschapChoiceInlineAdmin]
     model = ProcessEigenschap
     extra = 0
     ordering = ["camunda_start_process", "eigenschapnaam"]
@@ -76,7 +86,11 @@ class CamundaStartProcessAdmin(NestedModelAdmin):
         "zaaktype_identificatie",
     )
     form = CamundaStartProcessForm
-    inlines = [ProcessEigenschapAdmin, ProcessRolAdmin, ProcessInformatieObjectAdmin]
+    inlines = [
+        ProcessEigenschapInlineAdmin,
+        ProcessRolInlineAdmin,
+        ProcessInformatieObjectInlineAdmin,
+    ]
     extra = 0
 
 

@@ -13,7 +13,6 @@ from .models import CamundaStartProcess
 
 def get_zaaktypen_choices() -> Tuple[Tuple[str, str]]:
     zaaktypen = get_zaaktypen()
-
     zaaktypen = sorted(
         sorted(zaaktypen, key=lambda _zt: _zt.versiedatum, reverse=True),
         key=lambda zt: (zt.omschrijving, zt.identificatie),
