@@ -2,7 +2,7 @@
 
 .configuration-component {
   .step-container {
-    border-bottom: 1px solid $border-grey;
+    border-bottom: 1px solid $color-border;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     &:last-child {
@@ -14,7 +14,7 @@
     margin-bottom: 1.25rem;
   }
   .configuration-file {
-    border-bottom: 1px solid $border-grey;
+    border-bottom: 1px solid $color-border;
   }
   .configuration-details {
     margin-bottom: 0.875rem;
@@ -38,7 +38,7 @@
   }
   gu-icon {
     font-size: 1rem;
-    color: $color-warn;
+    color: $color-warning;
     cursor: pointer;
     margin-top: -2px;
   }

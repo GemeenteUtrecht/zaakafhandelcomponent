@@ -9,7 +9,11 @@ from django_camunda.utils import serialize_variable, underscoreize
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.catalogi import (
+    InformatieObjectType,
+    ResultaatType,
+    ZaakType,
+)
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -24,8 +28,10 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
+
+from ..data import ProcessInstance
 
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -399,6 +405,96 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertIn("benodigdeRollen", data["context"].keys())
         self.assertIn("benodigdeZaakeigenschappen", data["context"].keys())
 
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:zetResultaat"}),
+    )
+    def test_get_zet_resultaat_context(self, m, *mocks):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        process_instance = factory(
+            ProcessInstance,
+            {
+                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                "definitionId": "beleid_opstellen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        )
+        process_instance.tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
+        review_request_data = {
+            "id": uuid.uuid4(),
+            "created": "2020-01-01T15:15:22Z",
+            "forZaak": self.zaak.url,
+            "reviewType": KownslTypes.approval,
+            "documents": [self.document],
+            "frontendUrl": "http://some.kownsl.com/frontendurl/",
+            "numAdvices": 0,
+            "numApprovals": 1,
+            "numAssignedUsers": 1,
+            "toelichting": "some-toelichting",
+            "userDeadlines": {},
+            "requester": {
+                "username": "some-henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+        }
+        review_request = factory(ReviewRequest, review_request_data)
+        mock_resource_get(m, self.zaaktype)
+        resultaattype = generate_oas_component(
+            "ztc",
+            "schemas/ResultaatType",
+            catalogus=self.zaaktype["catalogus"],
+        )
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaakproces_usertasks.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        with patch(
+            "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
+            return_value=self.zaak.url,
+        ):
+            with patch(
+                "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
+                return_value=[process_instance],
+            ):
+                with patch(
+                    "zac.core.camunda.zet_resultaat.context.get_zaak",
+                    return_value=self.zaak,
+                ):
+                    with patch(
+                        "zac.core.camunda.zet_resultaat.context.get_review_requests",
+                        return_value=[review_request],
+                    ):
+                        with patch(
+                            "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
+                            return_value=[factory(ResultaatType, resultaattype)],
+                        ):
+                            response = self.client.get(self.task_endpoint)
+
+        data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
+        self.assertIn("activiteiten", data["context"].keys())
+        self.assertIn("checklistVragen", data["context"].keys())
+        self.assertIn("taken", data["context"].keys())
+        self.assertIn("verzoeken", data["context"].keys())
+        self.assertIn("resultaattypen", data["context"].keys())
+
 
 @requests_mock.Mocker()
 class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
@@ -431,6 +527,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
             omschrijving="bijlage",
             catalogus=cls.catalogus,
+        )
+        cls.resultaattype = generate_oas_component(
+            "ztc", "schemas/ResultaatType", catalogus=cls.catalogus
         )
 
         cls.document.informatieobjecttype = factory(
@@ -764,4 +863,28 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     return_value=[self.document],
                 ):
                     response = self.client.put(self.task_endpoint, payload)
+        self.assertEqual(response.status_code, 204)
+
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:zetResultaat"}),
+    )
+    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    def test_put_zet_resultaat_user_task(self, m, *mocks):
+        self._mock_permissions(m)
+        payload = {"resultaat": self.resultaattype["omschrijving"]}
+
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            status_code=201,
+        )
+        with patch(
+            "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            with patch(
+                "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
+                return_value=[factory(ResultaatType, self.resultaattype)],
+            ):
+                response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)

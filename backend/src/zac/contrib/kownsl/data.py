@@ -36,6 +36,10 @@ class ReviewRequest(Model):
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
 
+    @property
+    def completed(self) -> int:
+        return self.num_advices + self.num_approvals
+
 
 @dataclass
 class Author(Model):

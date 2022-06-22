@@ -1,5 +1,6 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Location} from '@angular/common';
+import {Title} from '@angular/platform-browser';
 import {ActivitiesService, UserService, ZaakService} from '@gu/services';
 import {Observable} from 'rxjs';
 import {Activity, User, Zaak} from '@gu/models';
@@ -24,7 +25,7 @@ import {UserPermissionsComponent} from './overview/user-permissions/user-permiss
   templateUrl: './features-zaak-detail.component.html',
   styleUrls: ['./features-zaak-detail.component.scss']
 })
-export class FeaturesZaakDetailComponent implements OnInit {
+export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
   /** @type {string} To identify the organisation. */
   @Input() bronorganisatie: string;
 
@@ -62,6 +63,9 @@ export class FeaturesZaakDetailComponent implements OnInit {
 
   /** @type {boolean} Whether an access request is successfully submitted. */
   isAccessRequestSuccess: boolean;
+
+  /** @type {string} Original title to restore on destroy. */
+  originalTitle: string;
 
   /** @type {FormGroup} Form use to request acces to this case (zaak). */
   zaakAccessRequestForm: FormGroup;
@@ -111,6 +115,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
    * @param {FormBuilder} formBuilder
    * @param {ModalService} modalService
    * @param {SnackbarService} snackbarService
+   * @param {Title} title
    * @param {UserService} userService
    * @param {ZaakService} zaakService
    * @param {Location} location
@@ -121,6 +126,7 @@ export class FeaturesZaakDetailComponent implements OnInit {
     private formBuilder: FormBuilder,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
+    private title: Title,
     private userService: UserService,
     private zaakService: ZaakService,
     private location: Location,
@@ -169,8 +175,18 @@ export class FeaturesZaakDetailComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    this.originalTitle = this.title.getTitle();
+    this.title.setTitle(this.identificatie);
     this.fetchCurrentUser();
     this.getContextData();
+  }
+
+  /**
+   * Cleanup just before Angular destroys the directive or component. Unsubscribe Observables and detach event handlers
+   * to avoid memory leaks.
+   */
+  ngOnDestroy() {
+    this.title.setTitle(this.originalTitle);
   }
 
   //

@@ -1,8 +1,8 @@
 <div class="gu-sidenav">
-  <div class="backdrop" [ngClass]="{'expanded': expanded === true}" (click)="expanded = !expanded"></div>
+  <div class="backdrop" [ngClass]="{'expanded': expanded === true}" (click)="toggle()"></div>
   <header class="navigation-header d-lg-none">
     <div class="navbar-left">
-      <button class="hamburger" aria-label="Menuknop" (click)="expanded = !expanded">
+      <button class="hamburger" aria-label="Menuknop" (click)="toggle()">
         <gu-icon>menu</gu-icon>
       </button>
     </div>
@@ -12,8 +12,8 @@
     <div class="navbar-right">
     </div>
   </header>
-  <nav class="vertical-nav" [ngClass]="{'expanded': expanded === true}" (click)="expanded = !expanded">
-    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="expanded = !expanded">
+  <nav class="vertical-nav" [ngClass]="{'expanded': expanded === true}" (click)="toggle()">
+    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="toggle()">
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug
     </a>
@@ -27,7 +27,7 @@
         </div>
         <ng-container *ngFor="let item of menuItems">
           <a *ngIf="item.external && isAuthorised(item.adminOnly)"
-             (click)="toggle()"
+             (click)="onItemClick($event)"
              href="{{item.to}}"
              [target]="item.external ? '_blank' : null"
              class="menu-item menu-link"
@@ -40,7 +40,7 @@
             <span class="menu-item__label">{{item.label}}</span>
           </a>
           <a *ngIf="!item.external && isAuthorised(item.adminOnly)"
-             (click)="toggle()"
+             (click)="onItemClick($event)"
              [routerLink]="!item.external ? [item.to] : null"
              class="menu-item menu-link"
              [ngClass]="{

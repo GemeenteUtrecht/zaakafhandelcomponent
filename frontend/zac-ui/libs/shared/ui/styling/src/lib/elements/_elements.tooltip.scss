@@ -16,7 +16,7 @@
   }
 
   &__content {
-    background: $color-blue;
+    background: $color-info;
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
@@ -41,19 +41,19 @@
 
   &--primary {
     .tooltip__content {
-      background-color: $color-blue;
+      background-color: $color-info;
     }
     .mat-icon {
-      color: $color-blue;
+      color: $color-info;
       font-size: 1.25rem;
     }
   }
   &--accent {
     .tooltip__content {
-      background-color: $color-orange;
+      background-color: $color-warning;
     }
     .mat-icon {
-      color: $color-orange;
+      color: $color-warning;
     }
   }
 }

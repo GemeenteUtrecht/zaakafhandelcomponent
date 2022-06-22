@@ -96,23 +96,41 @@
             <!-- Label -->
             <ng-template mat-tab-label>
               {{tab.label}}
-              <gu-chip *ngIf="activitiesData?.length > 0"
+              <gu-chip *ngIf="nActivities > 0"
                        type="badge"
                        color="primary"
                        class="ml-1">
-                {{activitiesData?.length}}
+                {{nActivities}}
               </gu-chip>
             </ng-template>
 
             <!-- Content -->
-            <ng-container *ngIf="activitiesData?.length > 0; else noActivity" >
-              <div class="task-link" *ngFor="let activity of activitiesData">
-                <a class="anchor mb-2"
-                   [routerLink]="getZaakPath(activity.zaak)+'/acties'"
+            <ng-container *ngIf="nActivities > 0; else noActivity" >
+              <div class="task-link" *ngFor="let userActivity of activitiesData">
+                <a class="anchor mb-4"
+                   [routerLink]="getZaakPath(userActivity.zaak)+'/acties'"
                    [queryParams]="{'activities': true}"
                 >
-                  {{activity.zaak.identificatie}}: {{activity.activities[0].name}}
+                  {{userActivity.zaak.identificatie}}
                 </a>
+                <ul class="mb-2">
+                  <li *ngFor="let activity of userActivity.activities">
+                    <p class="mb-0">Activiteit: <b>{{activity.name}}</b></p>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="task-link" *ngFor="let userChecklist of checkListData">
+                <a class="anchor mb-4"
+                   [routerLink]="getZaakPath(userChecklist.zaak)+'/acties'"
+                >
+                  {{userChecklist.zaak.identificatie}}
+                </a>
+                <ul class="mb-2">
+                  <li *ngFor="let checklistQuestion of userChecklist.checklistQuestions">
+                    <p class="mb-0">Checklistvraag: <b>{{checklistQuestion.question}}</b></p>
+                  </li>
+                </ul>
               </div>
             </ng-container>
             <ng-template #noActivity>
@@ -126,24 +144,43 @@
             <!-- Label -->
             <ng-template mat-tab-label>
               {{tab.label}}
-              <gu-chip *ngIf="groupActivitiesData?.length > 0"
+              <gu-chip *ngIf="nGroupActivities > 0"
                        type="badge"
                        color="primary"
                        class="ml-1">
-                {{groupActivitiesData?.length}}
+                {{nGroupActivities}}
               </gu-chip>
             </ng-template>
 
             <!-- Content -->
-            <ng-container *ngIf="groupActivitiesData?.length > 0; else noGroupActivity" >
+            <ng-container *ngIf="nGroupActivities > 0; else noGroupActivity" >
               <div class="task-link" *ngFor="let groupActivity of groupActivitiesData">
-                <a class="anchor mb-2"
+                <a class="anchor mb-4"
                    [routerLink]="getZaakPath(groupActivity.zaak)+'/acties'"
                    [queryParams]="{'activities': true}"
                 >
-                  {{groupActivity.zaak.identificatie}}: {{groupActivity.activities[0].name}}
+                  {{groupActivity.zaak.identificatie}}
                 </a>
-                <label class="label label--small d-block">{{groupActivity.activities[0].groupAssignee}}</label>
+                <ul class="mb-2">
+                  <li *ngFor="let activity of groupActivity.activities">
+                    <p class="mb-0">Activiteit: <b>{{activity.name}}</b></p>
+                    <label class="label label--small d-block">{{activity.groupAssignee}}</label>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="task-link" *ngFor="let groupChecklist of groupCheckListData">
+                <a class="anchor mb-4"
+                   [routerLink]="getZaakPath(groupChecklist.zaak)+'/acties'"
+                >
+                  {{groupChecklist.zaak.identificatie}}
+                </a>
+                <ul class="mb-2">
+                  <li *ngFor="let checklistQuestion of groupChecklist.checklistQuestions">
+                    <p class="mb-0">Checklistvraag: <b>{{checklistQuestion.question}}</b></p>
+                    <label class="label label--small d-block">{{checklistQuestion.groupAssignee}}</label>
+                  </li>
+                </ul>
               </div>
             </ng-container>
             <ng-template #noGroupActivity>

@@ -21,11 +21,11 @@
   &__toggle &__button {
     align-items: center;
     appearance: none;
-    background-color: $color-blue;
+    background-color: $color-secondary;
     border: 2px solid #e5e5e5;
     border-radius: 0.25rem;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
-    color: $color-white;
+    color: $color-background-white;
     display: flex;
     height: 3em;
     padding: 0;

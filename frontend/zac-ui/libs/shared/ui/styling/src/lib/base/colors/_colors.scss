@@ -1,28 +1,45 @@
-$color-blue: #01579b;
-$color-lightblue: #cce2ff;
-$color-orange: #f2994a;
-$color-dimgray: #696969;
-$color-white: white;
+// From: https://huisstijl.utrecht.nl/basiselementen/kleur/
+
+// shades
+$shade-primary-white: #FFFFFF;
+$shade-primary-black: #000000;
+$shade-secondary-gray: #757575;
+
+// primary colors
+$color-primary-red: #cc0000;
+$color-primary-yellow: #ffcc00;
+$color-primary-blue: #006dff;
+
+//secondary colors
+$color-secondary-purple: #762cd1;
+$color-secondary-magenta: #f02198;
+$color-secondary-red: #cc0000;
+$color-secondary-orange: #ff6e00;
+$color-secondary-yellow: #ffcc00;
+$color-secondary-lime: #99d000;
+$color-secondary-green: #32ab27;
+$color-secondary-cyan: #009ed4;
+$color-secondary-blue: #006dff;
+$color-secondary-marine: #1c4181;
+$color-secondary-brown: #ad643b;
+
+// mappings
+$color-primary: $color-primary-red;
+$color-tertiary: $color-primary-yellow;
+$color-secondary: $color-secondary-marine;
+
+$color-danger: $color-secondary-red;
+$color-info: $color-secondary-cyan;
+$color-success: $color-secondary-lime;
+$color-warning: $color-secondary-yellow;
+
 $color-disabled: #b3b3b3;
+$color-muted: $shade-secondary-gray;
 
-$color-blue--hover: #1f4169;
+$color-background-white: $shade-primary-white;
+$color-background-lightgrey: #f2f2f2;
 
-$color-success: #63a241;
-$color-warn: #e4463a;
+$color-border: $shade-secondary-gray;
 
-$background-white: white;
-$background-lightgrey: #f2f2f2;
-$background-grey: #e5e5e5;
-$background-lightyellow: #fff5e2;
-$background-yellow: #F9BF53;
-$background-red: #ffe9e7;
-$background-green: #eeffe5;
-$background-blue: #ebf4ff;
-
-$border-grey: #e5e5e5;
-$border-darkgrey: #b1b1b1;
-$border-input: #0000001e;
-$border-input-hover: #212529;
 $color-text: #15171B;
-$color-text--gray: #828282;
-$color-text--darkgray: #454545;
+$color-text-contrast: $shade-primary-white;
