@@ -26,7 +26,7 @@ COPY --from=build /app/dist/apps/ .
 # Tmp switch to root-user so we can chown a few files.
 # This is required as we need to do an envsubst in some files.
 USER root
-RUN chown -R nginx:nginx ./zac-ui/assets/
+RUN chown -R nginx:nginx ./zac-ui/
 USER nginx
 
 COPY ./bin/docker_start.sh /start.sh
