@@ -2,4 +2,10 @@
 
 set -e
 
-/app/node_modules/.bin/ng serve zac-ui --disable-host-check
+# Set environment variables.
+export NGSOURCEMAP=${SOURCEMAP:-false}
+
+# Start server.
+/app/node_modules/.bin/ng serve zac-ui --disable-host-check --sourceMap=$NGSOURCEMAP
+
+

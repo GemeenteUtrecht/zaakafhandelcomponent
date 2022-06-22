@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Gemeente Utrecht</title>
-    <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="assets/images/schild.png" />
-  </head>
-  <body>
-    <gu-zac-ui-root></gu-zac-ui-root>
-  </body>
+<head>
+  <meta charset="utf-8"/>
+  <title>Gemeente Utrecht</title>
+  <base href="/"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" type="image/x-icon" href="assets/images/schild.png"/>
+  <script>
+    // A mapping between the name of an environment variable, and its replacement target (to be substituted by envsubst).
+    window.env = {
+      "ALFRESCO_AUTH_URL": "$ALFRESCO_AUTH_URL",
+      "ALFRESCO_PREVIEW_URL": "$ALFRESCO_PREVIEW_URL",
+      "ALFRESCO_DOCUMENTS_URL": "$ALFRESCO_DOCUMENTS_URL",
+      "FORMS_URL": "$FORMS_URL",
+    }
+  </script>
+</head>
+<body>
+<gu-zac-ui-root></gu-zac-ui-root>
+</body>
 </html>

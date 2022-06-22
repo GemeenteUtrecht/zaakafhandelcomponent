@@ -1,6 +1,11 @@
+const ALFRESCO_DOCUMENTS_URL = '$ALFRESCO_DOCUMENTS_URL';
+
+// Still in use?
 module.exports = {
   '/alfresco': {
-    target: 'https://alfresco-tezza.aks.utrechtproeftuin.nl',
+    target: (ALFRESCO_DOCUMENTS_URL.startsWith('$'))
+      ? 'https://alfresco-tezza.aks.utrechtproeftuin.nl'
+      : ALFRESCO_DOCUMENTS_URL,
     secure: false,
     changeOrigin: true,
     onProxyRes: function(proxyRes, req, res) {
