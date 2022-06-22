@@ -204,7 +204,7 @@ class ProcessInformatieObject(
         help_text=_(
             "A boolean flag to indicate whether a user is allowed to add more than 1 document."
         ),
-        default=True,
+        default=False,
     )
     required = models.BooleanField(
         _("Required"),
@@ -258,10 +258,6 @@ class ProcessRol(
 
     def get_choices(self):
         return self.processrolchoice_set.all()
-
-    class Meta:
-        verbose_name = _("Process ROL")
-        verbose_name_plural = _("Process ROLlen")
 
     def clean(self):
         super().clean()

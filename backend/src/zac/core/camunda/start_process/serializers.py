@@ -35,6 +35,7 @@ from .models import (
     ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
+    ProcessRolChoice,
 )
 from .utils import (
     get_required_process_informatie_objecten,
@@ -76,35 +77,53 @@ class ProcessEigenschapSerializer(serializers.ModelSerializer):
 
 
 class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
-    informatieobjecttype = InformatieObjectTypeSerializer(
-        required=True,
-        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT."),
-        allow_null=True,
-    )
     already_uploaded_informatieobjecten = serializers.ListField(
         child=serializers.URLField(),
         required=False,
         help_text=_("URL-references of already uploaded documents."),
     )
+    informatieobjecttype = InformatieObjectTypeSerializer(
+        required=True,
+        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT."),
+        allow_null=True,
+    )
 
     class Meta:
         model = ProcessInformatieObject
         fields = (
-            "informatieobjecttype",
             "already_uploaded_informatieobjecten",
             "allow_multiple",
+            "informatieobjecttype",
             "label",
+            "required",
         )
 
 
+class ProcessRolChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProcessRolChoice
+        fields = ("label", "value")
+
+
 class ProcessRolSerializer(serializers.ModelSerializer):
+    choices = ProcessRolChoiceSerializer(
+        many=True,
+        required=False,
+        help_text=_("Possible choices related to the ROL."),
+        source="processrolchoice_set",
+    )
     roltype = RolTypeSerializer(
         _("roltype"), required=True, help_text=_("The ROLTYPE related to the ROL.")
     )
 
     class Meta:
         model = ProcessRol
-        fields = ("roltype", "label", "betrokkene_type", "default")
+        fields = (
+            "betrokkene_type",
+            "choices",
+            "label",
+            "roltype",
+        )
 
 
 class ZaakProcessEigenschapSerializer(serializers.Serializer):
@@ -160,7 +179,12 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 self._camunda_start_process = (
                     CamundaStartProcess.objects.prefetch_related(
                         "processinformatieobject_set",
-                        "processrol_set",
+                        Prefetch(
+                            "processrol_set",
+                            queryset=ProcessRol.objects.prefetch_related(
+                                "processrolchoice_set"
+                            ).all(),
+                        ),
                         Prefetch(
                             "processeigenschap_set",
                             queryset=ProcessEigenschap.objects.prefetch_related(
