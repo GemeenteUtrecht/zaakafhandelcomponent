@@ -184,6 +184,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             camunda_start_process=camunda_start_process,
             informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
             label="some-doc",
+            allow_multiple=True,
         )
         ProcessRolFactory.create(
             camunda_start_process=camunda_start_process,
@@ -260,6 +261,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             "alreadyUploadedInformatieobjecten": [self.document["url"]],
                             "allowMultiple": True,
                             "label": "some-doc",
+                            "required": False,
                         }
                     ],
                     "benodigdeRollen": [],
@@ -312,7 +314,6 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             ):
                 response = self.client.get(self.task_endpoint)
 
-        self.maxDiff = None
         self.assertEqual(
             response.json(),
             {
@@ -335,6 +336,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "allowMultiple": True,
                             "label": "some-doc",
+                            "required": False,
                         }
                     ],
                     "benodigdeRollen": [
@@ -346,7 +348,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "label": "some-rol",
                             "betrokkeneType": "natuurlijk_persoon",
-                            "default": "",
+                            "choices": [],
                         }
                     ],
                     "benodigdeZaakeigenschappen": [

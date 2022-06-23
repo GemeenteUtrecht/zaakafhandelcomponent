@@ -318,6 +318,15 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
     return roltypen
 
 
+def get_all_roltypen() -> list:
+    client = _client_from_object(zaaktype)
+    roltypen = get_paginated_results(client, "roltype", query_params=query_params)
+
+    roltypen = factory(RolType, roltypen)
+
+    return roltypen
+
+
 @cache_result("ziot:{zaaktype.url}", timeout=A_DAY)
 def get_informatieobjecttypen_for_zaaktype(
     zaaktype: ZaakType,

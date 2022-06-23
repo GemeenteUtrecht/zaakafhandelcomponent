@@ -34,6 +34,7 @@ class ProcessInformatieObjectFactory(factory.django.DjangoModelFactory):
     camunda_start_process = factory.SubFactory(CamundaStartProcessFactory)
     informatieobjecttype_omschrijving = factory.Faker(ProcessEigenschapFactory)
     label = factory.Faker("bs")
+    allow_multiple = factory.Faker("boolean")
 
     class Meta:
         model = "start_process.ProcessInformatieObject"
