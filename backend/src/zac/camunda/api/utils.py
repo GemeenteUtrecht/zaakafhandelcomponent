@@ -83,5 +83,5 @@ def delete_zaak_creation_process(zaak: Zaak) -> None:
         }
         for pi in process_instances.values():
             process_definition = process_definitions.get(pi.definition_id, None)
-            if process_definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY:
+            if process_definition and process_definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY:
                 delete_process_instance(pi.id)
