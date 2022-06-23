@@ -1,162 +1,171 @@
-<div class="keten-processen card">
-  <h2 class="d-inline-block mr-1">Acties</h2>
+<div class="processen card">
 
   <!-- First time loading  -->
   <ng-container *ngIf="isLoading && !zaak.resultaat">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
-  <!-- Result set -->
-  <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
+  <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
+    <h2 class="d-inline-block mr-1">Acties</h2>
 
-  <!-- Loaded -->
-  <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
+    <!-- Result set -->
+    <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
 
-    <!-- Action buttons -->
-    <div class="keten-processen__msg-btns-container">
-      <ng-container *ngFor="let message of data[0].messages; let i = index">
-        <button gu-button
-                [hidden]="!isExpanded && i >= 3"
-                (click)="sendMessage(message)"
-                buttonStyle="action-link"
-                class="mr-2 mb-3">
-          {{message}}
-        </button>
-      </ng-container>
-    </div>
+    <!-- Loaded -->
+    <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
 
-    <!-- Show more buttons -->
-    <button gu-button
-            *ngIf="!!data && data[0]?.messages?.length > 3"
-            buttonStyle="tertiary"
-            size="extrasmall"
-            class="d-block mb-4"
-            [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-            (click)="isExpanded = !isExpanded">
-      {{isExpanded ? 'Minder acties' : 'Meer acties'}}
-    </button>
+      <!-- Action buttons -->
+      <div class="processen__msg-btns-container">
+        <ng-container *ngFor="let message of data[0].messages; let i = index">
+          <button gu-button
+                  [hidden]="!isExpanded && i >= 3"
+                  (click)="sendMessage(message)"
+                  buttonStyle="action-link"
+                  class="mr-2 mb-3">
+            {{message}}
+          </button>
+        </ng-container>
+      </div>
 
-    <!-- Task lists -->
-    <div class="keten-processen__taken">
-      <div class="row">
+      <!-- Show more buttons -->
+      <button gu-button
+              *ngIf="!!data && data[0]?.messages?.length > 3"
+              buttonStyle="tertiary"
+              size="extrasmall"
+              class="d-block mb-4"
+              [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
+              (click)="isExpanded = !isExpanded">
+        {{isExpanded ? 'Minder acties' : 'Meer acties'}}
+      </button>
 
-        <!-- Tasks for current user -->
-        <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
-          <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
-          <ng-container *ngFor="let task of allTaskData">
-            <div class="taak d-flex justify-content-between"
-                 *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
-            >
-              <!-- Description -->
-              <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold">{{task.name | capitalize}}</p>
+      <!-- Task lists -->
+      <div class="processen__taken">
+        <div class="row">
 
-                <!-- Double click shows id. -->
-                <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
-                  <ng-container *ngIf="debugTask===task">
-                    Task id: {{task.id}}
+          <!-- Tasks for current user -->
+          <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
+            <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
+            <ng-container *ngFor="let task of allTaskData">
+              <div class="taak d-flex justify-content-between"
+                   *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
+              >
+                <!-- Description -->
+                <div class="taak__detail mr-md-2">
+                  <p class="m-0 p--bold">{{task.name | capitalize}}</p>
+
+                  <!-- Double click shows id. -->
+                  <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
+                    <ng-container *ngIf="debugTask===task">
+                      Task id: {{task.id}}
+                    </ng-container>
+
+                    <ng-container *ngIf="debugTask!==task">
+                      {{task.created | niceDateFormatPipe}}
+                    </ng-container>
+                  </label>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex flex-column justify-content-center align-items-end">
+                  <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
+                    <button gu-button class="mb-2" buttonStyle="primary" size="small" (click)="executeTask(task.id)">
+                      Behandelen
+                    </button>
+                    <button gu-button
+                            *ngIf="ketenProcessenService.isTaskAssigned(task) && task.assigneeType === 'group'"
+                            buttonStyle="tertiary"
+                            size="extrasmall"
+                            [icon]="task.assigneeType === 'user' ? 'person' : 'group'"
+                            class="d-inline-block mb-2"
+                            (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
+                            [disabled]="true"
+                    >
+                      {{task.assignee.name}}
+                    </button>
                   </ng-container>
-
-                  <ng-container *ngIf="debugTask!==task">
-                    {{task.created | niceDateFormatPipe}}
-                  </ng-container>
-                </label>
-
+                </div>
               </div>
+            </ng-container>
+          </div>
 
-              <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center align-items-end">
-                <ng-container *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
-                  <button gu-button class="mb-2" buttonStyle="primary" size="small" (click)="executeTask(task.id)">
-                    Behandelen
-                  </button>
+          <!-- Task for others -->
+          <div class="col-md-6">
+            <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h3>
+            <ng-container *ngFor="let task of allTaskData">
+              <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
+                <!-- Description -->
+                <div class="taak__detail mr-md-2">
+                  <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
+
+                  <!-- Double click shows id. -->
+                  <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
+                    <ng-container *ngIf="debugTask===task">
+                      Task id: {{task.id}}
+                    </ng-container>
+
+                    <ng-container *ngIf="debugTask!==task">
+                      {{task.created | niceDateFormatPipe}}
+                    </ng-container>
+                  </label>
+
+                  <div class="d-flex flex-column justify-content-center" *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
+                    <button gu-button class="mb-2" buttonStyle="action-link" (click)="executeTask(task.id)">
+                      Behandelen
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex flex-column justify-content-center align-items-end">
                   <button gu-button
-                          *ngIf="ketenProcessenService.isTaskAssigned(task) && task.assigneeType === 'group'"
+                          *ngIf="ketenProcessenService.isTaskAssigned(task)"
                           buttonStyle="tertiary"
                           size="extrasmall"
                           [icon]="task.assigneeType === 'user' ? 'person' : 'group'"
                           class="d-inline-block mb-2"
                           (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
-                          [disabled]="true"
+                          [disabled]="!ketenProcessenService.isUserAllowedToAssignTask(currentUser, task)"
                   >
-                    {{task.assignee.name}}
-                  </button>
-                </ng-container>
-              </div>
-            </div>
-          </ng-container>
-        </div>
+                    <!-- user -->
+                    <ng-container *ngIf="task.assigneeType === 'user'">
+                      <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
+                        {{task.assignee.firstName}} {{task.assignee.lastName}}
+                      </ng-container>
+                      <ng-template #username>
+                        <ng-container *ngIf="task.assignee.username">
+                          {{task.assignee.username}}
+                        </ng-container>
+                      </ng-template>
+                    </ng-container>
 
-        <!-- Task for others -->
-        <div class="col-md-6">
-          <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h3>
-          <ng-container *ngFor="let task of allTaskData">
-            <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
-              <!-- Description -->
-              <div class="taak__detail mr-md-2">
-                <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
-
-                <!-- Double click shows id. -->
-                <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
-                  <ng-container *ngIf="debugTask===task">
-                    Task id: {{task.id}}
-                  </ng-container>
-
-                  <ng-container *ngIf="debugTask!==task">
-                    {{task.created | niceDateFormatPipe}}
-                  </ng-container>
-                </label>
-
-                <div class="d-flex flex-column justify-content-center" *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
-                  <button gu-button class="mb-2" buttonStyle="action-link" (click)="executeTask(task.id)">
-                    Behandelen
+                    <!-- group -->
+                    <ng-container *ngIf="task.assigneeType === 'group'">
+                      {{task.assignee.name}}
+                    </ng-container>
                   </button>
                 </div>
               </div>
+            </ng-container>
+          </div>
 
-              <!-- Actions -->
-              <div class="d-flex flex-column justify-content-center align-items-end">
-                <button gu-button
-                        *ngIf="ketenProcessenService.isTaskAssigned(task)"
-                        buttonStyle="tertiary"
-                        size="extrasmall"
-                        [icon]="task.assigneeType === 'user' ? 'person' : 'group'"
-                        class="d-inline-block mb-2"
-                        (click)="ketenProcessenService.isUserAllowedToAssignTask(currentUser, task) && executeTask(task.id, 1)"
-                        [disabled]="!ketenProcessenService.isUserAllowedToAssignTask(currentUser, task)"
-                >
-                  <!-- user -->
-                  <ng-container *ngIf="task.assigneeType === 'user'">
-                    <ng-container *ngIf="task.assignee.firstName && task.assignee.lastName; else username" >
-                      {{task.assignee.firstName}} {{task.assignee.lastName}}
-                    </ng-container>
-                    <ng-template #username>
-                      <ng-container *ngIf="task.assignee.username">
-                        {{task.assignee.username}}
-                      </ng-container>
-                    </ng-template>
-                  </ng-container>
-
-                  <!-- group -->
-                  <ng-container *ngIf="task.assigneeType === 'group'">
-                    {{task.assignee.name}}
-                  </ng-container>
-                </button>
-              </div>
-            </div>
-          </ng-container>
         </div>
-
       </div>
-    </div>
-  </ng-container>
+    </ng-container>
 
-  <!-- Empty message -->
-  <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
-    <p>Er zijn geen acties beschikbaar.</p>
-  </ng-container>
+    <!-- Empty message -->
+    <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
+      <p>Er zijn geen acties beschikbaar.</p>
+    </ng-container>
+  </div>
+
+  <!-- Process has not started -->
+  <div *ngIf="showOverlay" class="processen__disabled-overlay">
+    <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()">
+      Process opstarten
+    </button>
+  </div>
 </div>
-
 
 <!-- BPMN modal -->
 <gu-modal id="bpmnModal" [closeIcon]="true" [size]="'huge'">

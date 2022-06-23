@@ -1,6 +1,24 @@
 @import './base/colors/colors';
 
-.keten-processen {
+.processen {
+  min-height: 500px;
+  &__acties {
+    &--disabled {
+      opacity: 0.3;
+    }
+  }
+
+  &__disabled-overlay {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   gu-tooltip mat-icon {
     cursor: pointer;
   }

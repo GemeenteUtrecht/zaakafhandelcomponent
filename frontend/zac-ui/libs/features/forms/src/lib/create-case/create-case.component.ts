@@ -3,6 +3,7 @@ import { CamundaService, MetaService, ZaakService } from '@gu/services';
 import { CreateCase, MetaZaaktypeResult, Zaak } from '@gu/models';
 import { Choice, FieldConfiguration, SnackbarService } from '@gu/components';
 import { CreateCaseService } from './create-case.service';
+import { delay, retry, retryWhen, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gu-create-case',
@@ -105,9 +106,14 @@ export class CreateCaseComponent implements OnInit {
    * @param processInstanceId
    */
   getCaseUrlForProcessInstance(processInstanceId) {
+
+
     this.camundaService.getCaseUrlForProcessInstance(processInstanceId)
+      .pipe(
+        retryWhen(errors => errors.pipe(delay(2000), take(5)))
+      )
       .subscribe(processInstanceCase => {
-        this.zaakService.navigateToCase({
+        this.zaakService.navigateToCaseActions({
           bronorganisatie: processInstanceCase.bronorganisatie,
           identificatie: processInstanceCase.identificatie
         })

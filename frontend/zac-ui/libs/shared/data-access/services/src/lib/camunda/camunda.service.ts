@@ -12,7 +12,6 @@ export class CamundaService {
   }
 
   /**
-   *
    * Request the case url with process instance.
    * @param instanceId
    * @returns {Observable<ProcessInstanceCase>}

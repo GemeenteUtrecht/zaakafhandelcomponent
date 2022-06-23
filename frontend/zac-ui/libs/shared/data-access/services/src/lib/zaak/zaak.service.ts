@@ -35,6 +35,14 @@ export class ZaakService {
   }
 
   /**
+   * Navigate to actions of a case.
+   * @param {{bronorganisatie: string, identificatie: string}} zaak
+   */
+  navigateToCaseActions(zaak: { bronorganisatie: string, identificatie: string }) {
+    this.router.navigate(['zaken', zaak.bronorganisatie, zaak.identificatie, 'acties']);
+  }
+
+  /**
    * Create a new case.
    * @param {CreateCase} formData
    * @returns {Observable<ProcessInstance>}
@@ -42,6 +50,17 @@ export class ZaakService {
   createCase(formData: CreateCase): Observable<ProcessInstance> {
     const endpoint = encodeURI(`/api/core/cases`);
     return this.http.Post<ProcessInstance>(endpoint, formData);
+  }
+
+  /**
+   * Start process for case.
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   * @returns {Observable<ProcessInstance>}
+   */
+  startCaseProcess(bronorganisatie: string, identificatie: string): Observable<ProcessInstance> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/start-process`);
+    return this.http.Post<ProcessInstance>(endpoint);
   }
 
   /**

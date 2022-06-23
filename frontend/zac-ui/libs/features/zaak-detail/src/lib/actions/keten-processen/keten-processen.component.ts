@@ -12,9 +12,9 @@ import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
-import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
+import {KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
-import {UserService} from '@gu/services';
+import {UserService, ZaakService} from '@gu/services';
 
 
 /**
@@ -70,6 +70,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isLoadingContext: boolean;
   contextHasError: boolean;
   contextErrorMessage: string;
+  isStatic: boolean;
+  hasProcess: boolean;
 
   // Tabs
   selectedTabIndex = null;
@@ -78,12 +80,21 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   doRedirectTarget: '_blank' | '_self';
 
   constructor(
-    private snackbarService: SnackbarService,
     public ketenProcessenService: KetenProcessenService,
+    private zaakService: ZaakService,
+    private snackbarService: SnackbarService,
     private modalService: ModalService,
     private userService: UserService,
     private route: ActivatedRoute,
   ) {
+  }
+
+  //
+  // Getters / setters.
+  //
+
+  get showOverlay() {
+    return !this.isStatic && !this.hasProcess;
   }
 
   /**
@@ -135,7 +146,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   /**
    * Poll tasks every 5 seconds.
    */
-  pollProcesses() {
+  startPollingProcesses() {
     this.isPolling = true;
     this.fetchPollProcesses();
   }
@@ -143,6 +154,15 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   fetchPollProcesses() {
     if (this.isPolling) {
       this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(resData => {
+        if (resData[0].title === "Zaak Aanmaken") {
+          this.updateProcessData(resData);
+          if (this.allTaskData?.length === 0) {
+            this.isPolling = false;
+            this.isStatic = false;
+            this.hasProcess = false;
+            console.log('has process');
+          }
+        }
         if (JSON.stringify(this.data) !== JSON.stringify(resData)) {
           const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
           this.setNewestTask(resData, currentTaskIds);
@@ -223,7 +243,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
         // Start polling
         setTimeout(() => {
-          this.pollProcesses();
+          this.startPollingProcesses();
         }, this.pollingInterval)
       }, errorRes => {
         this.isLoading = false;
@@ -283,7 +303,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {number} [tabIndex]
    */
   executeTask(taskId: string, tabIndex: number = null): void {
-
     this.cancelPolling() // stop polling data;
 
     this.selectedTabIndex = tabIndex;
@@ -321,17 +340,20 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     })
   }
 
-  /**
-   * Closes modal and reloads services.
-   */
-  closeModal(): void {
-    this.modalService.close('ketenprocessenModal');
-    this.fetchProcesses();
-  }
-
   //
   // Events.
   //
+
+  initiateCamundaProcess() {
+    this.isLoading = true;
+    this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
+      this.isLoading = false;
+    }, err => {
+      this.isLoading = false;
+      this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."
+      this.reportError(err);
+    })
+  }
 
   /**
    * Gets called when a task date label is double clicked.
@@ -351,6 +373,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   openModal(id: string): void {
     this.modalService.open(id);
+  }
+
+  /**
+   * Closes modal and reloads services.
+   */
+  closeModal(): void {
+    this.modalService.close('ketenprocessenModal');
+    this.fetchProcesses();
   }
 
   //
