@@ -41,4 +41,4 @@ def delete_process_instance(instance_id: CamundaId, query_params: Dict = dict):
     query_params = {
         "skipIoMappings": "true",
     }
-    client.delete(f"process-instance/{instance_id}", query_params)
+    client.delete(f"process-instance/{instance_id}", params=query_params)

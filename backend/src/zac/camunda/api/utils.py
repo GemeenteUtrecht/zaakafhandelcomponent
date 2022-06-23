@@ -69,25 +69,19 @@ def delete_zaak_creation_process(zaak: Zaak) -> None:
     # First check if there is still a CREATE_ZAAK_PROCESS_DEFINITION_KEY process that needs to be cleaned up.
     process_instances = get_process_instances(zaak.url)
     if process_instances:
-        pdefinition_to_pinstance_map = {
-            pi.definition_id: pid
-            for pid, pi in process_instances.items()
-            if pi.definition_id
+        process_definitions = {
+            pdef.id: pdef
+            for pdef in get_process_definitions(
+                list(
+                    {
+                        pi.definition_id
+                        for pi in process_instances.values()
+                        if pi.definition_id
+                    }
+                )
+            )
         }
-        process_definitions = get_process_definitions(
-            pdefinition_to_pinstance_map.keys()
-        )
-
-        p_def_id_to_key_map = {}
-        for pdef in process_definitions:
-            if pdef.key in p_def_id_to_key_map:
-                p_def_id_to_key_map[pdef.key].append(pdef.id)
-            else:
-                p_def_id_to_key_map[pdef.key] = [pdef.id]
-
-        if pdef_id := p_def_id_to_key_map.get(
-            settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
-        ):
-            if pdef_id in pdefinition_to_pinstance_map.keys():
-                delete_pid = pdefinition_to_pinstance_map[pdef_id]
-                delete_process_instance(delete_pid)
+        for pi in process_instances.values():
+            process_definition = process_definitions.get(pi.definition_id, None)
+            if process_definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY:
+                delete_process_instance(pi.id)

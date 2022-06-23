@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from django_camunda.camunda_models import ProcessDefinition
 from django_camunda.client import Camunda, get_client
+from django_camunda.types import CamundaId
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
@@ -56,7 +57,7 @@ def add_subprocesses(
 
 def get_process_instances(
     zaak_url: str, historic: bool = False
-) -> List[ProcessInstance]:
+) -> Dict[CamundaId, ProcessInstance]:
     client = get_client()
 
     #  get (historical) process-instances for particular zaak
