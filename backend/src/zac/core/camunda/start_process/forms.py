@@ -6,27 +6,35 @@ from django.utils.translation import gettext_lazy as _
 
 from django_camunda.client import get_client
 
-from zac.core.services import fetch_zaaktype, get_zaaktypen
+from zac.core.services import fetch_zaaktype, get_catalogi, get_zaaktypen
 
 from .models import CamundaStartProcess
 
 
 def get_zaaktypen_choices() -> Tuple[Tuple[str, str]]:
     zaaktypen = get_zaaktypen()
+    catalogi = {cat.url: cat for cat in get_catalogi()}
+    for zt in zaaktypen:
+        zt.catalogus = catalogi[zt.catalogus]
+
     zaaktypen = sorted(
-        sorted(zaaktypen, key=lambda _zt: _zt.versiedatum, reverse=True),
+        sorted(
+            sorted(zaaktypen, key=lambda zt: zt.versiedatum, reverse=True),
+            key=lambda zt: zt.catalogus.domein,
+        ),
         key=lambda zt: (zt.omschrijving, zt.identificatie),
     )
     zten = []
-    for key, group in groupby(zaaktypen, lambda zt: zt.identificatie):
-        group = list(group)
-        max_date = max([zt.versiedatum for zt in group])
-        zten += [zt for zt in group if zt.versiedatum == max_date]
+    for key, group_cat in groupby(zaaktypen, lambda zt: zt.catalogus.domein):
+        for key, group_id in groupby(group_cat, lambda zt: zt.identificatie):
+            group = list(group_id)
+            max_date = max([zt.versiedatum for zt in group])
+            zten += [zt for zt in group if zt.versiedatum == max_date]
 
     return (
         (
             zt.url,
-            f"{zt.omschrijving} Identificatie: {zt.identificatie} Versiedatum: {zt.versiedatum}",
+            f"{zt.omschrijving} - {zt.catalogus.domein} - {zt.identificatie} - {zt.versiedatum}",
         )
         for zt in zten
     )
