@@ -72,6 +72,11 @@ class CamundaStartProcessForm(forms.ModelForm):
         model = CamundaStartProcess
         fields = ("zaaktype",)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["zaaktype"].initial = self.instance.zaaktype.url
+
     def clean(self):
         super().clean()
         if zt_url := self.cleaned_data.get("zaaktype"):

@@ -29,12 +29,15 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
+        cls.catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
         cls.zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -43,7 +46,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
             identificatie="ZT2",
-            catalogus=CATALOGUS_URL,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT2",
         )
@@ -61,6 +64,10 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
         )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([self.catalogus]),
+        )
 
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
@@ -75,6 +82,10 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([self.catalogus]),
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
@@ -99,6 +110,10 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([self.catalogus]),
         )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
@@ -126,6 +141,10 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
         )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([self.catalogus]),
+        )
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
 
@@ -141,6 +160,10 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([self.catalogus]),
         )
         user = UserFactory.create()
         for zaaktype_omschrijving in ["ZT1", "ZT2"]:
@@ -186,12 +209,15 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_without_aggregation(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
+            catalogus=catalogus["url"],
             omschrijving="some zaaktype 1",
         )
         zaaktype_2 = generate_oas_component(
@@ -199,13 +225,17 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
             identificatie="ZT2",
-            catalogus=CATALOGUS_URL,
+            catalogus=catalogus["url"],
             omschrijving="some zaaktype 2",
         )
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus]),
         )
 
         response = self.client.get(self.endpoint)
@@ -223,23 +253,26 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                 "results": [
                     {
                         "omschrijving": "some zaaktype 1",
-                        "catalogus": CATALOGUS_URL,
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                     },
                     {
                         "omschrijving": "some zaaktype 2",
-                        "catalogus": CATALOGUS_URL,
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                     },
                 ],
             },
         )
 
     def test_get_with_aggregation(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
         zaaktype_v1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT",
-            catalogus=CATALOGUS_URL,
+            catalogus=catalogus["url"],
             omschrijving="some zaaktype",
         )
         zaaktype_v2 = generate_oas_component(
@@ -247,13 +280,17 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
             identificatie="ZT",
-            catalogus=CATALOGUS_URL,
+            catalogus=catalogus["url"],
             omschrijving="some zaaktype",
         )
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([zaaktype_v1, zaaktype_v2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus]),
         )
 
         response = self.client.get(self.endpoint)
@@ -271,13 +308,16 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                 "results": [
                     {
                         "omschrijving": "some zaaktype",
-                        "catalogus": CATALOGUS_URL,
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                     },
                 ],
             },
         )
 
     def test_get_with_filter_q(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -298,6 +338,10 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus]),
         )
 
         response = self.client.get(self.endpoint, {"q": "ZAAKTYPE 1"})

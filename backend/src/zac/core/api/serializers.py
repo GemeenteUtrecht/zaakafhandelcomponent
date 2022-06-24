@@ -16,6 +16,7 @@ from zds_client import ClientError
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
+    Catalogus,
     Eigenschap,
     EigenschapSpecificatie,
     InformatieObjectType,
@@ -985,13 +986,25 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
         fields = ("object_type", "label", "items")
 
 
-class ZaakTypeAggregateSerializer(serializers.Serializer):
-    omschrijving = serializers.CharField(
-        help_text=_(
-            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
-        )
-    )
-    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
+class CatalogusSerializer(APIModelSerializer):
+    class Meta:
+        model = Catalogus
+        fields = ("domein", "url")
+
+
+class ZaakTypeAggregateSerializer(APIModelSerializer):
+    catalogus = CatalogusSerializer(help_text=_("CATALOGUS that ZAAKTYPE belongs to."))
+
+    class Meta:
+        model = ZaakType
+        fields = ("catalogus", "omschrijving")
+        extra_kwargs = {
+            "omschrijving": {
+                "help_text": _(
+                    "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+                )
+            }
+        }
 
 
 class SearchEigenschapSpecificatieSerializer(serializers.Serializer):

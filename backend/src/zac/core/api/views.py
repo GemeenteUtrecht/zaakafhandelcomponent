@@ -58,6 +58,7 @@ from ..services import (
     fetch_zaak_object,
     fetch_zaaktype,
     find_zaak,
+    get_catalogi,
     get_document,
     get_documenten,
     get_eigenschap,
@@ -909,7 +910,7 @@ class ZaakTypenView(ListAPIView):
     the authenticated user has read-permissions for are returned.
     """
 
-    authentication_classes = (authentication.SessionAuthentication,)
+    # authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
     pagination_class = BffPagination
@@ -925,18 +926,28 @@ class ZaakTypenView(ListAPIView):
         zaaktypen = get_zaaktypen(self.request.user)
 
         # aggregate
-        zaaktypen_data = [
-            {
-                "catalogus": zaaktype.catalogus,
-                "omschrijving": zaaktype.omschrijving,
-            }
-            for zaaktype in zaaktypen
-        ]
-        zaaktypen_aggregated = {
-            frozenset(zaaktype.items()): zaaktype for zaaktype in zaaktypen_data
-        }.values()
+        zaaktypen_aggregated = []
+        for zt in zaaktypen:
+            omschrijving_found = zt.omschrijving in [
+                _zt.omschrijving for _zt in zaaktypen_aggregated
+            ]
+            catalogus_found = zt.catalogus in [
+                _zt.catalogus
+                for _zt in zaaktypen_aggregated
+                if _zt.omschrijving == zt.omschrijving
+            ]
+
+            if not omschrijving_found or (omschrijving_found and not catalogus_found):
+                zaaktypen_aggregated.append(zt)
+
+        # resolve catalogus
+        catalogi = {cat.url: cat for cat in get_catalogi()}
+        for zt in zaaktypen_aggregated:
+            zt.catalogus = catalogi[zt.catalogus]
+
         zaaktypen_aggregated = sorted(
-            zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
+            sorted(zaaktypen_aggregated, key=lambda zt: zt.catalogus.domein),
+            key=lambda zt: zt.omschrijving,
         )
         return zaaktypen_aggregated
 

@@ -14,7 +14,7 @@ class ZaaktypenFilterSet(ApiFilterSet):
         return [
             zaaktype
             for zaaktype in results
-            if value.lower() in zaaktype["omschrijving"].lower()
+            if value.lower() in zaaktype.omschrijving.lower()
         ]
 
 
