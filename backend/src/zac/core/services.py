@@ -17,6 +17,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
     BesluitType,
+    Catalogus,
     Eigenschap,
     InformatieObjectType,
     ResultaatType,
@@ -312,18 +313,7 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
         query_params.update({"omschrijvingGeneriek": omschrijving_generiek})
     client = _client_from_object(zaaktype)
     roltypen = get_paginated_results(client, "roltype", query_params=query_params)
-
     roltypen = factory(RolType, roltypen)
-
-    return roltypen
-
-
-def get_all_roltypen() -> list:
-    client = _client_from_object(zaaktype)
-    roltypen = get_paginated_results(client, "roltype", query_params=query_params)
-
-    roltypen = factory(RolType, roltypen)
-
     return roltypen
 
 
@@ -359,6 +349,18 @@ def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
     with parallel() as executor:
         results = executor.map(fetch_besluittype, zaaktype.besluittypen)
     return list(results)
+
+
+@cache_result("zts:catalogi", timeout=AN_HOUR)
+def get_catalogi() -> List[Catalogus]:
+    """
+    Fetch all catalogi from the ZTCs.
+
+    """
+
+    results = _get_from_catalogus("catalogus")
+    catalogi = factory(Catalogus, results)
+    return catalogi
 
 
 ###################################################
