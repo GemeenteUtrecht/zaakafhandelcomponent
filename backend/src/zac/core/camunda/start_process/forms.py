@@ -43,7 +43,7 @@ def get_zaaktypen_choices() -> Tuple[Tuple[str, str]]:
 def get_process_definition_keys() -> List[str]:
     camunda_client = get_client()
     process_definitions = camunda_client.get("process-definition?latestVersion=true")
-    return ((pdef["name"], pdef["key"]) for pdef in process_definitions)
+    return ((pdef["key"], pdef["key"]) for pdef in process_definitions)
 
 
 class CamundaStartProcessForm(forms.ModelForm):

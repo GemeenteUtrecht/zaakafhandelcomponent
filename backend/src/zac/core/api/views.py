@@ -910,7 +910,7 @@ class ZaakTypenView(ListAPIView):
     the authenticated user has read-permissions for are returned.
     """
 
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakTypeAggregateSerializer
     pagination_class = BffPagination

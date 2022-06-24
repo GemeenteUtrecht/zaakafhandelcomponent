@@ -5,6 +5,7 @@ from django.conf import settings
 
 from django_camunda.client import get_client
 from django_camunda.interface import Variable
+from django_camunda.utils import serialize_variable
 
 from zac.camunda.process_instances import delete_process_instance
 from zac.camunda.processes import get_process_definitions, get_process_instances
@@ -30,6 +31,10 @@ def start_process(
     business_key: Optional[str] = None,
     variables: Dict[str, Union[Variable, dict]] = None,
 ) -> Dict[str, str]:
+    """
+    Taken from django_camunda.tasks.start_process - removed shared_task decorator.
+
+    """
     logger.debug(
         "Received process start: process_key=%s, process_id=%s", process_key, process_id
     )
@@ -39,10 +44,7 @@ def start_process(
     client = get_client()
     variables = variables or {}
 
-    _variables = {
-        key: var.serialize() if isinstance(var, Variable) else var
-        for key, var in variables.items()
-    }
+    _variables = {key: serialize_variable(var) for key, var in variables.items()}
 
     if process_id:
         endpoint = f"process-definition/{process_id}/start"
@@ -54,7 +56,6 @@ def start_process(
         "withVariablesInReturn": False,
         "variables": _variables,
     }
-
     response = client.post(endpoint, json=body)
 
     self_rel = next((link for link in response["links"] if link["rel"] == "self"))

@@ -354,13 +354,11 @@ class CreateZaakSerializer(serializers.Serializer):
     )
     zaaktype_omschrijving = serializers.CharField(
         required=True,
-        help_text=_("`omschrijving` of ZAAKTYPE (in the Catalogi API)."),
+        help_text=_("`omschrijving` of ZAAKTYPE."),
     )
     zaaktype_catalogus = serializers.URLField(
         required=True,
-        help_text=_(
-            "URL-reference to the CATALOGUS of ZAAKTYPE (in the Catalogi API)."
-        ),
+        help_text=_("URL-reference to the CATALOGUS of ZAAKTYPE."),
     )
     zaaktype = serializers.HiddenField(default="")
     omschrijving = serializers.CharField(
