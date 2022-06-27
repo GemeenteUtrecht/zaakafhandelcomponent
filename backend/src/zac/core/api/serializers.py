@@ -373,8 +373,8 @@ class CreateZaakSerializer(serializers.Serializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
-        zt_omschrijving = deserialize_variable(validated_data["zaaktype_omschrijving"])
-        zt_catalogus = deserialize_variable(validated_data["zaaktype_catalogus"])
+        zt_omschrijving = validated_data["zaaktype_omschrijving"]
+        zt_catalogus = validated_data["zaaktype_catalogus"]
         zaaktypen = get_zaaktypen(catalogus=zt_catalogus, omschrijving=zt_omschrijving)
         if not zaaktypen:
             raise serializers.ValidationError(
@@ -384,7 +384,7 @@ class CreateZaakSerializer(serializers.Serializer):
             )
         max_date = max([zt.versiedatum for zt in zaaktypen])
         zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
-        validated_data["zaaktype"] = serialize_variable(zaaktype.url)
+        validated_data["zaaktype"] = zaaktype.url
         return validated_data
 
     def to_internal_value(self, data):
@@ -392,9 +392,6 @@ class CreateZaakSerializer(serializers.Serializer):
             **super().to_internal_value(data),
             **get_bptl_app_id_variable(),
         }
-        for key, value in serialized_data.items():
-            serialized_data[key] = serialize_variable(value)
-
         organisatie_rsin = serialized_data.pop("organisatie_rsin")
         serialized_data["organisatieRSIN"] = organisatie_rsin
         return serialized_data

@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 from typing import Dict, Optional, Union
 
 from django.conf import settings
@@ -6,6 +7,8 @@ from django.conf import settings
 from django_camunda.client import get_client
 from django_camunda.interface import Variable
 from django_camunda.utils import serialize_variable
+from djangorestframework_camel_case.settings import api_settings
+from djangorestframework_camel_case.util import camelize
 
 from zac.camunda.process_instances import delete_process_instance
 from zac.camunda.processes import get_process_definitions, get_process_instances
@@ -23,6 +26,14 @@ def get_bptl_app_id_variable() -> Dict[str, str]:
     return {
         "bptlAppId": core_config.app_id,
     }
+
+
+def ordered_dict_to_dict(variables: OrderedDict) -> Dict:
+    variables = {**variables}
+    for key, value in variables.items():
+        if type(value) == OrderedDict:
+            variables[key] = ordered_dict_to_dict(value)
+    return variables
 
 
 def start_process(
@@ -44,7 +55,12 @@ def start_process(
     client = get_client()
     variables = variables or {}
 
-    _variables = {key: serialize_variable(var) for key, var in variables.items()}
+    # Make sure variable is of type Dict and not OrderedDict as django_camunda can't handle ordereddicts
+    _variables = {}
+    for key, value in camelize(variables, **api_settings.JSON_UNDERSCOREIZE).items():
+        if type(value) == OrderedDict:
+            value = ordered_dict_to_dict(value)
+        _variables[key] = serialize_variable(value)
 
     if process_id:
         endpoint = f"process-definition/{process_id}/start"
