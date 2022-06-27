@@ -45,8 +45,8 @@ export class CreateCaseComponent implements OnInit {
         this.caseTypes = data.results;
         this.caseTypeChoices = this.caseTypes.map( type => {
           return {
-            label: type.omschrijving,
-            value: type.omschrijving,
+            label: `${type.omschrijving}: ${type.catalogus.domein}`,
+            value: type,
           }
         })
         this.form = this.getForm();
@@ -62,7 +62,7 @@ export class CreateCaseComponent implements OnInit {
     return [
       {
         label: 'Zaaktype',
-        name: 'zaaktypeOmschrijving',
+        name: 'zaaktype',
         required: true,
         choices: this.caseTypeChoices
       },
@@ -86,12 +86,13 @@ export class CreateCaseComponent implements OnInit {
    * @param formData
    */
   createCase(formData) {
-    const createCaseData = {
-      zaaktypeOmschrijving: formData.zaaktypeOmschrijving,
-      zaaktypeCatalogus: this.caseTypes.find(type => type.omschrijving === formData.zaaktypeOmschrijving).catalogus,
+    const createCaseData: CreateCase = {
+      zaaktypeOmschrijving: formData.zaaktype.omschrijving,
+      zaaktypeCatalogus: formData.zaaktype.catalogus.url,
       omschrijving: formData.omschrijving,
       toelichting: formData.toelichting
     }
+
     this.zaakService.createCase(createCaseData)
       .subscribe(processInstance => {
         this.getCaseUrlForProcessInstance(processInstance.instanceId);
@@ -106,8 +107,6 @@ export class CreateCaseComponent implements OnInit {
    * @param processInstanceId
    */
   getCaseUrlForProcessInstance(processInstanceId) {
-
-
     this.camundaService.getCaseUrlForProcessInstance(processInstanceId)
       .pipe(
         retryWhen(errors => errors.pipe(delay(2000), take(5)))

@@ -1,6 +1,11 @@
+export interface MetaZaaktypeCatalogus {
+  domein: string,
+  url: string
+}
+
 export interface MetaZaaktypeResult {
   omschrijving: string;
-  catalogus: string;
+  catalogus: MetaZaaktypeCatalogus;
 }
 
 export interface MetaZaaktype {

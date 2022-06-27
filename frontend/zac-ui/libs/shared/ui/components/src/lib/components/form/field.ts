@@ -6,7 +6,7 @@ import {FormService} from './form.service';
  */
 export interface Choice {
   label: string,
-  value: string | number,
+  value: string | number | object,
 }
 
 /**
@@ -64,7 +64,7 @@ export interface FieldConfiguration {
   type?: string;
 
   /** @type {string} */
-  value?: string | string[] | number;
+  value?: string | string[] | number | object;
 
   /** @type {boolean} Whether a select takes multiple values. */
   multiple?: boolean;
