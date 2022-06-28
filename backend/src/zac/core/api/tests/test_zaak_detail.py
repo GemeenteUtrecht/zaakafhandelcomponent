@@ -23,6 +23,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
+from zac.core.camunda.start_process.tests.factories import CamundaStartProcessFactory
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
@@ -115,11 +116,21 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
+        cls.patch_get_top_level_process_instances = patch(
+            "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
+        )
+        CamundaStartProcessFactory.create(
+            zaaktype_identificatie=cls.zaaktype["identificatie"],
+            zaaktype_catalogus=cls.zaaktype["catalogus"],
+        )
+
     def setUp(self):
         super().setUp()
 
         self.patch_get_resultaat.start()
         self.addCleanup(self.patch_get_resultaat.stop)
+        self.patch_get_top_level_process_instances.start()
+        self.addCleanup(self.patch_get_top_level_process_instances.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
@@ -162,6 +173,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
+            "hasProcess": False,
+            "isStatic": False,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -201,6 +214,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "deadlineProgress": 10.00,
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
+            "hasProcess": False,
+            "isStatic": False,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -463,6 +478,13 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.find_zaak_patcher = patch(
             "zac.core.api.views.find_zaak", return_value=cls.zaak
         )
+        cls.patch_get_top_level_process_instances = patch(
+            "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
+        )
+        CamundaStartProcessFactory.create(
+            zaaktype_identificatie=cls._zaaktype["identificatie"],
+            zaaktype_catalogus=cls._zaaktype["catalogus"],
+        )
 
         cls.detail_url = reverse(
             "zaak-detail",
@@ -477,6 +499,9 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
+
+        self.patch_get_top_level_process_instances.start()
+        self.addCleanup(self.patch_get_top_level_process_instances.stop)
 
     def test_not_authenticated(self):
         response = self.client.get(self.detail_url)

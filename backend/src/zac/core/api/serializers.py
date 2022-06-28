@@ -8,7 +8,6 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
-from django_camunda.utils import deserialize_variable, serialize_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
@@ -39,8 +38,10 @@ from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
+from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.core.camunda.start_process.models import CamundaStartProcess
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
@@ -447,6 +448,12 @@ class ZaakDetailSerializer(APIModelSerializer):
     kan_geforceerd_bijwerken = serializers.SerializerMethodField(
         help_text=_("A boolean flag whether a user can force edit the ZAAK or not."),
     )
+    has_process = serializers.SerializerMethodField(
+        help_text=_("A boolean flag whether the ZAAK has a process or not.")
+    )
+    is_static = serializers.SerializerMethodField(
+        help_text=_("A boolean flag whether the ZAAK is stationary or not.")
+    )
 
     class Meta:
         model = Zaak
@@ -468,12 +475,33 @@ class ZaakDetailSerializer(APIModelSerializer):
             "deadline_progress",
             "resultaat",
             "kan_geforceerd_bijwerken",
+            "has_process",
+            "is_static",
         )
 
     def get_kan_geforceerd_bijwerken(self, obj) -> bool:
         return CanForceEditClosedZaak().check_for_any_permission(
             self.context["request"], obj
         )
+
+    def get_has_process(self, obj) -> bool:
+        process_instances = get_top_level_process_instances(obj.url)
+        # Filter out the process instance that started the zaak
+        process_instances = [
+            pi
+            for pi in process_instances
+            if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        ]
+        return bool(process_instances)
+
+    def get_is_static(self, obj) -> bool:
+        zaaktype_catalogus = obj.zaaktype.catalogus
+        zaaktype_identificatie = obj.zaaktype.identificatie
+        objs = CamundaStartProcess.objects.filter(
+            zaaktype_catalogus=zaaktype_catalogus,
+            zaaktype_identificatie=zaaktype_identificatie,
+        )
+        return not objs.exists()
 
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
