@@ -377,6 +377,53 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             {"betrokkeneIdentificatie": ["Dit veld is vereist."]},
         )
 
+    @requests_mock.Mocker()
+    def test_destroy_rol(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkene_identificatie={"identificatie": self.user.username},
+        )
+        mock_resource_get(m, rol)
+
+        m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
+        response = self.client.delete(
+            self.endpoint,
+            {
+                "url": rol["url"],
+            },
+        )
+        self.assertEqual(response.status_code, 204)
+
+    @requests_mock.Mocker()
+    def test_destroy_rol_fail_different_zaak(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak="http://some-other-zaak.com",
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkene_identificatie={"identificatie": self.user.username},
+        )
+        mock_resource_get(m, rol)
+
+        m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
+        response = self.client.delete(
+            self.endpoint,
+            {
+                "url": rol["url"],
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"url": ["ROL does not belong to ZAAK."]})
+
 
 class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
@@ -604,3 +651,37 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
                 },
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @requests_mock.Mocker()
+    def test_has_permission_to_destroy_rol(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkene_identificatie={"identificatie": "some-username"},
+        )
+        mock_resource_get(m, rol)
+        m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
+        user = UserFactory.create()
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        response = self.client.delete(
+            self.endpoint,
+            {
+                "url": rol["url"],
+            },
+        )
+        self.assertEqual(response.status_code, 204)
