@@ -3,7 +3,7 @@ import { CamundaService, MetaService, ZaakService } from '@gu/services';
 import { CreateCase, MetaZaaktypeResult, Zaak } from '@gu/models';
 import { Choice, FieldConfiguration, SnackbarService } from '@gu/components';
 import { CreateCaseService } from './create-case.service';
-import { delay, retry, retryWhen, take } from 'rxjs/operators';
+import { delay, retryWhen, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gu-create-case',

@@ -1,0 +1,37 @@
+<div class="start-process" *ngIf="taskContextData">
+  <h2>{{taskContextData.task.name}}</h2>
+  <div class="start-process__steps mb-4">
+    <mat-stepper orientation="vertical" [linear]="false" #stepper>
+      <!-- Step 1: Case roles -->
+      <mat-step>
+        <ng-template matStepLabel>Betrokkenen</ng-template>
+        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-role-step>
+      </mat-step>
+
+      <!-- Step 2: Case properties -->
+      <mat-step>
+        <ng-template matStepLabel>Eigenschappen</ng-template>
+        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-properties-step>
+      </mat-step>
+
+      <!-- Step 3: Documents -->
+      <mat-step>
+        <ng-template matStepLabel>Documenten</ng-template>
+        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-documents-step>
+      </mat-step>
+    </mat-stepper>
+  </div>
+
+  <p>Het proces kan gestart worden indien alle vereiste velden hierboven zijn ingevuld.</p>
+
+  <!-- Only show this button if the form is not yet submitted -->
+  <button gu-button
+          class=""
+          buttonStyle="primary"
+          size="large"
+          [disabled]="isSubmitting"
+          [loading]="isSubmitting"
+          (click)="submitTask()">
+    Volgende
+  </button>
+</div>

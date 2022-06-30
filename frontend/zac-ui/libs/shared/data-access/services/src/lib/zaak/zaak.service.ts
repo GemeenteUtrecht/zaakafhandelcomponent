@@ -9,7 +9,7 @@ import {
   UserPermission,
   Zaak,
   NieuweEigenschap,
-  CreateCase, ProcessInstance
+  CreateCase, ProcessInstance, Betrokkene, CreateCaseDocument
 } from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
@@ -98,6 +98,17 @@ export class ZaakService {
   editCaseDocument(bronorganisatie, identificatie, formData: any): Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/document`);
     return this.http.Patch<any>(endpoint, formData);
+  }
+
+  /**
+   * Edit case document.
+   * @param {CreateCaseDocument} formData
+   * @return {Observable}
+   */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
+  createCaseDocument(formData: any): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/document`);
+    return this.http.Post<any>(endpoint, formData);
   }
 
   /**
@@ -243,6 +254,19 @@ export class ZaakService {
    */
   createCaseUrl(zaak: Zaak) {
     return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}`;
+  }
+
+  /**
+   * Create a role.
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   * @param {Betrokkene} caseRole
+   * @returns {Observable<*>}
+   */
+  @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
+  createCaseRole(bronorganisatie: string, identificatie: string, caseRole: Betrokkene): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
+    return this.http.Post<any>(endpoint, caseRole);
   }
 
 }

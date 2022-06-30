@@ -154,15 +154,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   fetchPollProcesses() {
     if (this.isPolling) {
       this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(resData => {
-        if (resData[0].title === "Zaak Aanmaken") {
-          this.updateProcessData(resData);
-          if (this.allTaskData?.length === 0) {
-            this.isPolling = false;
-            this.isStatic = false;
-            this.hasProcess = false;
-            console.log('has process');
-          }
-        }
         if (JSON.stringify(this.data) !== JSON.stringify(resData)) {
           const currentTaskIds = this.data && this.data.length ? this.ketenProcessenService.mergeTaskData(this.data) : null;
           this.setNewestTask(resData, currentTaskIds);
@@ -227,6 +218,16 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
         // Update data.
         this.updateProcessData(data);
+
+        // Check if process has started
+        if (this.allTaskData?.length === 0 && data[0].messages.length === 0) {
+          this.isPolling = false;
+          this.isStatic = false;
+          this.hasProcess = false;
+        } else {
+          this.isStatic = false;
+          this.hasProcess = true;
+        }
 
         // Execute newly created task.
         if (openTask && currentTaskIds && data && data.length) {

@@ -1,0 +1,22 @@
+@import './base/colors/colors';
+
+.start-process {
+  &__submit-button {
+    margin-top: 6px;
+  }
+
+  &__submit-document-button {
+    margin-top: 1px;
+  }
+
+  &__submitted-check-icon {
+    ::ng-deep .mat-icon {
+      font-size: 1.825rem;
+      margin-top: 7px;
+      margin-left: 12px;
+      color: $color-success;
+      height: fit-content;
+      width: fit-content;
+    }
+  }
+}

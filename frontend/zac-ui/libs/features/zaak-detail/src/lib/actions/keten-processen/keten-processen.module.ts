@@ -14,6 +14,11 @@ import {MatTabsModule} from "@angular/material/tabs";
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { SharedUtilsModule } from '@gu/utils';
 import { CancelTaskComponent } from './cancel-task/cancel-task.component';
+import { StartProcessComponent } from './configuration-components/start-process/start-process.component';
+import { MatStepperModule } from '@angular/material/stepper';
+import { RoleStepComponent } from './configuration-components/start-process/role-step/role-step.component';
+import { PropertiesStepComponent } from './configuration-components/start-process/properties-step/properties-step.component';
+import { DocumentsStepComponent } from './configuration-components/start-process/documents-step/documents-step.component';
 
 @NgModule({
   declarations: [
@@ -25,10 +30,15 @@ import { CancelTaskComponent } from './cancel-task/cancel-task.component';
     AssignTaskComponent,
     RedirectComponent,
     CancelTaskComponent,
+    StartProcessComponent,
+    RoleStepComponent,
+    PropertiesStepComponent,
+    DocumentsStepComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
+    MatStepperModule,
     MatTabsModule,
     MultiselectModule,
     ReactiveFormsModule,

@@ -160,7 +160,7 @@
   </div>
 
   <!-- Process has not started -->
-  <div *ngIf="showOverlay" class="processen__disabled-overlay">
+  <div *ngIf="showOverlay && allTaskData" class="processen__disabled-overlay">
     <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()">
       Process opstarten
     </button>
@@ -202,6 +202,8 @@
           <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-sign-document>
 
           <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="closeModal()"></gu-redirect>
+
+          <gu-start-process *ngSwitchCase="'zac:startProcessForm'" [zaak]="zaak" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-start-process>
 
           <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-dynamic-form>
         </div>

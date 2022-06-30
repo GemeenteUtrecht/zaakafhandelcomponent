@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'gu-file-upload',
@@ -6,6 +6,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
   styleUrls: ['./file-upload.component.scss']
 })
 export class FileUploadComponent {
+  @Input() disabled: boolean;
 
   @Output() selectedFileOutput: EventEmitter<File> = new EventEmitter();
   @Output() fileValue: EventEmitter<File> = new EventEmitter();
@@ -29,8 +30,10 @@ export class FileUploadComponent {
   }
 
   deleteSelectedFile() {
-    this.fileInput = null;
-    this.selectedFileOutput.emit(null);
+    if (!this.disabled) {
+      this.fileInput = null;
+      this.selectedFileOutput.emit(null);
+    }
   }
 
 }

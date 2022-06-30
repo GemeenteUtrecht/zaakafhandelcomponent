@@ -16,6 +16,7 @@
       [searchable]="searchable"
       [appendTo]="appendTo || 'body'"
       [clearable]="clearable"
+      [disabled]="disabled"
     >
     </ng-select>
     <span>{{label}}</span>
@@ -36,3 +37,24 @@
     </label>
   </div>
 </ng-container>
+<label class="has-float-label">
+  <ng-select [items]="items"
+             (search)="onSearch($event)"
+             (change)="onChange($event)"
+             [multiple]="multiple"
+             [bindLabel]="bindLabel"
+             [bindValue]="bindValue"
+             [placeholder]="placeholder"
+             notFoundText="Niets gevonden"
+             loadingText="Zoeken"
+             [(ngModel)]="selectedItems"
+             [formControl]="control"
+             [required]="required"
+             [searchable]="searchable"
+             [appendTo]="appendTo || 'body'"
+             [clearable]="clearable"
+             [disabled]="disabled"
+  >
+  </ng-select>
+  <span>{{label}}</span>
+</label>

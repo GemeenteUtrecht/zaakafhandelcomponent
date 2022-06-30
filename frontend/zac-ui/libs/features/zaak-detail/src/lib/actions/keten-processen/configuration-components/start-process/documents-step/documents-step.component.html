@@ -1,0 +1,26 @@
+<div class="start-process__documents-step pt-4" *ngIf="startProcessDocumentForm">
+  <ng-container [formGroup]="startProcessDocumentForm">
+    <div class="row mb-4" formArrayName="documents" *ngFor="let document of documentsControl.controls; let i = index">
+
+      <span class="col-3"><b>{{getDocumentsContext(i).label}}:</b></span>
+      <gu-file-upload [disabled]="submittingDocuments.indexOf(i) !== -1 || isSubmittedDocument(i)"
+                      (selectedFileOutput)="handleFileSelect($event, i)"
+                      class="col-3"
+      ></gu-file-upload>
+
+      <!-- Only show this button if the form is not yet submitted -->
+      <button *ngIf="!isSubmittedDocument(i)"
+              gu-button
+              class="start-process__submit-document-button ml-3"
+              buttonStyle="primary"
+              size="small"
+              [disabled]="!documentControl(i).value || submittingDocuments.indexOf(i) !== -1"
+              [loading]="submittingDocuments.indexOf(i) !== -1"
+              (click)="submitDocument(i)">
+        Opslaan
+      </button>
+
+      <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedDocument(i)">check_circle</gu-icon>
+    </div>
+  </ng-container>
+</div>

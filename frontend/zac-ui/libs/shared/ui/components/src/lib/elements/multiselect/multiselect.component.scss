@@ -8,7 +8,7 @@
   .ng-select {
     font-size: 0.875rem;
     .ng-select-container {
-      border-color: $color-secondary;
+      border-color: $color-border-input;
       border-radius: 5px;
       &:hover {
         transition: border-color 0.3s ease-out;

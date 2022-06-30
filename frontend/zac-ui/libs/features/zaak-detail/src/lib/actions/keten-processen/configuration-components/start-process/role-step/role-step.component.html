@@ -1,0 +1,58 @@
+<div class="start-process__role-step pt-4" *ngIf="startProcessRoleForm">
+  <ng-container [formGroup]="startProcessRoleForm">
+    <div class="row" formArrayName="roles" *ngFor="let role of rolesControl.controls; let i = index">
+      <!-- Free user input  -->
+      <gu-input
+        *ngIf="getRolesContext(i).choices.length === 0 && (getRolesContext(i).betrokkeneType !== 'medewerker')"
+        [control]="roleControl(i)"
+        type="text"
+        [label]="getRolesContext(i).label"
+        [required]="true"
+        autocomplete="off"
+        class="col-8"
+      ></gu-input>
+
+      <!-- If choices are available -->
+      <gu-multiselect
+        *ngIf="getRolesContext(i).choices.length > 0"
+        [control]="roleControl(i)"
+        [items]="getRolesContext(i).choices"
+        [label]="getRolesContext(i).label"
+        [multiple]="false"
+        [required]="true"
+        bindLabel="label"
+        bindValue="value"
+        appendTo="body"
+        class="mb-4 col-8"
+      ></gu-multiselect>
+
+      <!-- If a medewerker needs to be selected -->
+      <gu-multiselect *ngIf="getRolesContext(i).betrokkeneType === 'medewerker'"
+                      (search)="onSearchAccounts($event)"
+                      [items]="users"
+                      [multiple]="false"
+                      [control]="roleControl(i)"
+                      label="Medewerker"
+                      bindLabel="fullName"
+                      bindValue="username"
+                      required
+                      placeholder="Zoek een medewerker"
+                      class="mb-4 col-8"
+      ></gu-multiselect>
+
+      <!-- Only show this button if the form is not yet submitted -->
+      <button *ngIf="!isSubmittedRole(i)"
+              gu-button
+              class="start-process__submit-button ml-3"
+              buttonStyle="primary"
+              size="small"
+              [disabled]="!roleControl(i).value || submittingRoles.indexOf(i) !== -1"
+              [loading]="submittingRoles.indexOf(i) !== -1"
+              (click)="submitRole(i)">
+        Opslaan
+      </button>
+
+      <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedRole(i)">check_circle</gu-icon>
+    </div>
+  </ng-container>
+</div>
