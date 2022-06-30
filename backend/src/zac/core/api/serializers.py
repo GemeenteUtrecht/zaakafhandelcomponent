@@ -812,7 +812,8 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
                 The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL. 
                 Mutually exclusive with `betrokkene`. 
                 
-                By default, all string fields are submitted with a blank string, i.e. ("")."""
+                Data validation for `betrokkene_identificatie` is done at the source (in this case: Open Zaak).
+                """
             ),
         )
 
@@ -820,8 +821,14 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
     return type(name, (IdentificatieSerializer,), {})
 
 
+class PassDataInternalValue:
+    def to_internal_value(self, data: dict):
+        extra = super().to_representation(data)
+        return {**data, **extra}
+
+
 @betrokkene_identificatie_serializer
-class RolNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNatuurlijkPersoonSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -831,7 +838,7 @@ class RolNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNietNatuurlijkPersoonSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -841,7 +848,7 @@ class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolVestigingSerializer(ProxySerializer):
+class RolVestigingSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -851,7 +858,7 @@ class RolVestigingSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolOrganisatorischeEenheidSerializer(ProxySerializer):
+class RolOrganisatorischeEenheidSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -959,11 +966,11 @@ class RolSerializer(PolymorphicSerializer):
                     rt=data["roltype"], zt=zaaktype.url
                 )
             )
-        if data["betrokkene"] and data["betrokkene_type"]:
+        if data.get("betrokkene") and data["betrokkene_type"]:
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_type` are mutually exclusive.")
             )
-        if data["betrokkene"] and data["betrokkene_identificatie"]:
+        if data.get("betrokkene") and data["betrokkene_identificatie"]:
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_identificatie` are mutually exclusive.")
             )

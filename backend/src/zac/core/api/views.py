@@ -15,7 +15,15 @@ from django.views.decorators.csrf import csrf_protect
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, exceptions, permissions, status, views
+from rest_framework import (
+    authentication,
+    exceptions,
+    generics,
+    permissions,
+    serializers,
+    status,
+    views,
+)
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
@@ -594,7 +602,15 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         data = {**request.data, "zaak": zaak.url}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        rol = create_rol(serializer.data)
+        try:
+            rol = create_rol(serializer.data)
+        except Exception as exc:
+            if exc.args[0].get("status") == 400:
+                raise serializers.ValidationError(
+                    exc.args[0].get("invalidParams", "Something went wrong.")
+                )
+            raise exc
+
         serializer = self.get_serializer(instance=rol)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
