@@ -594,7 +594,8 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         data = {**request.data, "zaak": zaak.url}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        create_rol(serializer.data)
+        rol = create_rol(serializer.data)
+        serializer = self.get_serializer(instance=rol)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(

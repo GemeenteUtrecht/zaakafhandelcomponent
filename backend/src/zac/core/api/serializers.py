@@ -820,22 +820,8 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
     return type(name, (IdentificatieSerializer,), {})
 
 
-class SetDefaultToEmptyStringMixin:
-    def _set_field_to_default_empty_string(self, field):
-        if isinstance(field, serializers.Serializer):
-            for _field in field.fields:
-                _field = self._set_field_to_default_empty_string(_field)
-        if isinstance(field, serializers.CharField):
-            field.default = ""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self._set_field_to_default_empty_string(self, field)
-
-
 @betrokkene_identificatie_serializer
-class RolNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
+class RolNatuurlijkPersoonSerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -845,7 +831,7 @@ class RolNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySerializ
 
 
 @betrokkene_identificatie_serializer
-class RolNietNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
+class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -855,7 +841,7 @@ class RolNietNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySeri
 
 
 @betrokkene_identificatie_serializer
-class RolVestigingSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
+class RolVestigingSerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -865,9 +851,7 @@ class RolVestigingSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolOrganisatorischeEenheidSerializer(
-    SetDefaultToEmptyStringMixin, ProxySerializer
-):
+class RolOrganisatorischeEenheidSerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
