@@ -141,13 +141,14 @@ export class ZaakMapComponent implements OnInit, AfterViewInit {
             return [...acc, ...zaakObjectGroup.items]
           }, [])
 
+
         this.mapMarkers = [];
 
-        zaakObjects.forEach((zaakObject) => {
+        zaakObjects.forEach((zaakObject, index) => {
           // Async zaakObjectToMapMarker
           this.zaakObjectService.zaakObjectToMapMarker(zaakObject).subscribe((mapMarker) => {
-              // Push map marker.
-              this.mapMarkers.push(mapMarker);
+              // Add map marker.
+              this.mapMarkers = [...this.mapMarkers, mapMarker];
             },
 
             // Report error.
