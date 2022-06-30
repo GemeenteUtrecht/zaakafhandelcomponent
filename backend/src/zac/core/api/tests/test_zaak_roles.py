@@ -179,7 +179,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkene_type": "medewerker",
                 "betrokkene_identificatie": {"identificatie": self.user.username},
                 "roltype": self.roltype["url"],
-                "indicatie_machtiging": "",
+                "indicatie_machtiging": "gemachtigde",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -194,7 +194,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "voorvoegselAchternaam": "",
                 },
                 "betrokkeneType": "medewerker",
-                "indicatieMachtiging": "",
+                "indicatieMachtiging": "gemachtigde",
                 "roltoelichting": self.roltype["omschrijving"],
                 "roltype": self.roltype["url"],
                 "zaak": self.zaak["url"],
@@ -211,7 +211,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",
-                "indicatie_machtiging": "",
+                "indicatie_machtiging": "gemachtigde",
                 "roltoelichting": self.roltype["omschrijving"],
                 "roltype": self.roltype["url"],
                 "zaak": self.zaak["url"],
@@ -241,7 +241,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -273,7 +273,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -312,7 +312,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -333,7 +333,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -368,7 +368,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 {
                     "betrokkene_type": "medewerker",
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -647,7 +647,7 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

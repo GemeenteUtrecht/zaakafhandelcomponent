@@ -808,9 +808,11 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
         betrokkene_identificatie = serializer_cls(
             label=_("Betrokkene identificatie"),
             help_text=_(
-                "The `betrokkene_identificatie` of the ROL."
-                "The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL."
-                "Mutually exclusive with `betrokkene`."
+                """The `betrokkene_identificatie` of the ROL. 
+                The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL. 
+                Mutually exclusive with `betrokkene`. 
+                
+                By default, all string fields are submitted with a blank string, i.e. ("")."""
             ),
         )
 
@@ -818,8 +820,22 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
     return type(name, (IdentificatieSerializer,), {})
 
 
+class SetDefaultToEmptyStringMixin:
+    def _set_field_to_default_empty_string(self, field):
+        if isinstance(field, serializers.Serializer):
+            for _field in field.fields:
+                _field = self._set_field_to_default_empty_string(_field)
+        if isinstance(field, serializers.CharField):
+            field.default = ""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self._set_field_to_default_empty_string(self, field)
+
+
 @betrokkene_identificatie_serializer
-class RolNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -829,7 +845,7 @@ class RolNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNietNatuurlijkPersoonSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -839,7 +855,7 @@ class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolVestigingSerializer(ProxySerializer):
+class RolVestigingSerializer(SetDefaultToEmptyStringMixin, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -849,7 +865,9 @@ class RolVestigingSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolOrganisatorischeEenheidSerializer(ProxySerializer):
+class RolOrganisatorischeEenheidSerializer(
+    SetDefaultToEmptyStringMixin, ProxySerializer
+):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -919,8 +937,7 @@ class RolSerializer(PolymorphicSerializer):
         allow_blank=True,
     )
     indicatie_machtiging = serializers.ChoiceField(
-        choices=["gemachtigde", "machtiginggever"],
-        allow_blank=True,
+        choices=["gemachtigde", "machtiginggever"], default="gemachtigde"
     )
     roltoelichting = serializers.SerializerMethodField(
         help_text=_(
