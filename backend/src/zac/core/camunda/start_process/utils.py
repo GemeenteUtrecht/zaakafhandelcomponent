@@ -101,6 +101,7 @@ def get_required_zaakeigenschappen(
 ) -> List[ProcessEigenschap]:
     # Get all zaakeigenschappen and check if any of them match the
     # required zaakeigenschappen. Drop those that are already created.
+    zaak_context.zaak.zaaktype = zaak_context.zaaktype
     zaakeigenschappen = [
         zei.eigenschap.naam for zei in get_zaak_eigenschappen(zaak_context.zaak)
     ]
@@ -108,10 +109,8 @@ def get_required_zaakeigenschappen(
     required_eigenschappen = camunda_start_process.processeigenschap_set.all()
     required_process_eigenschappen = []
     for ei in required_eigenschappen:
-        if ei.eigenschapnaam in zaakeigenschappen:
-            continue
-
-        ei.eigenschap = eigenschappen[ei.eigenschapnaam]
-        required_process_eigenschappen.append(ei)
+        if ei.eigenschapnaam not in zaakeigenschappen:
+            ei.eigenschap = eigenschappen[ei.eigenschapnaam]
+            required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen

@@ -604,10 +604,6 @@ def get_status(zaak: Zaak) -> Optional[Status]:
 
 
 def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
-    # the zaak object itself already contains a list of URL references
-    if not zaak.eigenschappen:
-        return []
-
     perf_logger.info("      Fetching eigenschappen for zaak %s", zaak.identificatie)
 
     zrc_client = _client_from_object(zaak)

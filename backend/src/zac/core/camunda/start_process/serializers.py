@@ -141,11 +141,8 @@ class ZaakProcessEigenschapSerializer(serializers.Serializer):
 
 class GetCurrentZaakInformation:
     def set_context(self, serializer_field):
-        zaakcontext = get_zaak_context(
-            serializer_field.context["task"],
-            require_zaaktype=False,
-            require_documents=True,
-        )
+        zaakcontext = serializer_field.parent.zaakcontext
+        zaakcontext.zaak.zaaktype = zaakcontext.zaaktype
         self.field_name = serializer_field.field_name
         self.mapping = {
             "bijlagen": partial(
@@ -168,7 +165,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     def zaakcontext(self):
         if not hasattr(self, "_zaakcontext"):
             self._zaakcontext = get_zaak_context(
-                self.context["task"], require_zaaktype=False, require_documents=True
+                self.context["task"], require_zaaktype=True, require_documents=True
             )
         return self._zaakcontext
 
