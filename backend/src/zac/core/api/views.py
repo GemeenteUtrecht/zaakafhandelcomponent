@@ -15,14 +15,7 @@ from django.views.decorators.csrf import csrf_protect
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import (
-    authentication,
-    exceptions,
-    generics,
-    permissions,
-    status,
-    views,
-)
+from rest_framework import authentication, exceptions, permissions, status, views
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
@@ -57,6 +50,7 @@ from ..services import (
     create_document,
     create_rol,
     create_zaak_eigenschap,
+    delete_rol,
     delete_zaak_eigenschap,
     delete_zaak_object,
     fetch_document_audit_trail,
@@ -117,6 +111,7 @@ from .serializers import (
     AddZaakRelationSerializer,
     CreateZaakEigenschapSerializer,
     CreateZaakSerializer,
+    DestroyRolSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
@@ -570,6 +565,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         mapping = {
             "GET": ReadRolSerializer,
             "POST": RolSerializer,
+            "DELETE": DestroyRolSerializer,
         }
         return mapping[self.request.method]
 
@@ -599,6 +595,16 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
         create_rol(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        summary=_("Destroy ROL from ZAAK."),
+    )
+    def delete(self, request, *args, **kwargs):
+        zaak = self.get_object()
+        serializer = self.get_serializer(data=request.data, context={"zaak": zaak})
+        serializer.is_valid(raise_exception=True)
+        delete_rol(serializer.validated_data["url"])
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
 class ZaakObjectsView(GetZaakMixin, views.APIView):

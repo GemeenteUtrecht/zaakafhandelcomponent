@@ -42,6 +42,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
 from zac.core.services import (
+    fetch_rol,
     fetch_zaaktype,
     get_document,
     get_documenten,
@@ -929,6 +930,29 @@ class RolSerializer(PolymorphicSerializer):
                 _("`betrokkene` and `betrokkene_identificatie` are mutually exclusive.")
             )
         return data
+
+
+class DestroyRolSerializer(APIModelSerializer):
+    url = serializers.URLField(
+        required=True, help_text=_("URL-reference to ROL itself.")
+    )
+
+    class Meta:
+        model = Rol
+        fields = ("url",)
+
+    def validate_url(self, url):
+        try:
+            zaak = self.context["zaak"]
+        except KeyError:
+            raise RuntimeError(
+                _("Serializer {name} needs ZAAK in context.").format(name=self.__name__)
+            )
+
+        rol = fetch_rol(url)
+        if not rol.zaak == zaak.url:
+            raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
+        return url
 
 
 class ZaakObjectGroupSerializer(APIModelSerializer):
