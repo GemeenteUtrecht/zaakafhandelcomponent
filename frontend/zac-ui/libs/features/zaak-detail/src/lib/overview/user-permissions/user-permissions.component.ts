@@ -21,6 +21,9 @@ import { ModalService, TableButtonClickEvent } from '@gu/components';
 export class UserPermissionsComponent implements OnInit {
     @Input() zaak: Zaak;
 
+    /** @type {string} Error message. */
+    errorDetailMessage = '';
+
     /** @type {boolean} Whether this component is loading. */
     isLoading = false;
 
@@ -91,10 +94,7 @@ export class UserPermissionsComponent implements OnInit {
 
                 this.isLoading = false;
             },
-            (error: any): void => {
-                console.error(error);
-                this.isLoading = false;
-            },
+            this.reportError.bind(this),
         );
     }
 
@@ -172,11 +172,25 @@ export class UserPermissionsComponent implements OnInit {
             (): void => {
                 this.getContextData();
             },
-            (error: any): void => {
-                console.error(error);
-                this.isLoading = false;
-                this.getContextData();
-            },
+            this.reportError.bind(this),
         );
     }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.isLoading = false;
+
+    if(error.error?.detail) {
+      this.errorDetailMessage = error.error?.detail;
+    } else {
+      console.error(error);
+    }
+  }
 }
