@@ -15,7 +15,6 @@ import {KetenProcessenService} from './keten-processen.service';
 import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService} from '@gu/services';
-import BpmnJS from 'bpmn-js';
 
 
 /**
@@ -344,35 +343,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       return;
     }
     this.debugTask = task;
-  }
-
-  /**
-   * Gets called when the tooltip is clicked.
-   */
-  openBpmnVisualisation() {
-    if (!this.data?.length) {
-      return;
-    }
-
-    // Clear previous instances.
-    const container = document.querySelector('.bpmn');
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
-    }
-
-    // Get/render visualisation.
-    const definitionId = this.data[0].definitionId;
-    this.ketenProcessenService.getBpmnXml(definitionId).subscribe(async (bpmnXml: BpmnXml) => {
-      const bpmnXML = bpmnXml.bpmn20Xml;
-
-      const viewer = new BpmnJS({container: container});
-      await viewer.importXML(bpmnXML);
-
-      this.modalService.open('bpmnModal');
-      setTimeout(() => {
-        viewer.get('canvas').zoom('fit-viewport');
-      })
-    }, this.reportError.bind(this))
   }
 
   /**
