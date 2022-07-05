@@ -92,8 +92,10 @@ export class CreateCaseComponent implements OnInit {
     const createCaseData: CreateCase = {
       zaaktypeOmschrijving: formData.zaaktype.omschrijving,
       zaaktypeCatalogus: formData.zaaktype.catalogus.url,
-      omschrijving: formData.omschrijving,
-      toelichting: formData.toelichting
+      zaakDetails: {
+        omschrijving: formData.omschrijving,
+        toelichting: formData.toelichting
+      }
     }
 
     this.zaakService.createCase(createCaseData)
