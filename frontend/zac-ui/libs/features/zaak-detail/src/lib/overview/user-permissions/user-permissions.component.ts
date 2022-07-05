@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from '@angular/core';
 import {ZaakPermission, UserPermission, Table, Zaak} from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {PermissionsService} from './permissions.service';
-import {ModalService} from '@gu/components';
+import {ModalService, SnackbarService} from '@gu/components';
 
 /**
  * <gu-user-permissions [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-user-permissions>
@@ -20,6 +20,9 @@ import {ModalService} from '@gu/components';
 })
 export class UserPermissionsComponent implements OnInit {
   @Input() zaak: Zaak;
+
+  /** @type {string} Error message. */
+  readonly errorMessage = 'Er is een fout opgetreden bij het laden van gebruikersrechten.'
 
   /** @type {string} Error message. */
   errorDetailMessage = '';
@@ -45,6 +48,7 @@ export class UserPermissionsComponent implements OnInit {
   constructor(
     private permissionsService: PermissionsService,
     private modalService: ModalService,
+    private snackbarService: SnackbarService,
     private zaakService: ZaakService,
   ) {
   }
@@ -181,11 +185,14 @@ export class UserPermissionsComponent implements OnInit {
   deletePermission(): void {
     const permission = this.selectedPermission;
     this.permissionsService.deletePermission(permission).subscribe(
-      (): void => {
+      () => {
         this.getContextData();
         this.closeDeletePermission();
-      },
-      this.reportError.bind(this),
+      }, (error) => {
+        this.reportError(error);
+        this.getContextData();
+        this.closeDeletePermission();
+      }
     );
   }
 
@@ -208,6 +215,7 @@ export class UserPermissionsComponent implements OnInit {
       this.errorDetailMessage = error.error?.detail;
     } else {
       console.error(error);
+      this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     }
   }
 }

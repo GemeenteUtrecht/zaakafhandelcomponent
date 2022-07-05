@@ -64,3 +64,9 @@ body .ng-dropdown-panel.ng-select-bottom {
   border-width: 2px;
   border-top: 1px solid $color-secondary;
 }
+
+.multiselect__checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}

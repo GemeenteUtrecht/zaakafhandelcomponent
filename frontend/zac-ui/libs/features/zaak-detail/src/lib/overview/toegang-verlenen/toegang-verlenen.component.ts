@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angu
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserSearchResult, Zaak, Permission } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
-import { SnackbarService } from '@gu/components';
+import {ModalService, SnackbarService} from '@gu/components';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -20,7 +20,6 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   selectedPermissions: string[];
 
   grantAccessForm: FormGroup;
-  isLoading: boolean;
   isSubmitting: boolean;
   submitHasError: boolean;
   submitErrorMessage: string;
@@ -33,6 +32,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private http: ApplicationHttpClient,
     private accountsService: AccountsService,
+    private modalService: ModalService,
     private snackbarService: SnackbarService,
     private datePipe: DatePipe,
   ) { }
@@ -134,6 +134,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
           : error?.error[0] ? error.error[0].nonFieldErrors[0]
           : 'Er is een fout opgetreden';
       this.reportError(error);
+      this.modalService.close('add-person-modal');
     })
   }
 
