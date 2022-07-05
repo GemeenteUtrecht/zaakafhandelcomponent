@@ -1,5 +1,5 @@
-import { AfterContentInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl } from '@angular/forms';
+import {AfterContentInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {FormBuilder, FormControl} from '@angular/forms';
 
 /**
  * <gu-multiselect [control]="formControl" [items]="items" label="Multiselect"></gu-multiselect>
@@ -42,37 +42,75 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
   @Input() label: string;
   @Input() appendTo: string;
   @Input() clearable = true;
+  @Input() widgetType: 'checkboxGroup' | 'select' = 'select';
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
   selectedItems: any;
 
-  constructor(private fb: FormBuilder) {}
+  /**
+   * Constructor method.
+   * @param {FormBuilder} fb
+   */
+  constructor(private fb: FormBuilder) {
+  }
+
+
+  //
+  // Getters / setters.
+  //
 
   /**
-   * Angular lifecycle hook.
+   * Returns whether all items are checked (for widgetType === 'checkboxGroup').
+   * @return {boolean}
    */
-  ngOnInit() {
+  getAllChecked(): boolean {
+    return this.items.every((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
+  }
+
+  /**
+   * Returns whether an item should be checked (for widgetType === 'checkboxGroup').
+   * @param {Object} item
+   * @return {boolean}
+   */
+  getIsChecked(item: any): boolean {
+    return this.selectedItems.indexOf(item[this.bindValue]) > -1;
+  }
+
+  //
+  // Angular lifecycle.
+  //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit(): void {
     if (!this.control) {
       this.control = this.fb.control('')
     }
   }
 
   /**
-   * Angular lifecycle hook.
+   * A lifecycle hook that is called after Angular has fully initialized all content of a directive. Define an
+   * ngAfterContentInit() method to handle any additional initialization tasks.
    */
-  ngAfterContentInit() {
+  ngAfterContentInit(): void {
     if (this.selectedValue) {
       this.selectedItems = this.selectedValue
     }
   }
 
+  //
+  // Events.
+  //
+
   /**
    * Emits value if the user uses the search field.
    * @param value
    */
-  onSearch(value){
+  onSearch(value: any): void {
     this.search.emit(value.term);
   }
 
@@ -80,7 +118,33 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
    * Emits the value after an option selection.
    * @param value
    */
-  onChange(value){
+  onChange(value: any): void {
     this.change.emit(value);
+  }
+
+  /**
+   * Gets called when the checkbox group selection changed.
+   * @param {Event} event
+   */
+  onCheckboxGroupChange(event: Event) {
+    const groupElement = event.currentTarget as HTMLElement;
+    const selectedCheckboxes = groupElement.querySelectorAll('input:checked');
+    this.selectedItems = Array.from(selectedCheckboxes).map((checkbox: HTMLInputElement) => checkbox.value);
+    const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
+    event.stopPropagation();
+    this.onChange(value);
+  }
+
+  /**
+   * Gets called when check all toggle is clicked.
+   */
+  toggleCheckAll() {
+    if(this.getAllChecked()) {
+      this.selectedItems = []
+    } else {
+      this.selectedItems = this.items.map((item) => item[this.bindValue]);
+    }
+    const value = this.items;
+    this.onChange(value);
   }
 }

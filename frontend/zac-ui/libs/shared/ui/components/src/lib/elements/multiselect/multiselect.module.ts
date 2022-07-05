@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiselectComponent } from './multiselect.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { NgSelectModule } from '@ng-select/ng-select';
+import {SharedUtilsModule} from '@gu/utils';
 
 @NgModule({
   declarations: [MultiselectComponent],
@@ -12,7 +13,8 @@ import { NgSelectModule } from '@ng-select/ng-select';
     FormsModule,
     ReactiveFormsModule,
     NgMultiSelectDropDownModule.forRoot(),
-    NgSelectModule
+    NgSelectModule,
+    SharedUtilsModule,
   ],
   exports: [
     MultiselectComponent

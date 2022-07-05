@@ -1,20 +1,38 @@
-<label class="has-float-label">
-  <ng-select [items]="items"
-             (search)="onSearch($event)"
-             (change)="onChange($event)"
-             [multiple]="multiple"
-             [bindLabel]="bindLabel"
-             [bindValue]="bindValue"
-             [placeholder]="placeholder"
-             notFoundText="Niets gevonden"
-             loadingText="Zoeken"
-             [(ngModel)]="selectedItems"
-             [formControl]="control"
-             [required]="required"
-             [searchable]="searchable"
-             [appendTo]="appendTo || 'body'"
-             [clearable]="clearable"
-  >
-  </ng-select>
-  <span>{{label}}</span>
-</label>
+<ng-container *ngIf="widgetType==='select'">
+  <label class="has-float-label">
+    <ng-select
+      [items]="items"
+      (search)="onSearch($event)"
+      (change)="onChange($event)"
+      [multiple]="multiple"
+      [bindLabel]="bindLabel"
+      [bindValue]="bindValue"
+      [placeholder]="placeholder"
+      notFoundText="Niets gevonden"
+      loadingText="Zoeken"
+      [(ngModel)]="selectedItems"
+      [formControl]="control"
+      [required]="required"
+      [searchable]="searchable"
+      [appendTo]="appendTo || 'body'"
+      [clearable]="clearable"
+    >
+    </ng-select>
+    <span>{{label}}</span>
+  </label>
+</ng-container>
+
+<ng-container *ngIf="widgetType==='checkboxGroup'">
+  <span *ngIf="label">{{label}}</span>
+  <div class="multiselect__checkbox-group" (change)="onCheckboxGroupChange($event)">
+    <label class="multiselect__checkbox-item">
+      <input [checked]="getAllChecked()" type="checkbox" (click)="toggleCheckAll()"/>
+      <span>Selecteer alles</span>
+    </label>
+    <hr>
+    <label class="multiselect__checkbox-item" *ngFor="let item of items">
+      <input [checked]="getIsChecked(item)" name="permissions" type="checkbox" value="{{item[bindValue]}}"/>
+      <span title="{{item.description}}">{{item[bindLabel]}}</span>
+    </label>
+  </div>
+</ng-container>
