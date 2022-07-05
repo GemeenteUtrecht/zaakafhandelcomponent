@@ -1,12 +1,14 @@
 <div class="create-case" *ngIf="form">
-  <gu-loading-indicator *ngIf="isSubmitting"></gu-loading-indicator>
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <gu-loading-indicator *ngIf="isSubmitting" loadingText="Je wordt automatisch doorverwezen naar de aangemaakte zaak."></gu-loading-indicator>
+  <p class="p--bold">Zaakgegevens</p>
   <div class="row">
     <gu-form [form]="form"
              [buttonSize]="'small'"
              buttonLabel='Versturen'
              (formSubmit)="submitForm($event)"
-             [resetAfterSubmit]="true"
-             [isLoading]="isSubmitting"
+             [resetAfterSubmit]="false"
+             [isLoading]="isLoading"
              class="col-md-8 col-lg-6"
     >
     </gu-form>

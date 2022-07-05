@@ -16,6 +16,7 @@ export class CreateCaseComponent implements OnInit {
   caseTypeChoices: Choice[];
   form: FieldConfiguration[] = null;
 
+  isLoading: boolean;
   isSubmitting: boolean;
   errorMessage: string;
 
@@ -40,8 +41,10 @@ export class CreateCaseComponent implements OnInit {
    * Get context
    */
   getContextData(): void {
+    this.isLoading = true;
     this.metaService.getCaseTypes().subscribe(
       (data) => {
+        this.isLoading = false;
         this.caseTypes = data.results;
         this.caseTypeChoices = this.caseTypes.map( type => {
           return {
@@ -143,6 +146,8 @@ export class CreateCaseComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
+    this.isLoading = false;
+    this.isSubmitting = false;
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }

@@ -7,7 +7,7 @@
         [control]="roleControl(i)"
         type="text"
         [label]="getRolesContext(i).label"
-        [required]="true"
+        [required]="false"
         autocomplete="off"
         class="col-8"
       ></gu-input>
@@ -19,7 +19,7 @@
         [items]="getRolesContext(i).choices"
         [label]="getRolesContext(i).label"
         [multiple]="false"
-        [required]="true"
+        [required]="false"
         bindLabel="label"
         bindValue="value"
         appendTo="body"

@@ -1,37 +1,83 @@
 <div class="start-process" *ngIf="taskContextData">
   <h2>{{taskContextData.task.name}}</h2>
+  <p>
+    Het proces heeft de onderstaande gegevens nodig om opgestart te kunnen worden.
+    <br>
+    Vul de velden in en druk op de knop <strong>"Opslaan"</strong> om de gegevens op te slaan.
+  </p>
+  <p>
+    Alleen als alle vereiste gegevens zijn opgeslagen, kan het configuratieproces afgerond worden.
+  </p>
   <div class="start-process__steps mb-4">
     <mat-stepper orientation="vertical" [linear]="false" #stepper>
       <!-- Step 1: Case roles -->
-      <mat-step>
-        <ng-template matStepLabel>Betrokkenen</ng-template>
-        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-role-step>
+      <ng-template matStepperIcon="group">
+        <mat-icon>group</mat-icon>
+      </ng-template>
+
+      <mat-step state="group"
+
+                [completed]="rolesFields?.submitted === rolesFields?.total"
+      >
+        <ng-template matStepLabel>Betrokkenen: {{rolesCount}}</ng-template>
+        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="rolesFields = $event"></gu-role-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
       </mat-step>
 
       <!-- Step 2: Case properties -->
-      <mat-step>
-        <ng-template matStepLabel>Eigenschappen</ng-template>
-        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-properties-step>
+      <ng-template matStepperIcon="list">
+        <mat-icon>list</mat-icon>
+      </ng-template>
+
+      <mat-step state="list" [completed]="propertiesFields?.submitted === propertiesFields?.total">
+        <ng-template matStepLabel>Eigenschappen: {{propertiesCount}}</ng-template>
+        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event"></gu-properties-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
       </mat-step>
 
       <!-- Step 3: Documents -->
-      <mat-step>
-        <ng-template matStepLabel>Documenten</ng-template>
-        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData"></gu-documents-step>
+      <ng-template matStepperIcon="upload_file">
+        <mat-icon>upload_file</mat-icon>
+      </ng-template>
+
+      <mat-step state="upload_file" [completed]="documentsFields?.submitted === documentsFields?.total">
+        <ng-template matStepLabel>Documenten: {{documentsCount}}</ng-template>
+        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event"></gu-documents-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
+      </mat-step>
+
+      <!-- Step 4: Finish user task -->
+      <ng-template matStepperIcon="arrow_forward">
+        <mat-icon>arrow_forward</mat-icon>
+      </ng-template>
+
+      <mat-step state="arrow_forward" [completed]="false" [editable]='false'>
+        <ng-template matStepLabel>Configuratieproces afronden</ng-template>
+        <p class="mt-4">Let op! Het configuratieproces kan alleen afgerond worden indien alle vereiste velden zijn opgeslagen.</p>
+        <button gu-button
+                buttonStyle="primary"
+                size="small"
+                [disabled]="isSubmitting"
+                [loading]="isSubmitting"
+                (click)="submitTask()">
+          Versturen
+        </button>
       </mat-step>
     </mat-stepper>
   </div>
-
-  <p>Het proces kan gestart worden indien alle vereiste velden hierboven zijn ingevuld.</p>
-
-  <!-- Only show this button if the form is not yet submitted -->
-  <button gu-button
-          class=""
-          buttonStyle="primary"
-          size="large"
-          [disabled]="isSubmitting"
-          [loading]="isSubmitting"
-          (click)="submitTask()">
-    Volgende
-  </button>
 </div>

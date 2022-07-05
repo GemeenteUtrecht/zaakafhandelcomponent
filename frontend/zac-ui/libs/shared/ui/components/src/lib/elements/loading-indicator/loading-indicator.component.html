@@ -1,3 +1,6 @@
 <div class="loading-wrapper backdrop" [ngClass]="(hasContainer ? 'min-height' : '')">
-  <i class="loading__spinner" [ngClass]="(overlayGrey ? 'backdrop--backdrop-grey' : '')"></i>
+  <div class="loading-wrapper__content">
+    <i class="loading__spinner" [ngClass]="(overlayGrey ? 'backdrop--backdrop-grey' : '')"></i>
+    <p *ngIf="loadingText">{{loadingText}}</p>
+  </div>
 </div>

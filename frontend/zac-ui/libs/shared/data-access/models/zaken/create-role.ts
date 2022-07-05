@@ -7,7 +7,7 @@ export interface BetrokkeneIdentificatie {
 export interface Betrokkene {
   betrokkene?: string;
   betrokkeneType: string;
-  indicatieMachtiging: string;
+  indicatieMachtiging?: string;
   roltype: string;
   zaak: string;
   betrokkeneIdentificatie: any;

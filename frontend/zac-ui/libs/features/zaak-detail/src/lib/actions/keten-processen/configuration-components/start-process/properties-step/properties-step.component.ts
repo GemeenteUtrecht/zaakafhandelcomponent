@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { NieuweEigenschap, Zaak } from '@gu/models';
 import { BenodigdeZaakeigenschap, TaskContextData } from '../../../../../../models/task-context';
 import { FormArray, FormBuilder, FormControl } from '@angular/forms';
@@ -13,6 +13,8 @@ import { SnackbarService } from '@gu/components';
 export class PropertiesStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
+
+  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
 
   startProcessPropertyForm: any;
   errorMessage: string;
@@ -50,6 +52,10 @@ export class PropertiesStepComponent implements OnChanges {
       })
       this.submittedProperties = [];
       this.submittingProperties = [];
+      this.submittedFields.emit({
+        submitted: 0,
+        total: this.propertiesControl.controls.length
+      })
     }
   }
 
@@ -91,6 +97,12 @@ export class PropertiesStepComponent implements OnChanges {
       .subscribe(() => {
         this.submittingProperties = this.submittingProperties.filter(index => index !== i);
         this.submittedProperties.push(i);
+
+        // Emit the total submitted properties to parent
+        this.submittedFields.emit({
+          submitted: this.submittedProperties.length,
+          total: this.propertiesControl.controls.length
+        })
       }, error => {
         this.submittingProperties = this.submittingProperties.filter(index => index !== i);
         this.propertyControl(i).enable();

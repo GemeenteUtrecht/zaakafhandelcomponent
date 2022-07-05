@@ -60,6 +60,8 @@ export interface Zaak {
   status: Status;
   zaakgeometrie: Geometry;
   kanGeforceerdBijwerken: boolean;
+  isStatic: boolean;
+  hasProcess: boolean;
 }
 
 export interface WorkstackCase {

@@ -200,6 +200,10 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
     this.canRequestAccess = false
     this.isLoading = true;
 
+    this.fetchCaseDetails();
+  }
+
+  fetchCaseDetails() {
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
       .subscribe( res => {
         this.zaakData = res;
@@ -285,6 +289,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
    * @param event
    */
   ketenProcessenUpdate(event) {
+    this.fetchCaseDetails();
     this.adviserenAccorderenComponent.update();
     this.statusComponent.update();
   }

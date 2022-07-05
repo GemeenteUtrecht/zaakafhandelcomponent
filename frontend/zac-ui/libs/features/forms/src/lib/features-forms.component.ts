@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {RowData, Table} from '@gu/models';
 import {FeaturesFormsService} from "./features-forms.service";
 import {Form} from "./features-forms.model";
-import { ZaakService } from '@gu/services';
 
 @Component({
   providers: [FeaturesFormsService],
@@ -23,7 +22,6 @@ export class FeaturesFormsComponent implements OnInit {
    */
   constructor(
     private featuresFormsService: FeaturesFormsService,
-    private zaakService: ZaakService,
   ) { }
 
   //
@@ -50,7 +48,6 @@ export class FeaturesFormsComponent implements OnInit {
       (data) => {
         this.forms = data;
         this.tableData = this.getTableData();
-
       },
       (error) => console.error(error),
     );

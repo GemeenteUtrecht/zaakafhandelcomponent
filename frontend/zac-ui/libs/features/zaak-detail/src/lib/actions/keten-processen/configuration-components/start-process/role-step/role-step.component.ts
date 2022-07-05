@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Betrokkene, UserSearchResult, Zaak } from '@gu/models';
 import { BenodigdeRol, TaskContextData } from '../../../../../../models/task-context';
 import { FormArray, FormBuilder, FormControl } from '@angular/forms';
@@ -13,6 +13,8 @@ import { SnackbarService } from '@gu/components';
 export class RoleStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
+
+  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
 
   users: UserSearchResult[];
 
@@ -52,6 +54,10 @@ export class RoleStepComponent implements OnChanges {
       })
       this.submittedRoles = [];
       this.submittingRoles = [];
+      this.submittedFields.emit({
+        submitted: 0,
+        total: this.rolesControl.controls.length
+      })
     }
   }
 
@@ -89,7 +95,6 @@ export class RoleStepComponent implements OnChanges {
     switch (selectedRole.betrokkeneType) {
       case "organisatorische_eenheid":
         betrokkeneIdentificatie = {
-          identificatie: this.roleControl(i).value,
           naam: this.roleControl(i).value
         }
         break;
@@ -97,11 +102,26 @@ export class RoleStepComponent implements OnChanges {
         betrokkeneIdentificatie = {
           identificatie: this.roleControl(i).value
         }
+        break;
+      case "natuurlijk_persoon":
+        betrokkeneIdentificatie = {
+          geslachtsnaam: this.roleControl(i).value
+        }
+        break;
+      case "niet_natuurlijk_persoon":
+        betrokkeneIdentificatie = {
+          statutaireNaam: this.roleControl(i).value
+        }
+        break;
+      case "vestiging":
+        betrokkeneIdentificatie = {
+          handelsnaam: this.roleControl(i).value
+        }
+        break;
     }
 
     const newCaseRole: Betrokkene = {
       betrokkeneType: selectedRole.betrokkeneType,
-      indicatieMachtiging: "",
       roltype: selectedRole.roltype.url,
       zaak: this.zaak.url,
       betrokkeneIdentificatie: betrokkeneIdentificatie
@@ -109,8 +129,14 @@ export class RoleStepComponent implements OnChanges {
 
     this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, newCaseRole)
       .subscribe(() => {
-          this.submittingRoles = this.submittingRoles.filter(index => index !== i);
-          this.submittedRoles.push(i);
+        this.submittingRoles = this.submittingRoles.filter(index => index !== i);
+        this.submittedRoles.push(i);
+
+        // Emit the total submitted roles to parent
+        this.submittedFields.emit({
+          submitted: this.submittedRoles.length,
+          total: this.rolesControl.controls.length
+        })
         }, error => {
           this.submittingRoles = this.submittingRoles.filter(index => index !== i);
           this.roleControl(i).enable();

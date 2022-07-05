@@ -15,10 +15,9 @@
     <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
 
       <!-- Action buttons -->
-      <div class="processen__msg-btns-container">
+      <div class="processen__msg-btns-container" *ngIf="this.data[0]?.tasks[0]?.name !== 'Start Process Form'">
         <ng-container *ngFor="let message of data[0].messages; let i = index">
           <button gu-button
-                  [hidden]="!isExpanded && i >= 3"
                   (click)="sendMessage(message)"
                   buttonStyle="action-link"
                   class="mr-2 mb-3">
@@ -27,16 +26,6 @@
         </ng-container>
       </div>
 
-      <!-- Show more buttons -->
-      <button gu-button
-              *ngIf="!!data && data[0]?.messages?.length > 3"
-              buttonStyle="tertiary"
-              size="extrasmall"
-              class="d-block mb-4"
-              [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
-              (click)="isExpanded = !isExpanded">
-        {{isExpanded ? 'Minder acties' : 'Meer acties'}}
-      </button>
 
       <!-- Task lists -->
       <div class="processen__taken">
@@ -44,7 +33,7 @@
 
           <!-- Tasks for current user -->
           <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
-            <h3 *ngIf="allTaskData?.length > 0">Zelf doen</h3>
+            <h4 *ngIf="allTaskData?.length > 0">Zelf doen</h4>
             <ng-container *ngFor="let task of allTaskData">
               <div class="taak d-flex justify-content-between"
                    *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
@@ -91,7 +80,7 @@
 
           <!-- Task for others -->
           <div class="col-md-6">
-            <h3 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h3>
+            <h4 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h4>
             <ng-container *ngFor="let task of allTaskData">
               <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
                 <!-- Description -->
@@ -162,7 +151,7 @@
   <!-- Process has not started -->
   <div *ngIf="showOverlay && allTaskData" class="processen__disabled-overlay">
     <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()">
-      Process opstarten
+      Proces opstarten
     </button>
   </div>
 </div>
@@ -203,7 +192,7 @@
 
           <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="closeModal()"></gu-redirect>
 
-          <gu-start-process *ngSwitchCase="'zac:startProcessForm'" [zaak]="zaak" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-start-process>
+          <gu-start-process *ngSwitchCase="'zac:startProcessForm'" [zaak]="zaak" [taskContextData]="taskContextData" (successReload)="closeModal(); isLoading = true;"></gu-start-process>
 
           <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-dynamic-form>
         </div>

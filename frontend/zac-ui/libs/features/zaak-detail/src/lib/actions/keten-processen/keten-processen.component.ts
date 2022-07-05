@@ -167,6 +167,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
         // Reset fail counter
         this.nPollingFails = 0;
+
+        this.isLoading = false;
       }, () => {
         // Add to fail counter
         this.nPollingFails += 1;
@@ -222,8 +224,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         // Check if process has started
         if (this.allTaskData?.length === 0 && data[0].messages.length === 0) {
           this.isPolling = false;
-          this.isStatic = false;
-          this.hasProcess = false;
+          this.isStatic = this.zaak.isStatic;
+          this.hasProcess = this.zaak.hasProcess;
         } else {
           this.isStatic = false;
           this.hasProcess = true;
@@ -348,7 +350,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   initiateCamundaProcess() {
     this.isLoading = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
-      this.isLoading = false;
+      this.hasProcess = true;
     }, err => {
       this.isLoading = false;
       this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."

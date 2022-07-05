@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Zaak } from '@gu/models';
 import { BenodigdeBijlage, TaskContextData } from '../../../../../../models/task-context';
 import { FormArray, FormBuilder, FormControl } from '@angular/forms';
@@ -11,9 +11,10 @@ import { SnackbarService } from '@gu/components';
   styleUrls: ['../start-process.component.scss']
 })
 export class DocumentsStepComponent implements OnChanges {
-
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
+
+  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
 
   startProcessDocumentForm: any;
   errorMessage: string;
@@ -51,6 +52,10 @@ export class DocumentsStepComponent implements OnChanges {
       })
       this.submittedDocuments = [];
       this.submittingDocuments = [];
+      this.submittedFields.emit({
+        submitted: 0,
+        total: this.documentsControl.controls.length
+      })
     }
   }
 
@@ -96,6 +101,12 @@ export class DocumentsStepComponent implements OnChanges {
       .subscribe(() => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.submittedDocuments.push(i);
+
+        // Emit the total submitted documents to parent
+        this.submittedFields.emit({
+          submitted: this.submittedDocuments.length,
+          total: this.documentsControl.controls.length
+        })
       }, error => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.documentControl(i).enable();
