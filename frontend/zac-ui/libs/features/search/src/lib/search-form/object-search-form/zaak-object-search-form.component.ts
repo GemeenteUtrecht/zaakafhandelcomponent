@@ -265,6 +265,12 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
         let activeMapMarkers = []
 
+        if(!zaakObjects.length) {
+          this.isLoading = false;
+          this.isLoadingResult.emit(false);
+          return;
+        }
+
         // Fetch zaak objects.
         this.zaakObjects.forEach((zaakObject: ZaakObject) => {
           const mapMarkerOptions = {
