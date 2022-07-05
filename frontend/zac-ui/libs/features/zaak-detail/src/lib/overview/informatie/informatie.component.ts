@@ -48,12 +48,14 @@ export class InformatieComponent implements OnInit, OnChanges {
   isVisibleTezzaLink = false;
 
   readonly zaaktypenWithTezzaLink = [
-    "Aanvraag HARVO behandelen",
+    "Huurafhankelijk opstalrecht (HARVO) behandelen",
     "Huisvestingsbehoefte behandelen",
     "Eigendomsdossier",
     "Routingsproces",
     "Vastgoedobject beheren",
     "Vastgoedproject uitvoeren",
+    "Project uitvoeren",
+    "Programma uitvoeren",
     "VGU Vastgoedproject uitvoeren",
   ]
 
