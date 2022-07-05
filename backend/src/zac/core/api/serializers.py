@@ -338,6 +338,15 @@ class AddZaakRelationSerializer(serializers.Serializer):
         return data
 
 
+class CreateZaakDetailsSerializer(serializers.Serializer):
+    omschrijving = serializers.CharField(
+        required=True, help_text=_("A short summary of the ZAAK.")
+    )
+    toelichting = serializers.CharField(
+        help_text=_("A comment on the ZAAK."), default="", allow_blank=True
+    )
+
+
 class CreateZaakSerializer(serializers.Serializer):
     organisatie_rsin = serializers.CharField(
         help_text=_(
@@ -362,15 +371,7 @@ class CreateZaakSerializer(serializers.Serializer):
         help_text=_("URL-reference to the CATALOGUS of ZAAKTYPE."),
     )
     zaaktype = serializers.HiddenField(default="")
-    omschrijving = serializers.CharField(
-        required=True, help_text=_("A short summary of the ZAAK.")
-    )
-    toelichting = serializers.CharField(
-        help_text=_("A comment on the ZAAK."), default="", allow_blank=True
-    )
-    startdatum = serializers.DateField(
-        default=date.today(), help_text=_("The date the ZAAK begins.")
-    )
+    zaak_details = CreateZaakDetailsSerializer()
 
     def validate(self, data):
         validated_data = super().validate(data)

@@ -59,8 +59,10 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         cls.data = {
             "zaaktype_omschrijving": cls.zaaktype.omschrijving,
             "zaaktype_catalogus": cls.zaaktype.catalogus,
-            "omschrijving": "some-omschrijving",
-            "toelichting": "some-toelichting",
+            "zaak_details": {
+                "omschrijving": "some-omschrijving",
+                "toelichting": "some-toelichting",
+            },
         }
         cls.user = UserFactory.create()
 
@@ -144,8 +146,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         cls.data = {
             "zaaktype_omschrijving": cls.zaaktype["omschrijving"],
             "zaaktype_catalogus": cls.zaaktype["catalogus"],
-            "omschrijving": "some-omschrijving",
-            "toelichting": "some-toelichting",
+            "zaak_details": {
+                "omschrijving": "some-omschrijving",
+                "toelichting": "some-toelichting",
+            },
         }
 
     def setUp(self):
