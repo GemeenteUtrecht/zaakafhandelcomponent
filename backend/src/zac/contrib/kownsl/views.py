@@ -66,6 +66,7 @@ def _get_review_request_for_notification(data: dict) -> dict:
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
     def handle_notification(self, data: dict):
         # just to make sure, shouldn't happen with our URL routing
+        logger.error("Kownsl notification: %r" % data)
         if not data["kanaal"] == "kownsl":
             return
 

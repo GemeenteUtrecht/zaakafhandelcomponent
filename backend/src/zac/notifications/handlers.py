@@ -1,3 +1,5 @@
+import logging
+
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Status
@@ -32,9 +34,12 @@ from zac.elasticsearch.api import (
 )
 from zgw.models.zrc import Zaak
 
+logger = logging.getLogger(__name__)
+
 
 class ZakenHandler:
     def handle(self, data: dict) -> None:
+        logger.error("ZAC notification: %r" % data)
         if data["resource"] == "zaak":
             if data["actie"] == "create":
                 self._handle_zaak_creation(data["hoofd_object"])
