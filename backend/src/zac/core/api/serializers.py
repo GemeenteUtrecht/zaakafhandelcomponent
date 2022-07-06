@@ -1,5 +1,6 @@
 import pathlib
-from datetime import date, datetime
+from concurrent.futures import as_completed
+from datetime import datetime
 from decimal import ROUND_05UP
 from typing import Optional
 
@@ -8,6 +9,7 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
+from django_camunda.api import get_process_instance_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
@@ -31,6 +33,7 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
@@ -371,7 +374,9 @@ class CreateZaakSerializer(serializers.Serializer):
         help_text=_("URL-reference to the CATALOGUS of ZAAKTYPE."),
     )
     zaaktype = serializers.HiddenField(default="")
-    zaak_details = CreateZaakDetailsSerializer()
+    zaak_details = CreateZaakDetailsSerializer(
+        help_text=_("Relevant details pertaining to the ZAAK.")
+    )
 
     def validate(self, data):
         validated_data = super().validate(data)
@@ -455,6 +460,11 @@ class ZaakDetailSerializer(APIModelSerializer):
     is_static = serializers.SerializerMethodField(
         help_text=_("A boolean flag whether the ZAAK is stationary or not.")
     )
+    is_configured = serializers.SerializerMethodField(
+        help_text=_(
+            "A boolean flag whether the ZAAK has already been configured or not."
+        )
+    )
 
     class Meta:
         model = Zaak
@@ -478,6 +488,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             "kan_geforceerd_bijwerken",
             "has_process",
             "is_static",
+            "is_configured",
         )
 
     def get_kan_geforceerd_bijwerken(self, obj) -> bool:
@@ -503,6 +514,24 @@ class ZaakDetailSerializer(APIModelSerializer):
             zaaktype_identificatie=zaaktype_identificatie,
         )
         return not objs.exists()
+
+    def get_is_configured(self, obj) -> bool:
+        process_instances = get_top_level_process_instances(obj.url)
+        is_configured = False
+        with parallel() as executor:
+            futures = [
+                executor.submit(get_process_instance_variable, pid.id, "isConfigured")
+                for pid in process_instances
+            ]
+            for future in as_completed(futures):
+                # catch 404 errors - the variable is not found but we only care about
+                # the variable that is found.
+                try:
+                    is_configured = future.result()
+                    executor.executor.shutdown(wait=False, cancel_futures=True)
+                except HTTPError:
+                    continue
+        return is_configured
 
 
 class UpdateZaakDetailSerializer(APIModelSerializer):

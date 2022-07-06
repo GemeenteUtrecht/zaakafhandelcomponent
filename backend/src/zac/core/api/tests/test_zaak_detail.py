@@ -7,6 +7,7 @@ from django.urls import reverse
 
 import requests_mock
 from freezegun import freeze_time
+from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -177,6 +178,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "kanGeforceerdBijwerken": True,
             "hasProcess": False,
             "isStatic": False,
+            "isConfigured": False,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -218,6 +220,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "kanGeforceerdBijwerken": True,
             "hasProcess": False,
             "isStatic": False,
+            "isConfigured": False,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -452,12 +455,17 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         process_definition = mock.MagicMock()
         type(process_definition).key = mock.PropertyMock(return_value="some-model-key")
         process_instance.process_definition = process_definition
+
         with patch(
             "zac.core.api.serializers.get_top_level_process_instances",
             return_value=[process_instance],
         ):
-            response = self.client.get(self.detail_url)
-        self.maxDiff = None
+            with patch(
+                "zac.core.api.serializers.get_process_instance_variable",
+                return_value=True,
+            ):
+                response = self.client.get(self.detail_url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_response = {
             "url": f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
@@ -484,6 +492,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "kanGeforceerdBijwerken": True,
             "hasProcess": True,
             "isStatic": False,
+            "isConfigured": True,
         }
         self.assertEqual(response.json(), expected_response)
 
@@ -500,7 +509,6 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
         response = self.client.get(self.detail_url)
-        self.maxDiff = None
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_response = {
@@ -528,6 +536,107 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "kanGeforceerdBijwerken": True,
             "hasProcess": False,
             "isStatic": True,
+            "isConfigured": False,
+        }
+        self.assertEqual(response.json(), expected_response)
+
+    @freeze_time("2020-12-26T12:00:00Z")
+    def test_is_configured_raise_httperror(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+        process_instance = mock.MagicMock()
+
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            with patch(
+                "zac.core.api.serializers.get_process_instance_variable",
+                side_effect=HTTPError("", 404, "some-message", {}, None),
+            ):
+                response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_response = {
+            "url": f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            "identificatie": "ZAAK-2020-0010",
+            "bronorganisatie": "123456782",
+            "zaaktype": {
+                "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "omschrijving": self.zaaktype["omschrijving"],
+                "versiedatum": self.zaaktype["versiedatum"],
+            },
+            "omschrijving": self.zaak["omschrijving"],
+            "toelichting": self.zaak["toelichting"],
+            "registratiedatum": self.zaak["registratiedatum"],
+            "startdatum": "2020-12-25",
+            "einddatum": None,
+            "einddatumGepland": None,
+            "uiterlijkeEinddatumAfdoening": "2021-01-04",
+            "vertrouwelijkheidaanduiding": "openbaar",
+            "zaakgeometrie": {"type": "Point", "coordinates": [4.4683077, 51.9236739]},
+            "deadline": "2021-01-04",
+            "deadlineProgress": 10.00,
+            "resultaat": self.resultaat,
+            "kanGeforceerdBijwerken": True,
+            "hasProcess": True,
+            "isStatic": False,
+            "isConfigured": False,
+        }
+        self.assertEqual(response.json(), expected_response)
+
+    @freeze_time("2020-12-26T12:00:00Z")
+    def test_is_configured(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
+            json=paginated_response([self.zaak]),
+        )
+        process_instance = mock.MagicMock()
+
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            with patch(
+                "zac.core.api.serializers.get_process_instance_variable",
+                return_value=True,
+            ):
+                response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_response = {
+            "url": f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            "identificatie": "ZAAK-2020-0010",
+            "bronorganisatie": "123456782",
+            "zaaktype": {
+                "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "omschrijving": self.zaaktype["omschrijving"],
+                "versiedatum": self.zaaktype["versiedatum"],
+            },
+            "omschrijving": self.zaak["omschrijving"],
+            "toelichting": self.zaak["toelichting"],
+            "registratiedatum": self.zaak["registratiedatum"],
+            "startdatum": "2020-12-25",
+            "einddatum": None,
+            "einddatumGepland": None,
+            "uiterlijkeEinddatumAfdoening": "2021-01-04",
+            "vertrouwelijkheidaanduiding": "openbaar",
+            "zaakgeometrie": {"type": "Point", "coordinates": [4.4683077, 51.9236739]},
+            "deadline": "2021-01-04",
+            "deadlineProgress": 10.00,
+            "resultaat": self.resultaat,
+            "kanGeforceerdBijwerken": True,
+            "hasProcess": True,
+            "isStatic": False,
+            "isConfigured": True,
         }
         self.assertEqual(response.json(), expected_response)
 
