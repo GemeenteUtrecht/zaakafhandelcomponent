@@ -66,7 +66,7 @@ def _get_review_request_for_notification(data: dict) -> dict:
 class KownslNotificationCallbackView(BaseNotificationCallbackView):
     def handle_notification(self, data: dict):
         # just to make sure, shouldn't happen with our URL routing
-        logger.error("Kownsl notification: %r" % data)
+        logger.debug("Kownsl notification: %r" % data)
         if not data["kanaal"] == "kownsl":
             return
 
@@ -118,7 +118,12 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
             )
 
         for task in tasks:
-            complete_task(task["id"], variables={})
+            complete_task(
+                task["id"],
+                variables={
+                    "author": f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
+                },
+            )
 
 
 class BaseRequestView(APIView):
