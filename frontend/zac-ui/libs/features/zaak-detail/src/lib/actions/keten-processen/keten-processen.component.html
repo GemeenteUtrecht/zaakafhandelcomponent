@@ -15,7 +15,7 @@
     <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
 
       <!-- Action buttons -->
-      <div class="processen__msg-btns-container" *ngIf="this.data[0]?.tasks[0]?.name !== 'Start Process Form'">
+      <div class="processen__msg-btns-container" *ngIf="showActions">
         <ng-container *ngFor="let message of data[0].messages; let i = index">
           <button gu-button
                   (click)="sendMessage(message)"

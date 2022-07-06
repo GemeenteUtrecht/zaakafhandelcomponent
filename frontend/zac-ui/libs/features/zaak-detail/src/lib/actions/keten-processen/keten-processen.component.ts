@@ -94,7 +94,11 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   //
 
   get showOverlay() {
-    return !this.isStatic && !this.hasProcess;
+    return !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak.isConfigured;
+  }
+
+  get showActions() {
+    return !this.zaak.isStatic && this.zaak.hasProcess && this.zaak.isConfigured;
   }
 
   /**
@@ -220,16 +224,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(data => {
         // Update data.
         this.updateProcessData(data);
-
-        // Check if process has started
-        if (this.allTaskData?.length === 0 && data[0].messages.length === 0) {
-          this.isPolling = false;
-          this.isStatic = this.zaak.isStatic;
-          this.hasProcess = this.zaak.hasProcess;
-        } else {
-          this.isStatic = false;
-          this.hasProcess = true;
-        }
 
         // Execute newly created task.
         if (openTask && currentTaskIds && data && data.length) {

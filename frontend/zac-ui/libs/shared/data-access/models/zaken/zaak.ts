@@ -62,6 +62,7 @@ export interface Zaak {
   kanGeforceerdBijwerken: boolean;
   isStatic: boolean;
   hasProcess: boolean;
+  isConfigured: boolean;
 }
 
 export interface WorkstackCase {

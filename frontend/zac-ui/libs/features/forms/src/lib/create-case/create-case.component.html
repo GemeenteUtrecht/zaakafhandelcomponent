@@ -1,6 +1,7 @@
 <div class="create-case" *ngIf="form">
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <gu-loading-indicator *ngIf="isSubmitting" loadingText="Je wordt automatisch doorverwezen naar de aangemaakte zaak."></gu-loading-indicator>
+  <p>Met het invullen van de gegevens hieronder kun je een nieuwe zaak opstarten van het gewenste zaaktype.</p>
   <p class="p--bold">Zaakgegevens</p>
   <div class="row">
     <gu-form [form]="form"
