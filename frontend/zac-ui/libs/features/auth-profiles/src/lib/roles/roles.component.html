@@ -26,6 +26,12 @@
           {{rolePermission}}
         </li>
       </ul>
+
+      <div class="mt-4 d-flex justify-content-end align-items-center">
+        <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteRole(role)">
+          Verwijderen
+        </button>
+      </div>
     </mat-expansion-panel>
   </mat-accordion>
 

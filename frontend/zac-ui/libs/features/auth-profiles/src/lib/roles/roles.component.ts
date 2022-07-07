@@ -38,6 +38,9 @@ export class RolesComponent implements OnInit {
   readonly updateRoleSuccessMessage = "De rol is bijgewerkt."
   readonly updateRoleErrorMessage = "Er is een fout opgetreden bij het bijwerken van de rol."
 
+  readonly deleteRoleSuccessMessage = "De rol is verwijderd."
+  readonly deleteRoleErrorMessage = "Er is een fout opgetreden bij het verwijderen van de rol."
+
 
   /**
    * Constructor method.
@@ -162,7 +165,7 @@ export class RolesComponent implements OnInit {
   }
 
   /**
-   * Updatea role
+   * Updates role
    * @param data
    */
   updateRole(data) {
@@ -176,6 +179,25 @@ export class RolesComponent implements OnInit {
       },
       (err: HttpErrorResponse) => {
         this.errorMessage = this.updateRoleErrorMessage;
+        this.reportError(err)
+      }
+    )
+  }
+
+  /**
+   * Deletes role.
+   * @param {Role} role
+   */
+  deleteRole(role: Role) {
+    this.isLoading = true;
+    this.fService.deleteRole(role).subscribe(
+      () => {
+        this.snackbarService.openSnackBar(this.deleteRoleSuccessMessage, 'Sluiten', 'primary');
+        this.reloadRoles.emit(true);
+        this.isLoading = false;
+      },
+      (err: HttpErrorResponse) => {
+        this.errorMessage = this.deleteRoleErrorMessage;
         this.reportError(err)
       }
     )
