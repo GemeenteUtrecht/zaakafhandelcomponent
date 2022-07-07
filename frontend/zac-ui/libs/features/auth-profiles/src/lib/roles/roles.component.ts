@@ -119,7 +119,7 @@ export class RolesComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    this.snackbarService.openSnackBar(error?.error?.name || this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
     this.isLoading = false;
   }
