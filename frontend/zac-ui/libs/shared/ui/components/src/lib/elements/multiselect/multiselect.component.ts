@@ -128,12 +128,18 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
    * @param {Event} event
    */
   onCheckboxGroupChange(event: Event) {
+    event.stopPropagation();
+
     const groupElement = event.currentTarget as HTMLElement;
     const selectedCheckboxes = groupElement.querySelectorAll('input:checked');
-    this.selectedItems = Array.from(selectedCheckboxes).map((checkbox: HTMLInputElement) => checkbox.value);
+
+    this.selectedItems = Array.from(selectedCheckboxes)
+      .filter((checkbox: HTMLInputElement) => !checkbox.classList.contains('multiselect__select-all'))
+      .map((checkbox: HTMLInputElement) => checkbox.value);
+
     const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
-    event.stopPropagation();
     this.control.setValue(this.selectedItems)
+
     this.onChange(value);
   }
 

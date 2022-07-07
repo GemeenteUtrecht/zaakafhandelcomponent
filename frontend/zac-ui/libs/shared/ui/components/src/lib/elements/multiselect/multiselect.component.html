@@ -26,7 +26,7 @@
   <span *ngIf="label">{{label}}</span>
   <div class="multiselect__checkbox-group" (change)="onCheckboxGroupChange($event)">
     <label class="multiselect__checkbox-item">
-      <input [checked]="getAllChecked()" type="checkbox" (click)="toggleCheckAll()"/>
+      <input [checked]="getAllChecked()" class="multiselect__select-all" type="checkbox" (click)="toggleCheckAll()"/>
       <span>Selecteer alles</span>
     </label>
     <hr>
