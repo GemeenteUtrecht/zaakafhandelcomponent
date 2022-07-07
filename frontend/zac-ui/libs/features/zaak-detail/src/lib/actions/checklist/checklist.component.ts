@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
-import {FieldConfiguration, SnackbarService} from '@gu/components';
+import {FieldConfiguration, FieldsetConfiguration, SnackbarService} from '@gu/components';
 import {
   Checklist,
   ChecklistAnswer,
@@ -204,13 +204,13 @@ export class ChecklistComponent implements OnInit, OnChanges {
             : null,
           readonly: !this.canForceEdit
         }, {
-          label: `Voeg opmerking toe bij: ${question.question}`,
+          label: `Voeg opmerking toe`,
           name: `__remarks_${question.question}`,
           required: false,
           value: answer?.remarks,
           readonly: !this.canForceEdit
         }, {
-          label: `Voeg document toe bij: ${question.question}`,
+          label: `Voeg document toe`,
           name: `__document_${question.question}`,
           required: false,
           type: 'document',
@@ -218,7 +218,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
           readonly: !this.canForceEdit
         }, {
           activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
-          label: `Toegewezen gebruiker voor: ${question.question}`,
+          label: `Toegewezen gebruiker`,
           name: `__userAssignee_${question.question}`,
           required: false,
           choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
@@ -227,7 +227,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         },
           {
             activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
-            label: `Toegewezen groep voor: ${question.question}`,
+            label: `Toegewezen groep`,
             name: `__groupAssignee_${question.question}`,
             required: false,
             choices: this.groups.map((group: UserGroupDetail) => ({label: group.name, value: group.name})),
@@ -237,6 +237,22 @@ export class ChecklistComponent implements OnInit, OnChanges {
       }, []);
 
     return fieldConfigurations;
+  }
+
+  /**
+   * Returns fieldsets based on questions.
+   */
+  getFieldsets() {
+    return this.checklistType?.questions.map((question: ChecklistQuestion): FieldsetConfiguration => ({
+      label: question.question,
+      keys: [
+        question.question,
+        `__remarks_${question.question}`,
+        `__document_${question.question}`,
+        `__userAssignee_${question.question}`,
+        `__groupAssignee_${question.question}`,
+      ]
+    }))
   }
 
   //

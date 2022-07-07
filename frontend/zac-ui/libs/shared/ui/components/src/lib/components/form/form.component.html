@@ -7,8 +7,9 @@
 
   <h2 *ngIf="title">{{ title }}</h2>
 
-  <fieldset class="form__body">
-    <div *ngFor="let field of fields; let i = index">
+  <fieldset class="form__body" *ngFor="let fieldset of _fieldsets">
+    <h5>{{fieldset.label}}</h5>
+    <div *ngFor="let field of fieldset.fields; let i = index">
       <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
         <!-- Document -->
         <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
@@ -38,7 +39,7 @@
 
           <!-- Allow select -->
           <div *ngIf="!documents[field.name]" class="row">
-            <div class="col-12 mb-4">
+            <div class="col-12 mb-2">
               <button *ngIf="field.widgetType == 'document'"
                       gu-button
                       buttonStyle="tertiary"

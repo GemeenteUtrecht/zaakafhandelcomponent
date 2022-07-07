@@ -8,6 +8,7 @@
 
   <gu-form *ngIf="!isLoading && checklistForm"
            [zaak]="zaak"
+           [fieldsets]="getFieldsets()"
            [form]="checklistForm"
            [isLoading]="isSubmitting"
            [buttonSize]="'small'"
