@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 class ZakenHandler:
     def handle(self, data: dict) -> None:
-        logger.error("ZAC notification: %r" % data)
+        logger.debug("ZAC notification: %r" % data)
         if data["resource"] == "zaak":
             if data["actie"] == "create":
                 self._handle_zaak_creation(data["hoofd_object"])
