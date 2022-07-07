@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import {FieldConfiguration, SnackbarService} from '@gu/components';
 import {
   Checklist,
@@ -186,53 +186,55 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * @return {FieldConfiguration[]}
    */
   getChecklistForm(): FieldConfiguration[] {
-    const fieldConfigurations = this.checklistType?.questions.reduce((acc, question: ChecklistQuestion) => {
-      const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
+    const fieldConfigurations = this.checklistType?.questions
+      .sort((a: ChecklistQuestion, b: ChecklistQuestion) => a.order - b.order)
+      .reduce((acc, question: ChecklistQuestion) => {
+        const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
 
-      return [...acc, {
-        label: question.question,
-        name: question.question,
-        required: false,
-        value: answer?.answer,
-        choices: (question.isMultipleChoice)
-          ? question.choices.map((questionChoice: QuestionChoice) => ({
-            label: questionChoice.name,
-            value: questionChoice.value,
-          }))
-          : null,
-        readonly: !this.canForceEdit
-      }, {
-        label: `Voeg opmerking toe bij: ${question.question}`,
-        name: `__remarks_${question.question}`,
-        required: false,
-        value: answer?.remarks,
-        readonly: !this.canForceEdit
-      }, {
-        label: `Voeg document toe bij: ${question.question}`,
-        name: `__document_${question.question}`,
-        required: false,
-        type: 'document',
-        value: this.documents[question.question],
-        readonly: !this.canForceEdit
-      }, {
-        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
-        label: `Toegewezen gebruiker voor: ${question.question}`,
-        name: `__userAssignee_${question.question}`,
-        required: false,
-        choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
-        value: answer?.userAssignee?.username,
-        readonly: !this.canForceEdit
-      },
-      {
-        activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
-        label: `Toegewezen groep voor: ${question.question}`,
-        name: `__groupAssignee_${question.question}`,
-        required: false,
-        choices: this.groups.map((group: UserGroupDetail) => ({label: group.name, value: group.name})),
-        value: answer?.groupAssignee?.name,
-        readonly: !this.canForceEdit
-      }];
-    }, []);
+        return [...acc, {
+          label: question.question,
+          name: question.question,
+          required: false,
+          value: answer?.answer,
+          choices: (question.isMultipleChoice)
+            ? question.choices.map((questionChoice: QuestionChoice) => ({
+              label: questionChoice.name,
+              value: questionChoice.value,
+            }))
+            : null,
+          readonly: !this.canForceEdit
+        }, {
+          label: `Voeg opmerking toe bij: ${question.question}`,
+          name: `__remarks_${question.question}`,
+          required: false,
+          value: answer?.remarks,
+          readonly: !this.canForceEdit
+        }, {
+          label: `Voeg document toe bij: ${question.question}`,
+          name: `__document_${question.question}`,
+          required: false,
+          type: 'document',
+          value: this.documents[question.question],
+          readonly: !this.canForceEdit
+        }, {
+          activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
+          label: `Toegewezen gebruiker voor: ${question.question}`,
+          name: `__userAssignee_${question.question}`,
+          required: false,
+          choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
+          value: answer?.userAssignee?.username,
+          readonly: !this.canForceEdit
+        },
+          {
+            activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
+            label: `Toegewezen groep voor: ${question.question}`,
+            name: `__groupAssignee_${question.question}`,
+            required: false,
+            choices: this.groups.map((group: UserGroupDetail) => ({label: group.name, value: group.name})),
+            value: answer?.groupAssignee?.name,
+            readonly: !this.canForceEdit
+          }];
+      }, []);
 
     return fieldConfigurations;
   }
