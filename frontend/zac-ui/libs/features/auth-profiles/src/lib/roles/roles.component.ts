@@ -54,15 +54,16 @@ export class RolesComponent implements OnInit {
       {
         choices: this.permissions.map( permission => {
           return {
-            label: `${permission.name}: ${permission.description}`,
+            label: permission.name,
             value: permission.name
           }
         }),
         multiple: true,
-        label: 'Rechten',
+        label: '',
         name: 'permissions',
         required: true,
         value: [],
+        widgetType: 'checkboxGroup',
       },
     ];
   }

@@ -104,13 +104,14 @@
 
         <!-- Select field. -->
         <gu-multiselect
-          *ngIf="field.widgetType == 'select' && edit"
+          *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && edit"
           [control]="field.control"
           [items]="field.choices"
           [selectedValue]="field.control.value"
           [label]="field.label"
           [multiple]="field.multiple"
           [required]="field.required"
+          [widgetType]="field.widgetType"
           bindLabel="label"
           bindValue="value"
           (change)="selectChanged($event, field)"

@@ -14,7 +14,8 @@ import {FormBuilder, FormControl} from '@angular/forms';
  * Takes multiple: Allow multiple selections
  * Takes placeholder: Placeholder for the field
  * Takes required: Sets required for form
- * Takes searchable: Allow user to type and search
+ * Takes searchable: Allow user
+ * to type and search
  * Takes selectedValue: Pre selected values
  * Takes label: Label of the input field
  * Takes appendTo: HTML class to append the dropdown to
@@ -132,6 +133,7 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
     this.selectedItems = Array.from(selectedCheckboxes).map((checkbox: HTMLInputElement) => checkbox.value);
     const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
     event.stopPropagation();
+    this.control.setValue(this.selectedItems)
     this.onChange(value);
   }
 
