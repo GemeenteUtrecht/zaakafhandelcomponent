@@ -2,16 +2,23 @@
   <div class="d-flex justify-content-between">
     <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
     <h2 class="d-inline-block">Rollen</h2>
-    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-role-modal')">
+    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="onAddRoleClick()">
       Rol aanmaken
     </button>
   </div>
   <p>Een rol is een set aan rechten.</p>
   <mat-accordion *ngIf="roles" multi>
-    <mat-expansion-panel *ngFor="let role of roles">
+    <mat-expansion-panel *ngFor="let role of roles" hideToggle="true">
       <mat-expansion-panel-header>
+        <mat-panel-title>
         <gu-icon class="role-icon mr-2">perm_identity</gu-icon>
         <strong>{{ role.name }}</strong>
+        </mat-panel-title>
+
+        <mat-panel-description class="justify-content-end">
+          <gu-icon class="role-icon mr-2" (click)="onEditRoleClick(role)">edit</gu-icon>
+        </mat-panel-description>
+
       </mat-expansion-panel-header>
       <p class="mb-2">Rechten</p>
       <ul>
@@ -25,9 +32,9 @@
   <!-- Modal content -->
   <gu-modal id="add-role-modal"
             [closeIcon]="true"
+            [title]="(role) ? 'Rol bewerken' : 'Rol toevoegen'"
             size="small"
-            title="Rol toevoegen"
   >
-    <gu-form *ngIf="permissions" [form]="form" (formSubmit)="formSubmit($event)" buttonLabel="Rol aanmaken"></gu-form>
+    <gu-form *ngIf="permissions" [buttonLabel]="(role) ? 'Rol bewerken' : 'Rol toevoegen'" [form]="form" (formSubmit)="formSubmit($event)"></gu-form>
   </gu-modal>
 </div>

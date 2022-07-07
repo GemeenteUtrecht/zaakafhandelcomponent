@@ -1,4 +1,4 @@
-import {AfterContentInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterContentInit, Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormControl} from '@angular/forms';
 
 /**
@@ -29,7 +29,7 @@ import {FormBuilder, FormControl} from '@angular/forms';
   templateUrl: './multiselect.component.html',
   styleUrls: ['./multiselect.component.scss'],
 })
-export class MultiselectComponent implements OnInit, AfterContentInit {
+export class MultiselectComponent implements OnInit, OnChanges {
   @Input() control: FormControl;
   @Input() items = [];
 
@@ -94,10 +94,10 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
   }
 
   /**
-   * A lifecycle hook that is called after Angular has fully initialized all content of a directive. Define an
-   * ngAfterContentInit() method to handle any additional initialization tasks.
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
    */
-  ngAfterContentInit(): void {
+  ngOnChanges(): void {
     if (this.selectedValue) {
       this.selectedItems = this.selectedValue
     }
@@ -152,7 +152,9 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
     } else {
       this.selectedItems = this.items.map((item) => item[this.bindValue]);
     }
-    const value = this.items;
+    const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
+    this.control.setValue(this.selectedItems)
+
     this.onChange(value);
   }
 }
