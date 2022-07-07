@@ -192,7 +192,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
 
         return [...acc, {
-          label: question.question,
+          label: 'Antwoord',
           name: question.question,
           required: false,
           value: answer?.answer,
