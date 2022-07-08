@@ -59,6 +59,13 @@ export class DocumentenComponent implements OnChanges {
   }
 
   /**
+   * Updates the component using a public interface.
+   */
+  public update() {
+    this.fetchDocuments();
+  }
+
+  /**
    * Show an alert if the user refreshes or closes the browser without saving the edited documents.
    * Only fires if the user has had activity on the documents component.
    * @param $event

@@ -6,7 +6,7 @@ import {
   AfterViewInit,
   EventEmitter,
   OnDestroy,
-  ViewEncapsulation
+  ViewEncapsulation, ChangeDetectorRef, SimpleChanges
 } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
@@ -79,6 +79,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   // Links
   doRedirectTarget: '_blank' | '_self';
 
+  showOverlay: boolean;
+  showActions: boolean;
+
   constructor(
     public ketenProcessenService: KetenProcessenService,
     private zaakService: ZaakService,
@@ -86,26 +89,15 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     private modalService: ModalService,
     private userService: UserService,
     private route: ActivatedRoute,
+    private cdRef: ChangeDetectorRef
   ) {
-  }
-
-  //
-  // Getters / setters.
-  //
-
-  get showOverlay() {
-    return !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak.isConfigured;
-  }
-
-  get showActions() {
-    return !this.zaak.isStatic && this.zaak.hasProcess && this.zaak.isConfigured;
   }
 
   /**
    * Detect a change in the url to get the current url params.
    * Updated data will be fetched if the params change.
    */
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
     this.route.params.subscribe(params => {
       this.bronorganisatie = params['bronorganisatie'];
       this.identificatie = params['identificatie'];
@@ -116,6 +108,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.fetchProcesses();
       }
     });
+
+    this.showOverlay = !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    this.showActions = !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   /**
@@ -344,7 +339,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   initiateCamundaProcess() {
     this.isLoading = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
-      this.hasProcess = true;
+      this.showOverlay = false;
     }, err => {
       this.isLoading = false;
       this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."
@@ -378,6 +373,16 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   closeModal(): void {
     this.modalService.close('ketenprocessenModal');
     this.fetchProcesses();
+  }
+
+  /**
+   * Force update of other components.
+   */
+  handleStartProcessSuccess(): void {
+    this.isLoading = true;
+    this.update.emit();
+    this.showActions = true;
+    this.closeModal();
   }
 
   //

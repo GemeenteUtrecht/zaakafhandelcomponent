@@ -47,6 +47,7 @@ export interface BenodigdeRol {
   choices: Choice[];
   label: string;
   roltype: Roltype;
+  required: boolean;
 }
 
 interface Specificatie {
@@ -77,6 +78,7 @@ export interface BenodigdeZaakeigenschap {
   eigenschap: Eigenschap;
   label: string;
   default: string;
+  required: boolean;
 }
 
 export interface Context {

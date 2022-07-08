@@ -15,6 +15,7 @@ export class PropertiesStepComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   startProcessPropertyForm: any;
   errorMessage: string;
@@ -103,6 +104,8 @@ export class PropertiesStepComponent implements OnChanges {
           submitted: this.submittedProperties.length,
           total: this.propertiesControl.controls.length
         })
+
+        this.updateComponents.emit(true);
       }, error => {
         this.submittingProperties = this.submittingProperties.filter(index => index !== i);
         this.propertyControl(i).enable();

@@ -1,9 +1,12 @@
-<div class="start-process__documents-step pt-4" *ngIf="startProcessDocumentForm">
+<div class='start-process__documents-step pt-4' *ngIf='startProcessDocumentForm' xmlns='http://www.w3.org/1999/html'>
   <ng-container [formGroup]="startProcessDocumentForm">
     <div class="row mb-4" formArrayName="documents" *ngFor="let document of documentsControl.controls; let i = index">
 
-      <span class="col-3"><b>{{getDocumentsContext(i).label}}:</b></span>
+      <div class="col-3">
+        <p><b>{{getDocumentsContext(i).label}}:</b></p>
+      </div>
       <gu-file-upload [disabled]="submittingDocuments.indexOf(i) !== -1 || isSubmittedDocument(i)"
+                      [required]="getDocumentsContext(i).required"
                       (selectedFileOutput)="handleFileSelect($event, i)"
                       class="col-3"
       ></gu-file-upload>

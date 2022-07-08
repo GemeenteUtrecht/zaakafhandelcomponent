@@ -1,17 +1,19 @@
-<div class="create-case" *ngIf="form">
+<div class="create-case">
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <gu-loading-indicator *ngIf="isSubmitting" loadingText="Je wordt automatisch doorverwezen naar de aangemaakte zaak."></gu-loading-indicator>
-  <p>Met het invullen van de gegevens hieronder kun je een nieuwe zaak opstarten van het gewenste zaaktype.</p>
-  <p class="p--bold">Zaakgegevens</p>
-  <div class="row">
-    <gu-form [form]="form"
-             [buttonSize]="'small'"
-             buttonLabel='Versturen'
-             (formSubmit)="submitForm($event)"
-             [resetAfterSubmit]="false"
-             [isLoading]="isLoading"
-             class="col-md-8 col-lg-6"
-    >
-    </gu-form>
+  <div class="create-case__form" *ngIf="form">
+    <p>Met het invullen van de gegevens hieronder kun je een nieuwe zaak opstarten van het gewenste zaaktype.</p>
+    <p class="p--bold">Zaakgegevens</p>
+    <div class="row">
+      <gu-form [form]="form"
+               [buttonSize]="'small'"
+               buttonLabel='Versturen'
+               (formSubmit)="submitForm($event)"
+               [resetAfterSubmit]="false"
+               [isLoading]="isLoading"
+               class="col-md-8 col-lg-6"
+      >
+      </gu-form>
+    </div>
   </div>
 </div>

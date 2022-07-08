@@ -7,7 +7,7 @@
         [control]="propertyControl(i)"
         type="text"
         [label]="getPropertiesContext(i).label"
-        [required]="false"
+        [required]="getPropertiesContext(i).required"
         autocomplete="off"
         class="col-8"
       ></gu-input>
@@ -19,7 +19,7 @@
         [items]="getPropertiesContext(i).choices"
         [label]="getPropertiesContext(i).label"
         [multiple]="false"
-        [required]="false"
+        [required]="getPropertiesContext(i).required"
         bindLabel="label"
         bindValue="value"
         appendTo="body"

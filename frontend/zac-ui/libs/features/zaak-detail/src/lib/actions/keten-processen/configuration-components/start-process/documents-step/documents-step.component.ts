@@ -15,6 +15,7 @@ export class DocumentsStepComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   startProcessDocumentForm: any;
   errorMessage: string;
@@ -107,6 +108,8 @@ export class DocumentsStepComponent implements OnChanges {
           submitted: this.submittedDocuments.length,
           total: this.documentsControl.controls.length
         })
+
+        this.updateComponents.emit(true);
       }, error => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.documentControl(i).enable();

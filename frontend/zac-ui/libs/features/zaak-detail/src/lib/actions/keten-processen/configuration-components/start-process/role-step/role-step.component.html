@@ -7,7 +7,7 @@
         [control]="roleControl(i)"
         type="text"
         [label]="getRolesContext(i).label"
-        [required]="false"
+        [required]="getRolesContext(i).required"
         autocomplete="off"
         class="col-8"
       ></gu-input>

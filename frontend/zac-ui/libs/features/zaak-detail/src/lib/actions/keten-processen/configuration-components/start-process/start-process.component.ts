@@ -28,6 +28,7 @@ export class StartProcessComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   isSubmitting: boolean;
   errorMessage: string;

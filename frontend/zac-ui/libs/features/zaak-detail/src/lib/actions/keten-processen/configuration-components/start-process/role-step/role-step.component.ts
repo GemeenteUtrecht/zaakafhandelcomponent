@@ -15,6 +15,7 @@ export class RoleStepComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   users: UserSearchResult[];
 
@@ -137,6 +138,8 @@ export class RoleStepComponent implements OnChanges {
           submitted: this.submittedRoles.length,
           total: this.rolesControl.controls.length
         })
+
+        this.updateComponents.emit(true);
         }, error => {
           this.submittingRoles = this.submittingRoles.filter(index => index !== i);
           this.roleControl(i).enable();

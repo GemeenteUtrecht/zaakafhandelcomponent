@@ -16,11 +16,10 @@
       </ng-template>
 
       <mat-step state="group"
-
                 [completed]="rolesFields?.submitted === rolesFields?.total"
       >
         <ng-template matStepLabel>Betrokkenen: {{rolesCount}}</ng-template>
-        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="rolesFields = $event"></gu-role-step>
+        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="rolesFields = $event" (updateComponents)="updateComponents.emit()"></gu-role-step>
         <button gu-button
                 matStepperNext
                 buttonStyle="tertiary"
@@ -36,7 +35,7 @@
 
       <mat-step state="list" [completed]="propertiesFields?.submitted === propertiesFields?.total">
         <ng-template matStepLabel>Eigenschappen: {{propertiesCount}}</ng-template>
-        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event"></gu-properties-step>
+        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event" (updateComponents)="updateComponents.emit()"></gu-properties-step>
         <button gu-button
                 matStepperNext
                 buttonStyle="tertiary"
@@ -52,7 +51,7 @@
 
       <mat-step state="upload_file" [completed]="documentsFields?.submitted === documentsFields?.total">
         <ng-template matStepLabel>Documenten: {{documentsCount}}</ng-template>
-        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event"></gu-documents-step>
+        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event" (updateComponents)="updateComponents.emit()"></gu-documents-step>
         <button gu-button
                 matStepperNext
                 buttonStyle="tertiary"

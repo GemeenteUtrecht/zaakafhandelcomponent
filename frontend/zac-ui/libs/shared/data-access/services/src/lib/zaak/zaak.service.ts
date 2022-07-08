@@ -269,4 +269,15 @@ export class ZaakService {
     return this.http.Post<any>(endpoint, caseRole);
   }
 
+  /**
+   * Retrieve all roles
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   * @returns {Observable<*>}
+   */
+  getCaseRoles(bronorganisatie: string, identificatie: string): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
+    return this.http.Get<any>(endpoint);
+  }
+
 }
