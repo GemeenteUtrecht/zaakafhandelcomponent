@@ -1,17 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { CamundaService, MetaService, ZaakService } from '@gu/services';
+import {Component, OnInit} from '@angular/core';
 import { CreateCase, MetaZaaktypeResult, Zaak } from '@gu/models';
 import { Choice, FieldConfiguration, SnackbarService } from '@gu/components';
-import { CreateCaseService } from './create-case.service';
+import { CamundaService, MetaService, ZaakService } from '@gu/services';
 import { delay, retryWhen, take } from 'rxjs/operators';
 
 @Component({
-  selector: 'gu-create-case',
-  templateUrl: './create-case.component.html',
-  styleUrls: ['./create-case.component.scss']
+  selector: 'gu-features-start-case',
+  templateUrl: './features-start-case.component.html',
+  styleUrls: ['./features-start-case.component.scss'],
 })
-export class CreateCaseComponent implements OnInit {
-
+export class FeaturesStartCaseComponent implements OnInit {
   caseTypes: MetaZaaktypeResult[];
   caseTypeChoices: Choice[];
   form: FieldConfiguration[] = null;
@@ -21,7 +19,6 @@ export class CreateCaseComponent implements OnInit {
   errorMessage: string;
 
   constructor(
-    private createCaseService: CreateCaseService,
     private metaService: MetaService,
     private camundaService: CamundaService,
     private zaakService: ZaakService,
@@ -153,5 +150,4 @@ export class CreateCaseComponent implements OnInit {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
   }
-
 }

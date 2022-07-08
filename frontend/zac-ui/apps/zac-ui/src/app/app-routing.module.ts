@@ -30,7 +30,7 @@ const routes: Routes = [
   {
     path: 'zaak-starten',
     loadChildren: () =>
-      import('./components/forms/forms.module').then((m) => m.FormsModule),
+      import('./components/start-case/start-case.module').then((m) => m.StartCaseModule),
   },
   {
     path: 'rapportages',
