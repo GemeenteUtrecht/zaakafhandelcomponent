@@ -186,7 +186,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             [
-                f"Gebruiker {self.requester.username} heeft al toegang tot ZAAK {ZAAK_URL}"
+                f"Gebruiker `{self.requester.username}` heeft al toegang tot ZAAK `{ZAAK_URL}`."
             ],
         )
 
@@ -246,6 +246,6 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             [
-                f"Er is al een toegangsverzoek tot ZAAK {ZAAK_URL} voor gebruiker {self.requester.username} in behandeling"
+                f"Er is al een toegangsverzoek tot ZAAK `{ZAAK_URL}` voor gebruiker `{self.requester.username}` in behandeling."
             ],
         )

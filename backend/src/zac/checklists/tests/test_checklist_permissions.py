@@ -203,14 +203,14 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
             einddatum=None,
         )
-        cls.checklist_type = ChecklistTypeFactory.create(
+        cls.checklisttype = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
             zaaktype_omschrijving=cls.zaaktype["omschrijving"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(
             question="some-question",
-            checklist_type=cls.checklist_type,
+            checklisttype=cls.checklisttype,
             order=1,
         )
         cls.user = UserFactory.create()
@@ -472,19 +472,19 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
         )
-        cls.checklist_type = ChecklistTypeFactory.create(
+        cls.checklisttype = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
             zaaktype_omschrijving=cls.zaaktype["omschrijving"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(
             question="some-question",
-            checklist_type=cls.checklist_type,
+            checklisttype=cls.checklisttype,
             order=1,
         )
         cls.checklist = ChecklistFactory.create(
             zaak=cls.zaak["url"],
-            checklist_type=cls.checklist_type,
+            checklisttype=cls.checklisttype,
         )
         cls.user = UserFactory.create()
 

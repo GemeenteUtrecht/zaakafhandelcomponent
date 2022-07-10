@@ -27,7 +27,7 @@ class EigenschappenFilterSet(ApiFilterSet):
     zaaktype_omschrijving = fields.CharField(
         required=False,
         help_text=_(
-            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
         ),
     )
     catalogus = fields.URLField(

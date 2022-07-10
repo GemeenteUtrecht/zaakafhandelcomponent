@@ -69,7 +69,7 @@ class ChecklistAnswer(ChecklistMeta):
         # check if the answer is one of the choices
         if self.answer:
             checklist_question = (
-                self.checklist.checklist_type.checklistquestion_set.filter(
+                self.checklist.checklisttype.checklistquestion_set.filter(
                     question=self.question
                 )
             )
@@ -105,10 +105,10 @@ class QuestionChoice(ChecklistMeta):
 
 
 class ChecklistQuestion(ChecklistMeta):
-    checklist_type = models.ForeignKey(
+    checklisttype = models.ForeignKey(
         "ChecklistType",
         on_delete=models.PROTECT,
-        help_text=_("Checklist type related to this question."),
+        help_text=_("Checklisttype related to this question."),
     )
     question = models.TextField(
         _("Text of the question"),
@@ -142,7 +142,7 @@ class ChecklistQuestion(ChecklistMeta):
     class Meta:
         verbose_name = _("question")
         verbose_name_plural = _("questions")
-        unique_together = (("question", "checklist_type"), ("checklist_type", "order"))
+        unique_together = (("question", "checklisttype"), ("checklisttype", "order"))
 
 
 class ChecklistType(ChecklistMeta):
@@ -168,12 +168,12 @@ class ChecklistType(ChecklistMeta):
     )
 
     class Meta:
-        verbose_name = _("checklist type")
-        verbose_name_plural = _("checklist types")
+        verbose_name = _("checklisttype")
+        verbose_name_plural = _("checklisttypes")
         unique_together = (("zaaktype_catalogus", "zaaktype_omschrijving"),)
 
     def __str__(self):
-        return f"Checklist type of `{self.zaaktype_omschrijving}` within `{self.zaaktype_catalogus}`"
+        return f"Checklisttype of `{self.zaaktype_omschrijving}` within `{self.zaaktype_catalogus}`"
 
 
 class Checklist(ChecklistMeta):
@@ -183,7 +183,7 @@ class Checklist(ChecklistMeta):
         help_text=_("URL-reference to the ZAAK in its API."),
         unique=True,
     )
-    checklist_type = models.ForeignKey(
+    checklisttype = models.ForeignKey(
         "ChecklistType", on_delete=models.PROTECT, help_text=_("Type of the checklist.")
     )
 

@@ -135,7 +135,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "detail": f"Dit verzoek is al afgehandeld door {user.get_full_name()} vanuit ZAAK {self.zaak['identificatie']}."
+                "detail": f"Dit verzoek is al afgehandeld door `{user.get_full_name()}` vanuit {self.zaak['identificatie']}."
             },
         )
 

@@ -49,7 +49,7 @@ def get_required_process_informatie_objecten(
                 piobject.informatieobjecttype = iot
         if not piobject.informatieobjecttype:
             raise RuntimeError(
-                "Could not find an INFORMATIEOBJECTTYPE with `omschrijving` {omschrijving} for ZAAKTYPE {zaaktype}.".format(
+                "Could not find an INFORMATIEOBJECTTYPE with omschrijving {omschrijving} for ZAAKTYPE {zaaktype}.".format(
                     omschrijving=piobject.informatieobjecttype_omschrijving,
                     zaaktype=zaak_context.zaaktype.omschrijving,
                 )

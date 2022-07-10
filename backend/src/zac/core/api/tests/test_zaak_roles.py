@@ -316,7 +316,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            ["Can not find ROLTYPE {rt}.".format(rt=self.roltype["url"])],
+            ["Kan ROLTYPE {rt} niet vinden.".format(rt=self.roltype["url"])],
         )
 
     @requests_mock.Mocker()
@@ -350,7 +350,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    "ROLTYPE {rt} is not part of ROLTYPEs for ZAAKTYPE {zt}.".format(
+                    "ROLTYPE {rt} is niet onderdeel van de ROLTYPEs van ZAAKTYPE {zt}.".format(
                         rt=self.roltype["url"], zt=self.zaaktype["url"]
                     )
                 ]
@@ -389,7 +389,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    "`betrokkene` and `betrokkene_type` are mutually exclusive."
+                    "`betrokkene` en `betrokkene_type` zijn elkaar uitsluitend."
                 ]
             },
         )
@@ -410,7 +410,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    "`betrokkene` and `betrokkene_identificatie` are mutually exclusive."
+                    "`betrokkene` en `betrokkene_identificatie` zijn elkaar uitsluitend."
                 ]
             },
         )
@@ -491,7 +491,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"url": ["ROL does not belong to ZAAK."]})
+        self.assertEqual(response.json(), {"url": ["ROL behoort niet toe aan ZAAK."]})
 
 
 class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):

@@ -59,6 +59,8 @@ DATABASES = {
     },
 }
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

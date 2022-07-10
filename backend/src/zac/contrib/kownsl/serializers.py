@@ -144,6 +144,12 @@ class AdviceSerializer(APIModelSerializer):
     class Meta:
         model = Advice
         fields = ("created", "author", "advice", "documents", "group")
+        extra_kwargs = {
+            "created": {"help_text": _("Date review request was created.")},
+            "advice": {"help_text": _("Advice given for review request.")},
+            "documents": {"help_text": _("URL-references of documents.")},
+            "group": {"help_text": _("Group that advice was given by.")},
+        }
 
 
 class AdviceReviewsSerializer(serializers.Serializer):

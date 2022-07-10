@@ -415,7 +415,7 @@ class GrantAccessAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()[0]["nonFieldErrors"],
             [
-                "`{user}` already has permission `zaken:inzien.".format(
+                "`{user}` heeft al het recht `zaken:inzien`.".format(
                     user=self.requester.username
                 )
             ],

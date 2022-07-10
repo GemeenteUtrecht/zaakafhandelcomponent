@@ -147,7 +147,7 @@ class CancelTaskViewTests(APITransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"task": ["Task `Adviesvraag configureren` can not be canceled."]},
+            {"task": ["Taak `Adviesvraag configureren` kan niet worden geannuleerd."]},
         )
 
     def test_cancel_user_task(self, m):

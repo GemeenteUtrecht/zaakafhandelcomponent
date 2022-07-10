@@ -335,7 +335,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "bijlagen": [
-                    "A INFORMATIEOBJECT with INFORMATIEOBJECTTYPE description `bijlage` is required."
+                    "Een INFORMATIEOBJECT met INFORMATIEOBJECTTYPE `omschrijving`: `bijlage` is vereist."
                 ]
             },
         )
@@ -384,7 +384,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "rollen": [
-                    "Required ROLTYPE omschrijving `some-roltype-omschrijving` not found in ROLlen related to ZAAK."
+                    "Vereiste ROLTYPE `omschrijving`: `some-roltype-omschrijving` is niet gevonden in ROLlen toebehorend aan ZAAK."
                 ]
             },
         )
@@ -435,7 +435,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "rollen": [
-                    "`betrokkene_type` of ROL with ROLTYPE omschrijving `some-roltype-omschrijving` does not match required betrokkene_type `medewerker`"
+                    "`betrokkene_type` van ROL met ROLTYPE `omschrijving`: `some-roltype-omschrijving` komt niet overeen met vereist `betrokkene_type`: `medewerker`."
                 ]
             },
         )
@@ -484,7 +484,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "zaakeigenschappen": [
-                    "A ZAAKEIGENCHAP with `naam`: `some-property` is required."
+                    "Een ZAAKEIGENSCHAP met `naam`: `some-property` is vereist."
                 ]
             },
         )
@@ -533,7 +533,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "zaakeigenschappen": [
-                    "ZAAKEIGENCHAP with `naam`: `some-property`, needs to have a `waarde` chosen from: ['some-value-1']."
+                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-choice-1']`."
                 ]
             },
         )

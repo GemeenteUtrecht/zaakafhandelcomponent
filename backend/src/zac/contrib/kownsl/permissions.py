@@ -54,7 +54,7 @@ class IsReviewUser(permissions.BasePermission):
 
 class HasNotReviewed(permissions.BasePermission):
     _message = _(
-        "This request is already handled by assignee `{assignee}` from within ZAAK {identificatie}."
+        "This request is already handled by `{assignee}` from within {identificatie}."
     )
 
     def has_object_permission(self, request, view, obj):

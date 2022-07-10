@@ -31,44 +31,44 @@ class ZaakIdentificatieSerializer(serializers.Serializer):
 class SearchZaaktypeSerializer(serializers.Serializer):
     omschrijving = serializers.CharField(
         help_text=_(
-            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
         )
     )
-    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
+    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS."))
 
 
 class SearchSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
         required=False,
-        help_text=_("Unique identifier of ZAAK within `bronorganisatie`"),
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
     )
     zaaktype = SearchZaaktypeSerializer(
-        required=False, help_text=_("Properties to identify ZAAKTYPEn")
+        required=False, help_text=_("Properties to identify ZAAKTYPEs.")
     )
     omschrijving = serializers.CharField(
-        required=False, help_text=_("Brief description of ZAAK")
+        required=False, help_text=_("Brief description of ZAAK.")
     )
     eigenschappen = serializers.JSONField(
         required=False,
         help_text=_(
-            "ZAAK-EIGENSCHAPs in format `<property name>:{'value': <property value>}`"
+            "ZAAK-EIGENSCHAPs in format `<property name>:{'value': <property value>}`."
         ),
     )
     object = serializers.URLField(
         required=False,
-        help_text=_("URL-reference of OBJECT"),
+        help_text=_("URL-reference of OBJECT."),
     )
     fields = OrderedMultipleChoiceField(
         required=False,
         help_text=_(
-            "Fields that will be returned with the search results. Default returns all fields. Will always include <identificatie>."
+            "Fields that will be returned with the search results. Default returns all fields. Will always include `identificatie`."
         ),
         choices=DEFAULT_ES_FIELDS,
         default=DEFAULT_ES_FIELDS,
     )
     include_closed = serializers.BooleanField(
         required=False,
-        help_text=_("Include closed ZAKEN."),
+        help_text=_("Include closed ZAAKen."),
         default=False,
     )
 
@@ -106,6 +106,11 @@ class SearchReportSerializer(serializers.ModelSerializer):
             "name",
             "query",
         )
+        extra_kwargs = {
+            "id": {"help_text": _("Id of search report.")},
+            "name": {"help_text": _("Name of search report.")},
+            "query": {"help_text": _("Query of search report.")},
+        }
 
 
 class EigenschapDocumentSerializer(serializers.Serializer):

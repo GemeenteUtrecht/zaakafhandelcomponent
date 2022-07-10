@@ -61,13 +61,13 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.group = GroupFactory.create()
         cls.assignee.groups.add(cls.group)
 
-        cls.checklist_type = ChecklistTypeFactory.create(
+        cls.checklisttype = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
             zaaktype_omschrijving=cls.zaaktype["omschrijving"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(
-            question="some-question", checklist_type=cls.checklist_type, order="1"
+            question="some-question", checklisttype=cls.checklisttype, order="1"
         )
 
     def setUp(self):
@@ -91,7 +91,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         data = {
             "zaak": ZAAK_URL,
-            "checklistType": self.checklist_type.pk,
+            "checklistType": self.checklisttype.pk,
             "answers": [],
         }
 
@@ -200,7 +200,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklist = ChecklistFactory.create(
-            zaak=ZAAK_URL, checklist_type=self.checklist_type
+            zaak=ZAAK_URL, checklisttype=self.checklisttype
         )
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
@@ -210,7 +210,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         data = {
             "zaak": ZAAK_URL,
-            "checklistType": str(self.checklist_type.pk),
+            "checklistType": str(self.checklisttype.pk),
             "answers": [
                 {
                     "question": self.checklist_question.question,

@@ -71,7 +71,7 @@ class SetTaskAssigneeSerializerTests(APITestCase):
 
         self.assertEqual(
             exc.exception.detail["task"][0],
-            "The task with given `id` does not exist (anymore).",
+            "De taak met de gegeven `id` bestaat niet (meer).",
         )
         self.assertEqual(
             exc.exception.detail["assignee"][0],
@@ -218,7 +218,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"task": ["The task with given `id` does not exist (anymore)."]},
+            {"task": ["De taak met de gegeven `id` bestaat niet (meer)."]},
         )
 
     @requests_mock.Mocker()

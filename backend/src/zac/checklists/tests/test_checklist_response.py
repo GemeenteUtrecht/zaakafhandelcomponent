@@ -126,7 +126,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Checklist.objects.count(), 1)
 
-    def test_create_checklist_fail_no_checklist_type(self, m):
+    def test_create_checklist_fail_no_checklisttype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -153,7 +153,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"nonFieldErrors": ["No checklist_type found for ZAAKTYPE of ZAAK."]},
+            {"nonFieldErrors": ["Geen checklisttype gevonden foor ZAAKTYPE van ZAAK."]},
         )
 
     def test_create_checklist_fail_two_assignees_to_answer(self, m):
@@ -166,13 +166,13 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        checklisttype = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-question"
+            checklisttype=checklisttype, question="some-question"
         )
         group = GroupFactory.create()
         data = {
@@ -207,13 +207,13 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        checklisttype = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-question", order=1
+            checklisttype=checklisttype, question="some-question", order=1
         )
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
@@ -245,13 +245,13 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        checklisttype = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-question", order=1
+            checklisttype=checklisttype, question="some-question", order=1
         )
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
@@ -272,7 +272,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             [
-                "Answer with question: `some-non-existent-question` didn't answer a question of the related checklist_type: Checklist type of `ZT1` within `https://open-zaak.nl/catalogi/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd`."
+                "Answer with question: `some-non-existent-question` didn't answer a question of the related checklisttype: Checklisttype of `ZT1` within `https://open-zaak.nl/catalogi/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd`."
             ],
         )
 
@@ -287,22 +287,22 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaak["url"], json=self.zaak)
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
-        checklist_type = ChecklistTypeFactory.create(
+        checklisttype = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-question", order=1
+            checklisttype=checklisttype, question="some-question", order=1
         )
         question_2 = ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-other-question", order=2
+            checklisttype=checklisttype, question="some-other-question", order=2
         )
         QuestionChoiceFactory.create(
             question=question, name="Some answer", value="some-answer"
         )
         checklist = ChecklistFactory.create(
-            zaak=self.zaak["url"], checklist_type=checklist_type
+            zaak=self.zaak["url"], checklisttype=checklisttype
         )
         answer = ChecklistAnswerFactory.create(
             checklist=checklist,

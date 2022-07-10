@@ -4,6 +4,7 @@ from typing import List, Optional
 from django.core.cache import cache, caches
 
 from furl import furl
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.client import Client
@@ -38,7 +39,13 @@ def invalidate_zaak_cache(zaak: Zaak):
 
 
 def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
-    zaaktypes = ("", zaak.zaaktype)
+    if isinstance(zaak.zaaktype, ZaakType):
+        zaaktypes = ("", zaak.zaaktype.url)
+    elif isinstance(zaak.zaaktype, dict):
+        zaaktypes = ("", zaak.zaaktype["url"])
+    else:
+        zaaktypes = ("", zaak.zaaktype)
+
     identificaties = ("", zaak.identificatie)
     bronorganisaties = ("", zaak.bronorganisatie)
     relevant_vas = [""] + ALL_VAS_SORTED[

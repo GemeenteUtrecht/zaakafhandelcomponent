@@ -115,10 +115,10 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
 
         return validated_data
 
-    def create_questions(self, checklist_type: ChecklistType, questions: Dict):
+    def create_questions(self, checklisttype: ChecklistType, questions: Dict):
         for question in questions:
             checklist_question = ChecklistQuestion.objects.create(
-                checklist_type=checklist_type,
+                checklisttype=checklisttype,
                 question=question["question"],
                 order=question["order"],
             )
@@ -138,23 +138,23 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         questions = validated_data.pop("checklistquestion_set")
         try:
-            checklist_type = super().create(validated_data)
+            checklisttype = super().create(validated_data)
         except ValidationError as err:
             raise exceptions.ValidationError(err.messages)
 
-        self.create_questions(checklist_type, questions)
-        return checklist_type
+        self.create_questions(checklisttype, questions)
+        return checklisttype
 
     @transaction.atomic
-    def update(self, checklist_type, validated_data):
+    def update(self, checklisttype, validated_data):
         # Delete all old questions
-        checklist_type.checklistquestion_set.all().delete()
+        checklisttype.checklistquestion_set.all().delete()
 
         # Create entirely new set of questions
         new_questions = validated_data.pop("checklistquestion_set")
-        checklist_type = super().update(checklist_type, validated_data)
-        self.create_questions(checklist_type, new_questions)
-        return checklist_type
+        checklisttype = super().update(checklisttype, validated_data)
+        self.create_questions(checklisttype, new_questions)
+        return checklisttype
 
 
 class BaseChecklistAnswerSerializer(serializers.ModelSerializer):
@@ -265,24 +265,24 @@ class WriteChecklistSerializer(BaseChecklistSerializer):
             zaak = self.context["zaak"]
 
             try:
-                checklist_type = ChecklistType.objects.get(
+                checklisttype = ChecklistType.objects.get(
                     zaaktype_omschrijving=zaak.zaaktype.omschrijving,
                     zaaktype_catalogus=zaak.zaaktype.catalogus,
                 )
             except ChecklistType.DoesNotExist:
                 raise serializers.ValidationError(
-                    _("No checklist_type found for ZAAKTYPE of ZAAK.")
+                    _("No checklisttype found for ZAAKTYPE of ZAAK.")
                 )
             validated_data["zaak"] = zaak.url
-            validated_data["checklist_type"] = checklist_type
+            validated_data["checklisttype"] = checklisttype
 
         return validated_data
 
     def bulk_validate_answers(self, checklist: Checklist, answers: Dict):
         # Validate answers to multiple choice questions and
-        # if they answer a question of the related checklist_type
+        # if they answer a question of the related checklisttype
         checklist_questions = (
-            checklist.checklist_type.checklistquestion_set.prefetch_related(
+            checklist.checklisttype.checklistquestion_set.prefetch_related(
                 "questionchoice_set"
             )
         )
@@ -291,7 +291,7 @@ class WriteChecklistSerializer(BaseChecklistSerializer):
             if answer["question"] not in questions:
                 raise serializers.ValidationError(
                     _(
-                        f"Answer with question: `{answer['question']}` didn't answer a question of the related checklist_type: {checklist.checklist_type}."
+                        f"Answer with question: `{answer['question']}` didn't answer a question of the related checklisttype: {checklist.checklisttype}."
                     )
                 )
 

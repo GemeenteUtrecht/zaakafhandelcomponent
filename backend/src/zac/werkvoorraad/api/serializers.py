@@ -29,7 +29,7 @@ class AccessRequestSerializer(serializers.ModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
-        help_text=_("Username of access requester/grantee"),
+        help_text=_("`username` of access requester/grantee"),
     )
 
     class Meta:
