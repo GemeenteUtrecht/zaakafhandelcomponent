@@ -185,6 +185,8 @@ class RelatedCasesResponseTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
+
+        self.maxDiff = None
         expected = [
             {
                 "aardRelatie": "bijdrage",
@@ -233,6 +235,7 @@ class RelatedCasesResponseTests(APITestCase):
                     "kanGeforceerdBijwerken": True,
                     "hasProcess": False,
                     "isStatic": False,
+                    "isConfigured": False,
                 },
             }
         ]

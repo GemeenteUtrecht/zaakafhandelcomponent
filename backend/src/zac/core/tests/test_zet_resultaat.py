@@ -4,20 +4,15 @@ import requests_mock
 from django_camunda.models import CamundaConfig
 from django_camunda.utils import serialize_variable, underscoreize
 from freezegun import freeze_time
-from rest_framework import exceptions
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory, APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
-from zac.api.context import ZaakContext
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.checklists.tests.factories import (
@@ -26,20 +21,11 @@ from zac.checklists.tests.factories import (
     ChecklistQuestionFactory,
     ChecklistTypeFactory,
 )
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
-from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
 from zac.contrib.kownsl.tests.utils import REVIEW_REQUEST
-from zac.core.models import CoreConfig
 from zac.tests.utils import mock_resource_get, paginated_response
-from zac.werkvoorraad.api.data import ChecklistAnswerGroup
-from zgw.models.zrc import Zaak
 
-from ..camunda.zet_resultaat.serializers import (
-    ZetResultaatContextSerializer,
-    ZetResultaatTaskSerializer,
-)
+from ..camunda.zet_resultaat.serializers import ZetResultaatContextSerializer
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
@@ -265,6 +251,7 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                     "assignee_type": "",
                     "can_cancel_task": False,
                     "assignee": None,
+                    "form_key": "zac:zetResultaat",
                 }
             ],
         )

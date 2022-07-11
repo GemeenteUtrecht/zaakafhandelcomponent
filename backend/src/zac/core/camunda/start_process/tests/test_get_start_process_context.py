@@ -251,6 +251,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                     "assigneeType": "",
                     "canCancelTask": False,
                     "assignee": None,
+                    "formKey": "zac:startProcessForm",
                 },
                 "context": {
                     "benodigdeBijlagen": [
@@ -329,6 +330,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                     "assigneeType": "",
                     "canCancelTask": False,
                     "assignee": None,
+                    "formKey": "zac:startProcessForm",
                 },
                 "context": {
                     "benodigdeBijlagen": [
