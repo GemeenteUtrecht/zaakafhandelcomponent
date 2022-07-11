@@ -143,7 +143,7 @@ export class DocumentsStepComponent implements OnChanges {
       }, error => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.documentControl(i).enable();
-        this.errorMessage = 'Het aanmaken van de eigenschap is mislukt.'
+        this.errorMessage = 'Het toevoegen van het document is mislukt.'
         this.reportError(error)
       })
   }

@@ -40,29 +40,3 @@
     </label>
   </div>
 </ng-container>
-<span class="has-float-label">
-  <ng-select [items]="items"
-             (search)="onSearch($event)"
-             (change)="onChange($event)"
-             [multiple]="multiple"
-             [bindLabel]="bindLabel"
-             [bindValue]="bindValue"
-             [placeholder]="placeholder"
-             notFoundText="Niets gevonden"
-             loadingText="Zoeken"
-             [(ngModel)]="selectedItems"
-             [formControl]="control"
-             [required]="required"
-             [searchable]="searchable"
-             [appendTo]="appendTo || 'body'"
-             [clearable]="clearable"
-             [disabled]="disabled"
-             class='ng-select-invalid'
-             [ngClass]="{'is-required': required}"
-  >
-  </ng-select>
-  <label>
-    {{label}}
-    <span class="multiselect-required-marker" *ngIf="required">*</span>
-  </label>
-</span>
