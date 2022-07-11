@@ -386,7 +386,7 @@ class CreateZaakSerializer(serializers.Serializer):
         if not zaaktypen:
             raise serializers.ValidationError(
                 _(
-                    "ZAAKTYPE {zt_omschrijving} can not be found in {zt_catalogus}."
+                    "ZAAKTYPE `{zt_omschrijving}` can not be found in `{zt_catalogus}`."
                 ).format(zt_omschrijving=zt_omschrijving, zt_catalogus=zt_catalogus)
             )
         max_date = max([zt.versiedatum for zt in zaaktypen])

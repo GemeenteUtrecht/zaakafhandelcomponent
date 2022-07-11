@@ -188,7 +188,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    f'ZAAKTYPE {self.zaaktype["omschrijving"]} can not be found in {self.zaaktype["catalogus"]}.'
+                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}`."
                 ]
             },
         )
