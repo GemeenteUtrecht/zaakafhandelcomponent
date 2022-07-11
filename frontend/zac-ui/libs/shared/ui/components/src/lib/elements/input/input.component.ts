@@ -50,18 +50,6 @@ export class InputComponent implements OnChanges {
     }
     this.datalistId = this.inputRef.nativeElement.id + '-datalist';
   }
-
-  /**
-   * Creates input label.
-   * @returns {string}
-   */
-  getLabel() {
-    if (!this.hideNotRequiredLabel) {
-      return this.required ? this.label : (this.label + ' (niet verplicht)')
-    } else {
-      return this.label;
-    }
-  }
 }
 
 /**

@@ -1,10 +1,14 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { NieuweEigenschap, Zaak } from '@gu/models';
 import { BenodigdeZaakeigenschap, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
+/**
+ * This component allows the user to configure
+ * case properties to start a camunda process.
+ */
 @Component({
   selector: 'gu-properties-step',
   templateUrl: './properties-step.component.html',
@@ -17,7 +21,7 @@ export class PropertiesStepComponent implements OnChanges {
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  startProcessPropertyForm: any;
+  startProcessPropertyForm: FormGroup;
   errorMessage: string;
 
   submittedProperties: number[] = [];
@@ -55,7 +59,8 @@ export class PropertiesStepComponent implements OnChanges {
       this.submittingProperties = [];
       this.submittedFields.emit({
         submitted: 0,
-        total: this.propertiesControl.controls.length
+        total: this.propertiesControl.controls.length,
+        hasValidForm: this.startProcessPropertyForm.valid
       })
     }
   }
@@ -64,10 +69,19 @@ export class PropertiesStepComponent implements OnChanges {
   // Context.
   //
 
+  /**
+   * Returns the context for the given index
+   * @param i
+   * @returns {BenodigdeZaakeigenschap}
+   */
   getPropertiesContext(i): BenodigdeZaakeigenschap {
     return this.taskContextData.context.benodigdeZaakeigenschappen[i];
   }
 
+  /**
+   * Creates form controls.
+   * @returns {FormArray}
+   */
   addPropertyControls(): FormArray {
     const arr = this.taskContextData.context.benodigdeZaakeigenschappen.map(() => {
       return this.fb.control('');
@@ -75,6 +89,11 @@ export class PropertiesStepComponent implements OnChanges {
     return this.fb.array(arr);
   }
 
+  /**
+   * Checks if property is already submitted.
+   * @param i
+   * @returns {boolean}
+   */
   isSubmittedProperty(i) {
     return this.submittedProperties.indexOf(i) !== -1;
   }
@@ -83,6 +102,10 @@ export class PropertiesStepComponent implements OnChanges {
   // Events
   //
 
+  /**
+   * Submits the selected property to the API.
+   * @param i
+   */
   submitProperty(i) {
     const selectedProperty = this.getPropertiesContext(i);
     this.submittingProperties.push(i)
@@ -102,7 +125,8 @@ export class PropertiesStepComponent implements OnChanges {
         // Emit the total submitted properties to parent
         this.submittedFields.emit({
           submitted: this.submittedProperties.length,
-          total: this.propertiesControl.controls.length
+          total: this.propertiesControl.controls.length,
+          hasValidForm: this.startProcessPropertyForm.valid
         })
 
         this.updateComponents.emit(true);

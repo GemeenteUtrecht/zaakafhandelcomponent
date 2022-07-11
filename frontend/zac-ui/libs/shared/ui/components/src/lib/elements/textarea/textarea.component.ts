@@ -28,13 +28,4 @@ export class TextareaComponent {
   @Input() disabled: boolean;
   @Input() placeholder: string;
   @Input() value: string | number;
-
-  /**
-   * Creates input label.
-   * @returns {string}
-   */
-  getLabel() {
-    return this.required ? this.label : (this.label + ' (niet verplicht)')
-  }
-
 }

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Betrokkene, UserSearchResult, Zaak } from '@gu/models';
 import { BenodigdeRol, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
@@ -19,7 +19,7 @@ export class RoleStepComponent implements OnChanges {
 
   users: UserSearchResult[];
 
-  startProcessRoleForm: any;
+  startProcessRoleForm: FormGroup;
   errorMessage: string;
 
   submittedRoles: number[] = [];
@@ -57,7 +57,8 @@ export class RoleStepComponent implements OnChanges {
       this.submittingRoles = [];
       this.submittedFields.emit({
         submitted: 0,
-        total: this.rolesControl.controls.length
+        total: this.rolesControl.controls.length,
+        hasValidForm: this.startProcessRoleForm.valid
       })
     }
   }
@@ -65,18 +66,36 @@ export class RoleStepComponent implements OnChanges {
   //
   // Context.
   //
-
+  /**
+   *
+   * Returns the context for the given index
+   * @param i
+   * @returns {BenodigdeRol}
+   */
   getRolesContext(i): BenodigdeRol {
     return this.taskContextData.context.benodigdeRollen[i];
   }
 
+  /**
+   * Creates form controls.
+   * @returns {FormArray}
+   */
   addRoleControls(): FormArray {
-    const arr = this.taskContextData.context.benodigdeRollen.map(() => {
-      return this.fb.control('');
+    const arr = this.taskContextData.context.benodigdeRollen.map(role => {
+      if (role.required) {
+        return this.fb.control('', Validators.required);
+      } else {
+        return this.fb.control('');
+      }
     });
     return this.fb.array(arr);
   }
 
+  /**
+   * Checks if role is already submitted.
+   * @param i
+   * @returns {boolean}
+   */
   isSubmittedRole(i) {
     return this.submittedRoles.indexOf(i) !== -1;
   }
@@ -85,6 +104,10 @@ export class RoleStepComponent implements OnChanges {
   // Events
   //
 
+  /**
+   * Submits the selected role to the API.
+   * @param i
+   */
   submitRole(i) {
     this.submittingRoles.push(i)
     this.roleControl(i).disable()
@@ -136,7 +159,8 @@ export class RoleStepComponent implements OnChanges {
         // Emit the total submitted roles to parent
         this.submittedFields.emit({
           submitted: this.submittedRoles.length,
-          total: this.rolesControl.controls.length
+          total: this.rolesControl.controls.length,
+          hasValidForm: this.startProcessRoleForm.valid
         })
 
         this.updateComponents.emit(true);

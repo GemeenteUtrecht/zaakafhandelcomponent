@@ -19,7 +19,7 @@
         [items]="getRolesContext(i).choices"
         [label]="getRolesContext(i).label"
         [multiple]="false"
-        [required]="false"
+        [required]="getRolesContext(i).required"
         bindLabel="label"
         bindValue="value"
         appendTo="body"
@@ -35,7 +35,7 @@
                       label="Medewerker"
                       bindLabel="fullName"
                       bindValue="username"
-                      required
+                      [required]="getRolesContext(i).required"
                       placeholder="Zoek een medewerker"
                       class="mb-4 col-8"
       ></gu-multiselect>

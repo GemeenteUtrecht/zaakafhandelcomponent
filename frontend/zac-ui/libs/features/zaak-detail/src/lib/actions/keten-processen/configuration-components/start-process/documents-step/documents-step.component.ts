@@ -1,10 +1,14 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Zaak } from '@gu/models';
 import { BenodigdeBijlage, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
+/**
+ * This component allows the user to upload required
+ * documents to start a camunda process.
+ */
 @Component({
   selector: 'gu-documents-step',
   templateUrl: './documents-step.component.html',
@@ -17,7 +21,7 @@ export class DocumentsStepComponent implements OnChanges {
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  startProcessDocumentForm: any;
+  startProcessDocumentForm: FormGroup;
   errorMessage: string;
 
   submittedDocuments: number[] = [];
@@ -55,7 +59,8 @@ export class DocumentsStepComponent implements OnChanges {
       this.submittingDocuments = [];
       this.submittedFields.emit({
         submitted: 0,
-        total: this.documentsControl.controls.length
+        total: this.documentsControl.controls.length,
+        hasValidForm: this.startProcessDocumentForm.valid
       })
     }
   }
@@ -64,10 +69,19 @@ export class DocumentsStepComponent implements OnChanges {
   // Context.
   //
 
+  /**
+   * Returns the context for the given index.
+   * @param i
+   * @returns {BenodigdeBijlage}
+   */
   getDocumentsContext(i): BenodigdeBijlage {
     return this.taskContextData.context.benodigdeBijlagen[i];
   }
 
+  /**
+   * Creates form controls.
+   * @returns {FormArray}
+   */
   addDocumentControls(): FormArray {
     const arr = this.taskContextData.context.benodigdeBijlagen.map(() => {
       return this.fb.control('');
@@ -75,6 +89,11 @@ export class DocumentsStepComponent implements OnChanges {
     return this.fb.array(arr);
   }
 
+  /**
+   * Checks if document is already submitted.
+   * @param i
+   * @returns {boolean}
+   */
   isSubmittedDocument(i) {
     return this.submittedDocuments.indexOf(i) !== -1;
   }
@@ -83,10 +102,20 @@ export class DocumentsStepComponent implements OnChanges {
   // Events
   //
 
+  /**
+   * Sets form value when a document is selected.
+   * @param {File} file
+   * @param {number} i
+   * @returns {Promise<void>}
+   */
   async handleFileSelect(file: File, i: number) {
     this.documentControl(i).setValue(file)
   }
 
+  /**
+   * Submits the selected document to the API.
+   * @param i
+   */
   submitDocument(i) {
     const selectedDocument = this.getDocumentsContext(i);
     this.submittingDocuments.push(i)
@@ -106,7 +135,8 @@ export class DocumentsStepComponent implements OnChanges {
         // Emit the total submitted documents to parent
         this.submittedFields.emit({
           submitted: this.submittedDocuments.length,
-          total: this.documentsControl.controls.length
+          total: this.documentsControl.controls.length,
+          hadValidForm: this.startProcessDocumentForm.valid
         })
 
         this.updateComponents.emit(true);

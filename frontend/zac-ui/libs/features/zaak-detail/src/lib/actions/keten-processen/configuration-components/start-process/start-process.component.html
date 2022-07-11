@@ -67,11 +67,14 @@
 
       <mat-step state="arrow_forward" [completed]="false" [editable]='false'>
         <ng-template matStepLabel>Configuratieproces afronden</ng-template>
-        <p class="mt-4">Let op! Het configuratieproces kan alleen afgerond worden indien alle vereiste velden zijn opgeslagen.</p>
+        <p class="mt-4">
+          * Vereiste velden<br>
+          Let op! Het configuratieproces kan alleen afgerond worden indien alle vereiste velden zijn opgeslagen.
+        </p>
         <button gu-button
                 buttonStyle="primary"
                 size="small"
-                [disabled]="isSubmitting"
+                [disabled]="isSubmitting || !rolesFields.hasValidForm || !propertiesFields.hasValidForm || !documentsFields.hasValidForm"
                 [loading]="isSubmitting"
                 (click)="submitTask()">
           Versturen
