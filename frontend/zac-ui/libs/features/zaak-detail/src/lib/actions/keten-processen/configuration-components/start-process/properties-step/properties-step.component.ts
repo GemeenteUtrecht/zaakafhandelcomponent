@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { NieuweEigenschap, Zaak } from '@gu/models';
 import { BenodigdeZaakeigenschap, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
@@ -51,17 +51,19 @@ export class PropertiesStepComponent implements OnChanges {
   //
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.taskContextData.previousValue !== this.taskContextData ) {
-      this.startProcessPropertyForm = this.fb.group({
-        properties: this.addPropertyControls()
-      })
-      this.submittedProperties = [];
-      this.submittingProperties = [];
-      this.submittedFields.emit({
-        submitted: 0,
-        total: this.propertiesControl.controls.length,
-        hasValidForm: this.startProcessPropertyForm.valid
-      })
+    if (changes.taskContextData) {
+      if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.startProcessPropertyForm = this.fb.group({
+          properties: this.addPropertyControls()
+        })
+        this.submittedProperties = [];
+        this.submittingProperties = [];
+        this.submittedFields.emit({
+          submitted: 0,
+          total: this.propertiesControl.controls.length,
+          hasValidForm: this.startProcessPropertyForm.valid
+        })
+      }
     }
   }
 
@@ -83,8 +85,12 @@ export class PropertiesStepComponent implements OnChanges {
    * @returns {FormArray}
    */
   addPropertyControls(): FormArray {
-    const arr = this.taskContextData.context.benodigdeZaakeigenschappen.map(() => {
-      return this.fb.control('');
+    const arr = this.taskContextData.context.benodigdeZaakeigenschappen.map(prop => {
+      if (prop.required) {
+        return this.fb.control('', Validators.required);
+      } else {
+        return this.fb.control('');
+      }
     });
     return this.fb.array(arr);
   }
@@ -108,8 +114,7 @@ export class PropertiesStepComponent implements OnChanges {
    */
   submitProperty(i) {
     const selectedProperty = this.getPropertiesContext(i);
-    this.submittingProperties.push(i)
-    this.propertyControl(i).disable()
+    this.submittingProperties.push(i);
 
     const newCaseProperty: NieuweEigenschap = {
       naam: selectedProperty.eigenschap.naam,
@@ -130,6 +135,7 @@ export class PropertiesStepComponent implements OnChanges {
         })
 
         this.updateComponents.emit(true);
+        this.propertyControl(i).disable()
       }, error => {
         this.submittingProperties = this.submittingProperties.filter(index => index !== i);
         this.propertyControl(i).enable();

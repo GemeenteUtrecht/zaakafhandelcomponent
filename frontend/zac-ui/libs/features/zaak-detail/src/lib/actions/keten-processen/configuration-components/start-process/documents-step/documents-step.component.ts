@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Zaak } from '@gu/models';
 import { BenodigdeBijlage, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
@@ -27,6 +27,8 @@ export class DocumentsStepComponent implements OnChanges {
   submittedDocuments: number[] = [];
   submittingDocuments: number[] = [];
 
+  selectedFiles: File[] = [];
+
   constructor(
     private fb: FormBuilder,
     private zaakService: ZaakService,
@@ -51,17 +53,19 @@ export class DocumentsStepComponent implements OnChanges {
   //
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.taskContextData.previousValue !== this.taskContextData ) {
-      this.startProcessDocumentForm = this.fb.group({
-        documents: this.addDocumentControls()
-      })
-      this.submittedDocuments = [];
-      this.submittingDocuments = [];
-      this.submittedFields.emit({
-        submitted: 0,
-        total: this.documentsControl.controls.length,
-        hasValidForm: this.startProcessDocumentForm.valid
-      })
+    if (changes.taskContextData) {
+      if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.startProcessDocumentForm = this.fb.group({
+          documents: this.addDocumentControls()
+        })
+        this.submittedDocuments = [];
+        this.submittingDocuments = [];
+        this.submittedFields.emit({
+          submitted: 0,
+          total: this.documentsControl.controls.length,
+          hasValidForm: this.startProcessDocumentForm.valid
+        })
+      }
     }
   }
 
@@ -83,8 +87,12 @@ export class DocumentsStepComponent implements OnChanges {
    * @returns {FormArray}
    */
   addDocumentControls(): FormArray {
-    const arr = this.taskContextData.context.benodigdeBijlagen.map(() => {
-      return this.fb.control('');
+    const arr = this.taskContextData.context.benodigdeBijlagen.map(doc => {
+      if (doc.required) {
+        return this.fb.control('', Validators.required);
+      } else {
+        return this.fb.control('');
+      }
     });
     return this.fb.array(arr);
   }
@@ -109,7 +117,9 @@ export class DocumentsStepComponent implements OnChanges {
    * @returns {Promise<void>}
    */
   async handleFileSelect(file: File, i: number) {
-    this.documentControl(i).setValue(file)
+    this.documentControl(i).patchValue(file.name);
+    this.documentControl(i).markAsTouched();
+    this.selectedFiles.push(file);
   }
 
   /**
@@ -118,12 +128,12 @@ export class DocumentsStepComponent implements OnChanges {
    */
   submitDocument(i) {
     const selectedDocument = this.getDocumentsContext(i);
+    const selectedFile = this.selectedFiles.find( ({ name })  => name === this.documentControl(i).value);
     this.submittingDocuments.push(i)
-    this.documentControl(i).disable()
 
     const newCaseDocument = new FormData();
 
-    newCaseDocument.append("file", this.documentControl(i).value);
+    newCaseDocument.append("file", selectedFile);
     newCaseDocument.append("informatieobjecttype", selectedDocument.informatieobjecttype.url);
     newCaseDocument.append("zaak", this.zaak.url);
 
@@ -131,15 +141,17 @@ export class DocumentsStepComponent implements OnChanges {
       .subscribe(() => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.submittedDocuments.push(i);
+        this.documentControl(i).setErrors(null);
 
         // Emit the total submitted documents to parent
         this.submittedFields.emit({
           submitted: this.submittedDocuments.length,
           total: this.documentsControl.controls.length,
-          hadValidForm: this.startProcessDocumentForm.valid
+          hasValidForm: this.startProcessDocumentForm.valid
         })
 
         this.updateComponents.emit(true);
+        this.documentControl(i).disable()
       }, error => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);
         this.documentControl(i).enable();

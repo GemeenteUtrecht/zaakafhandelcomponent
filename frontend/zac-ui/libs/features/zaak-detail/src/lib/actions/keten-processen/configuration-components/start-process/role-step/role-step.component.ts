@@ -49,17 +49,19 @@ export class RoleStepComponent implements OnChanges {
   //
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.taskContextData.previousValue !== this.taskContextData ) {
-      this.startProcessRoleForm = this.fb.group({
-        roles: this.addRoleControls(),
-      })
-      this.submittedRoles = [];
-      this.submittingRoles = [];
-      this.submittedFields.emit({
-        submitted: 0,
-        total: this.rolesControl.controls.length,
-        hasValidForm: this.startProcessRoleForm.valid
-      })
+    if (changes.taskContextData) {
+      if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.startProcessRoleForm = this.fb.group({
+          roles: this.addRoleControls(),
+        })
+        this.submittedRoles = [];
+        this.submittingRoles = [];
+        this.submittedFields.emit({
+          submitted: 0,
+          total: this.rolesControl.controls.length,
+          hasValidForm: this.startProcessRoleForm.valid
+        })
+      }
     }
   }
 
@@ -110,7 +112,6 @@ export class RoleStepComponent implements OnChanges {
    */
   submitRole(i) {
     this.submittingRoles.push(i)
-    this.roleControl(i).disable()
     const selectedRole = this.getRolesContext(i);
 
     let betrokkeneIdentificatie;
@@ -164,6 +165,7 @@ export class RoleStepComponent implements OnChanges {
         })
 
         this.updateComponents.emit(true);
+        this.roleControl(i).disable()
         }, error => {
           this.submittingRoles = this.submittingRoles.filter(index => index !== i);
           this.roleControl(i).enable();
