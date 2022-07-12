@@ -1,8 +1,8 @@
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {FormGroup} from '@angular/forms';
-import {Choice, Field, FieldConfiguration} from './field';
+import {Choice, Field, FieldConfiguration, Fieldset, FieldsetConfiguration} from './field';
 import {FormService} from './form.service';
-import { Document, ReadWriteDocument, Zaak } from '@gu/models';
+import {Document, ReadWriteDocument, Zaak} from '@gu/models';
 import {DocumentenService} from '@gu/services';
 
 
@@ -28,6 +28,7 @@ import {DocumentenService} from '@gu/services';
 })
 export class FormComponent implements OnInit, OnChanges {
   @Input() form: FieldConfiguration[] = [];
+  @Input() fieldsets: FieldsetConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
   @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
@@ -46,7 +47,7 @@ export class FormComponent implements OnInit, OnChanges {
   /**
    * @type {Object} Documents mapping.
    */
-  documents: {[index: string]: Document} = {}
+  documents: { [index: string]: Document } = {}
 
   /**
    * @type {boolean} Whether the form is in edit mode.
@@ -57,6 +58,11 @@ export class FormComponent implements OnInit, OnChanges {
    * @type {Field[]} The fields to render.
    */
   fields!: Field[]
+
+  /**
+   * @type {Fieldset[]} The _fieldsets to render.
+   */
+  _fieldsets: Fieldset[] = [];
 
   /**
    * @type {FormGroup} The FormGroup used by this form.
@@ -149,7 +155,9 @@ export class FormComponent implements OnInit, OnChanges {
 
     this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
     this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
+
     this.updateFields();
+    this.updateFieldsets();
   }
 
   /**
@@ -201,6 +209,19 @@ export class FormComponent implements OnInit, OnChanges {
       const indexA = this.resolvedKeys.findIndex(key => key === this.formService.getKeyFromFieldConfiguration(a))
       const indexB = this.resolvedKeys.findIndex(key => key === this.formService.getKeyFromFieldConfiguration(b))
       return indexA - indexB;
+    })
+  }
+
+  /**
+   * Updates this._fieldsets in place.
+   */
+  updateFieldsets() {
+    if (!this.fieldsets.length) {
+      this.fieldsets = [{label: '', keys: this.formService.getKeysFromForm(this.form)}]
+    }
+
+    this._fieldsets = this.fieldsets.map((fieldsetConfiguration: FieldsetConfiguration): Fieldset => {
+      return new Fieldset(fieldsetConfiguration, this.fields)
     })
   }
 
@@ -281,6 +302,7 @@ export class FormComponent implements OnInit, OnChanges {
         this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
       }
       this.updateFields();
+      this.updateFieldsets();
     }
   }
 
@@ -289,6 +311,7 @@ export class FormComponent implements OnInit, OnChanges {
    */
   inputChanged(event, field: Field) {
     this.updateFields();
+    this.updateFieldsets();
     this.formChange.emit(this.formGroup.getRawValue())
     if (field.onChange) {
       field.onChange(event, field);
@@ -304,6 +327,7 @@ export class FormComponent implements OnInit, OnChanges {
     field.control.markAsDirty();
     field.control.markAsTouched();
     this.updateFields();
+    this.updateFieldsets();
     this.formChange.emit(this.formGroup.getRawValue())
     if (field.onChange) {
       field.onChange(choice, field)

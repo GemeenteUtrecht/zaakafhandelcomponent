@@ -80,6 +80,17 @@ export interface FieldConfiguration {
 }
 
 /**
+ * A group of fields.
+ */
+export interface FieldsetConfiguration {
+  /** The fieldset label. */
+  label: string;
+
+  /** The FieldConfiguration keys to render as part of this fiedlset. */
+  keys: string[];
+}
+
+/**
  * A combination of various properties that make up a form field.
  * @see {FieldConfiguration} for description of properties.
  * @class
@@ -148,5 +159,19 @@ export class Field {
     }
 
     return 'input';
+  }
+}
+
+/**
+ * A fieldset.
+ */
+export class Fieldset {
+  label: string;
+  fields: Field[];
+
+  constructor(fieldsetConfiguration: FieldsetConfiguration, form: Field[]) {
+    Object.assign(this, fieldsetConfiguration);
+    this.fields = form.filter((field: Field) =>
+      fieldsetConfiguration.keys.indexOf(new FormService().getKeyFromFieldConfiguration(field)) > -1)
   }
 }
